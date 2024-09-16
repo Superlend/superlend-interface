@@ -44,7 +44,7 @@ export default function ChainSelectorDropdown() {
                 <DropdownMenuGroup>
                     {allChains.map((chain) => (
                         <DropdownMenuItem key={chain.id} className="cursor-pointer hover:bg-gray-200 focus:bg-gray-200 flex items-between gap-3" onClick={() => setSelectedChain(chain)}>
-                            <div className="flex items-center gap-2">
+                            <div key={chain.id} className="flex items-center gap-2">
                                 <img src={chain.image} alt={chain.name} className="w-4 h-4" />
                                 {chain.name}
                             </div>

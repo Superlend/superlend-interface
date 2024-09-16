@@ -69,7 +69,7 @@ function FilterCategories() {
         <div className="flex flex-col gap-2 bg-white">
             {
                 FILTER_CATEGORIES.map(item => (
-                    <Button size="md" className="py-[8px] px-[15px] first:bg-gray-300 first:text-black text-gray-500 hover:bg-gray-200 border-0">
+                    <Button key={item.label} size="md" className="py-[8px] px-[15px] first:bg-gray-300 first:text-black text-gray-500 hover:bg-gray-200 border-0">
                         <span className="w-full text-left">
                             {item.label}
                         </span>
