@@ -5,15 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import GraphDropdown from "@/components/dropdowns/GraphDropdown";
 import ChainSelectorDropdown from "@/components/dropdowns/ChainSelectorDropdown";
 import DiscoverFilterDropdown from "@/components/dropdowns/DiscoverFilterDropdown";
-import { DataTable } from '@/components/ui/data-table';
-import { columns } from './opportunities-table/columns';
-import { getOpportunitiesDummyData } from './opportunities-table/page';
 import LendBorrowToggle from '@/components/LendBorrowToggle';
-import { Input } from "@/components/ui/input"
 import SearchInput from '@/components/inputs/SearchInput';
 
 export default async function ComponentsPage() {
-    const opportunitiesDummyData = await getOpportunitiesDummyData();
 
     return (
         <main className="flex flex-col gap-5 max-w-[1200px] w-full mx-auto pb-10">
@@ -66,9 +61,6 @@ export default async function ComponentsPage() {
             </ComponentCard>
             <ComponentCard>
                 <DiscoverFilterDropdown />
-            </ComponentCard>
-            <ComponentCard>
-                <DataTable columns={columns} data={opportunitiesDummyData} />
             </ComponentCard>
             <ComponentCard>
                 <LendBorrowToggle />
