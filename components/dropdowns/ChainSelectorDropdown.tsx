@@ -31,7 +31,7 @@ export default function ChainSelectorDropdown() {
                             allChains
                                 .filter((_, index: number) => index < 4 && index > 0)
                                 .map((chain: IChain) => (
-                                    <img src={chain.image} alt={chain.name} width={20} height={20}
+                                    <img key={chain.chainId} src={chain.image} alt={chain.name} width={20} height={20}
                                         className="object-contain rounded-full last:ml-0 -ml-3" />
                                 ))
                         }

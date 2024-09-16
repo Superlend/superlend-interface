@@ -85,12 +85,14 @@ function FilterSelectors() {
         <div className="flex flex-wrap gap-3 bg-white">
             <Button variant="outline" size="sm">All tokens</Button>
             {
-                allChains.filter((chain) => chain.id !== 0).map((chain: IChain) => (
-                    <Button variant="outline" size="sm" key={chain.id} className='flex items-center gap-1'>
-                        <img src={chain.image} alt={chain.name} width={24} height={24} />
-                        {chain.name}
-                    </Button>
-                ))
+                allChains
+                    .filter((chain) => chain.id !== 0).
+                    map((chain: IChain) => (
+                        <Button variant="outline" size="sm" key={chain.id} className='flex items-center gap-1'>
+                            <img src={chain.image} alt={chain.name} width={24} height={24} />
+                            {chain.name}
+                        </Button>
+                    ))
             }
         </div>
     )

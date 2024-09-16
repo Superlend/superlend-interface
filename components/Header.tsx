@@ -45,6 +45,8 @@ const Header: React.FC = () => {
   const BUTTON_INACTIVE_STYLES = `${BUTTON_DEFAULT_STYLES} opacity-50 hover:opacity-100`;
   const BUTTON_ACTIVE_STYLES = `${BUTTON_DEFAULT_STYLES}`;
 
+  const LOGO = isSmallDevice ? "/images/logos/favicon-32x32.png" : "/images/logos/superlend-logo.webp"
+
   function isSelected(tab: TTab) {
     return tab.id === activeTab?.id;
   }
@@ -54,13 +56,13 @@ const Header: React.FC = () => {
       // initial={{ y: -100 }}
       // animate={{ y: 0 }}
       // transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-      className="z-50 sticky top-5 left-0 flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center self-stretch py-0 pr-[8px] md:pl-[20px] mb-16 lg:mb-20 w-full font-semibold uppercase rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
-      <Button variant="ghost" onClick={() => router.push('home')}>
+      className="z-50 sticky top-5 left-0 flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center self-stretch py-0 pr-[8px] pl-4 sm:pl-[20px] mb-16 lg:mb-20 w-full font-semibold uppercase rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
+      <Button variant="ghost" className='w-[24px] md:w-fit p-0' onClick={() => router.push('home')}>
         <img
           loading="lazy"
-          src="https://cdn.builder.io/api/v1/image/assets/TEMP/071c90e2379bd33d3fbab4abc909fb5465bb038028349549391b7c9b806ed865?placeholderIfAbsent=true&apiKey=689e79da645a41c0a4332461eb09084b"
+          src={LOGO}
           alt="Superlend logo"
-          className="object-contain shrink-0 self-stretch my-auto w-36 aspect-[6.54] cursor-pointer"
+          className="object-contain shrink-0 my-auto w-[1.5rem] aspect-square md:aspect-[6.54] md:w-36 cursor-pointer"
         />
       </Button>
       <nav className="hidden md:flex lg:gap-5 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">
@@ -73,7 +75,7 @@ const Header: React.FC = () => {
           </Button>
         ))}
       </nav>
-      <Button variant="primary" size={isSmallDevice ? "md" : "lg"} className="rounded-[12px] py-2">Connect wallet</Button>
+      <Button variant="primary" size={isSmallDevice ? "sm" : "lg"} className="rounded-[12px] py-2">Connect wallet</Button>
     </header>
   );
 };

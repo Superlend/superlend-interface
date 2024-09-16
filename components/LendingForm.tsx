@@ -5,7 +5,7 @@ const LendingForm: React.FC = () => {
     <form className="flex flex-col p-3 mt-8 max-w-full rounded-3xl bg-white bg-opacity-40 shadow-[0px_2px_2px_rgba(0,0,0,0.02)] w-[464px]">
       <div className="flex flex-col w-full bg-white rounded-2xl min-h-[148px] max-md:max-w-full">
         <button type="button" className="flex gap-10 justify-between items-center p-6 w-full bg-white rounded-2xl border border-gray-100 border-solid min-h-[80px] shadow-[0px_4px_16px_rgba(0,0,0,0.04)] max-md:px-5 max-md:max-w-full hover:border-gray-400 focus:border-gray-400">
-          <label htmlFor="lendingToken" className="self-stretch my-auto text-base font-medium leading-none text-stone-500">
+          <label htmlFor="lendingToken" className="self-stretch my-auto text-sm sm:text-md font-medium leading-none text-stone-500">
             Select lending token
           </label>
           <div className="flex gap-1 justify-center items-center self-stretch px-2 my-auto w-8 h-8 rounded-xl border border-gray-100 border-solid bg-neutral-50">
