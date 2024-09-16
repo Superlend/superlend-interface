@@ -14,10 +14,10 @@ const getHeadingLevel = (level: string) => {
 
 const headingSizes: Record<string, string> = {
     h1: "text-[32px]",
-    h2: "text-[24px]",
-    h3: "text-[18px]",
-    h4: "text-[16px]",
-    h5: "text-[14px]",
+    h2: "text-[28px]",
+    h3: "text-[24px]",
+    h4: "text-[20px]",
+    h5: "text-[16px]",
     h6: "text-[12px]",
 }
 

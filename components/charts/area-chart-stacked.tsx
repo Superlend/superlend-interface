@@ -49,7 +49,7 @@ export function AreaChartStacked() {
                     Showing total visitors for the last 6 months
                 </CardDescription>
             </CardHeader> */}
-            <CardContent className="p-0">
+            <CardContent className="p-0 bg-white">
                 <ChartContainer config={chartConfig}>
                     <AreaChart
                         accessibilityLayer
@@ -57,7 +57,7 @@ export function AreaChartStacked() {
                         margin={{
                             left: 0,
                             right: 0,
-                            top: 50
+                            top: 0
                         }}
                     >
                         <CartesianGrid vertical={false} />

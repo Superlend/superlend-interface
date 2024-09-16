@@ -2,7 +2,7 @@ import React from 'react';
 
 interface IMainContainer {
     children: React.ReactNode;
-    className: string;
+    className?: string;
 }
 
 export default function MainContainer({ children, className }: IMainContainer) {

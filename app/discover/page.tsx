@@ -5,10 +5,11 @@ import Image from 'next/image'
 import ChainSelectorDropdown from '@/components/dropdowns/ChainSelectorDropdown'
 import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown'
 import { DataTable } from '@/components/ui/data-table'
-import { columns, Opportunity } from '@/data/top-apy-opportunities';
+import { columns, TOpportunity } from '@/data//table/top-apy-opportunities';
 import SearchInput from '@/components/inputs/SearchInput'
+import MainContainer from '@/components/MainContainer'
 
-async function getTopApyOpportunitiesDummyData(): Promise<Opportunity[]> {
+async function getTopApyOpportunitiesDummyData(): Promise<TOpportunity[]> {
     // Fetch data from your API here.
     return [
         {
@@ -66,7 +67,7 @@ export default async function Discover() {
     const opportunitiesDummyData = await getTopApyOpportunitiesDummyData();
 
     return (
-        <main className='max-w-[1200px] mx-auto'>
+        <MainContainer>
             <div className="top-apy-opportunities-container flex flex-col gap-[24px]">
                 <div className="top-apy-opportunities-header flex items-end lg:items-center justify-between gap-[12px]">
                     <div className="top-apy-opportunities-header-left w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
@@ -92,6 +93,6 @@ export default async function Discover() {
                     <DataTable columns={columns} data={opportunitiesDummyData} />
                 </div>
             </div>
-        </main>
+        </MainContainer>
     )
 }   

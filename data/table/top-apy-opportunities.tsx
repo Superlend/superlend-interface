@@ -1,11 +1,12 @@
 "use client"
 
+import ImageWithBadge from "@/components/ImageWithBadge";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
-export type Opportunity = {
+export type TOpportunity = {
     token: string
     platform: string
     chain: string
@@ -18,17 +19,17 @@ export type Opportunity = {
     platform_image: string
 }
 
-export const columns: ColumnDef<Opportunity>[] = [
+export const columns: ColumnDef<TOpportunity>[] = [
     {
         accessorKey: "token",
         header: "Token",
         cell: ({ row }) => {
             return (
                 <span className="flex items-center gap-1">
-                    <span className="relative">
-                        <img src={row.original.token_image} alt={row.original.token} width={20} height={20} />
-                        <img src={row.original.chain_image} alt={row.original.chain} width={12} height={12} className="absolute" style={{ bottom: "-3px", right: "-2px" }} />
-                    </span>
+                    <ImageWithBadge
+                        mainImg={row.original.token_image}
+                        badgeImg={row.original.chain_image}
+                    />
                     <span className="font-medium">
                         <Link href="position-management">{row.original.token}</Link>
                     </span>
