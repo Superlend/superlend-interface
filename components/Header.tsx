@@ -6,8 +6,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import HomeIcon from './icons/home-icon';
 import CompassIcon from './icons/compass-icon';
 import PieChartIcon from './icons/pie-chart-icon';
-import { motion } from "framer-motion"
-import { useMediaQuery } from "@uidotdev/usehooks";
 
 type TTab = {
   id: number;
@@ -30,8 +28,6 @@ const Header: React.FC = () => {
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<TTab | null>(activeTabInitialValue(pathname));
 
-  const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-
   useEffect(() => {
     setActiveTab(activeTabInitialValue(pathname));
   }, [pathname]);
@@ -44,8 +40,6 @@ const Header: React.FC = () => {
   const BUTTON_DEFAULT_STYLES = "group self-stretch px-6 max-lg:px-5 rounded-[14px] uppercase hover:text-primary";
   const BUTTON_INACTIVE_STYLES = `${BUTTON_DEFAULT_STYLES} opacity-50 hover:opacity-100`;
   const BUTTON_ACTIVE_STYLES = `${BUTTON_DEFAULT_STYLES}`;
-
-  const LOGO = isSmallDevice ? "/images/logos/favicon-32x32.png" : "/images/logos/superlend-logo.webp"
 
   function isSelected(tab: TTab) {
     return tab.id === activeTab?.id;
@@ -60,9 +54,15 @@ const Header: React.FC = () => {
       <Button variant="ghost" className='w-[24px] md:w-fit p-0' onClick={() => router.push('home')}>
         <img
           loading="lazy"
-          src={LOGO}
+          src={"/images/logos/favicon-32x32.png"}
           alt="Superlend logo"
-          className="object-contain shrink-0 my-auto w-[1.5rem] aspect-square md:aspect-[6.54] md:w-36 cursor-pointer"
+          className="md:hidden object-contain shrink-0 my-auto w-[1.5rem] aspect-square cursor-pointer"
+        />
+        <img
+          loading="lazy"
+          src={"/images/logos/superlend-logo.webp"}
+          alt="Superlend logo"
+          className="hidden md:inline object-contain shrink-0 my-auto aspect-[6.54] w-36 cursor-pointer"
         />
       </Button>
       <nav className="hidden md:flex lg:gap-5 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">
@@ -75,7 +75,7 @@ const Header: React.FC = () => {
           </Button>
         ))}
       </nav>
-      <Button variant="primary" size={isSmallDevice ? "sm" : "lg"} className="rounded-[12px] py-2">Connect wallet</Button>
+      <Button variant="primary" size={"lg"} className="rounded-[12px] py-2">Connect wallet</Button>
     </header>
   );
 };
