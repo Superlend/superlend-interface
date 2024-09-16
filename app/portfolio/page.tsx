@@ -118,7 +118,7 @@ export default async function Portfolio() {
                                 </Card>
                             </div>
                             <div className="bg-white rounded-t-6">
-                                <div className="flex items-center justify-between pt-[26px] px-[28px]">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between pt-[26px] px-[28px] gap-[16px]">
                                     <div className="flex items-center gap-[8px]">
                                         <BodyText level='body1' weight='medium'>Portfolio Trend</BodyText>
                                         <Badge variant="blue">1W</Badge>

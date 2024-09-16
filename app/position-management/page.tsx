@@ -30,22 +30,24 @@ function PageHeader() {
     const router = useRouter();
 
     return (
-        <div className="header flex items-center justify-between">
-            <div className="header-left flex items-center">
+        <section className="header flex items-center justify-between">
+            <div className="header-left flex items-start md:items-center">
                 <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
                     <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
                 </Button>
-                <div className="flex items-center gap-[12px] ml-[24px]">
-                    <div className="flex items-center gap-[8px]">
-                        <img src={EthTokenIcon} alt="Eth token" width={28} height={28} />
-                        <HeadingText level='h4' className='uppercase'>Eth</HeadingText>
+                <div className="flex flex-col md:flex-row md:items-center gap-[16px] ml-[24px]">
+                    <div className="flex items-center gap-[12px]">
+                        <div className="flex items-center gap-[8px]">
+                            <img src={EthTokenIcon} alt="Eth token" width={28} height={28} />
+                            <HeadingText level='h4' className='uppercase'>Eth</HeadingText>
+                        </div>
+                        <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
+                        <div className="flex items-center gap-[8px]">
+                            <img src={USDCTokenIcon} alt="Eth token" width={28} height={28} />
+                            <HeadingText level='h4' className='uppercase'>USDC</HeadingText>
+                        </div>
                     </div>
-                    <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
-                    <div className="flex items-center gap-[8px]">
-                        <img src={USDCTokenIcon} alt="Eth token" width={28} height={28} />
-                        <HeadingText level='h4' className='uppercase'>USDC</HeadingText>
-                    </div>
-                    <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pr-[4px] ml-[16px]'>
+                    <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pr-[4px]'>
                         <div className="flex gap-1">
                             <img src={PolygonNetworkIcon} alt="Polygon network" width={16} height={16} className='object-contain' />
                             <Label weight='medium'>Polygon Network</Label>
@@ -57,7 +59,7 @@ function PageHeader() {
                     </Badge>
                 </div>
             </div>
-            <div className="header-right flex items-center gap-[24px]">
+            <div className="header-right hidden lg:flex items-center gap-[24px]">
                 <div className="flex items-center gap-[4px]">
                     <BodyText level='body1' className='text-gray-700'>
                         Suppply APY
@@ -76,18 +78,18 @@ function PageHeader() {
                     </Badge>
                 </div>
             </div>
-        </div>
+        </section>
     )
 }
 
 function PageBody() {
     return (
-        <div className="grid grid-cols-[1fr_380px] gap-[16px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-[16px]">
             <div className='flex flex-col gap-[16px]'>
-                <div className="bg-white bg-opacity-40 pt-[32px] pb-[16px] px-[16px] rounded-6">
+                <section className="bg-white bg-opacity-40 pt-[32px] pb-[16px] px-[16px] rounded-6">
                     <div className="px-[16px]">
-                        <div className="flex items-center justify-between gap-5 mb-[12px]">
-                            <div className="flex items-center gap-[8px]">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-[12px]">
+                            <div className="flex items-center max-md:justify-between gap-[8px]">
                                 <BodyText level='body2'>
                                     Liquidation Risk
                                 </BodyText>
@@ -95,7 +97,7 @@ function PageBody() {
                                     low risk
                                 </Badge>
                             </div>
-                            <div className="flex items-center gap-[16px]">
+                            <div className="flex items-center max-md:justify-between gap-[16px]">
                                 <BodyText level='body2'>
                                     Liquidation price
                                 </BodyText>
@@ -109,11 +111,11 @@ function PageBody() {
                             <Progress value={20} />
                         </div>
                     </div>
-                    <div className="bg-white rounded-4 py-[32px] px-[44px]">
-                        <div className="flex items-center justify-between gap-5">
-                            <div className="flex flex-col gap-[12px] max-w-[230px] w-full">
+                    <div className="bg-white rounded-4 py-[32px] px-[22px] md:px-[44px]">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                            <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full">
                                 <BodyText level='body2'>Your Collateral</BodyText>
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
                                     <div className="flex items-center gap-[6px]">
                                         <img src={EthTokenIcon} alt="Eth token" width={24} height={24} />
                                         <HeadingText level='h3'>08.97</HeadingText>
@@ -123,9 +125,9 @@ function PageBody() {
                                     </Button>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-[12px] max-w-[230px] w-full">
+                            <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full">
                                 <BodyText level='body2'>Your Borrowing</BodyText>
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
                                     <div className="flex items-center gap-[6px]">
                                         <img src={USDCTokenIcon} alt="Eth token" width={24} height={24} />
                                         <HeadingText level='h3'>32,781</HeadingText>
@@ -137,22 +139,21 @@ function PageBody() {
                             </div>
                         </div>
                     </div>
-                </div>
-                <div className="bg-white bg-opacity-40 rounded-6">
+                </section>
+                <section className="bg-white bg-opacity-40 rounded-6">
                     <AreaChartStacked />
-                    <div className="py-[36px] px-[55px] flex items-center justify-between gap-10">
+                    <div className="py-[36px] px-[30px] md:px-[55px] flex flex-col md:flex-row md:items-center justify-between gap-10">
                         {
                             APY_CHART_DATA.map((block, blockIndex) => (
-                                <div key={blockIndex} className="block-1 flex flex-col gap-[12px]">
+                                <div key={blockIndex} className="block-1 flex flex-col md:gap-[12px]">
                                     <BodyText level='body1' className='text-gray-600'>{block.label}</BodyText>
                                     <HeadingText level='h3' className={`${blockIndex === 0 ? "text-[#0EA739]" : ""}`}>{block.value}</HeadingText>
                                 </div>
                             ))
                         }
                     </div>
-                </div>
+                </section>
             </div>
-            <div className=""></div>
         </div>
     )
 }
