@@ -113,17 +113,17 @@ const Header: React.FC = () => {
       </div>
 
       <Sheet open={openMenu}>
-        <SheetContent side="top" className='h-full'>
+        <SheetContent side="top" className='h-full bg-white flex items-center justity-center'>
           <Button onClick={handleCloseMenu} className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary border-none p-0">
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </Button>
-          <SheetHeader className='pt-8'>
+          <SheetHeader className='pt-8 h-full w-full justify-center'>
             <motion.ul
               variants={menuContainerVariant}
               initial="hidden"
               animate="show"
-              className='flex flex-col items-center gap-[24px]'>
+              className='flex flex-col items-center justify-center gap-[24px]'>
               {tabs.map((tab) => (
                 <motion.li key={tab.id} variants={menuItemVariant}>
                   <Button variant={isSelected(tab) ? "default" : "ghost"} size="xl" className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`} onClick={() => handleTabClick(tab)}>
