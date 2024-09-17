@@ -114,7 +114,7 @@ const Header: React.FC = () => {
       <div className="flex items-center gap-[12px]">
         <Button variant="primary" size={"lg"} className="rounded-[12px] py-2">Connect wallet</Button>
         <Button variant="outline" size={"md"} className="hidden max-md:block rounded-[12px] py-2 border border-gray-500 py-[6px]" onClick={() => setOpenMenu(true)}>
-          <Menu className='text-gray-600'/>
+          <Menu className='text-gray-600' />
         </Button>
       </div>
 
@@ -131,8 +131,8 @@ const Header: React.FC = () => {
               animate="show"
               className='flex flex-col gap-[15px]'>
               {tabs.map((tab) => (
-                <motion.li variants={menuItemVariant}>
-                  <Button key={tab.id} variant={isSelected(tab) ? "default" : "ghost"} size="lg" className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`} onClick={() => handleTabClick(tab)}>
+                <motion.li key={tab.id} variants={menuItemVariant}>
+                  <Button variant={isSelected(tab) ? "default" : "ghost"} size="lg" className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`} onClick={() => handleTabClick(tab)}>
                     <div className="flex items-center justify-center gap-2">
                       <tab.icon />
                       <span>{tab.name}</span>
