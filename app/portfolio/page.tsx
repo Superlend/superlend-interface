@@ -105,13 +105,13 @@ export default async function Portfolio() {
                                     <CardContent className='bg-white py-[25px] sm:px-[44px] flex flex-col md:flex-row sm:items-center justify-between gap-[20px]'>
                                         {
                                             POSITIONS_BREAKDOWN_DATA.map((position, positionIndex) => (
-                                                <>
-                                                    <div key={position.id} className="data-block-1">
+                                                <React.Fragment key={positionIndex}>
+                                                    <div className="data-block-1">
                                                         <BodyText level='body1' weight='medium'>$ {position.data}</BodyText>
                                                         <Label className="text-gray-600 text-success-500">Your {position.label}</Label>
                                                     </div>
                                                     <span className="hidden md:inline text-gray-500 [&:nth-child(6)]:hidden">|</span>
-                                                </>
+                                                </React.Fragment>
                                             ))
                                         }
                                     </CardContent>
