@@ -9,10 +9,7 @@ import PieChartIcon from './icons/pie-chart-icon';
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
-  SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet"
 import { Menu, X } from 'lucide-react';
 import { motion } from "framer-motion"
@@ -83,9 +80,6 @@ const Header: React.FC = () => {
 
   return (
     <header
-      // initial={{ y: -100 }}
-      // animate={{ y: 0 }}
-      // transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
       className="z-50 sticky top-5 left-0 flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center self-stretch py-0 pr-[8px] pl-4 sm:pl-[20px] mb-16 lg:mb-20 w-full font-semibold uppercase rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
       <Button variant="ghost" className='w-[24px] md:w-fit p-0' onClick={() => router.push('home')}>
         <img
@@ -129,10 +123,10 @@ const Header: React.FC = () => {
               variants={menuContainerVariant}
               initial="hidden"
               animate="show"
-              className='flex flex-col gap-[15px]'>
+              className='flex flex-col items-center gap-[24px]'>
               {tabs.map((tab) => (
                 <motion.li key={tab.id} variants={menuItemVariant}>
-                  <Button variant={isSelected(tab) ? "default" : "ghost"} size="lg" className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`} onClick={() => handleTabClick(tab)}>
+                  <Button variant={isSelected(tab) ? "default" : "ghost"} size="xl" className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`} onClick={() => handleTabClick(tab)}>
                     <div className="flex items-center justify-center gap-2">
                       <tab.icon />
                       <span>{tab.name}</span>
