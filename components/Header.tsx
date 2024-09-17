@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/sheet"
 import { Menu, X } from 'lucide-react';
 import { motion } from "framer-motion"
-
+import { useAppKit } from '@reown/appkit/react'
+import { useAccount } from 'wagmi';
+import ConnectWalletButton from './ConnectWalletButton';
 
 type TTab = {
   id: number;
@@ -36,6 +38,8 @@ const Header: React.FC = () => {
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<TTab | null>(activeTabInitialValue(pathname));
   const [openMenu, setOpenMenu] = useState(false);
+  const { open: openAuthModal, close: closeAuthModal } = useAppKit();
+  const { address, isConnecting, isDisconnected } = useAccount();
 
   useEffect(() => {
     setActiveTab(activeTabInitialValue(pathname));
@@ -78,6 +82,10 @@ const Header: React.FC = () => {
     show: { opacity: 1, x: 0 }
   }
 
+  function handleWalletConnection() {
+    openAuthModal();
+  }
+
   return (
     <header
       className="z-50 sticky top-5 left-0 flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center self-stretch py-0 pr-[8px] pl-4 sm:pl-[20px] mb-16 lg:mb-20 w-full font-semibold uppercase rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
@@ -106,7 +114,7 @@ const Header: React.FC = () => {
         ))}
       </nav>
       <div className="flex items-center gap-[12px]">
-        <Button variant="primary" size={"lg"} className="rounded-[12px] py-2">Connect wallet</Button>
+        <ConnectWalletButton />
         <Button variant="outline" size={"md"} className="hidden max-md:block rounded-[12px] py-2 border border-gray-500 py-[6px]" onClick={() => setOpenMenu(true)}>
           <Menu className='text-gray-600' />
         </Button>
