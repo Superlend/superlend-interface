@@ -17,6 +17,7 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart"
+import StackedIcons from "../StackedIcons"
 
 export const description = "A radial chart with stacked sections"
 
@@ -32,6 +33,24 @@ const chartConfig = {
         color: "hsl(var(--chart-2))",
     },
 } satisfies ChartConfig
+
+const ICONS_LIST = [
+    {
+        src: "/images/platforms/aave.webp",
+        alt: "Aave",
+        id: 1,
+    },
+    {
+        src: "/images/platforms/euler.webp",
+        alt: "Euler",
+        id: 2,
+    },
+    {
+        src: "/images/platforms/compound.webp",
+        alt: "Compound",
+        id: 3,
+    },
+];
 
 export function RadialChartStacked() {
     const totalVisitors = 5;
@@ -102,6 +121,7 @@ export function RadialChartStacked() {
             </CardContent>
             <CardFooter className="flex-col gap-2 text-sm">
                 <div className="flex items-center gap-2 font-medium leading-none">
+                    <StackedIcons list={ICONS_LIST} />
                     Spread across 4 platforms
                 </div>
             </CardFooter>
