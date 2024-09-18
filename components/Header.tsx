@@ -13,8 +13,6 @@ import {
 } from "@/components/ui/sheet"
 import { Menu, X } from 'lucide-react';
 import { motion } from "framer-motion"
-import { useAppKit } from '@reown/appkit/react'
-import { useAccount } from 'wagmi';
 import ConnectWalletButton from './ConnectWalletButton';
 
 type TTab = {
@@ -38,8 +36,6 @@ const Header: React.FC = () => {
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<TTab | null>(activeTabInitialValue(pathname));
   const [openMenu, setOpenMenu] = useState(false);
-  const { open: openAuthModal, close: closeAuthModal } = useAppKit();
-  const { address, isConnecting, isDisconnected } = useAccount();
 
   useEffect(() => {
     setActiveTab(activeTabInitialValue(pathname));
@@ -82,42 +78,39 @@ const Header: React.FC = () => {
     show: { opacity: 1, x: 0 }
   }
 
-  function handleWalletConnection() {
-    openAuthModal();
-  }
-
   return (
-    <header
-      className="z-50 sticky top-5 left-0 flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center self-stretch py-0 pr-[8px] pl-4 sm:pl-[20px] mb-16 lg:mb-20 w-full font-semibold uppercase rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
-      <Button variant="ghost" className='w-[24px] md:w-fit p-0' onClick={() => router.push('home')}>
-        <img
-          loading="lazy"
-          src={"/images/logos/favicon-32x32.png"}
-          alt="Superlend logo"
-          className="md:hidden object-contain shrink-0 my-auto w-[1.5rem] aspect-square cursor-pointer"
-        />
-        <img
-          loading="lazy"
-          src={"/images/logos/superlend-logo.webp"}
-          alt="Superlend logo"
-          className="hidden md:inline object-contain shrink-0 my-auto aspect-[6.54] w-36 cursor-pointer"
-        />
-      </Button>
-      <nav className="hidden md:flex lg:gap-5 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">
-        {tabs.map((tab) => (
-          <Button key={tab.id} variant={isSelected(tab) ? "default" : "ghost"} size="lg" className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`} onClick={() => handleTabClick(tab)}>
-            <div className="flex items-center justify-center gap-2">
-              <tab.icon />
-              <span>{tab.name}</span>
-            </div>
-          </Button>
-        ))}
-      </nav>
-      <div className="flex items-center gap-[12px]">
-        <ConnectWalletButton />
-        <Button variant="outline" size={"md"} className="hidden max-md:block rounded-[12px] py-2 border border-gray-500 py-[6px]" onClick={() => setOpenMenu(true)}>
-          <Menu className='text-gray-600' />
+    <header className="z-50 sticky top-5 left-0 max-w-[1200px] w-full mx-auto px-5">
+      <div className="flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center self-stretch py-0 pr-[8px] pl-4 sm:pl-[20px] mb-16 lg:mb-20 w-full font-semibold uppercase rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
+        <Button variant="ghost" className='w-[24px] md:w-fit p-0' onClick={() => router.push('home')}>
+          <img
+            loading="lazy"
+            src={"/images/logos/favicon-32x32.png"}
+            alt="Superlend logo"
+            className="md:hidden object-contain shrink-0 my-auto w-[1.5rem] aspect-square cursor-pointer"
+          />
+          <img
+            loading="lazy"
+            src={"/images/logos/superlend-logo.webp"}
+            alt="Superlend logo"
+            className="hidden md:inline object-contain shrink-0 my-auto aspect-[6.54] w-36 cursor-pointer"
+          />
         </Button>
+        <nav className="hidden md:flex gap-3 lg:gap-5 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">
+          {tabs.map((tab) => (
+            <Button key={tab.id} variant={isSelected(tab) ? "default" : "ghost"} size="lg" className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`} onClick={() => handleTabClick(tab)}>
+              <div className="flex items-center justify-center gap-2">
+                <tab.icon />
+                <span>{tab.name}</span>
+              </div>
+            </Button>
+          ))}
+        </nav>
+        <div className="flex items-center gap-[12px]">
+          <ConnectWalletButton />
+          <Button variant="outline" size={"md"} className="hidden max-md:block rounded-[12px] py-2 border border-gray-500 py-[6px]" onClick={() => setOpenMenu(true)}>
+            <Menu className='text-gray-600' />
+          </Button>
+        </div>
       </div>
 
       <Sheet open={openMenu}>
@@ -131,12 +124,12 @@ const Header: React.FC = () => {
               variants={menuContainerVariant}
               initial="hidden"
               animate="show"
-              className='flex flex-col items-center justify-center gap-[24px]'>
+              className='flex flex-col items-center justify-center gap-[32px]'>
               {tabs.map((tab) => (
                 <motion.li key={tab.id} variants={menuItemVariant}>
-                  <Button variant={isSelected(tab) ? "default" : "ghost"} size="xl" className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`} onClick={() => handleTabClick(tab)}>
+                  <Button variant={isSelected(tab) ? "default" : "ghost"} size="2xl" className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`} onClick={() => handleTabClick(tab)}>
                     <div className="flex items-center justify-center gap-2">
-                      <tab.icon />
+                      <tab.icon width={20} height={18} />
                       <span>{tab.name}</span>
                     </div>
                   </Button>
@@ -146,7 +139,6 @@ const Header: React.FC = () => {
           </SheetHeader>
         </SheetContent>
       </Sheet>
-
     </header>
   );
 };

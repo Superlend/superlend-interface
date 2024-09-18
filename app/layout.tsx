@@ -21,7 +21,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`bg-[#B4E2FB] px-[20px]`}>
+      <body className={`bg-[#B4E2FB]`}>
         <ContextProvider cookies={cookies}>
           <Header />
           {children}

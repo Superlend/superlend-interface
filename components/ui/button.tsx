@@ -24,8 +24,10 @@ const buttonVariants = cva(
       size: {
         sm: "px-2 py-1 text-[11px]",
         md: "px-2 py-1 text-[12px]",
-        lg: "px-2 py-1 md:px-3 md:py-2 text-[12px] md:text-[14px]",
-        xl: "px-2 py-1 md:px-3 md:py-2 text-[16px] md:text-[18px]",
+        lg: "px-2 py-1 md:px-3 md:py-2 text-[12px] sm:text-[14px]",
+        xl: "px-2 py-1 md:px-3 md:py-2 text-[16px] sm:text-[18px]",
+        '2xl': "px-2 py-1 md:px-3 md:py-2 text-[20px] sm:text-[22px]",
+        '3xl': "px-2 py-1 md:px-3 md:py-2 text-[24px] sm:text-[26px]",
         icon: "h-10 w-10",
       },
     },
