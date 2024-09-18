@@ -30,12 +30,12 @@ function PageHeader() {
     const router = useRouter();
 
     return (
-        <section className="header flex items-center justify-between">
-            <div className="header-left flex items-start md:items-center">
-                <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
-                    <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
-                </Button>
-                <div className="flex flex-col md:flex-row md:items-center gap-[16px] ml-[24px]">
+        <section className="header flex flex-col sm:flex-row items-start lg:items-center gap-[24px]">
+            <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
+                <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
+            </Button>
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-[24px] w-full">
+                <div className="flex flex-col md:flex-row md:items-center gap-[16px]">
                     <div className="flex items-center gap-[12px]">
                         <div className="flex items-center gap-[8px]">
                             <img src={EthTokenIcon} alt="Eth token" width={28} height={28} />
@@ -47,7 +47,7 @@ function PageHeader() {
                             <HeadingText level='h4' className='uppercase'>USDC</HeadingText>
                         </div>
                     </div>
-                    <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pr-[4px]'>
+                    <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pr-[4px] w-fit'>
                         <div className="flex gap-1">
                             <img src={PolygonNetworkIcon} alt="Polygon network" width={16} height={16} className='object-contain' />
                             <Label weight='medium'>Polygon Network</Label>
@@ -58,24 +58,24 @@ function PageHeader() {
                         </Button>
                     </Badge>
                 </div>
-            </div>
-            <div className="header-right hidden lg:flex items-center gap-[24px]">
-                <div className="flex items-center gap-[4px]">
-                    <BodyText level='body1' className='text-gray-700'>
-                        Suppply APY
-                    </BodyText>
-                    <Badge variant="green">
-                        <BodyText level='body1' weight='medium'>12.24%</BodyText>
-                    </Badge>
-                </div>
-                <span className="text-gray">|</span>
-                <div className="flex items-center gap-[4px]">
-                    <BodyText level='body1' className='text-gray-700'>
-                        Borrow Rate
-                    </BodyText>
-                    <Badge variant="yellow">
-                        <BodyText level='body1' weight='medium'>10.32%</BodyText>
-                    </Badge>
+                <div className="header-right flex flex-col md:flex-row items-start md:items-center gap-[24px]">
+                    <div className="flex items-center max-md:justify-between gap-[4px]">
+                        <BodyText level='body1' className='text-gray-700 shrink-0'>
+                            Suppply APY
+                        </BodyText>
+                        <Badge variant="green">
+                            <BodyText level='body1' weight='medium'>12.24%</BodyText>
+                        </Badge>
+                    </div>
+                    <span className="hidden md:inline-block text-gray">|</span>
+                    <div className="flex items-center max-md:justify-between gap-[4px]">
+                        <BodyText level='body1' className='text-gray-700 shrink-0'>
+                            Borrow Rate
+                        </BodyText>
+                        <Badge variant="yellow">
+                            <BodyText level='body1' weight='medium'>10.32%</BodyText>
+                        </Badge>
+                    </div>
                 </div>
             </div>
         </section>
@@ -89,7 +89,7 @@ function PageBody() {
                 <section className="bg-white bg-opacity-40 pt-[32px] pb-[16px] px-[16px] rounded-6">
                     <div className="px-[16px]">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-[12px]">
-                            <div className="flex items-center max-md:justify-between gap-[8px]">
+                            <div className="flex items-center gap-[8px]">
                                 <BodyText level='body2'>
                                     Liquidation Risk
                                 </BodyText>
@@ -97,7 +97,7 @@ function PageBody() {
                                     low risk
                                 </Badge>
                             </div>
-                            <div className="flex items-center max-md:justify-between gap-[16px]">
+                            <div className="flex items-center gap-[16px]">
                                 <BodyText level='body2'>
                                     Liquidation price
                                 </BodyText>

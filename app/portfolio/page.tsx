@@ -22,6 +22,7 @@ import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdow
 import { DataTable } from '@/components/ui/data-table'
 import { columns } from '@/data/table/all-positions'
 import { POSITIONS_AT_RISK_DATA, POSITIONS_BREAKDOWN_DATA } from '@/data/portfolio-page'
+import InfoTooltip from '@/components/tooltips'
 
 async function getAllPositionsDummyData(): Promise<any[]> {
     // Fetch data from your API here.
@@ -143,7 +144,7 @@ export default async function Portfolio() {
                 <section id='your-positions-at-risk'>
                     <div className="flex items-center gap-[12px] mb-[24px] ">
                         <HeadingText level='h3'>Your Positions at Risk</HeadingText>
-                        <Image src="/icons/info-circle-icon.svg" alt="info" width={16} height={16} className='object-contain cursor-pointer' />
+                        <InfoTooltip />
                     </div>
                     <Carousel className='md:[mask-image:linear-gradient(to_left,transparent,white_5%)]'>
                         <CarouselContent className='pl-0'>
@@ -213,7 +214,7 @@ export default async function Portfolio() {
                         <div className="all-positions-header-left w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                             <div className="flex items-center gap-[12px]">
                                 <HeadingText level="h3">All positions</HeadingText>
-                                <Image src="/icons/info-circle-icon.svg" alt="info" width={16} height={16} className='object-contain cursor-pointer' />
+                                <InfoTooltip />
                             </div>
                             <div className="flex items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                                 <div className="max-w-[150px] md:max-w-[250px]">
