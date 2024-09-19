@@ -102,8 +102,8 @@ function TopOpportunitiesOnWalletTokens() {
                 <Carousel>
                     <CarouselContent className='pl-3 sm:pl-5 min-[375px]:mr-5 select-none cursor-grabbing'>
                         {
-                            Array.from({ length: 3 }).map(item => (
-                                <CarouselItem className='basis-[330px] min-[375px]:basis-[380px]'>
+                            Array.from({ length: 3 }).map((item, index) => (
+                                <CarouselItem key={index} className='basis-[330px] min-[375px]:basis-[380px]'>
                                     <Card className='w-full max-w-[330px] min-[375px]:max-w-[380px]'>
                                         <CardContent className='relative bg-white pt-[40px] pb-[21px] pl-[28px] pr-[40px] rounded-b-5'>
                                             <LineGraphBg className='object-cover absolute inset-0 size-full' />
