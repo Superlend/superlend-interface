@@ -18,6 +18,8 @@ import {
     ChartTooltipContent,
 } from "@/components/ui/chart"
 import StackedIcons from "../StackedIcons"
+import { Badge } from "../ui/badge"
+import { BodyText, Label as LabelText } from "../ui/typography"
 
 export const description = "A radial chart with stacked sections"
 
@@ -52,6 +54,42 @@ const ICONS_LIST = [
     },
 ];
 
+function CustomToolTip() {
+    return (
+        <div className="bg-white rounded-4 w-[225px] px-[12px] py-[16px]">
+            <div className="flex items-center justify-between border-b border-gray-400 pb-[12px]">
+                <BodyText level="body2" weight="medium">Syrup fi</BodyText>
+                <Badge variant="blue" size="sm">
+                    Borrow / Lend
+                </Badge>
+            </div>
+            <div className="details-block flex flex-col gap-[13px] pt-[12px]">
+                <div className="flex items-center justify-between">
+                    <LabelText> Borrow </LabelText>
+                    <div className="flex items-center gap-[4px]">
+                        <BodyText level="body2" weight="medium">987.66</BodyText>
+                        <img src="/images/tokens/usdc.webp" alt="usdc" height={16} width={16} />
+                    </div>
+                </div>
+                <div className="flex items-center justify-between">
+                    <LabelText> Lend </LabelText>
+                    <div className="flex items-center gap-[4px]">
+                        <BodyText level="body2" weight="medium">1.473</BodyText>
+                        <img src="/images/tokens/btc.webp" alt="bitcoin" height={16} width={16} />
+                    </div>
+                </div>
+                <div className="flex items-center justify-between">
+                    <LabelText> Network </LabelText>
+                    <div className="flex items-center gap-[4px]">
+                        <BodyText level="body2" weight="medium">Optimism</BodyText>
+                        <img src="/images/chains/op.webp" alt="optimism" height={16} width={16} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export function RadialChartStacked() {
     const totalVisitors = 5;
 
@@ -74,7 +112,9 @@ export function RadialChartStacked() {
                     >
                         <ChartTooltip
                             cursor={false}
-                            content={<ChartTooltipContent />}
+                            // content={<ChartTooltipContent />
+                            content={<CustomToolTip />
+                            }
                         />
                         <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
                             <Label
