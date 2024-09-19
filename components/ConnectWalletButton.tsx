@@ -35,6 +35,7 @@ export default function ConnectWalletButton(
     return (
         <>
             {!isClient && <Skeleton className='w-[120px] h-[40px]' />}
+            {isClient && isConnecting && <Skeleton className='w-[120px] h-[40px]' />}
             {isClient && !isConnecting && (
                 <Button
                     variant={address ? "default" : "primary"}

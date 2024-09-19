@@ -1,6 +1,8 @@
 import React from 'react';
 import { IHeadingTextProps, IBodyTextProps, ILabelProps } from '../../interfaces/ui/ITypography';
 
+const COMMON_STYLES = "shrink-0";
+
 const hasValidHeadingLevel = (level: string): level is "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => {
     return ["h1", "h2", "h3", "h4", "h5", "h6"].includes(level);
 }
@@ -13,10 +15,10 @@ const getHeadingLevel = (level: string) => {
 }
 
 const headingSizes: Record<string, string> = {
-    h1: "text-[32px]",
-    h2: "text-[28px]",
-    h3: "text-[24px]",
-    h4: "text-[20px]",
+    h1: "text-[24px] md:text-[28px] lg:text-[32px]",
+    h2: "text-[20px] md:text-[24px] lg:text-[28px]",
+    h3: "text-[16px] md:text-[20px] lg:text-[24px]",
+    h4: "text-[16px] md:text-[18px] lg:text-[20px]",
     h5: "text-[16px]",
     h6: "text-[12px]",
 }
@@ -29,7 +31,7 @@ const fontWeights: Record<string, string> = {
 }
 
 const getHeadingClassName = (level: IHeadingTextProps["level"] = "h1", weight: IHeadingTextProps["weight"] = "bold", className: string = "") => {
-    return `${headingSizes[level]} ${fontWeights[weight]} ${className}`;
+    return `${headingSizes[level]} ${fontWeights[weight]} ${COMMON_STYLES} ${className}`;
 }
 
 export function HeadingText({ children, level = "h1", weight = "bold", className }: IHeadingTextProps) {
@@ -54,7 +56,7 @@ const bodySizes: Record<string, string> = {
 }
 
 const getBodyClassName = (level: IBodyTextProps["level"] = "body1", weight: IBodyTextProps["weight"] = "normal", className: string = "") => {
-    return `${bodySizes[level]} ${fontWeights[weight]} ${className}`;
+    return `${bodySizes[level]} ${fontWeights[weight]} ${COMMON_STYLES} ${className}`;
 }
 
 export function BodyText({ children, level, weight, className, as }: IBodyTextProps) {
@@ -72,7 +74,7 @@ const labelSizes: Record<string, string> = {
 }
 
 const getLabelClassName = (size: ILabelProps["size"] = "small", weight: ILabelProps["weight"] = "normal", className: string = "") => {
-    return `${labelSizes[size]} ${fontWeights[weight]} ${className}`;
+    return `${labelSizes[size]} ${fontWeights[weight]} ${COMMON_STYLES} ${className}`;
 }
 
 export function Label({ children, size, weight, className, htmlFor = "" }: ILabelProps) {

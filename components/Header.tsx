@@ -100,7 +100,7 @@ const Header: React.FC = () => {
             <Button key={tab.id} variant={isSelected(tab) ? "default" : "ghost"} size="lg" className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`} onClick={() => handleTabClick(tab)}>
               <div className="flex items-center justify-center gap-2">
                 <tab.icon />
-                <span>{tab.name}</span>
+                <span className='leading-[0]'>{tab.name}</span>
               </div>
             </Button>
           ))}
@@ -130,7 +130,7 @@ const Header: React.FC = () => {
                   <Button variant={isSelected(tab) ? "default" : "ghost"} size="2xl" className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`} onClick={() => handleTabClick(tab)}>
                     <div className="flex items-center justify-center gap-2">
                       <tab.icon width={20} height={18} />
-                      <span>{tab.name}</span>
+                      <span className='leading-[0]'>{tab.name}</span>
                     </div>
                   </Button>
                 </motion.li>

@@ -9,7 +9,7 @@ const LendBorrowToggle: React.FC = () => {
     return () => setIsLend(isLend);
   };
 
-  const BUTTON_DEFAULT_STYLE = "gap-1 self-stretch px-4 py-2 my-auto md:min-w-[120px] md:max-w-[166px] hover:bg-white/45";
+  const BUTTON_DEFAULT_STYLE = "gap-1 self-stretch px-4 py-2 my-auto min-[1100px]:min-w-[120px] md:max-w-[166px] hover:bg-white/45";
   const BUTTON_ACTIVE_STYLE = "shadow bg-[linear-gradient(180deg,#FF5B00_0%,#F55700_100%)] rounded-3";
 
   return (

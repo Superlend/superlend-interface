@@ -7,7 +7,6 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-// import Image from "next/image";
 import { motion } from "framer-motion"
 import { Label } from '../ui/typography';
 
@@ -31,7 +30,7 @@ export default function InfoTooltip({ content }: TProps) {
                         src="/icons/info-circle-icon.svg" alt="info"
                         width={16}
                         height={16}
-                        className='object-contain'
+                        className='object-contain shrink-0 inline-block'
                         // Tool tip triggers
                         onHoverStart={handleTooltipToggle(true)}
                         onClick={handleTooltipToggle(true)}
@@ -40,9 +39,8 @@ export default function InfoTooltip({ content }: TProps) {
                         onMouseLeave={handleTooltipToggle(false)}
                     />
                 </TooltipTrigger>
-                <TooltipContent className='max-w-[280px] py-[16px] px-[20px]'>
-                    {!content &&
-                        <Label>Manage your position risks and review position sizes regulary</Label>}
+                <TooltipContent sideOffset={15} className='max-w-[280px] py-[16px] px-[20px]'>
+                    <Label>Manage your position risks and review position sizes regulary</Label>
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
