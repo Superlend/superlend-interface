@@ -7,7 +7,7 @@ interface IMainContainer {
 
 export default function MainContainer({ children, className }: IMainContainer) {
     return (
-        <main className={`max-w-[1200px] mx-auto pb-[100px] px-[20px] ${className || ""}`}>
+        <main className={`max-w-[1200px] mx-auto pb-[100px] ${className?.includes("px") ? "" : "px-[20px]"} ${className || ""}`}>
             {children}
         </main>
     )
