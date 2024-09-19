@@ -6,23 +6,17 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import Image from "next/image"
 import React from 'react'
-import ImageWithBadge from '@/components/ImageWithBadge'
 import ArrowRightIcon from '@/components/icons/arrow-right-icon'
-import {
-    Carousel,
-    CarouselContent,
-    CarouselItem,
-} from "@/components/ui/carousel"
 import LendBorrowToggle from '@/components/LendBorrowToggle'
 import SearchInput from '@/components/inputs/SearchInput'
 import ChainSelectorDropdown from '@/components/dropdowns/ChainSelectorDropdown'
 import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown'
 import { DataTable } from '@/components/ui/data-table'
 import { columns } from '@/data/table/all-positions'
-import { POSITIONS_AT_RISK_DATA, POSITIONS_BREAKDOWN_DATA } from '@/data/portfolio-page'
+import { POSITIONS_BREAKDOWN_DATA } from '@/data/portfolio-page'
 import InfoTooltip from '@/components/tooltips'
+import { YourPositionsAtRiskCarousel } from '@/components/carousels'
 
 async function getAllPositionsDummyData(): Promise<any[]> {
     // Fetch data from your API here.
@@ -82,8 +76,8 @@ export default async function Portfolio() {
     const allPositionsDummyData = await getAllPositionsDummyData();
 
     return (
-        <MainContainer>
-            <section className="portfolio-page-header flex flex-col md:flex-row gap-[16px] items-start md:items-center justify-between mb-[24px] ">
+        <MainContainer className='px-0'>
+            <section id='your-portfolio' className="portfolio-page-header flex flex-col md:flex-row gap-[16px] items-start md:items-center justify-between mb-[24px] px-5">
                 <div className="flex flex-col gap-[4px]">
                     <HeadingText level="h4">Your Portfolio</HeadingText>
                     <BodyText level='body1' className='text-gray-600'>Track all your lend and borrow positions from one place</BodyText>
@@ -94,7 +88,7 @@ export default async function Portfolio() {
                 </Button>
             </section>
             <div className="flex flex-col gap-[72px]">
-                <section id='your-positions' className="grid lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_380px] gap-[16px] ">
+                <section id='your-positions' className="grid lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_380px] gap-[16px] px-5">
                     <article>
                         <Card>
                             <div className="positions-net-worth-block px-[24px] md:px-[32px] pt-[28px] flex flex-col sm:flex-row sm:items-center gap-[29px] pb-[24px]">
@@ -142,74 +136,13 @@ export default async function Portfolio() {
                     </article>
                 </section>
                 <section id='your-positions-at-risk'>
-                    <div className="flex items-center gap-[12px] mb-[24px] ">
+                    <div className="flex items-center gap-[12px] mb-[24px] px-5">
                         <HeadingText level='h3'>Your Positions at Risk</HeadingText>
                         <InfoTooltip />
                     </div>
-                    <Carousel className='md:[mask-image:linear-gradient(to_left,transparent,white_5%)]'>
-                        <CarouselContent className='pl-0'>
-                            {
-                                [
-                                    ...POSITIONS_AT_RISK_DATA,
-                                    ...POSITIONS_AT_RISK_DATA,
-                                    ...POSITIONS_AT_RISK_DATA,
-                                    ...POSITIONS_AT_RISK_DATA,
-                                    ...POSITIONS_AT_RISK_DATA,
-                                    ...POSITIONS_AT_RISK_DATA,
-                                ]
-                                    .map((positions, index) => (
-                                        <CarouselItem key={index} className='basis-[90%] min-[450px]:basis-[380px] md:basis-[380px]'>
-                                            <Card className='w-full max-w-[380px]'>
-                                                <CardContent className='bg-white rounded-b-6 py-[22px] px-[26px] divide-y divide-gray-400'>
-                                                    <div className="flex items-center justify-between pb-[17px]">
-                                                        <div className="lend-amount-block flex flex-col gap-[4px]">
-                                                            <Label className='capitalize text-gray-600'>Lend amount</Label>
-                                                            <div className="flex items-center gap-[4px]">
-                                                                <Image width={16} height={16} alt="" src={positions.lendAmount.tokenImage} />
-                                                                <BodyText level={'body2'} weight='medium'>$ {positions.lendAmount.amount}</BodyText>
-                                                            </div>
-                                                        </div>
-                                                        <div className="borrow-amount-block flex flex-col gap-[4px]">
-                                                            <Label className='capitalize text-gray-600'>Borrow amount</Label>
-                                                            <div className="flex items-center justify-end gap-[4px]">
-                                                                <BodyText level={'body2'} weight='medium'>$ {positions.borrowAmount.amount}</BodyText>
-                                                                <Image width={16} height={16} alt="" src={positions.borrowAmount.tokenImage} />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center justify-between pt-[17px]">
-                                                        <div className="position-on-block flex items-center gap-[8px]">
-                                                            <ImageWithBadge
-                                                                mainImg={positions.positionOn.platformImage}
-                                                                badgeImg={positions.positionOn.chainImage}
-                                                            />
-                                                            <div className="flex flex-col">
-                                                                <Label className='capitalize text-gray-600'>Position on</Label>
-                                                                <BodyText level={'body2'} weight='medium' className='capitalize text-wrap break-words max-w-[10ch]'>{positions.positionOn.platform}</BodyText>
-                                                            </div>
-                                                        </div>
-                                                        <div className="risk-factor-block flex flex-col items-end gap-[4px]">
-                                                            <Label className='capitalize text-gray-600'>Risk factor</Label>
-                                                            <Badge variant="destructive">{positions.riskFactor}</Badge>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                                <CardFooter className='py-[16px] flex flex-col md:flex-row item-center justify-between gap-[5px] md:gap-[14px]'>
-                                                    <BodyText level='body2' weight='medium' className='text-gray-600'>Recommended action</BodyText>
-                                                    <span className="hidden md:block text-gray-500">|</span>
-                                                    <Button variant="link" className='group uppercase flex items-center gap-[4px]'>
-                                                        Add collateral
-                                                        <ArrowRightIcon width={16} height={16} weight='2' className='stroke-secondary-500 group-hover:opacity-75 group-active:opacity-75' />
-                                                    </Button>
-                                                </CardFooter>
-                                            </Card>
-                                        </CarouselItem>
-                                    ))
-                            }
-                        </CarouselContent>
-                    </Carousel>
+                    <YourPositionsAtRiskCarousel />
                 </section>
-                <section className="all-positions-container flex flex-col gap-[24px]">
+                <section id='all-positions' className="all-positions-container flex flex-col gap-[24px] px-5">
                     <div className="all-positions-header flex items-end lg:items-center justify-between gap-[12px]">
                         <div className="all-positions-header-left w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                             <div className="flex items-center gap-[12px]">
