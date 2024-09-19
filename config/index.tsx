@@ -19,10 +19,10 @@ export const wagmiAdapter = new WagmiAdapter({
             id: "eip155:128123" as const,
             chainId: 128123,
             chainNamespace: "eip155",
-            name: "Etherlink Testnet",
-            currency: "ETL",
+            name: "Etherlink",
+            currency: "ETH",
             explorerUrl: "https://testnet.explorer.etherlink.com",
-            rpcUrl: "https://node.ghostnet.etherlink.com",
+            rpcUrl: "https://ethereum-rpc.publicnode.com",
         }
     ], // Add the required networks property
     projectId: projectId // Add the required projectId property
