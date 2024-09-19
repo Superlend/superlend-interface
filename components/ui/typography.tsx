@@ -1,7 +1,7 @@
 import React from 'react';
 import { IHeadingTextProps, IBodyTextProps, ILabelProps } from '../../interfaces/ui/ITypography';
 
-const COMMON_STYLES = "shrink-0";
+const COMMON_STYLES = "";
 
 const hasValidHeadingLevel = (level: string): level is "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => {
     return ["h1", "h2", "h3", "h4", "h5", "h6"].includes(level);
@@ -51,8 +51,8 @@ export function HeadingText({ children, level = "h1", weight = "bold", className
 // ========================================================================================================
 
 const bodySizes: Record<string, string> = {
-    body1: "text-[16px]",
-    body2: "text-[14px]",
+    body1: "text-[14px] sm:text-[16px]",
+    body2: "text-[12px] sm:text-[14px]",
 }
 
 const getBodyClassName = (level: IBodyTextProps["level"] = "body1", weight: IBodyTextProps["weight"] = "normal", className: string = "") => {

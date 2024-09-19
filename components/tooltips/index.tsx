@@ -30,7 +30,7 @@ export default function InfoTooltip({ content }: TProps) {
                         src="/icons/info-circle-icon.svg" alt="info"
                         width={16}
                         height={16}
-                        className='object-contain shrink-0 inline-block'
+                        className='object-contain shrink-0 inline-block sleect-none'
                         // Tool tip triggers
                         onHoverStart={handleTooltipToggle(true)}
                         onClick={handleTooltipToggle(true)}

@@ -1,1 +1,1 @@
-export type TFontWeight = "normal" | "medium" | "bold";
+export type TFontWeight = "normal" | "medium" | "semibold" | "bold";

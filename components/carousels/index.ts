@@ -1,3 +1,3 @@
-import YourPositionsAtRiskCarousel from "./your-positions-at-risk.carousel";
+import YourPositionsAtRiskCarousel from "./your-positions-at-risk";
 
 export { YourPositionsAtRiskCarousel };

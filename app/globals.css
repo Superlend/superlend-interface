@@ -55,6 +55,11 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --chart-blue: hsla(225, 100%, 54%, 1);
+    --chart-purple: hsla(281, 100%, 57%, 1);
+    --chart-green: hsla(137, 85%, 35%, 1);
+    --chart-orange: hsla(21, 100%, 50%, 1);
+    --chart-yellow: hsla(44, 100%, 47%, 1);
   }
 
   .dark {
