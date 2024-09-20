@@ -1,17 +1,23 @@
-import LendBorrowToggle from '@/components/LendBorrowToggle'
-import LendingForm from '@/components/LendingForm'
-import MainContainer from '@/components/MainContainer'
-import TokenRates from '@/components/TokenRates'
 import React from 'react'
+import {
+    dehydrate,
+    HydrationBoundary,
+    QueryClient,
+} from '@tanstack/react-query'
+import { getTokensData } from '@/queries/tokens-api'
+import HomeComponents from './home-components'
 
-export default function Home() {
+export default async function HomePage() {
+    const queryClient = new QueryClient()
+
+    await queryClient.prefetchQuery({
+        queryKey: ['tokens'],
+        queryFn: getTokensData,
+    })
+
     return (
-        <MainContainer>
-            <div className="flex flex-col items-center w-full max-w-[1176px] max-md:max-w-full">
-                <LendBorrowToggle />
-                <TokenRates />
-                <LendingForm />
-            </div>
-        </MainContainer>
+        <HydrationBoundary state={dehydrate(queryClient)}>
+            <HomeComponents />
+        </HydrationBoundary>
     )
 }
