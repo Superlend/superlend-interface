@@ -9,8 +9,8 @@ export default async function DiscoverPageComponents() {
     return (
         <MainContainer className='flex flex-col gap-[72px] px-0'>
             <TopApyOpportunities />
-            <TopOpportunitiesOnWalletTokens />
-            <TrendingLendTokens />
+            {/* <TopOpportunitiesOnWalletTokens /> */}
+            {/* <TrendingLendTokens /> */}
         </MainContainer>
     )
 }

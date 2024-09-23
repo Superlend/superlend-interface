@@ -65,10 +65,10 @@ export default function TopApyOpportunities() {
                         </div>
                     </div>
                 </div>
-                <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
+                {/* <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
                     <ChainSelectorDropdown />
                     <DiscoverFilterDropdown />
-                </div>
+                </div> */}
             </div>
             <div className="top-apy-opportunities-content">
                 {!isLoading && <DataTable columns={columns} data={tableData} />}

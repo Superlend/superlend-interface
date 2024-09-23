@@ -5,12 +5,8 @@ import LendBorrowToggle from '@/components/LendBorrowToggle'
 import LendingForm from '@/components/LendingForm'
 import MainContainer from '@/components/MainContainer'
 import TokenRates from '@/components/TokenRates'
-import useGetTokensData from '@/hooks/useGetTokensData'
-import useGetChainsData from '@/hooks/useGetChainsData'
 
 export default function HomePageComponents() {
-    // const { data: tokensData } = useGetTokensData();
-    // const { data: chainsData } = useGetChainsData();
 
     return (
         <MainContainer>
