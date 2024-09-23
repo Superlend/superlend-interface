@@ -77,8 +77,8 @@ export default function YourPositionsAtRiskCarousel() {
 
     return (
         <section id="your-positions-at-risk">
-            <div className="section-header flex items-center justify-between">
-                <div className="flex items-center gap-[12px] mb-[24px] px-5">
+            <div className="section-header flex items-center justify-between mb-[24px] px-5">
+                <div className="flex items-center gap-[12px]">
                     <HeadingText level="h3">Your Positions at Risk</HeadingText>
                     <InfoTooltip />
                 </div>
