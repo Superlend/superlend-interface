@@ -147,7 +147,7 @@ export default async function Portfolio() {
                             </div>
                             <div className="flex items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                                 <div className="max-w-[150px] md:max-w-[250px]">
-                                    <LendBorrowToggle />
+                                    {/* <LendBorrowToggle /> */}
                                 </div>
                                 <div className="max-w-[156px] w-full">
                                     <SearchInput />

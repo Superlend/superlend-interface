@@ -1,7 +1,8 @@
-import { request } from ".";
+import { TChain } from "@/types";
+import { request } from "./request";
 
 export async function getChainsData() {
-  return request<any[]>({
+  return request<TChain[]>({
     method: "GET",
     path: "/chains",
   });

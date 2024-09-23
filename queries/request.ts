@@ -25,7 +25,7 @@ export async function request<TResponse = void>(config: IRequestConfig) {
   };
   try {
     const response = await axiosInstance(axiosConfig);
-    return response.data as TResponse;
+    return response.data.data as TResponse;
   } catch (error) {
     throw new Error("HTTP request has been failed", {
       cause: error,

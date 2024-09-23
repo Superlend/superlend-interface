@@ -5,7 +5,7 @@ import {
     QueryClient,
 } from '@tanstack/react-query'
 import { getTokensData } from '@/queries/tokens-api'
-import HomeComponents from './home-components'
+import HomePageComponents from './page-components'
 
 export default async function HomePage() {
     const queryClient = new QueryClient()
@@ -17,7 +17,7 @@ export default async function HomePage() {
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>
-            <HomeComponents />
+            <HomePageComponents />
         </HydrationBoundary>
     )
 }

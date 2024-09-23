@@ -1,4 +1,5 @@
 import { getTokensData } from "@/queries/tokens-api";
+import { TToken } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 // import { getAssetsData } from "../services/assets-api";
 // import {
@@ -10,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 // import toast from "react-hot-toast";
 
 export default function useGetTokensData() {
-  const { data, isLoading, isError } = useQuery<any[], Error>({
+  const { data, isLoading, isError } = useQuery<TToken[], Error>({
     // enabled: !isMyPositionsEnabled,
     queryKey: ["tokens"],
     queryFn: async () => {

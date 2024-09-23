@@ -7,17 +7,44 @@ import Link from "next/link";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
+// export type TTrendingLendTokens = {
+//     token: string
+//     platform: string
+//     chain: string
+//     apy: string
+//     max_ltv: string
+//     deposits: string
+//     utilization: string
+//     token_image: string
+//     chain_image: string
+//     platform_image: string
+// }
 export type TTrendingLendTokens = {
-    token: string
-    platform: string
-    chain: string
-    apy: string
-    max_ltv: string
-    deposits: string
-    utilization: string
-    token_image: string
-    chain_image: string
-    platform_image: string
+    "token": {
+        // token details
+        "name": "string",
+        "logo": "string"
+    },
+    "chain_id": "number", // chain details
+    "platform": {
+        // platform details
+        "name": "string",
+        "logo": "string",
+        "additional_rewards": "boolean",
+        "max_ltv": "number",
+        "liquidity": "string",
+        "utilization_rate": "string",
+        "apy": {
+            "current": "string",
+            "avg_7days": "string",
+            "avg_30days": "string"
+        }
+    },
+    "trend": {
+        // trend details
+        "value": "string",
+        "type": "string"
+    }
 }
 
 export const columns: ColumnDef<TTrendingLendTokens>[] = [
@@ -27,12 +54,12 @@ export const columns: ColumnDef<TTrendingLendTokens>[] = [
         cell: ({ row }) => {
             return (
                 <span className="flex items-center gap-1">
-                    <ImageWithBadge
-                        mainImg={row.original.token_image}
+                    {/* <ImageWithBadge
+                        mainImg={row.original.token.logo}
                         badgeImg={row.original.chain_image}
-                    />
+                    /> */}
                     <span className="font-medium">
-                        <Link href="position-management">{row.original.token}</Link>
+                        <Link href="position-management">{row.original.token.name}</Link>
                     </span>
                 </span>
             )
@@ -44,8 +71,8 @@ export const columns: ColumnDef<TTrendingLendTokens>[] = [
         cell: ({ row }) => {
             return (
                 <span className="flex items-center gap-1">
-                    <img src={row.original.platform_image} alt={row.original.platform} width={20} height={20} />
-                    <span className="font-medium">{row.original.platform}</span>
+                    <img src={row.original.platform.logo} alt={row.original.platform.name} width={20} height={20} />
+                    <span className="font-medium">{row.original.platform.name}</span>
                 </span>
             )
         }

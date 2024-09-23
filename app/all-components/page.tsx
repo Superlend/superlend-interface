@@ -62,9 +62,9 @@ export default async function ComponentsPage() {
             <ComponentCard>
                 <DiscoverFilterDropdown />
             </ComponentCard>
-            <ComponentCard>
+            {/* <ComponentCard>
                 <LendBorrowToggle />
-            </ComponentCard>
+            </ComponentCard> */}
             <ComponentCard>
                 <div className="max-w-[250px] w-full">
                     <SearchInput />

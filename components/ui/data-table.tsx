@@ -40,7 +40,7 @@ export function DataTable<TData, TValue>({
                         <TableRow key={headerGroup.id}>
                             {headerGroup.headers.map((header) => {
                                 return (
-                                    <TableHead key={header.id} className="">
+                                    <TableHead key={header.id} className="max-w-[200px]">
                                         <BodyText level="body2" weight="normal" className="text-gray-800">
                                             {header.isPlaceholder
                                                 ? null
@@ -64,8 +64,8 @@ export function DataTable<TData, TValue>({
                                 className="border-0 bg-white"
                             >
                                 {row.getVisibleCells().map((cell) => (
-                                    <TableCell key={cell.id} className={`py-4 ${rowIndex == 0 ? "first:rounded-tl-xl last:rounded-tr-xl" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-xl last:rounded-br-xl" : ""}`}>
-                                        <BodyText level={"body2"} weight={"medium"}>
+                                    <TableCell key={cell.id} className={`py-4 max-w-[150px] ${rowIndex == 0 ? "first:rounded-tl-xl last:rounded-tr-xl" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-xl last:rounded-br-xl" : ""}`}>
+                                        <BodyText level={"body2"} weight={"medium"} className="">
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </BodyText>
                                     </TableCell>

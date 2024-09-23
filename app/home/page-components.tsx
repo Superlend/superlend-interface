@@ -8,14 +8,14 @@ import TokenRates from '@/components/TokenRates'
 import useGetTokensData from '@/hooks/useGetTokensData'
 import useGetChainsData from '@/hooks/useGetChainsData'
 
-export default function HomeComponents() {
+export default function HomePageComponents() {
     // const { data: tokensData } = useGetTokensData();
     // const { data: chainsData } = useGetChainsData();
 
     return (
         <MainContainer>
             <div className="flex flex-col items-center w-full max-w-[1176px] max-md:max-w-full">
-                <LendBorrowToggle />
+                {/* <LendBorrowToggle /> */}
                 <TokenRates />
                 <LendingForm />
             </div>

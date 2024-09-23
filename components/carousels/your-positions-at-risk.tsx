@@ -89,7 +89,7 @@ export default function YourPositionsAtRiskCarousel() {
                         onClick={handlePrev}
                         disabled={current <= 1}
                     >
-                        <ArrowLeft className="text-secondary-500" />
+                        <ArrowLeft className="text-gray-600" />
                     </Button>
                     <Button
                         variant={"ghost"}
@@ -97,7 +97,7 @@ export default function YourPositionsAtRiskCarousel() {
                         onClick={handleNext}
                         disabled={current === count}
                     >
-                        <ArrowRight className="text-secondary-500" />
+                        <ArrowRight className="text-gray-600" />
                     </Button>
                 </div>
             </div>

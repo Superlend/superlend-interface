@@ -1,5 +1,6 @@
 import { getChainsData } from "@/queries/chains-api";
 import { getTokensData } from "@/queries/tokens-api";
+import { TChain, TToken } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 // import { getAssetsData } from "../services/assets-api";
 // import {
@@ -11,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 // import toast from "react-hot-toast";
 
 export default function useGetChainsData() {
-  const { data, isLoading, isError } = useQuery<any[], Error>({
+  const { data, isLoading, isError } = useQuery<TChain[], Error>({
     // enabled: !isMyPositionsEnabled,
     queryKey: ["chains"],
     queryFn: async () => {
