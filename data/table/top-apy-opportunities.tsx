@@ -28,15 +28,15 @@ function convertNegativeToPositive(str: string) {
 
 export const abbreviateNumber = (value: number) => {
     if (value >= 1000000000) {
-      return (value / 1000000000).toFixed(2) + 'B'
+        return (value / 1000000000).toFixed(2) + 'B'
     } else if (value >= 1000000) {
-      return (value / 1000000).toFixed(2) + 'M'
+        return (value / 1000000).toFixed(2) + 'M'
     } else if (value >= 1000) {
-      return (value / 1000).toFixed(2) + 'K'
+        return (value / 1000).toFixed(2) + 'K'
     } else {
-      return value.toFixed(2).toString()
+        return value.toFixed(2).toString()
     }
-  }
+}
 
 export const columns: ColumnDef<TOpportunity>[] = [
     {
@@ -44,14 +44,16 @@ export const columns: ColumnDef<TOpportunity>[] = [
         header: "Token",
         cell: ({ row }) => {
             return (
-                <span className="flex items-center gap-[6px] min-w-[150px]">
+                <span className="flex items-center gap-[6px] w-full">
                     <ImageWithBadge
                         mainImg={row.original.token.logo}
                         badgeImg={row.original.chain.logo}
                     />
-                    <span className="font-medium">
-                        <Link href="position-management">{row.original.token.name}</Link>
-                    </span>
+                    <Link href="position-management" className="truncate">
+                        <span className="font-medium shrink-0 ">
+                            {row.original.token.name}
+                        </span>
+                    </Link>
                 </span>
             )
         }
