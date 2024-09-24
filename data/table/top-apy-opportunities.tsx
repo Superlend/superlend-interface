@@ -44,7 +44,7 @@ export const columns: ColumnDef<TOpportunity>[] = [
         header: "Token",
         cell: ({ row }) => {
             return (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-[6px] min-w-[150px]">
                     <ImageWithBadge
                         mainImg={row.original.token.logo}
                         badgeImg={row.original.chain.logo}
@@ -61,7 +61,7 @@ export const columns: ColumnDef<TOpportunity>[] = [
         header: "Platform",
         cell: ({ row }) => {
             return (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-[4px] min-w-[150px]">
                     <img
                         src={row.original.token.logo || '/images/logos/favicon-32x32.png'}
                         alt={row.original.platform.name}

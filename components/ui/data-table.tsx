@@ -64,7 +64,7 @@ export function DataTable<TData, TValue>({
                                 className="border-0 bg-white"
                             >
                                 {row.getVisibleCells().map((cell) => (
-                                    <TableCell key={cell.id} className={`py-4 max-w-[150px] ${rowIndex == 0 ? "first:rounded-tl-xl last:rounded-tr-xl" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-xl last:rounded-br-xl" : ""}`}>
+                                    <TableCell key={cell.id} className={`py-4 max-w-[200px] ${rowIndex == 0 ? "first:rounded-tl-xl last:rounded-tr-xl" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-xl last:rounded-br-xl" : ""}`}>
                                         <BodyText level={"body2"} weight={"medium"} className="">
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </BodyText>
