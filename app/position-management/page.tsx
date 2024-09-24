@@ -35,7 +35,7 @@ function PageHeader() {
                 <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
             </Button>
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-[24px] w-full">
-                <div className="flex flex-col md:flex-row md:items-center gap-[16px]">
+                <div className="flex flex-wrap md:items-center gap-[16px]">
                     <div className="flex items-center gap-[12px]">
                         <div className="flex items-center gap-[8px]">
                             <img src={EthTokenIcon} alt="Eth token" width={28} height={28} />
@@ -48,9 +48,9 @@ function PageHeader() {
                         </div> */}
                     </div>
                     <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pr-[4px] w-fit'>
-                        <div className="flex gap-1">
+                        <div className="flex items-center gap-1">
                             <img src={PolygonNetworkIcon} alt="Polygon network" width={16} height={16} className='object-contain' />
-                            <Label weight='medium'>Polygon Network</Label>
+                            <Label weight='medium' className='leading-[0]'>Polygon Network</Label>
                         </div>
                         <Button className='flex items-center gap-[4px] hover:bg-secondary-100/15'>
                             <span className="uppercase text-secondary-500 font-medium">aave v3</span>
