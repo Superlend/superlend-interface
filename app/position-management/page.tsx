@@ -41,11 +41,11 @@ function PageHeader() {
                             <img src={EthTokenIcon} alt="Eth token" width={28} height={28} />
                             <HeadingText level='h4' className='uppercase'>Eth</HeadingText>
                         </div>
-                        <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
+                        {/* <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
                         <div className="flex items-center gap-[8px]">
                             <img src={USDCTokenIcon} alt="Eth token" width={28} height={28} />
                             <HeadingText level='h4' className='uppercase'>USDC</HeadingText>
-                        </div>
+                        </div> */}
                     </div>
                     <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pr-[4px] w-fit'>
                         <div className="flex gap-1">
