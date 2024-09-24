@@ -86,7 +86,7 @@ function PageBody() {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-[16px]">
             <div className='flex flex-col gap-[16px]'>
-                <section className="bg-white bg-opacity-40 pt-[32px] pb-[16px] px-[16px] rounded-6">
+                {/* <section className="bg-white bg-opacity-40 pt-[32px] pb-[16px] px-[16px] rounded-6">
                     <div className="px-[16px]">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-[12px]">
                             <div className="flex items-center gap-[8px]">
@@ -139,7 +139,7 @@ function PageBody() {
                             </div>
                         </div>
                     </div>
-                </section>
+                </section> */}
                 <section className="bg-white bg-opacity-40 rounded-6">
                     <AreaChartStacked />
                     <div className="py-[36px] px-[30px] md:px-[55px] flex flex-col md:flex-row md:items-center justify-between gap-10">
