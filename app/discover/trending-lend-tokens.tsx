@@ -31,9 +31,9 @@ export default function TrendingLendTokens() {
                     <DiscoverFilterDropdown />
                 </div>
             </div>
-            <div className="trending-lend-tokens-content">
+            {/* <div className="trending-lend-tokens-content">
                 <DataTable columns={columns} data={[]} />
-            </div>
+            </div> */}
         </section>
     )
 }

@@ -11,36 +11,34 @@ import InfoTooltip from '@/components/tooltips'
 import { ColumnDef } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import TopApyOpportunitiesTable from './table'
-import { TChain, TOpportunity, TOpportunityType, TToken } from '@/types'
+import { TChain, TOpportunity, TOpportunityTable, TOpportunityType, TToken } from '@/types'
 import { DataTable } from '@/components/ui/data-table'
 import { useQuery } from '@tanstack/react-query'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 
 type TTopApyOpportunitiesProps = {
-    tableData: TOpportunity[];
-    columns: ColumnDef<TOpportunity>[];
+    tableData: TOpportunityTable[];
+    columns: ColumnDef<TOpportunityTable>[];
 }
 
 export default function TopApyOpportunities() {
     const [opportunityType, setOpportunityType] = useState<TOpportunityType>("lend");
+    const [searchKeywords, setSearchKeywords] = useState<string>("");
     const { data, isLoading } = useGetOpportunitiesData({ type: opportunityType })
-    const { allTokensData, allChainsData } = useContext<any>(AssetsDataContext)
+    const { allChainsData } = useContext<any>(AssetsDataContext)
 
-    const tableData = data.map(item => {
+    const tableData = data.map((item) => {
         return {
-            ...item,
-            token: {
-                ...item.token,
-                logo: allTokensData["1"]?.filter((token: TToken) => token.symbol === item.token.symbol)?.logo || ""
-            },
-            platform: {
-                ...item.platform,
-            },
-            chain: {
-                chain_id: item.chain_id,
-                logo: allChainsData?.filter((chain: TChain) => chain.chain_id === Number(item.chain_id))[0]?.logo
-            },
+            tokenSymbol: item.token.symbol,
+            tokenLogo: item.token.logo,
+            chainLogo: allChainsData?.filter((chain: TChain) => chain.chain_id === Number(item.chain_id))[0]?.logo,
+            platformName: item.platform.platform_name,
+            platformLogo: item.platform.logo,
+            apy_current: item.platform.apy.current,
+            max_ltv: item.platform.max_ltv,
+            deposits: item.platform.liquidity,
+            utilization: item.platform.utilization_rate,
         }
     })
 
@@ -61,7 +59,7 @@ export default function TopApyOpportunities() {
                             <LendBorrowToggle type={opportunityType} handleToggle={toggleOpportunityType} />
                         </div>
                         <div className="max-w-[156px] w-full">
-                            <SearchInput />
+                            <SearchInput onChange={e => setSearchKeywords(e.target.value)} value={searchKeywords} />
                         </div>
                     </div>
                 </div>
@@ -71,7 +69,13 @@ export default function TopApyOpportunities() {
                 </div> */}
             </div>
             <div className="top-apy-opportunities-content">
-                {!isLoading && <DataTable columns={columns} data={tableData} />}
+                {!isLoading &&
+                    <DataTable
+                        columns={columns}
+                        data={tableData}
+                        filters={searchKeywords}
+                        setFilters={setSearchKeywords}
+                    />}
                 {isLoading && (
                     <LoadingSectionSkeleton />
                 )}

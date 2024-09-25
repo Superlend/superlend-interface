@@ -159,9 +159,9 @@ export default async function Portfolio() {
                             <DiscoverFilterDropdown />
                         </div>
                     </div>
-                    <div className="all-positions-content">
+                    {/* <div className="all-positions-content">
                         <DataTable columns={columns} data={allPositionsDummyData} />
-                    </div>
+                    </div> */}
                 </section>
             </div>
         </MainContainer>

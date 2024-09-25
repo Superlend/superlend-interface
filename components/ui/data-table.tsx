@@ -5,6 +5,7 @@ import {
     flexRender,
     getCoreRowModel,
     useReactTable,
+    getFilteredRowModel,
 } from "@tanstack/react-table"
 
 import {
@@ -16,20 +17,30 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { BodyText } from "./typography";
+import React from "react";
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
+    filters: string
+    setFilters: React.Dispatch<React.SetStateAction<string>>
 }
 
 export function DataTable<TData, TValue>({
     columns,
     data,
+    filters,
+    setFilters
 }: DataTableProps<TData, TValue>) {
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        state: {
+            globalFilter: filters
+        },
+        onGlobalFilterChange: setFilters
     })
 
     return (

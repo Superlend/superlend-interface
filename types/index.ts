@@ -19,6 +19,7 @@ export type TOpportunity = {
   "platform": {
       // platform details
       "name": "string",
+      "platform_name": "string",
       "logo": "string",
       "additional_rewards": "boolean",
       "max_ltv": "number",
@@ -35,6 +36,18 @@ export type TOpportunity = {
       "value": "string",
       "type": "string"
   }
+}
+
+export type TOpportunityTable = {
+  tokenSymbol: string;
+  tokenLogo: string;
+  chainLogo: string;
+  platformName: string;
+  platformLogo: string;
+  apy_current: string;
+  max_ltv: string;
+  deposits: string;
+  utilization: string;
 }
 
 export type TLendOpportunitiesParams = {
