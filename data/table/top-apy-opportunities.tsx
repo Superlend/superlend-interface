@@ -16,7 +16,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-[8px]">
                     <ImageWithBadge
-                        mainImg={`https://app.aave.com/icons/tokens/${tokenSymbol.toLowerCase()}.svg`}
+                        mainImg={row.original.tokenLogo}
                         badgeImg={row.original.chainLogo}
                     />
                     <Link href="position-management" className="truncate">

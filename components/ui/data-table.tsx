@@ -78,12 +78,14 @@ export function DataTable<TData, TValue>({
                                             }
                                             {header.column.getIsSorted() === 'asc' &&
                                                 <InfoTooltip
+                                                    size="sm"
                                                     label={<ArrowUpWideNarrow className="w-4 h-4" />}
                                                     content={header.column.getIsSorted()}
                                                 />
                                             }
                                             {header.column.getIsSorted() === 'desc' &&
                                                 <InfoTooltip
+                                                    size="sm"
                                                     label={<ArrowDownWideNarrow className="w-4 h-4" />}
                                                     content={header.column.getIsSorted()}
                                                 />

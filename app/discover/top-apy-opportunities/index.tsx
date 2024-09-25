@@ -31,7 +31,7 @@ export default function TopApyOpportunities() {
     const tableData = data.map((item) => {
         return {
             tokenSymbol: item.token.symbol,
-            tokenLogo: item.token.logo,
+            tokenLogo: `https://app.aave.com/icons/tokens/${item.token.symbol.toLowerCase()}.svg`,
             chainLogo: allChainsData?.filter((chain: TChain) => chain.chain_id === Number(item.chain_id))[0]?.logo,
             platformName: item.platform.platform_name,
             platformLogo: item.platform.logo,

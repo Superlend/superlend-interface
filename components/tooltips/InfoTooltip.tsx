@@ -18,8 +18,8 @@ type TProps = {
 
 const sizes: any = {
     lg: "py-[18px] px-[22px]",
-    md: "py-[16px] px-[20px]",
-    sm: "py-[14px] px-[18px]"
+    md: "py-[12px] px-[16px]",
+    sm: "py-[6px] px-[12px]"
 }
 
 
