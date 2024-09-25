@@ -13,7 +13,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => item.tokenSymbol,
         cell: ({ row }) => {
             return (
-                <span className="flex items-center gap-[6px] w-full">
+                <span className="flex items-center gap-[6px]">
                     <ImageWithBadge
                         mainImg={row.original.tokenLogo}
                         badgeImg={row.original.chainLogo}
@@ -27,23 +27,28 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 </span>
             )
         },
+        enableSorting: false,
     },
     {
         accessorKey: "platformName",
         header: "Platform",
         accessorFn: item => item.platformName,
         cell: ({ row }) => {
+            const rawPlatformName: string = row.getValue("platformName");
+            const platformName = rawPlatformName.split("-")[0];
+
             return (
-                <span className="flex items-center gap-[4px] min-w-[150px]">
+                <span className="flex items-center gap-[4px]">
                     <img
                         src={'/images/logos/favicon-32x32.png'}
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
-                    <span className="font-medium truncate">{row.getValue("platformName")}</span>
+                    <span className="font-medium truncate">{platformName}</span>
                 </span>
             )
         },
+        enableSorting: false,
     },
     {
         accessorFn: item => `${Number(item.apy_current).toFixed(1)}%`,
