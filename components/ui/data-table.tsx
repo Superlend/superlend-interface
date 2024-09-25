@@ -7,6 +7,7 @@ import {
     useReactTable,
     getFilteredRowModel,
     getSortedRowModel,
+    getPaginationRowModel,
 } from "@tanstack/react-table"
 
 import {
@@ -17,10 +18,11 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { BodyText } from "./typography";
+import { BodyText, Label } from "./typography";
 import React from "react";
-import { ArrowDownWideNarrow, ArrowUpWideNarrow, ChevronsUpDown, SortAscIcon } from "lucide-react";
-import InfoTooltip from "../tooltips";
+import { ArrowDownWideNarrow, ArrowUpWideNarrow, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronsUpDown } from "lucide-react";
+import InfoTooltip from "../tooltips/InfoTooltip";
+import { Button } from "./button";
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -40,6 +42,7 @@ export function DataTable<TData, TValue>({
         columns,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
         state: {
             globalFilter: filters
         },
@@ -118,6 +121,53 @@ export function DataTable<TData, TValue>({
                     )}
                 </TableBody>
             </Table>
+            {/* Pagination STARTS */}
+            <div className="pagination-container flex items-center justify-end sm:justify-between gap-5 flex-wrap p-4">
+                <div className="pagination-stats">
+                    <Label size="medium" weight="medium">
+                        {table.getState().pagination.pageIndex + 1} of {table.getPageCount()} pages
+                    </Label>
+                </div>
+                <div className="pagination-controls flex items-center justify-end space-x-2 flex-1 shrink-0 ml-16">
+                    <Label size="medium" weight="medium" className="shrink-0">
+                        {table.getState().pagination.pageSize} {" "}
+                        of {table.getRowCount().toLocaleString()} rows
+                    </Label>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.firstPage()}
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        <ChevronsLeft className="w-5 h-5" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.previousPage()}
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.nextPage()}
+                        disabled={!table.getCanNextPage()}
+                    >
+                        <ChevronRight className="w-5 h-5" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.lastPage()}
+                        disabled={!table.getCanNextPage()}
+                    >
+                        <ChevronsRight className="w-5 h-5" />
+                    </Button>
+                </div>
+            </div>
+            {/* Pagination ENDS */}
         </div>
     )
 }

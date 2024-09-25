@@ -9,7 +9,7 @@ export async function getOpportunitiesData(
     chain_ids = [],
     tokens = [],
     trend = true,
-    limit = 10,
+    limit = 0,
   } = params;
 
   return request<TOpportunity[]>({
