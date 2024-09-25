@@ -15,7 +15,7 @@ import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdow
 import { DataTable } from '@/components/ui/data-table'
 import { columns } from '@/data/table/all-positions'
 import { POSITIONS_BREAKDOWN_DATA } from '@/data/portfolio-page'
-import InfoTooltip from '@/components/tooltips'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { YourPositionsAtRiskCarousel } from '@/components/carousels'
 
 async function getAllPositionsDummyData(): Promise<any[]> {

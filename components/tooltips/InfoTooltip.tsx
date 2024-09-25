@@ -13,10 +13,17 @@ import { Label } from '../ui/typography';
 type TProps = {
     label?: any;
     content?: any;
+    size?: string;
+}
+
+const sizes: any = {
+    lg: "py-[18px] px-[22px]",
+    md: "py-[16px] px-[20px]",
+    sm: "py-[14px] px-[18px]"
 }
 
 
-export default function InfoTooltip({ label, content }: TProps) {
+export default function InfoTooltip({ label, content, size = "md" }: TProps) {
     const [open, setOpen] = useState<boolean>(false);
 
     function handleTooltipToggle(state: boolean) {
@@ -45,7 +52,7 @@ export default function InfoTooltip({ label, content }: TProps) {
                         {label && label}
                     </motion.div>
                 </TooltipTrigger>
-                <TooltipContent sideOffset={15} className='max-w-[280px] py-[16px] px-[20px]'>
+                <TooltipContent sideOffset={15} className={`max-w-[280px] ${sizes[size]}`}>
                     <Label>{content}</Label>
                 </TooltipContent>
             </Tooltip>

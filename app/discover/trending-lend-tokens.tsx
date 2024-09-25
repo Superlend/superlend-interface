@@ -4,7 +4,7 @@ import ChainSelectorDropdown from '@/components/dropdowns/ChainSelectorDropdown'
 import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown'
 import { DataTable } from '@/components/ui/data-table'
 import SearchInput from '@/components/inputs/SearchInput'
-import InfoTooltip from '@/components/tooltips'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { columns, TTrendingLendTokens } from '@/data/table/trending-lend-tokens'
 import { ColumnDef } from '@tanstack/react-table'
 

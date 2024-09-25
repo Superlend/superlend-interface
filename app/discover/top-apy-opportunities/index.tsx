@@ -7,7 +7,7 @@ import ChainSelectorDropdown from '@/components/dropdowns/ChainSelectorDropdown'
 import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown'
 import { columns } from '@/data/table/top-apy-opportunities';
 import SearchInput from '@/components/inputs/SearchInput'
-import InfoTooltip from '@/components/tooltips'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { ColumnDef } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import TopApyOpportunitiesTable from './table'

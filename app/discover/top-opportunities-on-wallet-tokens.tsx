@@ -1,6 +1,6 @@
 import React from 'react'
 import { BodyText, HeadingText } from '@/components/ui/typography'
-import InfoTooltip from '@/components/tooltips'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import {
     Card,
     CardContent,

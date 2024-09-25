@@ -16,7 +16,7 @@ import Image from "next/image";
 import ImageWithBadge from "../ImageWithBadge";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import InfoTooltip from "../tooltips";
+import InfoTooltip from "../tooltips/InfoTooltip";
 
 const DUMMY_DATA = [
     ...POSITIONS_AT_RISK_DATA,
