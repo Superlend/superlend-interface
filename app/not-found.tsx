@@ -21,7 +21,7 @@ export default function NotFound() {
                         <div className="max-w-[360px] w-full flex flex-col gap-[8px]">
                             <HeadingText level='h2' weight='semibold'>This content does not exist</HeadingText>
                             <BodyText level='body2'>
-                                Uh oh, we can't seem to find the page you're looking for.
+                                Uh oh, we can&apos;t seem to find the page you&apos;re looking for.
                                 Try going back to the previous page or go to home page to explore other options.
                             </BodyText>
                         </div>
