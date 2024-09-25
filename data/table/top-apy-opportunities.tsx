@@ -12,16 +12,16 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: "Token",
         accessorFn: item => item.tokenSymbol,
         cell: ({ row }) => {
+            const tokenSymbol: string = row.getValue("tokenSymbol");
             return (
-                <span className="flex items-center gap-[6px]">
+                <span className="flex items-center gap-[8px]">
                     <ImageWithBadge
-                        mainImg={row.original.tokenLogo}
+                        mainImg={`https://app.aave.com/icons/tokens/${tokenSymbol.toLowerCase()}.svg`}
                         badgeImg={row.original.chainLogo}
                     />
                     <Link href="position-management" className="truncate">
                         <span className="font-medium shrink-0 ">
-                            {/* {row.original.token.symbol} */}
-                            {row.getValue("tokenSymbol")}
+                            {tokenSymbol}
                         </span>
                     </Link>
                 </span>
