@@ -45,6 +45,14 @@ export default function TopApyOpportunities() {
         setOpportunityType(opportunityType);
     };
 
+    function handleKeywordChange(e: any) {
+        setSearchKeywords(e.target.value)
+    }
+
+    function handleClearSearch() {
+        setSearchKeywords("");
+    }
+
     return (
         <section id='top-apy-opportunities' className="top-apy-opportunities-container flex flex-col gap-[24px] px-5">
             <div className="top-apy-opportunities-header flex items-end lg:items-center justify-between gap-[12px]">
@@ -58,7 +66,7 @@ export default function TopApyOpportunities() {
                             <LendBorrowToggle type={opportunityType} handleToggle={toggleOpportunityType} />
                         </div>
                         <div className="max-w-[156px] w-full">
-                            <SearchInput onChange={e => setSearchKeywords(e.target.value)} value={searchKeywords} />
+                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={searchKeywords} />
                         </div>
                     </div>
                 </div>
