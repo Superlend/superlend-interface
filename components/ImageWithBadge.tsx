@@ -28,14 +28,14 @@ export default function ImageWithBadge({
                 alt={mainImgAlt || ""}
                 width={mainImgWidth || 20}
                 height={mainImgHeight || 20}
+                className='rounded-full'
             />
             <img
                 src={badgeImg || '/images/icons/pie-chart.svg'}
                 alt={badgeImgAlt || ""}
                 width={badgeImgWidth || 12}
                 height={badgeImgHeight || 12}
-                className="absolute bg-gray-100 rounded-full ring-2 ring-white max-w-full max-h-full"
-                style={{ bottom: "-6px", right: "-3px" }}
+                className="absolute -bottom-[6px] -right-[3px] bg-gray-100 rounded-full ring-2 ring-white max-w-[12px] max-h-[12px]"
             />
         </span>
     )

@@ -132,7 +132,7 @@ export function DataTable<TData, TValue>({
                 </div>
                 <div className="pagination-controls flex items-center justify-end space-x-2 flex-1 shrink-0 ml-16">
                     <Label size="medium" weight="medium" className="shrink-0">
-                        {table.getState().pagination.pageSize} {" "}
+                        {table.getRowModel().rows.length.toLocaleString()} {" "}
                         of {table.getRowCount().toLocaleString()} rows
                     </Label>
                     <Button
