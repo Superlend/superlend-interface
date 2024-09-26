@@ -43,7 +43,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
-                    <span className="font-medium truncate">{platformName}</span>
+                    <span className="font-medium truncate">{`${platformName[0]}${platformName.slice(1).toLowerCase()}`}</span>
                 </span>
             )
         },
