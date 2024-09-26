@@ -51,14 +51,14 @@ export function DataTable<TData, TValue>({
     })
 
     return (
-        <div className="bg-white bg-opacity-40 rounded-xl border border-transparent overflow-hidden">
+        <div className="bg-white bg-opacity-40 rounded-6 border border-transparent overflow-hidden">
             <Table>
                 <TableHeader className="[&_tr]:border-0">
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id}>
                             {headerGroup.headers.map((header) => {
                                 return (
-                                    <TableHead key={header.id} className="max-w-[200px]">
+                                    <TableHead key={header.id} className="pt-[24px] pb-[12px] pl-[32px]">
                                         <div className="flex items-center  gap-[8px]">
                                             <BodyText level="body2" weight="normal" className="text-gray-800 select-none">
                                                 {header.isPlaceholder
@@ -106,8 +106,8 @@ export function DataTable<TData, TValue>({
                                 className="border-0 bg-white"
                             >
                                 {row.getVisibleCells().map((cell) => (
-                                    <TableCell key={cell.id} className={`py-4 min-w-[120px] md:min-w-[100px] max-w-[200px] ${rowIndex == 0 ? "first:rounded-tl-xl last:rounded-tr-xl" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-xl last:rounded-br-xl" : ""}`}>
-                                        <BodyText level={"body2"} weight={"medium"} className="">
+                                    <TableCell key={cell.id} className={`py-4 w-[150px] min-w-[120px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""}`}>
+                                        <BodyText level={"body2"} weight={"semibold"} className="">
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </BodyText>
                                     </TableCell>

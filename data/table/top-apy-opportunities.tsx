@@ -20,7 +20,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         badgeImg={row.original.chainLogo}
                     />
                     <Link href="position-management" className="truncate">
-                        <span className="font-medium shrink-0 ">
+                        <span className="shrink-0 ">
                             {tokenSymbol}
                         </span>
                     </Link>
@@ -37,13 +37,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const platformName: string = row.getValue("platformName");
 
             return (
-                <span className="flex items-center gap-[4px]">
+                <span className="flex items-center gap-[8px]">
                     <img
                         src={row.original.platformLogo || '/images/logos/favicon-32x32.png'}
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
-                    <span className="font-medium truncate">{`${platformName[0]}${platformName.slice(1).toLowerCase()}`}</span>
+                    <span className="truncate">{`${platformName[0]}${platformName.slice(1).toLowerCase()}`}</span>
                 </span>
             )
         },

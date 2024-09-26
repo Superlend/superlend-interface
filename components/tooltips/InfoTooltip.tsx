@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/tooltip"
 import { motion } from "framer-motion"
 import { Label } from '../ui/typography';
+import InfoCircleIcon from '../icons/info-circle-icon';
 
 type TProps = {
     label?: any;
@@ -43,12 +44,8 @@ export default function InfoTooltip({ label, content, size = "md" }: TProps) {
                         onMouseLeave={handleTooltipToggle(false)}
                     >
                         {!label &&
-                            <img
-                                src="/icons/info-circle-icon.svg" alt="info"
-                                width={16}
-                                height={16}
-                                className='object-contain shrink-0 inline-block sleect-none'
-                            />}
+                            <InfoCircleIcon width={24} height={24} weight='1.5' />
+                        }
                         {label && label}
                     </motion.div>
                 </TooltipTrigger>
