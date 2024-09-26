@@ -33,8 +33,8 @@ export default function TopApyOpportunities() {
             tokenSymbol: item.token.symbol,
             tokenLogo: `https://app.aave.com/icons/tokens/${item.token.symbol.toLowerCase()}.svg`,
             chainLogo: allChainsData?.filter((chain: TChain) => chain.chain_id === Number(item.chain_id))[0]?.logo,
-            platformName: item.platform.platform_name,
-            platformLogo: item.platform.logo,
+            platformName: item.platform.platform_name.split("-")[0],
+            platformLogo: `/images/platforms/${item.platform.platform_name.split("-")[0].toLowerCase()}.webp`,
             apy_current: item.platform.apy.current,
             max_ltv: item.platform.max_ltv,
             deposits: item.platform.liquidity,
@@ -52,7 +52,7 @@ export default function TopApyOpportunities() {
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                     <div className="flex items-center gap-[12px]">
                         <HeadingText level="h3">Top APY Opportunities</HeadingText>
-                        <InfoTooltip />
+                        <InfoTooltip content="Understand the risks, and types of high-yield opportunities to make informed investment decisions" />
                     </div>
                     <div className="flex items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="max-w-[150px] lg:max-w-[250px]">

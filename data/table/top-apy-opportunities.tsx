@@ -34,13 +34,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: "Platform",
         accessorFn: item => item.platformName,
         cell: ({ row }) => {
-            const rawPlatformName: string = row.getValue("platformName");
-            const platformName = rawPlatformName.split("-")[0];
+            const platformName: string = row.getValue("platformName");
 
             return (
                 <span className="flex items-center gap-[4px]">
                     <img
-                        src={'/images/logos/favicon-32x32.png'}
+                        src={row.original.platformLogo || '/images/logos/favicon-32x32.png'}
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
