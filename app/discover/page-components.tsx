@@ -1,8 +1,8 @@
 import React from 'react'
 import MainContainer from '@/components/MainContainer'
-import TopApyOpportunities from './top-apy-opportunities'
 import TopOpportunitiesOnWalletTokens from './top-opportunities-on-wallet-tokens'
 import TrendingLendTokens from './trending-lend-tokens'
+import TopApyOpportunities from './top-apy-opportunities'
 
 export default async function DiscoverPageComponents() {
 
