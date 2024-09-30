@@ -16,6 +16,8 @@ import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData';
 import { HISTORY_CHART_SELECT_OPTIONS } from '@/constants';
 import { AssetsDataContext } from '@/context/data-provider';
 import { TToken } from '@/types';
+import useGetPlatformData from '@/hooks/useGetPlatformData';
+import ImageWithDefault from '@/components/ImageWithDefault';
 
 // const EthTokenIcon = "/images/tokens/eth.webp";
 // const USDCTokenIcon = "/images/tokens/usdc.webp";
@@ -33,11 +35,26 @@ export default function PositionManagementPage() {
 
     const selectedTokenDetails: TToken | undefined = Object.values(allTokensData).flat(1).find((token: TToken) => token.address === tokenAddress);
 
-    const { data: platformHistoryData, isLoading, isError } = useGetPlatformHistoryData({
+    // [API_CALL: GET] - Get Platform data
+    const {
+        data: platformData,
+        isLoading: isLoadingPlatformData,
+        isError: isErrorPlatformData
+    } = useGetPlatformData({
+        platform_id,
+        chain_id: Number(chain_id),
+    });
+
+    // [API_CALL: GET] - Get Platform history data
+    const {
+        data: platformHistoryData,
+        isLoading: isLoadingPlatformHistory,
+        isError: isErrorPlatformHistory
+    } = useGetPlatformHistoryData({
         platform_id,
         token: tokenAddress,
         period: selectedRange
-    })
+    });
 
     function handleRangeChange(value: Period) {
         setSelectedRange(value)
@@ -47,6 +64,8 @@ export default function PositionManagementPage() {
         address: tokenAddress,
         symbol: selectedTokenDetails?.symbol
     }
+
+    // const getPageHeaderStats = platformData?.assets?.map((asset: any) => asset.token)
 
     const PageHeaderProps = {
         router,
@@ -82,7 +101,13 @@ function PageHeader({
                 <div className="flex flex-wrap md:items-center gap-[16px]">
                     <div className="flex items-center gap-[12px]">
                         <div className="flex items-center gap-[8px]">
-                            <img src={getTokenLogo(tokenDetails?.symbol?.toLocaleLowerCase())} alt="Token logo" width={28} height={28} />
+                            <ImageWithDefault
+                                src={getTokenLogo(tokenDetails?.symbol?.toLocaleLowerCase())}
+                                alt="Token logo"
+                                width={28}
+                                height={28}
+                            />
+                            {/* <img src={getTokenLogo(tokenDetails?.symbol?.toLocaleLowerCase())} alt="Token logo" width={28} height={28} /> */}
                             <HeadingText level='h4' className='uppercase'>{tokenDetails.symbol}</HeadingText>
                         </div>
                         {/* <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
