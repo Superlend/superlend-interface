@@ -33,7 +33,7 @@ function CustomChartTooltipContent({
     return (
         <div className="p-0 bg-white rounded-6 flex flex-col items-center gap-[4px]">
             <BodyText level="body2" weight="medium">
-                {value}
+                {value}%
             </BodyText>
             <Label size="small" className="text-gray-600">
                 {caption}

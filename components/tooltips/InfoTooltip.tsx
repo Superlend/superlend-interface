@@ -15,6 +15,7 @@ type TProps = {
     label?: any;
     content?: any;
     size?: string;
+    hide?: boolean;
 }
 
 const sizes: any = {
@@ -24,10 +25,12 @@ const sizes: any = {
 }
 
 
-export default function InfoTooltip({ label, content, size = "md" }: TProps) {
+export default function InfoTooltip({ label, content, size = "md", hide }: TProps) {
     const [open, setOpen] = useState<boolean>(false);
 
     function handleTooltipToggle(state: boolean) {
+        if (hide) return;
+
         return () => setOpen(state)
     }
 

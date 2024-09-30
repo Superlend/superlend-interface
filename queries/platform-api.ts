@@ -5,7 +5,7 @@ export async function getPlatformData({
   chain_id,
   platform_id,
 }: TGetPlatformParams) {
-  return request<TPlatform[]>({
+  return request<TPlatform>({
     method: "GET",
     path: `/platform`,
     query: {

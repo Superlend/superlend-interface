@@ -1,4 +1,4 @@
-import { TGetPlatformHistoryParams, TPlatform } from "@/types";
+import { TGetPlatformHistoryParams, TPlatform, TPlatformHistory } from "@/types";
 import { request } from "./request";
 
 export async function getPlatformHistoryData({
@@ -6,7 +6,7 @@ export async function getPlatformHistoryData({
   token,
   period,
 }: TGetPlatformHistoryParams) {
-  return request<any[]>({
+  return request<TPlatformHistory>({
     method: "GET",
     path: `/platform/history`,
     query: {

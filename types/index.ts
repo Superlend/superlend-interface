@@ -107,34 +107,73 @@ export type TGetPlatformParams = {
   platform_id: string;
 };
 
+export type TPlatformAssets = {
+  token: {
+    name: string;
+    symbol: string;
+    logo: string;
+    address: string;
+    decimals: number;
+    price_usd: number;
+  };
+  supply_apy: number;
+  variable_borrow_apy: number;
+  stable_borrow_apy: number;
+  borrow_enabled: boolean;
+  remaining_supply_cap: number;
+  remaining_borrow_cap: number;
+};
+
 export type TPlatform = {
   platform: {
     name: string;
     logo: string;
-    chain_id: 0;
+    chain_id: number;
   };
-  assets: {
-    token: {
-      name: string;
-      symbol: string;
-      logo: string;
-      address: string;
-      decimals: number;
-      price_usd: number;
-    };
-    supply_apy: number;
-    variable_borrow_apy: number;
-    stable_borrow_apy: number;
-    borrow_enabled: boolean;
-    remaining_supply_cap: number;
-    remaining_borrow_cap: number;
-  };
+  assets: TPlatformAssets[];
 };
 
 export type TGetPlatformHistoryParams = {
   platform_id: string;
   token: string;
   period: Period.oneDay | Period.oneMonth | Period.oneWeek | Period.oneYear;
+};
+
+export type TPlatformHistoryProcessMap = {
+  timestamp: number;
+  data: {
+    size: number;
+    tokenID: string;
+    symbol: string;
+    liquidationPenalty: number;
+    blockNumber: number;
+    depositRate: number;
+    variableBorrowRate: number;
+    ltv: number;
+    liquidationThreshold: number;
+    stableBorrowRate: number;
+    tokenName: string;
+    utilizationRate: number;
+    decimals: number;
+    platformMarketId: string;
+    underlyingAsset: string;
+    reserveFactor: number;
+  };
+};
+
+export type TPlatformHistoryStats = {
+  depositRateAverage: number;
+  prediction: {
+    depositRatePredict: number;
+    variableBorrowRatePredict: number;
+  };
+  utilizationRateAverage: number;
+  variableBorrowRateAverage: number;
+};
+
+export type TPlatformHistory = {
+  processMap: TPlatformHistoryProcessMap[];
+  stats: TPlatformHistoryStats;
 };
 
 export type TGetTokensParams = {
