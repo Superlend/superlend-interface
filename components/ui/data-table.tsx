@@ -124,7 +124,7 @@ export function DataTable<TData, TValue>({
                 </TableBody>
             </Table>
             {/* Pagination STARTS */}
-            <div className="pagination-container flex items-center justify-end sm:justify-between gap-5 flex-wrap p-4">
+            <div className="pagination-container flex items-center justify-end sm:justify-between gap-5 flex-wrap py-4 px-4 sm:px-8">
                 <div className="pagination-stats">
                     <Label size="medium" weight="medium">
                         {table.getState().pagination.pageIndex + 1} of {table.getPageCount()} pages

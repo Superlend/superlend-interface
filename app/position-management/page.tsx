@@ -3,32 +3,76 @@
 import ArrowLeftIcon from '@/components/icons/arrow-left-icon';
 import MainContainer from '@/components/MainContainer';
 import { Button } from '@/components/ui/button';
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { BodyText, HeadingText, Label } from '@/components/ui/typography';
 import { Badge } from '@/components/ui/badge';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { Progress } from '@/components/ui/progress';
 import { AreaChartStacked } from '@/components/charts/area-chart-stacked';
-import { useRouter } from 'next/navigation';
-// import Image from "next/image"
-// import EthTokenIcon from "@/public/images/tokens/eth.webp";
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { getTokenLogo } from '@/lib/utils';
+import { Period } from '@/types/periodButtons';
+import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData';
+import { HISTORY_CHART_SELECT_OPTIONS } from '@/constants';
+import { AssetsDataContext } from '@/context/data-provider';
+import { TToken } from '@/types';
 
-const EthTokenIcon = "/images/tokens/eth.webp";
-const USDCTokenIcon = "/images/tokens/usdc.webp";
-const PolygonNetworkIcon = "/images/tokens/matic.webp";
+// const EthTokenIcon = "/images/tokens/eth.webp";
+// const USDCTokenIcon = "/images/tokens/usdc.webp";
+// const PolygonNetworkIcon = "/images/tokens/matic.webp";
 
 export default function PositionManagementPage() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const tokenAddress = searchParams.get("token") || "";
+    const chain_id = searchParams.get("chain_id") || "";
+    const platform_id = searchParams.get("platform_id") || "";
+    const [selectedRange, setSelectedRange] = useState<Period>(Period.oneMonth);
+    const [selectedFilter, setSelectedFilter] = useState<any>(HISTORY_CHART_SELECT_OPTIONS[0]);
+    const { allTokensData } = useContext(AssetsDataContext);
+
+    const selectedTokenDetails: TToken | undefined = Object.values(allTokensData).flat(1).find((token: TToken) => token.address === tokenAddress);
+
+    const { data: platformHistoryData, isLoading, isError } = useGetPlatformHistoryData({
+        platform_id,
+        token: tokenAddress,
+        period: selectedRange
+    })
+
+    function handleRangeChange(value: Period) {
+        setSelectedRange(value)
+    }
+
+    const tokenDetails = {
+        address: tokenAddress,
+        symbol: selectedTokenDetails?.symbol
+    }
+
+    const PageHeaderProps = {
+        router,
+        tokenDetails,
+    }
+
+    const PageBodyProps = {
+        selectedRange,
+        handleRangeChange,
+        selectedFilter,
+        setSelectedFilter,
+        platformHistoryData,
+    }
+
     return (
         <MainContainer className='flex flex-col gap-[45.5px]'>
-            <PageHeader />
-            <PageBody />
+            <PageHeader {...PageHeaderProps} />
+            <PageBody {...PageBodyProps} />
         </MainContainer>
     )
 }
 
-function PageHeader() {
-    const router = useRouter();
-
+function PageHeader({
+    router,
+    tokenDetails,
+}: any) {
     return (
         <section className="header flex flex-col sm:flex-row items-start lg:items-center gap-[24px]">
             <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
@@ -38,8 +82,8 @@ function PageHeader() {
                 <div className="flex flex-wrap md:items-center gap-[16px]">
                     <div className="flex items-center gap-[12px]">
                         <div className="flex items-center gap-[8px]">
-                            <img src={EthTokenIcon} alt="Eth token" width={28} height={28} />
-                            <HeadingText level='h4' className='uppercase'>Eth</HeadingText>
+                            <img src={getTokenLogo(tokenDetails?.symbol?.toLocaleLowerCase())} alt="Token logo" width={28} height={28} />
+                            <HeadingText level='h4' className='uppercase'>{tokenDetails.symbol}</HeadingText>
                         </div>
                         {/* <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
                         <div className="flex items-center gap-[8px]">
@@ -47,7 +91,7 @@ function PageHeader() {
                             <HeadingText level='h4' className='uppercase'>USDC</HeadingText>
                         </div> */}
                     </div>
-                    <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pr-[4px] w-fit'>
+                    {/* <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pr-[4px] w-fit'>
                         <div className="flex items-center gap-1">
                             <img src={PolygonNetworkIcon} alt="Polygon network" width={16} height={16} className='object-contain' />
                             <Label weight='medium' className='leading-[0]'>Polygon Network</Label>
@@ -56,7 +100,7 @@ function PageHeader() {
                             <span className="uppercase text-secondary-500 font-medium">aave v3</span>
                             <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
                         </Button>
-                    </Badge>
+                    </Badge> */}
                 </div>
                 <div className="header-right flex flex-col md:flex-row items-start md:items-center gap-[24px]">
                     <div className="flex items-center max-md:justify-between gap-[4px]">
@@ -82,7 +126,13 @@ function PageHeader() {
     )
 }
 
-function PageBody() {
+function PageBody({
+    selectedRange,
+    handleRangeChange,
+    selectedFilter,
+    setSelectedFilter,
+    platformHistoryData
+}: any) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-[16px]">
             <div className='flex flex-col gap-[16px]'>
@@ -141,7 +191,13 @@ function PageBody() {
                     </div>
                 </section> */}
                 <section className="bg-white bg-opacity-40 rounded-6">
-                    <AreaChartStacked />
+                    <AreaChartStacked
+                        selectedRange={selectedRange}
+                        handleRangeChange={handleRangeChange}
+                        selectedFilter={selectedFilter}
+                        handleFilterChange={setSelectedFilter}
+                        chartData={platformHistoryData.processMap}
+                    />
                     <div className="py-[36px] px-[30px] md:px-[55px] flex flex-col md:flex-row md:items-center justify-between gap-10">
                         {
                             APY_CHART_DATA.map((block, blockIndex) => (

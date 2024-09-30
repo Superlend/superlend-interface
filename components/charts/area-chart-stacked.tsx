@@ -1,8 +1,5 @@
-"use client"
-
-import { TrendingUp } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Card,
     CardContent,
@@ -17,43 +14,83 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart"
+import { HISTORY_CHART_SELECT_OPTIONS, PERIOD_LIST } from "@/constants"
+import RadioGroupDropdown from "../dropdowns/RadioGroupDropdown"
+import { Period } from "@/types/periodButtons"
+import { BodyText, Label } from "../ui/typography"
+
+function CustomChartTooltipContent({
+    payload,
+    label
+}: {
+    payload: any[];
+    label: string;
+}) {
+    const value = payload[0].value;
+    const caption = payload[0].payload.timestamp;
+
+    return (
+        <div className="p-0 bg-white rounded-6 flex flex-col items-center gap-[4px]">
+            <BodyText level="body2" weight="medium">
+                {value}
+            </BodyText>
+            <Label size="small" className="text-gray-600">
+                {caption}
+            </Label>
+        </div>
+    )
+}
 
 export const description = "A stacked area chart"
 
-const chartData = [
-    { apy: "25" },
-    { apy: "55" },
-    { apy: "27" },
-    { apy: "85" },
-    { apy: "28" },
-    { apy: "22" },
-]
-
 const chartConfig = {
-    // desktop: {
-    //     label: "Desktop",
-    //     color: "hsl(var(--chart-1))",
-    // },
-    apy: {
-        label: "APY",
+    liquidationThreshold: {
+        label: "Liquidation Threshold",
         color: "hsl(var(--chart-2))",
     },
 } satisfies ChartConfig
 
-export function AreaChartStacked() {
+export function AreaChartStacked({
+    selectedRange,
+    handleRangeChange,
+    selectedFilter,
+    handleFilterChange,
+    chartData,
+}: any) {
+    const data = chartData?.map((item: any) => {
+        const date = new Date(item.timestamp);
+        const dateOptions: any = { year: 'numeric', month: 'short', day: 'numeric' };
+        const formattedDate = new Intl.DateTimeFormat('en-US', dateOptions).format(date)
+        // const formattedDate = `${date.getDate()} ${date.getMonth() + 1} ${date.getFullYear()}`;
+
+        return ({
+            [selectedFilter.value]: item.data[selectedFilter.value],
+            timestamp: formattedDate
+        })
+    }
+    )
+
     return (
         <Card className="overflow-hidden">
-            {/* <CardHeader>
-                <CardTitle>Area Chart - Stacked</CardTitle>
-                <CardDescription>
-                    Showing total visitors for the last 6 months
-                </CardDescription>
-            </CardHeader> */}
-            <CardContent className="p-0 bg-white">
+            <CardContent className="p-0 pt-[32px] bg-white">
+                <div className="px-[36px] flex items-center justify-between">
+                    <Tabs defaultValue={Period.oneMonth} value={selectedRange} onValueChange={handleRangeChange} className="w-fit">
+                        <TabsList>
+                            {
+                                PERIOD_LIST.map(item => (
+                                    <TabsTrigger key={item.value} value={item.value} className="px-[12px] py-[2px]">
+                                        {item.label}
+                                    </TabsTrigger>
+                                ))
+                            }
+                        </TabsList>
+                    </Tabs>
+                    <RadioGroupDropdown listData={HISTORY_CHART_SELECT_OPTIONS} value={selectedFilter} onValueChange={handleFilterChange} triggerLabel="Filter by" />
+                </div>
                 <ChartContainer config={chartConfig}>
                     <AreaChart
                         accessibilityLayer
-                        data={chartData}
+                        data={data}
                         margin={{
                             left: 0,
                             right: 0,
@@ -69,25 +106,21 @@ export function AreaChartStacked() {
                             tickFormatter={(value) => value.slice(0, 3)}
                         /> */}
                         <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent indicator="dot" />}
+                            cursor={true}
+                            content={
+                                <ChartTooltipContent
+                                    hideIndicator={true}
+                                    labelFormatter={(label, playload) => <CustomChartTooltipContent payload={playload} label={label} />} />
+                            }
                         />
                         <Area
-                            dataKey="apy"
+                            dataKey={selectedFilter.value}
                             type="natural"
-                            fill="var(--color-apy)"
+                            fill="var(--color-liquidationThreshold)"
                             fillOpacity={0.4}
-                            stroke="var(--color-apy)"
+                            stroke="var(--color-liquidationThreshold)"
                             stackId="a"
                         />
-                        {/* <Area
-                            dataKey="desktop"
-                            type="natural"
-                            fill="var(--color-desktop)"
-                            fillOpacity={0.4}
-                            stroke="var(--color-desktop)"
-                            stackId="a"
-                        /> */}
                     </AreaChart>
                 </ChartContainer>
             </CardContent>

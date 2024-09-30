@@ -15,6 +15,7 @@ import { DataTable } from '@/components/ui/data-table'
 import { useQuery } from '@tanstack/react-query'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
+import { getTokenLogo } from '@/lib/utils'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[];
@@ -29,9 +30,12 @@ export default function TopApyOpportunities() {
 
     const tableData = data.map((item) => {
         return {
+            tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,
-            tokenLogo: `https://app.aave.com/icons/tokens/${item.token.symbol.toLowerCase()}.svg`,
+            tokenLogo: getTokenLogo(item.token.symbol.toLowerCase()),
             chainLogo: allChainsData?.filter((chain: TChain) => chain.chain_id === Number(item.chain_id))[0]?.logo,
+            chain_id: item.chain_id,
+            platform_id: item.platform.platform_name,
             platformName: item.platform.platform_name.split("-")[0],
             platformLogo: `/images/platforms/${item.platform.platform_name.split("-")[0].toLowerCase()}.webp`,
             apy_current: item.platform.apy.current,

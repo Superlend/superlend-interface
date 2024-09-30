@@ -13,22 +13,23 @@ import {
 import { Button } from '../ui/button';
 import { ChevronDownIcon } from 'lucide-react';
 
-export default function GraphDropdown() {
-    const [position, setPosition] = React.useState("bottom")
+export default function RadioGroupDropdown({ triggerLabel, listData, defaultValue, value, onValueChange }: any) {
     const [isOpen, setIsOpen] = React.useState(false);
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
                 <Button size="lg" className="w-fit data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-800">
-                    Graph Dropdown Menu
+                    {value.label || "Filter by"}
                     <ChevronDownIcon className={`w-4 h-4 ml-2 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-                <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>
-                    <DropdownMenuRadioItem value="top" className="cursor-pointer hover:bg-gray-200">Top</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="bottom" className="cursor-pointer hover:bg-gray-200">Bottom</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="right" className="cursor-pointer hover:bg-gray-200">Right</DropdownMenuRadioItem>
+                <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
+                    {listData.map((item: any) => (
+                        <DropdownMenuRadioItem key={item.value} value={item} className="cursor-pointer hover:bg-gray-200">
+                            {item.label}
+                        </DropdownMenuRadioItem>
+                    ))}
                 </DropdownMenuRadioGroup>
             </DropdownMenuContent>
         </DropdownMenu>

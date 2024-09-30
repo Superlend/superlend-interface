@@ -2,10 +2,10 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { BodyText, HeadingText, Label } from "@/components/ui/typography";
 import { Badge } from "@/components/ui/badge";
-import GraphDropdown from "@/components/dropdowns/GraphDropdown";
+// import GraphDropdown from "@/components/dropdowns/GraphDropdown";
 import ChainSelectorDropdown from "@/components/dropdowns/ChainSelectorDropdown";
 import DiscoverFilterDropdown from "@/components/dropdowns/DiscoverFilterDropdown";
-import LendBorrowToggle from '@/components/LendBorrowToggle';
+// import LendBorrowToggle from '@/components/LendBorrowToggle';
 import SearchInput from '@/components/inputs/SearchInput';
 
 export default async function ComponentsPage() {
@@ -53,9 +53,9 @@ export default async function ComponentsPage() {
                 <Badge className="w-fit" variant="green">Green Badge</Badge>
                 <Badge className="w-fit" variant="blue">Blue Badge</Badge>
             </ComponentCard>
-            <ComponentCard>
+            {/* <ComponentCard>
                 <GraphDropdown />
-            </ComponentCard>
+            </ComponentCard> */}
             <ComponentCard>
                 <ChainSelectorDropdown />
             </ComponentCard>

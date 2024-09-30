@@ -1,17 +1,24 @@
 "use client";
 
 import { getOpportunitiesData } from "@/queries/opportunities-api";
-import { TGetOpportunitiesParams, TOpportunity } from "@/types";
+import { getPlatformHistoryData } from "@/queries/platform-history-api";
+import {
+  TGetOpportunitiesParams,
+  TGetPlatformHistoryParams,
+  TOpportunity,
+} from "@/types";
 import { useQuery } from "@tanstack/react-query";
 
-export default function useGetOpportunitiesData(
-  params: TGetOpportunitiesParams
+export default function useGetPlatformHistoryData(
+  params: TGetPlatformHistoryParams
 ) {
+  const { platform_id, token, period } = params;
+
   const { data, isLoading, isError } = useQuery<TOpportunity[], Error>({
-    queryKey: ["opportunities", params.type],
+    queryKey: ["platformHistory", platform_id, token, period],
     queryFn: async () => {
       try {
-        const responseData = await getOpportunitiesData(params);
+        const responseData = await getPlatformHistoryData(params);
         return responseData;
       } catch (error) {
         // toast.error(SOMETHING_WENT_WRONG_MESSAGE, ERROR_TOAST_ICON_STYLES);

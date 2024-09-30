@@ -6,6 +6,10 @@ import { TOpportunityTable } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
+function getPositionManagementParams(tokenSymbol: string, chain_id: string, platform_id: string) {
+    return `/position-management?tokenSymbol=${tokenSymbol}&chain_id=${chain_id}&platform_id=${platform_id}`;
+}
+
 export const columns: ColumnDef<TOpportunityTable>[] = [
     {
         accessorKey: "tokenSymbol",
@@ -19,7 +23,15 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         mainImg={row.original.tokenLogo}
                         badgeImg={row.original.chainLogo}
                     />
-                    <Link href="position-management" className="truncate">
+                    <Link href={{
+                        pathname: "position-management",
+                        query: {
+                            token: row.original.tokenAddress,
+                            chain_id: row.original.chain_id,
+                            platform_id: row.original.platform_id,
+                        }
+                    }}
+                        className="truncate">
                         <span className="shrink-0 ">
                             {tokenSymbol}
                         </span>

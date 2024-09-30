@@ -34,3 +34,7 @@ export const abbreviateNumber = (value: number): string => {
     return value.toFixed(2).toString();
   }
 };
+
+export function getTokenLogo(tokenSymbol: string) {
+  return `https://app.aave.com/icons/tokens/${tokenSymbol}.svg`;
+}
