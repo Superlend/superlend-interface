@@ -35,6 +35,35 @@ export const abbreviateNumber = (value: number): string => {
   }
 };
 
-export function getTokenLogo(tokenSymbol: string) {
-  return `https://app.aave.com/icons/tokens/${tokenSymbol}.svg`;
+type TOptions = {
+  exclude?: string[];
+  include?: string[];
+};
+
+export function convertDateToTime(date: Date, options: TOptions = {}) {
+  const { exclude } = options;
+  // Ensure the input is a Date object
+  if (!(date instanceof Date)) {
+    throw new Error("Input must be a Date object");
+  }
+
+  // Extract hours, minutes, and seconds
+  const hours = date.getHours().toString().padStart(2, "0"); // Format: HH
+  const minutes = date.getMinutes().toString().padStart(2, "0"); // Format: MM
+  const seconds = date.getSeconds().toString().padStart(2, "0"); // Format: SS
+
+  const hasHours = !exclude?.includes("hours") ? `${hours}` : "";
+  const hasMinutes = !exclude?.includes("minutes") ? `:${minutes}` : "";
+  const hasSeconds = !exclude?.includes("seconds") ? `:${seconds}` : "";
+
+  // Return formatted time string
+  return `${hasHours}${hasMinutes}${hasSeconds}`;
+}
+
+export function getTokenLogo(tokenSymbol: string): string {
+  return `https://app.aave.com/icons/tokens/${tokenSymbol?.toLowerCase()}.svg`;
+}
+
+export function getPlatformLogo(platformName: string): string {
+  return `/images/platforms/${platformName?.toLowerCase()}.webp`;
 }

@@ -18,6 +18,7 @@ import { HISTORY_CHART_SELECT_OPTIONS, PERIOD_LIST } from "@/constants"
 import RadioGroupDropdown from "../dropdowns/RadioGroupDropdown"
 import { Period } from "@/types/periodButtons"
 import { BodyText, Label } from "../ui/typography"
+import { abbreviateNumber, convertDateToTime } from "@/lib/utils"
 
 function CustomChartTooltipContent({
     payload,
@@ -60,12 +61,13 @@ export function AreaChartStacked({
     const data = chartData?.map((item: any) => {
         const date = new Date(item.timestamp);
         const dateOptions: any = { year: 'numeric', month: 'short', day: 'numeric' };
-        const formattedDate = new Intl.DateTimeFormat('en-US', dateOptions).format(date)
+        const formattedDate = new Intl.DateTimeFormat('en-US', dateOptions).format(date);
+        const timeStamp = convertDateToTime(date, { exclude: ["seconds"] });
         // const formattedDate = `${date.getDate()} ${date.getMonth() + 1} ${date.getFullYear()}`;
 
         return ({
-            [selectedFilter.value]: item.data[selectedFilter.value],
-            timestamp: formattedDate
+            [selectedFilter.value]: abbreviateNumber(item.data[selectedFilter.value]),
+            timestamp: selectedRange === Period.oneDay ? timeStamp : formattedDate
         })
     }
     )
@@ -94,7 +96,7 @@ export function AreaChartStacked({
                         margin={{
                             left: 0,
                             right: 0,
-                            top: 0
+                            top: 30
                         }}
                     >
                         <CartesianGrid vertical={false} />
