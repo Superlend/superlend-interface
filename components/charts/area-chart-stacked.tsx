@@ -73,7 +73,7 @@ export function AreaChartStacked({
     return (
         <Card className="overflow-hidden">
             <CardContent className="p-0 pt-[32px] bg-white">
-                <div className="px-[36px] flex items-center justify-between">
+                <div className="px-[20px] md:px-[36px] flex flex-col sm:flex-row gap-[16px] items-center justify-between">
                     <Tabs defaultValue={Period.oneMonth} value={selectedRange} onValueChange={handleRangeChange} className="w-fit">
                         <TabsList>
                             {
