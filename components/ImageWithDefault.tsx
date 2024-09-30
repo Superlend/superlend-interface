@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const ImageWithDefault = ({ src, defaultSrc = '/images/logos/favicon-32x32.png', alt, className, width, height }: any) => {
     const [imageSrc, setImageSrc] = useState(src);
+
+    useEffect(() => {
+        setImageSrc(src)
+    }, [src])
 
     const handleError = () => {
         setImageSrc(defaultSrc);

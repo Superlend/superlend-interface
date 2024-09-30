@@ -18,6 +18,7 @@ import { AssetsDataContext } from '@/context/data-provider';
 import { TToken } from '@/types';
 import useGetPlatformData from '@/hooks/useGetPlatformData';
 import ImageWithDefault from '@/components/ImageWithDefault';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // const EthTokenIcon = "/images/tokens/eth.webp";
 // const USDCTokenIcon = "/images/tokens/usdc.webp";
@@ -101,14 +102,25 @@ function PageHeader({
                 <div className="flex flex-wrap md:items-center gap-[16px]">
                     <div className="flex items-center gap-[12px]">
                         <div className="flex items-center gap-[8px]">
-                            <ImageWithDefault
-                                src={getTokenLogo(tokenDetails?.symbol?.toLocaleLowerCase())}
-                                alt="Token logo"
-                                width={28}
-                                height={28}
-                            />
-                            {/* <img src={getTokenLogo(tokenDetails?.symbol?.toLocaleLowerCase())} alt="Token logo" width={28} height={28} /> */}
-                            <HeadingText level='h4' className='uppercase'>{tokenDetails.symbol}</HeadingText>
+                            {
+                                !tokenDetails?.symbol && (
+                                    <>
+                                        <Skeleton className='w-[28px] h-[28px] rounded-full' />
+                                        <Skeleton className='w-[60px] h-[28px] rounded-4' />
+                                    </>
+                                )
+                            }
+                            {tokenDetails?.symbol &&
+                                <>
+                                    <ImageWithDefault
+                                        src={getTokenLogo(tokenDetails?.symbol?.toLowerCase())}
+                                        alt="Token logo"
+                                        width={28}
+                                        height={28}
+                                    />
+                                    <HeadingText level='h4' className='uppercase'>{tokenDetails.symbol}</HeadingText>
+                                </>
+                            }
                         </div>
                         {/* <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
                         <div className="flex items-center gap-[8px]">
