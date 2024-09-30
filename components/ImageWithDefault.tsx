@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-const ImageWithDefault = ({ src, defaultSrc = '/images/logos/favicon-32x32.png', alt, className, width, height }: any) => {
+const ImageWithDefault = ({ src, defaultSrc = '/images/fallback-img.png', alt, className, width, height }: any) => {
     const [imageSrc, setImageSrc] = useState(src);
 
     useEffect(() => {

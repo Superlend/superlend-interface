@@ -92,6 +92,7 @@ export type TOpportunityTable = {
   tokenLogo: string;
   chainLogo: string;
   chain_id: string;
+  chainName: string;
   platform_id: string;
   platformName: string;
   platformLogo: string;

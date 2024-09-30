@@ -74,7 +74,7 @@ export default function AssetHistory() {
                         <div key={blockIndex} className="block-1 flex flex-col md:gap-[12px]">
                             <InfoTooltip
                                 label={
-                                    <BodyText level='body1' className='text-gray-600'>
+                                    <BodyText level='body1' className={`text-gray-600 ${blockIndex === 0 ? "border-transparent" : "border-b cursor-help	"} border-dashed border-gray-800 hover:border-transparent`}>
                                         {block.label}
                                     </BodyText>
                                 }

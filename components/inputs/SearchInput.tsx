@@ -14,7 +14,7 @@ type TProps = {
 export default function SearchInput({ className, value, onChange, onClear, ...props }: TProps) {
     const hasKeyword: boolean = !!value?.trim().length;
     return (
-        <div className='relative'>
+        <div className='relative hover:contrast-[.90] focus:contrast-100 transition-300'>
             <SearchIcon className='absolute left-3 top-1/2 -translate-y-1/2' />
             {hasKeyword &&
                 <X onClick={onClear}

@@ -1,6 +1,9 @@
 "use client"
 
 import ImageWithBadge from "@/components/ImageWithBadge";
+import ImageWithDefault from "@/components/ImageWithDefault";
+import InfoTooltip from "@/components/tooltips/InfoTooltip";
+import { BodyText, Label } from "@/components/ui/typography";
 import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import { TOpportunityTable } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
@@ -17,26 +20,56 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => item.tokenSymbol,
         cell: ({ row }) => {
             const tokenSymbol: string = row.getValue("tokenSymbol");
+            const tokenLogo = row.original.tokenLogo;
+            const tokenAddress = row.original.tokenAddress;
+            const chainId = row.original.chain_id;
+            const chainLogo = row.original.chainLogo;
+            const chainName= row.original.chainName;
+            const platformId = row.original.platform_id;
+            
             return (
-                <span className="flex items-center gap-[8px]">
-                    <ImageWithBadge
-                        mainImg={row.original.tokenLogo}
-                        badgeImg={row.original.chainLogo}
-                    />
-                    <Link href={{
-                        pathname: "position-management",
-                        query: {
-                            token: row.original.tokenAddress,
-                            chain_id: row.original.chain_id,
-                            platform_id: row.original.platform_id,
-                        }
-                    }}
-                        className="truncate">
-                        <span className="shrink-0 ">
-                            {tokenSymbol}
+                <InfoTooltip
+                    label={
+                        <span className="flex items-center gap-[8px] w-fit">
+                            <ImageWithBadge
+                                mainImg={tokenLogo}
+                                badgeImg={chainLogo}
+                            />
+                            <Link href={{
+                                pathname: "position-management",
+                                query: {
+                                    token: tokenAddress,
+                                    chain_id: chainId,
+                                    platform_id: platformId,
+                                }
+                            }}
+                                className="truncate border-b border-dashed border-gray-800 hover:border-transparent">
+                                <span className="shrink-0">
+                                    {tokenSymbol}
+                                </span>
+                            </Link>
                         </span>
-                    </Link>
-                </span>
+                    }
+
+                    content={
+                        <span className="flex flex-col gap-[16px]">
+                            <span className="flex flex-col gap-[4px]">
+                                <Label>Token</Label>
+                                <span className="flex items-center gap-[8px]">
+                                    <ImageWithDefault alt={tokenSymbol} src={tokenLogo} width={24} height={24} />
+                                    <BodyText level="body2" weight="medium">{tokenSymbol}</BodyText>
+                                </span>
+                            </span>
+                            <span className="flex flex-col gap-[4px]">
+                                <Label>Chain</Label>
+                                <span className="flex items-center gap-[8px]">
+                                    <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} />
+                                    <BodyText level="body2" weight="medium">{chainName}</BodyText>
+                                </span>
+                            </span>
+                        </span>
+                    }
+                />
             )
         },
         enableSorting: false,

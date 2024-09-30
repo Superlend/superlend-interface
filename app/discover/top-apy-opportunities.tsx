@@ -25,16 +25,17 @@ type TTopApyOpportunitiesProps = {
 export default function TopApyOpportunities() {
     const [opportunityType, setOpportunityType] = useState<TOpportunityType>("lend");
     const [searchKeywords, setSearchKeywords] = useState<string>("");
-    const { data, isLoading } = useGetOpportunitiesData({ type: opportunityType });
+    const { data: opportunitiesData, isLoading } = useGetOpportunitiesData({ type: opportunityType });
     const { allChainsData } = useContext<any>(AssetsDataContext);
 
-    const tableData = data.map((item) => {
+    const tableData = opportunitiesData.map((item) => {
         return {
             tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,
             tokenLogo: getTokenLogo(item.token.symbol),
             chainLogo: allChainsData?.filter((chain: TChain) => chain.chain_id === Number(item.chain_id))[0]?.logo,
             chain_id: item.chain_id,
+            chainName: allChainsData.find((chain: any) => Number(chain.chain_id) === Number(item.chain_id))?.name || "",
             platform_id: item.platform.platform_name,
             platformName: item.platform.platform_name.split("-")[0],
             platformLogo: getPlatformLogo(item.platform.platform_name.split("-")[0]),

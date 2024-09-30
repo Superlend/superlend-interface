@@ -38,22 +38,24 @@ export default function InfoTooltip({ label, content, size = "md", hide }: TProp
         <TooltipProvider delayDuration={200}>
             <Tooltip open={open}>
                 <TooltipTrigger asChild>
-                    <motion.div
+                    <motion.span
                         // Tool tip triggers
                         onHoverStart={handleTooltipToggle(true)}
                         onClick={handleTooltipToggle(true)}
                         onMouseEnter={handleTooltipToggle(true)}
                         onHoverEnd={handleTooltipToggle(false)}
                         onMouseLeave={handleTooltipToggle(false)}
+                        className='w-fit inline-block'
                     >
                         {!label &&
                             <InfoCircleIcon width={24} height={24} weight='1.5' />
                         }
                         {label && label}
-                    </motion.div>
+                    </motion.span>
                 </TooltipTrigger>
                 <TooltipContent sideOffset={15} className={`max-w-[280px] ${sizes[size]}`}>
-                    <Label>{content}</Label>
+                    {typeof content === "string" && <Label className='w-fit'>{content}</Label>}
+                    {typeof content !== "string" && content}
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
