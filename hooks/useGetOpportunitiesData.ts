@@ -8,7 +8,7 @@ export default function useGetOpportunitiesData(
   params: TGetOpportunitiesParams
 ) {
   const { data, isLoading, isError } = useQuery<TOpportunity[], Error>({
-    queryKey: ["opportunities", params.type],
+    queryKey: ["opportunities", params.type, params.chain_ids],
     queryFn: async () => {
       try {
         const responseData = await getOpportunitiesData(params);

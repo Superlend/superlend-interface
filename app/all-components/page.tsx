@@ -59,9 +59,9 @@ export default async function ComponentsPage() {
             <ComponentCard>
                 <ChainSelectorDropdown />
             </ComponentCard>
-            <ComponentCard>
+            {/* <ComponentCard>
                 <DiscoverFilterDropdown />
-            </ComponentCard>
+            </ComponentCard> */}
             {/* <ComponentCard>
                 <LendBorrowToggle />
             </ComponentCard> */}

@@ -90,6 +90,7 @@ export type TOpportunityTable = {
   tokenAddress: string;
   tokenSymbol: string;
   tokenLogo: string;
+  tokenName: string;
   chainLogo: string;
   chain_id: string;
   chainName: string;

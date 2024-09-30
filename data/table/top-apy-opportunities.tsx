@@ -22,6 +22,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const tokenSymbol: string = row.getValue("tokenSymbol");
             const tokenLogo = row.original.tokenLogo;
             const tokenAddress = row.original.tokenAddress;
+            const tokenName= row.original.tokenName;
             const chainId = row.original.chain_id;
             const chainLogo = row.original.chainLogo;
             const chainName= row.original.chainName;
@@ -57,7 +58,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 <Label>Token</Label>
                                 <span className="flex items-center gap-[8px]">
                                     <ImageWithDefault alt={tokenSymbol} src={tokenLogo} width={24} height={24} />
-                                    <BodyText level="body2" weight="medium">{tokenSymbol}</BodyText>
+                                    <BodyText level="body2" weight="medium">{tokenName}</BodyText>
                                 </span>
                             </span>
                             <span className="flex flex-col gap-[4px]">

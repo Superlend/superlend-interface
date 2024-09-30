@@ -25,13 +25,18 @@ type TTopApyOpportunitiesProps = {
 export default function TopApyOpportunities() {
     const [opportunityType, setOpportunityType] = useState<TOpportunityType>("lend");
     const [searchKeywords, setSearchKeywords] = useState<string>("");
-    const { data: opportunitiesData, isLoading } = useGetOpportunitiesData({ type: opportunityType });
+    const [filterByChains, setFilterByChains] = useState<number[]>([]);
+    const {
+        data: opportunitiesData,
+        isLoading: isLoadingOpportunitiesData
+    } = useGetOpportunitiesData({ type: opportunityType, chain_ids: filterByChains });
     const { allChainsData } = useContext<any>(AssetsDataContext);
 
     const tableData = opportunitiesData.map((item) => {
         return {
             tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,
+            tokenName: item.token.name,
             tokenLogo: getTokenLogo(item.token.symbol),
             chainLogo: allChainsData?.filter((chain: TChain) => chain.chain_id === Number(item.chain_id))[0]?.logo,
             chain_id: item.chain_id,
@@ -58,6 +63,11 @@ export default function TopApyOpportunities() {
         setSearchKeywords("");
     }
 
+    const filterDropdownProps = {
+        filterByChains,
+        setFilterByChains
+    }
+
     return (
         <section id='top-apy-opportunities' className="top-apy-opportunities-container flex flex-col gap-[24px] px-5">
             <div className="top-apy-opportunities-header flex items-end lg:items-center justify-between gap-[12px]">
@@ -75,20 +85,20 @@ export default function TopApyOpportunities() {
                         </div>
                     </div>
                 </div>
-                {/* <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
-                    <ChainSelectorDropdown />
-                    <DiscoverFilterDropdown />
-                </div> */}
+                <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
+                    {/* <ChainSelectorDropdown /> */}
+                    <DiscoverFilterDropdown {...filterDropdownProps} />
+                </div>
             </div>
             <div className="top-apy-opportunities-content">
-                {!isLoading &&
+                {!isLoadingOpportunitiesData &&
                     <DataTable
                         columns={columns}
                         data={tableData}
                         filters={searchKeywords}
                         setFilters={setSearchKeywords}
                     />}
-                {isLoading && (
+                {isLoadingOpportunitiesData && (
                     <LoadingSectionSkeleton />
                 )}
             </div>

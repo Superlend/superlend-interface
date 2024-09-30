@@ -154,10 +154,10 @@ export default async function Portfolio() {
                                 </div> */}
                             </div>
                         </div>
-                        <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
+                        {/* <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
                             <ChainSelectorDropdown />
                             <DiscoverFilterDropdown />
-                        </div>
+                        </div> */}
                     </div>
                     {/* <div className="all-positions-content">
                         <DataTable columns={columns} data={allPositionsDummyData} />
