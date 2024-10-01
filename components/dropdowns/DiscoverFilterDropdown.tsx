@@ -24,6 +24,10 @@ const FILTER_CATEGORIES = [
         label: "Chains",
         value: "chains",
     },
+    // {
+    //     label: "Platforms",
+    //     value: "platforms",
+    // },
 ]
 
 export default function DiscoverFilterDropdown({
@@ -55,7 +59,7 @@ export default function DiscoverFilterDropdown({
                     <div className={`${!!filterByChains.length ? "absolute block" : "hidden"} -top-[2px] right-[-2px] w-2.5 h-2.5 bg-red-500 rounded-full`}></div>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="bottom" align="end" className="p-0 rounded-[16px] border-none">
+            <DropdownMenuContent side="bottom" align="end" className="p-0 rounded-[16px] border-none bg-white bg-opacity-40">
                 <FilterCard>
                     <FilterCardHeader {...filterCardHeaderProps} />
                     <FilterCardContent {...filterCardContentProps} />
@@ -68,7 +72,7 @@ export default function DiscoverFilterDropdown({
 
 function FilterCard({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex flex-col bg-[rgba(255, 255, 255, 0.4)] backdrop-blur-[500px] md:min-w-[480px] max-w-[480px]">
+        <div className="flex flex-col md:min-w-[480px] max-w-[480px]">
             {children}
         </div>
     )
