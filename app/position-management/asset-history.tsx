@@ -35,11 +35,11 @@ export default function AssetHistory() {
     }
 
     const HISTORY_CHART_FOOTER_STATS = [
-        {
-            key: "apy",
-            label: "Net APY",
-            value: "1.92%"
-        },
+        // {
+        //     key: "apy",
+        //     label: "Net APY",
+        //     value: "1.92%"
+        // },
         {
             key: "deposit",
             label: `Avg Deposit (${PeriodShortDisplay[selectedRange]})`,
@@ -58,6 +58,7 @@ export default function AssetHistory() {
     ]
 
     // const getLoanToValueTotal = platformHistoryData?.processMap?.map((item: any) => (item.data.ltv)).reduce((acc: number, curr: number) => acc + curr, 0);
+    // const getBottomBorder = (blockIndex: number) => blockIndex === 0 ? "border-transparent" : "border-b cursor-help";
 
     return (
         <section className="bg-white bg-opacity-40 rounded-6">
@@ -74,14 +75,14 @@ export default function AssetHistory() {
                         <div key={blockIndex} className="block-1 flex flex-col md:gap-[12px]">
                             <InfoTooltip
                                 label={
-                                    <BodyText level='body1' className={`text-gray-600 ${blockIndex === 0 ? "border-transparent" : "border-b cursor-help	"} border-dashed border-gray-800 hover:border-transparent`}>
+                                    <BodyText level='body1' className={`text-gray-600 border-b cursor-help border-dashed border-gray-800 hover:border-transparent`}>
                                         {block.label}
                                     </BodyText>
                                 }
                                 content={
                                     `Average ${block.key.toLowerCase()} rate for ${PeriodLongDisplay[selectedRange].toLowerCase()}`
                                 }
-                                hide={blockIndex === 0}
+                            // hide={blockIndex === 0}
                             />
                             {!isLoadingPlatformHistory &&
                                 <HeadingText level='h3' className={`${blockIndex === 0 ? "text-[#0EA739]" : ""}`}>

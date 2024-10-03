@@ -22,7 +22,7 @@ export default function PageHeader() {
     const platform_id = searchParams.get("platform_id") || "";
     const { allTokensData } = useContext(AssetsDataContext);
 
-    const selectedTokenDetails: TToken | undefined = Object.values(allTokensData).flat(1).find((token: TToken) => token.address === tokenAddress);
+    // const selectedTokenDetails: TToken | undefined = Object.values(allTokensData).flat(1).find((token: TToken) => token.address === tokenAddress);
 
     // [API_CALL: GET] - Get Platform data
     const {
@@ -36,7 +36,8 @@ export default function PageHeader() {
 
     const tokenDetails = {
         address: tokenAddress,
-        symbol: selectedTokenDetails?.symbol
+        // symbol: selectedTokenDetails?.symbol
+        symbol: platformData.assets.filter((asset: any) => asset.token.address ===  tokenAddress)[0]?.token?.symbol || ""
     }
 
     const [pageHeaderStats] = platformData?.assets
