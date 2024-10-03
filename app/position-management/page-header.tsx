@@ -20,7 +20,7 @@ export default function PageHeader() {
     const tokenAddress = searchParams.get("token") || "";
     const chain_id = searchParams.get("chain_id") || "";
     const platform_id = searchParams.get("platform_id") || "";
-    const { allTokensData } = useContext(AssetsDataContext);
+    // const { allTokensData } = useContext(AssetsDataContext);
 
     // const selectedTokenDetails: TToken | undefined = Object.values(allTokensData).flat(1).find((token: TToken) => token.address === tokenAddress);
 

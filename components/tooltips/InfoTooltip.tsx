@@ -27,7 +27,7 @@ const sizes: any = {
 }
 
 
-export default function InfoTooltip({ label, content, size = "md", hide, iconWidth = 24, iconHeight = 24 }: TProps) {
+export default function InfoTooltip({ label, content, size = "md", hide, iconWidth = 16, iconHeight = 16 }: TProps) {
     const [open, setOpen] = useState<boolean>(false);
 
     function handleTooltipToggle(state: boolean) {
