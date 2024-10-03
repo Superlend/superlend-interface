@@ -15,6 +15,7 @@ import { AssetsDataContext } from '@/context/data-provider';
 import ImageWithDefault from '../ImageWithDefault';
 import { OpportunitiesContext } from '@/context/opportunities-provider';
 import { getPlatformLogo } from '@/lib/utils';
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const allPlatformsData = [
     {
@@ -129,15 +130,15 @@ function FilterCardContent({
     const isActiveTab = (item: any) => activeTab.value === item.value ? "text-black bg-gray-300" : "text-gray-500 hover:bg-gray-200";
 
     return (
-        <div className="filter-card-content grid grid-cols-[120px_1fr] items-start gap-4 bg-white p-[24px] rounded-[16px]">
-            <div className="filter-categories flex flex-col gap-2 bg-white">
+        <div className="filter-card-content grid grid-cols-[120px_1fr] items-start gap-4 bg-white rounded-[16px]">
+            <div className="filter-categories flex flex-col gap-2 bg-white p-[24px_0px_24px_24px]">
                 {
                     FILTER_CATEGORIES.map((item: any) => (
                         <Button
                             onClick={() => setActiveTab(item)}
                             key={item.label}
                             size="md"
-                            className={`py-[8px] px-[15px] border-0 items-center justify-between  ${isActiveTab(item)}`}>
+                            className={`py-[8px] px-[8px] border-0 items-center justify-between  ${isActiveTab(item)}`}>
                             <Label size='small' weight='medium' className={`w-fit text-left self-start`}>
                                 {item.label}
                             </Label>
@@ -187,27 +188,29 @@ function FilterOptions({ type, options }: { type: string; options: any[] }) {
     };
 
     return (
-        <div className="filter-options flex flex-wrap gap-3 bg-white">
-            <Button
-                variant="outline"
-                size="sm"
-                className={`${filters[`${type}_ids`]?.length === 0 ? "selected" : ""}`}
-                onClick={() => handleSelection(null, type)}>
-                All {type.charAt(0).toUpperCase() + type.slice(1)}s
-            </Button>
-            {
-                options.map((option: any) => (
-                    <Button
-                        onClick={() => handleSelection(option.chain_id || option.platform_id, type)}
-                        variant="outline"
-                        size="sm"
-                        key={option.chain_id || option.platform_id}
-                        className={`flex items-center gap-1 ${isSelected(option.chain_id || option.platform_id, type) ? "selected" : ""}`}>
-                        <ImageWithDefault src={option.logo} alt={option.name} width={18} height={18} />
-                        {option.name}
-                    </Button>
-                ))
-            }
-        </div>
+        <ScrollArea className="h-[200px] w-full">
+            <div className="filter-options flex flex-wrap gap-3 bg-white p-[24px_24px_24px_14px]">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className={`${filters[`${type}_ids`]?.length === 0 ? "selected" : ""}`}
+                    onClick={() => handleSelection(null, type)}>
+                    All {type.charAt(0).toUpperCase() + type.slice(1)}s
+                </Button>
+                {
+                    options.map((option: any) => (
+                        <Button
+                            onClick={() => handleSelection(option.chain_id || option.platform_id, type)}
+                            variant="outline"
+                            size="sm"
+                            key={option.chain_id || option.platform_id}
+                            className={`flex items-center gap-1 ${isSelected(option.chain_id || option.platform_id, type) ? "selected" : ""}`}>
+                            <ImageWithDefault src={option.logo} alt={option.name} width={18} height={18} />
+                            {option.name}
+                        </Button>
+                    ))
+                }
+            </div>
+        </ScrollArea>
     );
 }
