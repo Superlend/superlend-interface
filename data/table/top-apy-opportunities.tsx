@@ -9,10 +9,6 @@ import { TOpportunityTable } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
-function getPositionManagementParams(tokenSymbol: string, chain_id: string, platform_id: string) {
-    return `/position-management?tokenSymbol=${tokenSymbol}&chain_id=${chain_id}&platform_id=${platform_id}`;
-}
-
 export const columns: ColumnDef<TOpportunityTable>[] = [
     {
         accessorKey: "tokenSymbol",
@@ -22,55 +18,57 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const tokenSymbol: string = row.getValue("tokenSymbol");
             const tokenLogo = row.original.tokenLogo;
             const tokenAddress = row.original.tokenAddress;
-            const tokenName= row.original.tokenName;
+            const tokenName = row.original.tokenName;
             const chainId = row.original.chain_id;
             const chainLogo = row.original.chainLogo;
-            const chainName= row.original.chainName;
+            const chainName = row.original.chainName;
             const platformId = row.original.platform_id;
-            
+            const tooltipContent = (
+                <span className="flex flex-col gap-[16px]">
+                    <span className="flex flex-col gap-[4px]">
+                        <Label>Token</Label>
+                        <span className="flex items-center gap-[8px]">
+                            <ImageWithDefault alt={tokenSymbol} src={tokenLogo} width={24} height={24} />
+                            <BodyText level="body2" weight="medium">{tokenName}</BodyText>
+                        </span>
+                    </span>
+                    <span className="flex flex-col gap-[4px]">
+                        <Label>Chain</Label>
+                        <span className="flex items-center gap-[8px]">
+                            <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} />
+                            <BodyText level="body2" weight="medium">{chainName}</BodyText>
+                        </span>
+                    </span>
+                </span>
+            )
+
             return (
-                <InfoTooltip
-                    label={
-                        <span className="flex items-center gap-[8px] w-fit">
+                <span className="flex items-center gap-[8px] w-fit">
+                    <InfoTooltip
+                        label={
                             <ImageWithBadge
                                 mainImg={tokenLogo}
                                 badgeImg={chainLogo}
                             />
-                            <Link href={{
-                                pathname: "position-management",
-                                query: {
-                                    token: tokenAddress,
-                                    chain_id: chainId,
-                                    platform_id: platformId,
-                                }
-                            }}
-                                className="truncate border-b border-dashed border-gray-800 hover:border-transparent">
-                                <span className="shrink-0">
-                                    {tokenSymbol}
-                                </span>
-                            </Link>
-                        </span>
-                    }
+                        }
 
-                    content={
-                        <span className="flex flex-col gap-[16px]">
-                            <span className="flex flex-col gap-[4px]">
-                                <Label>Token</Label>
-                                <span className="flex items-center gap-[8px]">
-                                    <ImageWithDefault alt={tokenSymbol} src={tokenLogo} width={24} height={24} />
-                                    <BodyText level="body2" weight="medium">{tokenName}</BodyText>
-                                </span>
-                            </span>
-                            <span className="flex flex-col gap-[4px]">
-                                <Label>Chain</Label>
-                                <span className="flex items-center gap-[8px]">
-                                    <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} />
-                                    <BodyText level="body2" weight="medium">{chainName}</BodyText>
-                                </span>
-                            </span>
+                        content={tooltipContent}
+                    />
+                    <Link href={{
+                        pathname: "position-management",
+                        query: {
+                            token: tokenAddress,
+                            chain_id: chainId,
+                            platform_id: platformId,
+                        }
+                    }}
+                        className="truncate border-b border-dashed border-gray-800 hover:border-transparent">
+                        <span className="shrink-0">
+                            {tokenSymbol}
                         </span>
-                    }
-                />
+                    </Link>
+                    {/* <InfoTooltip iconWidth={16} iconHeight={16} content={tooltipContent} /> */}
+                </span>
             )
         },
         enableSorting: false,

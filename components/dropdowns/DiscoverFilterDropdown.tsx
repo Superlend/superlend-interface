@@ -1,80 +1,104 @@
 "use client";
 
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { BodyText } from '../ui/typography';
+import { BodyText, Label } from '../ui/typography';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { ChevronDownIcon } from 'lucide-react';
 import FilterIcon from '../icons/filter-icon';
 import { AssetsDataContext } from '@/context/data-provider';
 import ImageWithDefault from '../ImageWithDefault';
+import { OpportunitiesContext } from '@/context/opportunities-provider';
+import { getPlatformLogo } from '@/lib/utils';
 
-type TProps = {
-    filterByChains: number[];
-    setFilterByChains: React.Dispatch<React.SetStateAction<number[]>>;
-}
-
-const FILTER_CATEGORIES = [
+const allPlatformsData = [
     {
-        label: "Chains",
-        value: "chains",
+        logo: getPlatformLogo("AAVE"),
+        name: "AAVE",
+        platform_id: "AAVE"
     },
-    // {
-    //     label: "Platforms",
-    //     value: "platforms",
-    // },
+    {
+        logo: getPlatformLogo("COMPOUND"),
+        name: "COMPOUND",
+        platform_id: "COMPOUND"
+    },
 ]
 
-export default function DiscoverFilterDropdown({
-    filterByChains,
-    setFilterByChains
-}: TProps) {
-    const [isOpen, setIsOpen] = React.useState(false);
+export default function DiscoverFilterDropdown() {
+    const [isOpen, setIsOpen] = React.useState<boolean>(false);
+    const { filters, setFilters } = useContext<any>(OpportunitiesContext);
+    const { allChainsData } = useContext<any>(AssetsDataContext);
+
+    const hasActiveFilters = !!filters.chain_ids.length || !!filters.platform_ids.length
+    const activeFiltersTotalCount = filters.chain_ids.length + filters.platform_ids.length;
+    const getActiveFiltersCountByCategory = (filterName: string) => (filters[filterName]?.length);
+
+    const FILTER_CATEGORIES = [
+        {
+            key: 0,
+            label: "Chains",
+            value: "chain",
+        },
+        {
+            key: 1,
+            label: "Platforms",
+            value: "platform",
+        },
+    ]
+
+    const FILTER_OPTIONS: any = {
+        chain: {
+            type: "chain",
+            options: allChainsData
+        },
+        platform: {
+            type: "platform",
+            options: allPlatformsData
+        },
+    };
 
     function handleClearFilters() {
-        setFilterByChains([]);
-    }
-
-    const filterCardContentProps = {
-        filterByChains,
-        setFilterByChains
+        setFilters({
+            chain_ids: [],
+            platform_ids: [],
+        });
     }
 
     const filterCardHeaderProps = {
         handleClearFilters
     }
 
+    const filterCardContentProps = {
+        FILTER_CATEGORIES,
+        FILTER_OPTIONS,
+        getActiveFiltersCountByCategory
+    }
+
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
                 <Button size="lg" className="w-fit relative flex items-center gap-2 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-600 rounded-xl">
-                    <FilterIcon className={`${!!filterByChains.length ? "fill-gray-600" : ""}`} width={16} height={16} />
+                    <FilterIcon className={`${hasActiveFilters ? "fill-gray-600" : ""}`} width={16} height={16} />
                     Filters
                     <ChevronDownIcon className={`w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-                    <div className={`${!!filterByChains.length ? "absolute block" : "hidden"} -top-[2px] right-[-2px] w-2.5 h-2.5 bg-red-500 rounded-full`}></div>
+                    <div className={`${hasActiveFilters ? "absolute block" : "hidden"} -top-[6px] -right-[6px] flex items-center justify-center w-4 h-4 bg-red-500 rounded-full`}>
+                        <Label size='small' className='text-white'>{activeFiltersTotalCount}</Label>
+                    </div>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="bottom" align="end" className="p-0 rounded-[16px] border-none bg-white bg-opacity-40">
-                <FilterCard>
+                <div className="filter-card flex flex-col md:min-w-[480px] max-w-[480px]">
                     <FilterCardHeader {...filterCardHeaderProps} />
                     <FilterCardContent {...filterCardContentProps} />
-                </FilterCard>
+                </div>
             </DropdownMenuContent>
         </DropdownMenu>
 
-    )
-}
-
-function FilterCard({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="flex flex-col md:min-w-[480px] max-w-[480px]">
-            {children}
-        </div>
     )
 }
 
@@ -97,65 +121,93 @@ function FilterCardHeader({
 }
 
 function FilterCardContent({
-    filterByChains,
-    setFilterByChains
+    FILTER_CATEGORIES,
+    FILTER_OPTIONS,
+    getActiveFiltersCountByCategory
 }: any) {
-    const { allChainsData } = useContext(AssetsDataContext);
-
-    const isChainSelected = (chainId: number) => {
-        return filterByChains.includes(chainId);
-    };
-
-    function handleChainSelection(chainId: number | null) {
-        if (chainId === null) {
-            setFilterByChains([]);
-            return;
-        }
-
-        if (isChainSelected(chainId)) {
-            setFilterByChains((state: any) => state.filter((selectedChainId: any) => selectedChainId !== chainId));
-            return;
-        }
-
-        setFilterByChains((state: any) => ([...state, chainId]));
-    }
+    const [activeTab, setActiveTab] = useState(FILTER_CATEGORIES[0]);
+    const isActiveTab = (item: any) => activeTab.value === item.value ? "text-black bg-gray-300" : "text-gray-500 hover:bg-gray-200";
 
     return (
         <div className="filter-card-content grid grid-cols-[120px_1fr] items-start gap-4 bg-white p-[24px] rounded-[16px]">
             <div className="filter-categories flex flex-col gap-2 bg-white">
                 {
-                    FILTER_CATEGORIES.map(item => (
-                        <Button key={item.label} size="md" className="py-[8px] px-[15px] first:bg-gray-300 first:text-black text-gray-500 hover:bg-gray-200 border-0">
-                            <span className="w-full text-left">
+                    FILTER_CATEGORIES.map((item: any) => (
+                        <Button
+                            onClick={() => setActiveTab(item)}
+                            key={item.label}
+                            size="md"
+                            className={`py-[8px] px-[15px] border-0 items-center justify-between  ${isActiveTab(item)}`}>
+                            <Label size='small' weight='medium' className={`w-fit text-left self-start`}>
                                 {item.label}
-                            </span>
+                            </Label>
+                            {!!getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`) &&
+                                <Label size='small' weight='medium' className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5">
+                                    {getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`)}
+                                </Label>
+                            }
                         </Button>
                     ))
                 }
             </div>
-            <div className="filter-options flex flex-wrap gap-3 bg-white">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className={`${filterByChains.length === 0 ? "selected" : ""}`}
-                    onClick={() => handleChainSelection(null)}>
-                    All chains
-                </Button>
-                {
-                    allChainsData
-                        .map((chain: any) => (
-                            <Button
-                                onClick={() => handleChainSelection(chain.chain_id)}
-                                variant="outline"
-                                size="sm"
-                                key={chain.chain_id}
-                                className={`flex items-center gap-1 ${isChainSelected(chain.chain_id) ? "selected" : ""}`}>
-                                <ImageWithDefault src={chain.logo} alt={chain.name} width={18} height={18} />
-                                {chain.name}
-                            </Button>
-                        ))
-                }
-            </div>
+            <FilterOptions {...FILTER_OPTIONS[activeTab.value]} />
         </div>
     )
+}
+
+// New reusable FilterOptions component
+function FilterOptions({ type, options }: { type: string; options: any[] }) {
+    const { filters, setFilters } = useContext<any>(OpportunitiesContext);
+
+    const isSelected = (id: number | string, filterType: string) => {
+        return filters[`${filterType}_ids`]?.includes(id);
+    };
+
+    const handleSelection = (id: number | string | null, filterType: string) => {
+        if (id === null) {
+            setFilters((state: any) => ({
+                ...state,
+                [`${filterType}_ids`]: []
+            }));
+            return;
+        }
+
+        if (isSelected(id, filterType)) {
+            setFilters((state: any) => ({
+                ...state,
+                [`${filterType}_ids`]: state[`${filterType}_ids`].filter((selectedId: any) => selectedId !== id)
+            }));
+            return;
+        }
+
+        setFilters((state: any) => ({
+            ...state,
+            [`${filterType}_ids`]: [...state[`${filterType}_ids`], id]
+        }));
+    };
+
+    return (
+        <div className="filter-options flex flex-wrap gap-3 bg-white">
+            <Button
+                variant="outline"
+                size="sm"
+                className={`${filters[`${type}_ids`]?.length === 0 ? "selected" : ""}`}
+                onClick={() => handleSelection(null, type)}>
+                All {type.charAt(0).toUpperCase() + type.slice(1)}s
+            </Button>
+            {
+                options.map((option: any) => (
+                    <Button
+                        onClick={() => handleSelection(option.chain_id || option.platform_id, type)}
+                        variant="outline"
+                        size="sm"
+                        key={option.chain_id || option.platform_id}
+                        className={`flex items-center gap-1 ${isSelected(option.chain_id || option.platform_id, type) ? "selected" : ""}`}>
+                        <ImageWithDefault src={option.logo} alt={option.name} width={18} height={18} />
+                        {option.name}
+                    </Button>
+                ))
+            }
+        </div>
+    );
 }

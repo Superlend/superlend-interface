@@ -16,6 +16,8 @@ type TProps = {
     content?: any;
     size?: string;
     hide?: boolean;
+    iconWidth?: number;
+    iconHeight?: number;
 }
 
 const sizes: any = {
@@ -25,13 +27,15 @@ const sizes: any = {
 }
 
 
-export default function InfoTooltip({ label, content, size = "md", hide }: TProps) {
+export default function InfoTooltip({ label, content, size = "md", hide, iconWidth = 24, iconHeight = 24 }: TProps) {
     const [open, setOpen] = useState<boolean>(false);
 
     function handleTooltipToggle(state: boolean) {
-        if (hide) return;
 
-        return () => setOpen(state)
+        return () => {
+            if (hide) return;
+            setOpen(state)
+        }
     }
 
     return (
@@ -48,7 +52,7 @@ export default function InfoTooltip({ label, content, size = "md", hide }: TProp
                         className='w-fit inline-block'
                     >
                         {!label &&
-                            <InfoCircleIcon width={24} height={24} weight='1.5' />
+                            <InfoCircleIcon width={iconWidth} height={iconHeight} weight='1.5' />
                         }
                         {label && label}
                     </motion.span>
