@@ -30,7 +30,11 @@ export default function TopApyOpportunities() {
     const {
         data: opportunitiesData,
         isLoading: isLoadingOpportunitiesData
-    } = useGetOpportunitiesData({ type: opportunityType, chain_ids: filters.chain_ids });
+    } = useGetOpportunitiesData({
+        type: opportunityType,
+        chain_ids: filters.chain_ids,
+        tokens: filters.token_ids
+    });
     const { allChainsData } = useContext<any>(AssetsDataContext);
 
     const rawTableData = opportunitiesData.map((item) => {

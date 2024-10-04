@@ -14,8 +14,9 @@ import FilterIcon from '../icons/filter-icon';
 import { AssetsDataContext } from '@/context/data-provider';
 import ImageWithDefault from '../ImageWithDefault';
 import { OpportunitiesContext } from '@/context/opportunities-provider';
-import { getPlatformLogo } from '@/lib/utils';
+import { getPlatformLogo, getTokenLogo } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { TToken } from '@/types';
 
 const allPlatformsData = [
     {
@@ -33,26 +34,43 @@ const allPlatformsData = [
 export default function DiscoverFilterDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
     const { filters, setFilters } = useContext<any>(OpportunitiesContext);
-    const { allChainsData } = useContext<any>(AssetsDataContext);
+    const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext);
 
-    const hasActiveFilters = !!filters.chain_ids.length || !!filters.platform_ids.length
-    const activeFiltersTotalCount = filters.chain_ids.length + filters.platform_ids.length;
+    const hasActiveFilters = !!filters.token_ids.length || !!filters.chain_ids.length || !!filters.platform_ids.length
+    const activeFiltersTotalCount = filters.token_ids.length || filters.chain_ids.length + filters.platform_ids.length;
     const getActiveFiltersCountByCategory = (filterName: string) => (filters[filterName]?.length);
 
     const FILTER_CATEGORIES = [
         {
-            key: 0,
+            label: "Tokens",
+            value: "token",
+        },
+        {
             label: "Chains",
             value: "chain",
         },
         {
-            key: 1,
             label: "Platforms",
             value: "platform",
         },
     ]
 
     const FILTER_OPTIONS: any = {
+        token: {
+            type: "token",
+            options: Object.values(allTokensData).flat(1)
+                .reduce((acc: TToken[], current: any) => {
+                    if (!acc.some((item) => item.symbol === current.symbol)) {
+                        acc.push(current)
+                    }
+                    return acc
+                }, [])
+                .map((token: TToken) => ({
+                    name: token.symbol,
+                    token_id: token.symbol,
+                    logo: getTokenLogo(token.symbol)
+                }))
+        },
         chain: {
             type: "chain",
             options: allChainsData
@@ -65,6 +83,7 @@ export default function DiscoverFilterDropdown() {
 
     function handleClearFilters() {
         setFilters({
+            token_ids: [],
             chain_ids: [],
             platform_ids: [],
         });
@@ -200,11 +219,11 @@ function FilterOptions({ type, options }: { type: string; options: any[] }) {
                 {
                     options.map((option: any) => (
                         <Button
-                            onClick={() => handleSelection(option.chain_id || option.platform_id, type)}
+                            onClick={() => handleSelection(option[`${type}_id`], type)}
                             variant="outline"
                             size="sm"
-                            key={option.chain_id || option.platform_id}
-                            className={`flex items-center gap-1 ${isSelected(option.chain_id || option.platform_id, type) ? "selected" : ""}`}>
+                            key={option[`${type}_id`]}
+                            className={`flex items-center gap-1 ${isSelected(option[`${type}_id`], type) ? "selected" : ""}`}>
                             <ImageWithDefault src={option.logo} alt={option.name} width={18} height={18} />
                             {option.name}
                         </Button>

@@ -43,7 +43,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
 
             return (
-                <span className="flex items-center gap-[8px] w-fit">
+                <span className="flex items-center gap-[8px] w-fit max-w-full">
                     <InfoTooltip
                         label={
                             <ImageWithBadge
@@ -62,8 +62,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             platform_id: platformId,
                         }
                     }}
-                        className="truncate border-b border-dashed border-gray-800 hover:border-transparent">
-                        <span className="shrink-0">
+                        className="truncate">
+                        <span className="truncate block shrink-0 hover:text-secondary-500">
                             {tokenSymbol}
                         </span>
                     </Link>
