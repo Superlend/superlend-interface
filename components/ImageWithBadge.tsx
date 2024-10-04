@@ -29,7 +29,7 @@ export default function ImageWithBadge({
                 alt={mainImgAlt}
                 width={mainImgWidth || 20}
                 height={mainImgHeight || 20}
-                className='rounded-full'
+                className='rounded-full shrink-0'
             />
             <ImageWithDefault
                 src={badgeImg}

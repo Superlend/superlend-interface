@@ -85,7 +85,7 @@ export default function AssetHistory() {
                             // hide={blockIndex === 0}
                             />
                             {!isLoadingPlatformHistory &&
-                                <HeadingText level='h3' className={`${blockIndex === 0 ? "text-[#0EA739]" : ""}`}>
+                                <HeadingText level='h3'>
                                     {block.value}
                                 </HeadingText>
                             }

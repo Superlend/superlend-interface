@@ -49,7 +49,7 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
                         onMouseEnter={handleTooltipToggle(true)}
                         onHoverEnd={handleTooltipToggle(false)}
                         onMouseLeave={handleTooltipToggle(false)}
-                        className='w-fit inline-block'
+                        className='w-fit inline-block shrink-0'
                     >
                         {!label &&
                             <InfoCircleIcon width={iconWidth} height={iconHeight} weight='1.5' />
