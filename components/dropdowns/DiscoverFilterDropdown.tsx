@@ -14,7 +14,7 @@ import {
 import { BodyText, Label } from '../ui/typography';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { ChevronDownIcon } from 'lucide-react';
+import { Check, ChevronDownIcon } from 'lucide-react';
 import FilterIcon from '../icons/filter-icon';
 import { AssetsDataContext } from '@/context/data-provider';
 import ImageWithDefault from '../ImageWithDefault';
@@ -23,6 +23,7 @@ import { getPlatformLogo, getTokenLogo } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { TToken } from '@/types';
 import useDimensions from '@/hooks/useDimensions';
+import { STABLECOINS_NAMES_LIST } from '@/constants';
 
 const allPlatformsData = [
     {
@@ -41,12 +42,26 @@ export default function DiscoverFilterDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
     const { filters, setFilters } = useContext<any>(OpportunitiesContext);
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext);
+    const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(false)
     const { width: screenWidth } = useDimensions();
     const isDesktop = screenWidth > 768;
 
     const hasActiveFilters = !!filters.token_ids.length || !!filters.chain_ids.length || !!filters.platform_ids.length
     const activeFiltersTotalCount = filters.token_ids.length + filters.chain_ids.length + filters.platform_ids.length;
     const getActiveFiltersCountByCategory = (filterName: string) => (filters[filterName]?.length);
+
+    const allTokenOptions = Object.values(allTokensData).flat(1)
+        .reduce((acc: TToken[], current: any) => {
+            if (!acc.some((item) => item.symbol === current.symbol)) {
+                acc.push(current)
+            }
+            return acc
+        }, [])
+        .map((token: TToken) => ({
+            name: token.symbol,
+            token_id: token.symbol,
+            logo: getTokenLogo(token.symbol)
+        }))
 
     const FILTER_CATEGORIES = [
         {
@@ -66,7 +81,7 @@ export default function DiscoverFilterDropdown() {
     const FILTER_OPTIONS: any = {
         token: {
             type: "token",
-            options: getAllFilteredTokens()
+            options: allTokenOptions
         },
         chain: {
             type: "chain",
@@ -78,19 +93,30 @@ export default function DiscoverFilterDropdown() {
         },
     };
 
-    function getAllFilteredTokens() {
-        return Object.values(allTokensData).flat(1)
-            .reduce((acc: TToken[], current: any) => {
-                if (!acc.some((item) => item.symbol === current.symbol)) {
-                    acc.push(current)
+    const selectStablecoins = () => {
+        if (!isStablecoinsSelected) {
+            const searchedList: any[] = []
+            STABLECOINS_NAMES_LIST.forEach((el) => {
+                const findToken = allTokenOptions.find(
+                    (item: any) => item?.token_id === el.toUpperCase()
+                )
+
+                if (findToken) {
+                    searchedList.push(findToken.token_id)
                 }
-                return acc
-            }, [])
-            .map((token: TToken) => ({
-                name: token.symbol,
-                token_id: token.symbol,
-                logo: getTokenLogo(token.symbol)
+            })
+            setFilters((state: any) => ({
+                ...state,
+                token_ids: searchedList
             }))
+            setIsStablecoinsSelected(true)
+            return
+        }
+        setIsStablecoinsSelected(false)
+        setFilters((state: any) => ({
+            ...state,
+            token_ids: state.token_ids.filter((tokenId: string) => !STABLECOINS_NAMES_LIST.includes(tokenId))
+        }))
     }
 
     function handleClearFilters() {
@@ -108,7 +134,9 @@ export default function DiscoverFilterDropdown() {
     const filterCardContentProps = {
         FILTER_CATEGORIES,
         FILTER_OPTIONS,
-        getActiveFiltersCountByCategory
+        getActiveFiltersCountByCategory,
+        isStablecoinsSelected,
+        selectStablecoins,
     }
 
     if (isDesktop) {
@@ -180,10 +208,17 @@ function FilterCardHeader({
 function FilterCardContent({
     FILTER_CATEGORIES,
     FILTER_OPTIONS,
-    getActiveFiltersCountByCategory
+    getActiveFiltersCountByCategory,
+    selectStablecoins,
+    isStablecoinsSelected
 }: any) {
     const [activeTab, setActiveTab] = useState(FILTER_CATEGORIES[0]);
     const isActiveTab = (item: any) => activeTab.value === item.value ? "text-black bg-gray-300" : "text-gray-500 hover:bg-gray-200";
+
+    const filterOptionProps = {
+        isStablecoinsSelected,
+        selectStablecoins,
+    }
 
     return (
         <div className="filter-card-content grid md:grid-cols-[120px_1fr] items-start md:gap-4 bg-white rounded-[16px]">
@@ -207,12 +242,22 @@ function FilterCardContent({
                     ))
                 }
             </div>
-            <FilterOptions {...FILTER_OPTIONS[activeTab.value]} />
+            <FilterOptions {...FILTER_OPTIONS[activeTab.value]} {...filterOptionProps} />
         </div>
     )
 }
 
-function FilterOptions({ type, options }: { type: string; options: any[] }) {
+function FilterOptions({
+    type,
+    options,
+    isStablecoinsSelected,
+    selectStablecoins
+}: {
+    type: string;
+    options: any[];
+    isStablecoinsSelected: boolean;
+    selectStablecoins: any;
+}) {
     const { filters, setFilters } = useContext<any>(OpportunitiesContext);
 
     const isSelected = (id: number | string, filterType: string) => {
@@ -244,6 +289,10 @@ function FilterOptions({ type, options }: { type: string; options: any[] }) {
 
     return (
         <ScrollArea className="h-[200px] w-full">
+            <Button variant={isStablecoinsSelected ? "secondaryOutline" : "outline"} className='m-4 mb-0 ml-3 flex items-center justify-center gap-1' onClick={selectStablecoins}>
+                {isStablecoinsSelected && <Check className='w-4 h-4 text-secondary-500' />}
+                Select{isStablecoinsSelected ? "ed" : ""} Stable Coins
+            </Button>
             <div className="filter-options flex flex-wrap gap-4 md:gap-3 bg-white p-4 md:p-[24px_24px_24px_14px]">
                 <Button
                     variant="outline"

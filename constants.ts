@@ -54,3 +54,20 @@ export const HISTORY_CHART_SELECT_OPTIONS = [
     value: 'utilizationRate',
   },
 ]
+
+export const STABLECOINS_NAMES_LIST = [
+  'DAI',
+  'CDAI',
+  'SDAI',
+  'CSDAI',
+  'SUSDE',
+  'CSUSDE',
+  'USDC',
+  'CUSDC',
+  'USDC.E',
+  'CUSDC.E',
+  'USDE',
+  'CUSDE',
+  'USDT',
+  'CUSDT',
+]
