@@ -105,7 +105,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     },
     {
         accessorFn: item => {
-            const value = item.utilization;
+            const value = item.deposits;
             if (containsNegativeInteger(value)) {
                 return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)))}`
             }
