@@ -9,13 +9,16 @@ import {
 } from "@/components/ui/tooltip"
 import {
     Drawer,
+    DrawerClose,
     DrawerContent,
+    DrawerFooter,
     DrawerTrigger,
 } from "@/components/ui/drawer"
 import { motion } from "framer-motion"
 import { Label } from '../ui/typography';
 import InfoCircleIcon from '../icons/info-circle-icon';
 import useDimensions from '@/hooks/useDimensions';
+import { Button } from '../ui/button';
 
 type TProps = {
     label?: any;
@@ -93,9 +96,16 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
                     {label && label}
                 </motion.span>
             </DrawerTrigger>
-            <DrawerContent className='p-4 pb-8'>
-                {typeof content === "string" && <Label className='w-fit'>{content}</Label>}
-                {typeof content !== "string" && content}
+            <DrawerContent>
+                <div className="p-4 pb-8">
+                    {typeof content === "string" && <Label className='w-fit'>{content}</Label>}
+                    {typeof content !== "string" && content}
+                </div>
+                <DrawerFooter>
+                    <DrawerClose className='w-full'>
+                        <Button size={'lg'} variant="outline" className='w-full'>Close</Button>
+                    </DrawerClose>
+                </DrawerFooter>
             </DrawerContent>
         </Drawer>
 

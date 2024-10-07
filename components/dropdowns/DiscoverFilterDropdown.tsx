@@ -8,7 +8,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
     Drawer,
+    DrawerClose,
     DrawerContent,
+    DrawerFooter,
     DrawerTrigger,
 } from "@/components/ui/drawer"
 import { BodyText, Label } from '../ui/typography';
@@ -180,6 +182,11 @@ export default function DiscoverFilterDropdown() {
                     <FilterCardHeader {...filterCardHeaderProps} />
                     <FilterCardContent {...filterCardContentProps} />
                 </div>
+                <DrawerFooter>
+                    <DrawerClose className='w-full'>
+                        <Button size={'lg'} variant="outline" className='w-full'>Close</Button>
+                    </DrawerClose>
+                </DrawerFooter>
             </DrawerContent>
         </Drawer>
     )
