@@ -52,7 +52,7 @@ export default function DiscoverFilterDropdown() {
 
     const allTokenOptions = Object.values(allTokensData).flat(1)
         .reduce((acc: TToken[], current: any) => {
-            if (!acc.some((item) => item.symbol === current.symbol)) {
+            if (!acc.some((item) => item.symbol.toLocaleUpperCase() === current.symbol.toLocaleUpperCase())) {
                 acc.push(current)
             }
             return acc
@@ -125,6 +125,7 @@ export default function DiscoverFilterDropdown() {
             chain_ids: [],
             platform_ids: [],
         });
+        setIsStablecoinsSelected(false)
     }
 
     const filterCardHeaderProps = {
