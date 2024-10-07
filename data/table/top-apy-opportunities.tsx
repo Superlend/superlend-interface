@@ -36,7 +36,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         <Label>Chain</Label>
                         <span className="flex items-center gap-[8px]">
                             <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} />
-                            <BodyText level="body2" weight="medium">{chainName}</BodyText>
+                            <BodyText level="body2" weight="medium">{chainName[0]}{chainName.toLowerCase().slice(1)}</BodyText>
                         </span>
                     </span>
                 </span>
@@ -104,14 +104,15 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         // enableGlobalFilter: false,
     },
     {
-        accessorFn: item => {
-            const value = item.deposits;
+        accessorKey: "deposits",
+        header: "Deposits",
+        cell: ({ row }) => {
+            const value: string = row.getValue("deposits");
             if (containsNegativeInteger(value)) {
                 return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)))}`
             }
             return `$${abbreviateNumber(Number(value))}`
-        },
-        header: "Deposits",
+        }
         // enableGlobalFilter: false,
     },
     {

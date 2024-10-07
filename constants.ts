@@ -10,8 +10,8 @@ export const PERIOD_LIST = [
     value: Period.oneWeek,
   },
   { label: PeriodDisplay.oneMonth, value: Period.oneMonth },
-//   { label: PeriodDisplay.threeMonth, value: Period.threeMonth },
-//   { label: PeriodDisplay.sixMonth, value: Period.sixMonth },
+  //   { label: PeriodDisplay.threeMonth, value: Period.threeMonth },
+  //   { label: PeriodDisplay.sixMonth, value: Period.sixMonth },
   { label: PeriodDisplay.oneYear, value: Period.oneYear },
 ];
 
@@ -19,55 +19,55 @@ export const PERIOD_DISPLAY_MAPPER: { [key in Period]: string } = {
   [Period.oneDay]: "day",
   [Period.oneWeek]: "week",
   [Period.oneMonth]: "month",
-//   [Period.threeMonth]: "3 months",
-//   [Period.sixMonth]: "6 months",
+  //   [Period.threeMonth]: "3 months",
+  //   [Period.sixMonth]: "6 months",
   [Period.oneYear]: "year",
 };
 
 export const HISTORY_CHART_SELECT_OPTIONS = [
   {
-    label: 'Liquidation Threshold',
-    value: 'liquidationThreshold',
+    label: "Deposit Rate",
+    value: "depositRate",
   },
   {
-    label: 'Liquidation Penalty',
-    value: 'liquidationPenalty',
+    label: "LTV",
+    value: "ltv",
   },
   {
-    label: 'LTV',
-    value: 'ltv',
+    label: "Variable Borrow APR",
+    value: "variableBorrowRate",
   },
   {
-    label: 'Reserve Factor',
-    value: 'reserveFactor',
+    label: "Utilization Rate",
+    value: "utilizationRate",
   },
   {
-    label: 'Variable Borrow APR',
-    value: 'variableBorrowRate',
+    label: "Liquidation Threshold",
+    value: "liquidationThreshold",
   },
   {
-    label: 'Deposit Rate',
-    value: 'depositRate',
+    label: "Liquidation Penalty",
+    value: "liquidationPenalty",
   },
   {
-    label: 'Utilization Rate',
-    value: 'utilizationRate',
+    label: "Reserve Factor",
+    value: "reserveFactor",
   },
-]
+];
 
 export const STABLECOINS_NAMES_LIST = [
-  'DAI',
-  'CDAI',
-  'SDAI',
-  'CSDAI',
-  'SUSDE',
-  'CSUSDE',
-  'USDC',
-  'CUSDC',
-  'USDC.E',
-  'CUSDC.E',
-  'USDE',
-  'CUSDE',
-  'USDT',
-  'CUSDT',
-]
+  "DAI",
+  "CDAI",
+  "SDAI",
+  "CSDAI",
+  "SUSDE",
+  "CSUSDE",
+  "USDC",
+  "CUSDC",
+  "USDC.E",
+  "CUSDC.E",
+  "USDE",
+  "CUSDE",
+  "USDT",
+  "CUSDT",
+];
