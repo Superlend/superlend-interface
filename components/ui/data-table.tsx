@@ -131,7 +131,7 @@ export function DataTable<TData, TValue>({
                     </Label>
                 </div>
                 <div className="pagination-controls flex items-center justify-end space-x-2 flex-1 shrink-0 ml-16">
-                    <Label size="medium" weight="medium" className="shrink-0">
+                    <Label size="medium" weight="medium" className="hidden xs:block shrink-0">
                         {table.getRowModel().rows.length.toLocaleString()} {" "}
                         of {table.getRowCount().toLocaleString()} rows
                     </Label>

@@ -10,7 +10,7 @@ import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { ColumnDef } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
-import { TChain, TOpportunity, TOpportunityTable, TOpportunityType, TToken } from '@/types'
+import { TChain, TOpportunityTable, TOpportunityType, TToken } from '@/types'
 import { DataTable } from '@/components/ui/data-table'
 import { useQuery } from '@tanstack/react-query'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
@@ -78,19 +78,26 @@ export default function TopApyOpportunities() {
         <section id='top-apy-opportunities' className="top-apy-opportunities-container flex flex-col gap-[24px] px-5">
             <div className="top-apy-opportunities-header flex items-end lg:items-center justify-between gap-[12px]">
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
-                    <div className="flex items-center gap-[12px]">
-                        <HeadingText level="h3">Top APY Opportunities</HeadingText>
-                        <InfoTooltip content="Understand the risks, and types of high-yield opportunities to make informed investment decisions" />
+                    <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
+                        <div className="flex items-center gap-[12px]">
+                            <HeadingText level="h3">Top APY Opportunities</HeadingText>
+                            <InfoTooltip content="Understand the risks, and types of high-yield opportunities to make informed investment decisions" />
+                        </div>
+                        {/* Filter button for Tablet and below screens */}
+                        <div className="block lg:hidden">
+                            <DiscoverFilterDropdown />
+                        </div>
                     </div>
-                    <div className="flex items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
-                        <div className="max-w-[150px] lg:max-w-[250px]">
+                    <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
+                        <div className="w-full sm:max-w-[150px] lg:max-w-[250px]">
                             <LendBorrowToggle type={opportunityType} handleToggle={toggleOpportunityType} />
                         </div>
-                        <div className="max-w-[156px] w-full">
+                        <div className="sm:max-w-[156px] w-full">
                             <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={searchKeywords} />
                         </div>
                     </div>
                 </div>
+                {/* Filter buttons for Desktop and above screens */}
                 <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
                     {/* <ChainSelectorDropdown /> */}
                     <DiscoverFilterDropdown />

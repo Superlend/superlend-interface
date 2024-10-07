@@ -6,6 +6,11 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+    Drawer,
+    DrawerContent,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
 import { BodyText, Label } from '../ui/typography';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -17,6 +22,7 @@ import { OpportunitiesContext } from '@/context/opportunities-provider';
 import { getPlatformLogo, getTokenLogo } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { TToken } from '@/types';
+import useDimensions from '@/hooks/useDimensions';
 
 const allPlatformsData = [
     {
@@ -35,9 +41,11 @@ export default function DiscoverFilterDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
     const { filters, setFilters } = useContext<any>(OpportunitiesContext);
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext);
+    const { width: screenWidth } = useDimensions();
+    const isDesktop = screenWidth > 768;
 
     const hasActiveFilters = !!filters.token_ids.length || !!filters.chain_ids.length || !!filters.platform_ids.length
-    const activeFiltersTotalCount = filters.token_ids.length || filters.chain_ids.length + filters.platform_ids.length;
+    const activeFiltersTotalCount = filters.token_ids.length + filters.chain_ids.length + filters.platform_ids.length;
     const getActiveFiltersCountByCategory = (filterName: string) => (filters[filterName]?.length);
 
     const FILTER_CATEGORIES = [
@@ -58,18 +66,7 @@ export default function DiscoverFilterDropdown() {
     const FILTER_OPTIONS: any = {
         token: {
             type: "token",
-            options: Object.values(allTokensData).flat(1)
-                .reduce((acc: TToken[], current: any) => {
-                    if (!acc.some((item) => item.symbol === current.symbol)) {
-                        acc.push(current)
-                    }
-                    return acc
-                }, [])
-                .map((token: TToken) => ({
-                    name: token.symbol,
-                    token_id: token.symbol,
-                    logo: getTokenLogo(token.symbol)
-                }))
+            options: getAllFilteredTokens()
         },
         chain: {
             type: "chain",
@@ -80,6 +77,21 @@ export default function DiscoverFilterDropdown() {
             options: allPlatformsData
         },
     };
+
+    function getAllFilteredTokens() {
+        return Object.values(allTokensData).flat(1)
+            .reduce((acc: TToken[], current: any) => {
+                if (!acc.some((item) => item.symbol === current.symbol)) {
+                    acc.push(current)
+                }
+                return acc
+            }, [])
+            .map((token: TToken) => ({
+                name: token.symbol,
+                token_id: token.symbol,
+                logo: getTokenLogo(token.symbol)
+            }))
+    }
 
     function handleClearFilters() {
         setFilters({
@@ -99,28 +111,53 @@ export default function DiscoverFilterDropdown() {
         getActiveFiltersCountByCategory
     }
 
+    if (isDesktop) {
+        return (
+            <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+                <DropdownMenuTrigger asChild>
+                    <Button size="lg" className="w-fit relative flex items-center gap-2 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-600 rounded-xl">
+                        <FilterIcon className={`hidden xs:inline-block ${hasActiveFilters ? "fill-gray-600" : ""}`} width={16} height={16} />
+                        <span className="trigger-label">Filters</span>
+                        <ChevronDownIcon className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                        <div className={`${hasActiveFilters ? "absolute block" : "hidden"} -top-[6px] -right-[6px] flex items-center justify-center w-4 h-4 bg-red-500 rounded-full`}>
+                            <Label size='small' className='text-white'>{activeFiltersTotalCount}</Label>
+                        </div>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="bottom" align="end" className="p-0 rounded-[16px] border-none bg-white bg-opacity-40">
+                    <div className="filter-card flex flex-col md:min-w-[480px] max-w-[480px]">
+                        <FilterCardHeader {...filterCardHeaderProps} />
+                        <FilterCardContent {...filterCardContentProps} />
+                    </div>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        )
+    }
+
     return (
-        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger asChild>
+        <Drawer open={isOpen} onOpenChange={setIsOpen}>
+            <DrawerTrigger asChild>
                 <Button size="lg" className="w-fit relative flex items-center gap-2 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-600 rounded-xl">
-                    <FilterIcon className={`${hasActiveFilters ? "fill-gray-600" : ""}`} width={16} height={16} />
-                    Filters
-                    <ChevronDownIcon className={`w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                    <FilterIcon className={`hidden xs:inline-block ${hasActiveFilters ? "fill-gray-600" : ""}`} width={16} height={16} />
+                    <span className="trigger-label">Filters</span>
+                    <ChevronDownIcon className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                     <div className={`${hasActiveFilters ? "absolute block" : "hidden"} -top-[6px] -right-[6px] flex items-center justify-center w-4 h-4 bg-red-500 rounded-full`}>
                         <Label size='small' className='text-white'>{activeFiltersTotalCount}</Label>
                     </div>
                 </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="bottom" align="end" className="p-0 rounded-[16px] border-none bg-white bg-opacity-40">
+            </DrawerTrigger>
+            <DrawerContent>
                 <div className="filter-card flex flex-col md:min-w-[480px] max-w-[480px]">
                     <FilterCardHeader {...filterCardHeaderProps} />
                     <FilterCardContent {...filterCardContentProps} />
                 </div>
-            </DropdownMenuContent>
-        </DropdownMenu>
-
+            </DrawerContent>
+        </Drawer>
     )
+
 }
+
+// Child components =====================
 
 function FilterCardHeader({
     handleClearFilters
@@ -149,15 +186,15 @@ function FilterCardContent({
     const isActiveTab = (item: any) => activeTab.value === item.value ? "text-black bg-gray-300" : "text-gray-500 hover:bg-gray-200";
 
     return (
-        <div className="filter-card-content grid grid-cols-[120px_1fr] items-start gap-4 bg-white rounded-[16px]">
-            <div className="filter-categories flex flex-col gap-2 bg-white p-[24px_0px_24px_24px]">
+        <div className="filter-card-content grid md:grid-cols-[120px_1fr] items-start md:gap-4 bg-white rounded-[16px]">
+            <div className="filter-categories flex md:flex-col gap-4 md:gap-2 bg-white py-2 px-4 md:p-[24px_0px_24px_24px]">
                 {
                     FILTER_CATEGORIES.map((item: any) => (
                         <Button
                             onClick={() => setActiveTab(item)}
                             key={item.label}
                             size="md"
-                            className={`py-[8px] px-[8px] border-0 items-center justify-between  ${isActiveTab(item)}`}>
+                            className={`flex items-center gap-2 py-[8px] px-[8px] border-0 items-center justify-between  ${isActiveTab(item)}`}>
                             <Label size='small' weight='medium' className={`w-fit text-left self-start`}>
                                 {item.label}
                             </Label>
@@ -175,7 +212,6 @@ function FilterCardContent({
     )
 }
 
-// New reusable FilterOptions component
 function FilterOptions({ type, options }: { type: string; options: any[] }) {
     const { filters, setFilters } = useContext<any>(OpportunitiesContext);
 
@@ -208,7 +244,7 @@ function FilterOptions({ type, options }: { type: string; options: any[] }) {
 
     return (
         <ScrollArea className="h-[200px] w-full">
-            <div className="filter-options flex flex-wrap gap-3 bg-white p-[24px_24px_24px_14px]">
+            <div className="filter-options flex flex-wrap gap-4 md:gap-3 bg-white p-4 md:p-[24px_24px_24px_14px]">
                 <Button
                     variant="outline"
                     size="sm"
