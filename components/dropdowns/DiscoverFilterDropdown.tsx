@@ -289,10 +289,12 @@ function FilterOptions({
 
     return (
         <ScrollArea className="h-[200px] w-full">
-            <Button variant={isStablecoinsSelected ? "secondaryOutline" : "outline"} className='m-4 mb-0 ml-3 flex items-center justify-center gap-1' onClick={selectStablecoins}>
-                {isStablecoinsSelected && <Check className='w-4 h-4 text-secondary-500' />}
-                Select{isStablecoinsSelected ? "ed" : ""} Stable Coins
-            </Button>
+            {type === "token" &&
+                <Button variant={isStablecoinsSelected ? "secondaryOutline" : "outline"} className='m-4 sm:mt-6 mb-0 ml-3 flex items-center justify-center gap-1' onClick={selectStablecoins}>
+                    {isStablecoinsSelected && <Check className='w-4 h-4 text-secondary-500' />}
+                    Select{isStablecoinsSelected ? "ed" : ""} Stable Coins
+                </Button>
+            }
             <div className="filter-options flex flex-wrap gap-4 md:gap-3 bg-white p-4 md:p-[24px_24px_24px_14px]">
                 <Button
                     variant="outline"
