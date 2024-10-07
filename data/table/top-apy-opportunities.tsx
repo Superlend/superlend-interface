@@ -4,6 +4,7 @@ import ImageWithBadge from "@/components/ImageWithBadge";
 import ImageWithDefault from "@/components/ImageWithDefault";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import { BodyText, Label } from "@/components/ui/typography";
+import useDimensions from "@/hooks/useDimensions";
 import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import { TOpportunityTable } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
@@ -15,6 +16,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: "Token",
         accessorFn: item => item.tokenSymbol,
         cell: ({ row }) => {
+            const { width: screenWidth } = useDimensions();
             const tokenSymbol: string = row.getValue("tokenSymbol");
             const tokenLogo = row.original.tokenLogo;
             const tokenAddress = row.original.tokenAddress;
@@ -45,13 +47,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-[8px] w-fit max-w-full">
                     <InfoTooltip
+                        hide={screenWidth < 768}
                         label={
                             <ImageWithBadge
                                 mainImg={tokenLogo}
                                 badgeImg={chainLogo}
                             />
                         }
-
                         content={tooltipContent}
                     />
                     <Link href={{

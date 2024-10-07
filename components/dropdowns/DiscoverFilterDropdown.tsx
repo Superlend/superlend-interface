@@ -289,7 +289,7 @@ function FilterOptions({
     };
 
     return (
-        <ScrollArea className="h-[200px] w-full">
+        <ScrollArea className="h-[400px] sm:h-[200px] w-full">
             {type === "token" &&
                 <Button variant={isStablecoinsSelected ? "secondaryOutline" : "outline"} className='m-4 sm:mt-6 mb-0 ml-3 flex items-center justify-center gap-1' onClick={selectStablecoins}>
                     {isStablecoinsSelected && <Check className='w-4 h-4 text-secondary-500' />}

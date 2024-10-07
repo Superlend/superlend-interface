@@ -81,14 +81,15 @@ export default function PageHeader() {
                             </div>
                         )
                     }
-                    {tokenDetails?.symbol && !isLoadingPlatformData &&
+                    {tokenDetails?.symbol && chainDetails.logo && !isLoadingPlatformData &&
                         <div className="flex items-center gap-[12px]">
                             <div className="flex items-center gap-[8px]">
                                 <ImageWithDefault
                                     src={tokenLogo}
-                                    alt="Token logo"
+                                    alt={`${tokenName} Token Logo`}
                                     width={28}
                                     height={28}
+                                    className="rounded-full"
                                 />
                                 <HeadingText level='h4' className='uppercase'>{tokenSymbol}</HeadingText>
                             </div>
@@ -99,7 +100,7 @@ export default function PageHeader() {
                                     alt={`${chainName} Chain Logo`}
                                     width={28}
                                     height={28}
-                                    // className="bg-white rounded-full"
+                                    className="rounded-full"
                                 />
                                 <HeadingText level='h4' className='uppercase'>{chainName}</HeadingText>
                             </div>
@@ -171,14 +172,14 @@ function getAssetTooltipContent({
                 <Label>Token</Label>
                 <span className="flex items-center gap-[8px]">
                     <ImageWithDefault alt={tokenSymbol} src={tokenLogo} width={24} height={24} />
-                    <BodyText level="body2" weight="medium">{tokenName}</BodyText>
+                    <BodyText level="body1" weight="medium">{tokenName}</BodyText>
                 </span>
             </span>
             <span className="flex flex-col gap-[4px]">
                 <Label>Chain</Label>
                 <span className="flex items-center gap-[8px]">
                     <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} />
-                    <BodyText level="body2" weight="medium">{chainName[0]}{chainName.toLowerCase().slice(1)}</BodyText>
+                    <BodyText level="body1" weight="medium">{chainName[0]}{chainName.toLowerCase().slice(1)}</BodyText>
                 </span>
             </span>
         </span>
