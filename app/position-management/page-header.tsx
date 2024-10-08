@@ -126,8 +126,8 @@ export default function PageHeader() {
                         </Button>
                     </Badge> */}
                 </div>
-                <div className="header-right flex flex-col md:flex-row items-start md:items-center gap-[24px]">
-                    {isLoadingPlatformData && <Skeleton className='w-[150px] sm:w-[300px] h-[35px]' />}
+                <div className="header-right flex flex-wrap items-center gap-[24px]">
+                    {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
                     {!!pageHeaderStats?.supply_apy &&
                         <div className="flex items-center max-md:justify-between gap-[4px]">
                             <BodyText level='body1' className='text-gray-700 shrink-0'>
@@ -140,7 +140,7 @@ export default function PageHeader() {
                             </Badge>
                         </div>
                     }
-                    {!!pageHeaderStats?.borrow_rate && <span className="hidden md:inline-block text-gray">|</span>}
+                    {!!pageHeaderStats?.borrow_rate && <span className="hidden xs:inline-block text-gray">|</span>}
                     {!!pageHeaderStats?.borrow_rate &&
                         <div className="flex items-center max-md:justify-between gap-[4px]">
                             <BodyText level='body1' className='text-gray-700 shrink-0'>

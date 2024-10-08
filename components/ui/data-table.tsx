@@ -121,51 +121,53 @@ export function DataTable<TData, TValue>({
                 </TableBody>
             </Table>
             {/* Pagination STARTS */}
-            <div className="pagination-container flex items-center justify-end sm:justify-between gap-5 flex-wrap py-4 px-4 sm:px-8">
-                <div className="pagination-stats">
-                    <Label size="medium" weight="medium">
-                        {table.getState().pagination.pageIndex + 1} of {table.getPageCount()} pages
-                    </Label>
+            {!!table.getRowModel().rows?.length &&
+                <div className="pagination-container flex items-center justify-end sm:justify-between gap-5 flex-wrap py-4 px-4 sm:px-8">
+                    <div className="pagination-stats">
+                        <Label size="medium" weight="medium">
+                            {table.getState().pagination.pageIndex + 1} of {table.getPageCount()} pages
+                        </Label>
+                    </div>
+                    <div className="pagination-controls flex items-center justify-end space-x-2 flex-1 shrink-0 ml-16">
+                        <Label size="medium" weight="medium" className="hidden xs:block shrink-0">
+                            {table.getRowModel().rows.length.toLocaleString()} {" "}
+                            of {table.getRowCount().toLocaleString()} rows
+                        </Label>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.firstPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            <ChevronsLeft className="w-5 h-5" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.lastPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            <ChevronsRight className="w-5 h-5" />
+                        </Button>
+                    </div>
                 </div>
-                <div className="pagination-controls flex items-center justify-end space-x-2 flex-1 shrink-0 ml-16">
-                    <Label size="medium" weight="medium" className="hidden xs:block shrink-0">
-                        {table.getRowModel().rows.length.toLocaleString()} {" "}
-                        of {table.getRowCount().toLocaleString()} rows
-                    </Label>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.firstPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        <ChevronsLeft className="w-5 h-5" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        <ChevronRight className="w-5 h-5" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.lastPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        <ChevronsRight className="w-5 h-5" />
-                    </Button>
-                </div>
-            </div>
+            }
             {/* Pagination ENDS */}
         </div>
     )

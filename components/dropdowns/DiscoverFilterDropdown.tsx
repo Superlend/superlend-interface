@@ -178,11 +178,11 @@ export default function DiscoverFilterDropdown() {
                 </Button>
             </DrawerTrigger>
             <DrawerContent>
-                <div className="filter-card flex flex-col md:min-w-[480px] max-w-[480px]">
+                <div className="filter-card flex flex-col">
                     <FilterCardHeader {...filterCardHeaderProps} />
                     <FilterCardContent {...filterCardContentProps} />
                 </div>
-                <DrawerFooter>
+                <DrawerFooter className='w-full'>
                     <DrawerClose className='w-full'>
                         <Button size={'lg'} variant="outline" className='w-full'>Close</Button>
                     </DrawerClose>

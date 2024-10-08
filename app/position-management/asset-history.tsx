@@ -72,7 +72,7 @@ export default function AssetHistory() {
             <div className="py-[36px] px-[30px] md:px-[55px] flex flex-col md:flex-row md:items-center justify-between gap-10">
                 {
                     HISTORY_CHART_FOOTER_STATS.map((block, blockIndex) => (
-                        <div key={blockIndex} className="block-1 flex flex-col md:gap-[12px]">
+                        <div key={blockIndex} className="block-1 flex flex-col gap-[4px] sm:gap-[8px] md:gap-[12px]">
                             <InfoTooltip
                                 label={
                                     <BodyText level='body1' className={`text-gray-600 border-b cursor-help border-dashed border-gray-800 hover:border-transparent`}>
@@ -90,7 +90,7 @@ export default function AssetHistory() {
                                 </HeadingText>
                             }
                             {
-                                isLoadingPlatformHistory && <Skeleton className='h-[35px] w-[80px] rounded-4' />
+                                isLoadingPlatformHistory && <Skeleton className='h-[28px] w-[80px] rounded-4' />
                             }
                         </div>
                     ))
