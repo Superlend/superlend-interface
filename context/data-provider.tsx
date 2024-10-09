@@ -2,9 +2,18 @@
 
 import useGetChainsData from '@/hooks/useGetChainsData';
 import useGetTokensData from '@/hooks/useGetTokensData';
+import { TChain, TToken } from '@/types';
 import { createContext } from 'react';
 
-export const AssetsDataContext = createContext<any>(null);
+type TAssetsDataProps = {
+    allTokensData: TToken[],
+    allChainsData: TChain[]
+};
+
+export const AssetsDataContext = createContext<TAssetsDataProps>({
+    allTokensData: [],
+    allChainsData: []
+});
 
 export default function AssetsDataProvider({ children }: { children: React.ReactNode }) {
     const { data: allTokensData } = useGetTokensData();
