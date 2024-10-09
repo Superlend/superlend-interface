@@ -19,7 +19,7 @@ export default function useGetOpportunitiesData(
       }
     },
     staleTime: Infinity,
-    refetchInterval: 60000,
+    refetchInterval: false,
   });
   return { data: data || [], isLoading, isError };
 }

@@ -51,7 +51,7 @@ export default function TopApyOpportunities() {
             platformLogo: getPlatformLogo(item.platform.platform_name.split("-")[0]),
             apy_current: item.platform.apy.current,
             max_ltv: item.platform.max_ltv,
-            deposits: `${Number(item.platform.liquidity) * Number(item.token.price_usd)}`,
+            deposits: item.platform.liquidity,
             utilization: item.platform.utilization_rate,
         }
     });
