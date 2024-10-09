@@ -1,3 +1,4 @@
+import { Period } from "@/types/periodButtons";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -48,17 +49,64 @@ export function convertDateToTime(date: Date, options: TOptions = {}) {
   }
 
   // Extract hours, minutes, and seconds
-  const hours = date.getHours().toString().padStart(2, "0"); // Format: HH
+  let hours: number | string = date.getHours().toString(); // Format: HH
+  hours = Number(hours) % 12;
+  hours = hours ? hours : 12;
   const minutes = date.getMinutes().toString().padStart(2, "0"); // Format: MM
   const seconds = date.getSeconds().toString().padStart(2, "0"); // Format: SS
+  let ampm = Number(hours) >= 12 ? "PM" : "AM";
 
   const hasHours = !exclude?.includes("hours") ? `${hours}` : "";
   const hasMinutes = !exclude?.includes("minutes") ? `:${minutes}` : "";
   const hasSeconds = !exclude?.includes("seconds") ? `:${seconds}` : "";
+  const hasAmPm = ` ${ampm}`;
 
   // Return formatted time string
-  return `${hasHours}${hasMinutes}${hasSeconds}`;
+  return `${hasHours}${hasMinutes}${hasSeconds}${hasAmPm}`;
 }
+
+export function formatDateAccordingToPeriod(
+  timeStamp: string,
+  selectedRange: Period
+) {
+  const day = timeStamp.slice(4, 6).split(",")[0];
+  const month = timeStamp.slice(0, 3);
+  const date = `${day} ${month}`;
+
+  const result = selectedRange === Period.oneDay ? timeStamp : date;
+  return result
+}
+
+export const shortNubers = (value: number): number => {
+  const parts = value.toString().split(".");
+
+  if (parts.length === 1) {
+    return value;
+  }
+
+  const integerPart = parts[0];
+  const fractionalPart = parts[1];
+
+  let significantCount = 0;
+  let trimmedFractional = "";
+  let firstNotZero = false;
+  for (let i = 0; i < fractionalPart.length; i++) {
+    trimmedFractional += fractionalPart[i];
+    if (Number(fractionalPart[i]) > 0) {
+      firstNotZero = true;
+    }
+    if (firstNotZero) {
+      significantCount++;
+    }
+    if (significantCount === 3) {
+      break;
+    }
+  }
+
+  const result = parseFloat(integerPart + "." + trimmedFractional);
+
+  return result;
+};
 
 export function getTokenLogo(tokenSymbol: string): string {
   return `https://app.aave.com/icons/tokens/${tokenSymbol?.toLowerCase()}.svg`;

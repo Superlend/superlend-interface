@@ -1,12 +1,8 @@
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Card,
     CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
 } from "@/components/ui/card"
 import {
     ChartConfig,
@@ -18,7 +14,66 @@ import { HISTORY_CHART_SELECT_OPTIONS, PERIOD_LIST } from "@/constants"
 import RadioGroupDropdown from "../dropdowns/RadioGroupDropdown"
 import { Period } from "@/types/periodButtons"
 import { BodyText, Label } from "../ui/typography"
-import { abbreviateNumber, convertDateToTime } from "@/lib/utils"
+import { abbreviateNumber, convertDateToTime, formatDateAccordingToPeriod, shortNubers } from "@/lib/utils"
+
+interface CustomYAxisTickProps {
+    x: number
+    y: number
+    payload: {
+        value: number
+    }
+    index: number
+    length: number
+}
+
+const CustomYAxisTick = ({
+    x,
+    y,
+    payload,
+    index,
+    length,
+}: CustomYAxisTickProps) => {
+    // if (index === 0 || index === length - 1) return null
+    return (
+        <g
+            transform={`translate(${x - 20},${y})`}
+            style={{ zIndex: 10, position: 'relative', color: "#000000" }}
+        >
+            <text x={0} y={0} dy={6} dx={11} textAnchor="start" fill="#000000">
+                {shortNubers(payload.value)}
+            </text>
+        </g>
+    )
+}
+
+interface CustomXAxisTickProps {
+    x: number
+    y: number
+    selectedRange: Period
+    payload: {
+        value: number
+    }
+    index: number
+    length: number
+}
+
+const CustomXAxisTick = ({
+    x,
+    y,
+    selectedRange,
+    payload,
+    index,
+    length,
+}: CustomXAxisTickProps) => {
+    if (index % 2) return null
+    return (
+        <g transform={`translate(${x},${y})`} style={{ zIndex: 10 }}>
+            <text x={0} y={0} dy={16} textAnchor="middle" fill="#000000">
+                {formatDateAccordingToPeriod(payload.value.toString(), selectedRange)}
+            </text>
+        </g>
+    )
+}
 
 function CustomChartTooltipContent({
     payload,
@@ -45,8 +100,8 @@ function CustomChartTooltipContent({
 export const description = "A stacked area chart"
 
 const chartConfig = {
-    liquidationThreshold: {
-        label: "Liquidation Threshold",
+    platformHistory: {
+        label: "History",
         color: "hsl(var(--chart-2))",
     },
 } satisfies ChartConfig
@@ -63,7 +118,6 @@ export function AreaChartStacked({
         const dateOptions: any = { year: 'numeric', month: 'short', day: 'numeric' };
         const formattedDate = new Intl.DateTimeFormat('en-US', dateOptions).format(date);
         const timeStamp = convertDateToTime(date, { exclude: ["seconds"] });
-        // const formattedDate = `${date.getDate()} ${date.getMonth() + 1} ${date.getFullYear()}`;
 
         return ({
             [selectedFilter.value]: abbreviateNumber(item.data[selectedFilter.value]),
@@ -89,24 +143,37 @@ export function AreaChartStacked({
                     </Tabs>
                     <RadioGroupDropdown listData={HISTORY_CHART_SELECT_OPTIONS} value={selectedFilter} onValueChange={handleFilterChange} triggerLabel="Filter by" />
                 </div>
-                <ChartContainer config={chartConfig}>
+                <ChartContainer config={chartConfig} className="h-[250px] w-full">
                     <AreaChart
                         accessibilityLayer
                         data={data}
                         margin={{
-                            left: 0,
+                            left: -60,
                             right: 0,
-                            top: 30
+                            top: 30,
+                            bottom: -30
                         }}
                     >
                         <CartesianGrid vertical={false} />
-                        {/* <XAxis
-                            dataKey="month"
+                        <XAxis
+                            dataKey="timestamp"
                             tickLine={false}
                             axisLine={false}
-                            tickMargin={8}
-                            tickFormatter={(value) => value.slice(0, 3)}
-                        /> */}
+                            tickMargin={-35}
+                            tickFormatter={(value) =>
+                                formatDateAccordingToPeriod(value, selectedRange)
+                            }
+                            tick={({ x, y, payload, index }) => (
+                                <CustomXAxisTick
+                                    payload={payload as { value: number }}
+                                    selectedRange={selectedRange}
+                                    x={x as number}
+                                    y={y as number}
+                                    index={index as number}
+                                    length={data.length}
+                                />
+                            )}
+                        />
                         <ChartTooltip
                             cursor={true}
                             content={
@@ -117,27 +184,31 @@ export function AreaChartStacked({
                         />
                         <Area
                             dataKey={selectedFilter.value}
-                            type="natural"
-                            fill="var(--color-liquidationThreshold)"
-                            fillOpacity={0.4}
-                            stroke="var(--color-liquidationThreshold)"
+                            type="monotone"
+                            fill="var(--color-platformHistory)"
+                            fillOpacity={0.3}
+                            stroke="var(--color-platformHistory)"
+                            strokeWidth={2}
                             stackId="a"
+                        />
+                        <YAxis
+                            tick={({ x, y, payload, index }) => (
+                                <CustomYAxisTick
+                                    payload={payload as { value: number }}
+                                    x={x as number}
+                                    y={y as number}
+                                    index={index as number}
+                                    length={chartData.length}
+                                />
+                            )}
+                            // domain={[minValue, maxValue]}
+                            tickCount={5}
+                            tickMargin={-20}
+                            stroke="#FFF"
                         />
                     </AreaChart>
                 </ChartContainer>
             </CardContent>
-            {/* <CardFooter>
-                <div className="flex w-full items-start gap-2 text-sm">
-                    <div className="grid gap-2">
-                        <div className="flex items-center gap-2 font-medium leading-none">
-                            Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-                        </div>
-                        <div className="flex items-center gap-2 leading-none text-muted-foreground">
-                            January - June 2024
-                        </div>
-                    </div>
-                </div>
-            </CardFooter> */}
         </Card>
     )
 }
