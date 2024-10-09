@@ -27,19 +27,6 @@ import { TToken } from '@/types';
 import useDimensions from '@/hooks/useDimensions';
 import { STABLECOINS_NAMES_LIST } from '@/constants';
 
-const allPlatformsData = [
-    {
-        logo: getPlatformLogo("AAVE"),
-        name: "AAVE",
-        platform_id: "AAVE"
-    },
-    {
-        logo: getPlatformLogo("COMPOUND"),
-        name: "COMPOUND",
-        platform_id: "COMPOUND"
-    },
-]
-
 export default function DiscoverFilterDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
     const { filters, setFilters } = useContext<any>(OpportunitiesContext);
@@ -62,8 +49,21 @@ export default function DiscoverFilterDropdown() {
         .map((token: TToken) => ({
             name: token.symbol,
             token_id: token.symbol,
-            logo: getTokenLogo(token.symbol)
+            logo: token.logo
         }))
+
+    const allPlatformsData = [
+        {
+            logo: allTokenOptions?.find((token: any) => token.token_id === 'AAVE')?.logo || "",
+            name: "AAVE",
+            platform_id: "AAVE"
+        },
+        {
+            logo: allTokenOptions?.find((token: any) => token.token_id === 'COMP')?.logo || "",
+            name: "COMPOUND",
+            platform_id: "COMPOUND"
+        },
+    ]
 
     const FILTER_CATEGORIES = [
         {
@@ -319,7 +319,7 @@ function FilterOptions({
                             size="sm"
                             key={option[`${type}_id`]}
                             className={`flex items-center gap-1 ${isSelected(option[`${type}_id`], type) ? "selected" : ""}`}>
-                            <ImageWithDefault src={option.logo} alt={option.name} width={18} height={18} />
+                            <ImageWithDefault src={option.logo} alt={option.name} width={18} height={18} className="max-w-[18px] max-h-[18px]" />
                             {option.name}
                         </Button>
                     ))

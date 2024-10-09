@@ -39,6 +39,7 @@ export default function PageHeader() {
         address: tokenAddress,
         symbol: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.symbol || "",
         name: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.name || "",
+        logo: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.logo || ""
     }
 
     const chainDetails: any = allChainsData?.find((chain: any) => Number(chain.chain_id) === Number(chain_id)) || {
@@ -54,7 +55,7 @@ export default function PageHeader() {
         }))
 
     const tokenSymbol = tokenDetails.symbol;
-    const tokenLogo = getTokenLogo(tokenDetails?.symbol?.toLowerCase());
+    const tokenLogo = tokenDetails.logo;
     const tokenName = tokenDetails.name;
     const chainName = chainDetails.name;
     const chainLogo = chainDetails.logo;
@@ -89,7 +90,7 @@ export default function PageHeader() {
                                     alt={`${tokenName} Token Logo`}
                                     width={28}
                                     height={28}
-                                    className="rounded-full"
+                                    className="rounded-full max-w-[28px] max-h-[28px]"
                                 />
                                 <HeadingText level='h4' className='uppercase'>{tokenSymbol}</HeadingText>
                             </div>
@@ -100,7 +101,7 @@ export default function PageHeader() {
                                     alt={`${chainName} Chain Logo`}
                                     width={28}
                                     height={28}
-                                    className="rounded-full"
+                                    className="rounded-full max-w-[28px] max-h-[28px]"
                                 />
                                 <HeadingText level='h4' className='uppercase'>{chainName}</HeadingText>
                             </div>
@@ -178,7 +179,7 @@ function getAssetTooltipContent({
             <span className="flex flex-col gap-[4px]">
                 <Label>Chain</Label>
                 <span className="flex items-center gap-[8px]">
-                    <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} />
+                    <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} className="max-w-[24px] max-h-[24px]" />
                     <BodyText level="body1" weight="medium">{chainName[0]}{chainName.toLowerCase().slice(1)}</BodyText>
                 </span>
             </span>

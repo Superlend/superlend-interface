@@ -30,14 +30,14 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <span className="flex flex-col gap-[4px]">
                         <Label>Token</Label>
                         <span className="flex items-center gap-[8px]">
-                            <ImageWithDefault alt={tokenSymbol} src={tokenLogo} width={24} height={24} />
+                            <ImageWithDefault alt={tokenSymbol} src={tokenLogo} width={24} height={24} className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]" />
                             <BodyText level="body2" weight="medium">{tokenName}</BodyText>
                         </span>
                     </span>
                     <span className="flex flex-col gap-[4px]">
                         <Label>Chain</Label>
                         <span className="flex items-center gap-[8px]">
-                            <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} />
+                            <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]" />
                             <BodyText level="body2" weight="medium">{chainName[0]}{chainName.toLowerCase().slice(1)}</BodyText>
                         </span>
                     </span>
