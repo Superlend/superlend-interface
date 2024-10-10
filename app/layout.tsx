@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers"; // added
-import { Inter } from "next/font/google";
+import { headers } from "next/headers";
+// import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import ContextProvider from "@/context";
+import Footer from "@/components/Footer";
 
-const inter = Inter({ subsets: ["latin"] });
+// const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Superlend",
@@ -25,6 +26,7 @@ export default function RootLayout({
         <ContextProvider cookies={cookies}>
           <Header />
           {children}
+          <Footer />
         </ContextProvider>
       </body>
     </html>
