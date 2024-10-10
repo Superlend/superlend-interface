@@ -13,6 +13,22 @@ import ScrollToTop from "@/components/ScrollToTop";
 export const metadata: Metadata = {
   title: "Superlend",
   description: "All in one aggregator platform for your lending and borrowing needs.",
+  icons: [
+    { url: "/images/logos/favicon-16x16.png", sizes: "16x16" },
+    { url: "/images/logos/favicon-32x32.png", sizes: "32x32" },
+    { rel: "apple-touch-icon", url: "/images/logos/apple-touch-icon.png" },
+    { rel: "apple-touch-icon", url: "/images/logos/apple-touch-icon.png" },
+  ],
+  openGraph: {
+    type: "website",
+    url: "https://beta.superlend.xyz/",
+    title: "Superlend",
+    description: "All in one aggregator platform for your lending and borrowing needs.",
+    siteName: "Superlend",
+    images: [{
+      url: "https://beta.superlend.xyz/og.png",
+    }],
+  }
 };
 
 export default function RootLayout({
