@@ -36,11 +36,11 @@ const CustomYAxisTick = ({
     // if (index === 0 || index === length - 1) return null
     return (
         <g
-            transform={`translate(${x - 20},${y})`}
+            transform={`translate(${x - 10},${y - 10})`}
             style={{ zIndex: 10, position: 'relative', color: "#000000" }}
         >
             <text x={0} y={0} dy={6} dx={11} textAnchor="start" fill="#000000">
-                {shortNubers(payload.value)}
+                {`${shortNubers(payload.value)}%`}
             </text>
         </g>
     )
@@ -86,7 +86,7 @@ function CustomChartTooltipContent({
     const caption = payload[0].payload.timestamp;
 
     return (
-        <div className="p-0 bg-white rounded-6 flex flex-col items-center gap-[4px]">
+        <div className="flex flex-col items-center gap-[4px] pt-1.5">
             <BodyText level="body2" weight="medium">
                 {value}%
             </BodyText>
@@ -148,10 +148,10 @@ export function AreaChartStacked({
                         accessibilityLayer
                         data={data}
                         margin={{
-                            left: -60,
+                            left: 0,
                             right: 0,
                             top: 30,
-                            bottom: -30
+                            bottom: 5
                         }}
                     >
                         <CartesianGrid vertical={false} />
@@ -159,7 +159,7 @@ export function AreaChartStacked({
                             dataKey="timestamp"
                             tickLine={false}
                             axisLine={false}
-                            tickMargin={-35}
+                            tickMargin={0}
                             tickFormatter={(value) =>
                                 formatDateAccordingToPeriod(value, selectedRange)
                             }
@@ -202,8 +202,8 @@ export function AreaChartStacked({
                                 />
                             )}
                             // domain={[minValue, maxValue]}
-                            tickCount={5}
-                            tickMargin={-20}
+                            tickCount={4}
+                            tickMargin={35}
                             stroke="#FFF"
                         />
                     </AreaChart>
