@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import ContextProvider from "@/context";
 import Footer from "@/components/Footer";
 import { GoogleTagManager } from '@next/third-parties/google'
+import ScrollToTop from "@/components/ScrollToTop";
 // import { Inter } from "next/font/google";
 
 // const inter = Inter({ subsets: ["latin"] });
@@ -25,6 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`bg-[#B4E2FB]`}>
+        <ScrollToTop />
         <GoogleTagManager gtmId={GTM_ID} />
         <ContextProvider cookies={cookies}>
           <Header />
