@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-// import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import ContextProvider from "@/context";
 import Footer from "@/components/Footer";
+import { GoogleTagManager } from '@next/third-parties/google'
+// import { Inter } from "next/font/google";
 
 // const inter = Inter({ subsets: ["latin"] });
 
@@ -19,10 +20,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookies = headers().get('cookie')
+  const GTM_ID = process.env.NEXT_GTM_ID || "";
 
   return (
     <html lang="en">
       <body className={`bg-[#B4E2FB]`}>
+        <GoogleTagManager gtmId={GTM_ID} />
         <ContextProvider cookies={cookies}>
           <Header />
           {children}
