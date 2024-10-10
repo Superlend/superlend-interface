@@ -2,16 +2,15 @@
 
 import ArrowLeftIcon from '@/components/icons/arrow-left-icon';
 import { Button } from '@/components/ui/button';
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { BodyText, HeadingText, Label } from '@/components/ui/typography';
 import { Badge } from '@/components/ui/badge';
 import { abbreviateNumber, getTokenLogo } from '@/lib/utils';
 import ImageWithDefault from '@/components/ImageWithDefault';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useRouter } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import useGetPlatformData from '@/hooks/useGetPlatformData';
-import { TToken } from '@/types';
 import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
 
@@ -23,8 +22,6 @@ export default function PageHeader() {
     const platform_id = searchParams.get("platform_id") || "";
     const { allChainsData } = useContext(AssetsDataContext);
 
-    // const selectedTokenDetails: TToken | undefined = Object.values(allTokensData).flat(1).find((token: TToken) => token.address === tokenAddress);
-
     // [API_CALL: GET] - Get Platform data
     const {
         data: platformData,
@@ -35,30 +32,43 @@ export default function PageHeader() {
         chain_id: Number(chain_id),
     });
 
-    const tokenDetails = {
-        address: tokenAddress,
-        symbol: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.symbol || "",
-        name: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.name || "",
-        logo: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.logo || ""
-    }
+    const tokenDetails = getTokenDetails({
+        tokenAddress,
+        platformData
+    })
 
-    const chainDetails: any = allChainsData?.find((chain: any) => Number(chain.chain_id) === Number(chain_id)) || {
-        logo: null,
-        name: ""
-    }
+    const chainDetails: any = getChainDetails({
+        allChainsData,
+        chainIdToMatch: chain_id
+    })
 
-    const [pageHeaderStats] = platformData?.assets
-        ?.filter((asset: any) => asset.token.address === tokenAddress)
-        .map(item => ({
-            supply_apy: abbreviateNumber(item.supply_apy),
-            borrow_rate: abbreviateNumber(item.variable_borrow_apy)
-        }))
+    // Error boundry
+    useEffect(() => {
+        const hasNoData = isErrorPlatformData || (!tokenDetails?.symbol?.length && !chainDetails?.name?.length);
 
-    const tokenSymbol = tokenDetails.symbol;
-    const tokenLogo = tokenDetails.logo;
-    const tokenName = tokenDetails.name;
-    const chainName = chainDetails.name;
-    const chainLogo = chainDetails.logo;
+        if (hasNoData && !isLoadingPlatformData) {
+            return notFound();
+        }
+
+        return;
+    }, [
+        isErrorPlatformData,
+        tokenAddress,
+        chain_id,
+        platform_id,
+        isLoadingPlatformData,
+    ])
+
+    const pageHeaderStats = getPageHeaderStats({
+        tokenAddress,
+        platformData
+    })
+
+    const tokenSymbol = tokenDetails?.symbol;
+    const tokenLogo = tokenDetails?.logo;
+    const tokenName = tokenDetails?.name;
+    const chainName = chainDetails?.name;
+    const chainLogo = chainDetails?.logo;
 
     return (
         <section className="header flex flex-col sm:flex-row items-start lg:items-center gap-[24px]">
@@ -82,7 +92,7 @@ export default function PageHeader() {
                             </div>
                         )
                     }
-                    {tokenDetails?.symbol && chainDetails.logo && !isLoadingPlatformData &&
+                    {tokenDetails?.symbol && chainDetails?.logo && !isLoadingPlatformData &&
                         <div className="flex items-center gap-[12px]">
                             <div className="flex items-center gap-[8px]">
                                 <ImageWithDefault
@@ -160,6 +170,50 @@ export default function PageHeader() {
     )
 }
 
+function getTokenDetails({
+    tokenAddress,
+    platformData
+}: {
+    tokenAddress: string;
+    platformData: any
+}) {
+    return {
+        address: tokenAddress,
+        symbol: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.symbol || "",
+        name: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.name || "",
+        logo: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.logo || "",
+    }
+}
+
+// Helper functions =================================================
+
+function getChainDetails({
+    allChainsData,
+    chainIdToMatch
+}: {
+    allChainsData: any[]
+    chainIdToMatch: string | number
+}) {
+    return allChainsData?.find((chain: any) => Number(chain.chain_id) === Number(chainIdToMatch));
+}
+
+function getPageHeaderStats({
+    tokenAddress,
+    platformData
+}: {
+    tokenAddress: string;
+    platformData: any
+}) {
+    const [stats] = platformData?.assets
+        ?.filter((asset: any) => asset.token.address === tokenAddress)
+        .map((item: any) => ({
+            supply_apy: abbreviateNumber(item.supply_apy),
+            borrow_rate: abbreviateNumber(item.variable_borrow_apy)
+        }))
+
+    return stats
+}
+
 function getAssetTooltipContent({
     tokenSymbol,
     tokenLogo,
@@ -180,7 +234,7 @@ function getAssetTooltipContent({
                 <Label>Chain</Label>
                 <span className="flex items-center gap-[8px]">
                     <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} className="max-w-[24px] max-h-[24px]" />
-                    <BodyText level="body1" weight="medium">{chainName[0]}{chainName.toLowerCase().slice(1)}</BodyText>
+                    <BodyText level="body1" weight="medium">{chainName[0]}{chainName?.toLowerCase().slice(1)}</BodyText>
                 </span>
             </span>
         </span>
