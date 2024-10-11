@@ -150,7 +150,7 @@ export default function DiscoverFilterDropdown() {
                         <FilterIcon className={`hidden xs:inline-block ${hasActiveFilters ? "fill-gray-600" : ""}`} width={16} height={16} />
                         <span className="trigger-label">Filters</span>
                         <ChevronDownIcon className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-                        <div className={`${hasActiveFilters ? "absolute block" : "hidden"} -top-[6px] -right-[6px] flex items-center justify-center w-4 h-4 bg-red-500 rounded-full`}>
+                        <div className={`${hasActiveFilters ? "absolute block" : "hidden"} -top-[10px] -right-[8px] flex items-center justify-center w-5 h-5 bg-red-500 rounded-full`}>
                             <Label size='small' className='text-white'>{activeFiltersTotalCount}</Label>
                         </div>
                     </Button>
@@ -172,7 +172,7 @@ export default function DiscoverFilterDropdown() {
                     <FilterIcon className={`hidden xs:inline-block ${hasActiveFilters ? "fill-gray-600" : ""}`} width={16} height={16} />
                     <span className="trigger-label">Filters</span>
                     <ChevronDownIcon className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-                    <div className={`${hasActiveFilters ? "absolute block" : "hidden"} -top-[6px] -right-[6px] flex items-center justify-center w-4 h-4 bg-red-500 rounded-full`}>
+                    <div className={`${hasActiveFilters ? "absolute block" : "hidden"} -top-[10px] -right-[8px] flex items-center justify-center w-5 h-5 bg-red-500 rounded-full`}>
                         <Label size='small' className='text-white'>{activeFiltersTotalCount}</Label>
                     </div>
                 </Button>
