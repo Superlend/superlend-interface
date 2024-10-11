@@ -96,7 +96,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         enableSorting: false,
     },
     {
-        accessorFn: item => `${Number(item.apy_current).toFixed(1)}%`,
+        accessorFn: item => `${Number(item.apy_current).toFixed(2)}%`,
         header: "APY",
         // enableGlobalFilter: false,
     },

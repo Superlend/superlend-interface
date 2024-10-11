@@ -15,7 +15,7 @@ import { DataTable } from '@/components/ui/data-table'
 import { useQuery } from '@tanstack/react-query'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
-import { getPlatformLogo, getTokenLogo } from '@/lib/utils'
+import { abbreviateNumber, getPlatformLogo, getTokenLogo } from '@/lib/utils'
 import { OpportunitiesContext } from '@/context/opportunities-provider'
 
 type TTopApyOpportunitiesProps = {
@@ -51,7 +51,7 @@ export default function TopApyOpportunities() {
             platformLogo: item.platform.logo,
             apy_current: item.platform.apy.current,
             max_ltv: item.platform.max_ltv,
-            deposits: item.platform.liquidity,
+            deposits: `${Number(item.platform.liquidity) * Number(item.token.price_usd)}`,
             utilization: item.platform.utilization_rate,
         }
     });
