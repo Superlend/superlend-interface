@@ -100,7 +100,7 @@ export default function DiscoverFilterDropdown() {
             const searchedList: any[] = []
             STABLECOINS_NAMES_LIST.forEach((el) => {
                 const findToken = allTokenOptions.find(
-                    (item: any) => item?.token_id === el.toUpperCase()
+                    (item: any) => item?.token_id === el
                 )
 
                 if (findToken) {
