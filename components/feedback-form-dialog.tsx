@@ -23,7 +23,7 @@ import { SHEET_FORM_URL } from "@/constants"
 import { DialogClose } from "@radix-ui/react-dialog"
 
 export function FeedbackFormDialog() {
-  const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(localStorage.getItem("isFeedbackSubmitted") === "true");
+  const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -58,7 +58,6 @@ export function FeedbackFormDialog() {
       await axios.post(SHEET_FORM_URL, data);
       setIsLoading(false)
       setIsFeedbackSubmitted(true)
-      localStorage.setItem("isFeedbackSubmitted", "true");
       // Reset form after submission
       setEmail("")
       setFeedback("")
@@ -68,6 +67,10 @@ export function FeedbackFormDialog() {
       setIsFeedbackSubmitted(false)
       console.log(error);
     }
+  }
+
+  function showNewFeedbackForm() {
+    return setIsFeedbackSubmitted(false)
   }
 
   const getFormTemplate = () => {
@@ -164,7 +167,7 @@ export function FeedbackFormDialog() {
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px] bg-white bg-opacity-75 backdrop-blur-sm border-0 rounded-6">
           <DialogHeader>
-            <DialogTitle className="text-gray-800">Feedback Form</DialogTitle>
+            <DialogTitle className="text-gray-800">Feedback {isFeedbackSubmitted ? "Received" : "Form"}</DialogTitle>
             <DialogDescription className="text-gray-600">
               We appreciate your feedback. {!isFeedbackSubmitted && "Please fill out the form below."}
             </DialogDescription>
@@ -179,9 +182,14 @@ export function FeedbackFormDialog() {
                 <CircleCheckBig className="w-[60px] h-[60px] text-success-text" />
                 <HeadingText level="h3">Thank you for your feedback!</HeadingText>
               </div>
-              <DialogClose asChild>
-                <Button size={'lg'} variant="secondary" className='w-full'>Close</Button>
-              </DialogClose>
+              <div className="grid grid-cols-2 gap-5">
+                <DialogClose asChild>
+                  <Button size={'lg'} variant="secondary" className='w-full'>Close</Button>
+                </DialogClose>
+                <Button type="submit" size={'lg'} variant={'primary'} onClick={showNewFeedbackForm}>
+                  Give New Feedback
+                </Button>
+              </div>
             </>
           }
         </DialogContent>
@@ -216,9 +224,14 @@ export function FeedbackFormDialog() {
               <CircleCheckBig className="w-[60px] h-[60px] text-success-text" />
               <HeadingText level="h3">Thank you for your feedback!</HeadingText>
             </div>
-            <DialogClose asChild>
-              <Button size={'lg'} variant="secondary" className='w-full'>Close</Button>
-            </DialogClose>
+            <div className="grid grid-cols-2 gap-5">
+              <DialogClose asChild>
+                <Button size={'lg'} variant="secondary" className='w-full'>Close</Button>
+              </DialogClose>
+              <Button type="submit" size={'lg'} variant={'primary'} onClick={showNewFeedbackForm}>
+                Give New Feedback
+              </Button>
+            </div>
           </>
         }
       </DrawerContent>
