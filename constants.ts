@@ -71,3 +71,5 @@ export const STABLECOINS_NAMES_LIST = [
   "USDT",
   "CUSDT",
 ];
+
+export const SHEET_FORM_URL = "https://script.google.com/macros/s/AKfycbwdG0b3rOiiRL0UP0KwHSBZfwVYRyeDZrJfVKAAV7yoVPGglaRaIanX91S_yRIl0ZYw/exec"
