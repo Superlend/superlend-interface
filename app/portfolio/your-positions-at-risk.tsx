@@ -13,10 +13,11 @@ import { Button } from "@/components/ui/button";
 import { BodyText, HeadingText, Label } from "@/components/ui/typography";
 import ArrowRightIcon from "@/components/icons/arrow-right-icon";
 import Image from "next/image";
-import ImageWithBadge from "../ImageWithBadge";
+import ImageWithBadge from "@/components/ImageWithBadge";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import InfoTooltip from "../tooltips/InfoTooltip";
+import InfoTooltip from "@/components/tooltips/InfoTooltip";
+import useGetPortfolioData from "@/hooks/useGetPortfolioData";
 
 const DUMMY_DATA = [
     ...POSITIONS_AT_RISK_DATA,
@@ -41,6 +42,36 @@ export default function YourPositionsAtRiskCarousel() {
     const [current, setCurrent] = React.useState(0);
     const [count, setCount] = React.useState(0);
     const [scrollToPos, setScrollToPos] = React.useState(scrollToPosInit);
+    const address = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
+    const {
+        data,
+        isLoading,
+        isError
+    } = useGetPortfolioData({
+        user_address: address,
+    });
+
+    const HAS_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0);
+
+    const POSITIONS_AT_RISK = HAS_POSITIONS?.map(platform => ({
+        lendAmount: {
+            tokenImage: "/images/tokens/btc.webp",
+            amount: platform.total_liquidity,
+            change: "241.12",
+        },
+        borrowAmount: {
+            tokenImage: "/images/tokens/usdc.webp",
+            amount: "2,687",
+        },
+        positionOn: {
+            platform: "compound",
+            chain: "op",
+            platformName: "compound",
+            platformImage: "/images/platforms/compound.webp",
+            chainImage: "/images/chains/op.webp",
+        },
+        riskFactor: "high",
+    }))
 
     React.useEffect(() => {
         if (!api) {
@@ -211,3 +242,4 @@ export default function YourPositionsAtRiskCarousel() {
         </section>
     );
 }
+
