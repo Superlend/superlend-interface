@@ -16,6 +16,7 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { TPlatform } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { PlatformWebsiteLink } from '@/types/platform';
+import { platformWebsiteLinks } from '@/constants';
 
 export default function PageHeader() {
     const router = useRouter();
@@ -74,7 +75,7 @@ export default function PageHeader() {
     const chainLogo = chainDetails?.logo;
     const platformName = platform_id.split("-").slice(0, 2).join(" ");
     const platformLogo = platformData?.platform.logo;
-    const platformWebsiteLink = platform_id.split("-")[0].toLowerCase() === "aave" ? PlatformWebsiteLink.AAVE : PlatformWebsiteLink.COMPOUND;
+    const platformWebsiteLink = platformWebsiteLinks[platform_id.split("-")[0].toLowerCase() as keyof typeof platformWebsiteLinks];
 
     return (
         <section className="header flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
