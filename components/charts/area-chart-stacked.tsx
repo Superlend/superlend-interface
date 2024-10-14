@@ -15,6 +15,8 @@ import RadioGroupDropdown from "../dropdowns/RadioGroupDropdown"
 import { Period } from "@/types/periodButtons"
 import { BodyText, Label } from "../ui/typography"
 import { abbreviateNumber, extractTimeFromDate, formatDateAccordingToPeriod, shortNubers } from "@/lib/utils"
+import { Skeleton } from "../ui/skeleton"
+import { LoaderCircle } from "lucide-react"
 
 interface CustomYAxisTickProps {
     x: number
@@ -139,107 +141,126 @@ export function AreaChartStacked({
     return (
         <Card className="overflow-hidden">
             <CardContent className="p-0 py-[32px] bg-white">
-                <div className="px-[20px] flex flex-col sm:flex-row gap-[16px] items-center justify-between">
-                    {/* Timeline Filters Tab */}
-                    <Tabs defaultValue={Period.oneMonth} value={selectedRange} onValueChange={handleRangeChange} className="w-fit">
-                        <TabsList>
-                            {
-                                PERIOD_LIST.map(item => (
-                                    <TabsTrigger key={item.value} value={item.value} className="px-[12px] py-[2px]">
-                                        {item.label}
-                                    </TabsTrigger>
-                                ))
-                            }
-                        </TabsList>
-                    </Tabs>
-                    {/* Category Filters Dropdown */}
-                    <RadioGroupDropdown
-                        listData={HISTORY_CHART_SELECT_OPTIONS}
-                        value={selectedFilter}
-                        onValueChange={handleFilterChange}
-                        triggerLabel="Filter by"
-                        disableFilterOptions={disableCategoryFilters}
-                    />
-                </div>
-                {/* Chart Begins Here */}
-                <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                    <AreaChart
-                        accessibilityLayer
-                        data={data}
-                        margin={{
-                            left: 0,
-                            right: 20,
-                            top: 30,
-                            bottom: 0
-                        }}
-                    >
-                        {/* <defs>
+                {
+                    !data && <GraphLoading />
+                }
+                {data &&
+                    <>
+                        <div className="px-[20px] flex flex-col sm:flex-row gap-[16px] items-center justify-between">
+                            {/* Timeline Filters Tab */}
+                            <Tabs defaultValue={Period.oneMonth} value={selectedRange} onValueChange={handleRangeChange} className="w-fit">
+                                <TabsList>
+                                    {
+                                        PERIOD_LIST.map(item => (
+                                            <TabsTrigger key={item.value} value={item.value} className="px-[12px] py-[2px]">
+                                                {item.label}
+                                            </TabsTrigger>
+                                        ))
+                                    }
+                                </TabsList>
+                            </Tabs>
+                            {/* Category Filters Dropdown */}
+                            <RadioGroupDropdown
+                                listData={HISTORY_CHART_SELECT_OPTIONS}
+                                value={selectedFilter}
+                                onValueChange={handleFilterChange}
+                                triggerLabel="Filter by"
+                                disableFilterOptions={disableCategoryFilters}
+                            />
+                        </div>
+
+                        {/* Chart Begins Here */}
+
+                        <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                            <AreaChart
+                                accessibilityLayer
+                                data={data}
+                                margin={{
+                                    left: 0,
+                                    right: 20,
+                                    top: 30,
+                                    bottom: 0
+                                }}
+                            >
+                                {/* <defs>
                             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8} />
                                 <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
                             </linearGradient>
                         </defs> */}
-                        <CartesianGrid vertical={false} />
-                        <XAxis
-                            dataKey="timestamp"
-                            tickLine={true}
-                            axisLine={true}
-                            tickMargin={5}
-                            interval={100}
-                            tickCount={4}
-                            tickFormatter={(value) =>
-                                formatDateAccordingToPeriod(value, selectedRange)
-                            }
-                            tick={({ x, y, payload, index }) => (
-                                <CustomXAxisTick
-                                    payload={payload as { value: number }}
-                                    selectedRange={selectedRange}
-                                    x={x as number}
-                                    y={y as number}
-                                    index={index as number}
-                                    length={data.length}
+                                <CartesianGrid vertical={false} />
+                                <XAxis
+                                    dataKey="timestamp"
+                                    tickLine={true}
+                                    axisLine={true}
+                                    tickMargin={5}
+                                    interval={100}
+                                    tickCount={4}
+                                    tickFormatter={(value) =>
+                                        formatDateAccordingToPeriod(value, selectedRange)
+                                    }
+                                    tick={({ x, y, payload, index }) => (
+                                        <CustomXAxisTick
+                                            payload={payload as { value: number }}
+                                            selectedRange={selectedRange}
+                                            x={x as number}
+                                            y={y as number}
+                                            index={index as number}
+                                            length={data.length}
+                                        />
+                                    )}
                                 />
-                            )}
-                        />
-                        <ChartTooltip
-                            cursor={true}
-                            content={
-                                <ChartTooltipContent
-                                    hideIndicator={true}
-                                    labelFormatter={(label, playload) => <CustomChartTooltipContent payload={playload} label={label} />} />
-                            }
-                        />
-                        <Area
-                            dataKey={selectedFilter.value}
-                            type="monotone"
-                            fill="var(--color-platformHistory)"
-                            fillOpacity={0.3}
-                            stroke="var(--color-platformHistory)"
-                            strokeWidth={2}
-                            stackId="a"
-                            activeDot={{ r: 6 }}
-                        />
-                        <YAxis
-                            tick={({ x, y, payload, index }) => (
-                                <CustomYAxisTick
-                                    payload={payload as { value: number }}
-                                    x={x as number}
-                                    y={y as number}
-                                    index={index as number}
-                                    length={chartData.length}
+                                <ChartTooltip
+                                    cursor={true}
+                                    content={
+                                        <ChartTooltipContent
+                                            hideIndicator={true}
+                                            labelFormatter={(label, playload) => <CustomChartTooltipContent payload={playload} label={label} />} />
+                                    }
                                 />
-                            )}
-                            // domain={[minValue, maxValue]}
-                            tickCount={4}
-                            tickMargin={40}
-                            // stroke="#FFF"
-                            tickLine={true}
-                            axisLine={true}
-                        />
-                    </AreaChart>
-                </ChartContainer>
-                {/* Chart Ends Here */}
+                                <Area
+                                    dataKey={selectedFilter.value}
+                                    type="monotone"
+                                    fill="var(--color-platformHistory)"
+                                    fillOpacity={0.3}
+                                    stroke="var(--color-platformHistory)"
+                                    strokeWidth={2}
+                                    stackId="a"
+                                    activeDot={{ r: 6 }}
+                                />
+                                <YAxis
+                                    tick={({ x, y, payload, index }) => (
+                                        <CustomYAxisTick
+                                            payload={payload as { value: number }}
+                                            x={x as number}
+                                            y={y as number}
+                                            index={index as number}
+                                            length={chartData.length}
+                                        />
+                                    )}
+                                    // domain={[minValue, maxValue]}
+                                    tickCount={4}
+                                    tickMargin={40}
+                                    // stroke="#FFF"
+                                    tickLine={true}
+                                    axisLine={true}
+                                />
+                            </AreaChart>
+                        </ChartContainer>
+                        {/* Chart Ends Here */}
+                    </>
+                }
             </CardContent>
         </Card>
     )
+}
+
+function GraphLoading() {
+    return (
+        <div className="relative px-4 h-[300px] w-full rounded-6 overflow-hidden">
+            <Skeleton className='z-[0] relative w-full h-full' />
+            <LoaderCircle className='z-[1] absolute left-[45%] top-[45%] md:left-1/2 text-primary w-8 h-8 animate-spin' />
+        </div>
+    )
+
 }
