@@ -16,7 +16,6 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { TPlatform } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { PlatformWebsiteLink } from '@/types/platform';
-import { LinkPreview } from '@/components/ui/link-preview';
 
 export default function PageHeader() {
     const router = useRouter();
