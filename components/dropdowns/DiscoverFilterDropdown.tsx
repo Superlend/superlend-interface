@@ -238,12 +238,12 @@ function FilterCardContent({
                             onClick={() => setActiveTab(item)}
                             key={item.label}
                             size="md"
-                            className={`flex items-center gap-2 py-[8px] px-[8px] border-0 items-center justify-between  ${isActiveTab(item)}`}>
-                            <Label size='small' weight='medium' className={`w-fit text-left self-start`}>
+                            className={`flex items-center gap-2 py-[8px] px-[8px] border-0 items-center justify-between overflow-hidden ${isActiveTab(item)}`}>
+                            <Label size='small' weight='medium' className={`w-fit text-left self-start cursor-pointer`}>
                                 {item.label}
                             </Label>
                             {!!getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`) &&
-                                <Label size='small' weight='medium' className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5">
+                                <Label size='small' weight='medium' className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer">
                                     {getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`)}
                                 </Label>
                             }
@@ -305,7 +305,7 @@ function FilterOptions({
     };
 
     return (
-        <ScrollArea className="h-[400px] sm:h-[250px] w-full pt-5">
+        <ScrollArea id='filter-options-section' className="h-[400px] sm:h-[250px] w-full pt-5">
             <div className="search-container w-[85%] max-w-[400px] ml-[14px] mt-1">
                 <SearchInput
                     placeholder={`Search ${type}`}
@@ -319,6 +319,9 @@ function FilterOptions({
                 <Button variant={isStablecoinsSelected ? "secondaryOutline" : "outline"} className='m-4 mb-0 ml-3 flex items-center justify-center gap-1' onClick={selectStablecoins}>
                     {isStablecoinsSelected && <Check className='w-4 h-4 text-secondary-500' />}
                     Select{isStablecoinsSelected ? "ed" : ""} Stable Coins
+                    <span className={`${isStablecoinsSelected ? "bg-secondary-300 text-white" : "bg-gray-600 text-gray-100"} rounded-full px-1 ml-1`}>
+                        {STABLECOINS_NAMES_LIST.length}
+                    </span>
                 </Button>
             }
             <div className="filter-options flex flex-wrap gap-4 md:gap-3 bg-white p-4 md:p-[24px_24px_24px_14px]">
