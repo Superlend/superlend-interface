@@ -44,7 +44,7 @@ export function DataTable<TData, TValue>({
         getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         state: {
-            globalFilter: filters
+            globalFilter: filters.trim()
         },
         onGlobalFilterChange: setFilters,
         getSortedRowModel: getSortedRowModel(),

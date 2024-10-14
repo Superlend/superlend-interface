@@ -353,6 +353,6 @@ function FilterOptions({
 const filterOptionsByKeyword = (searchKeyword: string, options: any[]) => {
     if (!searchKeyword) return options; // Return all options if no keyword
     return options.filter(option =>
-        option.name.toLowerCase().includes(searchKeyword.toLowerCase())
+        option.name.toLowerCase().includes(searchKeyword.trim().toLowerCase())
     );
 };
