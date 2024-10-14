@@ -97,13 +97,15 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         enableSorting: false,
     },
     {
-        accessorFn: item => `${Number(item.apy_current).toFixed(2)}%`,
+        accessorKey: "apy_current",
+        accessorFn: item => Number(item.apy_current),
         header: "APY",
+        cell: ({ row }) => `${Number(row.getValue("apy_current")).toFixed(2)}%`,
         // enableGlobalFilter: false,
     },
     {
         accessorKey: "max_ltv",
-        accessorFn: item => `${Number(item.max_ltv).toFixed(0)}%`,
+        accessorFn: item => Number(item.max_ltv),
         header: () => (
             <InfoTooltip
                 label={
@@ -112,10 +114,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 content={"Maximum Loan-to-Value ratio; the highest percentage of asset value that can be borrowed."}
             />
         ),
+        cell: ({ row }) => `${Number(row.getValue("max_ltv")).toFixed(0)}%`,
         // enableGlobalFilter: false,
     },
     {
         accessorKey: "deposits",
+        accessorFn: item => Number(item.deposits),
         header: () => (
             <InfoTooltip
                 label={
@@ -130,12 +134,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)))}`
             }
             return `$${abbreviateNumber(Number(value))}`
-        }
+        },
         // enableGlobalFilter: false,
     },
     {
         accessorKey: "utilization",
-        accessorFn: item => `${Number(item.utilization).toFixed(1)}%`,
+        accessorFn: item => Number(item.utilization),
         header: () => (
             <InfoTooltip
                 label={
@@ -144,6 +148,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 content={"Ratio of borrowed funds to total available capital, indicating how effectively a lending pool is used."}
             />
         ),
+        cell: ({ row }) => `${Number(row.getValue("utilization")).toFixed(1)}%`,
         // enableGlobalFilter: false,
     },
 ]
