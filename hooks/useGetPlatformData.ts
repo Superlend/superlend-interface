@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 export default function useGetPlatformData(params: TGetPlatformParams) {
   const { platform_id, chain_id } = params;
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError } = useQuery<TPlatform>({
     queryKey: ["platform", platform_id, chain_id],
     queryFn: async () => {
       try {
@@ -15,9 +15,7 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
         return responseData;
       } catch (error) {
         // toast.error(SOMETHING_WENT_WRONG_MESSAGE, ERROR_TOAST_ICON_STYLES);
-        return {
-          assets: [],
-        };
+        throw new Error("There was an error while fetching Platform data");
       }
     },
     staleTime: Infinity,
@@ -25,6 +23,11 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
   });
   return {
     data: data || {
+      platform: {
+        name: "",
+        logo: "",
+        chain_id: 0,
+      },
       assets: [],
     },
     isLoading,

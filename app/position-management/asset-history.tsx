@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { BodyText, HeadingText, Label } from '@/components/ui/typography';
 import { AreaChartStacked } from '@/components/charts/area-chart-stacked';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Period, PeriodLongDisplay, PeriodShortDisplay } from '@/types/periodButtons';
 import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData';
 import { HISTORY_CHART_SELECT_OPTIONS } from '@/constants';
@@ -35,11 +35,6 @@ export default function AssetHistory() {
     }
 
     const HISTORY_CHART_FOOTER_STATS = [
-        // {
-        //     key: "apy",
-        //     label: "Net APY",
-        //     value: "1.92%"
-        // },
         {
             key: "deposit",
             label: `Avg Deposit (${PeriodShortDisplay[selectedRange]})`,

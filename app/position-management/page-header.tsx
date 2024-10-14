@@ -13,6 +13,10 @@ import { useSearchParams } from 'next/navigation';
 import useGetPlatformData from '@/hooks/useGetPlatformData';
 import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
+import { TPlatform } from '@/types';
+import ArrowRightIcon from '@/components/icons/arrow-right-icon';
+import { PlatformWebsiteLink } from '@/types/platform';
+import { LinkPreview } from '@/components/ui/link-preview';
 
 export default function PageHeader() {
     const router = useRouter();
@@ -69,14 +73,17 @@ export default function PageHeader() {
     const tokenName = tokenDetails?.name;
     const chainName = chainDetails?.name;
     const chainLogo = chainDetails?.logo;
+    const platformName = platform_id.split("-").slice(0, 2).join(" ");
+    const platformLogo = platformData?.platform.logo;
+    const platformWebsiteLink = platform_id.split("-")[0].toLowerCase() === "aave" ? PlatformWebsiteLink.AAVE : PlatformWebsiteLink.COMPOUND;
 
     return (
-        <section className="header flex flex-col sm:flex-row items-start lg:items-center gap-[24px]">
+        <section className="header flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
             <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
                 <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
             </Button>
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-[24px] w-full">
-                <div className="flex flex-wrap md:items-center gap-[16px]">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-[24px] w-full">
+                <div className="flex flex-wrap items-center gap-[16px]">
                     {
                         isLoadingPlatformData && (
                             <div className="flex items-center gap-[12px]">
@@ -115,27 +122,31 @@ export default function PageHeader() {
                                 />
                                 <HeadingText level='h4' className='uppercase'>{chainName}</HeadingText>
                             </div>
-                            <InfoTooltip
-                                content={getAssetTooltipContent({
-                                    tokenSymbol,
-                                    tokenLogo,
-                                    tokenName,
-                                    chainName,
-                                    chainLogo,
-                                })}
-                            />
                         </div>
                     }
-                    {/* <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pr-[4px] w-fit'>
-                        <div className="flex items-center gap-1">
-                            <img src={PolygonNetworkIcon} alt="Polygon network" width={16} height={16} className='object-contain' />
-                            <Label weight='medium' className='leading-[0]'>Polygon Network</Label>
-                        </div>
-                        <Button className='flex items-center gap-[4px] hover:bg-secondary-100/15'>
-                            <span className="uppercase text-secondary-500 font-medium">aave v3</span>
-                            <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
-                        </Button>
-                    </Badge> */}
+                    {!isLoadingPlatformData && platformLogo &&
+                        <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit'>
+                            <div className="flex items-center gap-1">
+                                <img src={platformLogo} alt={`${platformName} Platform`} width={16} height={16} className='object-contain shrink-0' />
+                                <Label weight='medium' className='leading-[0]'>{platformName}</Label>
+                            </div>
+                            <a className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2" href={platformWebsiteLink} target='_blank'>
+                                <span className="uppercase text-secondary-500 font-medium">more</span>
+                                <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
+                            </a>
+                        </Badge>
+                    }
+                    <InfoTooltip
+                        content={getAssetTooltipContent({
+                            tokenSymbol,
+                            tokenLogo,
+                            tokenName,
+                            chainName,
+                            chainLogo,
+                            platformName,
+                            platformLogo
+                        })}
+                    />
                 </div>
                 <div className="header-right flex flex-wrap items-center gap-[24px]">
                     {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
@@ -179,9 +190,9 @@ function getTokenDetails({
 }) {
     return {
         address: tokenAddress,
-        symbol: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.symbol || "",
-        name: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.name || "",
-        logo: platformData.assets.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.logo || "",
+        symbol: platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.symbol || "",
+        name: platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.name || "",
+        logo: platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.logo || "",
     }
 }
 
@@ -202,10 +213,9 @@ function getPageHeaderStats({
     platformData
 }: {
     tokenAddress: string;
-    platformData: any
+    platformData: TPlatform
 }) {
-    const [stats] = platformData?.assets
-        ?.filter((asset: any) => asset.token.address === tokenAddress)
+    const [stats] = platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)
         .map((item: any) => ({
             supply_apy: abbreviateNumber(item.supply_apy),
             borrow_rate: abbreviateNumber(item.variable_borrow_apy)
@@ -220,23 +230,42 @@ function getAssetTooltipContent({
     tokenName,
     chainName,
     chainLogo,
+    platformLogo,
+    platformName,
 }: any) {
+    const TooltipData = [
+        {
+            label: "Token",
+            image: tokenLogo,
+            imageAlt: tokenName,
+            displayName: tokenName
+        },
+        {
+            label: "Chain",
+            image: chainLogo,
+            imageAlt: chainName,
+            displayName: `${chainName?.slice(0, 1)}${chainName?.toLowerCase().slice(1)}`
+        },
+        {
+            label: "Platform",
+            image: platformLogo,
+            imageAlt: platformName,
+            displayName: platformName
+        },
+    ]
     return (
         <span className="flex flex-col gap-[16px]">
-            <span className="flex flex-col gap-[4px]">
-                <Label>Token</Label>
-                <span className="flex items-center gap-[8px]">
-                    <ImageWithDefault alt={tokenSymbol} src={tokenLogo} width={24} height={24} />
-                    <BodyText level="body1" weight="medium">{tokenName}</BodyText>
-                </span>
-            </span>
-            <span className="flex flex-col gap-[4px]">
-                <Label>Chain</Label>
-                <span className="flex items-center gap-[8px]">
-                    <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} className="max-w-[24px] max-h-[24px]" />
-                    <BodyText level="body1" weight="medium">{chainName[0]}{chainName?.toLowerCase().slice(1)}</BodyText>
-                </span>
-            </span>
+            {
+                TooltipData.map(item => (
+                    <span key={item.label} className="flex flex-col gap-[4px]">
+                        <Label>{item.label}</Label>
+                        <span className="flex items-center gap-[8px]">
+                            <ImageWithDefault alt={item.imageAlt} src={item.image} width={24} height={24} className="max-w-[24px] max-h-[24px]" />
+                            <BodyText level="body1" weight="medium">{item.displayName}</BodyText>
+                        </span>
+                    </span>
+                ))
+            }
         </span>
     )
 }

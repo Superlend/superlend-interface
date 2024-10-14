@@ -81,6 +81,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => item.platformName,
         cell: ({ row }) => {
             const platformName: string = row.getValue("platformName");
+            const platformVersion: string = row.original.platform_id.split("-")[1]
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -89,7 +90,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
-                    <span className="truncate">{`${platformName[0]}${platformName.slice(1).toLowerCase()}`}</span>
+                    <span className="truncate">{`${platformName[0]}${platformName.slice(1).toLowerCase()} ${platformVersion}`}</span>
                 </span>
             )
         },
@@ -101,13 +102,28 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         // enableGlobalFilter: false,
     },
     {
+        accessorKey: "max_ltv",
         accessorFn: item => `${Number(item.max_ltv).toFixed(0)}%`,
-        header: "Max LTV",
+        header: () => (
+            <InfoTooltip
+                label={
+                    <TooltipText>Max LTV</TooltipText>
+                }
+                content={"Maximum Loan-to-Value ratio; the highest percentage of asset value that can be borrowed."}
+            />
+        ),
         // enableGlobalFilter: false,
     },
     {
         accessorKey: "deposits",
-        header: "Deposits",
+        header: () => (
+            <InfoTooltip
+                label={
+                    <TooltipText>Deposits</TooltipText>
+                }
+                content={"Placing assets in smart contracts or liquidity pools to earn interest or rewards."}
+            />
+        ),
         cell: ({ row }) => {
             const value: string = row.getValue("deposits");
             if (containsNegativeInteger(value)) {
@@ -118,8 +134,24 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         // enableGlobalFilter: false,
     },
     {
+        accessorKey: "utilization",
         accessorFn: item => `${Number(item.utilization).toFixed(1)}%`,
-        header: "Utilization",
+        header: () => (
+            <InfoTooltip
+                label={
+                    <TooltipText>Utilization</TooltipText>
+                }
+                content={"Ratio of borrowed funds to total available capital, indicating how effectively a lending pool is used."}
+            />
+        ),
         // enableGlobalFilter: false,
     },
 ]
+
+function TooltipText({ children }: { children: React.ReactNode }) {
+    return (
+        <span className="inline-block border-b border-dashed border-gray-800">
+            {children}
+        </span>
+    )
+}

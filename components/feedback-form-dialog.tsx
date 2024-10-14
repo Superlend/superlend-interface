@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { CircleCheckBig, File, LoaderCircle, MessageSquareCode, PaperclipIcon, XIcon } from "lucide-react"
+import { CircleCheckBig, File, LoaderCircle, MessageSquare, MessageSquareCode, PaperclipIcon, XIcon } from "lucide-react"
 import { HeadingText, Label } from "./ui/typography"
 import {
   Drawer,
@@ -78,7 +78,7 @@ export function FeedbackFormDialog() {
       <form onSubmit={handleSubmit}>
         <div className="grid gap-4 py-4">
           <div className="flex flex-col items-start gap-2">
-            <Label htmlFor="email" className="text-right">
+            <Label htmlFor="email" className="text-gray-800">
               Email (optional)
             </Label>
             <Input
@@ -91,7 +91,7 @@ export function FeedbackFormDialog() {
             />
           </div>
           <div className="flex flex-col items-start gap-2">
-            <Label htmlFor="feedback" className="text-right">
+            <Label htmlFor="feedback" className="text-gray-800">
               Feedback
             </Label>
             <Textarea
@@ -100,7 +100,7 @@ export function FeedbackFormDialog() {
               onChange={handleFeedbackChange}
               className="rounded-4"
               required
-              placeholder="Your feedback or suggestions..."
+              placeholder="What features would enhance your DeFi experience?"
             />
           </div>
           {/* <div className="flex flex-col items-start gap-2">
@@ -145,10 +145,15 @@ export function FeedbackFormDialog() {
           )} */}
         </div>
         <DialogFooter className="mt-2">
-          <Button type="submit" size={'lg'} variant={'primary'} disabled={isLoading || isFormEmpty}>
-            {isLoading && <LoaderCircle className='text-white w-4 h-4 animate-spin mr-1' />}
-            Submit Feedback
-          </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <DialogClose asChild>
+              <Button size={'lg'} variant="secondary" className='w-full'>Cancel</Button>
+            </DialogClose>
+            <Button type="submit" size={'lg'} variant={'primary'} disabled={isLoading || isFormEmpty}>
+              {isLoading && <LoaderCircle className='text-white w-4 h-4 animate-spin mr-1' />}
+              Submit Feedback
+            </Button>
+          </div>
         </DialogFooter>
       </form>
     )
@@ -160,15 +165,15 @@ export function FeedbackFormDialog() {
         <DialogTrigger asChild>
           <div className="w-full flex items-center justify-center">
             <Button variant="primary" size={'lg'} className="flex items-center gap-2">
-              Give Feedback
-              <MessageSquareCode className="h-5 w-5" />
+              <MessageSquare className="h-5 w-5" />
+              Share Your Thoughts
             </Button>
           </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px] bg-white bg-opacity-75 backdrop-blur-sm border-0 rounded-6">
           <DialogHeader>
-            <DialogTitle className="text-gray-800">Feedback {isFeedbackSubmitted ? "Received" : "Form"}</DialogTitle>
-            <DialogDescription className="text-gray-600">
+            <DialogTitle className="text-gray-800">Share Your Thoughts</DialogTitle>
+            <DialogDescription className="text-gray-800">
               We appreciate your feedback. {!isFeedbackSubmitted && "Please fill out the form below."}
             </DialogDescription>
           </DialogHeader>
@@ -182,7 +187,7 @@ export function FeedbackFormDialog() {
                 <CircleCheckBig className="w-[60px] h-[60px] text-success-text" />
                 <HeadingText level="h3">Thank you for your feedback!</HeadingText>
               </div>
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-2 gap-3">
                 <DialogClose asChild>
                   <Button size={'lg'} variant="secondary" className='w-full'>Close</Button>
                 </DialogClose>
@@ -201,21 +206,21 @@ export function FeedbackFormDialog() {
     <Drawer>
       <DrawerTrigger asChild>
         <div className="w-full flex items-center justify-center">
-          <Button variant="primary" size={'lg'} className="flex items-center gap-2">
-            Give Feedback
-            <MessageSquareCode className="h-5 w-5" />
+          <Button variant="primary" size={'lg'} className="flex items-center gap-2 w-full">
+            <MessageSquare className="h-5 w-5" />
+            Share Your Thoughts
           </Button>
         </div>
       </DrawerTrigger>
       <DrawerContent className="pb-5 px-5 bg-white bg-opacity-75">
         <DrawerHeader>
-          <DrawerTitle>Feedback Form</DrawerTitle>
+          <DrawerTitle>Share Your Thoughts</DrawerTitle>
           <DrawerDescription>
             We appreciate your feedback. {!isFeedbackSubmitted && "Please fill out the form below."}
           </DrawerDescription>
         </DrawerHeader>
         {!isFeedbackSubmitted &&
-          <div className="">
+          <div className="sm:p-4">
             {getFormTemplate()}
           </div>}
         {isFeedbackSubmitted &&
@@ -226,7 +231,7 @@ export function FeedbackFormDialog() {
             </div>
             <div className="grid grid-cols-2 gap-5">
               <DialogClose asChild>
-                <Button size={'lg'} variant="secondary" className='w-full'>Close</Button>
+                <Button size={'lg'} variant="secondary" className='w-full'>Cancel</Button>
               </DialogClose>
               <Button type="submit" size={'lg'} variant={'primary'} onClick={showNewFeedbackForm}>
                 Give New Feedback

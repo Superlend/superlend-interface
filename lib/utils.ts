@@ -38,31 +38,24 @@ export const abbreviateNumber = (value: number): string => {
 
 type TOptions = {
   exclude?: string[];
-  include?: string[];
 };
 
-export function convertDateToTime(date: Date, options: TOptions = {}) {
+export function extractTimeFromDate(date: Date, options: TOptions = {}) {
   const { exclude } = options;
-  // Ensure the input is a Date object
-  if (!(date instanceof Date)) {
-    throw new Error("Input must be a Date object");
-  }
 
-  // Extract hours, minutes, and seconds
-  let hours: number | string = date.getHours().toString(); // Format: HH
-  hours = Number(hours) % 12;
-  hours = hours ? hours : 12;
-  const minutes = date.getMinutes().toString().padStart(2, "0"); // Format: MM
-  const seconds = date.getSeconds().toString().padStart(2, "0"); // Format: SS
-  let ampm = Number(hours) >= 12 ? "PM" : "AM";
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const seconds = date.getSeconds().toString().padStart(2, "0");
+
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12; // Convert to 12-hour format
+  hours = hours ? hours : 12; // The hour '0' should be '12'
 
   const hasHours = !exclude?.includes("hours") ? `${hours}` : "";
   const hasMinutes = !exclude?.includes("minutes") ? `:${minutes}` : "";
   const hasSeconds = !exclude?.includes("seconds") ? `:${seconds}` : "";
-  const hasAmPm = ` ${ampm}`;
 
-  // Return formatted time string
-  return `${hasHours}${hasMinutes}${hasSeconds}${hasAmPm}`;
+  return `${hasHours}${hasMinutes}${hasSeconds} ${ampm}`;
 }
 
 export function formatDateAccordingToPeriod(
@@ -74,7 +67,7 @@ export function formatDateAccordingToPeriod(
   const date = `${day} ${month}`;
 
   const result = selectedRange === Period.oneDay ? timeStamp : date;
-  return result
+  return result;
 }
 
 export const shortNubers = (value: number): number => {

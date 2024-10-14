@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -21,11 +21,11 @@ import FilterIcon from '../icons/filter-icon';
 import { AssetsDataContext } from '@/context/data-provider';
 import ImageWithDefault from '../ImageWithDefault';
 import { OpportunitiesContext } from '@/context/opportunities-provider';
-import { getPlatformLogo, getTokenLogo } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { TToken } from '@/types';
 import useDimensions from '@/hooks/useDimensions';
 import { STABLECOINS_NAMES_LIST } from '@/constants';
+import SearchInput from '../inputs/SearchInput';
 
 export default function DiscoverFilterDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
@@ -155,7 +155,7 @@ export default function DiscoverFilterDropdown() {
                         </div>
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="bottom" align="end" className="p-0 rounded-[16px] border-none bg-white bg-opacity-40">
+                <DropdownMenuContent side="bottom" align="end" className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 overflow-hidden">
                     <div className="filter-card flex flex-col md:min-w-[480px] max-w-[480px]">
                         <FilterCardHeader {...filterCardHeaderProps} />
                         <FilterCardContent {...filterCardContentProps} />
@@ -226,10 +226,11 @@ function FilterCardContent({
     const filterOptionProps = {
         isStablecoinsSelected,
         selectStablecoins,
+        filterOptionsByKeyword,
     }
 
     return (
-        <div className="filter-card-content grid md:grid-cols-[120px_1fr] items-start md:gap-4 bg-white rounded-[16px]">
+        <div className="filter-card-content grid md:grid-cols-[120px_1fr] items-start md:gap-4 bg-white rounded-[16px] overflow-hidden">
             <div className="filter-categories flex md:flex-col gap-4 md:gap-2 bg-white py-2 px-4 md:p-[24px_0px_24px_24px]">
                 {
                     FILTER_CATEGORIES.map((item: any) => (
@@ -250,7 +251,10 @@ function FilterCardContent({
                     ))
                 }
             </div>
-            <FilterOptions {...FILTER_OPTIONS[activeTab.value]} {...filterOptionProps} />
+            <FilterOptions
+                {...FILTER_OPTIONS[activeTab.value]}
+                {...filterOptionProps}
+            />
         </div>
     )
 }
@@ -259,7 +263,7 @@ function FilterOptions({
     type,
     options,
     isStablecoinsSelected,
-    selectStablecoins
+    selectStablecoins,
 }: {
     type: string;
     options: any[];
@@ -267,6 +271,11 @@ function FilterOptions({
     selectStablecoins: any;
 }) {
     const { filters, setFilters } = useContext<any>(OpportunitiesContext);
+    const [searchKeyword, setSearchKeyword] = useState<string>("");
+
+    useEffect(() => {
+        setSearchKeyword("")
+    }, [type])
 
     const isSelected = (id: number | string, filterType: string) => {
         return filters[`${filterType}_ids`]?.includes(id);
@@ -296,9 +305,18 @@ function FilterOptions({
     };
 
     return (
-        <ScrollArea className="h-[400px] sm:h-[200px] w-full">
+        <ScrollArea className="h-[400px] sm:h-[250px] w-full pt-5">
+            <div className="search-container w-[85%] max-w-[400px] ml-[14px] mt-1">
+                <SearchInput
+                    placeholder={`Search ${type}`}
+                    className='ring-1 ring-gray-300'
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    value={searchKeyword}
+                    onClear={() => setSearchKeyword("")}
+                />
+            </div>
             {type === "token" &&
-                <Button variant={isStablecoinsSelected ? "secondaryOutline" : "outline"} className='m-4 sm:mt-6 mb-0 ml-3 flex items-center justify-center gap-1' onClick={selectStablecoins}>
+                <Button variant={isStablecoinsSelected ? "secondaryOutline" : "outline"} className='m-4 mb-0 ml-3 flex items-center justify-center gap-1' onClick={selectStablecoins}>
                     {isStablecoinsSelected && <Check className='w-4 h-4 text-secondary-500' />}
                     Select{isStablecoinsSelected ? "ed" : ""} Stable Coins
                 </Button>
@@ -312,7 +330,7 @@ function FilterOptions({
                     All {type.charAt(0).toUpperCase() + type.slice(1)}s
                 </Button>
                 {
-                    options.map((option: any) => (
+                    filterOptionsByKeyword(searchKeyword, options).map((option: any) => (
                         <Button
                             onClick={() => handleSelection(option[`${type}_id`], type)}
                             variant="outline"
@@ -328,3 +346,13 @@ function FilterOptions({
         </ScrollArea>
     );
 }
+
+// Helper functions =====================
+
+// Function to filter options by category type based on the search keyword
+const filterOptionsByKeyword = (searchKeyword: string, options: any[]) => {
+    if (!searchKeyword) return options; // Return all options if no keyword
+    return options.filter(option =>
+        option.name.toLowerCase().includes(searchKeyword.toLowerCase())
+    );
+};
