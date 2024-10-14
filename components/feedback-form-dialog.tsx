@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { File, MessageSquareCode, PaperclipIcon, XIcon } from "lucide-react"
-import { Label } from "./ui/typography"
+import { CircleCheckBig, File, LoaderCircle, MessageSquare, MessageSquareCode, PaperclipIcon, XIcon } from "lucide-react"
+import { HeadingText, Label } from "./ui/typography"
 import {
   Drawer,
   DrawerClose,
@@ -18,14 +18,19 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import useDimensions from "@/hooks/useDimensions"
-
+import axios from "axios"
+import { SHEET_FORM_URL } from "@/constants"
+import { DialogClose } from "@radix-ui/react-dialog"
 
 export function FeedbackFormDialog() {
-  const [email, setEmail] = useState("")
-  const [feedback, setFeedback] = useState("")
+  const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [feedback, setFeedback] = useState("");
   const [attachments, setAttachments] = useState<File[]>([])
   const { width: screenWidth } = useDimensions()
   const isDesktop = screenWidth > 768;
+  const isFormEmpty = !feedback.trim().length;
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)
   const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setFeedback(e.target.value)
@@ -42,27 +47,30 @@ export function FeedbackFormDialog() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // console.log({ email, feedback, attachments })
+    setIsLoading(true)
     const data = new FormData();
-    data.append('email', email);
-    data.append('feedback', feedback);
-    attachments.forEach((file, index) => {
-      data.append(`attachments[${index}]`, file, file.name);
-    });
+    data.append('email', email.trim());
+    data.append('feedback', feedback.trim());
+    // attachments.forEach((file, index) => {
+    //   data.append(`attachments[${index}]`, file, file.name);
+    // });
     try {
-      // await fetch(process.env.Sheet_Url as string, {
-      //   method: 'POST',
-      //   // body: data,
-      //   // muteHttpExceptions: true,
-      // });
-
+      await axios.post(SHEET_FORM_URL, data);
+      setIsLoading(false)
+      setIsFeedbackSubmitted(true)
       // Reset form after submission
       setEmail("")
       setFeedback("")
-      setAttachments([])
+      // setAttachments([])
     } catch (error) {
+      setIsLoading(false)
+      setIsFeedbackSubmitted(false)
       console.log(error);
     }
+  }
+
+  function showNewFeedbackForm() {
+    return setIsFeedbackSubmitted(false)
   }
 
   const getFormTemplate = () => {
@@ -70,8 +78,8 @@ export function FeedbackFormDialog() {
       <form onSubmit={handleSubmit}>
         <div className="grid gap-4 py-4">
           <div className="flex flex-col items-start gap-2">
-            <Label htmlFor="email" className="text-right">
-              Email
+            <Label htmlFor="email" className="text-gray-800">
+              Email (optional)
             </Label>
             <Input
               id="email"
@@ -79,12 +87,11 @@ export function FeedbackFormDialog() {
               value={email}
               onChange={handleEmailChange}
               className="rounded-4"
-              required
               placeholder="example@email.com"
             />
           </div>
           <div className="flex flex-col items-start gap-2">
-            <Label htmlFor="feedback" className="text-right">
+            <Label htmlFor="feedback" className="text-gray-800">
               Feedback
             </Label>
             <Textarea
@@ -93,10 +100,10 @@ export function FeedbackFormDialog() {
               onChange={handleFeedbackChange}
               className="rounded-4"
               required
-              placeholder="Your feedback or suggestions..."
+              placeholder="What features would enhance your DeFi experience?"
             />
           </div>
-          <div className="flex flex-col items-start gap-2">
+          {/* <div className="flex flex-col items-start gap-2">
             <Label htmlFor="attachment" className="text-right">
               Attachments (optional)
             </Label>
@@ -135,10 +142,18 @@ export function FeedbackFormDialog() {
                 ))}
               </ul>
             </div>
-          )}
+          )} */}
         </div>
         <DialogFooter className="mt-2">
-          <Button type="submit" size={'lg'} variant={'primary'}>Submit Feedback</Button>
+          <div className="grid grid-cols-2 gap-3">
+            <DialogClose asChild>
+              <Button size={'lg'} variant="secondary" className='w-full'>Cancel</Button>
+            </DialogClose>
+            <Button type="submit" size={'lg'} variant={'primary'} disabled={isLoading || isFormEmpty}>
+              {isLoading && <LoaderCircle className='text-white w-4 h-4 animate-spin mr-1' />}
+              Submit Feedback
+            </Button>
+          </div>
         </DialogFooter>
       </form>
     )
@@ -150,19 +165,38 @@ export function FeedbackFormDialog() {
         <DialogTrigger asChild>
           <div className="w-full flex items-center justify-center">
             <Button variant="primary" size={'lg'} className="flex items-center gap-2">
-              Give Feedback
-              <MessageSquareCode className="h-5 w-5" />
+              <MessageSquare className="h-5 w-5" />
+              Share Your Thoughts
             </Button>
           </div>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px] bg-white bg-opacity-75 backdrop-blur-sm border-0 rounded-6">
           <DialogHeader>
-            <DialogTitle className="text-gray-800">Feedback Form</DialogTitle>
-            <DialogDescription className="text-gray-600">
-              We appreciate your feedback. Please fill out the form below.
+            <DialogTitle className="text-gray-800">Share Your Thoughts</DialogTitle>
+            <DialogDescription className="text-gray-800">
+              We appreciate your feedback. {!isFeedbackSubmitted && "Please fill out the form below."}
             </DialogDescription>
           </DialogHeader>
-          {getFormTemplate()}
+          {!isFeedbackSubmitted &&
+            <div className="">
+              {getFormTemplate()}
+            </div>}
+          {isFeedbackSubmitted &&
+            <>
+              <div className="flex flex-col items-center justify-center gap-5 py-10">
+                <CircleCheckBig className="w-[60px] h-[60px] text-success-text" />
+                <HeadingText level="h3">Thank you for your feedback!</HeadingText>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <DialogClose asChild>
+                  <Button size={'lg'} variant="secondary" className='w-full'>Close</Button>
+                </DialogClose>
+                <Button type="submit" size={'lg'} variant={'primary'} onClick={showNewFeedbackForm}>
+                  Give New Feedback
+                </Button>
+              </div>
+            </>
+          }
         </DialogContent>
       </Dialog>
     )
@@ -172,20 +206,39 @@ export function FeedbackFormDialog() {
     <Drawer>
       <DrawerTrigger asChild>
         <div className="w-full flex items-center justify-center">
-          <Button variant="primary" size={'lg'} className="flex items-center gap-2">
-            Give Feedback
-            <MessageSquareCode className="h-5 w-5" />
+          <Button variant="primary" size={'lg'} className="flex items-center gap-2 w-full">
+            <MessageSquare className="h-5 w-5" />
+            Share Your Thoughts
           </Button>
         </div>
       </DrawerTrigger>
-      <DrawerContent className="pb-5 bg-white bg-opacity-75">
+      <DrawerContent className="pb-5 px-5 bg-white bg-opacity-75">
         <DrawerHeader>
-          <DrawerTitle>Feedback Form</DrawerTitle>
-          <DrawerDescription>We appreciate your feedback. Please fill out the form below.</DrawerDescription>
+          <DrawerTitle>Share Your Thoughts</DrawerTitle>
+          <DrawerDescription>
+            We appreciate your feedback. {!isFeedbackSubmitted && "Please fill out the form below."}
+          </DrawerDescription>
         </DrawerHeader>
-        <div className="px-4">
-          {getFormTemplate()}
-        </div>
+        {!isFeedbackSubmitted &&
+          <div className="sm:p-4">
+            {getFormTemplate()}
+          </div>}
+        {isFeedbackSubmitted &&
+          <>
+            <div className="flex flex-col items-center justify-center gap-5 py-10">
+              <CircleCheckBig className="w-[60px] h-[60px] text-success-text" />
+              <HeadingText level="h3">Thank you for your feedback!</HeadingText>
+            </div>
+            <div className="grid grid-cols-2 gap-5">
+              <DialogClose asChild>
+                <Button size={'lg'} variant="secondary" className='w-full'>Cancel</Button>
+              </DialogClose>
+              <Button type="submit" size={'lg'} variant={'primary'} onClick={showNewFeedbackForm}>
+                Give New Feedback
+              </Button>
+            </div>
+          </>
+        }
       </DrawerContent>
     </Drawer>
 

@@ -82,7 +82,7 @@ const Header: React.FC = () => {
   return (
     <>
       <header className="z-50 sticky top-5 left-0 max-w-[1200px] w-full mx-auto px-5">
-        <div className="flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center self-stretch py-0 pr-[8px] pl-4 sm:pl-[20px] mb-16 lg:mb-20 w-full font-semibold uppercase rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
+        <div className="flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center self-stretch py-0 pr-[8px] pl-4 sm:pl-[20px] mb-14 w-full font-semibold uppercase rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
           <Button variant="ghost" className='w-[24px] md:w-fit p-0' onClick={() => router.push('/')}>
             <img
               loading="lazy"

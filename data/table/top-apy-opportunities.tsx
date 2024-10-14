@@ -81,6 +81,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => item.platformName,
         cell: ({ row }) => {
             const platformName: string = row.getValue("platformName");
+            const platformVersion: string = row.original.platform_id.split("-")[1]
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -89,37 +90,73 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
-                    <span className="truncate">{`${platformName[0]}${platformName.slice(1).toLowerCase()}`}</span>
+                    <span className="truncate">{`${platformName[0]}${platformName.slice(1).toLowerCase()} ${platformVersion}`}</span>
                 </span>
             )
         },
         enableSorting: false,
     },
     {
-        accessorFn: item => `${Number(item.apy_current).toFixed(1)}%`,
+        accessorKey: "apy_current",
+        accessorFn: item => Number(item.apy_current),
         header: "APY",
+        cell: ({ row }) => `${Number(row.getValue("apy_current")).toFixed(2)}%`,
         // enableGlobalFilter: false,
     },
     {
-        accessorFn: item => `${Number(item.max_ltv).toFixed(0)}%`,
-        header: "Max LTV",
+        accessorKey: "max_ltv",
+        accessorFn: item => Number(item.max_ltv),
+        header: () => (
+            <InfoTooltip
+                label={
+                    <TooltipText>Max LTV</TooltipText>
+                }
+                content={"Maximum Loan-to-Value ratio; the highest percentage of asset value that can be borrowed."}
+            />
+        ),
+        cell: ({ row }) => `${Number(row.getValue("max_ltv")).toFixed(0)}%`,
         // enableGlobalFilter: false,
     },
     {
         accessorKey: "deposits",
-        header: "Deposits",
+        accessorFn: item => Number(item.deposits),
+        header: () => (
+            <InfoTooltip
+                label={
+                    <TooltipText>Deposits</TooltipText>
+                }
+                content={"Placing assets in smart contracts or liquidity pools to earn interest or rewards."}
+            />
+        ),
         cell: ({ row }) => {
             const value: string = row.getValue("deposits");
             if (containsNegativeInteger(value)) {
                 return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)))}`
             }
             return `$${abbreviateNumber(Number(value))}`
-        }
+        },
         // enableGlobalFilter: false,
     },
     {
-        accessorFn: item => `${Number(item.utilization).toFixed(1)}%`,
-        header: "Utilization",
+        accessorKey: "utilization",
+        accessorFn: item => Number(item.utilization),
+        header: () => (
+            <InfoTooltip
+                label={
+                    <TooltipText>Utilization</TooltipText>
+                }
+                content={"Ratio of borrowed funds to total available capital, indicating how effectively a lending pool is used."}
+            />
+        ),
+        cell: ({ row }) => `${Number(row.getValue("utilization")).toFixed(1)}%`,
         // enableGlobalFilter: false,
     },
 ]
+
+function TooltipText({ children }: { children: React.ReactNode }) {
+    return (
+        <span className="inline-block border-b border-dashed border-gray-800">
+            {children}
+        </span>
+    )
+}

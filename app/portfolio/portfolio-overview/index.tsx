@@ -35,7 +35,7 @@ export default function PortfolioOverview() {
     const COLLATERAL = getStatValue(data?.total_supplied);
     const BORROWINGS = getStatValue(data?.total_borrowed);
     const NET_WORTH = getStatValue(Number(data?.total_supplied ?? 0) - Number(data?.total_borrowed ?? 0));
-    const EARNINGS = getStatValue(Number(data?.platforms.reduce((acc, curr) => acc + curr.pnl, 0)));
+    const EARNINGS = getStatValue(Number(data?.platforms.reduce((acc, curr) => acc + curr.pnl, 0) ?? 0));
 
     const POSITIONS_BREAKDOWN_DATA = [
         {

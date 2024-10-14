@@ -1,4 +1,10 @@
 import { Period, PeriodDisplay } from "./types/periodButtons";
+import { PlatformWebsiteLink } from "./types/platform";
+
+export type TPlatformWebsiteLinks ={
+  aave: PlatformWebsiteLink.AAVE;
+  compound: PlatformWebsiteLink.COMPOUND;
+}
 
 export const PERIOD_LIST = [
   {
@@ -56,18 +62,34 @@ export const HISTORY_CHART_SELECT_OPTIONS = [
 ];
 
 export const STABLECOINS_NAMES_LIST = [
-  "DAI",
-  "CDAI",
-  "SDAI",
-  "CSDAI",
-  "SUSDE",
-  "CSUSDE",
-  "USDC",
-  "CUSDC",
-  "USDC.E",
-  "CUSDC.E",
-  "USDE",
-  "CUSDE",
   "USDT",
-  "CUSDT",
+  "sUSDe",
+  "USDe",
+  "GHO",
+  "USDC",
+  "DAI",
+  "USDS",
+  "sDAI",
+  "PYUSD",
+  "crvUSD",
+  "LUSD",
+  "USDP",
+  "TUSD",
+  "sUSD",
+  "FDUSD",
+  "USDC.e",
+  "fUSDT",
+  "m.USDT",
+  "m.DAI",
+  "m.USDC",
+  "USDbC",
+  "DAI.e",
 ];
+
+export const platformWebsiteLinks: TPlatformWebsiteLinks = {
+  aave: PlatformWebsiteLink.AAVE,
+  compound: PlatformWebsiteLink.COMPOUND,
+};
+
+export const SHEET_FORM_URL =
+  "https://script.google.com/macros/s/AKfycbwdG0b3rOiiRL0UP0KwHSBZfwVYRyeDZrJfVKAAV7yoVPGglaRaIanX91S_yRIl0ZYw/exec";

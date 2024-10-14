@@ -31,3 +31,8 @@ export enum PlatformDisplayValue {
   SparkEthereum = "Spark v3 Ethereum",
   SparkGnosis = "Spark v3 Gnosis",
 }
+
+export enum PlatformWebsiteLink {
+  AAVE = "https://aave.com/",
+  COMPOUND = "https://compound.finance/"
+}

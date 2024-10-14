@@ -3,7 +3,6 @@
 import React, { useContext, useState } from 'react'
 import LendBorrowToggle from '@/components/LendBorrowToggle'
 import { HeadingText } from '@/components/ui/typography'
-import ChainSelectorDropdown from '@/components/dropdowns/ChainSelectorDropdown'
 import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown'
 import { columns } from '@/data/table/top-apy-opportunities';
 import SearchInput from '@/components/inputs/SearchInput'
@@ -12,10 +11,8 @@ import { ColumnDef } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { TChain, TOpportunityTable, TOpportunityType, TToken } from '@/types'
 import { DataTable } from '@/components/ui/data-table'
-import { useQuery } from '@tanstack/react-query'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
-import { getPlatformLogo, getTokenLogo } from '@/lib/utils'
 import { OpportunitiesContext } from '@/context/opportunities-provider'
 
 type TTopApyOpportunitiesProps = {
@@ -47,11 +44,11 @@ export default function TopApyOpportunities() {
             chain_id: item.chain_id,
             chainName: allChainsData.find((chain: any) => Number(chain.chain_id) === Number(item.chain_id))?.name || "",
             platform_id: item.platform.platform_name,
-            platformName: item.platform.platform_name.split("-")[0],
+            platformName: `${item.platform.platform_name.split("-")[0]}`,
             platformLogo: item.platform.logo,
             apy_current: item.platform.apy.current,
             max_ltv: item.platform.max_ltv,
-            deposits: item.platform.liquidity,
+            deposits: `${Number(item.platform.liquidity) * Number(item.token.price_usd)}`,
             utilization: item.platform.utilization_rate,
         }
     });
@@ -80,7 +77,7 @@ export default function TopApyOpportunities() {
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                     <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
                         <div className="flex items-center gap-[12px]">
-                            <HeadingText level="h3">Top APY Opportunities</HeadingText>
+                            <HeadingText level="h3" weight='semibold'>Top APY Opportunities</HeadingText>
                             <InfoTooltip content="Understand the risks, and types of high-yield opportunities to make informed investment decisions" />
                         </div>
                         {/* Filter button for Tablet and below screens */}

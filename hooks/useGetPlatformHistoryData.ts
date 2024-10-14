@@ -3,6 +3,7 @@
 import { getPlatformHistoryData } from "@/queries/platform-history-api";
 import {
   TGetPlatformHistoryParams,
+  TPlatform,
   TPlatformHistory,
 } from "@/types";
 import { useQuery } from "@tanstack/react-query";
@@ -12,7 +13,7 @@ export default function useGetPlatformHistoryData(
 ) {
   const { platform_id, token, period } = params;
 
-  const { data, isLoading, isError } = useQuery<any, Error>({
+  const { data, isLoading, isError } = useQuery<TPlatformHistory, Error>({
     queryKey: ["platformHistory", platform_id, token, period],
     queryFn: async () => {
       try {
@@ -21,6 +22,7 @@ export default function useGetPlatformHistoryData(
       } catch (error) {
         // toast.error(SOMETHING_WENT_WRONG_MESSAGE, ERROR_TOAST_ICON_STYLES);
         // return [];
+        throw new Error("There was an error while fetching Platform history data");
       }
     },
     staleTime: Infinity,
