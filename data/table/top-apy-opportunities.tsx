@@ -117,9 +117,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             return (
                 <span className="flex items-center gap-2">
-                    <span>{`${Number(row.getValue("max_ltv")).toFixed(0)}%`}</span>
+                    {Number(row.getValue("max_ltv")) > 0 &&
+                        <span>
+                            {`${Number(row.getValue("max_ltv")).toFixed(0)}%`}
+                        </span>}
                     {Number(row.getValue("max_ltv")) === 0 &&
                         <InfoTooltip
+                            label={<TooltipText>{`${row.getValue("max_ltv")}%`}</TooltipText>}
                             content="This asset cannot be used as collateral to take out a loan"
                         />}
                 </span>
@@ -140,6 +144,26 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         ),
         cell: ({ row }) => {
             const value: string = row.getValue("deposits");
+            if (containsNegativeInteger(value)) {
+                return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)))}`
+            }
+            return `$${abbreviateNumber(Number(value))}`
+        },
+        // enableGlobalFilter: false,
+    },
+    {
+        accessorKey: "borrows",
+        accessorFn: item => Number(item.borrows),
+        header: () => (
+            <InfoTooltip
+                label={
+                    <TooltipText>Borrows</TooltipText>
+                }
+                content={"Total amount of asset borrowed in the pool."}
+            />
+        ),
+        cell: ({ row }) => {
+            const value: string = row.getValue("borrows");
             if (containsNegativeInteger(value)) {
                 return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)))}`
             }

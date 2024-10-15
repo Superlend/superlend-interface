@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import LendBorrowToggle from '@/components/LendBorrowToggle'
 import { HeadingText } from '@/components/ui/typography'
 import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown'
@@ -9,11 +9,12 @@ import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { ColumnDef } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
-import { TChain, TOpportunityTable, TOpportunityType, TToken } from '@/types'
+import { TChain, TOpportunityTable, TPositionType, TToken } from '@/types'
 import { DataTable } from '@/components/ui/data-table'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 import { OpportunitiesContext } from '@/context/opportunities-provider'
+import { useRouter } from 'next/navigation'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[];
@@ -21,20 +22,40 @@ type TTopApyOpportunitiesProps = {
 }
 
 export default function TopApyOpportunities() {
-    const { filters } = useContext<any>(OpportunitiesContext);
-    const [opportunityType, setOpportunityType] = useState<TOpportunityType>("lend");
+    const { filters, positionType, setPositionType } = useContext<any>(OpportunitiesContext);
     const [searchKeywords, setSearchKeywords] = useState<string>("");
+    const [columnVisibility, setColumnVisibility] = useState({
+        deposits: true,
+        borrows: false,
+    });
+    const router = useRouter();
     const {
         data: opportunitiesData,
         isLoading: isLoadingOpportunitiesData
     } = useGetOpportunitiesData({
-        type: opportunityType,
+        type: positionType,
         chain_ids: filters.chain_ids,
         tokens: filters.token_ids
     });
     const { allChainsData } = useContext<any>(AssetsDataContext);
+    
+    useEffect(() => {
+        setColumnVisibility(() => {
+            if (positionType === "lend") {
+                return {
+                    deposits: true,
+                    borrows: false,
+                }
+            }
 
-    const rawTableData = opportunitiesData.map((item) => {
+            return {
+                deposits: false,
+                borrows: true,
+            }
+        })
+    }, [positionType])
+
+    const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         return {
             tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,
@@ -49,6 +70,7 @@ export default function TopApyOpportunities() {
             apy_current: item.platform.apy.current,
             max_ltv: item.platform.max_ltv,
             deposits: `${Number(item.platform.liquidity) * Number(item.token.price_usd)}`,
+            borrows: `${Number(item.platform.borrows) * Number(item.token.price_usd)}`,
             utilization: item.platform.utilization_rate,
         }
     });
@@ -59,8 +81,14 @@ export default function TopApyOpportunities() {
 
     const tableData = filters.platform_ids.length > 0 ? filteredTableData : rawTableData;
 
-    const toggleOpportunityType = (opportunityType: TOpportunityType): void => {
-        setOpportunityType(opportunityType);
+    function handleRowClick(rowData: any) {
+        const { tokenAddress, platform_id, chain_id } = rowData;
+        const url = `/position-management?token=${tokenAddress}&platform_id=${platform_id}&chain_id=${chain_id}`
+        router.push(url);
+    }
+
+    const toggleOpportunityType = (positionType: TPositionType): void => {
+        setPositionType(positionType);
     };
 
     function handleKeywordChange(e: any) {
@@ -87,7 +115,7 @@ export default function TopApyOpportunities() {
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="w-full sm:max-w-[150px] lg:max-w-[250px]">
-                            <LendBorrowToggle type={opportunityType} handleToggle={toggleOpportunityType} />
+                            <LendBorrowToggle type={positionType} handleToggle={toggleOpportunityType} />
                         </div>
                         <div className="sm:max-w-[156px] w-full">
                             <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={searchKeywords} />
@@ -107,6 +135,9 @@ export default function TopApyOpportunities() {
                         data={tableData}
                         filters={searchKeywords}
                         setFilters={setSearchKeywords}
+                        handleRowClick={handleRowClick}
+                        columnVisibility={columnVisibility}
+                        setColumnVisibility={setColumnVisibility}
                     />}
                 {isLoadingOpportunitiesData && (
                     <LoadingSectionSkeleton />

@@ -1,5 +1,6 @@
 "use client"
 
+import { TPositionType } from "@/types";
 import { createContext, useState } from "react";
 
 export type TOpportunitiesFilters = {
@@ -15,6 +16,7 @@ export const OpportunitiesContext = createContext<any>({
 });
 
 export default function OpportunitiesProvider({ children }: { children: React.ReactNode }) {
+    const [positionType, setPositionType] = useState<TPositionType>("lend");
     const [filters, setFilters] = useState<TOpportunitiesFilters>({
         token_ids: [],
         chain_ids: [],
@@ -22,7 +24,7 @@ export default function OpportunitiesProvider({ children }: { children: React.Re
     });
 
     return (
-        <OpportunitiesContext.Provider value={{ filters, setFilters }}>
+        <OpportunitiesContext.Provider value={{ filters, setFilters, positionType, setPositionType }}>
             {children}
         </OpportunitiesContext.Provider>
     )

@@ -1,6 +1,6 @@
 import { Period } from "./periodButtons";
 
-export type TOpportunityType = "lend" | "borrow";
+export type TPositionType = "lend" | "borrow";
 
 export type TToken = {
   address: string;
@@ -73,6 +73,7 @@ export type TOpportunity = {
     additional_rewards: "boolean";
     max_ltv: "number";
     liquidity: string;
+    borrows: string;
     utilization_rate: string;
     apy: {
       current: string;
@@ -100,6 +101,7 @@ export type TOpportunityTable = {
   apy_current: string;
   max_ltv: string;
   deposits: string;
+  borrows: string;
   utilization: string;
 };
 
