@@ -78,7 +78,7 @@ export default function TopApyOpportunities() {
                     <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
                         <div className="flex items-center gap-[12px]">
                             <HeadingText level="h3" weight='semibold'>Top APY Opportunities</HeadingText>
-                            <InfoTooltip content="Understand the risks, and types of high-yield opportunities to make informed investment decisions" />
+                            <InfoTooltip content="List of assets from different lending protocols across various chains, offering good APYs" />
                         </div>
                         {/* Filter button for Tablet and below screens */}
                         <div className="block lg:hidden">
