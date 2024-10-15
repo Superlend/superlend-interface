@@ -15,6 +15,7 @@ import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 import { OpportunitiesContext } from '@/context/opportunities-provider'
 import { useRouter } from 'next/navigation'
+import useDimensions from '@/hooks/useDimensions'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[];
@@ -22,6 +23,7 @@ type TTopApyOpportunitiesProps = {
 }
 
 export default function TopApyOpportunities() {
+    const { width: screenWidth } = useDimensions();
     const { filters, positionType, setPositionType } = useContext<any>(OpportunitiesContext);
     const [searchKeywords, setSearchKeywords] = useState<string>("");
     const [columnVisibility, setColumnVisibility] = useState({
@@ -38,7 +40,7 @@ export default function TopApyOpportunities() {
         tokens: filters.token_ids
     });
     const { allChainsData } = useContext<any>(AssetsDataContext);
-    
+
     useEffect(() => {
         setColumnVisibility(() => {
             if (positionType === "lend") {
@@ -135,7 +137,7 @@ export default function TopApyOpportunities() {
                         data={tableData}
                         filters={searchKeywords}
                         setFilters={setSearchKeywords}
-                        handleRowClick={handleRowClick}
+                        handleRowClick={screenWidth > 768 ? handleRowClick : undefined}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
                     />}
