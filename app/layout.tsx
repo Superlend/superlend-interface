@@ -34,6 +34,7 @@ export const metadata: Metadata = {
     title: "Superlend - Lend & Borrow Aggregator",
     description: "Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .",
     siteName: "Superlend - Lend & Borrow Aggregator",
+    images: "https://beta.superlend.xyz/og.png"
   },
 };
 
