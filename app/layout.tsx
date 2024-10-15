@@ -18,8 +18,9 @@ export const metadata: Metadata = {
       'en-US': '/en-US',
     },
   },
-  title: "Superlend",
-  description: "All in one aggregator platform for your lending and borrowing needs.",
+  keywords: ["DeFi", "Lend", "Borrow", "Money Markets", "Aggregator", "DeFi rates", "Earn in DeFi", "Borrow USDC", "Earn USDC"],
+  title: "Superlend - Lend & Borrow Aggregator",
+  description: "Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .",
   icons: [
     { url: "/images/logos/favicon-16x16.png", sizes: "16x16" },
     { url: "/images/logos/favicon-32x32.png", sizes: "32x32" },
@@ -29,23 +30,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "https://beta.superlend.xyz/",
-    title: "Superlend",
-    description: "All in one aggregator platform for your lending and borrowing needs.",
-    siteName: "Superlend",
-    images: "https://beta.superlend.xyz/og.png",
-  },
-  robots: {
-    index: false,
-    follow: true,
-    nocache: true,
-    googleBot: {
-      index: true,
-      follow: false,
-      noimageindex: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
+    title: "Superlend - Lend & Borrow Aggregator",
+    description: "Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .",
+    siteName: "Superlend - Lend & Borrow Aggregator",
   },
 };
 
