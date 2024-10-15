@@ -26,7 +26,8 @@ export const metadata: Metadata = {
     description: "All in one aggregator platform for your lending and borrowing needs.",
     siteName: "Superlend",
     images: [{
-      url: "https://beta.superlend.xyz/og.png",
+      url: "/og.png",
+      secureUrl: "https://beta.superlend.xyz/og.png",
     }],
   }
 };
