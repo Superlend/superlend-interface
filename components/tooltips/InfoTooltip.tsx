@@ -19,6 +19,7 @@ import { Label } from '../ui/typography';
 import InfoCircleIcon from '../icons/info-circle-icon';
 import useDimensions from '@/hooks/useDimensions';
 import { Button } from '../ui/button';
+import { DialogTitle } from '@radix-ui/react-dialog';
 
 type TProps = {
     label?: any;
@@ -54,10 +55,10 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
                     <TooltipTrigger asChild>
                         <motion.span
                             // Tool tip triggers
-                            onHoverStart={handleTooltipToggle(true)}
                             onClick={handleTooltipToggle(true)}
-                            onMouseEnter={handleTooltipToggle(true)}
+                            onHoverStart={handleTooltipToggle(true)}
                             onHoverEnd={handleTooltipToggle(false)}
+                            onMouseEnter={handleTooltipToggle(true)}
                             onMouseLeave={handleTooltipToggle(false)}
                             className='w-fit inline-block shrink-0 cursor-help'
                         >
@@ -81,7 +82,6 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
         <Drawer open={open}>
             <DrawerTrigger asChild>
                 <span
-                    // Tool tip triggers
                     onClick={handleTooltipToggle(true)}
                     className='w-fit inline-block shrink-0'
                 >
@@ -97,8 +97,8 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
                     {typeof content !== "string" && content}
                 </div>
                 <DrawerFooter>
-                    <DrawerClose className='w-full'>
-                        <Button size={'lg'} variant="outline" className='w-full'>Close</Button>
+                    <DrawerClose asChild>
+                        <Button size={'lg'} variant="outline" className='w-full' onClick={handleTooltipToggle(false)}>Close</Button>
                     </DrawerClose>
                 </DrawerFooter>
             </DrawerContent>
