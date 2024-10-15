@@ -1,21 +1,21 @@
 "use client";
 import React, { useState } from 'react';
 import { Button } from './ui/button';
-import { TOpportunityType } from '@/types';
+import { TPositionType } from '@/types';
 
 type TProps = {
-  type: TOpportunityType;
-  handleToggle: (opportunityType: TOpportunityType) => void;
+  type: TPositionType;
+  handleToggle: (positionType: TPositionType) => void;
 }
 
 const LendBorrowToggle = ({ type, handleToggle }: TProps) => {
-  const opportunityType = {
+  const positionType = {
     lend: "lend",
     borrow: "borrow",
   }
 
-  function checkType(typeToMatch: TOpportunityType): boolean {
-    return opportunityType[typeToMatch] === type;
+  function checkType(typeToMatch: TPositionType): boolean {
+    return positionType[typeToMatch] === type;
   }
 
   const BUTTON_DEFAULT_STYLE = "flex items-center justify-center py-[8px] grow-1 basis-1/2 sm:w-[120px] h-full my-auto hover:bg-white/45 uppercase font-semibold rounded-3";

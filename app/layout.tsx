@@ -6,13 +6,22 @@ import ContextProvider from "@/context";
 import Footer from "@/components/Footer";
 import { GoogleTagManager } from '@next/third-parties/google'
 import ScrollToTop from "@/components/ScrollToTop";
+import { Meta } from "@/components/Meta";
 // import { Inter } from "next/font/google";
 
 // const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Superlend",
-  description: "All in one aggregator platform for your lending and borrowing needs.",
+  metadataBase: new URL("https://beta.superlend.xyz"),
+  alternates: {
+    canonical: '/',
+    languages: {
+      'en-US': '/en-US',
+    },
+  },
+  keywords: ["DeFi", "Lend", "Borrow", "Money Markets", "Aggregator", "DeFi rates", "Earn in DeFi", "Borrow USDC", "Earn USDC"],
+  title: "Superlend - Lend & Borrow Aggregator",
+  description: "Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .",
   icons: [
     { url: "/images/logos/favicon-16x16.png", sizes: "16x16" },
     { url: "/images/logos/favicon-32x32.png", sizes: "32x32" },
@@ -22,13 +31,16 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "https://beta.superlend.xyz/",
-    title: "Superlend",
-    description: "All in one aggregator platform for your lending and borrowing needs.",
-    siteName: "Superlend",
-    images: [{
-      url: "https://beta.superlend.xyz/og.png",
-    }],
-  }
+    title: "Superlend - Lend & Borrow Aggregator",
+    description: "Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .",
+    siteName: "Superlend - Lend & Borrow Aggregator",
+    images: "https://beta.superlend.xyz/og.png"
+  },
+  twitter: {
+    title: "Superlend - Lend & Borrow Aggregator",
+    description: "Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .",
+    images: "https://beta.superlend.xyz/og.png"
+  },
 };
 
 export default function RootLayout({
@@ -41,6 +53,13 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      {/* <Meta
+        baseURL={'https://beta.superlend.xyz'}
+        title={'Superlend - Lend & Borrow Aggregator'}
+        description={'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.'}
+        imageUrl="/og.png"
+        keywords={["DeFi", "Lend", "Borrow", "Money Markets", "Aggregator", "DeFi rates", "Earn in DeFi", "Borrow USDC", "Earn USDC"]}
+      /> */}
       <body className={`bg-[#B4E2FB]`}>
         <ScrollToTop />
         <GoogleTagManager gtmId={GTM_ID} />

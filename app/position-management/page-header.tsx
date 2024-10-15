@@ -75,7 +75,11 @@ export default function PageHeader() {
     const chainLogo = chainDetails?.logo;
     const platformName = platform_id.split("-").slice(0, 2).join(" ");
     const platformLogo = platformData?.platform.logo;
-    const platformWebsiteLink = platformWebsiteLinks[platform_id.split("-")[0].toLowerCase() as keyof typeof platformWebsiteLinks];
+    const platformWebsiteLink = getPlatformWebsiteLink({
+        tokenAddress,
+        chainName,
+        platform_id,
+    });
 
     return (
         <section className="header flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
@@ -130,7 +134,10 @@ export default function PageHeader() {
                                 <img src={platformLogo} alt={`${platformName} Platform`} width={16} height={16} className='object-contain shrink-0' />
                                 <Label weight='medium' className='leading-[0]'>{platformName}</Label>
                             </div>
-                            <a className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2" href={platformWebsiteLink} target='_blank'>
+                            <a
+                                className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
+                                href={platformWebsiteLink}
+                                target='_blank'>
                                 <span className="uppercase text-secondary-500 font-medium">more</span>
                                 <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
                             </a>
@@ -181,6 +188,8 @@ export default function PageHeader() {
     )
 }
 
+// Helper functions =================================================
+
 function getTokenDetails({
     tokenAddress,
     platformData
@@ -195,8 +204,6 @@ function getTokenDetails({
         logo: platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.logo || "",
     }
 }
-
-// Helper functions =================================================
 
 function getChainDetails({
     allChainsData,
@@ -268,4 +275,16 @@ function getAssetTooltipContent({
             }
         </span>
     )
+}
+
+function getPlatformWebsiteLink({
+    tokenAddress,
+    chainName,
+    platform_id,
+}: any) {
+    const baseUrl = platformWebsiteLinks[platform_id?.split("-")[0].toLowerCase() as keyof typeof platformWebsiteLinks];
+    const aavePath = `${baseUrl}/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${chainName?.toLowerCase()}_v3`;
+    const compoundPath = `/markets/v2`;
+    const path = platform_id?.split("-")[0].toLowerCase() === "aave" ? aavePath : compoundPath;
+    return `${new URL(path, baseUrl)}`
 }

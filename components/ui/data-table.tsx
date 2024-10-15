@@ -8,6 +8,7 @@ import {
     getFilteredRowModel,
     getSortedRowModel,
     getPaginationRowModel,
+    VisibilityState,
 } from "@tanstack/react-table"
 
 import {
@@ -29,13 +30,19 @@ interface DataTableProps<TData, TValue> {
     data: TData[]
     filters: string
     setFilters: React.Dispatch<React.SetStateAction<string>>
+    handleRowClick?: any
+    columnVisibility?: VisibilityState
+    setColumnVisibility?: any
 }
 
 export function DataTable<TData, TValue>({
     columns,
     data,
     filters,
-    setFilters
+    setFilters,
+    handleRowClick,
+    columnVisibility,
+    setColumnVisibility,
 }: DataTableProps<TData, TValue>) {
     const table = useReactTable({
         data,
@@ -44,10 +51,12 @@ export function DataTable<TData, TValue>({
         getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         state: {
-            globalFilter: filters.trim()
+            globalFilter: filters.trim(),
+            columnVisibility
         },
         onGlobalFilterChange: setFilters,
         getSortedRowModel: getSortedRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
     })
 
     return (
@@ -101,9 +110,14 @@ export function DataTable<TData, TValue>({
                                 key={row.id}
                                 data-state={row.getIsSelected() && "selected"}
                                 className="border-0 bg-white"
+                                onClick={
+                                    !handleRowClick
+                                        ? undefined
+                                        : () => handleRowClick(row.original)
+                                }
                             >
                                 {row.getVisibleCells().map((cell) => (
-                                    <TableCell key={cell.id} className={`py-4 w-[150px] min-w-[120px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""}`}>
+                                    <TableCell key={cell.id} className={`py-4 w-[150px] min-w-[120px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""} ${!!handleRowClick ? "cursor-pointer" : ""}`}>
                                         <BodyText level={"body2"} weight={"semibold"} className="">
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </BodyText>

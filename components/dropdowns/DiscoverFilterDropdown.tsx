@@ -319,7 +319,7 @@ function FilterOptions({
                 <Button variant={isStablecoinsSelected ? "secondaryOutline" : "outline"} className='m-4 mb-0 ml-3 flex items-center justify-center gap-1' onClick={selectStablecoins}>
                     {isStablecoinsSelected && <Check className='w-4 h-4 text-secondary-500' />}
                     Select{isStablecoinsSelected ? "ed" : ""} Stable Coins
-                    <span className={`${isStablecoinsSelected ? "bg-secondary-300 text-white" : "bg-gray-600 text-gray-100"} rounded-full px-1 ml-1`}>
+                    <span className={`${isStablecoinsSelected ? "bg-secondary-300 text-white" : "bg-gray-500 text-gray-100"} rounded-full px-1 ml-1`}>
                         {STABLECOINS_NAMES_LIST.length}
                     </span>
                 </Button>
