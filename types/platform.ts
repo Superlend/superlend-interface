@@ -33,6 +33,6 @@ export enum PlatformDisplayValue {
 }
 
 export enum PlatformWebsiteLink {
-  AAVE = "https://aave.com/",
-  COMPOUND = "https://compound.finance/"
+  AAVE = "https://app.aave.com/",
+  COMPOUND = "https://app.compound.finance/"
 }
