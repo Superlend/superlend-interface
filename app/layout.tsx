@@ -36,6 +36,11 @@ export const metadata: Metadata = {
     siteName: "Superlend - Lend & Borrow Aggregator",
     images: "https://beta.superlend.xyz/og.png"
   },
+  twitter: {
+    title: "Superlend - Lend & Borrow Aggregator",
+    description: "Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .",
+    images: "https://beta.superlend.xyz/og.png"
+  },
 };
 
 export default function RootLayout({
