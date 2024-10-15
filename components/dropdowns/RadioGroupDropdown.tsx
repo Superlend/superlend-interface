@@ -38,7 +38,6 @@ export default function RadioGroupDropdown({
     if (disableFilterOptions.includes(value.value) && listData.length > 0) {
         onValueChange((state: any) => {
             const updatedField = listData?.find((option: any) => !disableFilterOptions?.includes(option.value))
-            console.log(updatedField);
 
             return updatedField || listData[0]
         })

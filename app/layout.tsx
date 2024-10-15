@@ -6,6 +6,7 @@ import ContextProvider from "@/context";
 import Footer from "@/components/Footer";
 import { GoogleTagManager } from '@next/third-parties/google'
 import ScrollToTop from "@/components/ScrollToTop";
+import { Meta } from "@/components/Meta";
 // import { Inter } from "next/font/google";
 
 // const inter = Inter({ subsets: ["latin"] });
@@ -46,6 +47,13 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      {/* <Meta
+        baseURL={'https://beta.superlend.xyz'}
+        title={'Superlend - Lend & Borrow Aggregator'}
+        description={'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.'}
+        imageUrl="/og.png"
+        keywords={["DeFi", "Lend", "Borrow", "Money Markets", "Aggregator", "DeFi rates", "Earn in DeFi", "Borrow USDC", "Earn USDC"]}
+      /> */}
       <body className={`bg-[#B4E2FB]`}>
         <ScrollToTop />
         <GoogleTagManager gtmId={GTM_ID} />
