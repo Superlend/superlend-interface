@@ -80,18 +80,16 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
     return (
         <Drawer open={open}>
             <DrawerTrigger asChild>
-                <motion.span
+                <span
                     // Tool tip triggers
                     onClick={handleTooltipToggle(true)}
-                    onMouseEnter={handleTooltipToggle(true)}
-                    onMouseLeave={handleTooltipToggle(false)}
                     className='w-fit inline-block shrink-0'
                 >
                     {!label &&
                         <InfoCircleIcon width={iconWidth} height={iconHeight} weight='1.5' />
                     }
                     {label && label}
-                </motion.span>
+                </span>
             </DrawerTrigger>
             <DrawerContent>
                 <div className="p-4 pb-8">
