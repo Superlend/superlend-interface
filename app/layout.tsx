@@ -11,6 +11,13 @@ import ScrollToTop from "@/components/ScrollToTop";
 // const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://beta.superlend.xyz"),
+  alternates: {
+    canonical: '/',
+    languages: {
+      'en-US': '/en-US',
+    },
+  },
   title: "Superlend",
   description: "All in one aggregator platform for your lending and borrowing needs.",
   icons: [
@@ -25,7 +32,21 @@ export const metadata: Metadata = {
     title: "Superlend",
     description: "All in one aggregator platform for your lending and borrowing needs.",
     siteName: "Superlend",
-  }
+    images: "https://beta.superlend.xyz/og.png",
+  },
+  robots: {
+    index: false,
+    follow: true,
+    nocache: true,
+    googleBot: {
+      index: true,
+      follow: false,
+      noimageindex: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({
