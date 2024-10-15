@@ -43,7 +43,6 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
 
     function handleTooltipToggle(state: boolean) {
         return () => {
-            if (hide) return;
             setOpen(state)
         }
     }
