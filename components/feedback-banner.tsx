@@ -8,7 +8,7 @@ import { MessageSquare, MessageSquareText } from "lucide-react"
 export function FeedbackBanner() {
   return (
     <Card className="w-full">
-      <CardContent className="relative p-8 max-md:pt-[50px] md:pl-[60px] overflow-hidden">
+      <CardContent className="relative p-8 max-md:pt-[40px] max-md:pl-[50px] md:pl-[60px] overflow-hidden">
         <div className="absolute -top-[60px] -left-[60px] bg-white bg-opacity-90 w-[120px] h-[120px] rounded-full flex items-end justify-end">
           <MessageSquareText className="h-5 w-5 text-primary absolute right-6 bottom-[1.5rem]" />
         </div>
