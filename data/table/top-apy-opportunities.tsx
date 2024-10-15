@@ -111,10 +111,20 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 label={
                     <TooltipText>Max LTV</TooltipText>
                 }
-                content={"Maximum Loan-to-Value ratio; the highest percentage of asset value that can be borrowed."}
+                content={"Maximum amount that can be borrowed against the value of collateral."}
             />
         ),
-        cell: ({ row }) => `${Number(row.getValue("max_ltv")).toFixed(0)}%`,
+        cell: ({ row }) => {
+            return (
+                <span className="flex items-center gap-2">
+                    <span>{`${Number(row.getValue("max_ltv")).toFixed(0)}%`}</span>
+                    {Number(row.getValue("max_ltv")) === 0 &&
+                        <InfoTooltip
+                            content="This asset cannot be used as collateral to take out a loan"
+                        />}
+                </span>
+            )
+        },
         // enableGlobalFilter: false,
     },
     {
@@ -125,7 +135,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 label={
                     <TooltipText>Deposits</TooltipText>
                 }
-                content={"Placing assets in smart contracts or liquidity pools to earn interest or rewards."}
+                content={"Total amount of asset deposited in the pool as collateral so far."}
             />
         ),
         cell: ({ row }) => {
@@ -145,7 +155,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 label={
                     <TooltipText>Utilization</TooltipText>
                 }
-                content={"Ratio of borrowed funds to total available capital, indicating how effectively a lending pool is used."}
+                content={"Ratio between the amount borrowed and the amount deposited."}
             />
         ),
         cell: ({ row }) => `${Number(row.getValue("utilization")).toFixed(1)}%`,
