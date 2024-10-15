@@ -82,10 +82,8 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
             <DrawerTrigger asChild>
                 <motion.span
                     // Tool tip triggers
-                    onHoverStart={handleTooltipToggle(true)}
                     onClick={handleTooltipToggle(true)}
                     onMouseEnter={handleTooltipToggle(true)}
-                    onHoverEnd={handleTooltipToggle(false)}
                     onMouseLeave={handleTooltipToggle(false)}
                     className='w-fit inline-block shrink-0'
                 >
