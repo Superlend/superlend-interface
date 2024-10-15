@@ -100,7 +100,7 @@ export function FeedbackFormDialog() {
               onChange={handleFeedbackChange}
               className="rounded-4"
               required
-              placeholder="What features would enhance your DeFi experience?"
+              placeholder="Could be a bug or a feature you would like to see"
             />
           </div>
           {/* <div className="flex flex-col items-start gap-2">
