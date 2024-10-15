@@ -15,7 +15,7 @@ import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 import { OpportunitiesContext } from '@/context/opportunities-provider'
 import { useRouter } from 'next/navigation'
-// import useDimensions from '@/hooks/useDimensions'
+import useDimensions from '@/hooks/useDimensions'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[];
@@ -23,7 +23,7 @@ type TTopApyOpportunitiesProps = {
 }
 
 export default function TopApyOpportunities() {
-    // const { width: screenWidth } = useDimensions();
+    const { width: screenWidth } = useDimensions();
     const { filters, positionType, setPositionType } = useContext<any>(OpportunitiesContext);
     const [searchKeywords, setSearchKeywords] = useState<string>("");
     const [columnVisibility, setColumnVisibility] = useState({
@@ -84,6 +84,8 @@ export default function TopApyOpportunities() {
     const tableData = filters.platform_ids.length > 0 ? filteredTableData : rawTableData;
 
     function handleRowClick(rowData: any) {
+        if (screenWidth < 768) return;
+
         const { tokenAddress, platform_id, chain_id } = rowData;
         const url = `/position-management?token=${tokenAddress}&platform_id=${platform_id}&chain_id=${chain_id}`
         router.push(url);
