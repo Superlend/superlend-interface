@@ -40,6 +40,14 @@ export default function TopApyOpportunities() {
         tokens: filters.token_ids
     });
     const { allChainsData } = useContext<any>(AssetsDataContext);
+    const initialState = {
+        sorting: [
+            {
+                id: "apy_current",
+                desc: true
+            }
+        ]
+    }
 
     useEffect(() => {
         setColumnVisibility(() => {
@@ -142,6 +150,7 @@ export default function TopApyOpportunities() {
                         handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
+                        initialState={initialState}
                     />}
                 {isLoadingOpportunitiesData && (
                     <LoadingSectionSkeleton />
