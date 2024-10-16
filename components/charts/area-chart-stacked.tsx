@@ -17,6 +17,7 @@ import { BodyText, Label } from "../ui/typography"
 import { abbreviateNumber, extractTimeFromDate, formatDateAccordingToPeriod, shortNubers } from "@/lib/utils"
 import { Skeleton } from "../ui/skeleton"
 import { LoaderCircle } from "lucide-react"
+import { useState } from "react"
 
 interface CustomYAxisTickProps {
     x: number
@@ -26,6 +27,7 @@ interface CustomYAxisTickProps {
     }
     index: number
     length: number
+    setYAxisDigitCount: any
 }
 
 const CustomYAxisTick = ({
@@ -34,8 +36,11 @@ const CustomYAxisTick = ({
     payload,
     index,
     length,
+    setYAxisDigitCount,
 }: CustomYAxisTickProps) => {
     // if (index === 0 || index === length - 1) return null
+    setYAxisDigitCount(payload.value.toString().length)
+
     return (
         <g
             transform={`translate(${x - 5},${y - 3})`}
@@ -115,6 +120,7 @@ export function AreaChartStacked({
     handleFilterChange,
     chartData,
 }: any) {
+    const [yAxisDigitCount, setYAxisDigitCount] = useState(0);
     const data: any[] = chartData?.map((item: any) => {
         const date = new Date(item.timestamp);
         const dateOptions: any = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -176,7 +182,7 @@ export function AreaChartStacked({
                                 accessibilityLayer
                                 data={data}
                                 margin={{
-                                    left: 0,
+                                    left: yAxisDigitCount > 4 ? 20 : yAxisDigitCount > 3 ? 10 : 0,
                                     right: 20,
                                     top: 30,
                                     bottom: 0
@@ -236,11 +242,12 @@ export function AreaChartStacked({
                                             y={y as number}
                                             index={index as number}
                                             length={chartData.length}
+                                            setYAxisDigitCount={setYAxisDigitCount}
                                         />
                                     )}
                                     // domain={[minValue, maxValue]}
                                     tickCount={4}
-                                    tickMargin={40}
+                                    tickMargin={yAxisDigitCount > 4 ? 60 : yAxisDigitCount > 3 ? 50 : 40}
                                     // stroke="#FFF"
                                     tickLine={true}
                                     axisLine={true}
