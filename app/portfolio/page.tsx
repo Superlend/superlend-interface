@@ -9,6 +9,7 @@ import InfoBannerWithCta from '@/components/InfoBannerWithCta'
 import { useAppKit } from '@reown/appkit/react'
 import { Skeleton } from '@/components/ui/skeleton'
 import YourPositionsAtRisk from './your-positions-at-risk'
+import AllPositions from './all-positions'
 
 export default function Portfolio() {
     const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
@@ -47,7 +48,7 @@ export default function Portfolio() {
             <div className="flex flex-col gap-[72px]">
                 <PortfolioOverview />
                 <YourPositionsAtRisk />
-                {/* <AllPositions /> */}
+                <AllPositions />
             </div>
         </MainContainer>
     )
