@@ -100,7 +100,21 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorKey: "apy_current",
         accessorFn: item => Number(item.apy_current),
         header: "APY",
-        cell: ({ row }) => `${Number(row.getValue("apy_current")).toFixed(2)}%`,
+        cell: ({ row }) => {
+            if (`${Number(row.getValue("apy_current")).toFixed(2)}` === "0.00") {
+                return (
+                    <InfoTooltip
+                        label={
+                            <TooltipText>{`${Number(row.getValue("apy_current")).toFixed(2)}%`}</TooltipText>
+                        }
+                        content={"This asset is non-borrowable"}
+                    />
+
+                )
+            }
+
+            return `${Number(row.getValue("apy_current")).toFixed(2)}%`
+        },
         // enableGlobalFilter: false,
     },
     {
@@ -182,7 +196,21 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 content={"Ratio between the amount borrowed and the amount deposited."}
             />
         ),
-        cell: ({ row }) => `${Number(row.getValue("utilization")).toFixed(1)}%`,
+        cell: ({ row }) => {
+            if (`${Number(row.getValue("utilization")).toFixed(1)}` === "0.0") {
+                return (
+                    <InfoTooltip
+                        label={
+                            <TooltipText>{`${Number(row.getValue("apy_current")).toFixed(1)}%`}</TooltipText>
+                        }
+                        content={"This asset is non-borrowable"}
+                    />
+
+                )
+            }
+
+            return `${Number(row.getValue("apy_current")).toFixed(2)}%`
+        },
         // enableGlobalFilter: false,
     },
 ]
