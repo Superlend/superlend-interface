@@ -35,14 +35,16 @@ export default function RadioGroupDropdown({
     const { width: screenWidth } = useDimensions();
     const isDesktop = screenWidth > 768;
 
-    if (disableFilterOptions.includes(value.value) && listData.length > 0) {
-        onValueChange((state: any) => {
-            const updatedField = listData?.find((option: any) => !disableFilterOptions?.includes(option.value))
-
-            return updatedField || listData[0]
-        })
+    useEffect(() => {
+        if (disableFilterOptions.includes(value.value) && listData.length > 0) {
+            onValueChange((state: any) => {
+                const updatedField = listData?.find((option: any) => !disableFilterOptions?.includes(option.value))
+                return updatedField || listData[0]
+            })
+            return
+        }
         return
-    }
+    }, [disableFilterOptions.length])
 
     function handleValueChange(value: any) {
         return () => {
@@ -63,7 +65,12 @@ export default function RadioGroupDropdown({
                 <DropdownMenuContent>
                     <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
                         {listData.map((item: any) => (
-                            <DropdownMenuRadioItem key={item.value} value={item} className="cursor-pointer hover:bg-gray-200 flex items-center justify-between gap-2" disabled={disableFilterOptions.includes(item.value)}>
+                            <DropdownMenuRadioItem
+                                key={item.value}
+                                value={item}
+                                className="cursor-pointer hover:bg-gray-200 flex items-center justify-between gap-2"
+                                disabled={disableFilterOptions.includes(item.value)}
+                            >
                                 <span className="block max-w-[150px] truncate">{item.label}</span>
                                 {disableFilterOptions.includes(item.value) && <Badge className='border border-gray-500'>N/A</Badge>}
                             </DropdownMenuRadioItem>
