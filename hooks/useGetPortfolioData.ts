@@ -4,6 +4,12 @@ import { getPortfolioData } from "@/queries/portfolio-api";
 import { TGetPortfolioParams, TPortfolio } from "@/types/queries/portfolio";
 import { useQuery } from "@tanstack/react-query";
 
+const PortfolioDataInit = {
+  platforms: [],
+  total_borrowed: 0,
+  total_supplied: 0,
+};
+
 export default function useGetPortfolioData(params: TGetPortfolioParams) {
   const { user_address, chain_id, platform_id, position_type } = params;
 
@@ -22,7 +28,7 @@ export default function useGetPortfolioData(params: TGetPortfolioParams) {
     refetchInterval: 60000,
   });
   return {
-    data: data,
+    data: data || PortfolioDataInit,
     isLoading,
     isError,
   };

@@ -20,6 +20,7 @@ import {
 import StackedIcons from "../StackedIcons"
 import { Badge } from "../ui/badge"
 import { BodyText, Label as LabelText } from "../ui/typography"
+import { TPortfolio } from "@/types/queries/portfolio"
 
 export const description = "A radial chart with stacked sections"
 
@@ -90,8 +91,12 @@ function CustomToolTip() {
     )
 }
 
-export function RadialChartStacked() {
-    const totalVisitors = 5;
+export function RadialChartStacked({
+    data
+}: {
+    data: TPortfolio
+}) {
+    const totalPlatforms = data.platforms.length;
 
     return (
         <Card className="flex flex-col">
@@ -127,7 +132,7 @@ export function RadialChartStacked() {
                                                     y={(viewBox.cy || 0)}
                                                     className="fill-foreground text-2xl font-bold"
                                                 >
-                                                    {totalVisitors.toLocaleString()}
+                                                    {totalPlatforms.toLocaleString()}
                                                 </tspan>
                                                 <tspan
                                                     x={viewBox.cx}
