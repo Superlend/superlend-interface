@@ -173,7 +173,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 label={
                     <TooltipText>Borrows</TooltipText>
                 }
-                content={"Total amount of asset borrowed in the pool."}
+                content={"Total amount of asset borrowed from the pool."}
             />
         ),
         cell: ({ row }) => {
@@ -201,7 +201,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 return (
                     <InfoTooltip
                         label={
-                            <TooltipText>{`${Number(row.getValue("apy_current")).toFixed(1)}%`}</TooltipText>
+                            <TooltipText>{`${Number(row.getValue("utilization")).toFixed(1)}%`}</TooltipText>
                         }
                         content={"This asset is non-borrowable"}
                     />
@@ -209,7 +209,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 )
             }
 
-            return `${Number(row.getValue("apy_current")).toFixed(2)}%`
+            return `${Number(row.getValue("utilization")).toFixed(2)}%`
         },
         // enableGlobalFilter: false,
     },
