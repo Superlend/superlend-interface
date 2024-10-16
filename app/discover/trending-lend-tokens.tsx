@@ -26,10 +26,10 @@ export default function TrendingLendTokens() {
                         <SearchInput />
                     </div>
                 </div>
-                <div className="filter-dropdowns-container hidden lg:flex flex-1 items-center justify-end gap-[12px]">
+                {/* <div className="filter-dropdowns-container hidden lg:flex flex-1 items-center justify-end gap-[12px]">
                     <ChainSelectorDropdown />
                     <DiscoverFilterDropdown />
-                </div>
+                </div> */}
             </div>
             {/* <div className="trending-lend-tokens-content">
                 <DataTable columns={columns} data={[]} />

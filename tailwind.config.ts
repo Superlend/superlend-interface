@@ -22,6 +22,10 @@ const config = {
       },
     },
     extend: {
+      screens: {
+        xs: "375px",
+        "2xl": "1400px",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -29,15 +33,15 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         gray: {
+          "100": "hsl(var(--background))",
+          "200": "hsl(var(--elevate-01))",
+          "300": "hsl(var(--elevate-02))",
+          "400": "hsl(var(--foreground-disabled))",
+          "500": "hsl(var(--foreground-gray))",
+          "600": "hsl(var(--foreground-subtle))",
+          "700": "hsl(var(--foreground-muted))",
+          "800": "hsl(var(--foreground))",
           DEFAULT: "hsl(var(--foreground-gray))",
-          100: "hsl(var(--background))",
-          200: "hsl(var(--elevate-01))",
-          300: "hsl(var(--elevate-02))",
-          400: "hsl(var(--foreground-disabled))",
-          500: "hsl(var(--foreground-gray))",
-          600: "hsl(var(--foreground-subtle))",
-          700: "hsl(var(--foreground-muted))",
-          800: "hsl(var(--foreground))",
         },
         primary: {
           DEFAULT: "hsl(var(--primary-01))",
@@ -48,11 +52,11 @@ const config = {
           gradientEndActive: "hsl(var(--primary-gradient-end-active))",
         },
         secondary: {
+          "100": "hsl(var(--secondary-03))",
+          "300": "hsl(var(--secondary-02))",
+          "500": "hsl(var(--secondary-01))",
           DEFAULT: "hsl(var(--secondary-01))",
           foreground: "hsl(var(--secondary-foreground))",
-          100: "hsl(var(--secondary-03))",
-          300: "hsl(var(--secondary-02))",
-          500: "hsl(var(--secondary-01))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive-background))",
@@ -61,7 +65,7 @@ const config = {
         success: {
           DEFAULT: "hsl(var(--success-background))",
           foreground: "hsl(var(--success-foreground))",
-          text: "#0EA739"
+          text: "#0EA739",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -97,13 +101,13 @@ const config = {
         },
       },
       borderRadius: {
-        1: "var(--radius)", // 2px
-        2: "calc(var(--radius) + 0.125rem)", // 4px
-        3: "calc(var(--radius) + 0.375rem)", // 8px
-        4: "calc(var(--radius) + 0.625rem)", // 12px
-        5: "calc(var(--radius) + 0.875rem)", // 16px
-        6: "calc(var(--radius) + 1.125rem)", // 20px
-        7: "calc(var(--radius) + 1.375rem)", // 24px
+        "1": "var(--radius)", // 2px
+        "2": "calc(var(--radius) + 0.125rem)", // 4px
+        "3": "calc(var(--radius) + 0.375rem)", // 8px
+        "4": "calc(var(--radius) + 0.625rem)", // 12px
+        "5": "calc(var(--radius) + 0.875rem)", // 16px
+        "6": "calc(var(--radius) + 1.125rem)", // 20px
+        "7": "calc(var(--radius) + 1.375rem)", // 24px
       },
       keyframes: {
         "accordion-down": {
@@ -127,12 +131,21 @@ const config = {
             transform: "translate(calc(-50% - 0.5rem))",
           },
         },
+        pulse: {
+          "0%, 100%": {
+            boxShadow: "0 0 0 0 var(--pulse-color)",
+          },
+          "50%": {
+            boxShadow: "0 0 0 8px var(--pulse-color)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         scroll:
           "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
+        pulse: "pulse var(--duration) ease-out infinite",
       },
     },
   },

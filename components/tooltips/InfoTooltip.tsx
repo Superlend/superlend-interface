@@ -7,13 +7,27 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerFooter,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
 import { motion } from "framer-motion"
 import { Label } from '../ui/typography';
+import InfoCircleIcon from '../icons/info-circle-icon';
+import useDimensions from '@/hooks/useDimensions';
+import { Button } from '../ui/button';
+import { DialogTitle } from '@radix-ui/react-dialog';
 
 type TProps = {
     label?: any;
     content?: any;
     size?: string;
+    hide?: boolean;
+    iconWidth?: number;
+    iconHeight?: number;
 }
 
 const sizes: any = {
@@ -23,40 +37,72 @@ const sizes: any = {
 }
 
 
-export default function InfoTooltip({ label, content, size = "md" }: TProps) {
+export default function InfoTooltip({ label, content, size = "md", hide = false, iconWidth = 16, iconHeight = 16 }: TProps) {
     const [open, setOpen] = useState<boolean>(false);
+    const { width: screenWidth } = useDimensions();
+    const isDesktop = screenWidth > 768;
 
     function handleTooltipToggle(state: boolean) {
-        return () => setOpen(state)
+        return () => {
+            setOpen(state)
+        }
+    }
+
+    if (isDesktop) {
+        return (
+            <TooltipProvider delayDuration={200}>
+                <Tooltip open={open}>
+                    <TooltipTrigger asChild>
+                        <motion.span
+                            // Tool tip triggers
+                            onClick={handleTooltipToggle(true)}
+                            onHoverStart={handleTooltipToggle(true)}
+                            onHoverEnd={handleTooltipToggle(false)}
+                            onMouseEnter={handleTooltipToggle(true)}
+                            onMouseLeave={handleTooltipToggle(false)}
+                            className='w-fit inline-block shrink-0 cursor-help'
+                        >
+                            {!label &&
+                                <InfoCircleIcon width={iconWidth} height={iconHeight} weight='1.5' />
+                            }
+                            {label && label}
+                        </motion.span>
+                    </TooltipTrigger>
+                    <TooltipContent sideOffset={15} className={`max-w-[280px] ${sizes[size]}`}>
+                        {typeof content === "string" && <Label className='w-fit'>{content}</Label>}
+                        {typeof content !== "string" && content}
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+
+        )
     }
 
     return (
-        <TooltipProvider delayDuration={200}>
-            <Tooltip open={open}>
-                <TooltipTrigger asChild>
-                    <motion.div
-                        // Tool tip triggers
-                        onHoverStart={handleTooltipToggle(true)}
-                        onClick={handleTooltipToggle(true)}
-                        onMouseEnter={handleTooltipToggle(true)}
-                        onHoverEnd={handleTooltipToggle(false)}
-                        onMouseLeave={handleTooltipToggle(false)}
-                    >
-                        {!label &&
-                            <img
-                                src="/icons/info-circle-icon.svg" alt="info"
-                                width={16}
-                                height={16}
-                                className='object-contain shrink-0 inline-block sleect-none'
-                            />}
-                        {label && label}
-                    </motion.div>
-                </TooltipTrigger>
-                <TooltipContent sideOffset={15} className={`max-w-[280px] ${sizes[size]}`}>
-                    <Label>{content}</Label>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+        <Drawer open={open}>
+            <DrawerTrigger asChild>
+                <span
+                    onClick={handleTooltipToggle(true)}
+                    className='w-fit inline-block shrink-0'
+                >
+                    {!label &&
+                        <InfoCircleIcon width={iconWidth} height={iconHeight} weight='1.5' />
+                    }
+                    {label && label}
+                </span>
+            </DrawerTrigger>
+            <DrawerContent>
+                <div className="p-4 pb-8">
+                    {typeof content === "string" && <Label className='w-fit'>{content}</Label>}
+                    {typeof content !== "string" && content}
+                </div>
+                <DrawerFooter>
+                    <DrawerClose asChild>
+                        <Button size={'lg'} variant="outline" className='w-full' onClick={handleTooltipToggle(false)}>Close</Button>
+                    </DrawerClose>
+                </DrawerFooter>
+            </DrawerContent>
+        </Drawer>
 
     )
 }

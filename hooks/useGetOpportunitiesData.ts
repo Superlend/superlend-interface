@@ -1,14 +1,14 @@
 "use client";
 
 import { getOpportunitiesData } from "@/queries/opportunities-api";
-import { TLendOpportunitiesParams, TOpportunity } from "@/types";
+import { TGetOpportunitiesParams, TOpportunity } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 
 export default function useGetOpportunitiesData(
-  params: TLendOpportunitiesParams
+  params: TGetOpportunitiesParams
 ) {
   const { data, isLoading, isError } = useQuery<TOpportunity[], Error>({
-    queryKey: ["opportunities", params.type],
+    queryKey: ["opportunities", params.type, params.chain_ids, params.tokens],
     queryFn: async () => {
       try {
         const responseData = await getOpportunitiesData(params);
@@ -19,7 +19,7 @@ export default function useGetOpportunitiesData(
       }
     },
     staleTime: Infinity,
-    refetchInterval: 60000,
+    refetchInterval: false,
   });
   return { data: data || [], isLoading, isError };
 }

@@ -80,20 +80,20 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className="z-50 sticky top-5 left-0 max-w-[1200px] w-full mx-auto px-5">
-      <div className="flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center self-stretch py-0 pr-[8px] pl-4 sm:pl-[20px] mb-16 lg:mb-20 w-full font-semibold uppercase rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
-        <Button variant="ghost" className='w-[24px] md:w-fit p-0' onClick={() => router.push('/')}>
-          <img
+    <header className="z-50 sticky top-0 md:top-5 left-0 max-w-[1200px] w-full mx-auto md:px-5">
+      <div className="flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center py-[16px] pr-[8px] pl-4 sm:pl-[20px] mb-14 w-full font-semibold uppercase md:rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
+        <Button variant="ghost" className='md:w-[24px] md:w-fit p-0' onClick={() => router.push('/')}>
+          {/* <img
             loading="lazy"
             src={"/images/logos/favicon-32x32.png"}
             alt="Superlend logo"
             className="md:hidden object-contain shrink-0 my-auto w-[1.5rem] aspect-square cursor-pointer"
-          />
+          /> */}
           <img
             loading="lazy"
             src={"/images/logos/superlend-logo.webp"}
             alt="Superlend logo"
-            className="hidden md:inline object-contain shrink-0 my-auto aspect-[6.54] w-36 cursor-pointer"
+            className="object-contain shrink-0 my-auto aspect-[6.54] w-36 cursor-pointer"
           />
         </Button>
         {/* <nav className="hidden md:flex gap-3 lg:gap-5 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">

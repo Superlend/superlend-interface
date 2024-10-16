@@ -1,8 +1,8 @@
 import { request } from "./request";
-import { TLendOpportunitiesParams, TOpportunity } from "@/types";
+import { TGetOpportunitiesParams, TOpportunity } from "@/types";
 
 export async function getOpportunitiesData(
-  params: TLendOpportunitiesParams
+  params: TGetOpportunitiesParams
 ) {
   const {
     type,
