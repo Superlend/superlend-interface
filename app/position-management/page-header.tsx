@@ -16,7 +16,7 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { TPlatform } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { PlatformWebsiteLink } from '@/types/platform';
-import { platformWebsiteLinks } from '@/constants';
+import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants';
 
 export default function PageHeader() {
     const router = useRouter();
@@ -283,8 +283,16 @@ function getPlatformWebsiteLink({
     platform_id,
 }: any) {
     const baseUrl = platformWebsiteLinks[platform_id?.split("-")[0].toLowerCase() as keyof typeof platformWebsiteLinks];
-    const aavePath = `${baseUrl}/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${chainName?.toLowerCase()}_v3`;
+    const aavePath = `${baseUrl}/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName)}_v3`;
     const compoundPath = `/markets/v2`;
     const path = platform_id?.split("-")[0].toLowerCase() === "aave" ? aavePath : compoundPath;
     return `${new URL(path, baseUrl)}`
+}
+
+function getChainNameBasedOnAaveMarkets(chainName: string) {
+    if (chainName?.toLowerCase() in chainNamesBasedOnAaveMarkets) {
+        return chainNamesBasedOnAaveMarkets[chainName?.toLowerCase() as keyof typeof chainNamesBasedOnAaveMarkets]
+    }
+
+    return chainName?.toLowerCase();
 }

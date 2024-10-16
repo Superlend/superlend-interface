@@ -19,6 +19,7 @@ import { Label } from '../ui/typography';
 import InfoCircleIcon from '../icons/info-circle-icon';
 import useDimensions from '@/hooks/useDimensions';
 import { Button } from '../ui/button';
+import { DialogTitle } from '@radix-ui/react-dialog';
 
 type TProps = {
     label?: any;
@@ -43,7 +44,6 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
 
     function handleTooltipToggle(state: boolean) {
         return () => {
-            if (hide) return;
             setOpen(state)
         }
     }
@@ -55,10 +55,10 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
                     <TooltipTrigger asChild>
                         <motion.span
                             // Tool tip triggers
-                            onHoverStart={handleTooltipToggle(true)}
                             onClick={handleTooltipToggle(true)}
-                            onMouseEnter={handleTooltipToggle(true)}
+                            onHoverStart={handleTooltipToggle(true)}
                             onHoverEnd={handleTooltipToggle(false)}
+                            onMouseEnter={handleTooltipToggle(true)}
                             onMouseLeave={handleTooltipToggle(false)}
                             className='w-fit inline-block shrink-0 cursor-help'
                         >
@@ -81,20 +81,15 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
     return (
         <Drawer open={open}>
             <DrawerTrigger asChild>
-                <motion.span
-                    // Tool tip triggers
-                    onHoverStart={handleTooltipToggle(true)}
+                <span
                     onClick={handleTooltipToggle(true)}
-                    onMouseEnter={handleTooltipToggle(true)}
-                    onHoverEnd={handleTooltipToggle(false)}
-                    onMouseLeave={handleTooltipToggle(false)}
                     className='w-fit inline-block shrink-0'
                 >
                     {!label &&
                         <InfoCircleIcon width={iconWidth} height={iconHeight} weight='1.5' />
                     }
                     {label && label}
-                </motion.span>
+                </span>
             </DrawerTrigger>
             <DrawerContent>
                 <div className="p-4 pb-8">
@@ -102,8 +97,8 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
                     {typeof content !== "string" && content}
                 </div>
                 <DrawerFooter>
-                    <DrawerClose className='w-full'>
-                        <Button size={'lg'} variant="outline" className='w-full'>Close</Button>
+                    <DrawerClose asChild>
+                        <Button size={'lg'} variant="outline" className='w-full' onClick={handleTooltipToggle(false)}>Close</Button>
                     </DrawerClose>
                 </DrawerFooter>
             </DrawerContent>

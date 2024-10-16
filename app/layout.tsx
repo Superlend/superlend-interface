@@ -34,12 +34,12 @@ export const metadata: Metadata = {
     title: "Superlend - Lend & Borrow Aggregator",
     description: "Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .",
     siteName: "Superlend - Lend & Borrow Aggregator",
-    images: "https://beta.superlend.xyz/og.png"
+    images: "https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png"
   },
   twitter: {
     title: "Superlend - Lend & Borrow Aggregator",
     description: "Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .",
-    images: "https://beta.superlend.xyz/og.png"
+    images: "https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png"
   },
 };
 
@@ -60,7 +60,7 @@ export default function RootLayout({
         imageUrl="/og.png"
         keywords={["DeFi", "Lend", "Borrow", "Money Markets", "Aggregator", "DeFi rates", "Earn in DeFi", "Borrow USDC", "Earn USDC"]}
       /> */}
-      <body className={`bg-[#B4E2FB]`}>
+      <body className={`bg-[#B4E2FB] max-md:pb-[50px]`}>
         <ScrollToTop />
         <GoogleTagManager gtmId={GTM_ID} />
         <ContextProvider cookies={cookies}>

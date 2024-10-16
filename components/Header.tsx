@@ -81,20 +81,20 @@ const Header: React.FC = () => {
 
   return (
     <>
-      <header className="z-50 sticky top-5 left-0 max-w-[1200px] w-full mx-auto px-5">
-        <div className="flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center self-stretch py-0 pr-[8px] pl-4 sm:pl-[20px] mb-14 w-full font-semibold uppercase rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
-          <Button variant="ghost" className='w-[24px] md:w-fit p-0' onClick={() => router.push('/')}>
-            <img
-              loading="lazy"
-              src={"/images/logos/favicon-32x32.png"}
-              alt="Superlend logo"
-              className="md:hidden object-contain shrink-0 my-auto w-[1.5rem] aspect-square cursor-pointer"
-            />
+      <header className="z-50 sticky top-0 md:top-5 left-0 max-w-[1200px] w-full mx-auto md:px-5">
+        <div className="flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center py-0 pr-[8px] pl-4 sm:pl-[20px] mb-5 w-full font-semibold uppercase md:rounded-xl bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
+          <Button variant="ghost" className='md:w-[24px] md:w-fit p-0' onClick={() => router.push('/')}>
+            {/* <img
+            loading="lazy"
+            src={"/images/logos/favicon-32x32.png"}
+            alt="Superlend logo"
+            className="md:hidden object-contain shrink-0 my-auto w-[1.5rem] aspect-square cursor-pointer"
+          /> */}
             <img
               loading="lazy"
               src={"/images/logos/superlend-logo.webp"}
               alt="Superlend logo"
-              className="hidden md:inline object-contain shrink-0 my-auto aspect-[6.54] w-36 cursor-pointer"
+              className="object-contain shrink-0 my-auto aspect-[6.54] w-36 cursor-pointer"
             />
           </Button>
           <nav className="hidden md:flex gap-3 lg:gap-5 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">
@@ -110,45 +110,18 @@ const Header: React.FC = () => {
           <div className="flex items-center gap-[12px]">
             <ConnectWalletButton />
             {/* <Button variant="outline" size={"md"} className="hidden max-md:block rounded-[12px] py-2 border border-gray-500 py-[6px]" onClick={() => setOpenMenu(true)}>
-            <Menu className='text-gray-600' />
-          </Button> */}
+              <Menu className='text-gray-600' />
+            </Button> */}
           </div>
         </div>
-
-        {/* <Sheet open={openMenu}>
-        <SheetContent side="top" className='h-full bg-white flex items-center justity-center'>
-          <Button onClick={handleCloseMenu} className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary border-none p-0">
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </Button>
-          <SheetHeader className='pt-8 h-full w-full justify-center'>
-            <motion.ul
-              variants={menuContainerVariant}
-              initial="hidden"
-              animate="show"
-              className='flex flex-col items-center justify-center gap-[32px]'>
-              {tabs.map((tab) => (
-                <motion.li key={tab.id} variants={menuItemVariant}>
-                  <Button variant={isSelected(tab) ? "default" : "ghost"} size="2xl" className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`} onClick={() => handleTabClick(tab)}>
-                    <div className="flex items-center justify-center gap-2">
-                      <tab.icon width={20} height={18} />
-                      <span className='leading-[0]'>{tab.name}</span>
-                    </div>
-                  </Button>
-                </motion.li>
-              ))}
-            </motion.ul>
-          </SheetHeader>
-        </SheetContent>
-      </Sheet> */}
       </header>
 
       {/* Footer nav */}
-      <div className="z-50 fixed bottom-5 left-0 px-5 md:hidden w-full flex justify-center">
-        <nav className="flex gap-3 lg:gap-5 items-center justify-center self-stretch py-[11px] px-10 text-sm tracking-normal leading-none whitespace-nowrap text-stone-800 w-full bg-white bg-opacity-40 backdrop-blur rounded-xl">
+      <div className="z-50 fixed bottom-0 left-0 md:hidden w-full flex justify-center">
+        <nav className="flex gap-3 lg:gap-5 items-center justify-center self-stretch py-1.5 px-10 text-sm tracking-normal leading-none whitespace-nowrap text-stone-800 w-full bg-white bg-opacity-40 backdrop-blur">
           {tabs.map((tab) => (
             <Button key={tab.id} variant={"ghost"} size="lg" className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`} onClick={() => handleTabClick(tab)}>
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex flex-col items-center justify-center gap-3">
                 <tab.icon className='max-sm:w-5 max-sm:h-5' />
                 <span className='hidden max-md:inline-block leading-[0] text-inherit'>{tab.name}</span>
               </div>
