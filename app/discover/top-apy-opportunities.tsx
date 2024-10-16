@@ -7,7 +7,7 @@ import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdow
 import { columns } from '@/data/table/top-apy-opportunities';
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
-import { ColumnDef } from '@tanstack/react-table'
+import { ColumnDef, SortingState } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { TChain, TOpportunityTable, TPositionType, TToken } from '@/types'
 import { DataTable } from '@/components/ui/data-table'
@@ -26,6 +26,9 @@ export default function TopApyOpportunities() {
     const { width: screenWidth } = useDimensions();
     const { filters, positionType, setPositionType } = useContext<any>(OpportunitiesContext);
     const [searchKeywords, setSearchKeywords] = useState<string>("");
+    const [sorting, setSorting] = useState<SortingState>([
+        { id: 'apy_current', desc: positionType === "lend" },
+    ]);
     const [columnVisibility, setColumnVisibility] = useState({
         deposits: true,
         borrows: false,
@@ -40,29 +43,26 @@ export default function TopApyOpportunities() {
         tokens: filters.token_ids
     });
     const { allChainsData } = useContext<any>(AssetsDataContext);
-    const initialState = {
-        sorting: [
-            {
-                id: "apy_current",
-                desc: true
-            }
-        ]
-    }
+    // const initialState = {
+    //     sorting: [
+    //         {
+    //             id: "apy_current",
+    //             desc: true
+    //         }
+    //     ]
+    // }
 
     useEffect(() => {
         setColumnVisibility(() => {
-            if (positionType === "lend") {
-                return {
-                    deposits: true,
-                    borrows: false,
-                }
-            }
-
             return {
-                deposits: false,
-                borrows: true,
+                deposits: positionType === "lend",
+                borrows: positionType === "borrow",
             }
         })
+    }, [positionType])
+
+    useEffect(() => {
+        setSorting([{ id: 'apy_current', desc: positionType === "lend" }])
     }, [positionType])
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
@@ -150,7 +150,9 @@ export default function TopApyOpportunities() {
                         handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
-                        initialState={initialState}
+                        // initialState={initialState}
+                        sorting={sorting}
+                        setSorting={setSorting}
                     />}
                 {isLoadingOpportunitiesData && (
                     <LoadingSectionSkeleton />

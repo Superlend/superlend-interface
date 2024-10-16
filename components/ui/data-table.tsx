@@ -9,6 +9,7 @@ import {
     getSortedRowModel,
     getPaginationRowModel,
     VisibilityState,
+    SortingState,
 } from "@tanstack/react-table"
 
 import {
@@ -34,6 +35,8 @@ interface DataTableProps<TData, TValue> {
     columnVisibility?: VisibilityState
     setColumnVisibility?: any
     initialState?: any
+    sorting?: SortingState
+    setSorting?: React.Dispatch<React.SetStateAction<SortingState>>
 }
 
 export function DataTable<TData, TValue>({
@@ -44,7 +47,9 @@ export function DataTable<TData, TValue>({
     handleRowClick,
     columnVisibility,
     setColumnVisibility,
-    initialState
+    initialState,
+    sorting,
+    setSorting
 }: DataTableProps<TData, TValue>) {
     const table = useReactTable({
         data,
@@ -54,13 +59,15 @@ export function DataTable<TData, TValue>({
         getPaginationRowModel: getPaginationRowModel(),
         state: {
             globalFilter: filters.trim(),
-            columnVisibility
+            columnVisibility,
+            sorting,
         },
         onGlobalFilterChange: setFilters,
         getSortedRowModel: getSortedRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         initialState: initialState,
         enableSortingRemoval: false,
+        onSortingChange: setSorting,
     })
 
     return (

@@ -4,11 +4,13 @@ import ImageWithBadge from "@/components/ImageWithBadge";
 import ImageWithDefault from "@/components/ImageWithDefault";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import { BodyText, Label } from "@/components/ui/typography";
+import { OpportunitiesContext } from "@/context/opportunities-provider";
 import useDimensions from "@/hooks/useDimensions";
 import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import { TOpportunityTable } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
+import { useContext } from "react";
 
 export const columns: ColumnDef<TOpportunityTable>[] = [
     {
@@ -99,7 +101,20 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     {
         accessorKey: "apy_current",
         accessorFn: item => Number(item.apy_current),
-        header: "APY",
+        header: () => {
+            const { positionType } = useContext<any>(OpportunitiesContext);
+            const lendTooltipContent = "% interest you earn on deposits over a year. This includes compounding.";
+            const borrowTooltipContent = "% interest you pay for your borrows over a year. This includes compunding.";
+            const tooltipContent = positionType === "lend" ? lendTooltipContent : borrowTooltipContent;
+            return (
+                <InfoTooltip
+                    label={
+                        <TooltipText>APY</TooltipText>
+                    }
+                    content={tooltipContent}
+                />
+            )
+        },
         cell: ({ row }) => {
             if (`${Number(row.getValue("apy_current")).toFixed(2)}` === "0.00") {
                 return (
