@@ -155,7 +155,7 @@ export default function DiscoverFilterDropdown() {
                         </div>
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="bottom" align="end" className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 overflow-hidden">
+                <DropdownMenuContent side="bottom" align="end" className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden">
                     <div className="filter-card flex flex-col md:min-w-[480px] max-w-[480px]">
                         <FilterCardHeader {...filterCardHeaderProps} />
                         <FilterCardContent {...filterCardContentProps} />
