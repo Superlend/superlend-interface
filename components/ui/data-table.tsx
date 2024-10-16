@@ -60,6 +60,7 @@ export function DataTable<TData, TValue>({
         getSortedRowModel: getSortedRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         initialState: initialState,
+        enableSortingRemoval: false,
     })
 
     return (
