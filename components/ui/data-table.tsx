@@ -33,6 +33,7 @@ interface DataTableProps<TData, TValue> {
     handleRowClick?: any
     columnVisibility?: VisibilityState
     setColumnVisibility?: any
+    initialState?: any
 }
 
 export function DataTable<TData, TValue>({
@@ -43,6 +44,7 @@ export function DataTable<TData, TValue>({
     handleRowClick,
     columnVisibility,
     setColumnVisibility,
+    initialState
 }: DataTableProps<TData, TValue>) {
     const table = useReactTable({
         data,
@@ -57,6 +59,7 @@ export function DataTable<TData, TValue>({
         onGlobalFilterChange: setFilters,
         getSortedRowModel: getSortedRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
+        initialState: initialState,
     })
 
     return (
