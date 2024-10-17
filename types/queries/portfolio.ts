@@ -23,6 +23,7 @@ type TPosition = {
 
 type TPlatform = {
   name: string;
+  platform_name: string;
   logo: string;
   chain_id: number;
   positions: TPosition[];

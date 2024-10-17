@@ -24,15 +24,15 @@ export function convertNegativeToPositive(str: string): string {
   });
 }
 
-export const abbreviateNumber = (value: number): string => {
+export const abbreviateNumber = (value: number, fixed: number = 2): string => {
   if (value >= 1000000000) {
-    return (value / 1000000000).toFixed(2) + "B";
+    return (value / 1000000000).toFixed(fixed) + "B";
   } else if (value >= 1000000) {
-    return (value / 1000000).toFixed(2) + "M";
+    return (value / 1000000).toFixed(fixed) + "M";
   } else if (value >= 1000) {
-    return (value / 1000).toFixed(2) + "K";
+    return (value / 1000).toFixed(fixed) + "K";
   } else {
-    return value.toFixed(2).toString();
+    return value.toFixed(fixed).toString();
   }
 };
 
