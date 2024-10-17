@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useContext } from "react";
 import {
     Carousel,
     CarouselApi,
@@ -18,15 +18,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import useGetPortfolioData from "@/hooks/useGetPortfolioData";
-
-const DUMMY_DATA = [
-    ...POSITIONS_AT_RISK_DATA,
-    ...POSITIONS_AT_RISK_DATA,
-    ...POSITIONS_AT_RISK_DATA,
-    ...POSITIONS_AT_RISK_DATA,
-    ...POSITIONS_AT_RISK_DATA,
-    ...POSITIONS_AT_RISK_DATA,
-];
+import { abbreviateNumber } from "@/lib/utils";
+import { AssetsDataContext } from "@/context/data-provider";
 
 const scrollToPosInit = {
     next: false,
@@ -38,6 +31,7 @@ const BLUR_ON_RIGHT_END_STYLES = "md:[mask-image:linear-gradient(to_left,transpa
 
 export default function YourPositionsAtRiskCarousel() {
     const router = useRouter();
+    const { allChainsData } = useContext(AssetsDataContext);
     const [api, setApi] = React.useState<CarouselApi>();
     const [current, setCurrent] = React.useState(0);
     const [count, setCount] = React.useState(0);
@@ -51,27 +45,48 @@ export default function YourPositionsAtRiskCarousel() {
         user_address: address,
     });
 
-    const HAS_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0);
+    function getRiskFactor(healthFactor: string | number) {
+        const HF = Number(healthFactor);
+        if (HF < 1) return {
+            label: "high",
+            theme: "destructive"
+        }
+        if (HF < 1.5) return {
+            label: "medium",
+            theme: "yellow"
+        }
+        return {
+            label: "low",
+            theme: "green"
+        }
+    }
 
-    const POSITIONS_AT_RISK = HAS_POSITIONS?.map(platform => ({
-        lendAmount: {
-            tokenImage: "/images/tokens/btc.webp",
-            amount: platform.total_liquidity,
-            change: "241.12",
-        },
-        borrowAmount: {
-            tokenImage: "/images/tokens/usdc.webp",
-            amount: "2,687",
-        },
-        positionOn: {
-            platform: "compound",
-            chain: "op",
-            platformName: "compound",
-            platformImage: "/images/platforms/compound.webp",
-            chainImage: "/images/chains/op.webp",
-        },
-        riskFactor: "high",
-    }))
+    const PLATFORMS_WITH_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0);
+    // const POSITIONS = PLATFORMS_WITH_POSITIONS.map(platform => platform.positions).flat(1);
+
+    const POSITIONS_AT_RISK = PLATFORMS_WITH_POSITIONS?.map((platform, index: number) => {
+        const lendPositions = platform.positions.filter(position => position.type === "lend");
+        const borrowPositions = platform.positions.filter(position => position.type === "borrow");
+        const chainDetails = allChainsData.find(chain => chain.chain_id === platform.chain_id);
+        // console.log(platform);
+
+        return {
+            lendAsset: {
+                tokenImage: lendPositions[index]?.token.logo ?? "",
+                amount: abbreviateNumber(lendPositions[index]?.amount, 0),
+            },
+            borrowAsset: {
+                tokenImage: borrowPositions[index]?.token.logo ?? "",
+                amount: abbreviateNumber(borrowPositions[index]?.amount, 0),
+            },
+            positionOn: {
+                platformName: `${platform?.platform_name?.split("-")[0][0]}${platform.platform_name.split("-")[0].slice(1).toLowerCase()}`,
+                platformImage: platform?.logo ?? "",
+                chainImage: chainDetails?.logo ?? "",
+            },
+            riskFactor: getRiskFactor(platform.health_factor),
+        }
+    })
 
     React.useEffect(() => {
         if (!api) {
@@ -134,14 +149,14 @@ export default function YourPositionsAtRiskCarousel() {
             </div>
             <Carousel
                 setApi={setApi}
-                className={
-                    current === count
-                        ? BLUR_ON_LEFT_END_STYLES
-                        : BLUR_ON_RIGHT_END_STYLES
-                }
+            // className={
+            //     current === count
+            //         ? BLUR_ON_LEFT_END_STYLES
+            //         : BLUR_ON_RIGHT_END_STYLES
+            // }
             >
                 <CarouselContent className="pl-5 cursor-grabbing">
-                    {DUMMY_DATA.map((positions, index) => (
+                    {POSITIONS_AT_RISK.map((positions, index) => (
                         <CarouselItem
                             key={index}
                             className="basis-[90%] min-[450px]:basis-[380px] md:basis-[380px]"
@@ -158,10 +173,11 @@ export default function YourPositionsAtRiskCarousel() {
                                                     width={16}
                                                     height={16}
                                                     alt=""
-                                                    src={positions.lendAmount.tokenImage}
+                                                    src={positions.lendAsset.tokenImage}
+                                                    className="max-w-[16px] max-h-[16px]"
                                                 />
                                                 <BodyText level={"body2"} weight="medium">
-                                                    $ {positions.lendAmount.amount}
+                                                    ${positions.lendAsset.amount}
                                                 </BodyText>
                                             </div>
                                         </div>
@@ -171,13 +187,14 @@ export default function YourPositionsAtRiskCarousel() {
                                             </Label>
                                             <div className="flex items-center justify-end gap-[4px]">
                                                 <BodyText level={"body2"} weight="medium">
-                                                    $ {positions.borrowAmount.amount}
+                                                    ${positions.borrowAsset.amount}
                                                 </BodyText>
                                                 <Image
                                                     width={16}
                                                     height={16}
                                                     alt=""
-                                                    src={positions.borrowAmount.tokenImage}
+                                                    src={positions.borrowAsset.tokenImage}
+                                                    className="max-w-[16px] max-h-[16px]"
                                                 />
                                             </div>
                                         </div>
@@ -197,7 +214,7 @@ export default function YourPositionsAtRiskCarousel() {
                                                     weight="medium"
                                                     className="capitalize text-wrap break-words max-w-[10ch]"
                                                 >
-                                                    {positions.positionOn.platform}
+                                                    {positions.positionOn.platformName}
                                                 </BodyText>
                                             </div>
                                         </div>
@@ -205,8 +222,8 @@ export default function YourPositionsAtRiskCarousel() {
                                             <Label className="capitalize text-gray-600">
                                                 Risk factor
                                             </Label>
-                                            <Badge variant="destructive">
-                                                {positions.riskFactor}
+                                            <Badge variant={positions.riskFactor.theme as "destructive" | "green" | "yellow"}>
+                                                {positions.riskFactor.label}
                                             </Badge>
                                         </div>
                                     </div>
@@ -223,7 +240,7 @@ export default function YourPositionsAtRiskCarousel() {
                                     <Button
                                         variant="link"
                                         className="group uppercase flex items-center gap-[4px]"
-                                        onClick={() => router.push("position-management")}
+                                    // onClick={() => router.push("position-management")}
                                     >
                                         Add collateral
                                         <ArrowRightIcon
