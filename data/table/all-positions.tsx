@@ -161,9 +161,9 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         cell: ({ row }) => {
             const value: string = row.getValue("deposits");
             if (containsNegativeInteger(value)) {
-                return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)))}`
+                return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)) ?? 0)}`
             }
-            return `$${abbreviateNumber(Number(value))}`
+            return `$${abbreviateNumber(Number(value) ?? 0)}`
         },
         // enableGlobalFilter: false,
     },
@@ -181,9 +181,9 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         cell: ({ row }) => {
             const value: string = row.getValue("borrows");
             if (containsNegativeInteger(value)) {
-                return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)))}`
+                return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)) ?? 0)}`
             }
-            return `$${abbreviateNumber(Number(value))}`
+            return `$${abbreviateNumber(Number(value) ?? 0)}`
         },
         // enableGlobalFilter: false,
     },

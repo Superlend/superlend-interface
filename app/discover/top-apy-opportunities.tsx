@@ -3,7 +3,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import LendBorrowToggle from '@/components/LendBorrowToggle'
 import { HeadingText } from '@/components/ui/typography'
-import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown'
 import { columns } from '@/data/table/top-apy-opportunities';
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
@@ -16,6 +15,7 @@ import { AssetsDataContext } from '@/context/data-provider'
 import { OpportunitiesContext } from '@/context/opportunities-provider'
 import { useRouter } from 'next/navigation'
 import useDimensions from '@/hooks/useDimensions'
+import DiscoverFiltersDropdown from '@/components/dropdowns/DiscoverFiltersDropdown';
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[];
@@ -122,7 +122,7 @@ export default function TopApyOpportunities() {
                         </div>
                         {/* Filter button for Tablet and below screens */}
                         <div className="block lg:hidden">
-                            <DiscoverFilterDropdown />
+                            <DiscoverFiltersDropdown />
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
@@ -137,7 +137,7 @@ export default function TopApyOpportunities() {
                 {/* Filter buttons for Desktop and above screens */}
                 <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
                     {/* <ChainSelectorDropdown /> */}
-                    <DiscoverFilterDropdown />
+                    <DiscoverFiltersDropdown />
                 </div>
             </div>
             <div className="top-apy-opportunities-content">

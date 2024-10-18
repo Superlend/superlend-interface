@@ -21,19 +21,34 @@ import StackedIcons from "../StackedIcons"
 import { Badge } from "../ui/badge"
 import { BodyText, Label as LabelText } from "../ui/typography"
 import { TPortfolio } from "@/types/queries/portfolio"
+import ImageWithDefault from "../ImageWithDefault"
+import { abbreviateNumber, capitalizeText } from "@/lib/utils"
+import { useContext } from "react"
+import { AssetsDataContext } from "@/context/data-provider"
+import AvatarCircles from "../ui/avatar-circles"
 
 export const description = "A radial chart with stacked sections"
 
-const chartData = [{ month: "january", desktop: 1260, mobile: 570 }]
-
 const chartConfig = {
-    desktop: {
-        label: "Desktop",
+    1: {
+        label: "Aave",
         color: "hsl(var(--chart-1))",
     },
-    mobile: {
-        label: "Mobile",
+    2: {
+        label: "Compound",
         color: "hsl(var(--chart-2))",
+    },
+    3: {
+        label: "Compound",
+        color: "hsl(var(--chart-3))",
+    },
+    4: {
+        label: "Compound",
+        color: "hsl(var(--chart-4))",
+    },
+    5: {
+        label: "Compound",
+        color: "hsl(var(--chart-5))",
     },
 } satisfies ChartConfig
 
@@ -55,11 +70,21 @@ const ICONS_LIST = [
     },
 ];
 
-function CustomToolTip() {
+function CustomToolTip(payload: any) {
+    const { platform, chain, lend, borrow } = payload.payload;
+
     return (
         <div className="bg-white rounded-4 w-[225px] px-[12px] py-[16px]">
             <div className="flex items-center justify-between border-b border-gray-400 pb-[12px]">
-                <BodyText level="body2" weight="medium">Syrup fi</BodyText>
+                <div className="flex items-center gap-1">
+                    <ImageWithDefault
+                        src={platform?.logo || ""}
+                        width={20}
+                        height={20}
+                        className={"max-w-[20px] max-h-[20px] object-contain"}
+                    />
+                    <BodyText level="body2" weight="medium">{platform?.id?.split("-")[0]}</BodyText>
+                </div>
                 <Badge variant="blue" size="sm">
                     Borrow / Lend
                 </Badge>
@@ -68,22 +93,22 @@ function CustomToolTip() {
                 <div className="flex items-center justify-between">
                     <LabelText> Borrow </LabelText>
                     <div className="flex items-center gap-[4px]">
-                        <BodyText level="body2" weight="medium">987.66</BodyText>
-                        <img src="/images/tokens/usdc.webp" alt="usdc" height={16} width={16} />
+                        <BodyText level="body2" weight="medium">${borrow?.amount}</BodyText>
+                        <AvatarCircles avatarUrls={borrow.tokens.map((token: any) => token.logo)} />
                     </div>
                 </div>
                 <div className="flex items-center justify-between">
                     <LabelText> Lend </LabelText>
                     <div className="flex items-center gap-[4px]">
-                        <BodyText level="body2" weight="medium">1.473</BodyText>
-                        <img src="/images/tokens/btc.webp" alt="bitcoin" height={16} width={16} />
+                        <BodyText level="body2" weight="medium">${lend?.amount}</BodyText>
+                        <AvatarCircles avatarUrls={lend.tokens.map((token: any) => token.logo)} />
                     </div>
                 </div>
                 <div className="flex items-center justify-between">
-                    <LabelText> Network </LabelText>
+                    <LabelText> Chain </LabelText>
                     <div className="flex items-center gap-[4px]">
-                        <BodyText level="body2" weight="medium">Optimism</BodyText>
-                        <img src="/images/chains/op.webp" alt="optimism" height={16} width={16} />
+                        <BodyText level="body2" weight="medium">{capitalizeText(chain?.name)}</BodyText>
+                        <ImageWithDefault src={chain?.logo} alt="optimism" height={16} width={16} className="max-w-[16px] max-h-[16px]" />
                     </div>
                 </div>
             </div>
@@ -91,12 +116,67 @@ function CustomToolTip() {
     )
 }
 
+const CustomActiveShape = (props: any) => {
+    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+
+    return (
+        <g>
+            <path
+                d={`
+            M ${cx},${cy}
+            L ${cx + outerRadius * Math.cos(-startAngle * Math.PI / 180)},${cy + outerRadius * Math.sin(-startAngle * Math.PI / 180)}
+            A ${outerRadius},${outerRadius} 0 0 1 ${cx + outerRadius * Math.cos(-endAngle * Math.PI / 180)},${cy + outerRadius * Math.sin(-endAngle * Math.PI / 180)}
+            L ${cx},${cy}
+            Z
+          `}
+                fill={fill}
+                fillOpacity={0.8}
+                stroke={fill}
+                strokeWidth={2}
+            />
+        </g>
+    );
+};
+
 export function RadialChartStacked({
     data
 }: {
     data: TPortfolio
 }) {
-    const totalPlatforms = data.platforms.length;
+    const { allChainsData } = useContext(AssetsDataContext);
+    const PLATFORMS_WITH_POSITIONS = data.platforms.filter(platform => platform.positions.length > 0);
+    const openPositionsCount = PLATFORMS_WITH_POSITIONS.reduce((acc, curr) => {
+        return acc + curr.positions.length
+    }, 0);
+    const totalPlatformsCount = PLATFORMS_WITH_POSITIONS.length;
+    const chartData = PLATFORMS_WITH_POSITIONS.map((platform) => {
+        const chainDetails = allChainsData.find(chain => Number(chain.chain_id) === Number(platform.chain_id))
+        return {
+            platform: {
+                id: platform.platform_name,
+                name: platform.name,
+                logo: platform.logo,
+                pnl: abbreviateNumber(platform.pnl),
+            },
+            chain: {
+                id: chainDetails?.chain_id,
+                name: chainDetails?.name,
+                logo: chainDetails?.logo
+            },
+            lend: {
+                amount: abbreviateNumber(platform.total_liquidity),
+                tokens: [
+                    ...platform.positions.filter(position => position.type === "lend").map(platform => ({ ...platform.token }))
+                ],
+            },
+            borrow: {
+                amount: abbreviateNumber(platform.total_borrow),
+                tokens: [
+                    ...platform.positions.filter(position => position.type === "borrow").map(platform => ({ ...platform.token }))
+                ],
+            },
+        }
+    })
 
     return (
         <Card className="flex flex-col">
@@ -118,7 +198,12 @@ export function RadialChartStacked({
                         <ChartTooltip
                             cursor={false}
                             // content={<ChartTooltipContent />
-                            content={<CustomToolTip />
+                            content={
+                                <ChartTooltipContent
+                                    hideIndicator
+                                    className="rounded-6"
+                                    labelFormatter={(label, payload) => <CustomToolTip payload={payload[0].payload} />}
+                                />
                             }
                         />
                         <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
@@ -132,14 +217,14 @@ export function RadialChartStacked({
                                                     y={(viewBox.cy || 0)}
                                                     className="fill-foreground text-2xl font-bold"
                                                 >
-                                                    {totalPlatforms.toLocaleString()}
+                                                    {openPositionsCount.toLocaleString()}
                                                 </tspan>
                                                 <tspan
                                                     x={viewBox.cx}
                                                     y={(viewBox.cy || 0) + 20}
                                                     className="fill-muted-foreground"
                                                 >
-                                                    Positions open
+                                                    Position{openPositionsCount > 1 ? "s" : ""} open
                                                 </tspan>
                                             </text>
                                         )
@@ -147,27 +232,27 @@ export function RadialChartStacked({
                                 }}
                             />
                         </PolarRadiusAxis>
-                        <RadialBar
-                            dataKey="desktop"
-                            stackId="a"
-                            cornerRadius={16}
-                            fill="var(--color-desktop)"
-                            className="stroke-transparent stroke-2"
-                        />
-                        <RadialBar
-                            dataKey="mobile"
-                            fill="var(--color-mobile)"
-                            stackId="a"
-                            cornerRadius={16}
-                            className="stroke-transparent stroke-2"
-                        />
+                        {
+                            chartData.map((data, index) => (
+                                <RadialBar
+                                    key={index}
+                                    dataKey={(obj) => {
+                                        return obj.platform.pnl
+                                    }}
+                                    stackId="a"
+                                    cornerRadius={16}
+                                    fill={`var(--color-${index + 1})`}
+                                    className="stroke-transparent stroke-2"
+                                />
+                            ))
+                        }
                     </RadialBarChart>
                 </ChartContainer>
             </CardContent>
             <CardFooter className="flex-col gap-2 text-sm">
                 <div className="flex items-center gap-2 font-medium leading-none">
-                    <StackedIcons list={ICONS_LIST} />
-                    Spread across 4 platforms
+                    {/* <StackedIcons list={ICONS_LIST} /> */}
+                    Spread across {totalPlatformsCount} platform{totalPlatformsCount > 1 ? "s" : ""}
                 </div>
             </CardFooter>
         </Card>

@@ -21,7 +21,8 @@ export default function useGetPortfolioData(params: TGetPortfolioParams) {
         return responseData;
       } catch (error) {
         // toast.error(SOMETHING_WENT_WRONG_MESSAGE, ERROR_TOAST_ICON_STYLES);
-        throw new Error("Failed to fetch portfolio data");
+        // throw new Error("Failed to fetch portfolio data");
+        return PortfolioDataInit;
       }
     },
     staleTime: Infinity,

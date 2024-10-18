@@ -13,6 +13,7 @@ import AllPositions from './all-positions'
 import { LoaderCircle } from 'lucide-react'
 import useIsClient from '@/hooks/useIsClient'
 import PositionsProvider from '@/context/positions-provider'
+import TopLowRiskPositions from './top-low-risk-positions'
 
 export default function Portfolio() {
     const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
@@ -59,6 +60,7 @@ export default function Portfolio() {
                         <PositionsProvider>
                             <AllPositions />
                         </PositionsProvider>
+                        <TopLowRiskPositions />
                     </div>
                     {/* <Button variant="primary" className='group uppercase py-[9px] px-[16px] flex items-center gap-[4px]'>
                     transaction history

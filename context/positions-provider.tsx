@@ -5,7 +5,7 @@ import { createContext, Dispatch, SetStateAction, useState } from "react";
 
 export type TPositionsFilters = {
     token_ids: string[],
-    chain_ids: number[];
+    chain_ids: string[];
     platform_ids: string[];
 }
 

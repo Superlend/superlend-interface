@@ -93,7 +93,7 @@ function CustomChartTooltipContent({
     const caption = payload[0].payload.timestamp;
 
     return (
-        <div className="flex flex-col items-center gap-[4px] pt-1.5">
+        <div className="flex flex-col items-center gap-[4px] px-1.5 pt-1.5">
             <BodyText level="body2" weight="medium">
                 {value}%
             </BodyText>
@@ -221,6 +221,7 @@ export function AreaChartStacked({
                                     content={
                                         <ChartTooltipContent
                                             hideIndicator={true}
+                                            className=" rounded-lg"
                                             labelFormatter={(label, playload) => <CustomChartTooltipContent payload={playload} label={label} />} />
                                     }
                                 />

@@ -31,7 +31,7 @@ const scrollToPosInit = {
 const BLUR_ON_LEFT_END_STYLES = "md:[mask-image:linear-gradient(to_right,transparent,white_5%)]"
 const BLUR_ON_RIGHT_END_STYLES = "md:[mask-image:linear-gradient(to_left,transparent,white_5%)]"
 
-export default function YourPositionsAtRiskCarousel() {
+export default function TopLowRiskPositions() {
     const router = useRouter();
     const { allChainsData } = useContext(AssetsDataContext);
     const [api, setApi] = React.useState<CarouselApi>();
@@ -49,11 +49,11 @@ export default function YourPositionsAtRiskCarousel() {
 
     function getRiskFactor(healthFactor: string | number) {
         const HF = Number(healthFactor);
-        if (HF < 1.5) return {
+        if (HF < 1) return {
             label: "high",
             theme: "destructive"
         }
-        if (HF >= 1.5 && HF < 2) return {
+        if (HF < 1.5) return {
             label: "medium",
             theme: "yellow"
         }
@@ -63,7 +63,7 @@ export default function YourPositionsAtRiskCarousel() {
         }
     }
 
-    const PLATFORMS_WITH_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0 && platform.health_factor < 1.5)
+    const PLATFORMS_WITH_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0)
 
     const POSITIONS_AT_RISK = PLATFORMS_WITH_POSITIONS?.map((platform, index: number) => {
         const lendPositions = platform.positions.filter(position => position.type === "lend");
@@ -94,7 +94,7 @@ export default function YourPositionsAtRiskCarousel() {
                 platformImage: platform?.logo ?? "",
                 chainImage: chainDetails?.logo ?? "",
             },
-            riskFactor: getRiskFactor(platform.health_factor),
+            netApy: abbreviateNumber(platform.net_apy),
         }
     })
 
@@ -132,10 +132,10 @@ export default function YourPositionsAtRiskCarousel() {
     }
 
     return (
-        <section id="your-positions-at-risk">
+        <section id="top-low-risk-positions">
             <div className="section-header flex items-center justify-between mb-[24px] px-5">
                 <div className="flex items-center gap-[12px]">
-                    <HeadingText level="h3" weight='semibold'>Your Positions at Risk</HeadingText>
+                    <HeadingText level="h3" weight='semibold'>Top low risk positions</HeadingText>
                     <InfoTooltip />
                 </div>
                 {POSITIONS_AT_RISK.length > 1 &&
@@ -227,29 +227,21 @@ export default function YourPositionsAtRiskCarousel() {
                                             </div>
                                             <div className="risk-factor-block flex flex-col items-end gap-[4px]">
                                                 <Label className="capitalize text-gray-600">
-                                                    Risk factor
+                                                    Net APY
                                                 </Label>
-                                                <Badge variant={positions.riskFactor.theme as "destructive" | "green" | "yellow"}>
-                                                    {positions.riskFactor.label}
-                                                </Badge>
+                                                <BodyText level={"body2"} weight="medium">
+                                                    {positions.netApy}%
+                                                </BodyText>
                                             </div>
                                         </div>
                                     </CardContent>
-                                    <CardFooter className="py-[16px] flex flex-col md:flex-row item-center justify-between gap-[5px] md:gap-[14px]">
-                                        <BodyText
-                                            level="body2"
-                                            weight="medium"
-                                            className="text-gray-600"
-                                        >
-                                            Recommended action
-                                        </BodyText>
-                                        <span className="hidden md:block text-gray-500">|</span>
+                                    <CardFooter className="py-[16px] flex item-center justify-center gap-[5px] md:gap-[14px]">
                                         <Button
                                             variant="link"
-                                            className="group uppercase flex items-center gap-[4px]"
+                                            className="group uppercase flex items-center gap-[4px] w-fit"
                                         // onClick={() => router.push("position-management")}
                                         >
-                                            Add collateral
+                                            View position
                                             <ArrowRightIcon
                                                 width={16}
                                                 height={16}

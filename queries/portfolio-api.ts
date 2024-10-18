@@ -3,17 +3,30 @@ import { request } from "./request";
 
 export async function getPortfolioData({
   user_address,
-  chain_id,
-  platform_id,
+  chain_id = [],
+  platform_id = [],
   position_type,
 }: TGetPortfolioParams) {
+  const params = new URLSearchParams();
+
+  // Add chain_id as a comma-separated list
+  if (chain_id.length > 0) {
+    params.append("chain_id", chain_id.join(","));
+  }
+
+  // Add platform_id if needed (not in the example URL, but keeping it for flexibility)
+  if (platform_id.length > 0) {
+    params.append("platform_id", platform_id.join(","));
+  }
+
+  // Add position_type
+  if (position_type) {
+    params.append("position_type", position_type);
+  }
+
   return request<TPortfolio>({
     method: "GET",
     path: `/users/portfolio/${user_address}`,
-    query: {
-      chain_id: chain_id ?? [],
-      platform_id: platform_id ?? [],
-      position_type: position_type,
-    },
+    query: params,
   });
 }

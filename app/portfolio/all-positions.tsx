@@ -1,6 +1,6 @@
 "use client";
 
-import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown';
+import AllPositionsFiltersDropdown from '@/components/dropdowns/AllPositionsFiltersDropdown';
 import SearchInput from '@/components/inputs/SearchInput';
 import LendBorrowToggle from '@/components/LendBorrowToggle';
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection';
@@ -14,7 +14,7 @@ import useDimensions from '@/hooks/useDimensions';
 import useGetPortfolioData from '@/hooks/useGetPortfolioData';
 import { TChain, TPositionType } from '@/types';
 import { useRouter } from 'next/navigation';
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { useAccount } from 'wagmi';
 
 export default function AllPositions() {
@@ -35,6 +35,8 @@ export default function AllPositions() {
     } = useGetPortfolioData({
         user_address: address,
         position_type: positionType,
+        chain_id: filters.chain_ids,
+        platform_id: filters.platform_ids,
     });
     const { allChainsData } = useContext(AssetsDataContext);
 
@@ -76,10 +78,10 @@ export default function AllPositions() {
     });
 
     const filteredTableData = rawTableData.filter((position) => {
-        return filters.platform_ids.includes(position.platformName)
+        return filters.token_ids.includes(position.tokenSymbol)
     });
 
-    const tableData = filters.platform_ids.length > 0 ? filteredTableData : rawTableData;
+    const tableData = filters.token_ids.length > 0 ? filteredTableData : rawTableData;
 
     function handleRowClick(rowData: any) {
         if (screenWidth < 768) return;
@@ -106,7 +108,7 @@ export default function AllPositions() {
             <div className="all-positions-header flex items-end lg:items-center justify-between gap-[12px]">
                 <div className="all-positions-header-left w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                     <div className="flex items-center gap-[12px]">
-                        <HeadingText level="h3">All positions</HeadingText>
+                        <HeadingText level="h3" weight='semibold'>All positions</HeadingText>
                         <InfoTooltip />
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
@@ -121,7 +123,7 @@ export default function AllPositions() {
                 {/* Filter buttons for Desktop and above screens */}
                 <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
                     {/* <ChainSelectorDropdown /> */}
-                    {/* <DiscoverFilterDropdown /> */}
+                    <AllPositionsFiltersDropdown />
                 </div>
             </div>
             <div className="all-positions-content">
@@ -131,7 +133,7 @@ export default function AllPositions() {
                         data={tableData}
                         filters={searchKeywords}
                         setFilters={setSearchKeywords}
-                        handleRowClick={handleRowClick}
+                        // handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
                     />}

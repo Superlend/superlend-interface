@@ -24,7 +24,10 @@ export function convertNegativeToPositive(str: string): string {
   });
 }
 
-export const abbreviateNumber = (value: number, fixed: number = 2): string => {
+export const abbreviateNumber = (
+  value: number = 0,
+  fixed: number = 2
+): string => {
   if (value >= 1000000000) {
     return (value / 1000000000).toFixed(fixed) + "B";
   } else if (value >= 1000000) {
@@ -107,4 +110,8 @@ export function getTokenLogo(tokenSymbol: string): string {
 
 export function getPlatformLogo(platformName: string): string {
   return `/images/platforms/${platformName?.toLowerCase()}.webp`;
+}
+
+export function capitalizeText(text: string) {
+  return `${text.split("-")[0][0]}${text.split("-")[0].slice(1).toLowerCase()}`;
 }

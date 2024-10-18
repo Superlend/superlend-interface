@@ -20,24 +20,24 @@ import { Check, ChevronDownIcon } from 'lucide-react';
 import FilterIcon from '../icons/filter-icon';
 import { AssetsDataContext } from '@/context/data-provider';
 import ImageWithDefault from '../ImageWithDefault';
-import { OpportunitiesContext } from '@/context/opportunities-provider';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { TToken } from '@/types';
 import useDimensions from '@/hooks/useDimensions';
-import { STABLECOINS_NAMES_LIST } from '@/constants';
+import { PLATFORM_OPTIONS, STABLECOINS_NAMES_LIST } from '@/constants';
 import SearchInput from '../inputs/SearchInput';
+import { PositionsContext, TPositionsContext, TPositionsFilters } from '@/context/positions-provider';
 
-export default function DiscoverFilterDropdown() {
+export default function AllPositionsFiltersDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
-    const { filters, setFilters } = useContext<any>(OpportunitiesContext);
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext);
+    const { filters, setFilters } = useContext<TPositionsContext>(PositionsContext);
     const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(false)
     const { width: screenWidth } = useDimensions();
     const isDesktop = screenWidth > 768;
 
-    const hasActiveFilters = !!filters.token_ids.length || !!filters.chain_ids.length || !!filters.platform_ids.length
-    const activeFiltersTotalCount = filters.token_ids.length + filters.chain_ids.length + filters.platform_ids.length;
-    const getActiveFiltersCountByCategory = (filterName: string) => (filters[filterName]?.length);
+    const hasActiveFilters = !!filters?.token_ids?.length || !!filters?.chain_ids?.length || !!filters?.platform_ids?.length
+    const activeFiltersTotalCount = filters?.token_ids?.length + filters?.chain_ids?.length + filters?.platform_ids?.length;
+    const getActiveFiltersCountByCategory = (filterName: keyof TPositionsFilters) => filters[filterName]?.length ?? 0;
 
     const allTokenOptions = Object.values(allTokensData).flat(1)
         .reduce((acc: TToken[], current: any) => {
@@ -52,18 +52,11 @@ export default function DiscoverFilterDropdown() {
             logo: token.logo
         }))
 
-    const allPlatformsData = [
-        {
-            logo: allTokenOptions?.find((token: any) => token.token_id === 'AAVE')?.logo || "",
-            name: "AAVE",
-            platform_id: "AAVE"
-        },
-        {
-            logo: allTokenOptions?.find((token: any) => token.token_id === 'COMP')?.logo || "",
-            name: "COMPOUND",
-            platform_id: "COMPOUND"
-        },
-    ]
+    const allPlatformsData = PLATFORM_OPTIONS.map(platform => ({
+        logo: allTokenOptions?.find((token: any) => token.token_id === platform.label.split("-")[0])?.logo || "",
+        name: platform.label,
+        platform_id: platform.value,
+    }));
 
     const FILTER_CATEGORIES = [
         {
@@ -270,7 +263,7 @@ function FilterOptions({
     isStablecoinsSelected: boolean;
     selectStablecoins: any;
 }) {
-    const { filters, setFilters } = useContext<any>(OpportunitiesContext);
+    const { filters, setFilters } = useContext<any>(PositionsContext);
     const [searchKeyword, setSearchKeyword] = useState<string>("");
 
     useEffect(() => {

@@ -39,3 +39,29 @@ export type TPortfolio = {
   total_borrowed: number;
   total_supplied: number;
 };
+
+export type TGetUserPositionsParams = {
+  user_address: `0x${string}` | undefined;
+  chain_ids?: string[];
+  platform_ids?: string[];
+  tokens?: string[];
+};
+
+export type TUserPosition = {
+  platform: [
+    {
+      name: string;
+      logo: string;
+      chain_id: number;
+    }
+  ];
+  recommended_change: [
+    {
+      message: string;
+      action: string;
+    }
+  ];
+  lend_amount_usd: number;
+  borrow_amount_usd: number;
+  health_factor: number;
+};
