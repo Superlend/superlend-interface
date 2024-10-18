@@ -2,6 +2,16 @@ import MainContainer from '@/components/MainContainer';
 import React from 'react';
 import PageHeader from './page-header';
 import AssetHistory from './asset-history';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card"
+import { BodyText } from '@/components/ui/typography';
+
 
 export default function PositionManagementPage() {
     return (
@@ -11,7 +21,34 @@ export default function PositionManagementPage() {
                 <div className='flex flex-col gap-[16px]'>
                     <AssetHistory />
                 </div>
+                {/* <BlogCard /> */}
             </div>
         </MainContainer>
+    )
+}
+
+function BlogCard() {
+    return (
+        <div className="blog-card-wrapper">
+            <Card className='group'>
+                <CardContent className='relative h-[262px] w-full p-0 overflow-hidden rounded-6 flex items-center justify-center'>
+                    <div className="absolute top-0 left-0 h-full w-full bg-primary bg-opacity-40 blur-md">
+                    </div>
+                    <BodyText level='body1' weight='medium' className='group-hover:scale-125 transition-all relative text-white font-bold text-[32px]'>
+                        Coming soon
+                    </BodyText>
+                </CardContent>
+                <CardFooter className='py-[16px] blur-[2px]'>
+                    <div className="flex flex-col gap-[6px]">
+                        <BodyText level='body1' weight='medium'>
+                            Introduction to Lending & Borrowing with Superlend
+                        </BodyText>
+                        <BodyText level='body2'>
+                            Understanding: What is Superlend, How does it work, Key benefits of using Superlend and more.
+                        </BodyText>
+                    </div>
+                </CardFooter>
+            </Card>
+        </div>
     )
 }
