@@ -82,6 +82,7 @@ export default function TopApyOpportunities() {
             deposits: `${Number(item.platform.liquidity) * Number(item.token.price_usd)}`,
             borrows: `${Number(item.platform.borrows) * Number(item.token.price_usd)}`,
             utilization: item.platform.utilization_rate,
+            additional_rewards: item.platform.additional_rewards,
         }
     });
 

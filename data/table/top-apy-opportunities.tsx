@@ -128,7 +128,14 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 )
             }
 
-            return `${Number(row.getValue("apy_current")).toFixed(2)}%`
+            return (
+                <span className="flex items-center gap-1">
+                    <span className="">{`${Number(row.getValue("apy_current")).toFixed(2)}%`}</span>
+                    {row.original.additional_rewards.toString() === "true" &&
+                        <img src="/icons/sparkles.svg" width={22} height={24} />
+                    }
+                </span>
+            )
         },
         // enableGlobalFilter: false,
     },
