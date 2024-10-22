@@ -1,8 +1,6 @@
 "use client"
 
-import { TrendingUp } from "lucide-react"
 import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts"
-
 import {
     Card,
     CardContent,
@@ -22,7 +20,7 @@ import { Badge } from "../ui/badge"
 import { BodyText, Label as LabelText } from "../ui/typography"
 import { TPortfolio } from "@/types/queries/portfolio"
 import ImageWithDefault from "../ImageWithDefault"
-import { abbreviateNumber, capitalizeText } from "@/lib/utils"
+import { abbreviateNumber, capitalizeText, convertScientificToNormal, isLowestValue } from "@/lib/utils"
 import { useContext } from "react"
 import { AssetsDataContext } from "@/context/data-provider"
 import AvatarCircles from "../ui/avatar-circles"
@@ -73,6 +71,17 @@ const ICONS_LIST = [
 function CustomToolTip(payload: any) {
     const { platform, chain, lend, borrow } = payload.payload;
 
+    function hasLowestValuePrefix(value: number) {
+        return isLowestValue(Number(value)) ? "< " : "";
+    }
+
+    function handleLowestValue(value: number) {
+        return isLowestValue(Number(value)) ? 0.01 : value;
+    }
+
+    const borrowAmount = handleLowestValue(borrow?.amount)
+    const lendAmount = handleLowestValue(lend?.amount)
+
     return (
         <div className="bg-white rounded-4 w-[225px] px-[12px] py-[16px]">
             <div className="flex items-center justify-between border-b border-gray-400 pb-[12px]">
@@ -93,14 +102,14 @@ function CustomToolTip(payload: any) {
                 <div className="flex items-center justify-between">
                     <LabelText> Borrow </LabelText>
                     <div className="flex items-center gap-[4px]">
-                        <BodyText level="body2" weight="medium">${borrow?.amount}</BodyText>
+                        <BodyText level="body2" weight="medium">{hasLowestValuePrefix(borrow?.amount)} ${borrowAmount}</BodyText>
                         <AvatarCircles avatarUrls={borrow.tokens.map((token: any) => token.logo)} />
                     </div>
                 </div>
                 <div className="flex items-center justify-between">
                     <LabelText> Lend </LabelText>
                     <div className="flex items-center gap-[4px]">
-                        <BodyText level="body2" weight="medium">${lend?.amount}</BodyText>
+                        <BodyText level="body2" weight="medium">{hasLowestValuePrefix(lend?.amount)} ${lendAmount}</BodyText>
                         <AvatarCircles avatarUrls={lend.tokens.map((token: any) => token.logo)} />
                     </div>
                 </div>
@@ -151,6 +160,12 @@ export function RadialChartStacked({
     const totalPlatformsCount = PLATFORMS_WITH_POSITIONS.length;
     const chartData = PLATFORMS_WITH_POSITIONS.map((platform) => {
         const chainDetails = allChainsData.find(chain => Number(chain.chain_id) === Number(platform.chain_id))
+
+        function getSanitizedValue(value: number) {
+            const normalValue = Number(convertScientificToNormal(value));
+            return isLowestValue(normalValue) ? normalValue.toFixed(10) : abbreviateNumber(normalValue);
+        }
+
         return {
             platform: {
                 id: platform.platform_name,
@@ -164,13 +179,13 @@ export function RadialChartStacked({
                 logo: chainDetails?.logo
             },
             lend: {
-                amount: abbreviateNumber(platform.total_liquidity),
+                amount: getSanitizedValue(platform.total_liquidity),
                 tokens: [
                     ...platform.positions.filter(position => position.type === "lend").map(platform => ({ ...platform.token }))
                 ],
             },
             borrow: {
-                amount: abbreviateNumber(platform.total_borrow),
+                amount: getSanitizedValue(platform.total_borrow),
                 tokens: [
                     ...platform.positions.filter(position => position.type === "borrow").map(platform => ({ ...platform.token }))
                 ],
@@ -237,7 +252,7 @@ export function RadialChartStacked({
                                 <RadialBar
                                     key={index}
                                     dataKey={(obj) => {
-                                        return obj.platform.pnl
+                                        return Number(obj.platform.pnl) || 1
                                     }}
                                     stackId="a"
                                     cornerRadius={16}

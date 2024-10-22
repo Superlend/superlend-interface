@@ -17,6 +17,8 @@ import TopLowRiskPositions from './top-low-risk-positions'
 
 export default function Portfolio() {
     const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
+    const WALLET_ADDRESS = process.env.NODE_ENV === "development" ? process.env.NEXT_WALLET_ADDRESS : walletAddress;
+
     const { open: openAuthModal, close: closeAuthModal } = useAppKit();
     const { isClient } = useIsClient();
 
@@ -57,12 +59,12 @@ export default function Portfolio() {
                 </section>
                 <section>
                     <div className="flex flex-col gap-[72px]">
-                        <PortfolioOverview />
-                        <YourPositionsAtRisk />
+                        <PortfolioOverview walletAddress={WALLET_ADDRESS as `0x${string}` | undefined} />
+                        <YourPositionsAtRisk walletAddress={WALLET_ADDRESS as `0x${string}` | undefined} />
                         <PositionsProvider>
-                            <AllPositions />
+                            <AllPositions walletAddress={WALLET_ADDRESS as `0x${string}` | undefined} />
                         </PositionsProvider>
-                        <TopLowRiskPositions />
+                        <TopLowRiskPositions walletAddress={WALLET_ADDRESS as `0x${string}` | undefined} />
                     </div>
                     {/* <Button variant="primary" className='group uppercase py-[9px] px-[16px] flex items-center gap-[4px]'>
                     transaction history

@@ -24,6 +24,10 @@ import AvatarCircles from "@/components/ui/avatar-circles";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccount } from "wagmi";
 
+type TProps = {
+    walletAddress: `0x${string}` | undefined
+}
+
 const scrollToPosInit = {
     next: false,
     prev: false,
@@ -32,15 +36,15 @@ const scrollToPosInit = {
 const BLUR_ON_LEFT_END_STYLES = "md:[mask-image:linear-gradient(to_right,transparent,white_5%)]"
 const BLUR_ON_RIGHT_END_STYLES = "md:[mask-image:linear-gradient(to_left,transparent,white_5%)]"
 
-export default function YourPositionsAtRiskCarousel() {
+export default function YourPositionsAtRiskCarousel({
+    walletAddress
+}: TProps) {
     const router = useRouter();
-    const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
     const { allChainsData } = useContext(AssetsDataContext);
     const [api, setApi] = React.useState<CarouselApi>();
     const [current, setCurrent] = React.useState(0);
     const [count, setCount] = React.useState(0);
     const [scrollToPos, setScrollToPos] = React.useState(scrollToPosInit);
-    // const walletAddress = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
     const {
         data,
         isLoading,
@@ -65,7 +69,7 @@ export default function YourPositionsAtRiskCarousel() {
         }
     }
 
-    const PLATFORMS_WITH_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0 && platform.health_factor < 1.5)
+    const PLATFORMS_WITH_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0 && platform.health_factor <= 1.5)
 
     const POSITIONS_AT_RISK = PLATFORMS_WITH_POSITIONS?.map((platform, index: number) => {
         const lendPositions = platform.positions.filter(position => position.type === "lend");

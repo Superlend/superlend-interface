@@ -6,7 +6,6 @@ import {
     CarouselContent,
     CarouselItem,
 } from "@/components/ui/carousel";
-import { POSITIONS_AT_RISK_DATA } from "@/data/portfolio-page";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,10 @@ import AvatarCircles from "@/components/ui/avatar-circles";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccount } from "wagmi";
 
+type TProps = {
+    walletAddress: `0x${string}` | undefined
+}
+
 const scrollToPosInit = {
     next: false,
     prev: false,
@@ -32,15 +35,15 @@ const scrollToPosInit = {
 const BLUR_ON_LEFT_END_STYLES = "md:[mask-image:linear-gradient(to_right,transparent,white_5%)]"
 const BLUR_ON_RIGHT_END_STYLES = "md:[mask-image:linear-gradient(to_left,transparent,white_5%)]"
 
-export default function TopLowRiskPositions() {
+export default function TopLowRiskPositions({
+    walletAddress
+}: TProps) {
     const router = useRouter();
-    const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
     const { allChainsData } = useContext(AssetsDataContext);
     const [api, setApi] = React.useState<CarouselApi>();
     const [current, setCurrent] = React.useState(0);
     const [count, setCount] = React.useState(0);
     const [scrollToPos, setScrollToPos] = React.useState(scrollToPosInit);
-    // const walletAddress = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
     const {
         data,
         isLoading,
@@ -49,9 +52,9 @@ export default function TopLowRiskPositions() {
         user_address: walletAddress,
     });
 
-    const PLATFORMS_WITH_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0)
+    const PLATFORMS_WITH_LOW_RISK_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0 && platform.health_factor > 1.5)
 
-    const POSITIONS_AT_RISK = PLATFORMS_WITH_POSITIONS?.map((platform, index: number) => {
+    const POSITIONS_AT_LOW_RISK = PLATFORMS_WITH_LOW_RISK_POSITIONS?.map((platform, index: number) => {
         const lendPositions = platform.positions.filter(position => position.type === "lend");
         const borrowPositions = platform.positions.filter(position => position.type === "borrow");
         const chainDetails = allChainsData.find(chain => chain.chain_id === platform.chain_id);
@@ -117,7 +120,7 @@ export default function TopLowRiskPositions() {
         setScrollToPos((state) => ({ ...state, prev: false }));
     }
 
-    if (POSITIONS_AT_RISK.length <= 0) {
+    if (POSITIONS_AT_LOW_RISK.length <= 0) {
         return null;
     }
 
@@ -128,7 +131,7 @@ export default function TopLowRiskPositions() {
                     <HeadingText level="h3" weight='semibold'>Top low risk positions</HeadingText>
                     <InfoTooltip />
                 </div>
-                {POSITIONS_AT_RISK.length > 1 &&
+                {POSITIONS_AT_LOW_RISK.length > 1 &&
                     <div className="slide-carousel-btns flex items-center gap-[16px]">
                         <Button
                             variant={"ghost"}
@@ -159,7 +162,7 @@ export default function TopLowRiskPositions() {
                 // }
                 >
                     <CarouselContent className="pl-5 cursor-grabbing">
-                        {POSITIONS_AT_RISK.map((positions, index) => (
+                        {POSITIONS_AT_LOW_RISK.map((positions, index) => (
                             <CarouselItem
                                 key={index}
                                 className="basis-[90%] min-[450px]:basis-[380px] md:basis-[380px]"
@@ -175,7 +178,7 @@ export default function TopLowRiskPositions() {
                                                     <AvatarCircles
                                                         avatarUrls={positions.lendAsset.tokenImages}
                                                         avatarDetails={positions.lendAsset.tokenDetails}
-                                                        moreItemsCount={POSITIONS_AT_RISK.length}
+                                                        moreItemsCount={POSITIONS_AT_LOW_RISK.length}
                                                     />
                                                     <BodyText level={"body2"} weight="medium">
                                                         ${positions.lendAsset.amount}

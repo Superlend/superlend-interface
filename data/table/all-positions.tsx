@@ -160,11 +160,11 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             />
         ),
         cell: ({ row }) => {
-            const value: string = row.getValue("deposits");
-            if (containsNegativeInteger(value)) {
-                return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)) ?? 0)}`
-            }
-            return `$${abbreviateNumber(Number(value) ?? 0)}`
+            const value: number = Number(row.getValue("deposits"));
+            const isLowestValue = value < 0.01;
+            const sanitizedValue = isLowestValue ? "0.01" : abbreviateNumber(value);
+
+            return `${isLowestValue ? "< " : ""} $${sanitizedValue}`
         },
         // enableGlobalFilter: false,
     },
@@ -180,11 +180,11 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             />
         ),
         cell: ({ row }) => {
-            const value: string = row.getValue("borrows");
-            if (containsNegativeInteger(value)) {
-                return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)) ?? 0)}`
-            }
-            return `$${abbreviateNumber(Number(value) ?? 0)}`
+            const value: number = Number(row.getValue("borrows"));
+            const isLowestValue = value < 0.01;
+            const sanitizedValue = isLowestValue ? "0.01" : abbreviateNumber(value);
+
+            return `${isLowestValue ? "< " : ""} $${sanitizedValue}`
         },
         // enableGlobalFilter: false,
     },
@@ -195,6 +195,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         cell: ({ row }) => {
             const value: string = Number(row.getValue("earnings")).toFixed(2);
             const prefixSign = Number(value) < 0 ? "-" : Number(value) > 0 ? "+" : "";
+            const badgeVariant = Number(value) < 0 ? "destructive" : Number(value) > 0 ? "green" : "default";
 
             function getSanitizedValue(value: string | number) {
                 if (containsNegativeInteger(value)) {
@@ -204,7 +205,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             }
 
             return (
-                <Badge variant={`${Number(value) <= 0 ? "destructive" : "green"}`}>
+                <Badge variant={badgeVariant}>
                     {prefixSign}{" "}{getSanitizedValue(value)}
                 </Badge>
             )

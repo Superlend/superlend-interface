@@ -11,12 +11,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import React from 'react'
 import { useAccount } from 'wagmi'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
-import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from '@/lib/utils'
+import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive, convertScientificToNormal, isLowestValue } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 
-export default function PortfolioOverview() {
-    const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
-    // const walletAddress = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
+type TProps = {
+    walletAddress: `0x${string}` | undefined
+}
+
+export default function PortfolioOverview({
+    walletAddress
+}: TProps) {
     const {
         data,
         isLoading,
@@ -105,10 +109,11 @@ export default function PortfolioOverview() {
     )
 }
 
-function getStatValue(value: number | undefined) {
-    const VALUE = value?.toString() || "";
+function getStatValue(value: number) {
+    const normalValue = convertScientificToNormal(value);
+    const VALUE = isLowestValue(normalValue) ? 0.01 : abbreviateNumber(normalValue);
     if (containsNegativeInteger(VALUE)) {
-        return `-$${abbreviateNumber(Number(convertNegativeToPositive(VALUE)))}`
+        return `-$${convertNegativeToPositive(VALUE)}`
     }
-    return `$${abbreviateNumber(Number(value ?? 0))}`
+    return `${isLowestValue(value) ? "<" : ""} $${VALUE}`
 }

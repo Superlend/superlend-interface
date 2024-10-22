@@ -106,6 +106,101 @@ export const shortNubers = (value: number): number => {
   return result;
 };
 
+export function calculateScientificNotation(
+  num1: string,
+  num2: string,
+  operation: "add" | "subtract" | "divide" | "multiply"
+) {
+  // Extract the coefficient and exponent from the first number
+  const [coef1, exp1] = parseScientific(num1);
+  // Extract the coefficient and exponent from the second number
+  const [coef2, exp2] = parseScientific(num2);
+
+  let resultCoefficient;
+  let resultExponent;
+
+  switch (operation) {
+    case "multiply":
+      // Multiply the coefficients and add the exponents
+      resultCoefficient = coef1 * coef2;
+      resultExponent = exp1 + exp2;
+      break;
+    case "add":
+      // Align exponents for addition
+      if (exp1 > exp2) {
+        resultCoefficient = coef1 + coef2 * Math.pow(10, exp2 - exp1);
+        resultExponent = exp1;
+      } else {
+        resultCoefficient = coef2 + coef1 * Math.pow(10, exp1 - exp2);
+        resultExponent = exp2;
+      }
+      break;
+    case "subtract":
+      // Align exponents for subtraction
+      if (exp1 > exp2) {
+        resultCoefficient = coef1 - coef2 * Math.pow(10, exp2 - exp1);
+        resultExponent = exp1;
+      } else {
+        resultCoefficient = coef2 - coef1 * Math.pow(10, exp1 - exp2);
+        resultExponent = exp2;
+      }
+      break;
+    case "divide":
+      // Divide the coefficients and subtract the exponents
+      resultCoefficient = coef1 / coef2;
+      resultExponent = exp1 - exp2;
+      break;
+    default:
+      throw new Error(
+        "Invalid operation. Use 'add', 'subtract', 'multiply', or 'divide'."
+      );
+  }
+
+  // Calculate the final result in normal number format
+  return normalizeResult(resultCoefficient, resultExponent);
+}
+
+export function convertScientificToNormal(num: string | number) {
+  const value = num.toString();
+  // Extract the coefficient and exponent using regex
+  const regex = /([+-]?\d*\.?\d+)(e[+-]?\d+)?/i;
+  const match = value.match(regex);
+
+  if (!match) {
+    throw new Error("Invalid number format");
+  }
+
+  const coefficient = parseFloat(match[1]);
+  const exponent = match[2] ? parseInt(match[2].substring(1), 10) : 0;
+
+  // Calculate the normal number by multiplying the coefficient by 10 raised to the exponent
+  return coefficient * Math.pow(10, exponent);
+}
+
+function parseScientific(num: number | string) {
+  const value = num.toString();
+  const regex = /([+-]?\d*\.?\d+)(e[+-]?\d+)?/i;
+  const match = value.match(regex);
+
+  if (!match) {
+    throw new Error("Invalid number format");
+  }
+
+  const coefficient = parseFloat(match[1]);
+  const exponent = match[2] ? parseInt(match[2].substring(1), 10) : 0;
+
+  return [coefficient, exponent];
+}
+
+function normalizeResult(coefficient: number, exponent: number) {
+  // Normalize to standard decimal format
+  return coefficient * Math.pow(10, exponent);
+}
+
+export function isLowestValue(value: number) {
+  return !!value && value < 0.01;
+}
+
 export function getTokenLogo(tokenSymbol: string): string {
   return `https://app.aave.com/icons/tokens/${tokenSymbol?.toLowerCase()}.svg`;
 }

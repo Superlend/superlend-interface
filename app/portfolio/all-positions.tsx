@@ -12,15 +12,19 @@ import { PositionsContext } from '@/context/positions-provider';
 import { columns, TPositionsTable } from '@/data/table/all-positions';
 import useDimensions from '@/hooks/useDimensions';
 import useGetPortfolioData from '@/hooks/useGetPortfolioData';
+import { calculateScientificNotation } from '@/lib/utils';
 import { TChain, TPositionType } from '@/types';
 import { SortingState } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
 import React, { useContext, useEffect, useState } from 'react'
 import { useAccount } from 'wagmi';
 
-export default function AllPositions() {
-    const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
-    // const walletAddress = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
+type TProps = {
+    walletAddress: `0x${string}` | undefined
+}
+export default function AllPositions({
+    walletAddress
+}: TProps) {
     const router = useRouter();
     const { width: screenWidth } = useDimensions();
     const { filters, positionType, setPositionType } = useContext(PositionsContext);
@@ -76,6 +80,7 @@ export default function AllPositions() {
     }).flat(portfolioData?.platforms.length);
 
     const rawTableData: TPositionsTable[] = POSITIONS?.map((item) => {
+
         return {
             tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,
@@ -88,8 +93,8 @@ export default function AllPositions() {
             platformName: `${item.platform.platform_name.split("-")[0]}`,
             platformLogo: item.platform.logo,
             apy: item.platform.net_apy,
-            deposits: `${Number(item.amount) * Number(item.token.price_usd)}`,
-            borrows: `${Number(item.amount) * Number(item.token.price_usd)}`,
+            deposits: calculateScientificNotation(item.amount.toString(), item.token.price_usd.toString(), "multiply").toFixed(10),
+            borrows: calculateScientificNotation(item.amount.toString(), item.token.price_usd.toString(), "multiply").toFixed(10),
             earnings: item.platform.pnl,
         }
     });
