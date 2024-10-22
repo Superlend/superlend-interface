@@ -1,21 +1,22 @@
 "use client"
 
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import LendBorrowToggle from '@/components/LendBorrowToggle'
 import { HeadingText } from '@/components/ui/typography'
 import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown'
 import { columns } from '@/data/table/top-apy-opportunities';
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
-import { ColumnDef, SortingState } from '@tanstack/react-table'
+import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { TChain, TOpportunityTable, TPositionType, TToken } from '@/types'
 import { DataTable } from '@/components/ui/data-table'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 import { OpportunitiesContext } from '@/context/opportunities-provider'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import useDimensions from '@/hooks/useDimensions'
+import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[];
@@ -23,24 +24,34 @@ type TTopApyOpportunitiesProps = {
 }
 
 export default function TopApyOpportunities() {
+    const updateSearchParams = useUpdateSearchParams();
+    const searchParams = useSearchParams();
+    const positionTypeParam = searchParams.get("position_type") || "lend";
+    const tokenIdsParam = searchParams.get('token_ids')?.split(',') || [];
+    const chainIdsParam = searchParams.get('chain_ids')?.split(',') || [];
+    const platformIdsParam = searchParams.get('platform_ids')?.split(',') || [];
+    const keywordsParam = searchParams.get("keywords") || "";
     const { width: screenWidth } = useDimensions();
-    const { filters, positionType, setPositionType } = useContext<any>(OpportunitiesContext);
-    const [searchKeywords, setSearchKeywords] = useState<string>("");
     const [sorting, setSorting] = useState<SortingState>([
-        { id: 'apy_current', desc: positionType === "lend" },
+        { id: 'apy_current', desc: positionTypeParam === "lend" },
     ]);
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageIndex: 0,
+        pageSize: 10,
+    });
     const [columnVisibility, setColumnVisibility] = useState({
         deposits: true,
         borrows: false,
     });
     const router = useRouter();
+    const pathname = usePathname();
     const {
         data: opportunitiesData,
         isLoading: isLoadingOpportunitiesData
     } = useGetOpportunitiesData({
-        type: positionType,
-        chain_ids: filters.chain_ids,
-        tokens: filters.token_ids
+        type: positionTypeParam as TPositionType,
+        chain_ids: chainIdsParam.map(id => Number(id)),
+        tokens: tokenIdsParam
     });
     const { allChainsData } = useContext<any>(AssetsDataContext);
     // const initialState = {
@@ -52,18 +63,72 @@ export default function TopApyOpportunities() {
     //     ]
     // }
 
+    const lastParamString = useRef('');
+    const isInitialMount = useRef(true);
+
     useEffect(() => {
         setColumnVisibility(() => {
             return {
-                deposits: positionType === "lend",
-                borrows: positionType === "borrow",
+                deposits: positionTypeParam === "lend",
+                borrows: positionTypeParam === "borrow",
             }
         })
-    }, [positionType])
+    }, [positionTypeParam])
 
     useEffect(() => {
-        setSorting([{ id: 'apy_current', desc: positionType === "lend" }])
-    }, [positionType])
+        setSorting([{ id: 'apy_current', desc: positionTypeParam === "lend" }])
+    }, [positionTypeParam])
+
+    const updatePageInUrl = useCallback((newPage: number) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        newParams.set("page", newPage.toString());
+        router.push(`${pathname}?${newParams.toString()}`, { scroll: false });
+    }, [searchParams, router, pathname]);
+
+    const resetPageOnParamChange = useCallback(() => {
+        setPagination(prev => ({
+            ...prev,
+            pageIndex: 0
+        }));
+        updatePageInUrl(1);
+    }, [updatePageInUrl]);
+
+    useEffect(() => {
+        const currentParams = new URLSearchParams(searchParams.toString());
+        const currentPage = currentParams.get('page');
+        currentParams.delete('page'); // Remove page from comparison
+        
+        const paramString = currentParams.toString();
+        
+        if (isInitialMount.current) {
+            // On initial mount, set the page from URL if it exists
+            if (currentPage) {
+                const pageIndex = Math.max(0, parseInt(currentPage) - 1);
+                setPagination(prev => ({ ...prev, pageIndex }));
+            }
+            isInitialMount.current = false;
+        } else {
+            // Only reset page if other params changed (not including page)
+            if (paramString !== lastParamString.current) {
+                resetPageOnParamChange();
+            } else if (currentPage) {
+                // If only page changed, update pagination state
+                const pageIndex = Math.max(0, parseInt(currentPage) - 1);
+                setPagination(prev => ({ ...prev, pageIndex }));
+            }
+        }
+        
+        lastParamString.current = paramString;
+    }, [searchParams, resetPageOnParamChange]);
+
+    const handlePaginationChange = useCallback((updatedPagination: PaginationState) => {
+        const newPageIndex = updatedPagination.pageIndex;
+        setPagination(prev => ({
+            ...prev,
+            pageIndex: newPageIndex
+        }));
+        updatePageInUrl(newPageIndex + 1);
+    }, [updatePageInUrl]);
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         return {
@@ -86,10 +151,15 @@ export default function TopApyOpportunities() {
     });
 
     const filteredTableData = rawTableData.filter((opportunity) => {
-        return filters.platform_ids.includes(opportunity.platformName)
+        return platformIdsParam.includes(opportunity.platformName)
     });
 
-    const tableData = filters.platform_ids.length > 0 ? filteredTableData : rawTableData;
+    const tableData = platformIdsParam.length > 0 ? filteredTableData : rawTableData;
+
+    const paginatedData = useMemo(() => {
+        const startIndex = pagination.pageIndex * pagination.pageSize;
+        return tableData.slice(startIndex, startIndex + pagination.pageSize);
+    }, [tableData, pagination.pageIndex, pagination.pageSize]);
 
     function handleRowClick(rowData: any) {
         if (screenWidth < 768) return;
@@ -100,15 +170,18 @@ export default function TopApyOpportunities() {
     }
 
     const toggleOpportunityType = (positionType: TPositionType): void => {
-        setPositionType(positionType);
+        const params = { position_type: positionType }
+        updateSearchParams(params)
     };
 
     function handleKeywordChange(e: any) {
-        setSearchKeywords(e.target.value)
+        const params = { keywords: !!e.target.value.trim().length ? e.target.value : undefined, page: undefined }
+        updateSearchParams(params)
     }
 
     function handleClearSearch() {
-        setSearchKeywords("");
+        const params = { keywords: undefined, page: undefined }
+        updateSearchParams(params)
     }
 
     return (
@@ -127,10 +200,10 @@ export default function TopApyOpportunities() {
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="w-full sm:max-w-[150px] lg:max-w-[250px]">
-                            <LendBorrowToggle type={positionType} handleToggle={toggleOpportunityType} />
+                            <LendBorrowToggle type={positionTypeParam as TPositionType} handleToggle={toggleOpportunityType} />
                         </div>
                         <div className="sm:max-w-[156px] w-full">
-                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={searchKeywords} />
+                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={keywordsParam} />
                         </div>
                     </div>
                 </div>
@@ -144,15 +217,18 @@ export default function TopApyOpportunities() {
                 {!isLoadingOpportunitiesData &&
                     <DataTable
                         columns={columns}
-                        data={tableData}
-                        filters={searchKeywords}
-                        setFilters={setSearchKeywords}
+                        data={paginatedData}
+                        totalRows={tableData.length}
+                        filters={keywordsParam}
+                        setFilters={handleKeywordChange}
                         handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
                         // initialState={initialState}
                         sorting={sorting}
                         setSorting={setSorting}
+                        pagination={pagination}
+                        setPagination={handlePaginationChange}
                     />}
                 {isLoadingOpportunitiesData && (
                     <LoadingSectionSkeleton />
