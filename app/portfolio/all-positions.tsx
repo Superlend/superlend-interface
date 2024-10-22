@@ -13,17 +13,21 @@ import { columns, TPositionsTable } from '@/data/table/all-positions';
 import useDimensions from '@/hooks/useDimensions';
 import useGetPortfolioData from '@/hooks/useGetPortfolioData';
 import { TChain, TPositionType } from '@/types';
+import { SortingState } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
 import React, { useContext, useEffect, useState } from 'react'
 import { useAccount } from 'wagmi';
 
 export default function AllPositions() {
     const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
-    const address = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
+    // const walletAddress = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
     const router = useRouter();
     const { width: screenWidth } = useDimensions();
     const { filters, positionType, setPositionType } = useContext(PositionsContext);
     const [searchKeywords, setSearchKeywords] = useState<string>("");
+    const [sorting, setSorting] = useState<SortingState>([
+        { id: 'apy', desc: positionType === "lend" },
+    ]);
     const [columnVisibility, setColumnVisibility] = useState({
         deposits: true,
         borrows: false,
@@ -33,12 +37,25 @@ export default function AllPositions() {
         isLoading: isLoadingPortfolioData,
         isError: isErrorPortfolioData
     } = useGetPortfolioData({
-        user_address: address,
+        user_address: walletAddress,
         position_type: positionType,
         chain_id: filters.chain_ids,
         platform_id: filters.platform_ids,
     });
     const { allChainsData } = useContext(AssetsDataContext);
+
+    useEffect(() => {
+        setColumnVisibility(() => {
+            return {
+                deposits: positionType === "lend",
+                borrows: positionType === "borrow",
+            }
+        })
+    }, [positionType])
+
+    useEffect(() => {
+        setSorting([{ id: 'apy', desc: positionType === "lend" }])
+    }, [positionType])
 
     const POSITIONS = portfolioData?.platforms?.flatMap(platform => {
         return platform.positions.map(position => {
@@ -71,8 +88,8 @@ export default function AllPositions() {
             platformName: `${item.platform.platform_name.split("-")[0]}`,
             platformLogo: item.platform.logo,
             apy: item.platform.net_apy,
-            deposits: `${Number(item.platform.total_liquidity) * Number(item.token.price_usd)}`,
-            borrows: `${Number(item.platform.total_borrow) * Number(item.token.price_usd)}`,
+            deposits: `${Number(item.amount) * Number(item.token.price_usd)}`,
+            borrows: `${Number(item.amount) * Number(item.token.price_usd)}`,
             earnings: item.platform.pnl,
         }
     });
@@ -136,6 +153,9 @@ export default function AllPositions() {
                         // handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
+                        sorting={sorting}
+                        setSorting={setSorting}
+                        noDataMessage={"No positions"}
                     />}
                 {isLoadingPortfolioData && (
                     <LoadingSectionSkeleton />

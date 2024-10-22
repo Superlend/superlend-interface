@@ -36,7 +36,8 @@ interface DataTableProps<TData, TValue> {
     setColumnVisibility?: any
     initialState?: any
     sorting?: SortingState
-    setSorting?: React.Dispatch<React.SetStateAction<SortingState>>
+    setSorting?: React.Dispatch<React.SetStateAction<SortingState>>;
+    noDataMessage?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -49,7 +50,8 @@ export function DataTable<TData, TValue>({
     setColumnVisibility,
     initialState,
     sorting,
-    setSorting
+    setSorting,
+    noDataMessage
 }: DataTableProps<TData, TValue>) {
     const table = useReactTable({
         data,
@@ -142,7 +144,7 @@ export function DataTable<TData, TValue>({
                     ) : (
                         <TableRow>
                             <TableCell colSpan={columns.length} className="h-24 text-center">
-                                No results.
+                                {noDataMessage || "No results."}
                             </TableCell>
                         </TableRow>
                     )}

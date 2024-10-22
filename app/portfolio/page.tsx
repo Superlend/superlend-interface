@@ -30,13 +30,15 @@ export default function Portfolio() {
 
     if ((!walletAddress || isDisconnected) && !isConnecting) {
         return (
-            <InfoBannerWithCta
-                image={'/images/connect-wallet-banner.webp'}
-                title={'Connect Wallet'}
-                description={'Connect your web3 wallet to be able to view your portfolio and take required actions'}
-                ctaText={'Connect wallet'}
-                ctaOnClick={handleConnectWallet}
-            />
+            <div className="py-16">
+                <InfoBannerWithCta
+                    image={'/images/connect-wallet-banner.webp'}
+                    title={'Connect Wallet'}
+                    description={'Connect your web3 wallet to be able to view your portfolio and take required actions'}
+                    ctaText={'Connect wallet'}
+                    ctaOnClick={handleConnectWallet}
+                />
+            </div>
         )
     }
 

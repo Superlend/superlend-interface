@@ -6,20 +6,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function containsNegativeInteger(str: string): boolean {
+export function containsNegativeInteger(str: string | number): boolean {
+  const value = str.toString();
   // Regular expression to match negative integers
   const negativeIntegerPattern = /-\d+/;
 
   // Test the string against the pattern
-  return negativeIntegerPattern.test(str);
+  return negativeIntegerPattern.test(value);
 }
 
-export function convertNegativeToPositive(str: string): string {
+export function convertNegativeToPositive(str: string | number): string {
+  const value = str.toString();
   // Regular expression to match negative integers
   const negativeIntegerPattern = /(-\d+)/g;
 
   // Replace negative integers with their positive counterparts
-  return str.toString().replace(negativeIntegerPattern, (match) => {
+  return value.toString().replace(negativeIntegerPattern, (match) => {
     return Math.abs(parseInt(match, 10)).toString();
   });
 }

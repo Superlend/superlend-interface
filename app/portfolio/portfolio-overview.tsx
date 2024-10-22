@@ -16,13 +16,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export default function PortfolioOverview() {
     const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
-    const address = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
+    // const walletAddress = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
     const {
         data,
         isLoading,
         isError
     } = useGetPortfolioData({
-        user_address: address,
+        user_address: walletAddress,
     });
 
     const COLLATERAL = getStatValue(data?.total_supplied);

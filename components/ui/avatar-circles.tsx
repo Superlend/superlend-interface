@@ -9,13 +9,13 @@ import { Label } from "./typography";
 
 interface AvatarCirclesProps {
   className?: string;
-  numPeople?: number;
+  moreItemsCount?: number;
   avatarUrls: string[];
   avatarDetails?: any[];
 }
 
 const AvatarCircles = ({
-  numPeople,
+  moreItemsCount,
   className,
   avatarUrls,
   avatarDetails,
@@ -28,7 +28,7 @@ const AvatarCircles = ({
           label={
             <ImageWithDefault
               key={index}
-              className="h-[24px] w-[24px] max-w-[24px] max-h-[24px] rounded-full border-2 border-white dark:border-gray-800 md:hover:scale-150 transition-transform ease-in delay-150 bg-white"
+              className="h-[24px] w-[24px] max-w-[24px] max-h-[24px] rounded-full border-2 border-white dark:border-gray-800 delay-75 md:hover:scale-150 transition-transform ease-in delay-150 bg-white"
               src={url}
               width={24}
               height={24}
@@ -41,11 +41,11 @@ const AvatarCircles = ({
           }
         />
       ))}
-      {numPeople && numPeople > 3 &&
+      {moreItemsCount && moreItemsCount > 2 &&
         <span
-          className="flex h-[24px] w-[24px] items-center justify-center rounded-full border-2 border-white bg-black text-center text-xs font-medium text-white hover:bg-gray-600 dark:border-gray-800 dark:bg-white dark:text-black"
+          className="flex h-[24px] w-[24px] items-center justify-center rounded-full border-2 border-secondary-300/75 bg-white text-center text-xs font-medium text-secondary-500 hover:bg-gray-400 dark:border-gray-800 dark:bg-white dark:text-black"
         >
-          +{numPeople}
+          +{moreItemsCount}
         </span>}
     </div>
   );

@@ -4,9 +4,10 @@ import ImageWithBadge from "@/components/ImageWithBadge";
 import ImageWithDefault from "@/components/ImageWithDefault";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import TooltipText from "@/components/tooltips/TooltipText";
+import { Badge } from "@/components/ui/badge";
 import { BodyText, Label } from "@/components/ui/typography";
 import useDimensions from "@/hooks/useDimensions";
-import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
+import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
@@ -68,7 +69,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         <Label>Chain</Label>
                         <span className="flex items-center gap-[8px]">
                             <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]" />
-                            <BodyText level="body2" weight="medium">{chainName[0]}{chainName.toLowerCase().slice(1)}</BodyText>
+                            <BodyText level="body2" weight="medium">{capitalizeText(chainName)}</BodyText>
                         </span>
                     </span>
                 </span>
@@ -120,7 +121,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
-                    <span className="truncate">{`${platformName[0]}${platformName.slice(1).toLowerCase()} ${platformVersion}`}</span>
+                    <span className="truncate">{`${capitalizeText(platformName)} ${platformVersion}`}</span>
                 </span>
             )
         },
@@ -190,28 +191,23 @@ export const columns: ColumnDef<TPositionsTable>[] = [
     {
         accessorKey: "earnings",
         accessorFn: item => Number(item.earnings),
-        header: () => (
-            <InfoTooltip
-                label={
-                    <TooltipText>Earnings</TooltipText>
-                }
-                content={"Ratio between the amount borrowed and the amount deposited."}
-            />
-        ),
+        header: "Earnings",
         cell: ({ row }) => {
-            if (`${Number(row.getValue("earnings")).toFixed(1)}` === "0.0") {
-                return (
-                    <InfoTooltip
-                        label={
-                            <TooltipText>{`${Number(row.getValue("earnings")).toFixed(1)}%`}</TooltipText>
-                        }
-                        content={"This asset is non-borrowable"}
-                    />
+            const value: string = Number(row.getValue("earnings")).toFixed(2);
+            const prefixSign = Number(value) < 0 ? "-" : Number(value) > 0 ? "+" : "";
 
-                )
+            function getSanitizedValue(value: string | number) {
+                if (containsNegativeInteger(value)) {
+                    return `$${abbreviateNumber(Number(convertNegativeToPositive(value)) ?? 0)}`
+                }
+                return `$${abbreviateNumber(Number(value) ?? 0)}`
             }
 
-            return `${Number(row.getValue("earnings")).toFixed(2)}%`
+            return (
+                <Badge variant={`${Number(value) <= 0 ? "destructive" : "green"}`}>
+                    {prefixSign}{" "}{getSanitizedValue(value)}
+                </Badge>
+            )
         },
         // enableGlobalFilter: false,
     },

@@ -22,6 +22,7 @@ import { abbreviateNumber, capitalizeText } from "@/lib/utils";
 import { AssetsDataContext } from "@/context/data-provider";
 import AvatarCircles from "@/components/ui/avatar-circles";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAccount } from "wagmi";
 
 const scrollToPosInit = {
     next: false,
@@ -33,18 +34,19 @@ const BLUR_ON_RIGHT_END_STYLES = "md:[mask-image:linear-gradient(to_left,transpa
 
 export default function YourPositionsAtRiskCarousel() {
     const router = useRouter();
+    const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
     const { allChainsData } = useContext(AssetsDataContext);
     const [api, setApi] = React.useState<CarouselApi>();
     const [current, setCurrent] = React.useState(0);
     const [count, setCount] = React.useState(0);
     const [scrollToPos, setScrollToPos] = React.useState(scrollToPosInit);
-    const address = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
+    // const walletAddress = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
     const {
         data,
         isLoading,
         isError
     } = useGetPortfolioData({
-        user_address: address,
+        user_address: walletAddress,
     });
 
     function getRiskFactor(healthFactor: string | number) {
@@ -129,6 +131,10 @@ export default function YourPositionsAtRiskCarousel() {
         api.scrollPrev();
 
         setScrollToPos((state) => ({ ...state, prev: false }));
+    }
+
+    if (POSITIONS_AT_RISK.length <= 0) {
+        return null;
     }
 
     return (
