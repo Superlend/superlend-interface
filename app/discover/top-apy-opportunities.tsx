@@ -27,9 +27,12 @@ export default function TopApyOpportunities() {
     const updateSearchParams = useUpdateSearchParams();
     const searchParams = useSearchParams();
     const positionTypeParam = searchParams.get("position_type") || "lend";
+    const tokenIdsParam = searchParams.get('token_ids')?.split(',') || [];
+    const chainIdsParam = searchParams.get('chain_ids')?.split(',') || [];
+    const platformIdsParam = searchParams.get('platform_ids')?.split(',') || [];
     const keywordsParam = searchParams.get("keywords") || "";
     const { width: screenWidth } = useDimensions();
-    const { filters } = useContext<any>(OpportunitiesContext);
+    // const { filters } = useContext<any>(OpportunitiesContext);
     const [sorting, setSorting] = useState<SortingState>([
         { id: 'apy_current', desc: positionTypeParam === "lend" },
     ]);
@@ -43,8 +46,8 @@ export default function TopApyOpportunities() {
         isLoading: isLoadingOpportunitiesData
     } = useGetOpportunitiesData({
         type: positionTypeParam as TPositionType,
-        chain_ids: filters.chain_ids,
-        tokens: filters.token_ids
+        chain_ids: chainIdsParam.map(id => Number(id)),
+        tokens: tokenIdsParam
     });
     const { allChainsData } = useContext<any>(AssetsDataContext);
     // const initialState = {
@@ -90,10 +93,10 @@ export default function TopApyOpportunities() {
     });
 
     const filteredTableData = rawTableData.filter((opportunity) => {
-        return filters.platform_ids.includes(opportunity.platformName)
+        return platformIdsParam.includes(opportunity.platformName)
     });
 
-    const tableData = filters.platform_ids.length > 0 ? filteredTableData : rawTableData;
+    const tableData = platformIdsParam.length > 0 ? filteredTableData : rawTableData;
 
     function handleRowClick(rowData: any) {
         if (screenWidth < 768) return;

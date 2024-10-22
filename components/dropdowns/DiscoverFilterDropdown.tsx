@@ -26,18 +26,27 @@ import { TToken } from '@/types';
 import useDimensions from '@/hooks/useDimensions';
 import { STABLECOINS_NAMES_LIST } from '@/constants';
 import SearchInput from '../inputs/SearchInput';
+import useUpdateSearchParams from '@/hooks/useUpdateSearchParams';
+import { useSearchParams } from 'next/navigation';
 
 export default function DiscoverFilterDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
-    const { filters, setFilters } = useContext<any>(OpportunitiesContext);
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext);
-    const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(false)
+    const updateSearchParams = useUpdateSearchParams();
+    const searchParams = useSearchParams();
+    const getFiltersFromURL = () => ({
+        token_ids: searchParams.get('token_ids')?.split(',') || [],
+        chain_ids: searchParams.get('chain_ids')?.split(',') || [],
+        platform_ids: searchParams.get('platform_ids')?.split(',') || [],
+    });
+    const filters = getFiltersFromURL();
+    const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(STABLECOINS_NAMES_LIST.every(name => filters.token_ids.includes(name)) || false)
     const { width: screenWidth } = useDimensions();
     const isDesktop = screenWidth > 768;
 
-    const hasActiveFilters = !!filters.token_ids.length || !!filters.chain_ids.length || !!filters.platform_ids.length
+    const hasActiveFilters = !!filters.token_ids.length || !!filters.chain_ids.length || !!filters.platform_ids.length;
     const activeFiltersTotalCount = filters.token_ids.length + filters.chain_ids.length + filters.platform_ids.length;
-    const getActiveFiltersCountByCategory = (filterName: string) => (filters[filterName]?.length);
+    const getActiveFiltersCountByCategory = (filterName: keyof typeof filters) => filters[filterName].length;
 
     const allTokenOptions = Object.values(allTokensData).flat(1)
         .reduce((acc: TToken[], current: any) => {
@@ -107,25 +116,20 @@ export default function DiscoverFilterDropdown() {
                     searchedList.push(findToken.token_id)
                 }
             })
-            setFilters((state: any) => ({
-                ...state,
-                token_ids: searchedList
-            }))
+            updateSearchParams({ token_ids: searchedList.join(',') });
             setIsStablecoinsSelected(true)
             return
         }
         setIsStablecoinsSelected(false)
-        setFilters((state: any) => ({
-            ...state,
-            token_ids: state.token_ids.filter((tokenId: string) => !STABLECOINS_NAMES_LIST.includes(tokenId))
-        }))
+        const currentTokenIds = filters.token_ids.filter((tokenId: string) => !STABLECOINS_NAMES_LIST.includes(tokenId));
+        updateSearchParams({ token_ids: currentTokenIds.length ? currentTokenIds.join(',') : undefined });
     }
 
     function handleClearFilters() {
-        setFilters({
-            token_ids: [],
-            chain_ids: [],
-            platform_ids: [],
+        updateSearchParams({
+            token_ids: undefined,
+            chain_ids: undefined,
+            platform_ids: undefined,
         });
         setIsStablecoinsSelected(false)
     }
@@ -270,38 +274,37 @@ function FilterOptions({
     isStablecoinsSelected: boolean;
     selectStablecoins: any;
 }) {
-    const { filters, setFilters } = useContext<any>(OpportunitiesContext);
+    const updateSearchParams = useUpdateSearchParams();
+    const searchParams = useSearchParams();
     const [searchKeyword, setSearchKeyword] = useState<string>("");
 
     useEffect(() => {
         setSearchKeyword("")
     }, [type])
 
+    const getFiltersFromURL = () => ({
+        token_ids: searchParams.get('token_ids')?.split(',') || [],
+        chain_ids: searchParams.get('chain_ids')?.split(',') || [],
+        platform_ids: searchParams.get('platform_ids')?.split(',') || [],
+    });
+
+    const filters = getFiltersFromURL();
     const isSelected = (id: number | string, filterType: string) => {
-        return filters[`${filterType}_ids`]?.includes(id);
+        return filters[`${filterType}_ids` as keyof typeof filters].includes(id.toString());
     };
-
     const handleSelection = (id: number | string | null, filterType: string) => {
+        const currentFilters = filters[`${filterType}_ids` as keyof typeof filters];
+        let newFilters: (string | number)[] | undefined;
+
         if (id === null) {
-            setFilters((state: any) => ({
-                ...state,
-                [`${filterType}_ids`]: []
-            }));
-            return;
+            newFilters = [];
+        } else if (isSelected(id, filterType)) {
+            newFilters = currentFilters.filter((selectedId: string) => selectedId !== id.toString());
+        } else {
+            newFilters = [...currentFilters, id.toString()];
         }
 
-        if (isSelected(id, filterType)) {
-            setFilters((state: any) => ({
-                ...state,
-                [`${filterType}_ids`]: state[`${filterType}_ids`].filter((selectedId: any) => selectedId !== id)
-            }));
-            return;
-        }
-
-        setFilters((state: any) => ({
-            ...state,
-            [`${filterType}_ids`]: [...state[`${filterType}_ids`], id]
-        }));
+        updateSearchParams({ [`${filterType}_ids`]: newFilters.length ? newFilters.join(',') : undefined });
     };
 
     return (
@@ -328,7 +331,7 @@ function FilterOptions({
                 <Button
                     variant="outline"
                     size="sm"
-                    className={`${filters[`${type}_ids`]?.length === 0 ? "selected" : ""}`}
+                    className={`${filters[`${type}_ids` as keyof typeof filters]?.length === 0 ? "selected" : ""}`}
                     onClick={() => handleSelection(null, type)}>
                     All {type.charAt(0).toUpperCase() + type.slice(1)}s
                 </Button>
