@@ -1,7 +1,6 @@
 import React from 'react'
 import { BodyText, HeadingText } from '@/components/ui/typography'
 import ChainSelectorDropdown from '@/components/dropdowns/ChainSelectorDropdown'
-import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown'
 import { DataTable } from '@/components/ui/data-table'
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
@@ -28,7 +27,7 @@ export default function TrendingLendTokens() {
                 </div>
                 {/* <div className="filter-dropdowns-container hidden lg:flex flex-1 items-center justify-end gap-[12px]">
                     <ChainSelectorDropdown />
-                    <DiscoverFilterDropdown />
+                    <DiscoverFiltersDropdown />
                 </div> */}
             </div>
             {/* <div className="trending-lend-tokens-content">
