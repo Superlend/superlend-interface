@@ -14,8 +14,9 @@ import { DataTable } from '@/components/ui/data-table'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 import { OpportunitiesContext } from '@/context/opportunities-provider'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import useDimensions from '@/hooks/useDimensions'
+import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[];
@@ -23,11 +24,14 @@ type TTopApyOpportunitiesProps = {
 }
 
 export default function TopApyOpportunities() {
+    const updateSearchParams = useUpdateSearchParams();
+    const searchParams = useSearchParams();
+    const positionTypeParam = searchParams.get("position_type") || "lend";
+    const keywordsParam = searchParams.get("keywords") || "";
     const { width: screenWidth } = useDimensions();
-    const { filters, positionType, setPositionType } = useContext<any>(OpportunitiesContext);
-    const [searchKeywords, setSearchKeywords] = useState<string>("");
+    const { filters } = useContext<any>(OpportunitiesContext);
     const [sorting, setSorting] = useState<SortingState>([
-        { id: 'apy_current', desc: positionType === "lend" },
+        { id: 'apy_current', desc: positionTypeParam === "lend" },
     ]);
     const [columnVisibility, setColumnVisibility] = useState({
         deposits: true,
@@ -38,7 +42,7 @@ export default function TopApyOpportunities() {
         data: opportunitiesData,
         isLoading: isLoadingOpportunitiesData
     } = useGetOpportunitiesData({
-        type: positionType,
+        type: positionTypeParam as TPositionType,
         chain_ids: filters.chain_ids,
         tokens: filters.token_ids
     });
@@ -55,15 +59,15 @@ export default function TopApyOpportunities() {
     useEffect(() => {
         setColumnVisibility(() => {
             return {
-                deposits: positionType === "lend",
-                borrows: positionType === "borrow",
+                deposits: positionTypeParam === "lend",
+                borrows: positionTypeParam === "borrow",
             }
         })
-    }, [positionType])
+    }, [positionTypeParam])
 
     useEffect(() => {
-        setSorting([{ id: 'apy_current', desc: positionType === "lend" }])
-    }, [positionType])
+        setSorting([{ id: 'apy_current', desc: positionTypeParam === "lend" }])
+    }, [positionTypeParam])
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         return {
@@ -100,15 +104,18 @@ export default function TopApyOpportunities() {
     }
 
     const toggleOpportunityType = (positionType: TPositionType): void => {
-        setPositionType(positionType);
+        const params = { position_type: positionType }
+        updateSearchParams(params)
     };
 
     function handleKeywordChange(e: any) {
-        setSearchKeywords(e.target.value)
+        const params = { keywords: !!e.target.value.trim().length ? e.target.value : undefined }
+        updateSearchParams(params)
     }
 
     function handleClearSearch() {
-        setSearchKeywords("");
+        const params = { keywords: undefined }
+        updateSearchParams(params)
     }
 
     return (
@@ -127,10 +134,10 @@ export default function TopApyOpportunities() {
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="w-full sm:max-w-[150px] lg:max-w-[250px]">
-                            <LendBorrowToggle type={positionType} handleToggle={toggleOpportunityType} />
+                            <LendBorrowToggle type={positionTypeParam as TPositionType} handleToggle={toggleOpportunityType} />
                         </div>
                         <div className="sm:max-w-[156px] w-full">
-                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={searchKeywords} />
+                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={keywordsParam} />
                         </div>
                     </div>
                 </div>
@@ -145,8 +152,8 @@ export default function TopApyOpportunities() {
                     <DataTable
                         columns={columns}
                         data={tableData}
-                        filters={searchKeywords}
-                        setFilters={setSearchKeywords}
+                        filters={keywordsParam}
+                        setFilters={handleKeywordChange}
                         handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
