@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { cn } from "@/lib/utils";
+import { cn, getLowestDisplayValue, hasLowestDisplayValuePrefix } from "@/lib/utils";
 import ImageWithDefault from "../ImageWithDefault";
 import InfoTooltip from "../tooltips/InfoTooltip";
 import { Label } from "./typography";
@@ -37,7 +37,7 @@ const AvatarCircles = ({
           }
 
           content={
-            avatarDetails && <Label weight="semibold" size="medium" className="">{`$${avatarDetails[index].amount}`}</Label>
+            avatarDetails && <Label weight="semibold" size="medium" className="">{`${hasLowestDisplayValuePrefix(avatarDetails[index].amount)} $${getLowestDisplayValue(avatarDetails[index].amount)}`}</Label>
           }
         />
       ))}

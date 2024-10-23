@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import useGetPortfolioData from "@/hooks/useGetPortfolioData";
-import { abbreviateNumber, capitalizeText } from "@/lib/utils";
+import { abbreviateNumber, capitalizeText, convertScientificToNormal, getLowestDisplayValue, hasLowestDisplayValuePrefix, isLowestValue, normalizeResult } from "@/lib/utils";
 import { AssetsDataContext } from "@/context/data-provider";
 import AvatarCircles from "@/components/ui/avatar-circles";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -76,24 +76,32 @@ export default function YourPositionsAtRiskCarousel({
         const borrowPositions = platform.positions.filter(position => position.type === "borrow");
         const chainDetails = allChainsData.find(chain => chain.chain_id === platform.chain_id);
 
+        function getSanitizedValue(value: number) {
+            const normalValue = Number(convertScientificToNormal(value));
+            return isLowestValue(normalValue) ? normalValue.toFixed(20) : normalValue;
+        }
+
+        const lendAmount = getSanitizedValue(platform?.total_liquidity)
+        const borrowAmount = getSanitizedValue(platform?.total_borrow)
+
         return {
             lendAsset: {
                 tokenImages: lendPositions.map(position => position.token.logo),
                 tokenDetails: lendPositions.map(position => ({
                     logo: position.token.logo,
                     symbol: position.token.symbol,
-                    amount: abbreviateNumber(position.amount),
+                    amount: getSanitizedValue(position.amount),
                 })),
-                amount: abbreviateNumber(platform.total_liquidity, 0),
+                amount: lendAmount,
             },
             borrowAsset: {
                 tokenImages: borrowPositions.map(position => position.token.logo),
                 tokenDetails: borrowPositions.map(position => ({
                     logo: position.token.logo,
                     symbol: position.token.symbol,
-                    amount: abbreviateNumber(position.amount),
+                    amount: getSanitizedValue(position.amount),
                 })),
-                amount: abbreviateNumber(platform.total_borrow, 0),
+                amount: borrowAmount,
             },
             positionOn: {
                 platformName: capitalizeText(platform?.platform_name),
@@ -197,7 +205,7 @@ export default function YourPositionsAtRiskCarousel({
                                                         avatarDetails={positions.lendAsset.tokenDetails}
                                                     />
                                                     <BodyText level={"body2"} weight="medium">
-                                                        ${positions.lendAsset.amount}
+                                                        {hasLowestDisplayValuePrefix(Number(positions.lendAsset.amount))}{" "}${getLowestDisplayValue(Number(positions.lendAsset.amount))}
                                                     </BodyText>
                                                 </div>
                                             </div>
@@ -207,7 +215,7 @@ export default function YourPositionsAtRiskCarousel({
                                                 </Label>
                                                 <div className="flex items-center justify-end gap-[4px]">
                                                     <BodyText level={"body2"} weight="medium">
-                                                        ${positions.borrowAsset.amount}
+                                                        {hasLowestDisplayValuePrefix(Number(positions.borrowAsset.amount))}{" "}${getLowestDisplayValue(Number(positions.borrowAsset.amount))}
                                                     </BodyText>
                                                     <AvatarCircles
                                                         avatarUrls={positions.borrowAsset.tokenImages}

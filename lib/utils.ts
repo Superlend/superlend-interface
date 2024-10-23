@@ -192,13 +192,21 @@ function parseScientific(num: number | string) {
   return [coefficient, exponent];
 }
 
-function normalizeResult(coefficient: number, exponent: number) {
+export function normalizeResult(coefficient: number, exponent: number) {
   // Normalize to standard decimal format
   return coefficient * Math.pow(10, exponent);
 }
 
 export function isLowestValue(value: number) {
   return value > 0 && value < 0.01;
+}
+
+export function hasLowestDisplayValuePrefix(value: number) {
+  return isLowestValue(Number(value)) ? "< " : "";
+}
+
+export function getLowestDisplayValue(value: number) {
+  return isLowestValue(Number(value)) ? 0.01 : abbreviateNumber(value);
 }
 
 export function getTokenLogo(tokenSymbol: string): string {
