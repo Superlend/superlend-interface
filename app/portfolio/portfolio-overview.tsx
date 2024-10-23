@@ -29,10 +29,10 @@ export default function PortfolioOverview({
         user_address: walletAddress,
     });
 
-    const COLLATERAL = getStatValue(data?.total_supplied);
-    const BORROWINGS = getStatValue(data?.total_borrowed);
-    const NET_WORTH = getStatValue(Number(data?.total_supplied ?? 0) - Number(data?.total_borrowed ?? 0));
-    const EARNINGS = getStatValue(Number(data?.platforms.reduce((acc, curr) => acc + curr.pnl, 0) ?? 0));
+    const COLLATERAL = getStatDisplayValue(data?.total_supplied);
+    const BORROWINGS = getStatDisplayValue(data?.total_borrowed);
+    const NET_WORTH = getStatDisplayValue(Number(data?.total_supplied ?? 0) - Number(data?.total_borrowed ?? 0));
+    const EARNINGS = getStatDisplayValue(Number(data?.platforms.reduce((acc, curr) => acc + curr.pnl, 0) ?? 0));
 
     const POSITIONS_BREAKDOWN_DATA = [
         {
@@ -109,11 +109,12 @@ export default function PortfolioOverview({
     )
 }
 
-function getStatValue(value: number) {
+function getStatDisplayValue(value: number) {
     const normalValue = convertScientificToNormal(value);
-    const VALUE = isLowestValue(normalValue) ? 0.01 : abbreviateNumber(normalValue);
+    const VALUE = isLowestValue(normalValue) ? 0.01 : normalValue;
+
     if (containsNegativeInteger(VALUE)) {
-        return `-$${convertNegativeToPositive(VALUE)}`
+        return `-$${abbreviateNumber(Number(convertNegativeToPositive(VALUE)))}`
     }
-    return `${isLowestValue(value) ? "<" : ""} $${VALUE}`
+    return `${isLowestValue(value) ? "<" : ""} $${abbreviateNumber(VALUE)}`
 }

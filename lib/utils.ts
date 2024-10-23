@@ -198,7 +198,7 @@ function normalizeResult(coefficient: number, exponent: number) {
 }
 
 export function isLowestValue(value: number) {
-  return !!value && value < 0.01;
+  return value > 0 && value < 0.01;
 }
 
 export function getTokenLogo(tokenSymbol: string): string {
