@@ -90,7 +90,7 @@ export default function YourPositionsAtRiskCarousel({
                 tokenDetails: lendPositions.map(position => ({
                     logo: position.token.logo,
                     symbol: position.token.symbol,
-                    amount: getSanitizedValue(position.amount),
+                    amount: getSanitizedValue(position.amount * position.token.price_usd),
                 })),
                 amount: lendAmount,
             },
@@ -99,7 +99,7 @@ export default function YourPositionsAtRiskCarousel({
                 tokenDetails: borrowPositions.map(position => ({
                     logo: position.token.logo,
                     symbol: position.token.symbol,
-                    amount: getSanitizedValue(position.amount),
+                    amount: getSanitizedValue(position.amount * position.token.price_usd),
                 })),
                 amount: borrowAmount,
             },
@@ -202,10 +202,10 @@ export default function YourPositionsAtRiskCarousel({
                                                 <div className="flex items-center gap-[4px]">
                                                     <AvatarCircles
                                                         avatarUrls={positions.lendAsset.tokenImages}
-                                                        avatarDetails={positions.lendAsset.tokenDetails}
+                                                        avatarDetails={positions.lendAsset.tokenDetails.map(token => ({ content: `${hasLowestDisplayValuePrefix(Number(token.amount))} $${getStatDisplayValue(token.amount, false)}` }))}
                                                     />
                                                     <BodyText level={"body2"} weight="medium">
-                                                        {hasLowestDisplayValuePrefix(Number(positions.lendAsset.amount))}{" "}${getLowestDisplayValue(Number(positions.lendAsset.amount))}
+                                                        {hasLowestDisplayValuePrefix(Number(positions.lendAsset.amount))} ${getStatDisplayValue(positions.lendAsset.amount, false)}
                                                     </BodyText>
                                                 </div>
                                             </div>
@@ -215,11 +215,11 @@ export default function YourPositionsAtRiskCarousel({
                                                 </Label>
                                                 <div className="flex items-center justify-end gap-[4px]">
                                                     <BodyText level={"body2"} weight="medium">
-                                                        {hasLowestDisplayValuePrefix(Number(positions.borrowAsset.amount))}{" "}${getLowestDisplayValue(Number(positions.borrowAsset.amount))}
+                                                        {hasLowestDisplayValuePrefix(Number(positions.borrowAsset.amount))} ${getStatDisplayValue(positions.borrowAsset.amount, false)}
                                                     </BodyText>
                                                     <AvatarCircles
                                                         avatarUrls={positions.borrowAsset.tokenImages}
-                                                        avatarDetails={positions.borrowAsset.tokenDetails}
+                                                        avatarDetails={positions.borrowAsset.tokenDetails.map(token => ({ content: `$${getStatDisplayValue(token.amount)}` }))}
                                                     />
                                                 </div>
                                             </div>
@@ -289,5 +289,9 @@ export default function YourPositionsAtRiskCarousel({
             }
         </section>
     );
+}
+
+function getStatDisplayValue(value: string | number, hasPrefix: boolean = true) {
+    return `${hasPrefix ? hasLowestDisplayValuePrefix(Number(value)) : ""}${getLowestDisplayValue(Number(value))}`;
 }
 

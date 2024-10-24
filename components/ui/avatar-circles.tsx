@@ -37,11 +37,11 @@ const AvatarCircles = ({
           }
 
           content={
-            avatarDetails && <Label weight="semibold" size="medium" className="">{`${hasLowestDisplayValuePrefix(avatarDetails[index].amount)} $${getLowestDisplayValue(avatarDetails[index].amount)}`}</Label>
+            avatarDetails && <Label weight="semibold" size="medium" className="">{avatarDetails[index].content}</Label>
           }
         />
       ))}
-      {moreItemsCount && moreItemsCount > 2 &&
+      {moreItemsCount && moreItemsCount > 3 &&
         <span
           className="flex h-[24px] w-[24px] items-center justify-center rounded-full border-2 border-secondary-300/75 bg-white text-center text-xs font-medium text-secondary-500 hover:bg-gray-400 dark:border-gray-800 dark:bg-white dark:text-black"
         >

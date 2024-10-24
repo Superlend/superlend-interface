@@ -202,7 +202,7 @@ export function isLowestValue(value: number) {
 }
 
 export function hasLowestDisplayValuePrefix(value: number) {
-  return isLowestValue(Number(value)) ? "< " : "";
+  return isLowestValue(Number(value)) ? "<" : "";
 }
 
 export function getLowestDisplayValue(value: number) {

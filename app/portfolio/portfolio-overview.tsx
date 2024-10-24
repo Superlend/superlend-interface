@@ -52,8 +52,6 @@ export default function PortfolioOverview({
         },
     ]
 
-    const allPositions = data.platforms.filter(platform => platform.positions.length > 0);
-
     return (
         <section id='your-stats' className="grid lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_380px] gap-[16px] px-5">
             <article>
@@ -103,6 +101,7 @@ export default function PortfolioOverview({
             <article>
                 <RadialChartStacked
                     data={data}
+                    isLoading={isLoading}
                 />
             </article>
         </section>

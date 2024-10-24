@@ -24,6 +24,7 @@ import { abbreviateNumber, capitalizeText, convertScientificToNormal, isLowestVa
 import { useContext } from "react"
 import { AssetsDataContext } from "@/context/data-provider"
 import AvatarCircles from "../ui/avatar-circles"
+import { Skeleton } from "../ui/skeleton"
 
 export const description = "A radial chart with stacked sections"
 
@@ -148,9 +149,11 @@ const CustomActiveShape = (props: any) => {
 };
 
 export function RadialChartStacked({
-    data
+    data,
+    isLoading
 }: {
-    data: TPortfolio
+    data: TPortfolio,
+    isLoading: boolean,
 }) {
     const { allChainsData } = useContext(AssetsDataContext);
     const PLATFORMS_WITH_POSITIONS = data.platforms.filter(platform => platform.positions.length > 0);
@@ -159,12 +162,7 @@ export function RadialChartStacked({
     }, 0);
     const totalPlatformsCount = PLATFORMS_WITH_POSITIONS.length;
     const chartData = PLATFORMS_WITH_POSITIONS.map((platform) => {
-        const chainDetails = allChainsData.find(chain => Number(chain.chain_id) === Number(platform.chain_id))
-
-        function getSanitizedValue(value: number) {
-            const normalValue = Number(convertScientificToNormal(value));
-            return isLowestValue(normalValue) ? normalValue.toFixed(10) : abbreviateNumber(normalValue);
-        }
+        const chainDetails = allChainsData.find(chain => Number(chain.chain_id) === Number(platform.chain_id));
 
         return {
             platform: {
@@ -192,84 +190,97 @@ export function RadialChartStacked({
             },
         }
     })
+    const platformDetails = {
+        logos: chartData.map(data => data.platform.logo),
+        platform_names: chartData.map(data => data.platform.id.split("-").join(" ")),
+    }
+    const platformTooltipNames = platformDetails.platform_names.map(name => ({ content: name }));
 
     return (
         <Card className="flex flex-col">
-            {/* <CardHeader className="items-center pb-0">
-        <CardTitle>Radial Chart - Stacked</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
-      </CardHeader> */}
             <CardContent className="flex flex-1 items-center pb-0">
-                <ChartContainer
-                    config={chartConfig}
-                    className="mx-auto aspect-square w-full max-w-[250px]"
-                >
-                    <RadialBarChart
-                        data={chartData}
-                        // endAngle={180}
-                        innerRadius={90}
-                        outerRadius={140}
+                {
+                    isLoading && <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full my-4" />
+                }
+                {!isLoading &&
+                    <ChartContainer
+                        config={chartConfig}
+                        className="mx-auto aspect-square w-full max-w-[250px]"
                     >
-                        <ChartTooltip
-                            cursor={false}
-                            // content={<ChartTooltipContent />
-                            content={
-                                <ChartTooltipContent
-                                    hideIndicator
-                                    className="rounded-6"
-                                    labelFormatter={(label, payload) => <CustomToolTip payload={payload[0].payload} />}
-                                />
-                            }
-                        />
-                        <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
-                            <Label
-                                content={({ viewBox }) => {
-                                    if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                                        return (
-                                            <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
-                                                <tspan
-                                                    x={viewBox.cx}
-                                                    y={(viewBox.cy || 0)}
-                                                    className="fill-foreground text-2xl font-bold"
-                                                >
-                                                    {openPositionsCount.toLocaleString()}
-                                                </tspan>
-                                                <tspan
-                                                    x={viewBox.cx}
-                                                    y={(viewBox.cy || 0) + 20}
-                                                    className="fill-muted-foreground"
-                                                >
-                                                    Position{openPositionsCount > 1 ? "s" : ""} open
-                                                </tspan>
-                                            </text>
-                                        )
-                                    }
-                                }}
+                        <RadialBarChart
+                            data={chartData}
+                            // endAngle={180}
+                            innerRadius={90}
+                            outerRadius={140}
+                        >
+                            <ChartTooltip
+                                cursor={false}
+                                // content={<ChartTooltipContent />
+                                content={
+                                    <ChartTooltipContent
+                                        hideIndicator
+                                        className="rounded-6"
+                                        labelFormatter={(label, payload) => <CustomToolTip payload={payload[0].payload} />}
+                                    />
+                                }
                             />
-                        </PolarRadiusAxis>
-                        {
-                            chartData.map((data, index) => (
-                                <RadialBar
-                                    key={index}
-                                    dataKey={(obj) => {
-                                        return Number(obj.platform.pnl) || 1
+                            <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+                                <Label
+                                    content={({ viewBox }) => {
+                                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                            return (
+                                                <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
+                                                    <tspan
+                                                        x={viewBox.cx}
+                                                        y={(viewBox.cy || 0)}
+                                                        className="fill-foreground text-2xl font-bold"
+                                                    >
+                                                        {openPositionsCount.toLocaleString()}
+                                                    </tspan>
+                                                    <tspan
+                                                        x={viewBox.cx}
+                                                        y={(viewBox.cy || 0) + 20}
+                                                        className="fill-muted-foreground"
+                                                    >
+                                                        Position{openPositionsCount > 1 ? "s" : ""} open
+                                                    </tspan>
+                                                </text>
+                                            )
+                                        }
                                     }}
-                                    stackId="a"
-                                    cornerRadius={16}
-                                    fill={`var(--color-${index + 1})`}
-                                    className="stroke-transparent stroke-2"
                                 />
-                            ))
-                        }
-                    </RadialBarChart>
-                </ChartContainer>
+                            </PolarRadiusAxis>
+                            {
+                                chartData.map((data, index) => (
+                                    <RadialBar
+                                        key={index}
+                                        dataKey={(obj) => {
+                                            return Number(obj.platform.pnl) || 1
+                                        }}
+                                        stackId="a"
+                                        cornerRadius={16}
+                                        fill={`var(--color-${index + 1})`}
+                                        className="stroke-transparent stroke-2"
+                                    />
+                                ))
+                            }
+                        </RadialBarChart>
+                    </ChartContainer>}
             </CardContent>
             <CardFooter className="flex-col gap-2 text-sm">
-                <div className="flex items-center gap-2 font-medium leading-none">
-                    {/* <StackedIcons list={ICONS_LIST} /> */}
-                    Spread across {totalPlatformsCount} platform{totalPlatformsCount > 1 ? "s" : ""}
-                </div>
+                {isLoading && <Skeleton className="h-7 w-full max-w-[200px] rounded-3" />}
+                {!isLoading &&
+                    <div className="flex items-center gap-2 font-medium leading-none">
+                        {totalPlatformsCount > 0 && <AvatarCircles avatarUrls={platformDetails.logos} avatarDetails={platformTooltipNames} />}
+                        Spread across {totalPlatformsCount} platform{totalPlatformsCount > 1 ? "s" : ""}
+                    </div>
+                }
             </CardFooter>
         </Card>
     )
+}
+
+function getSanitizedValue(value: number) {
+    const normalValue = Number(convertScientificToNormal(value));
+    return isLowestValue(normalValue) ? normalValue.toFixed(10) : abbreviateNumber(normalValue);
 }
