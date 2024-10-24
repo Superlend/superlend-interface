@@ -22,6 +22,11 @@ export default function ImageWithBadge({
     mainImgAlt,
     badgeImgAlt
 }: IProps) {
+    const mainImgSizes = {
+        height: `max-h-[${mainImgHeight || 20}px]`,
+        width: `max-w-[${mainImgWidth || 20}px]`,
+    }
+
     return (
         <span className='relative shrink-0'>
             <ImageWithDefault
@@ -29,7 +34,7 @@ export default function ImageWithBadge({
                 alt={mainImgAlt}
                 width={mainImgWidth || 20}
                 height={mainImgHeight || 20}
-                className='relative rounded-full shrink-0 object-contain'
+                className={`relative rounded-full shrink-0 object-contain ${mainImgSizes.width} ${mainImgSizes.height}`}
             />
             <ImageWithDefault
                 src={badgeImg}

@@ -4,6 +4,7 @@ import { useAppKit } from '@reown/appkit/react'
 import { useAccount } from 'wagmi';
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from './ui/button';
+import useIsClient from '@/hooks/useIsClient';
 
 type TProps = {
     // isConnecting: boolean;
@@ -20,13 +21,9 @@ export default function ConnectWalletButton(
     //     onConnect,
     // }: TProps
 ) {
-    const [isClient, setIsClient] = useState(false)
+    const { isClient } = useIsClient();
     const { open: openAuthModal, close: closeAuthModal } = useAppKit();
     const { address, isConnecting, isDisconnected } = useAccount();
-
-    useEffect(() => {
-        setIsClient(true)
-    }, [])
 
     function onConnect() {
         openAuthModal();

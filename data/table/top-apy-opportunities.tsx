@@ -148,7 +148,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 <span className="flex items-center gap-2">
                     {Number(row.getValue("max_ltv")) > 0 &&
                         <span>
-                            {`${Number(row.getValue("max_ltv")).toFixed(0)}%`}
+                            {`${Number(row.getValue("max_ltv")).toFixed(2)}%`}
                         </span>}
                     {Number(row.getValue("max_ltv")) === 0 &&
                         <InfoTooltip
