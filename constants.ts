@@ -1,9 +1,11 @@
 import { Period, PeriodDisplay } from "./types/periodButtons";
-import { PlatformWebsiteLink } from "./types/platform";
+import { PlatformValue, PlatformWebsiteLink } from "./types/platform";
 
 export type TPlatformWebsiteLinks = {
   aave: PlatformWebsiteLink.AAVE;
   compound: PlatformWebsiteLink.COMPOUND;
+  fluid: PlatformWebsiteLink.FLUID;
+  morpho: PlatformWebsiteLink.MORPHO;
 };
 
 export type TChainNamesBasedOnAaveMarkets = {
@@ -93,6 +95,8 @@ export const STABLECOINS_NAMES_LIST = [
 export const platformWebsiteLinks: TPlatformWebsiteLinks = {
   aave: PlatformWebsiteLink.AAVE,
   compound: PlatformWebsiteLink.COMPOUND,
+  fluid: PlatformWebsiteLink.FLUID,
+  morpho: PlatformWebsiteLink.MORPHO,
 };
 
 export const SHEET_FORM_URL =

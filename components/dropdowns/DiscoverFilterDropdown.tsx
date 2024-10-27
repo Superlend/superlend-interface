@@ -28,6 +28,7 @@ import { STABLECOINS_NAMES_LIST } from '@/constants';
 import SearchInput from '../inputs/SearchInput';
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams';
 import { useSearchParams } from 'next/navigation';
+import { PlatformLogo, ProtocolIdentifier } from '@/types/platform';
 
 export default function DiscoverFilterDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
@@ -37,16 +38,16 @@ export default function DiscoverFilterDropdown() {
     const getFiltersFromURL = () => ({
         token_ids: searchParams.get('token_ids')?.split(',') || [],
         chain_ids: searchParams.get('chain_ids')?.split(',') || [],
-        platform_ids: searchParams.get('platform_ids')?.split(',') || [],
+        protocol_ids: searchParams.get('protocol_ids')?.split(',') || [],
     });
     const filters = getFiltersFromURL();
     const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(STABLECOINS_NAMES_LIST.every(name => filters.token_ids.includes(name)) || false)
     const { width: screenWidth } = useDimensions();
     const isDesktop = screenWidth > 768;
 
-    const hasActiveFilters = !!filters.token_ids.length || !!filters.chain_ids.length || !!filters.platform_ids.length;
-    const activeFiltersTotalCount = filters.token_ids.length + filters.chain_ids.length + filters.platform_ids.length;
-    const getActiveFiltersCountByCategory = (filterName: keyof typeof filters) => filters[filterName].length;
+    const hasActiveFilters = !!filters.token_ids.length || !!filters.chain_ids.length || !!filters.protocol_ids.length;
+    const activeFiltersTotalCount = filters.token_ids.length + filters.chain_ids.length + filters.protocol_ids.length;
+    const getActiveFiltersCountByCategory = (filterName: keyof typeof filters) => filters[filterName]?.length;
 
     const allTokenOptions = Object.values(allTokensData).flat(1)
         .reduce((acc: TToken[], current: any) => {
@@ -63,14 +64,24 @@ export default function DiscoverFilterDropdown() {
 
     const allPlatformsData = [
         {
-            logo: allTokenOptions?.find((token: any) => token.token_id === 'AAVE')?.logo || "",
+            logo: PlatformLogo.AAVE,
             name: "AAVE",
-            platform_id: "AAVE"
+            protocol_id: "AAVE"
         },
         {
-            logo: allTokenOptions?.find((token: any) => token.token_id === 'COMP')?.logo || "",
+            logo: PlatformLogo.COMPOUND,
             name: "COMPOUND",
-            platform_id: "COMPOUND"
+            protocol_id: "COMPOUND"
+        },
+        {
+            logo: PlatformLogo.MORPHO,
+            name: "MORPHO",
+            protocol_id: "MORPHO"
+        },
+        {
+            logo: PlatformLogo.FLUID,
+            name: "FLUID",
+            protocol_id: "FLUID"
         },
     ]
 
@@ -85,7 +96,7 @@ export default function DiscoverFilterDropdown() {
         },
         {
             label: "Platforms",
-            value: "platform",
+            value: "protocol",
         },
     ]
 
@@ -98,8 +109,8 @@ export default function DiscoverFilterDropdown() {
             type: "chain",
             options: allChainsData
         },
-        platform: {
-            type: "platform",
+        protocol: {
+            type: "protocol",
             options: allPlatformsData
         },
     };
@@ -129,7 +140,7 @@ export default function DiscoverFilterDropdown() {
         updateSearchParams({
             token_ids: undefined,
             chain_ids: undefined,
-            platform_ids: undefined,
+            protocol_ids: undefined,
         });
         setIsStablecoinsSelected(false)
     }
@@ -285,12 +296,12 @@ function FilterOptions({
     const getFiltersFromURL = () => ({
         token_ids: searchParams.get('token_ids')?.split(',') || [],
         chain_ids: searchParams.get('chain_ids')?.split(',') || [],
-        platform_ids: searchParams.get('platform_ids')?.split(',') || [],
+        protocol_ids: searchParams.get('protocol_ids')?.split(',') || [],
     });
 
     const filters = getFiltersFromURL();
     const isSelected = (id: number | string, filterType: string) => {
-        return filters[`${filterType}_ids` as keyof typeof filters].includes(id.toString());
+        return filters[`${filterType}_ids` as keyof typeof filters]?.includes(id.toString());
     };
     const handleSelection = (id: number | string | null, filterType: string) => {
         const currentFilters = filters[`${filterType}_ids` as keyof typeof filters];
