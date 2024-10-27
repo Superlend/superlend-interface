@@ -63,22 +63,21 @@ export function DataTable<TData, TValue>({
         columns,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
+        getSortedRowModel: getSortedRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         state: {
             globalFilter: filters.trim(),
             columnVisibility,
             sorting,
-            pagination,
+            // pagination,
         },
         onGlobalFilterChange: setFilters,
-        getSortedRowModel: getSortedRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         initialState: initialState,
         enableSortingRemoval: false,
         onSortingChange: setSorting,
-        onPaginationChange: setPagination,
-        manualPagination: true,
-        pageCount: Math.ceil(totalRows / pagination.pageSize),
+        // onPaginationChange: setPagination,
+        // pageCount: Math.ceil(totalRows / pagination.pageSize),
     })
 
     return (
@@ -169,13 +168,13 @@ export function DataTable<TData, TValue>({
                     </div>
                     <div className="pagination-controls flex items-center justify-end space-x-2 flex-1 shrink-0 ml-16">
                         <Label size="medium" weight="medium" className="hidden xs:block shrink-0">
-                            {data.length.toLocaleString()} {" "}
+                            {table.getRowModel().rows.length.toLocaleString()} {" "}
                             of {totalRows.toLocaleString()} rows
                         </Label>
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setPagination({ ...pagination, pageIndex: 0 })}
+                            onClick={() => table.setPageIndex(0)}
                             disabled={!table.getCanPreviousPage()}
                         >
                             <ChevronsLeft className="w-5 h-5" />
@@ -183,7 +182,7 @@ export function DataTable<TData, TValue>({
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setPagination({ ...pagination, pageIndex: pagination.pageIndex - 1 })}
+                            onClick={() => table.previousPage()}
                             disabled={!table.getCanPreviousPage()}
                         >
                             <ChevronLeft className="w-5 h-5" />
@@ -191,7 +190,7 @@ export function DataTable<TData, TValue>({
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setPagination({ ...pagination, pageIndex: pagination.pageIndex + 1 })}
+                            onClick={() => table.nextPage()}
                             disabled={!table.getCanNextPage()}
                         >
                             <ChevronRight className="w-5 h-5" />
@@ -199,7 +198,7 @@ export function DataTable<TData, TValue>({
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setPagination({ ...pagination, pageIndex: table.getPageCount() - 1 })}
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                             disabled={!table.getCanNextPage()}
                         >
                             <ChevronsRight className="w-5 h-5" />

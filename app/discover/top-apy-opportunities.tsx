@@ -29,14 +29,15 @@ export default function TopApyOpportunities() {
     const positionTypeParam = searchParams.get("position_type") || "lend";
     const tokenIdsParam = searchParams.get('token_ids')?.split(',') || [];
     const chainIdsParam = searchParams.get('chain_ids')?.split(',') || [];
-    const platformIdsParam = searchParams.get('platform_ids')?.split(',') || [];
+    const platformIdsParam = searchParams.get('protocol_ids')?.split(',') || [];
     const keywordsParam = searchParams.get("keywords") || "";
+    const pageParam = searchParams.get('page');
     const { width: screenWidth } = useDimensions();
     const [sorting, setSorting] = useState<SortingState>([
         { id: 'apy_current', desc: positionTypeParam === "lend" },
     ]);
     const [pagination, setPagination] = useState<PaginationState>({
-        pageIndex: 0,
+        pageIndex: Number(pageParam) || 0,
         pageSize: 10,
     });
     const [columnVisibility, setColumnVisibility] = useState({
@@ -54,17 +55,6 @@ export default function TopApyOpportunities() {
         tokens: tokenIdsParam
     });
     const { allChainsData } = useContext<any>(AssetsDataContext);
-    // const initialState = {
-    //     sorting: [
-    //         {
-    //             id: "apy_current",
-    //             desc: true
-    //         }
-    //     ]
-    // }
-
-    const lastParamString = useRef('');
-    const isInitialMount = useRef(true);
 
     useEffect(() => {
         setColumnVisibility(() => {
@@ -73,62 +63,27 @@ export default function TopApyOpportunities() {
                 borrows: positionTypeParam === "borrow",
             }
         })
-    }, [positionTypeParam])
-
-    useEffect(() => {
         setSorting([{ id: 'apy_current', desc: positionTypeParam === "lend" }])
     }, [positionTypeParam])
 
-    const updatePageInUrl = useCallback((newPage: number) => {
-        const newParams = new URLSearchParams(searchParams.toString());
-        newParams.set("page", newPage.toString());
-        router.push(`${pathname}?${newParams.toString()}`, { scroll: false });
-    }, [searchParams, router, pathname]);
+    // useEffect(() => {
+    //     const pageParam = searchParams.get('page');
+    //     if (pageParam) {
+    //         const pageIndex = Math.max(0, parseInt(pageParam) - 1);
+    //         setPagination(prev => ({ ...prev, pageIndex }));
+    //     }
+    // }, []);
 
-    const resetPageOnParamChange = useCallback(() => {
-        setPagination(prev => ({
-            ...prev,
-            pageIndex: 0
-        }));
-        updatePageInUrl(1);
-    }, [updatePageInUrl]);
+    // const updatePageInUrl = (newPage: number) => {
+    //     const newParams = new URLSearchParams(searchParams.toString());
+    //     newParams.set("page", newPage.toString());
+    //     router.push(`${pathname}?${newParams.toString()}`, { scroll: false });
+    // };
 
-    useEffect(() => {
-        const currentParams = new URLSearchParams(searchParams.toString());
-        const currentPage = currentParams.get('page');
-        currentParams.delete('page'); // Remove page from comparison
-        
-        const paramString = currentParams.toString();
-        
-        if (isInitialMount.current) {
-            // On initial mount, set the page from URL if it exists
-            if (currentPage) {
-                const pageIndex = Math.max(0, parseInt(currentPage) - 1);
-                setPagination(prev => ({ ...prev, pageIndex }));
-            }
-            isInitialMount.current = false;
-        } else {
-            // Only reset page if other params changed (not including page)
-            if (paramString !== lastParamString.current) {
-                resetPageOnParamChange();
-            } else if (currentPage) {
-                // If only page changed, update pagination state
-                const pageIndex = Math.max(0, parseInt(currentPage) - 1);
-                setPagination(prev => ({ ...prev, pageIndex }));
-            }
-        }
-        
-        lastParamString.current = paramString;
-    }, [searchParams, resetPageOnParamChange]);
-
-    const handlePaginationChange = useCallback((updatedPagination: PaginationState) => {
-        const newPageIndex = updatedPagination.pageIndex;
-        setPagination(prev => ({
-            ...prev,
-            pageIndex: newPageIndex
-        }));
-        updatePageInUrl(newPageIndex + 1);
-    }, [updatePageInUrl]);
+    // const handlePaginationChange = () => {
+    //     setPagination(state => ({ ...state, pageIndex: state.pageIndex + 1 }));
+    //     updatePageInUrl(pagination.pageIndex + 1);
+    // };
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         return {
@@ -139,33 +94,30 @@ export default function TopApyOpportunities() {
             chainLogo: allChainsData?.filter((chain: TChain) => chain.chain_id === Number(item.chain_id))[0]?.logo,
             chain_id: item.chain_id,
             chainName: allChainsData.find((chain: any) => Number(chain.chain_id) === Number(item.chain_id))?.name || "",
-            platform_id: item.platform.platform_name,
-            platformName: `${item.platform.platform_name.split("-")[0]}`,
+            protocol_identifier: item.platform.protocol_identifier,
+            platformName: `${item.platform.platform_name}`,
             platformLogo: item.platform.logo,
             apy_current: item.platform.apy.current,
             max_ltv: item.platform.max_ltv,
             deposits: `${Number(item.platform.liquidity) * Number(item.token.price_usd)}`,
             borrows: `${Number(item.platform.borrows) * Number(item.token.price_usd)}`,
             utilization: item.platform.utilization_rate,
+            additional_rewards: item.platform.additional_rewards,
+            rewards: item.platform.rewards,
         }
     });
 
-    const filteredTableData = rawTableData.filter((opportunity) => {
-        return platformIdsParam.includes(opportunity.platformName)
+    const filteredTableDataByPlatformIds = rawTableData.filter((opportunity) => {
+        return platformIdsParam.includes(opportunity.platformName.split("-")[0])
     });
 
-    const tableData = platformIdsParam.length > 0 ? filteredTableData : rawTableData;
-
-    const paginatedData = useMemo(() => {
-        const startIndex = pagination.pageIndex * pagination.pageSize;
-        return tableData.slice(startIndex, startIndex + pagination.pageSize);
-    }, [tableData, pagination.pageIndex, pagination.pageSize]);
+    const tableData = platformIdsParam.length > 0 ? filteredTableDataByPlatformIds : rawTableData;
 
     function handleRowClick(rowData: any) {
         if (screenWidth < 768) return;
 
-        const { tokenAddress, platform_id, chain_id } = rowData;
-        const url = `/position-management?token=${tokenAddress}&platform_id=${platform_id}&chain_id=${chain_id}`
+        const { tokenAddress, protocol_identifier, chain_id } = rowData;
+        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}`
         router.push(url);
     }
 
@@ -217,18 +169,17 @@ export default function TopApyOpportunities() {
                 {!isLoadingOpportunitiesData &&
                     <DataTable
                         columns={columns}
-                        data={paginatedData}
+                        data={tableData}
                         totalRows={tableData.length}
                         filters={keywordsParam}
                         setFilters={handleKeywordChange}
                         handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
-                        // initialState={initialState}
                         sorting={sorting}
                         setSorting={setSorting}
                         pagination={pagination}
-                        setPagination={handlePaginationChange}
+                        setPagination={setPagination}
                     />}
                 {isLoadingOpportunitiesData && (
                     <LoadingSectionSkeleton />
