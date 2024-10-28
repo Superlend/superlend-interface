@@ -38,8 +38,8 @@ interface DataTableProps<TData, TValue> {
     initialState?: any
     sorting?: SortingState
     setSorting?: React.Dispatch<React.SetStateAction<SortingState>>
-    pagination: PaginationState
-    setPagination: any
+    pagination?: PaginationState
+    setPagination?: any
     totalRows: number
 }
 

@@ -136,6 +136,7 @@ export default function AllPositions() {
                         // handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
+                        totalRows={tableData.length}
                     />}
                 {isLoadingPortfolioData && (
                     <LoadingSectionSkeleton />

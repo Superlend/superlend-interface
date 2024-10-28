@@ -1,7 +1,7 @@
 import React from 'react'
 import { BodyText, HeadingText } from '@/components/ui/typography'
 import ChainSelectorDropdown from '@/components/dropdowns/ChainSelectorDropdown'
-import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown'
+import DiscoverFiltersDropdown from '@/components/dropdowns/DiscoverFiltersDropdown'
 import { DataTable } from '@/components/ui/data-table'
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'

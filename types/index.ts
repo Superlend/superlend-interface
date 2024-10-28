@@ -120,7 +120,6 @@ export type TOpportunityTable = {
   deposits: string;
   borrows: string;
   utilization: string;
-  additional_rewards: string;
 };
 
 // Platform

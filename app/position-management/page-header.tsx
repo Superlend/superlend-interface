@@ -113,7 +113,7 @@ export default function PageHeader() {
                                     height={28}
                                     className="rounded-full max-w-[28px] max-h-[28px]"
                                 />
-                                <HeadingText level='h4' className='uppercase'>{tokenSymbol}</HeadingText>
+                                <HeadingText level='h4' className='uppercase truncate max-w-[150px]'>{tokenSymbol}</HeadingText>
                             </div>
                             <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
                             <div className="flex items-center gap-[8px]">
@@ -124,7 +124,7 @@ export default function PageHeader() {
                                     height={28}
                                     className="rounded-full max-w-[28px] max-h-[28px]"
                                 />
-                                <HeadingText level='h4' className='uppercase'>{chainName}</HeadingText>
+                                <HeadingText level='h4' className='uppercase truncate max-w-[150px]'>{chainName}</HeadingText>
                             </div>
                         </div>
                     }
@@ -286,7 +286,7 @@ function getPlatformWebsiteLink({
     const baseUrl = platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
     const paths: any = {
         aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName)}_v3`,
-        compoundPath: `/markets/v2`,
+        compound: `/markets/v2`,
         fluid: "",
         mopho: ""
     }

@@ -6,7 +6,7 @@ import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import { BodyText, Label } from "@/components/ui/typography";
 import { OpportunitiesContext } from "@/context/opportunities-provider";
 import useDimensions from "@/hooks/useDimensions";
-import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive, getPlatformVersion } from "@/lib/utils";
+import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive, getPlatformVersion } from "@/lib/utils";
 import { TOpportunityTable } from "@/types";
 import { PlatformLogo } from "@/types/platform";
 import { ColumnDef } from "@tanstack/react-table";
@@ -94,7 +94,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
-                    <span className="truncate">{`${platformName.split("-")[0]} ${platformVersion}`}</span>
+                    <span className="truncate">{`${capitalizeText(platformName)} ${platformVersion}`}</span>
                 </span>
             )
         },
@@ -118,11 +118,22 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
         },
         cell: ({ row }) => {
-            if (`${Number(row.getValue("apy_current")).toFixed(2)}` === "0.00") {
+            const apyCurrent = Number(row.getValue("apy_current"));
+            const apyCurrentFormatted = apyCurrent.toFixed(2);
+            let morphoReward = "";
+            let morphoRewardFormatted = "";
+            const hasRewards = row.original?.rewards && row.original?.rewards.length > 0;
+            
+            if (hasRewards) {
+                morphoReward = abbreviateNumber(apyCurrent - Number(row.original?.rewards[0]?.supply_apy || 0));
+                morphoRewardFormatted = Number(morphoReward) < 0.01 ? "<0.01" : morphoReward;
+            }
+
+            if (!apyCurrent) {
                 return (
                     <InfoTooltip
                         label={
-                            <TooltipText>{`${Number(row.getValue("apy_current")).toFixed(2)}%`}</TooltipText>
+                            <TooltipText>{`${apyCurrentFormatted}%`}</TooltipText>
                         }
                         content={"This asset is non-borrowable"}
                     />
@@ -132,9 +143,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
 
             return (
                 <span className="flex items-center gap-1" >
-                    <span className="">{`${Number(row.getValue("apy_current")).toFixed(2)}%`}</span>
+                    <span className="">{`${apyCurrentFormatted}%`}</span>
                     {
-                        row.original.additional_rewards && (
+                        hasRewards && (
                             <InfoTooltip
                                 label={
                                     <img src="/icons/sparkles.svg" width={22} height={22} className="cursor-pointer hover:scale-110" />
@@ -147,7 +158,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                                 <Label weight="normal">Rate</Label>
                                             </span>
                                             <BodyText level="body2" weight="medium">
-                                                +{abbreviateNumber(row.getValue("apy_current"))}%
+                                                + {abbreviateNumber(apyCurrent)}%
                                             </BodyText>
                                         </span>
                                         <span className="flex items-center justify-between gap-6">
@@ -156,7 +167,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                                 <Label weight="normal">Morpho</Label>
                                             </span>
                                             <BodyText level="body2" weight="medium">
-                                                +{abbreviateNumber(Number(row.original.rewards[0].supply_apy))}
+                                                + {morphoRewardFormatted}
                                             </BodyText>
                                         </span>
                                         <span className="flex items-center justify-between gap-6">
@@ -165,7 +176,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                                 <Label weight="normal">Net APY</Label>
                                             </span>
                                             <BodyText level="body2" weight="medium">
-                                                = {abbreviateNumber(row.getValue("apy_current"))}%
+                                                = {abbreviateNumber(apyCurrent)}%
                                             </BodyText>
                                         </span>
                                     </span>

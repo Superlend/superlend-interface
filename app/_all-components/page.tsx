@@ -4,7 +4,7 @@ import { BodyText, HeadingText, Label } from "@/components/ui/typography";
 import { Badge } from "@/components/ui/badge";
 // import GraphDropdown from "@/components/dropdowns/GraphDropdown";
 import ChainSelectorDropdown from "@/components/dropdowns/ChainSelectorDropdown";
-import DiscoverFilterDropdown from "@/components/dropdowns/DiscoverFilterDropdown";
+// import DiscoverFiltersDropdown from "@/components/dropdowns/DiscoverFiltersDropdown";
 // import LendBorrowToggle from '@/components/LendBorrowToggle';
 import SearchInput from '@/components/inputs/SearchInput';
 
