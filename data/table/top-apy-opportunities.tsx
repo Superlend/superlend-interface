@@ -7,12 +7,12 @@ import { BodyText, Label } from "@/components/ui/typography";
 import { OpportunitiesContext } from "@/context/opportunities-provider";
 import useDimensions from "@/hooks/useDimensions";
 import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive, getPlatformVersion } from "@/lib/utils";
-import { TOpportunityTable } from "@/types";
+import { TOpportunityTable, TReward } from "@/types";
 import { PlatformLogo } from "@/types/platform";
 import { ColumnDef } from "@tanstack/react-table";
 import { Percent } from "lucide-react";
 import Link from "next/link";
-import { useContext } from "react";
+import { Fragment, useContext } from "react";
 
 export const columns: ColumnDef<TOpportunityTable>[] = [
     {
@@ -120,13 +120,18 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const apyCurrent = Number(row.getValue("apy_current"));
             const apyCurrentFormatted = apyCurrent.toFixed(2);
-            let morphoReward = "";
-            let morphoRewardFormatted = "";
             const hasRewards = row.original?.rewards && row.original?.rewards.length > 0;
-            
+            // Declare tooltip content related variables
+            let baseRate, baseRateFormatted, rewards, totalRewards, rewardFormatted;
+
             if (hasRewards) {
-                morphoReward = abbreviateNumber(apyCurrent - Number(row.original?.rewards[0]?.supply_apy || 0));
-                morphoRewardFormatted = Number(morphoReward) < 0.01 ? "<0.01" : morphoReward;
+                // Update rewards grouped by asset address
+                rewards = getRewardsGroupedByAsset(row.original?.rewards)
+                // Get total rewards
+                totalRewards = rewards.reduce((acc, curr) => acc + Number(curr.supply_apy), 0);
+                // Base rate = APY - Asset Total Rewards
+                baseRate = abbreviateNumber(apyCurrent - totalRewards);
+                baseRateFormatted = Number(baseRate) < 0.01 ? "<0.01" : baseRate;
             }
 
             if (!apyCurrent) {
@@ -158,18 +163,24 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                                 <Label weight="normal">Rate</Label>
                                             </span>
                                             <BodyText level="body2" weight="medium">
-                                                + {abbreviateNumber(apyCurrent)}%
+                                                + {baseRateFormatted}%
                                             </BodyText>
                                         </span>
-                                        <span className="flex items-center justify-between gap-6">
-                                            <span className="flex items-center gap-1">
-                                                <ImageWithDefault src={PlatformLogo.MORPHO} width={16} height={16} className="cursor-pointer hover:scale-110" />
-                                                <Label weight="normal">Morpho</Label>
-                                            </span>
-                                            <BodyText level="body2" weight="medium">
-                                                + {morphoRewardFormatted}
-                                            </BodyText>
-                                        </span>
+                                        {
+                                            rewards?.map((reward: TReward) => (
+                                                <Fragment key={reward.asset.address}>
+                                                    <span className="flex items-center justify-between gap-6">
+                                                        <span className="flex items-center gap-1">
+                                                            <ImageWithDefault src={reward.asset.logo} width={16} height={16} className="cursor-pointer hover:scale-110" />
+                                                            <Label weight="normal" className="truncate">{reward.asset.name}</Label>
+                                                        </span>
+                                                        <BodyText level="body2" weight="medium">
+                                                            {abbreviateNumber(reward.supply_apy)}
+                                                        </BodyText>
+                                                    </span>
+                                                </Fragment>
+                                            ))
+                                        }
                                         <span className="flex items-center justify-between gap-6">
                                             <span className="flex items-center gap-1">
                                                 <ImageWithDefault src="/icons/sparkles.svg" width={16} height={16} className="cursor-pointer hover:scale-110" />
@@ -293,4 +304,21 @@ function TooltipText({ children }: { children: React.ReactNode }) {
             {children}
         </span>
     )
+}
+
+/**
+ * Get rewards grouped by asset address
+ * @param rewards 
+ * @returns rewards grouped by asset address
+ */
+function getRewardsGroupedByAsset(rewards: TReward[]) {
+    return rewards.reduce((acc: TReward[], curr: TReward) => {
+        const existing = acc.find(item => item.asset.address === curr.asset.address);
+        if (existing) {
+            existing.supply_apy += curr.supply_apy;
+        } else {
+            acc.push(curr);
+        }
+        return acc;
+    }, []);
 }

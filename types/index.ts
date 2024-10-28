@@ -56,6 +56,19 @@ export type TGetOpportunitiesParams = {
   limit?: number;
 };
 
+export type TReward = {
+  supply_apy: number;
+  borrow_apy: number;
+  asset: {
+    symbol: string;
+    name: string;
+    address: `0x${string}`;
+    decimals: number;
+    logo: string;
+    price_usd: number;
+  };
+};
+
 export type TOpportunity = {
   token: {
     address: string;
@@ -81,26 +94,13 @@ export type TOpportunity = {
       avg_7days: string;
       avg_30days: string;
     };
-    rewards: any[];
+    rewards: TReward[];
   };
   trend: {
     value: string;
     type: string;
   };
 };
-
-// {
-//   supply_apy?: number;
-//   borrow_apy?: number;
-//   asset?: {
-//     symbol: string;
-//     name: string;
-//     address: `0x${string}`;
-//     decimals: number;
-//     logo: string;
-//     price_usd: number;
-//   };
-// }
 
 export type TOpportunityTable = {
   tokenAddress: string;
@@ -115,7 +115,7 @@ export type TOpportunityTable = {
   platformLogo: string;
   apy_current: string;
   additional_rewards: boolean;
-  rewards: any[];
+  rewards: TReward[];
   max_ltv: number;
   deposits: string;
   borrows: string;
