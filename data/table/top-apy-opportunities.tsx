@@ -6,7 +6,7 @@ import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import { BodyText, Label } from "@/components/ui/typography";
 import { OpportunitiesContext } from "@/context/opportunities-provider";
 import useDimensions from "@/hooks/useDimensions";
-import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive, getPlatformVersion } from "@/lib/utils";
+import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive, getPlatformVersion } from "@/lib/utils";
 import { TOpportunityTable } from "@/types";
 import { PlatformLogo } from "@/types/platform";
 import { ColumnDef } from "@tanstack/react-table";
@@ -94,7 +94,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
-                    <span className="truncate">{`${platformName.split("-")[0]} ${platformVersion}`}</span>
+                    <span className="truncate">{`${capitalizeText(platformName)} ${platformVersion}`}</span>
                 </span>
             )
         },

@@ -124,3 +124,7 @@ export function getPlatformVersion(platformName: string): string {
   const versionMatch = platformName?.split("-")[1]?.toLowerCase()?.match(/v2|v3|v\d+/);
   return versionMatch ? versionMatch[0].toUpperCase() : "";
 }
+
+export function capitalizeText(text: string) {
+  return `${text.split("-")[0][0]}${text.split("-")[0].slice(1).toLowerCase()}`;
+}
