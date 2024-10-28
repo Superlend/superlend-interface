@@ -120,7 +120,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const apyCurrent = Number(row.getValue("apy_current"));
             const apyCurrentFormatted = apyCurrent.toFixed(2);
-            const morphoReward = abbreviateNumber(apyCurrent - Number(row.original.rewards[0]?.supply_apy));
+            const morphoReward = abbreviateNumber(apyCurrent - Number(row.original?.rewards[0]?.supply_apy || 0));
             const morphoRewardFormatted = Number(morphoReward) < 0.01 ? "<0.01" : morphoReward;
 
             if (!apyCurrent) {
