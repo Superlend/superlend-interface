@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import React, { useContext, useEffect } from 'react';
 import { BodyText, HeadingText, Label } from '@/components/ui/typography';
 import { Badge } from '@/components/ui/badge';
-import { abbreviateNumber, getTokenLogo } from '@/lib/utils';
+import { abbreviateNumber, getPlatformVersion, getTokenLogo } from '@/lib/utils';
 import ImageWithDefault from '@/components/ImageWithDefault';
 import { Skeleton } from '@/components/ui/skeleton';
 import { notFound, useRouter } from 'next/navigation';
@@ -23,7 +23,7 @@ export default function PageHeader() {
     const searchParams = useSearchParams();
     const tokenAddress = searchParams.get("token") || "";
     const chain_id = searchParams.get("chain_id") || 0;
-    const platform_id = searchParams.get("platform_id") || "";
+    const protocol_identifier = searchParams.get("protocol_identifier") || "";
     const { allChainsData } = useContext(AssetsDataContext);
 
     // [API_CALL: GET] - Get Platform data
@@ -32,7 +32,7 @@ export default function PageHeader() {
         isLoading: isLoadingPlatformData,
         isError: isErrorPlatformData
     } = useGetPlatformData({
-        platform_id,
+        protocol_identifier,
         chain_id: Number(chain_id),
     });
 
@@ -59,13 +59,13 @@ export default function PageHeader() {
         isErrorPlatformData,
         tokenAddress,
         chain_id,
-        platform_id,
+        protocol_identifier,
         isLoadingPlatformData,
     ])
 
     const pageHeaderStats = getPageHeaderStats({
         tokenAddress,
-        platformData
+        platformData: platformData as TPlatform
     })
 
     const tokenSymbol = tokenDetails?.symbol;
@@ -73,12 +73,12 @@ export default function PageHeader() {
     const tokenName = tokenDetails?.name;
     const chainName = chainDetails?.name;
     const chainLogo = chainDetails?.logo;
-    const platformName = platform_id.split("-").slice(0, 2).join(" ");
+    const platformName = platformData.platform.platform_name.split("-").slice(0, 2).join(" ");
     const platformLogo = platformData?.platform.logo;
     const platformWebsiteLink = getPlatformWebsiteLink({
         tokenAddress,
         chainName,
-        platform_id,
+        platformName,
     });
 
     return (
@@ -132,7 +132,7 @@ export default function PageHeader() {
                         <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit'>
                             <div className="flex items-center gap-1">
                                 <img src={platformLogo} alt={`${platformName} Platform`} width={16} height={16} className='object-contain shrink-0' />
-                                <Label weight='medium' className='leading-[0]'>{platformName}</Label>
+                                <Label weight='medium' className='leading-[0]'>{`${platformName.split(" ")[0]} ${getPlatformVersion(platformName)}`}</Label>
                             </div>
                             <a
                                 className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
@@ -257,7 +257,7 @@ function getAssetTooltipContent({
             label: "Platform",
             image: platformLogo,
             imageAlt: platformName,
-            displayName: platformName
+            displayName: `${platformName.split(" ")[0]} ${getPlatformVersion(platformName)}`
         },
     ]
     return (
@@ -280,13 +280,18 @@ function getAssetTooltipContent({
 function getPlatformWebsiteLink({
     tokenAddress,
     chainName,
-    platform_id,
+    platformName,
 }: any) {
-    const baseUrl = platformWebsiteLinks[platform_id?.split("-")[0].toLowerCase() as keyof typeof platformWebsiteLinks];
-    const aavePath = `${baseUrl}/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName)}_v3`;
-    const compoundPath = `/markets/v2`;
-    const path = platform_id?.split("-")[0].toLowerCase() === "aave" ? aavePath : compoundPath;
-    return `${new URL(path, baseUrl)}`
+    const platformNameId = platformName?.split(" ")[0].toLowerCase();
+    const baseUrl = platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
+    const paths: any = {
+        aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName)}_v3`,
+        compoundPath: `/markets/v2`,
+        fluid: "",
+        mopho: ""
+    }
+    const path = paths[platformNameId];
+    return `${baseUrl}${path}`
 }
 
 function getChainNameBasedOnAaveMarkets(chainName: string) {

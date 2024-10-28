@@ -115,3 +115,18 @@ export function getPlatformLogo(platformName: string): string {
 export function capitalizeText(text: string) {
   return `${text.split("-")[0][0]}${text.split("-")[0].slice(1).toLowerCase()}`;
 }
+/**
+ * Extracts the version string subset from a hyphen-delimited platform name, 
+ * having version string subset on 1st index position.
+ * 
+ * @param {string} platformName - The hyphen-delimited platform name.
+ * @returns {string} The extracted version string subset or an empty string if not found.
+ * 
+ * Example:
+ * - If platformName is "AAVE-V3-ETHEREUM", returns "V3".
+ * - If platformName is "FLUID-ETHEREUM", returns an empty string.
+ */
+export function getPlatformVersion(platformName: string): string {
+  const versionMatch = platformName?.split("-")[1]?.toLowerCase()?.match(/v2|v3|v\d+/);
+  return versionMatch ? versionMatch[0].toUpperCase() : "";
+}

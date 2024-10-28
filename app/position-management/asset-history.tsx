@@ -15,7 +15,7 @@ export default function AssetHistory() {
     const searchParams = useSearchParams();
     const tokenAddress = searchParams.get("token") || "";
     // const chain_id = searchParams.get("chain_id") || "";
-    const platform_id = searchParams.get("platform_id") || "";
+    const protocol_identifier = searchParams.get("protocol_identifier") || "";
     const [selectedRange, setSelectedRange] = useState<Period>(Period.oneMonth);
     const [selectedFilter, setSelectedFilter] = useState<any>(HISTORY_CHART_SELECT_OPTIONS[0]);
 
@@ -25,7 +25,7 @@ export default function AssetHistory() {
         isLoading: isLoadingPlatformHistory,
         isError: isErrorPlatformHistory
     } = useGetPlatformHistoryData({
-        platform_id,
+        protocol_identifier,
         token: tokenAddress,
         period: selectedRange
     });

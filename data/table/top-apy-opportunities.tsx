@@ -6,9 +6,11 @@ import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import { BodyText, Label } from "@/components/ui/typography";
 import { OpportunitiesContext } from "@/context/opportunities-provider";
 import useDimensions from "@/hooks/useDimensions";
-import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
+import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive, getPlatformVersion } from "@/lib/utils";
 import { TOpportunityTable } from "@/types";
+import { PlatformLogo } from "@/types/platform";
 import { ColumnDef } from "@tanstack/react-table";
+import { Percent } from "lucide-react";
 import Link from "next/link";
 import { useContext } from "react";
 
@@ -26,7 +28,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const chainId = row.original.chain_id;
             const chainLogo = row.original.chainLogo;
             const chainName = row.original.chainName;
-            const platformId = row.original.platform_id;
+            const platformId = row.original.protocol_identifier;
             const tooltipContent = (
                 <span className="flex flex-col gap-[16px]">
                     <span className="flex flex-col gap-[4px]">
@@ -63,7 +65,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         query: {
                             token: tokenAddress,
                             chain_id: chainId,
-                            platform_id: platformId,
+                            protocol_identifier: platformId,
                         }
                     }}
                         className="truncate">
@@ -83,7 +85,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => item.platformName,
         cell: ({ row }) => {
             const platformName: string = row.getValue("platformName");
-            const platformVersion: string = row.original.platform_id.split("-")[1]
+            const platformVersion = getPlatformVersion(platformName);
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -92,7 +94,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
-                    <span className="truncate">{`${platformName[0]}${platformName.slice(1).toLowerCase()} ${platformVersion}`}</span>
+                    <span className="truncate">{`${platformName.split("-")[0]} ${platformVersion}`}</span>
                 </span>
             )
         },
@@ -129,12 +131,49 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             }
 
             return (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1" >
                     <span className="">{`${Number(row.getValue("apy_current")).toFixed(2)}%`}</span>
-                    {row.original.additional_rewards.toString() === "true" &&
-                        <img src="/icons/sparkles.svg" width={22} height={24} />
+                    {
+                        row.original.additional_rewards && (
+                            <InfoTooltip
+                                label={
+                                    <img src="/icons/sparkles.svg" width={22} height={22} className="cursor-pointer hover:scale-110" />
+                                }
+                                content={
+                                    <span className="flex flex-col gap-3">
+                                        <span className="flex items-center justify-between gap-6">
+                                            <span className="flex items-center gap-1">
+                                                <Percent className="w-[16px] h-[16px]" />
+                                                <Label weight="normal">Rate</Label>
+                                            </span>
+                                            <BodyText level="body2" weight="medium">
+                                                +{abbreviateNumber(row.getValue("apy_current"))}%
+                                            </BodyText>
+                                        </span>
+                                        <span className="flex items-center justify-between gap-6">
+                                            <span className="flex items-center gap-1">
+                                                <ImageWithDefault src={PlatformLogo.MORPHO} width={16} height={16} className="cursor-pointer hover:scale-110" />
+                                                <Label weight="normal">Morpho</Label>
+                                            </span>
+                                            <BodyText level="body2" weight="medium">
+                                                +{abbreviateNumber(Number(row.original.rewards[0].supply_apy))}
+                                            </BodyText>
+                                        </span>
+                                        <span className="flex items-center justify-between gap-6">
+                                            <span className="flex items-center gap-1">
+                                                <ImageWithDefault src="/icons/sparkles.svg" width={16} height={16} className="cursor-pointer hover:scale-110" />
+                                                <Label weight="normal">Net APY</Label>
+                                            </span>
+                                            <BodyText level="body2" weight="medium">
+                                                = {abbreviateNumber(row.getValue("apy_current"))}%
+                                            </BodyText>
+                                        </span>
+                                    </span>
+                                }
+                            />
+                        )
                     }
-                </span>
+                </span >
             )
         },
         // enableGlobalFilter: false,
