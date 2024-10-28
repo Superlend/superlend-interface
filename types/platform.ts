@@ -33,9 +33,9 @@ export enum PlatformDisplayValue {
 }
 
 export enum PlatformWebsiteLink {
-  AAVE = "https://app.aave.com/",
-  COMPOUND = "https://app.compound.finance/",
-  FLUID = "https://fluid.instadapp.io/",
+  AAVE = "https://app.aave.com",
+  COMPOUND = "https://app.compound.finance",
+  FLUID = "https://fluid.instadapp.io",
   MORPHO = "https://app.morpho.org/?network=mainnet",
 }
 

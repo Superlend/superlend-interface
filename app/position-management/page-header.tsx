@@ -286,7 +286,7 @@ function getPlatformWebsiteLink({
     const baseUrl = platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
     const paths: any = {
         aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName)}_v3`,
-        compoundPath: `/markets/v2`,
+        compound: `/markets/v2`,
         fluid: "",
         mopho: ""
     }
