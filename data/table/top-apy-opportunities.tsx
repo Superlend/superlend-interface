@@ -8,7 +8,9 @@ import { OpportunitiesContext } from "@/context/opportunities-provider";
 import useDimensions from "@/hooks/useDimensions";
 import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive, getPlatformVersion } from "@/lib/utils";
 import { TOpportunityTable } from "@/types";
+import { PlatformLogo } from "@/types/platform";
 import { ColumnDef } from "@tanstack/react-table";
+import { Percent } from "lucide-react";
 import Link from "next/link";
 import { useContext } from "react";
 
@@ -128,8 +130,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 )
             }
 
-            // return `${Number(row.getValue("apy_current")).toFixed(2)}%`
-
             return (
                 <span className="flex items-center gap-1" >
                     <span className="">{`${Number(row.getValue("apy_current")).toFixed(2)}%`}</span>
@@ -142,19 +142,28 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 content={
                                     <span className="flex flex-col gap-3">
                                         <span className="flex items-center justify-between gap-6">
-                                            <Label weight="normal">Rate</Label>
+                                            <span className="flex items-center gap-1">
+                                                <Percent className="w-[16px] h-[16px]" />
+                                                <Label weight="normal">Rate</Label>
+                                            </span>
                                             <BodyText level="body2" weight="medium">
                                                 +{abbreviateNumber(row.getValue("apy_current"))}%
                                             </BodyText>
                                         </span>
                                         <span className="flex items-center justify-between gap-6">
-                                            <Label weight="normal">Morpho</Label>
+                                            <span className="flex items-center gap-1">
+                                                <ImageWithDefault src={PlatformLogo.MORPHO} width={16} height={16} className="cursor-pointer hover:scale-110" />
+                                                <Label weight="normal">Morpho</Label>
+                                            </span>
                                             <BodyText level="body2" weight="medium">
                                                 +{abbreviateNumber(Number(row.original.rewards[0].supply_apy))}
                                             </BodyText>
                                         </span>
                                         <span className="flex items-center justify-between gap-6">
-                                            <Label weight="normal">Net APY</Label>
+                                            <span className="flex items-center gap-1">
+                                                <ImageWithDefault src="/icons/sparkles.svg" width={16} height={16} className="cursor-pointer hover:scale-110" />
+                                                <Label weight="normal">Net APY</Label>
+                                            </span>
                                             <BodyText level="body2" weight="medium">
                                                 = {abbreviateNumber(row.getValue("apy_current"))}%
                                             </BodyText>
