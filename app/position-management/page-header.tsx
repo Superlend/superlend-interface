@@ -13,7 +13,7 @@ import { useSearchParams } from 'next/navigation';
 import useGetPlatformData from '@/hooks/useGetPlatformData';
 import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
-import { TPlatform } from '@/types';
+import { TPlatform, TPlatformAssets } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { PlatformWebsiteLink } from '@/types/platform';
 import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants';
@@ -88,21 +88,9 @@ export default function PageHeader() {
             </Button>
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-[24px] w-full">
                 <div className="flex flex-wrap items-center gap-[16px]">
-                    {
-                        isLoadingPlatformData && (
-                            <div className="flex items-center gap-[12px]">
-                                <div className="flex items-center gap-[8px]">
-                                    <Skeleton className='w-[28px] h-[28px] rounded-full' />
-                                    <Skeleton className='w-[60px] h-[28px] rounded-4' />
-                                </div>
-                                <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
-                                <div className="flex items-center gap-[8px]">
-                                    <Skeleton className='w-[28px] h-[28px] rounded-full' />
-                                    <Skeleton className='w-[60px] h-[28px] rounded-4' />
-                                </div>
-                            </div>
-                        )
-                    }
+                    {/* Loading Skeleton */}
+                    {isLoadingPlatformData && <LoadingSkeleton />}
+                    {/* Token Details */}
                     {tokenDetails?.symbol && chainDetails?.logo && !isLoadingPlatformData &&
                         <div className="flex items-center gap-[12px]">
                             <div className="flex items-center gap-[8px]">
@@ -128,6 +116,7 @@ export default function PageHeader() {
                             </div>
                         </div>
                     }
+                    {/* Platform Details */}
                     {!isLoadingPlatformData && platformLogo &&
                         <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit'>
                             <div className="flex items-center gap-1">
@@ -143,9 +132,9 @@ export default function PageHeader() {
                             </a>
                         </Badge>
                     }
+                    {/* Info Tooltip */}
                     <InfoTooltip
                         content={getAssetTooltipContent({
-                            tokenSymbol,
                             tokenLogo,
                             tokenName,
                             chainName,
@@ -155,9 +144,12 @@ export default function PageHeader() {
                         })}
                     />
                 </div>
+                {/* Page Header Stats */}
                 <div className="header-right flex flex-wrap items-center gap-[24px]">
+                    {/* Loading Skeleton */}
                     {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
-                    {!!pageHeaderStats?.supply_apy &&
+                    {/* Supply APY */}
+                    {!!Number(pageHeaderStats?.supply_apy) &&
                         <div className="flex items-center max-md:justify-between gap-[4px]">
                             <BodyText level='body1' className='text-gray-700 shrink-0'>
                                 Supply APY
@@ -169,8 +161,9 @@ export default function PageHeader() {
                             </Badge>
                         </div>
                     }
-                    {!!pageHeaderStats?.borrow_rate && <span className="hidden xs:inline-block text-gray">|</span>}
-                    {!!pageHeaderStats?.borrow_rate &&
+                    {!!Number(pageHeaderStats?.borrow_rate) && <span className="hidden xs:inline-block text-gray">|</span>}
+                    {/* Borrow Rate */}
+                    {!!Number(pageHeaderStats?.borrow_rate) &&
                         <div className="flex items-center max-md:justify-between gap-[4px]">
                             <BodyText level='body1' className='text-gray-700 shrink-0'>
                                 Borrow Rate
@@ -195,13 +188,15 @@ function getTokenDetails({
     platformData
 }: {
     tokenAddress: string;
-    platformData: any
+    platformData: TPlatform
 }) {
+    const asset = platformData?.assets?.find((asset: TPlatformAssets) => asset.token.address.toLowerCase() === tokenAddress.toLowerCase())
+
     return {
-        address: tokenAddress,
-        symbol: platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.symbol || "",
-        name: platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.name || "",
-        logo: platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.logo || "",
+        address: asset?.token?.address || tokenAddress,
+        symbol: asset?.token?.symbol || "",
+        name: asset?.token?.name || "",
+        logo: asset?.token?.logo || "",
     }
 }
 
@@ -222,8 +217,8 @@ function getPageHeaderStats({
     tokenAddress: string;
     platformData: TPlatform
 }) {
-    const [stats] = platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)
-        .map((item: any) => ({
+    const [stats] = platformData?.assets?.filter((asset: TPlatformAssets) => asset.token.address.toLowerCase() === tokenAddress.toLowerCase())
+        .map((item: TPlatformAssets) => ({
             supply_apy: abbreviateNumber(item.supply_apy),
             borrow_rate: abbreviateNumber(item.variable_borrow_apy)
         }))
@@ -232,14 +227,20 @@ function getPageHeaderStats({
 }
 
 function getAssetTooltipContent({
-    tokenSymbol,
     tokenLogo,
     tokenName,
     chainName,
     chainLogo,
     platformLogo,
     platformName,
-}: any) {
+}: {
+    tokenLogo: string;
+    tokenName: string;
+    chainName: string;
+    chainLogo: string;
+    platformLogo: string;
+    platformName: string;
+}) {
     const TooltipData = [
         {
             label: "Token",
@@ -281,7 +282,11 @@ function getPlatformWebsiteLink({
     tokenAddress,
     chainName,
     platformName,
-}: any) {
+}: {
+    tokenAddress: string;
+    chainName: string;
+    platformName: string;
+}) {
     const platformNameId = platformName?.split(" ")[0].toLowerCase();
     const baseUrl = platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
     const paths: any = {
@@ -300,4 +305,20 @@ function getChainNameBasedOnAaveMarkets(chainName: string) {
     }
 
     return chainName?.toLowerCase();
+}
+
+function LoadingSkeleton() {
+    return (
+        <div className="flex items-center gap-[12px]">
+            <div className="flex items-center gap-[8px]">
+                <Skeleton className='w-[28px] h-[28px] rounded-full' />
+                <Skeleton className='w-[60px] h-[28px] rounded-4' />
+            </div>
+            <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
+            <div className="flex items-center gap-[8px]">
+                <Skeleton className='w-[28px] h-[28px] rounded-full' />
+                <Skeleton className='w-[60px] h-[28px] rounded-4' />
+            </div>
+        </div>
+    )
 }
