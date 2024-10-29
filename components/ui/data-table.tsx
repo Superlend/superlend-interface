@@ -11,6 +11,7 @@ import {
     VisibilityState,
     SortingState,
     PaginationState,
+    Column,
 } from "@tanstack/react-table"
 
 import {
@@ -22,11 +23,12 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { BodyText, Label } from "./typography";
-import React from "react";
+import React, { CSSProperties } from "react";
 import { ArrowDownWideNarrow, ArrowUpWideNarrow, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronsUpDown } from "lucide-react";
 import InfoTooltip from "../tooltips/InfoTooltip";
 import { Button } from "./button";
 import { ScrollArea } from "./scroll-area";
+import { TOpportunityTable } from "@/types";
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -64,6 +66,12 @@ export function DataTable<TData, TValue>({
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
+        initialState: {
+            ...initialState,
+            columnPinning: {
+                left: ['tokenSymbol'],
+            },
+        },
         state: {
             globalFilter: filters.trim(),
             columnVisibility,
@@ -72,7 +80,6 @@ export function DataTable<TData, TValue>({
         },
         onGlobalFilterChange: setFilters,
         onColumnVisibilityChange: setColumnVisibility,
-        initialState: initialState,
         enableSortingRemoval: false,
         onSortingChange: setSorting,
         // onPaginationChange: setPagination,
@@ -87,9 +94,14 @@ export function DataTable<TData, TValue>({
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
+                                    const { column } = header
                                     return (
-                                        <TableHead key={header.id} className="pt-[24px] pb-[12px] pl-[32px]">
-                                            <div className="flex items-center  gap-[8px]">
+                                        <TableHead
+                                            key={header.id}
+                                            className="pt-[24px] pb-[12px] pl-[32px]"
+                                            style={{ ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, true) }}
+                                        >
+                                            <div className="flex items-center gap-[8px]">
                                                 <BodyText level="body2" weight="normal" className="text-gray-800 select-none">
                                                     {header.isPlaceholder
                                                         ? null
@@ -140,13 +152,20 @@ export function DataTable<TData, TValue>({
                                             : () => handleRowClick(row.original)
                                     }
                                 >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id} className={`py-4 w-[150px] min-w-[120px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""} ${!!handleRowClick ? "cursor-pointer" : ""}`}>
-                                            <BodyText level={"body2"} weight={"semibold"} className="">
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                            </BodyText>
-                                        </TableCell>
-                                    ))}
+                                    {row.getVisibleCells().map((cell) => {
+                                        const { column } = cell
+                                        return (
+                                            <TableCell
+                                                key={cell.id}
+                                                className={`py-4 w-[150px] min-w-[120px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""} ${!!handleRowClick ? "cursor-pointer" : ""}`}
+                                                style={{ ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>) }}
+                                            >
+                                                <BodyText level={"body2"} weight={"semibold"} className="">
+                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                </BodyText>
+                                            </TableCell>
+                                        )
+                                    })}
                                 </TableRow>
                             ))
                         ) : (
@@ -210,4 +229,22 @@ export function DataTable<TData, TValue>({
             {/* Pagination ENDS */}
         </div >
     )
+}
+
+const getCommonPinningStyles = (column: Column<TOpportunityTable>, isHeader?: boolean): CSSProperties => {
+    const isPinned = column.getIsPinned()
+    const isLastLeftPinnedColumn =
+        isPinned === 'left' && column.getIsLastColumn('left')
+    const isFirstRightPinnedColumn =
+        isPinned === 'right' && column.getIsFirstColumn('right')
+
+    return {
+        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+        right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+        opacity: isPinned ? 0.95 : 1,
+        backgroundColor: isPinned && isHeader ? '#d2eefd' : 'inherit',
+        position: isPinned ? 'sticky' : 'relative',
+        width: column.getSize(),
+        zIndex: isPinned ? 1 : 0,
+    }
 }
