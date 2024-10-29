@@ -158,10 +158,10 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 content={
                                     <span className="flex flex-col divide-y divide-gray-800">
                                         <BodyText level="body1" weight="semibold" className="py-2">Rate & Rewards</BodyText>
-                                        <span className="flex items-center justify-between gap-6 py-2">
+                                        <span className="flex items-center justify-between gap-10 py-2">
                                             <span className="flex items-center gap-1">
                                                 <Percent className="w-[16px] h-[16px]" />
-                                                <Label weight="normal">Rate</Label>
+                                                <Label weight="medium">Rate</Label>
                                             </span>
                                             <BodyText level="body2" weight="medium">
                                                 + {baseRateFormatted}%
@@ -169,23 +169,23 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                         </span>
                                         {
                                             rewards?.map((reward: TReward) => (
-                                                <span key={reward.asset.address} className="flex items-center justify-between gap-6 py-2">
+                                                <span key={reward.asset.address} className="flex items-center justify-between gap-10 py-2">
                                                     <span className="flex items-center gap-1">
-                                                        <ImageWithDefault src={reward.asset.logo} width={16} height={16} className="cursor-pointer hover:scale-110" />
-                                                        <Label weight="normal" className="truncate">{reward.asset.name}</Label>
+                                                        <ImageWithDefault src={reward.asset.logo} width={16} height={16} className="cursor-pointer hover:scale-110 rounded-full object-contain" />
+                                                        <Label weight="medium" className="truncate">{reward.asset.name}</Label>
                                                     </span>
                                                     <BodyText level="body2" weight="medium">
-                                                        {abbreviateNumber(reward.supply_apy)}
+                                                        {abbreviateNumber(reward.supply_apy)}%
                                                     </BodyText>
                                                 </span>
                                             ))
                                         }
-                                        <span className="flex items-center justify-between gap-6 py-2">
+                                        <span className="flex items-center justify-between gap-10 py-2">
                                             <span className="flex items-center gap-1">
                                                 <ImageWithDefault src="/icons/sparkles.svg" width={16} height={16} className="cursor-pointer hover:scale-110" />
-                                                <Label weight="normal">Net APY</Label>
+                                                <Label weight="semibold">Net APY</Label>
                                             </span>
-                                            <BodyText level="body2" weight="medium">
+                                            <BodyText level="body2" weight="semibold">
                                                 = {abbreviateNumber(apyCurrent)}%
                                             </BodyText>
                                         </span>
