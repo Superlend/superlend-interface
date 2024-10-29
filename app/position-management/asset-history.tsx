@@ -10,6 +10,7 @@ import { HISTORY_CHART_SELECT_OPTIONS } from '@/constants';
 import { abbreviateNumber } from '@/lib/utils';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { Skeleton } from '@/components/ui/skeleton';
+import { motion } from 'framer-motion';
 
 export default function AssetHistory() {
     const searchParams = useSearchParams();
@@ -56,7 +57,12 @@ export default function AssetHistory() {
     // const getBottomBorder = (blockIndex: number) => blockIndex === 0 ? "border-transparent" : "border-b cursor-help";
 
     return (
-        <section className="bg-white bg-opacity-40 rounded-6">
+        <motion.section
+            className="bg-white bg-opacity-40 rounded-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.7, ease: "easeOut" }}
+        >
             <AreaChartStacked
                 selectedRange={selectedRange}
                 handleRangeChange={handleRangeChange}
@@ -91,6 +97,6 @@ export default function AssetHistory() {
                     ))
                 }
             </div>
-        </section>
+        </motion.section>
     )
 }

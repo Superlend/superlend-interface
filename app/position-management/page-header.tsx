@@ -17,6 +17,7 @@ import { TPlatform, TPlatformAsset } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { PlatformWebsiteLink } from '@/types/platform';
 import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants';
+import { motion } from 'framer-motion';
 
 export default function PageHeader() {
     const router = useRouter();
@@ -83,11 +84,22 @@ export default function PageHeader() {
 
     return (
         <section className="header flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
-            <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
-                <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
-            </Button>
+            <motion.div className="will-change-transform"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+            >
+                <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
+                    <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
+                </Button>
+            </motion.div>
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-[24px] w-full">
-                <div className="flex flex-wrap items-center gap-[16px]">
+                <motion.div
+                    className="flex flex-wrap items-center gap-[16px] will-change-transform"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5, ease: "easeOut" }}
+                >
                     {/* Loading Skeleton */}
                     {isLoadingPlatformData && <LoadingSkeleton />}
                     {/* Token Details */}
@@ -143,9 +155,13 @@ export default function PageHeader() {
                             platformLogo
                         })}
                     />
-                </div>
+                </motion.div>
                 {/* Page Header Stats */}
-                <div className="header-right flex flex-wrap items-center gap-[24px]">
+                <motion.div className="header-right flex flex-wrap items-center gap-[24px]"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7, ease: "easeOut" }}
+                >
                     {/* Loading Skeleton */}
                     {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
                     {/* Supply APY */}
@@ -177,7 +193,7 @@ export default function PageHeader() {
                             </Badge>
                         </div>
                     }
-                </div>
+                </motion.div>
             </div>
         </section>
     )

@@ -17,6 +17,7 @@ import { OpportunitiesContext } from '@/context/opportunities-provider'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import useDimensions from '@/hooks/useDimensions'
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
+import { motion } from 'framer-motion'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[];
@@ -165,7 +166,12 @@ export default function TopApyOpportunities() {
                     <DiscoverFilterDropdown />
                 </div>
             </div>
-            <div className="top-apy-opportunities-content">
+            <motion.div
+                className="top-apy-opportunities-content will-change-transform"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+            >
                 {!isLoadingOpportunitiesData &&
                     <DataTable
                         columns={columns}
@@ -183,7 +189,7 @@ export default function TopApyOpportunities() {
                 {isLoadingOpportunitiesData && (
                     <LoadingSectionSkeleton />
                 )}
-            </div>
+            </motion.div>
         </section>
     )
 }
