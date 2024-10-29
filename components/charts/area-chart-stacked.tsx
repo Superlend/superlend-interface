@@ -16,7 +16,7 @@ import { Period } from "@/types/periodButtons"
 import { BodyText, Label } from "../ui/typography"
 import { abbreviateNumber, extractTimeFromDate, formatDateAccordingToPeriod, shortNubers } from "@/lib/utils"
 import { Skeleton } from "../ui/skeleton"
-import { LoaderCircle } from "lucide-react"
+import { ChartLine, LoaderCircle } from "lucide-react"
 import { useState } from "react"
 import ImageWithDefault from "../ImageWithDefault"
 
@@ -256,9 +256,10 @@ export function AreaChartStacked({
                 }
                 {
                     data && isFilterDisabled &&
-                    <div className="flex flex-col items-center justify-center h-[250px] w-full">
-                        <Label size="large" className="text-gray-600">
-                            No history data available
+                    <div className="flex flex-col gap-2 items-center justify-center h-[250px] w-full">
+                        <ChartLine className="w-12 h-12 text-gray-600" />
+                        <Label size="large" weight="medium" className="text-gray-600">
+                            No history data found
                         </Label>
                     </div>
                 }

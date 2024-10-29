@@ -161,7 +161,9 @@ export default function PageHeader() {
                             </Badge>
                         </div>
                     }
-                    {!!Number(pageHeaderStats?.borrow_rate) && <span className="hidden xs:inline-block text-gray">|</span>}
+                    {!!Number(pageHeaderStats?.borrow_rate) && !!Number(pageHeaderStats?.supply_apy) &&
+                        <span className="hidden xs:inline-block text-gray">|</span>
+                    }
                     {/* Borrow Rate */}
                     {!!Number(pageHeaderStats?.borrow_rate) &&
                         <div className="flex items-center max-md:justify-between gap-[4px]">
