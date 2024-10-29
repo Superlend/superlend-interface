@@ -13,7 +13,7 @@ import { useSearchParams } from 'next/navigation';
 import useGetPlatformData from '@/hooks/useGetPlatformData';
 import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
-import { TPlatform, TPlatformAssets } from '@/types';
+import { TPlatform, TPlatformAsset } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { PlatformWebsiteLink } from '@/types/platform';
 import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants';
@@ -190,13 +190,21 @@ function getTokenDetails({
     tokenAddress: string;
     platformData: TPlatform
 }) {
-    const asset = platformData?.assets?.find((asset: TPlatformAssets) => asset.token.address.toLowerCase() === tokenAddress.toLowerCase())
+    const fallbackAsset = {
+        address: tokenAddress,
+        symbol: "",
+        name: "",
+        logo: "",
+        decimals: 0,
+        price_usd: 0,
+    };
+    const asset: TPlatformAsset["token"] = platformData?.assets?.find((asset: TPlatformAsset) => asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase())?.token || fallbackAsset;
 
     return {
-        address: asset?.token?.address || tokenAddress,
-        symbol: asset?.token?.symbol || "",
-        name: asset?.token?.name || "",
-        logo: asset?.token?.logo || "",
+        address: asset?.address || tokenAddress,
+        symbol: asset?.symbol || "",
+        name: asset?.name || "",
+        logo: asset?.logo || "",
     }
 }
 
@@ -217,8 +225,8 @@ function getPageHeaderStats({
     tokenAddress: string;
     platformData: TPlatform
 }) {
-    const [stats] = platformData?.assets?.filter((asset: TPlatformAssets) => asset.token.address.toLowerCase() === tokenAddress.toLowerCase())
-        .map((item: TPlatformAssets) => ({
+    const [stats] = platformData?.assets?.filter((asset: TPlatformAsset) => asset.token.address.toLowerCase() === tokenAddress.toLowerCase())
+        .map((item: TPlatformAsset) => ({
             supply_apy: abbreviateNumber(item.supply_apy),
             borrow_rate: abbreviateNumber(item.variable_borrow_apy)
         }))

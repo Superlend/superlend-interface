@@ -128,7 +128,7 @@ export type TGetPlatformParams = {
   protocol_identifier: string;
 };
 
-export type TPlatformAssets = {
+export type TPlatformAsset = {
   token: {
     name: string;
     symbol: string;
@@ -152,7 +152,7 @@ export type TPlatform = {
     logo: string;
     chain_id: number;
   };
-  assets: TPlatformAssets[];
+  assets: TPlatformAsset[];
 };
 
 export type TGetPlatformHistoryParams = {
