@@ -157,12 +157,10 @@ export function DataTable<TData, TValue>({
                                         return (
                                             <TableCell
                                                 key={cell.id}
-                                                className={`py-4 w-[150px] min-w-[120px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""} ${!!handleRowClick ? "cursor-pointer" : ""}`}
+                                                className={`py-4 w-[150px] min-w-[150px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""} ${!!handleRowClick ? "cursor-pointer" : ""}`}
                                                 style={{ ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>) }}
                                             >
-                                                <BodyText level={"body2"} weight={"semibold"} className="">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </BodyText>
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </TableCell>
                                         )
                                     })}

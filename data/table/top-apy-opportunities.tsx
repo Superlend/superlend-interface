@@ -69,9 +69,10 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         }
                     }}
                         className="truncate">
-                        <span className="truncate block shrink-0 hover:text-secondary-500">
+                        <BodyText level={"body2"} weight={"semibold"} className="truncate block shrink-0 hover:text-secondary-500">
                             {tokenSymbol}
-                        </span>
+                        </BodyText>
+
                     </Link>
                     {/* <InfoTooltip iconWidth={16} iconHeight={16} content={tooltipContent} /> */}
                 </span>
@@ -94,7 +95,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
-                    <span className="truncate">{`${capitalizeText(platformName)} ${platformVersion}`}</span>
+                    <BodyText level={"body2"} weight={"semibold"} className="truncate">
+                        {`${capitalizeText(platformName)} ${platformVersion}`}
+                    </BodyText>
                 </span>
             )
         },
@@ -138,7 +141,11 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 return (
                     <InfoTooltip
                         label={
-                            <TooltipText>{`${apyCurrentFormatted}%`}</TooltipText>
+                            <TooltipText>
+                                <BodyText level={"body2"} weight={"semibold"}>
+                                    {`${apyCurrentFormatted}%`}
+                                </BodyText>
+                            </TooltipText>
                         }
                         content={"This asset is non-borrowable"}
                     />
@@ -148,48 +155,17 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
 
             return (
                 <span className="flex items-center gap-1" >
-                    <span className="">{`${apyCurrentFormatted}%`}</span>
+                    <BodyText level={"body2"} weight={"semibold"}>
+                        {`${apyCurrentFormatted}%`}
+                    </BodyText>
                     {
                         hasRewards && (
                             <InfoTooltip
                                 label={
-                                    <img src="/icons/sparkles.svg" width={22} height={22} className="cursor-pointer hover:scale-110" />
+                                    <ImageWithDefault src="/icons/sparkles.svg" width={22} height={22} className="cursor-pointer hover:scale-110" />
                                 }
                                 content={
-                                    <span className="flex flex-col divide-y divide-gray-800">
-                                        <BodyText level="body1" weight="semibold" className="py-2">Rate & Rewards</BodyText>
-                                        <span className="flex items-center justify-between gap-10 py-2">
-                                            <span className="flex items-center gap-1">
-                                                <Percent className="w-[16px] h-[16px]" />
-                                                <Label weight="medium">Rate</Label>
-                                            </span>
-                                            <BodyText level="body2" weight="medium">
-                                                + {baseRateFormatted}%
-                                            </BodyText>
-                                        </span>
-                                        {
-                                            rewards?.map((reward: TReward) => (
-                                                <span key={reward.asset.address} className="flex items-center justify-between gap-10 py-2">
-                                                    <span className="flex items-center gap-1">
-                                                        <ImageWithDefault src={reward.asset.logo} width={16} height={16} className="cursor-pointer hover:scale-110 rounded-full object-contain" />
-                                                        <Label weight="medium" className="truncate">{reward.asset.name}</Label>
-                                                    </span>
-                                                    <BodyText level="body2" weight="medium">
-                                                        {abbreviateNumber(reward.supply_apy)}%
-                                                    </BodyText>
-                                                </span>
-                                            ))
-                                        }
-                                        <span className="flex items-center justify-between gap-10 py-2">
-                                            <span className="flex items-center gap-1">
-                                                <ImageWithDefault src="/icons/sparkles.svg" width={16} height={16} className="cursor-pointer hover:scale-110" />
-                                                <Label weight="semibold">Net APY</Label>
-                                            </span>
-                                            <BodyText level="body2" weight="semibold">
-                                                = {abbreviateNumber(apyCurrent)}%
-                                            </BodyText>
-                                        </span>
-                                    </span>
+                                    getRewardsTooltipContent({ baseRateFormatted: baseRateFormatted || '', rewards: rewards || [], apyCurrent: apyCurrent || 0 })
                                 }
                             />
                         )
@@ -214,17 +190,22 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-2">
                     {Number(row.getValue("max_ltv")) > 0 &&
-                        <span>
+                        <BodyText level={"body2"} weight={"semibold"}>
                             {`${Number(row.getValue("max_ltv")).toFixed(2)}%`}
-                        </span>}
+                        </BodyText>}
                     {Number(row.getValue("max_ltv")) === 0 &&
                         <InfoTooltip
-                            label={<TooltipText>{`${row.getValue("max_ltv")}%`}</TooltipText>}
+                            label={<TooltipText>
+                                <BodyText level={"body2"} weight={"semibold"}>
+                                    {`${row.getValue("max_ltv")}%`}
+                                </BodyText>
+                            </TooltipText>}
                             content="This asset cannot be used as collateral to take out a loan"
                         />}
                 </span>
             )
         },
+        size: 150,
         // enableGlobalFilter: false,
     },
     {
@@ -241,9 +222,17 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const value: string = row.getValue("deposits");
             if (containsNegativeInteger(value)) {
-                return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)))}`
+                return (
+                    <BodyText level={"body2"} weight={"semibold"}>
+                        -${abbreviateNumber(Number(convertNegativeToPositive(value)))}
+                    </BodyText>
+                )
             }
-            return `$${abbreviateNumber(Number(value))}`
+            return (
+                <BodyText level={"body2"} weight={"semibold"}>
+                    ${abbreviateNumber(Number(value))}
+                </BodyText>
+            )
         },
         // enableGlobalFilter: false,
     },
@@ -261,9 +250,17 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const value: string = row.getValue("borrows");
             if (containsNegativeInteger(value)) {
-                return `-$${abbreviateNumber(Number(convertNegativeToPositive(value)))}`
+                return (
+                    <BodyText level={"body2"} weight={"semibold"}>
+                        -${abbreviateNumber(Number(convertNegativeToPositive(value)))}
+                    </BodyText>
+                )
             }
-            return `$${abbreviateNumber(Number(value))}`
+            return (
+                <BodyText level={"body2"} weight={"semibold"}>
+                    ${abbreviateNumber(Number(value))}
+                </BodyText>
+            )
         },
         // enableGlobalFilter: false,
     },
@@ -283,7 +280,11 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 return (
                     <InfoTooltip
                         label={
-                            <TooltipText>{`${Number(row.getValue("utilization")).toFixed(1)}%`}</TooltipText>
+                            <TooltipText>
+                                <BodyText level={"body2"} weight={"semibold"}>
+                                    {`${Number(row.getValue("utilization")).toFixed(1)}%`}
+                                </BodyText>
+                            </TooltipText>
                         }
                         content={"This asset is non-borrowable"}
                     />
@@ -291,15 +292,19 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 )
             }
 
-            return `${Number(row.getValue("utilization")).toFixed(2)}%`
+            return (
+                <BodyText level={"body2"} weight={"semibold"}>
+                    {`${Number(row.getValue("utilization")).toFixed(2)}%`}
+                </BodyText>
+            )
         },
         // enableGlobalFilter: false,
     },
 ]
 
-function TooltipText({ children }: { children: React.ReactNode }) {
+function TooltipText({ children, className }: { children: React.ReactNode, className?: string }) {
     return (
-        <span className="inline-block border-b border-dashed border-gray-800">
+        <span className={`inline-block border-b border-dashed border-gray-800 ${className}`}>
             {children}
         </span>
     )
@@ -320,4 +325,50 @@ function getRewardsGroupedByAsset(rewards: TReward[]) {
         }
         return acc;
     }, []);
+}
+
+/**
+ * Get rewards tooltip content
+ * @param baseRateFormatted 
+ * @param rewards 
+ * @param apyCurrent 
+ * @returns rewards tooltip content
+ */
+function getRewardsTooltipContent({ baseRateFormatted, rewards, apyCurrent }: { baseRateFormatted: string, rewards: TReward[], apyCurrent: number }) {
+    return (
+        <span className="flex flex-col divide-y divide-gray-800">
+            <BodyText level="body1" weight="semibold" className="py-2">Rate & Rewards</BodyText>
+            <span className="flex items-center justify-between gap-10 py-2">
+                <span className="flex items-center gap-1">
+                    <Percent className="w-[16px] h-[16px]" />
+                    <Label weight="medium">Rate</Label>
+                </span>
+                <BodyText level="body2" weight="medium">
+                    + {baseRateFormatted}%
+                </BodyText>
+            </span>
+            {
+                rewards?.map((reward: TReward) => (
+                    <span key={reward.asset.address} className="flex items-center justify-between gap-10 py-2">
+                        <span className="flex items-center gap-1">
+                            <ImageWithDefault src={reward.asset.logo} width={16} height={16} className="cursor-pointer hover:scale-110 rounded-full object-contain" />
+                            <Label weight="medium" className="truncate">{reward.asset.name}</Label>
+                        </span>
+                        <BodyText level="body2" weight="medium">
+                            {abbreviateNumber(reward.supply_apy)}%
+                        </BodyText>
+                    </span>
+                ))
+            }
+            <span className="flex items-center justify-between gap-10 py-2">
+                <span className="flex items-center gap-1">
+                    <ImageWithDefault src="/icons/sparkles.svg" width={16} height={16} className="cursor-pointer hover:scale-110" />
+                    <Label weight="semibold">Net APY</Label>
+                </span>
+                <BodyText level="body2" weight="semibold">
+                    = {abbreviateNumber(apyCurrent)}%
+                </BodyText>
+            </span>
+        </span>
+    )
 }
