@@ -56,6 +56,19 @@ export type TGetOpportunitiesParams = {
   limit?: number;
 };
 
+export type TReward = {
+  supply_apy: number;
+  borrow_apy: number;
+  asset: {
+    symbol: string;
+    name: string;
+    address: `0x${string}`;
+    decimals: number;
+    logo: string;
+    price_usd: number;
+  };
+};
+
 export type TOpportunity = {
   token: {
     address: string;
@@ -65,13 +78,14 @@ export type TOpportunity = {
     price_usd: number;
     symbol: string;
   };
-  chain_id: "number";
+  chain_id: number;
   platform: {
     name: string;
     platform_name: string;
+    protocol_identifier: string;
     logo: string;
-    additional_rewards: "boolean";
-    max_ltv: "number";
+    additional_rewards: boolean;
+    max_ltv: number;
     liquidity: string;
     borrows: string;
     utilization_rate: string;
@@ -80,6 +94,7 @@ export type TOpportunity = {
       avg_7days: string;
       avg_30days: string;
     };
+    rewards: TReward[];
   };
   trend: {
     value: string;
@@ -93,13 +108,15 @@ export type TOpportunityTable = {
   tokenLogo: string;
   tokenName: string;
   chainLogo: string;
-  chain_id: string;
+  chain_id: number;
   chainName: string;
-  platform_id: string;
+  protocol_identifier: string;
   platformName: string;
   platformLogo: string;
   apy_current: string;
-  max_ltv: string;
+  additional_rewards: boolean;
+  rewards: TReward[];
+  max_ltv: number;
   deposits: string;
   borrows: string;
   utilization: string;
@@ -108,10 +125,10 @@ export type TOpportunityTable = {
 // Platform
 export type TGetPlatformParams = {
   chain_id: number;
-  platform_id: string;
+  protocol_identifier: string;
 };
 
-export type TPlatformAssets = {
+export type TPlatformAsset = {
   token: {
     name: string;
     symbol: string;
@@ -131,14 +148,15 @@ export type TPlatformAssets = {
 export type TPlatform = {
   platform: {
     name: string;
+    platform_name: string;
     logo: string;
     chain_id: number;
   };
-  assets: TPlatformAssets[];
+  assets: TPlatformAsset[];
 };
 
 export type TGetPlatformHistoryParams = {
-  platform_id: string;
+  protocol_identifier: string;
   token: string;
   period: Period.oneDay | Period.oneMonth | Period.oneWeek | Period.oneYear;
 };

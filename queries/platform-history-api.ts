@@ -2,7 +2,7 @@ import { TGetPlatformHistoryParams, TPlatform, TPlatformHistory } from "@/types"
 import { request } from "./request";
 
 export async function getPlatformHistoryData({
-  platform_id,
+  protocol_identifier,
   token,
   period,
 }: TGetPlatformHistoryParams) {
@@ -10,7 +10,7 @@ export async function getPlatformHistoryData({
     method: "GET",
     path: `/platform/history`,
     query: {
-      platform_id,
+      protocol_identifier,
       token,
       period,
     },

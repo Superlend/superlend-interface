@@ -5,10 +5,10 @@ import { TGetPlatformParams, TOpportunity, TPlatform } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 
 export default function useGetPlatformData(params: TGetPlatformParams) {
-  const { platform_id, chain_id } = params;
+  const { protocol_identifier, chain_id } = params;
 
   const { data, isLoading, isError } = useQuery<TPlatform>({
-    queryKey: ["platform", platform_id, chain_id],
+    queryKey: ["platform", protocol_identifier, chain_id],
     queryFn: async () => {
       try {
         const responseData = await getPlatformData(params);
@@ -24,6 +24,7 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
   return {
     data: data || {
       platform: {
+        platform_name: "",
         name: "",
         logo: "",
         chain_id: 0,

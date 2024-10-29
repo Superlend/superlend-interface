@@ -10,12 +10,13 @@ import { HISTORY_CHART_SELECT_OPTIONS } from '@/constants';
 import { abbreviateNumber } from '@/lib/utils';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { Skeleton } from '@/components/ui/skeleton';
+import { motion } from 'framer-motion';
 
 export default function AssetHistory() {
     const searchParams = useSearchParams();
     const tokenAddress = searchParams.get("token") || "";
     // const chain_id = searchParams.get("chain_id") || "";
-    const platform_id = searchParams.get("platform_id") || "";
+    const protocol_identifier = searchParams.get("protocol_identifier") || "";
     const [selectedRange, setSelectedRange] = useState<Period>(Period.oneMonth);
     const [selectedFilter, setSelectedFilter] = useState<any>(HISTORY_CHART_SELECT_OPTIONS[0]);
 
@@ -25,7 +26,7 @@ export default function AssetHistory() {
         isLoading: isLoadingPlatformHistory,
         isError: isErrorPlatformHistory
     } = useGetPlatformHistoryData({
-        platform_id,
+        protocol_identifier,
         token: tokenAddress,
         period: selectedRange
     });
@@ -56,7 +57,12 @@ export default function AssetHistory() {
     // const getBottomBorder = (blockIndex: number) => blockIndex === 0 ? "border-transparent" : "border-b cursor-help";
 
     return (
-        <section className="bg-white bg-opacity-40 rounded-6">
+        <motion.section
+            className="bg-white bg-opacity-40 rounded-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.7, ease: "easeOut" }}
+        >
             <AreaChartStacked
                 selectedRange={selectedRange}
                 handleRangeChange={handleRangeChange}
@@ -91,6 +97,6 @@ export default function AssetHistory() {
                     ))
                 }
             </div>
-        </section>
+        </motion.section>
     )
 }

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import React, { useContext, useEffect } from 'react';
 import { BodyText, HeadingText, Label } from '@/components/ui/typography';
 import { Badge } from '@/components/ui/badge';
-import { abbreviateNumber, getTokenLogo } from '@/lib/utils';
+import { abbreviateNumber, getPlatformVersion, getTokenLogo } from '@/lib/utils';
 import ImageWithDefault from '@/components/ImageWithDefault';
 import { Skeleton } from '@/components/ui/skeleton';
 import { notFound, useRouter } from 'next/navigation';
@@ -13,17 +13,18 @@ import { useSearchParams } from 'next/navigation';
 import useGetPlatformData from '@/hooks/useGetPlatformData';
 import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
-import { TPlatform } from '@/types';
+import { TPlatform, TPlatformAsset } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { PlatformWebsiteLink } from '@/types/platform';
 import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants';
+import { motion } from 'framer-motion';
 
 export default function PageHeader() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const tokenAddress = searchParams.get("token") || "";
     const chain_id = searchParams.get("chain_id") || 0;
-    const platform_id = searchParams.get("platform_id") || "";
+    const protocol_identifier = searchParams.get("protocol_identifier") || "";
     const { allChainsData } = useContext(AssetsDataContext);
 
     // [API_CALL: GET] - Get Platform data
@@ -32,7 +33,7 @@ export default function PageHeader() {
         isLoading: isLoadingPlatformData,
         isError: isErrorPlatformData
     } = useGetPlatformData({
-        platform_id,
+        protocol_identifier,
         chain_id: Number(chain_id),
     });
 
@@ -59,13 +60,13 @@ export default function PageHeader() {
         isErrorPlatformData,
         tokenAddress,
         chain_id,
-        platform_id,
+        protocol_identifier,
         isLoadingPlatformData,
     ])
 
     const pageHeaderStats = getPageHeaderStats({
         tokenAddress,
-        platformData
+        platformData: platformData as TPlatform
     })
 
     const tokenSymbol = tokenDetails?.symbol;
@@ -73,36 +74,35 @@ export default function PageHeader() {
     const tokenName = tokenDetails?.name;
     const chainName = chainDetails?.name;
     const chainLogo = chainDetails?.logo;
-    const platformName = platform_id.split("-").slice(0, 2).join(" ");
+    const platformName = platformData.platform.platform_name.split("-").slice(0, 2).join(" ");
     const platformLogo = platformData?.platform.logo;
     const platformWebsiteLink = getPlatformWebsiteLink({
         tokenAddress,
         chainName,
-        platform_id,
+        platformName,
     });
 
     return (
         <section className="header flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
-            <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
-                <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
-            </Button>
+            <motion.div className="will-change-transform"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+            >
+                <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
+                    <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
+                </Button>
+            </motion.div>
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-[24px] w-full">
-                <div className="flex flex-wrap items-center gap-[16px]">
-                    {
-                        isLoadingPlatformData && (
-                            <div className="flex items-center gap-[12px]">
-                                <div className="flex items-center gap-[8px]">
-                                    <Skeleton className='w-[28px] h-[28px] rounded-full' />
-                                    <Skeleton className='w-[60px] h-[28px] rounded-4' />
-                                </div>
-                                <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
-                                <div className="flex items-center gap-[8px]">
-                                    <Skeleton className='w-[28px] h-[28px] rounded-full' />
-                                    <Skeleton className='w-[60px] h-[28px] rounded-4' />
-                                </div>
-                            </div>
-                        )
-                    }
+                <motion.div
+                    className="flex flex-wrap items-center gap-[16px] will-change-transform"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5, ease: "easeOut" }}
+                >
+                    {/* Loading Skeleton */}
+                    {isLoadingPlatformData && <LoadingSkeleton />}
+                    {/* Token Details */}
                     {tokenDetails?.symbol && chainDetails?.logo && !isLoadingPlatformData &&
                         <div className="flex items-center gap-[12px]">
                             <div className="flex items-center gap-[8px]">
@@ -113,7 +113,7 @@ export default function PageHeader() {
                                     height={28}
                                     className="rounded-full max-w-[28px] max-h-[28px]"
                                 />
-                                <HeadingText level='h4' className='uppercase'>{tokenSymbol}</HeadingText>
+                                <HeadingText level='h4' className='uppercase truncate max-w-[150px]'>{tokenSymbol}</HeadingText>
                             </div>
                             <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
                             <div className="flex items-center gap-[8px]">
@@ -124,15 +124,16 @@ export default function PageHeader() {
                                     height={28}
                                     className="rounded-full max-w-[28px] max-h-[28px]"
                                 />
-                                <HeadingText level='h4' className='uppercase'>{chainName}</HeadingText>
+                                <HeadingText level='h4' className='uppercase truncate max-w-[150px]'>{chainName}</HeadingText>
                             </div>
                         </div>
                     }
+                    {/* Platform Details */}
                     {!isLoadingPlatformData && platformLogo &&
                         <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit'>
                             <div className="flex items-center gap-1">
                                 <img src={platformLogo} alt={`${platformName} Platform`} width={16} height={16} className='object-contain shrink-0' />
-                                <Label weight='medium' className='leading-[0]'>{platformName}</Label>
+                                <Label weight='medium' className='leading-[0]'>{`${platformName.split(" ")[0]} ${getPlatformVersion(platformName)}`}</Label>
                             </div>
                             <a
                                 className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
@@ -143,9 +144,9 @@ export default function PageHeader() {
                             </a>
                         </Badge>
                     }
+                    {/* Info Tooltip */}
                     <InfoTooltip
                         content={getAssetTooltipContent({
-                            tokenSymbol,
                             tokenLogo,
                             tokenName,
                             chainName,
@@ -154,10 +155,17 @@ export default function PageHeader() {
                             platformLogo
                         })}
                     />
-                </div>
-                <div className="header-right flex flex-wrap items-center gap-[24px]">
+                </motion.div>
+                {/* Page Header Stats */}
+                <motion.div className="header-right flex flex-wrap items-center gap-[24px]"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7, ease: "easeOut" }}
+                >
+                    {/* Loading Skeleton */}
                     {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
-                    {!!pageHeaderStats?.supply_apy &&
+                    {/* Supply APY */}
+                    {!!Number(pageHeaderStats?.supply_apy) &&
                         <div className="flex items-center max-md:justify-between gap-[4px]">
                             <BodyText level='body1' className='text-gray-700 shrink-0'>
                                 Supply APY
@@ -169,8 +177,11 @@ export default function PageHeader() {
                             </Badge>
                         </div>
                     }
-                    {!!pageHeaderStats?.borrow_rate && <span className="hidden xs:inline-block text-gray">|</span>}
-                    {!!pageHeaderStats?.borrow_rate &&
+                    {!!Number(pageHeaderStats?.borrow_rate) && !!Number(pageHeaderStats?.supply_apy) &&
+                        <span className="hidden xs:inline-block text-gray">|</span>
+                    }
+                    {/* Borrow Rate */}
+                    {!!Number(pageHeaderStats?.borrow_rate) &&
                         <div className="flex items-center max-md:justify-between gap-[4px]">
                             <BodyText level='body1' className='text-gray-700 shrink-0'>
                                 Borrow Rate
@@ -182,7 +193,7 @@ export default function PageHeader() {
                             </Badge>
                         </div>
                     }
-                </div>
+                </motion.div>
             </div>
         </section>
     )
@@ -195,13 +206,23 @@ function getTokenDetails({
     platformData
 }: {
     tokenAddress: string;
-    platformData: any
+    platformData: TPlatform
 }) {
-    return {
+    const fallbackAsset = {
         address: tokenAddress,
-        symbol: platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.symbol || "",
-        name: platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.name || "",
-        logo: platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)[0]?.token?.logo || "",
+        symbol: "",
+        name: "",
+        logo: "",
+        decimals: 0,
+        price_usd: 0,
+    };
+    const asset: TPlatformAsset["token"] = platformData?.assets?.find((asset: TPlatformAsset) => asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase())?.token || fallbackAsset;
+
+    return {
+        address: asset?.address || tokenAddress,
+        symbol: asset?.symbol || "",
+        name: asset?.name || "",
+        logo: asset?.logo || "",
     }
 }
 
@@ -222,8 +243,8 @@ function getPageHeaderStats({
     tokenAddress: string;
     platformData: TPlatform
 }) {
-    const [stats] = platformData?.assets?.filter((asset: any) => asset.token.address === tokenAddress)
-        .map((item: any) => ({
+    const [stats] = platformData?.assets?.filter((asset: TPlatformAsset) => asset.token.address.toLowerCase() === tokenAddress.toLowerCase())
+        .map((item: TPlatformAsset) => ({
             supply_apy: abbreviateNumber(item.supply_apy),
             borrow_rate: abbreviateNumber(item.variable_borrow_apy)
         }))
@@ -232,14 +253,20 @@ function getPageHeaderStats({
 }
 
 function getAssetTooltipContent({
-    tokenSymbol,
     tokenLogo,
     tokenName,
     chainName,
     chainLogo,
     platformLogo,
     platformName,
-}: any) {
+}: {
+    tokenLogo: string;
+    tokenName: string;
+    chainName: string;
+    chainLogo: string;
+    platformLogo: string;
+    platformName: string;
+}) {
     const TooltipData = [
         {
             label: "Token",
@@ -257,7 +284,7 @@ function getAssetTooltipContent({
             label: "Platform",
             image: platformLogo,
             imageAlt: platformName,
-            displayName: platformName
+            displayName: `${platformName.split(" ")[0]} ${getPlatformVersion(platformName)}`
         },
     ]
     return (
@@ -280,13 +307,22 @@ function getAssetTooltipContent({
 function getPlatformWebsiteLink({
     tokenAddress,
     chainName,
-    platform_id,
-}: any) {
-    const baseUrl = platformWebsiteLinks[platform_id?.split("-")[0].toLowerCase() as keyof typeof platformWebsiteLinks];
-    const aavePath = `${baseUrl}/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName)}_v3`;
-    const compoundPath = `/markets/v2`;
-    const path = platform_id?.split("-")[0].toLowerCase() === "aave" ? aavePath : compoundPath;
-    return `${new URL(path, baseUrl)}`
+    platformName,
+}: {
+    tokenAddress: string;
+    chainName: string;
+    platformName: string;
+}) {
+    const platformNameId = platformName?.split(" ")[0].toLowerCase();
+    const baseUrl = platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
+    const paths: any = {
+        aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName)}_v3`,
+        compound: `/markets/v2`,
+        fluid: "",
+        mopho: ""
+    }
+    const path = paths[platformNameId];
+    return `${baseUrl}${path}`
 }
 
 function getChainNameBasedOnAaveMarkets(chainName: string) {
@@ -295,4 +331,20 @@ function getChainNameBasedOnAaveMarkets(chainName: string) {
     }
 
     return chainName?.toLowerCase();
+}
+
+function LoadingSkeleton() {
+    return (
+        <div className="flex items-center gap-[12px]">
+            <div className="flex items-center gap-[8px]">
+                <Skeleton className='w-[28px] h-[28px] rounded-full' />
+                <Skeleton className='w-[60px] h-[28px] rounded-4' />
+            </div>
+            <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
+            <div className="flex items-center gap-[8px]">
+                <Skeleton className='w-[28px] h-[28px] rounded-full' />
+                <Skeleton className='w-[60px] h-[28px] rounded-4' />
+            </div>
+        </div>
+    )
 }

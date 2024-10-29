@@ -1,21 +1,23 @@
 "use client"
 
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import LendBorrowToggle from '@/components/LendBorrowToggle'
 import { HeadingText } from '@/components/ui/typography'
 import { columns } from '@/data/table/top-apy-opportunities';
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
-import { ColumnDef, SortingState } from '@tanstack/react-table'
+import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { TChain, TOpportunityTable, TPositionType, TToken } from '@/types'
 import { DataTable } from '@/components/ui/data-table'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 import { OpportunitiesContext } from '@/context/opportunities-provider'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import useDimensions from '@/hooks/useDimensions'
 import DiscoverFiltersDropdown from '@/components/dropdowns/DiscoverFiltersDropdown';
+import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
+import { motion } from 'framer-motion'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[];
@@ -23,47 +25,66 @@ type TTopApyOpportunitiesProps = {
 }
 
 export default function TopApyOpportunities() {
+    const updateSearchParams = useUpdateSearchParams();
+    const searchParams = useSearchParams();
+    const positionTypeParam = searchParams.get("position_type") || "lend";
+    const tokenIdsParam = searchParams.get('token_ids')?.split(',') || [];
+    const chainIdsParam = searchParams.get('chain_ids')?.split(',') || [];
+    const platformIdsParam = searchParams.get('protocol_ids')?.split(',') || [];
+    const keywordsParam = searchParams.get("keywords") || "";
+    const pageParam = searchParams.get('page');
     const { width: screenWidth } = useDimensions();
-    const { filters, positionType, setPositionType } = useContext<any>(OpportunitiesContext);
-    const [searchKeywords, setSearchKeywords] = useState<string>("");
     const [sorting, setSorting] = useState<SortingState>([
-        { id: 'apy_current', desc: positionType === "lend" },
+        { id: 'apy_current', desc: positionTypeParam === "lend" },
     ]);
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageIndex: Number(pageParam) || 0,
+        pageSize: 10,
+    });
     const [columnVisibility, setColumnVisibility] = useState({
         deposits: true,
         borrows: false,
     });
     const router = useRouter();
+    const pathname = usePathname();
     const {
         data: opportunitiesData,
         isLoading: isLoadingOpportunitiesData
     } = useGetOpportunitiesData({
-        type: positionType,
-        chain_ids: filters.chain_ids,
-        tokens: filters.token_ids
+        type: positionTypeParam as TPositionType,
+        chain_ids: chainIdsParam.map(id => Number(id)),
+        tokens: tokenIdsParam
     });
     const { allChainsData } = useContext<any>(AssetsDataContext);
-    // const initialState = {
-    //     sorting: [
-    //         {
-    //             id: "apy_current",
-    //             desc: true
-    //         }
-    //     ]
-    // }
 
     useEffect(() => {
         setColumnVisibility(() => {
             return {
-                deposits: positionType === "lend",
-                borrows: positionType === "borrow",
+                deposits: positionTypeParam === "lend",
+                borrows: positionTypeParam === "borrow",
             }
         })
-    }, [positionType])
+        setSorting([{ id: 'apy_current', desc: positionTypeParam === "lend" }])
+    }, [positionTypeParam])
 
-    useEffect(() => {
-        setSorting([{ id: 'apy_current', desc: positionType === "lend" }])
-    }, [positionType])
+    // useEffect(() => {
+    //     const pageParam = searchParams.get('page');
+    //     if (pageParam) {
+    //         const pageIndex = Math.max(0, parseInt(pageParam) - 1);
+    //         setPagination(prev => ({ ...prev, pageIndex }));
+    //     }
+    // }, []);
+
+    // const updatePageInUrl = (newPage: number) => {
+    //     const newParams = new URLSearchParams(searchParams.toString());
+    //     newParams.set("page", newPage.toString());
+    //     router.push(`${pathname}?${newParams.toString()}`, { scroll: false });
+    // };
+
+    // const handlePaginationChange = () => {
+    //     setPagination(state => ({ ...state, pageIndex: state.pageIndex + 1 }));
+    //     updatePageInUrl(pagination.pageIndex + 1);
+    // };
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         return {
@@ -74,41 +95,46 @@ export default function TopApyOpportunities() {
             chainLogo: allChainsData?.filter((chain: TChain) => chain.chain_id === Number(item.chain_id))[0]?.logo,
             chain_id: item.chain_id,
             chainName: allChainsData.find((chain: any) => Number(chain.chain_id) === Number(item.chain_id))?.name || "",
-            platform_id: item.platform.platform_name,
-            platformName: `${item.platform.platform_name.split("-")[0]}`,
+            protocol_identifier: item.platform.protocol_identifier,
+            platformName: `${item.platform.platform_name}`,
             platformLogo: item.platform.logo,
             apy_current: item.platform.apy.current,
             max_ltv: item.platform.max_ltv,
             deposits: `${Number(item.platform.liquidity) * Number(item.token.price_usd)}`,
             borrows: `${Number(item.platform.borrows) * Number(item.token.price_usd)}`,
             utilization: item.platform.utilization_rate,
+            additional_rewards: item.platform.additional_rewards,
+            rewards: item.platform.rewards,
         }
     });
 
-    const filteredTableData = rawTableData.filter((opportunity) => {
-        return filters.platform_ids.includes(opportunity.platformName)
+    const filteredTableDataByPlatformIds = rawTableData.filter((opportunity) => {
+        return platformIdsParam.includes(opportunity.platformName.split("-")[0])
     });
 
-    const tableData = filters.platform_ids.length > 0 ? filteredTableData : rawTableData;
+    const tableData = platformIdsParam.length > 0 ? filteredTableDataByPlatformIds : rawTableData;
 
     function handleRowClick(rowData: any) {
         if (screenWidth < 768) return;
 
-        const { tokenAddress, platform_id, chain_id } = rowData;
-        const url = `/position-management?token=${tokenAddress}&platform_id=${platform_id}&chain_id=${chain_id}`
+        const { tokenAddress, protocol_identifier, chain_id } = rowData;
+        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}`
         router.push(url);
     }
 
     const toggleOpportunityType = (positionType: TPositionType): void => {
-        setPositionType(positionType);
+        const params = { position_type: positionType }
+        updateSearchParams(params)
     };
 
     function handleKeywordChange(e: any) {
-        setSearchKeywords(e.target.value)
+        const params = { keywords: !!e.target.value.trim().length ? e.target.value : undefined, page: undefined }
+        updateSearchParams(params)
     }
 
     function handleClearSearch() {
-        setSearchKeywords("");
+        const params = { keywords: undefined, page: undefined }
+        updateSearchParams(params)
     }
 
     return (
@@ -127,10 +153,10 @@ export default function TopApyOpportunities() {
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="w-full sm:max-w-[150px] lg:max-w-[250px]">
-                            <LendBorrowToggle type={positionType} handleToggle={toggleOpportunityType} />
+                            <LendBorrowToggle type={positionTypeParam as TPositionType} handleToggle={toggleOpportunityType} />
                         </div>
                         <div className="sm:max-w-[156px] w-full">
-                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={searchKeywords} />
+                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={keywordsParam} />
                         </div>
                     </div>
                 </div>
@@ -140,24 +166,30 @@ export default function TopApyOpportunities() {
                     <DiscoverFiltersDropdown />
                 </div>
             </div>
-            <div className="top-apy-opportunities-content">
+            <motion.div
+                className="top-apy-opportunities-content will-change-transform"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+            >
                 {!isLoadingOpportunitiesData &&
                     <DataTable
                         columns={columns}
                         data={tableData}
-                        filters={searchKeywords}
-                        setFilters={setSearchKeywords}
+                        filters={keywordsParam}
+                        setFilters={handleKeywordChange}
                         handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
-                        // initialState={initialState}
                         sorting={sorting}
                         setSorting={setSorting}
+                        pagination={pagination}
+                        setPagination={setPagination}
                     />}
                 {isLoadingOpportunitiesData && (
                     <LoadingSectionSkeleton />
                 )}
-            </div>
+            </motion.div>
         </section>
     )
 }
