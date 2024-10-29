@@ -40,7 +40,6 @@ interface DataTableProps<TData, TValue> {
     setSorting?: React.Dispatch<React.SetStateAction<SortingState>>
     pagination: PaginationState
     setPagination: any
-    totalRows: number
 }
 
 export function DataTable<TData, TValue>({
@@ -56,7 +55,6 @@ export function DataTable<TData, TValue>({
     setSorting,
     pagination,
     setPagination,
-    totalRows,
 }: DataTableProps<TData, TValue>) {
     const table = useReactTable({
         data,
@@ -159,7 +157,7 @@ export function DataTable<TData, TValue>({
                 </TableBody>
             </Table>
             {/* Pagination STARTS */}
-            {!!totalRows &&
+            {!!table.getRowModel().rows.length &&
                 <div className="pagination-container flex items-center justify-end sm:justify-between gap-5 flex-wrap py-4 px-4 sm:px-8">
                     <div className="pagination-stats">
                         <Label size="medium" weight="medium">
@@ -168,13 +166,12 @@ export function DataTable<TData, TValue>({
                     </div>
                     <div className="pagination-controls flex items-center justify-end space-x-2 flex-1 shrink-0 ml-16">
                         <Label size="medium" weight="medium" className="hidden xs:block shrink-0">
-                            {table.getRowModel().rows.length.toLocaleString()} {" "}
-                            of {totalRows.toLocaleString()} rows
+                            {table.getRowModel().rows.length.toLocaleString()} of {table.getRowCount().toLocaleString()} rows
                         </Label>
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => table.setPageIndex(0)}
+                            onClick={() => table.firstPage()}
                             disabled={!table.getCanPreviousPage()}
                         >
                             <ChevronsLeft className="w-5 h-5" />
@@ -198,7 +195,7 @@ export function DataTable<TData, TValue>({
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            onClick={() => table.lastPage()}
                             disabled={!table.getCanNextPage()}
                         >
                             <ChevronsRight className="w-5 h-5" />

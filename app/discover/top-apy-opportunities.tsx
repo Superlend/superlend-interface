@@ -170,7 +170,6 @@ export default function TopApyOpportunities() {
                     <DataTable
                         columns={columns}
                         data={tableData}
-                        totalRows={tableData.length}
                         filters={keywordsParam}
                         setFilters={handleKeywordChange}
                         handleRowClick={handleRowClick}
