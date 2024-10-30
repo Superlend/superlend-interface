@@ -13,6 +13,7 @@ import { useAccount } from 'wagmi'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive, convertScientificToNormal, isLowestValue } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import { UserPositionsByPlatform } from '@/components/charts/users-positions-pie-chart'
 
 type TProps = {
     walletAddress: `0x${string}` | undefined
@@ -99,7 +100,7 @@ export default function PortfolioOverview({
                 </Card>
             </article>
             <article>
-                <RadialChartStacked
+                <UserPositionsByPlatform
                     data={data}
                     isLoading={isLoading}
                 />
