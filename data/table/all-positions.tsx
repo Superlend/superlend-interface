@@ -76,7 +76,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             )
 
             return (
-                <span className="flex items-center gap-[8px] w-fit max-w-full">
+                <BodyText level="body2" weight="medium" className="flex items-center gap-[8px] w-fit max-w-full">
                     <InfoTooltip
                         hide={screenWidth < 768}
                         label={
@@ -101,7 +101,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         </span>
                     </Link>
                     {/* <InfoTooltip iconWidth={16} iconHeight={16} content={tooltipContent} /> */}
-                </span>
+                </BodyText>
             )
         },
         enableSorting: false,
@@ -116,12 +116,16 @@ export const columns: ColumnDef<TPositionsTable>[] = [
 
             return (
                 <span className="flex items-center gap-[8px]">
-                    <img
+                    <ImageWithDefault
                         src={row.original.platformLogo || '/images/logos/favicon-32x32.png'}
                         alt={row.original.platformName}
                         width={20}
-                        height={20} />
-                    <span className="truncate">{`${capitalizeText(platformName)} ${platformVersion}`}</span>
+                        height={20}
+                        className="w-[20px] h-[20px] max-w-[20px] max-h-[20px]"
+                    />
+                    <BodyText level="body2" weight="medium" className="truncate">
+                        {`${capitalizeText(platformName)} ${platformVersion}`}
+                    </BodyText>
                 </span>
             )
         },
@@ -144,7 +148,11 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                 )
             }
 
-            return `${Number(row.getValue("apy")).toFixed(2)}%`
+            return (
+                <BodyText level="body2" weight="medium">
+                    {`${Number(row.getValue("apy")).toFixed(2)}%`}
+                </BodyText>
+            )
         },
         // enableGlobalFilter: false,
     },
@@ -164,7 +172,11 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             const isLowestValue = value < 0.01;
             const sanitizedValue = isLowestValue ? "0.01" : abbreviateNumber(value);
 
-            return `${isLowestValue ? "< " : ""} $${sanitizedValue}`
+            return (
+                <BodyText level="body2" weight="medium">
+                    {`${isLowestValue ? "< " : ""} $${sanitizedValue}`}
+                </BodyText>
+            )
         },
         // enableGlobalFilter: false,
     },
@@ -184,7 +196,11 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             const isLowestValue = value < 0.01;
             const sanitizedValue = isLowestValue ? "0.01" : abbreviateNumber(value);
 
-            return `${isLowestValue ? "< " : ""} $${sanitizedValue}`
+            return (
+                <BodyText level="body2" weight="medium">
+                    {`${isLowestValue ? "< " : ""} $${sanitizedValue}`}
+                </BodyText>
+            )
         },
         // enableGlobalFilter: false,
     },
