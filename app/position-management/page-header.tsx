@@ -18,6 +18,7 @@ import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { PlatformWebsiteLink } from '@/types/platform';
 import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants';
 import { motion } from 'framer-motion';
+import { getChainDetails, getTokenDetails } from './helper-functions';
 
 export default function PageHeader() {
     const router = useRouter();
@@ -200,41 +201,6 @@ export default function PageHeader() {
 }
 
 // Helper functions =================================================
-
-function getTokenDetails({
-    tokenAddress,
-    platformData
-}: {
-    tokenAddress: string;
-    platformData: TPlatform
-}) {
-    const fallbackAsset = {
-        address: tokenAddress,
-        symbol: "",
-        name: "",
-        logo: "",
-        decimals: 0,
-        price_usd: 0,
-    };
-    const asset: TPlatformAsset["token"] = platformData?.assets?.find((asset: TPlatformAsset) => asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase())?.token || fallbackAsset;
-
-    return {
-        address: asset?.address || tokenAddress,
-        symbol: asset?.symbol || "",
-        name: asset?.name || "",
-        logo: asset?.logo || "",
-    }
-}
-
-function getChainDetails({
-    allChainsData,
-    chainIdToMatch
-}: {
-    allChainsData: any[]
-    chainIdToMatch: string | number
-}) {
-    return allChainsData?.find((chain: any) => Number(chain.chain_id) === Number(chainIdToMatch));
-}
 
 function getPageHeaderStats({
     tokenAddress,

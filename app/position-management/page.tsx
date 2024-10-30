@@ -11,6 +11,7 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { BodyText } from '@/components/ui/typography';
+import PositionDetails from './position-details';
 
 
 export default function PositionManagementPage() {
@@ -19,6 +20,7 @@ export default function PositionManagementPage() {
             <PageHeader />
             <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-[16px]">
                 <div className='flex flex-col gap-[16px]'>
+                    <PositionDetails />
                     <AssetHistory />
                 </div>
                 {/* <BlogCard /> */}
