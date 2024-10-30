@@ -99,7 +99,7 @@ export function DataTable<TData, TValue>({
                                         <TableHead
                                             key={header.id}
                                             className="pt-[24px] pb-[12px] pl-[32px]"
-                                            style={{ ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, true) }}
+                                            // style={{ ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, true) }}
                                         >
                                             <div className="flex items-center gap-[8px]">
                                                 <BodyText level="body2" weight="normal" className="text-gray-800 select-none">
@@ -158,7 +158,7 @@ export function DataTable<TData, TValue>({
                                             <TableCell
                                                 key={cell.id}
                                                 className={`py-4 w-[150px] min-w-[150px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""} ${!!handleRowClick ? "cursor-pointer" : ""}`}
-                                                style={{ ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>) }}
+                                                // style={{ ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>) }}
                                             >
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </TableCell>

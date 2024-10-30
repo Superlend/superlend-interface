@@ -53,6 +53,7 @@ export function HeadingText({ children, level = "h1", weight = "bold", className
 const bodySizes: Record<string, string> = {
     body1: "text-[14px] sm:text-[16px]",
     body2: "text-[12px] sm:text-[14px]",
+    body3: "text-[12px]",
 }
 
 const getBodyClassName = (level: IBodyTextProps["level"] = "body1", weight: IBodyTextProps["weight"] = "normal", className: string = "") => {
@@ -77,8 +78,8 @@ const getLabelClassName = (size: ILabelProps["size"] = "small", weight: ILabelPr
     return `${labelSizes[size]} ${fontWeights[weight]} ${COMMON_STYLES} ${className}`;
 }
 
-export function Label({ children, size, weight, className, htmlFor = "" }: ILabelProps) {
+export function Label({ children, size, weight, className, htmlFor = "", ...props }: ILabelProps) {
     return (
-        <label className={getLabelClassName(size, weight, className)} htmlFor={htmlFor}>{children}</label>
+        <label className={getLabelClassName(size, weight, className)} htmlFor={htmlFor} {...props}>{children}</label>
     )
 }

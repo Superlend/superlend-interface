@@ -94,9 +94,6 @@
   * {
     @apply border-border;
   }
-  html {
-    font-family: "Basier Circle", system-ui, sans-serif;
-  }
   body {
     @apply bg-background text-foreground;
   }

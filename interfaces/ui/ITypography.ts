@@ -9,7 +9,7 @@ export interface IHeadingTextProps {
 
 export interface IBodyTextProps {
     children: React.ReactNode;
-    level: "body1" | "body2";
+    level: "body1" | "body2" | "body3";
     weight?: TFontWeight;
     className?: string;
     as?: string;
@@ -21,4 +21,5 @@ export interface ILabelProps {
     size?: "small" | "medium" | "large";
     className?: string;
     htmlFor?: string;
+    [key: string]: any;
 }

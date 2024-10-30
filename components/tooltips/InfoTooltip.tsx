@@ -68,7 +68,7 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
                             {label && label}
                         </motion.span>
                     </TooltipTrigger>
-                    <TooltipContent sideOffset={15} className={`max-w-[280px] ${sizes[size]}`}>
+                    <TooltipContent sideOffset={5} className={`max-w-[280px] ${sizes[size]}`}>
                         {typeof content === "string" && <Label className='w-fit'>{content}</Label>}
                         {typeof content !== "string" && content}
                     </TooltipContent>

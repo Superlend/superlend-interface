@@ -60,7 +60,7 @@ export default function RootLayout({
         imageUrl="/og.png"
         keywords={["DeFi", "Lend", "Borrow", "Money Markets", "Aggregator", "DeFi rates", "Earn in DeFi", "Borrow USDC", "Earn USDC"]}
       /> */}
-      <body className={`bg-[#B4E2FB]`}>
+      <body className={`bg-[#B4E2FB] font-sans`}>
         <ScrollToTop />
         <GoogleTagManager gtmId={GTM_ID} />
         <ContextProvider cookies={cookies}>
