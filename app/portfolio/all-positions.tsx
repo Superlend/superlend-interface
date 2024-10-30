@@ -161,6 +161,8 @@ export default function AllPositions({
                         sorting={sorting}
                         setSorting={setSorting}
                         noDataMessage={"No positions"}
+                    // pagination={undefined}
+                    // setPagination={undefined}
                     />}
                 {isLoadingPortfolioData && (
                     <LoadingSectionSkeleton />

@@ -42,8 +42,8 @@ interface DataTableProps<TData, TValue> {
     sorting?: SortingState
     setSorting?: React.Dispatch<React.SetStateAction<SortingState>>;
     noDataMessage?: string;
-    pagination: PaginationState
-    setPagination: any
+    pagination?: PaginationState
+    setPagination?: any
 }
 
 export function DataTable<TData, TValue>({
@@ -90,7 +90,7 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="bg-white bg-opacity-40 rounded-6 border border-transparent overflow-hidden">
-            <ScrollArea className="h-[calc(100vh-250px)]">
+            <ScrollArea className="h-[calc(100vh-250px)] max-h-[500px]">
                 <Table>
                     <TableHeader className="[&_tr]:border-0 sticky top-0">
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -171,7 +171,7 @@ export function DataTable<TData, TValue>({
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    No results.
+                                    {noDataMessage || "No results."}
                                 </TableCell>
                             </TableRow>
                         )}

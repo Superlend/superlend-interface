@@ -25,6 +25,7 @@ import { useContext } from "react"
 import { AssetsDataContext } from "@/context/data-provider"
 import AvatarCircles from "../ui/avatar-circles"
 import { Skeleton } from "../ui/skeleton"
+import { ChartPie } from "lucide-react"
 
 export const description = "A radial chart with stacked sections"
 
@@ -200,9 +201,17 @@ export function RadialChartStacked({
         <Card className="flex flex-col">
             <CardContent className="flex flex-1 items-center pb-0">
                 {
-                    isLoading && <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full my-4" />
+                    isLoading && <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full mt-8 mb-16" />
                 }
-                {!isLoading &&
+                {
+                    !isLoading && chartData.length === 0 &&
+                    <div className="flex flex-col items-center justify-center w-full h-[300px] gap-3">
+                        <ChartPie strokeWidth={1.5} className="w-8 h-8 text-gray-700" />
+                        <BodyText level="body1" weight="normal" className="text-gray-700">No positions to display</BodyText>
+                    </div>
+                }
+                {
+                    !isLoading && chartData.length > 0 &&
                     <ChartContainer
                         config={chartConfig}
                         className="mx-auto aspect-square w-full max-w-[250px]"
@@ -265,17 +274,21 @@ export function RadialChartStacked({
                                 ))
                             }
                         </RadialBarChart>
-                    </ChartContainer>}
-            </CardContent>
-            <CardFooter className="flex-col gap-2 text-sm">
-                {isLoading && <Skeleton className="h-7 w-full max-w-[200px] rounded-3" />}
-                {!isLoading &&
-                    <div className="flex items-center gap-2 font-medium leading-none">
-                        {totalPlatformsCount > 0 && <AvatarCircles avatarUrls={platformDetails.logos} avatarDetails={platformTooltipNames} />}
-                        Spread across {totalPlatformsCount} platform{totalPlatformsCount > 1 ? "s" : ""}
-                    </div>
+                    </ChartContainer>
                 }
-            </CardFooter>
+            </CardContent>
+            {
+                !isLoading && chartData.length > 0 &&
+                <CardFooter className="flex-col gap-2 text-sm">
+                    {isLoading && <Skeleton className="h-7 w-full max-w-[200px] rounded-3" />}
+                    {!isLoading &&
+                        <div className="flex items-center gap-2 font-medium leading-none">
+                            {totalPlatformsCount > 0 && <AvatarCircles avatarUrls={platformDetails.logos} avatarDetails={platformTooltipNames} />}
+                            Spread across {totalPlatformsCount} platform{totalPlatformsCount > 1 ? "s" : ""}
+                        </div>
+                    }
+                </CardFooter>
+            }
         </Card>
     )
 }

@@ -14,7 +14,7 @@ import ArrowRightIcon from "@/components/icons/arrow-right-icon";
 import Image from "next/image";
 import ImageWithBadge from "@/components/ImageWithBadge";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import useGetPortfolioData from "@/hooks/useGetPortfolioData";
 import { abbreviateNumber, capitalizeText } from "@/lib/utils";
@@ -118,10 +118,6 @@ export default function TopLowRiskPositions({
         api.scrollPrev();
 
         setScrollToPos((state) => ({ ...state, prev: false }));
-    }
-
-    if (POSITIONS_AT_LOW_RISK.length <= 0) {
-        return null;
     }
 
     return (
@@ -253,6 +249,13 @@ export default function TopLowRiskPositions({
                 isLoading &&
                 <div className="overflow-hidden rounded-6 pl-5">
                     <Skeleton className="h-[225px] w-[364px]" />
+                </div>
+            }
+            {
+                !isLoading && POSITIONS_AT_LOW_RISK.length === 0 &&
+                <div className="flex items-center justify-start w-full h-full gap-2 ml-5 py-5">
+                    <ShieldCheck className="w-8 h-8 text-secondary-500" />
+                    <BodyText level="body1" weight="semibold" className="text-secondary-500">No positions at risk</BodyText>
                 </div>
             }
         </section>
