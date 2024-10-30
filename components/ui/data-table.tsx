@@ -73,7 +73,7 @@ export function DataTable<TData, TValue>({
             },
         },
         state: {
-            globalFilter: filters.trim(),
+            globalFilter: filters,
             columnVisibility,
             sorting,
             // pagination,
