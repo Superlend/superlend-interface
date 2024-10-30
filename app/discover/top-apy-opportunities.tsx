@@ -128,12 +128,12 @@ export default function TopApyOpportunities() {
     };
 
     function handleKeywordChange(e: any) {
-        const params = { keywords: !!e.target.value.trim().length ? e.target.value : undefined, page: undefined }
+        const params = { keywords: !!e.target.value.trim().length ? e.target.value : undefined }
         updateSearchParams(params)
     }
 
     function handleClearSearch() {
-        const params = { keywords: undefined, page: undefined }
+        const params = { keywords: undefined }
         updateSearchParams(params)
     }
 
