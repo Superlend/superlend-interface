@@ -145,10 +145,6 @@ export default function YourPositionsAtRiskCarousel({
         setScrollToPos((state) => ({ ...state, prev: false }));
     }
 
-    if (PLATFORMS_WITH_POSITIONS?.length === 0) {
-        return null;
-    }
-
     return (
         <section id="your-positions-at-risk">
             <div className="section-header flex items-center justify-between mb-[24px] px-5">
@@ -280,11 +276,12 @@ export default function YourPositionsAtRiskCarousel({
                             </CarouselItem>
                         ))}
                     </CarouselContent>
-                </Carousel>}
+                </Carousel>
+            }
             {
                 isLoading &&
-                <div className="overflow-hidden rounded-6 pl-5">
-                    <Skeleton className="h-[225px] w-[364px]" />
+                <div className="relative h-[225px] w-[364px] overflow-hidden rounded-6 ml-5">
+                    <Skeleton className="h-full w-full" />
                 </div>
             }
             {

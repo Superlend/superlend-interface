@@ -27,6 +27,7 @@ import AvatarCircles from "../ui/avatar-circles"
 import ImageWithDefault from "../ImageWithDefault"
 import { BodyText, Label } from "../ui/typography"
 import { Badge } from "../ui/badge"
+import { ChartPie } from "lucide-react"
 
 export const description = "A donut chart with text"
 
@@ -175,73 +176,86 @@ export function UserPositionsByPlatform({
     return (
         <Card className="flex flex-col">
             <CardContent className="flex-1 pb-0">
-                <ChartContainer
-                    config={chartConfig}
-                    className="mx-auto aspect-square max-h-[250px]"
-                >
-                    <PieChart>
-                        <ChartTooltip
-                            cursor={false}
-                            content={
-                                <ChartTooltipContent
-                                    hideIndicator
-                                    className="rounded-6"
-                                    labelFormatter={(label, payload) => <CustomToolTip payload={payload[0].payload} />}
-                                />
-                            }
-                        />
-                        <Pie
-                            data={chartData}
-                            dataKey="chartValue"
-                            nameKey="chartKey"
-                            innerRadius={75}
-                            // strokeWidth={30}
-                            stroke="#fff"
-                            cornerRadius={12}
-                            paddingAngle={1}
-                        >
-                            <RechartsLabel
-                                content={({ viewBox }) => {
-                                    if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                                        return (
-                                            <text
-                                                x={viewBox.cx}
-                                                y={viewBox.cy}
-                                                textAnchor="middle"
-                                                dominantBaseline="middle"
-                                            >
-                                                <tspan
-                                                    x={viewBox.cx}
-                                                    y={viewBox.cy}
-                                                    className="fill-foreground text-3xl font-bold"
-                                                >
-                                                    {openPositionsCount.toLocaleString()}
-                                                </tspan>
-                                                <tspan
-                                                    x={viewBox.cx}
-                                                    y={(viewBox.cy || 0) + 24}
-                                                    className="fill-muted-foreground"
-                                                >
-                                                    Positions open
-                                                </tspan>
-                                            </text>
-                                        )
-                                    }
-                                }}
-                            />
-                        </Pie>
-                    </PieChart>
-                </ChartContainer>
-            </CardContent>
-            <CardFooter className="flex-col gap-2 text-sm">
-                {isLoading && <Skeleton className="h-7 w-full max-w-[200px] rounded-3" />}
-                {!isLoading &&
-                    <div className="flex items-center gap-2 font-medium leading-none">
-                        {totalPlatformsCount > 0 && <AvatarCircles avatarUrls={platformDetails.logos} avatarDetails={platformTooltipNames} />}
-                        Spread across {totalPlatformsCount} platform{totalPlatformsCount > 1 ? "s" : ""}
+                {
+                    isLoading && <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full my-8" />
+                }
+                {
+                    !isLoading && chartData.length === 0 &&
+                    <div className="flex flex-col items-center justify-center w-full h-[250px] gap-3">
+                        <ChartPie strokeWidth={1.5} className="w-8 h-8 text-gray-700" />
+                        <BodyText level="body1" weight="normal" className="text-gray-700">No positions to display</BodyText>
                     </div>
                 }
-            </CardFooter>
+                {!isLoading && chartData.length > 0 &&
+                    <ChartContainer
+                        config={chartConfig}
+                        className="mx-auto aspect-square max-h-[250px]"
+                    >
+                        <PieChart>
+                            <ChartTooltip
+                                cursor={false}
+                                content={
+                                    <ChartTooltipContent
+                                        hideIndicator
+                                        className="rounded-6"
+                                        labelFormatter={(label, payload) => <CustomToolTip payload={payload[0].payload} />}
+                                    />
+                                }
+                            />
+                            <Pie
+                                data={chartData}
+                                dataKey="chartValue"
+                                nameKey="chartKey"
+                                innerRadius={75}
+                                // strokeWidth={30}
+                                stroke="#fff"
+                                cornerRadius={12}
+                                paddingAngle={1}
+                            >
+                                <RechartsLabel
+                                    content={({ viewBox }) => {
+                                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                            return (
+                                                <text
+                                                    x={viewBox.cx}
+                                                    y={viewBox.cy}
+                                                    textAnchor="middle"
+                                                    dominantBaseline="middle"
+                                                >
+                                                    <tspan
+                                                        x={viewBox.cx}
+                                                        y={viewBox.cy}
+                                                        className="fill-foreground text-3xl font-bold"
+                                                    >
+                                                        {openPositionsCount.toLocaleString()}
+                                                    </tspan>
+                                                    <tspan
+                                                        x={viewBox.cx}
+                                                        y={(viewBox.cy || 0) + 24}
+                                                        className="fill-gray-700 font-medium text-[14px]"
+                                                    >
+                                                        Positions open
+                                                    </tspan>
+                                                </text>
+                                            )
+                                        }
+                                    }}
+                                />
+                            </Pie>
+                        </PieChart>
+                    </ChartContainer>
+                }
+            </CardContent>
+            {!!totalPlatformsCount &&
+                <CardFooter className="flex-col gap-2 text-sm">
+                    {isLoading && <Skeleton className="h-7 w-full max-w-[200px] rounded-3" />}
+                    {!isLoading && totalPlatformsCount > 0 &&
+                        <div className="flex items-center gap-2 font-medium leading-none text-gray-700">
+                            {totalPlatformsCount > 0 && <AvatarCircles avatarUrls={platformDetails.logos} avatarDetails={platformTooltipNames} />}
+                            Spread across {totalPlatformsCount} platform{totalPlatformsCount > 1 ? "s" : ""}
+                        </div>
+                    }
+                </CardFooter>}
         </Card>
     )
 }

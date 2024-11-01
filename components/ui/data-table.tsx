@@ -92,9 +92,9 @@ export function DataTable<TData, TValue>({
         <div className="bg-white bg-opacity-40 rounded-6 border border-transparent overflow-hidden">
             <ScrollArea className="h-[calc(100vh-250px)] max-h-[500px]">
                 <Table>
-                    <TableHeader className="[&_tr]:border-0 sticky top-0">
+                    <TableHeader className="[&_tr]:border-0">
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
+                            <TableRow key={headerGroup.id} className="hover:bg-transparent">
                                 {headerGroup.headers.map((header) => {
                                     const { column } = header
                                     return (

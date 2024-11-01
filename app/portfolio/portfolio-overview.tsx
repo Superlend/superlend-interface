@@ -1,19 +1,12 @@
 "use client"
 
-import { AreaChartStacked } from '@/components/charts/area-chart-stacked'
-import { RadialChartStacked } from '@/components/charts/radial-chart-stacked'
-import MainContainer from '@/components/MainContainer'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import React from 'react'
-import { useAccount } from 'wagmi'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive, convertScientificToNormal, isLowestValue } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
-import { UserPositionsByPlatform } from '@/components/charts/users-positions-pie-chart'
+import { UserPositionsByPlatform } from '@/components/charts/user-positions-pie-chart'
 
 type TProps = {
     walletAddress: `0x${string}` | undefined
