@@ -13,12 +13,18 @@ import { useSearchParams } from 'next/navigation';
 import useGetPlatformData from '@/hooks/useGetPlatformData';
 import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
-import { TPlatform, TPlatformAsset } from '@/types';
+import { TChain, TPlatform, TPlatformAsset } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
-import { PlatformWebsiteLink } from '@/types/platform';
 import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants';
 import { motion } from 'framer-motion';
 import { getChainDetails, getTokenDetails } from './helper-functions';
+
+type TTokenDetails = {
+    address: string;
+    symbol: string;
+    name: string;
+    logo: string;
+}
 
 export default function PageHeader() {
     const router = useRouter();
@@ -38,12 +44,12 @@ export default function PageHeader() {
         chain_id: Number(chain_id),
     });
 
-    const tokenDetails = getTokenDetails({
+    const tokenDetails: TTokenDetails = getTokenDetails({
         tokenAddress,
         platformData
     })
 
-    const chainDetails: any = getChainDetails({
+    const chainDetails: TChain | undefined = getChainDetails({
         allChainsData,
         chainIdToMatch: chain_id
     })
@@ -70,36 +76,38 @@ export default function PageHeader() {
         platformData: platformData as TPlatform
     })
 
-    const tokenSymbol = tokenDetails?.symbol;
-    const tokenLogo = tokenDetails?.logo;
-    const tokenName = tokenDetails?.name;
-    const chainName = chainDetails?.name;
-    const chainLogo = chainDetails?.logo;
-    const platformName = platformData.platform.platform_name.split("-").slice(0, 2).join(" ");
-    const platformLogo = platformData?.platform.logo;
-    const platformWebsiteLink = getPlatformWebsiteLink({
-        tokenAddress,
+    const {
+        tokenSymbol,
+        tokenLogo,
+        tokenName,
         chainName,
+        chainLogo,
         platformName,
-    });
+        platformLogo,
+        platformWebsiteLink
+    } = getAssetDetails({
+        tokenDetails,
+        chainDetails,
+        platformData: platformData as TPlatform
+    })
+
+    const childVariants = {
+        initial: { opacity: 0, y: 30 },
+        animate: { opacity: 1, y: 0 },
+    }
 
     return (
         <section className="header flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
-            <motion.div className="will-change-transform"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
-            >
-                <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
-                    <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
-                </Button>
-            </motion.div>
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-[24px] w-full">
+            <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
+                <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
+            </Button>
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-[24px] w-full will-change-transform" >
                 <motion.div
                     className="flex flex-wrap items-center gap-[16px] will-change-transform"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.5, ease: "easeOut" }}
+                    variants={childVariants}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ duration: 0.5, ease: "easeOut" }}
                 >
                     {/* Loading Skeleton */}
                     {isLoadingPlatformData && <LoadingSkeleton />}
@@ -158,10 +166,11 @@ export default function PageHeader() {
                     />
                 </motion.div>
                 {/* Page Header Stats */}
-                <motion.div className="header-right flex flex-wrap items-center gap-[24px]"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.7, ease: "easeOut" }}
+                <motion.div className="header-right flex flex-wrap items-center gap-[24px] will-change-transform"
+                    variants={childVariants}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ duration: 0.5, ease: "easeOut", delay: 0.4 }}
                 >
                     {/* Loading Skeleton */}
                     {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
@@ -298,6 +307,42 @@ function getChainNameBasedOnAaveMarkets(chainName: string) {
 
     return chainName?.toLowerCase();
 }
+
+function getAssetDetails({
+    tokenDetails,
+    chainDetails,
+    platformData
+}: {
+    tokenDetails: TTokenDetails;
+    chainDetails: any;
+    platformData: any
+}) {
+    const tokenSymbol = tokenDetails?.symbol;
+    const tokenLogo = tokenDetails?.logo;
+    const tokenName = tokenDetails?.name;
+    const chainName = chainDetails?.name;
+    const chainLogo = chainDetails?.logo;
+    const platformName = platformData.platform.platform_name.split("-").slice(0, 2).join(" ");
+    const platformLogo = platformData?.platform.logo;
+    const platformWebsiteLink = getPlatformWebsiteLink({
+        tokenAddress: tokenDetails?.address,
+        chainName,
+        platformName,
+    });
+
+    return {
+        tokenSymbol,
+        tokenLogo,
+        tokenName,
+        chainName,
+        chainLogo,
+        platformName,
+        platformLogo,
+        platformWebsiteLink
+    }
+}
+
+// Child Components =================================================
 
 function LoadingSkeleton() {
     return (

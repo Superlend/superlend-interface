@@ -1,4 +1,4 @@
-import { TPlatform, TPlatformAsset } from "@/types";
+import { TPlatform, TPlatformAsset, TChain } from "@/types";
 
 export function getTokenDetails({
   tokenAddress,
@@ -33,7 +33,7 @@ export function getChainDetails({
   allChainsData,
   chainIdToMatch,
 }: {
-  allChainsData: any[];
+  allChainsData: TChain[];
   chainIdToMatch: string | number;
 }) {
   return allChainsData?.find(
