@@ -32,7 +32,7 @@ export default function ImageWithBadge({
         height: badgeImgHeight || 12,
         className: `max-w-[${badgeImgWidth || 12}px] max-h-[${badgeImgHeight || 12}px]`
     }
-    
+
     return (
         <span className='relative shrink-0'>
             <ImageWithDefault
@@ -41,6 +41,10 @@ export default function ImageWithBadge({
                 width={mainImgSizes.width}
                 height={mainImgSizes.height}
                 className={`relative rounded-full shrink-0 object-contain ${mainImgSizes.className}`}
+                style={{
+                    maxHeight: `${mainImgSizes.height}px`,
+                    maxWidth: `${mainImgSizes.width}px`
+                }}
             />
             <ImageWithDefault
                 src={badgeImg}
@@ -48,6 +52,10 @@ export default function ImageWithBadge({
                 width={badgeImgSizes.width}
                 height={badgeImgSizes.height}
                 className={`absolute bottom-[-6px] right-[-3px] bg-gray-100 rounded-full ring-2 ring-white ${badgeImgSizes.className} object-contain`}
+                style={{
+                    maxHeight: `${badgeImgSizes.height}px`,
+                    maxWidth: `${badgeImgSizes.width}px`
+                }}
             />
         </span>
     )
