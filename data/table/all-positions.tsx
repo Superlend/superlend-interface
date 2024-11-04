@@ -6,10 +6,12 @@ import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import TooltipText from "@/components/tooltips/TooltipText";
 import { Badge } from "@/components/ui/badge";
 import { BodyText, Label } from "@/components/ui/typography";
+import { PositionsContext } from "@/context/positions-provider";
 import useDimensions from "@/hooks/useDimensions";
 import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
+import { useContext } from "react";
 
 export type TPositions = {
     token: string
@@ -134,11 +136,26 @@ export const columns: ColumnDef<TPositionsTable>[] = [
     {
         accessorKey: "apy",
         accessorFn: item => Number(item.apy),
-        header: "APY",
+        header: () => {
+            const { positionType } = useContext<any>(PositionsContext);
+            const lendTooltipContent = "% interest you earn on deposits over a year. This includes compounding.";
+            const borrowTooltipContent = "% interest you pay for your borrows over a year. This includes compunding.";
+            const tooltipContent = positionType === "lend" ? lendTooltipContent : borrowTooltipContent;
+            return (
+                <InfoTooltip
+                    side="bottom"
+                    label={
+                        <TooltipText>APY</TooltipText>
+                    }
+                    content={tooltipContent}
+                />
+            )
+        },
         cell: ({ row }) => {
             if (`${Number(row.getValue("apy")).toFixed(2)}` === "0.00") {
                 return (
                     <InfoTooltip
+                        side="bottom"
                         label={
                             <TooltipText>{`${Number(row.getValue("apy")).toFixed(2)}%`}</TooltipText>
                         }
@@ -161,6 +178,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         accessorFn: item => Number(item.deposits),
         header: () => (
             <InfoTooltip
+                side="bottom"
                 label={
                     <TooltipText>Deposits</TooltipText>
                 }
@@ -185,6 +203,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         accessorFn: item => Number(item.borrows),
         header: () => (
             <InfoTooltip
+                side="bottom"
                 label={
                     <TooltipText>Borrows</TooltipText>
                 }
