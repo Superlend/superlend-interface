@@ -104,7 +104,8 @@ export default function TopApyOpportunities() {
             chain_id: item.chain_id,
             chainName: allChainsData.find((chain: any) => Number(chain.chain_id) === Number(item.chain_id))?.name || "",
             protocol_identifier: item.platform.protocol_identifier,
-            platformName: `${item.platform.platform_name}`,
+            platformName: `${item.platform.name}`,
+            platformId: `${item.platform.platform_name}`,
             platformLogo: item.platform.logo,
             apy_current: item.platform.apy.current,
             max_ltv: item.platform.max_ltv,
@@ -117,7 +118,7 @@ export default function TopApyOpportunities() {
     });
 
     const filteredTableDataByPlatformIds = rawTableData.filter((opportunity) => {
-        return platformIdsParam.includes(opportunity.platformName.split("-")[0])
+        return platformIdsParam.includes(opportunity.platformId.split("-")[0])
     });
 
     const tableData = platformIdsParam.length > 0 ? filteredTableDataByPlatformIds : rawTableData;

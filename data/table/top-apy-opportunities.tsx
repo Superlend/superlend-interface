@@ -28,7 +28,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const chainId = row.original.chain_id;
             const chainLogo = row.original.chainLogo;
             const chainName = row.original.chainName;
-            const platformId = row.original.protocol_identifier;
+            const protocolIdentifier = row.original.protocol_identifier;
             const tooltipContent = (
                 <span className="flex flex-col gap-[16px]">
                     <span className="flex flex-col gap-[4px]">
@@ -67,7 +67,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         query: {
                             token: tokenAddress,
                             chain_id: chainId,
-                            protocol_identifier: platformId,
+                            protocol_identifier: protocolIdentifier,
                         }
                     }}
                         className="truncate">
@@ -88,17 +88,17 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => item.platformName,
         cell: ({ row }) => {
             const platformName: string = row.getValue("platformName");
-            const platformVersion = getPlatformVersion(platformName);
+            // const platformVersion = getPlatformVersion(platformName);
 
             return (
                 <span className="flex items-center gap-[8px]">
-                    <img
-                        src={row.original.platformLogo || '/images/logos/favicon-32x32.png'}
+                    <ImageWithDefault
+                        src={row.original.platformLogo}
                         alt={row.original.platformName}
                         width={20}
                         height={20} />
                     <BodyText level={"body2"} weight={"semibold"} className="truncate">
-                        {`${capitalizeText(platformName)} ${platformVersion}`}
+                        {platformName}
                     </BodyText>
                 </span>
             )

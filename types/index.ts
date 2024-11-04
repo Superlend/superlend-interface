@@ -112,6 +112,7 @@ export type TOpportunityTable = {
   chainName: string;
   protocol_identifier: string;
   platformName: string;
+  platformId: string;
   platformLogo: string;
   apy_current: string;
   additional_rewards: boolean;

@@ -74,12 +74,13 @@ export default function PageHeader() {
     const tokenName = tokenDetails?.name;
     const chainName = chainDetails?.name;
     const chainLogo = chainDetails?.logo;
-    const platformName = platformData.platform.platform_name.split("-").slice(0, 2).join(" ");
+    const platformName = platformData.platform.name;
+    const platformId = platformData.platform.platform_name;
     const platformLogo = platformData?.platform.logo;
     const platformWebsiteLink = getPlatformWebsiteLink({
         tokenAddress,
         chainName,
-        platformName,
+        platformId,
     });
 
     return (
@@ -130,13 +131,13 @@ export default function PageHeader() {
                     }
                     {/* Platform Details */}
                     {!isLoadingPlatformData && platformLogo &&
-                        <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit'>
-                            <div className="flex items-center gap-1">
-                                <img src={platformLogo} alt={`${platformName} Platform`} width={16} height={16} className='object-contain shrink-0' />
-                                <Label weight='medium' className='leading-[0]'>{`${platformName.split(" ")[0]} ${getPlatformVersion(platformName)}`}</Label>
+                        <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[200px]'>
+                            <div className="flex items-center gap-1 basis-full truncate">
+                                <ImageWithDefault src={platformLogo} alt={`${platformName}`} width={16} height={16} className='object-contain shrink-0' />
+                                <Label weight='medium' className='leading-[0] shrink-0'>{platformName.split(" ")[0]}</Label>
                             </div>
                             <a
-                                className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
+                                className="basis-[67px] inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
                                 href={platformWebsiteLink}
                                 target='_blank'>
                                 <span className="uppercase text-secondary-500 font-medium">more</span>
@@ -284,7 +285,7 @@ function getAssetTooltipContent({
             label: "Platform",
             image: platformLogo,
             imageAlt: platformName,
-            displayName: `${platformName.split(" ")[0]} ${getPlatformVersion(platformName)}`
+            displayName: platformName
         },
     ]
     return (
@@ -307,20 +308,21 @@ function getAssetTooltipContent({
 function getPlatformWebsiteLink({
     tokenAddress,
     chainName,
-    platformName,
+    platformId,
 }: {
     tokenAddress: string;
     chainName: string;
-    platformName: string;
+    platformId: string;
 }) {
-    const platformNameId = platformName?.split(" ")[0].toLowerCase();
+    const platformNameId = platformId?.split("-")[0].toLowerCase();
     const baseUrl = platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
     const paths: any = {
         aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName)}_v3`,
         compound: `/markets/v2`,
         fluid: "",
-        mopho: ""
+        morpho: ""
     }
+
     const path = paths[platformNameId];
     return `${baseUrl}${path}`
 }
