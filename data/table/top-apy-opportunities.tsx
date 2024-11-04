@@ -56,6 +56,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             <ImageWithBadge
                                 mainImg={tokenLogo}
                                 badgeImg={chainLogo}
+                                mainImgAlt={tokenSymbol}
+                                badgeImgAlt={chainName}
                             />
                         }
                         content={tooltipContent}
