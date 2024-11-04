@@ -21,6 +21,9 @@ const config = {
         "2xl": "1400px",
       },
     },
+    fontFamily: {
+      sans: ['"Basier Circle"', "system-ui", "sans-serif"],
+    },
     extend: {
       screens: {
         xs: "375px",

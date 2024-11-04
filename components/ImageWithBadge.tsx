@@ -23,25 +23,31 @@ export default function ImageWithBadge({
     badgeImgAlt
 }: IProps) {
     const mainImgSizes = {
-        height: `max-h-[${mainImgHeight || 20}px]`,
-        width: `max-w-[${mainImgWidth || 20}px]`,
+        width: mainImgWidth || 20,
+        height: mainImgHeight || 20,
+        className: `max-w-[${mainImgWidth || 20}px] max-h-[${mainImgHeight || 20}px]`
     }
-
+    const badgeImgSizes = {
+        width: badgeImgWidth || 12,
+        height: badgeImgHeight || 12,
+        className: `max-w-[${badgeImgWidth || 12}px] max-h-[${badgeImgHeight || 12}px]`
+    }
+    
     return (
         <span className='relative shrink-0'>
             <ImageWithDefault
                 src={mainImg}
                 alt={mainImgAlt}
-                width={mainImgWidth || 20}
-                height={mainImgHeight || 20}
-                className={`relative rounded-full shrink-0 object-contain ${mainImgSizes.width} ${mainImgSizes.height}`}
+                width={mainImgSizes.width}
+                height={mainImgSizes.height}
+                className={`relative rounded-full shrink-0 object-contain ${mainImgSizes.className}`}
             />
             <ImageWithDefault
                 src={badgeImg}
                 alt={badgeImgAlt}
-                width={badgeImgWidth || 12}
-                height={badgeImgHeight || 12}
-                className="absolute bottom-[-6px] right-[-3px] bg-gray-100 rounded-full ring-2 ring-white max-w-[12px] max-h-[12px] object-contain"
+                width={badgeImgSizes.width}
+                height={badgeImgSizes.height}
+                className={`absolute bottom-[-6px] right-[-3px] bg-gray-100 rounded-full ring-2 ring-white ${badgeImgSizes.className} object-contain`}
             />
         </span>
     )

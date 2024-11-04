@@ -10,7 +10,7 @@ import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegat
 import { TOpportunityTable, TReward } from "@/types";
 import { PlatformLogo } from "@/types/platform";
 import { ColumnDef } from "@tanstack/react-table";
-import { Percent } from "lucide-react";
+import { ChartNoAxesColumnIncreasing, Percent } from "lucide-react";
 import Link from "next/link";
 import { useContext } from "react";
 
@@ -113,6 +113,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const tooltipContent = positionType === "lend" ? lendTooltipContent : borrowTooltipContent;
             return (
                 <InfoTooltip
+                    side="bottom"
                     label={
                         <TooltipText>APY</TooltipText>
                     }
@@ -180,6 +181,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => Number(item.max_ltv),
         header: () => (
             <InfoTooltip
+                side="bottom"
                 label={
                     <TooltipText>Max LTV</TooltipText>
                 }
@@ -213,6 +215,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => Number(item.deposits),
         header: () => (
             <InfoTooltip
+                side="bottom"
                 label={
                     <TooltipText>Deposits</TooltipText>
                 }
@@ -241,6 +244,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => Number(item.borrows),
         header: () => (
             <InfoTooltip
+                side="bottom"
                 label={
                     <TooltipText>Borrows</TooltipText>
                 }
@@ -269,6 +273,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => Number(item.utilization),
         header: () => (
             <InfoTooltip
+                side="bottom"
                 label={
                     <TooltipText>Utilization</TooltipText>
                 }
@@ -336,39 +341,41 @@ function getRewardsGroupedByAsset(rewards: TReward[]) {
  */
 function getRewardsTooltipContent({ baseRateFormatted, rewards, apyCurrent }: { baseRateFormatted: string, rewards: TReward[], apyCurrent: number }) {
     return (
-        <span className="flex flex-col divide-y divide-gray-800">
-            <BodyText level="body1" weight="semibold" className="py-2">Rate & Rewards</BodyText>
-            <span className="flex items-center justify-between gap-10 py-2">
-                <span className="flex items-center gap-1">
-                    <Percent className="w-[16px] h-[16px]" />
-                    <Label weight="medium">Rate</Label>
-                </span>
-                <BodyText level="body2" weight="medium">
-                    + {baseRateFormatted}%
+        <div className="flex flex-col divide-y divide-gray-800">
+            <BodyText level="body1" weight="medium" className="py-2 text-gray-800/75">Rate & Rewards</BodyText>
+            <div className="flex items-center justify-between gap-[100px] py-2" style={{ gap: '70px' }}>
+                <div className="flex items-center gap-1">
+                    <ChartNoAxesColumnIncreasing className="w-[16px] h-[16px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">Base rate</Label>
+                </div>
+                <BodyText level="body3" weight="medium" className="text-gray-800">
+                    {baseRateFormatted}%
                 </BodyText>
-            </span>
+            </div>
             {
                 rewards?.map((reward: TReward) => (
-                    <span key={reward.asset.address} className="flex items-center justify-between gap-10 py-2">
-                        <span className="flex items-center gap-1">
-                            <ImageWithDefault src={reward.asset.logo} width={16} height={16} className="cursor-pointer hover:scale-110 rounded-full object-contain" />
-                            <Label weight="medium" className="truncate">{reward.asset.name}</Label>
-                        </span>
-                        <BodyText level="body2" weight="medium">
-                            {abbreviateNumber(reward.supply_apy)}%
+                    <div key={reward.asset.address} className="flex items-center justify-between gap-[100px] py-2" style={{ gap: '70px' }}>
+                        <div className="flex items-center gap-1">
+                            <ImageWithDefault src={reward.asset.logo} width={16} height={16} className="inline-block rounded-full object-contain" />
+                            <Label weight="medium" className="truncate text-gray-800 max-w-[100px] truncate" title={reward.asset.name}>
+                                {reward.asset.name}
+                            </Label>
+                        </div>
+                        <BodyText level="body3" weight="medium" className="text-gray-800">
+                            + {abbreviateNumber(reward.supply_apy)}%
                         </BodyText>
-                    </span>
+                    </div>
                 ))
             }
-            <span className="flex items-center justify-between gap-10 py-2">
-                <span className="flex items-center gap-1">
-                    <ImageWithDefault src="/icons/sparkles.svg" width={16} height={16} className="cursor-pointer hover:scale-110" />
-                    <Label weight="semibold">Net APY</Label>
-                </span>
-                <BodyText level="body2" weight="semibold">
+            <div className="flex items-center justify-between gap-[100px] py-2" style={{ gap: '70px' }}>
+                <div className="flex items-center gap-1">
+                    <ImageWithDefault src="/icons/sparkles.svg" width={16} height={16} className="inline-block" />
+                    <Label weight="medium" className="text-gray-800">Net APY</Label>
+                </div>
+                <BodyText level="body3" weight="medium" className="text-gray-800">
                     = {abbreviateNumber(apyCurrent)}%
                 </BodyText>
-            </span>
-        </span>
+            </div>
+        </div>
     )
 }

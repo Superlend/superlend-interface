@@ -18,6 +18,7 @@ import useDimensions from '@/hooks/useDimensions'
 import DiscoverFiltersDropdown from '@/components/dropdowns/DiscoverFiltersDropdown';
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { motion } from 'framer-motion'
+import { useDebounce } from '@/hooks/useDebounce';
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[];
@@ -37,6 +38,8 @@ export default function TopApyOpportunities() {
     const [sorting, setSorting] = useState<SortingState>([
         { id: 'apy_current', desc: positionTypeParam === "lend" },
     ]);
+    const [keywords, setKeywords] = useState<string>(keywordsParam);
+    const debouncedKeywords = useDebounce(keywords, 300);
     const [pagination, setPagination] = useState<PaginationState>({
         pageIndex: Number(pageParam) || 0,
         pageSize: 10,
@@ -66,6 +69,11 @@ export default function TopApyOpportunities() {
         })
         setSorting([{ id: 'apy_current', desc: positionTypeParam === "lend" }])
     }, [positionTypeParam])
+
+    useEffect(() => {
+        const params = { keywords: !!debouncedKeywords.trim().length ? debouncedKeywords : undefined }
+        updateSearchParams(params)
+    }, [debouncedKeywords])
 
     // useEffect(() => {
     //     const pageParam = searchParams.get('page');
@@ -128,13 +136,11 @@ export default function TopApyOpportunities() {
     };
 
     function handleKeywordChange(e: any) {
-        const params = { keywords: !!e.target.value.trim().length ? e.target.value : undefined, page: undefined }
-        updateSearchParams(params)
+        setKeywords(e.target.value)
     }
 
     function handleClearSearch() {
-        const params = { keywords: undefined, page: undefined }
-        updateSearchParams(params)
+        setKeywords("")
     }
 
     return (
@@ -156,7 +162,7 @@ export default function TopApyOpportunities() {
                             <LendBorrowToggle type={positionTypeParam as TPositionType} handleToggle={toggleOpportunityType} />
                         </div>
                         <div className="sm:max-w-[156px] w-full">
-                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={keywordsParam} />
+                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={keywords} />
                         </div>
                     </div>
                 </div>
@@ -176,7 +182,7 @@ export default function TopApyOpportunities() {
                     <DataTable
                         columns={columns}
                         data={tableData}
-                        filters={keywordsParam}
+                        filters={keywords}
                         setFilters={handleKeywordChange}
                         handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
