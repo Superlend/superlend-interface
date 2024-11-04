@@ -106,6 +106,7 @@ export default function YourPositionsAtRiskCarousel({
             positionOn: {
                 platformName: capitalizeText(platform?.platform_name),
                 platformImage: platform?.logo ?? "",
+                chainName: chainDetails?.name ?? "",
                 chainImage: chainDetails?.logo ?? "",
             },
             riskFactor: getRiskFactor(platform.health_factor),
@@ -225,6 +226,8 @@ export default function YourPositionsAtRiskCarousel({
                                                 <ImageWithBadge
                                                     mainImg={positions.positionOn.platformImage}
                                                     badgeImg={positions.positionOn.chainImage}
+                                                    mainImgAlt={positions.positionOn.platformName}
+                                                    badgeImgAlt={positions.positionOn.chainName}
                                                 />
                                                 <div className="flex flex-col">
                                                     <Label className="capitalize text-gray-600">
@@ -249,21 +252,21 @@ export default function YourPositionsAtRiskCarousel({
                                             </div>
                                         </div>
                                     </CardContent>
-                                    <CardFooter className="py-[16px] flex flex-col md:flex-row item-center justify-between gap-[5px] md:gap-[14px]">
-                                        <BodyText
+                                    <CardFooter className="py-[16px] flex flex-col md:flex-row item-center justify-center gap-[5px] md:gap-[14px]">
+                                        {/* <BodyText
                                             level="body2"
                                             weight="medium"
                                             className="text-gray-600"
                                         >
                                             Recommended action
                                         </BodyText>
-                                        <span className="hidden md:block text-gray-500">|</span>
+                                        <span className="hidden md:block text-gray-500">|</span> */}
                                         <Button
                                             variant="link"
                                             className="group uppercase flex items-center gap-[4px]"
                                         // onClick={() => router.push("position-management")}
                                         >
-                                            Add collateral
+                                            <span className="leading-[0]">View position</span>
                                             <ArrowRightIcon
                                                 width={16}
                                                 height={16}
