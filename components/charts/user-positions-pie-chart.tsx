@@ -175,7 +175,7 @@ export function UserPositionsByPlatform({
 
     return (
         <Card className="flex flex-col">
-            <CardContent className="flex-1 pb-0">
+            <CardContent className="flex-1 p-0">
                 {
                     isLoading && <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full my-8" />
                 }
@@ -206,7 +206,7 @@ export function UserPositionsByPlatform({
                                 data={chartData}
                                 dataKey="chartValue"
                                 nameKey="chartKey"
-                                innerRadius={75}
+                                innerRadius={78}
                                 // strokeWidth={30}
                                 stroke="#fff"
                                 cornerRadius={12}
@@ -255,7 +255,8 @@ export function UserPositionsByPlatform({
                             Spread across {totalPlatformsCount} platform{totalPlatformsCount > 1 ? "s" : ""}
                         </div>
                     }
-                </CardFooter>}
+                </CardFooter>
+            }
         </Card>
     )
 }
