@@ -85,6 +85,8 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                             <ImageWithBadge
                                 mainImg={tokenLogo}
                                 badgeImg={chainLogo}
+                                mainImgAlt={tokenSymbol}
+                                badgeImgAlt={chainName}
                             />
                         }
                         content={tooltipContent}
