@@ -84,7 +84,7 @@ export default function PageHeader() {
     });
 
     return (
-        <section className="header flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
+        <section className="header relative z-[1] flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
             <motion.div className="will-change-transform"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
