@@ -27,8 +27,9 @@ import React, { CSSProperties } from "react";
 import { ArrowDownWideNarrow, ArrowUpWideNarrow, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronsUpDown } from "lucide-react";
 import InfoTooltip from "../tooltips/InfoTooltip";
 import { Button } from "./button";
-import { ScrollArea } from "./scroll-area";
+import { ScrollArea, ScrollBar } from "./scroll-area";
 import { TOpportunityTable } from "@/types";
+import useDimensions from "@/hooks/useDimensions";
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -59,6 +60,8 @@ export function DataTable<TData, TValue>({
     pagination,
     setPagination,
 }: DataTableProps<TData, TValue>) {
+    const { width: screenWidth } = useDimensions();
+
     const table = useReactTable({
         data,
         columns,
@@ -92,14 +95,19 @@ export function DataTable<TData, TValue>({
                 <Table>
                     <TableHeader className="[&_tr]:border-0">
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id} className="">
+                            <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     const { column } = header
                                     return (
                                         <TableHead
                                             key={header.id}
                                             className="pt-[24px] pb-[12px] pl-[32px]"
-                                            // style={{ ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, true) }}
+                                            style={{
+                                                ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, {
+                                                    isHeader: true,
+                                                    screenWidth
+                                                })
+                                            }}
                                         >
                                             <div className="flex items-center gap-[8px]">
                                                 <BodyText level="body2" weight="normal" className="text-gray-800 select-none">
@@ -159,7 +167,12 @@ export function DataTable<TData, TValue>({
                                             <TableCell
                                                 key={cell.id}
                                                 className={`py-4 w-[150px] min-w-[150px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""} ${!!handleRowClick ? "cursor-pointer" : ""}`}
-                                                // style={{ ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>) }}
+                                                style={{
+                                                    ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, {
+                                                        isHeader: false,
+                                                        screenWidth
+                                                    })
+                                                }}
                                             >
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </TableCell>
@@ -176,6 +189,7 @@ export function DataTable<TData, TValue>({
                         )}
                     </TableBody>
                 </Table>
+                <ScrollBar orientation="horizontal" />
             </ScrollArea>
             {/* Pagination STARTS */}
             {
@@ -230,20 +244,30 @@ export function DataTable<TData, TValue>({
     )
 }
 
-const getCommonPinningStyles = (column: Column<TOpportunityTable>, isHeader?: boolean): CSSProperties => {
+const getCommonPinningStyles = (column: Column<TOpportunityTable>, {
+    isHeader,
+    screenWidth
+}: {
+    isHeader?: boolean,
+    screenWidth: number
+}): CSSProperties => {
     const isPinned = column.getIsPinned()
     const isLastLeftPinnedColumn =
         isPinned === 'left' && column.getIsLastColumn('left')
     const isFirstRightPinnedColumn =
         isPinned === 'right' && column.getIsFirstColumn('right')
 
-    return {
-        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
-        right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-        opacity: isPinned ? 0.95 : 1,
-        backgroundColor: isPinned && isHeader ? '#d2eefd' : 'inherit',
-        position: isPinned ? 'sticky' : 'relative',
-        width: column.getSize(),
-        zIndex: isPinned ? 1 : 0,
+    if (screenWidth < 768) {
+        return {
+            left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+            right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+            opacity: isPinned ? 0.95 : 1,
+            backgroundColor: isPinned && isHeader ? '#d2eefd' : 'inherit',
+            position: isPinned ? 'sticky' : 'relative',
+            width: column.getSize(),
+            zIndex: isPinned ? 1 : 0,
+        }
     }
+
+    return {}
 }
