@@ -121,6 +121,7 @@ export function DataTable<TData, TValue>({
                                                 {!!header.column.getIsSorted() &&
                                                     <InfoTooltip
                                                         size="sm"
+                                                        side="bottom"
                                                         label={
                                                             header.column.getIsSorted() === 'asc'
                                                                 ? <ArrowUpWideNarrow className="w-4 h-4" />

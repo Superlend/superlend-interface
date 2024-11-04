@@ -113,6 +113,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const tooltipContent = positionType === "lend" ? lendTooltipContent : borrowTooltipContent;
             return (
                 <InfoTooltip
+                    side="bottom"
                     label={
                         <TooltipText>APY</TooltipText>
                     }
@@ -180,6 +181,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => Number(item.max_ltv),
         header: () => (
             <InfoTooltip
+                side="bottom"
                 label={
                     <TooltipText>Max LTV</TooltipText>
                 }
@@ -213,6 +215,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => Number(item.deposits),
         header: () => (
             <InfoTooltip
+                side="bottom"
                 label={
                     <TooltipText>Deposits</TooltipText>
                 }
@@ -241,6 +244,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => Number(item.borrows),
         header: () => (
             <InfoTooltip
+                side="bottom"
                 label={
                     <TooltipText>Borrows</TooltipText>
                 }
@@ -269,6 +273,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => Number(item.utilization),
         header: () => (
             <InfoTooltip
+                side="bottom"
                 label={
                     <TooltipText>Utilization</TooltipText>
                 }
