@@ -134,7 +134,7 @@ export default function PageHeader() {
                         <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[200px]'>
                             <div className="flex items-center gap-1 basis-full truncate">
                                 <ImageWithDefault src={platformLogo} alt={`${platformName}`} width={16} height={16} className='object-contain shrink-0' />
-                                <Label weight='medium' className='leading-[0] shrink-0'>{platformName.split(" ")[0]}</Label>
+                                <Label weight='medium' className='leading-[0] shrink-0'>{platformName}</Label>
                             </div>
                             <a
                                 className="basis-[67px] inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
