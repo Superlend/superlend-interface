@@ -21,7 +21,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: "Token",
         accessorFn: item => item.tokenSymbol,
         cell: ({ row }) => {
-            const { width: screenWidth } = useDimensions();
             const tokenSymbol: string = row.getValue("tokenSymbol");
             const tokenLogo = row.original.tokenLogo;
             const tokenAddress = row.original.tokenAddress;
@@ -52,7 +51,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-[8px] w-fit max-w-full">
                     <InfoTooltip
-                        hide={screenWidth < 768}
                         label={
                             <ImageWithBadge
                                 mainImg={tokenLogo}

@@ -102,12 +102,12 @@ export function DataTable<TData, TValue>({
                                         <TableHead
                                             key={header.id}
                                             className="pt-[24px] pb-[12px] pl-[32px]"
-                                            style={{
-                                                ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, {
-                                                    isHeader: true,
-                                                    screenWidth
-                                                })
-                                            }}
+                                        // style={{
+                                        //     ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, {
+                                        //         isHeader: true,
+                                        //         // screenWidth
+                                        //     })
+                                        // }}
                                         >
                                             <div className="flex items-center gap-[8px]">
                                                 <BodyText level="body2" weight="normal" className="text-gray-800 select-none">
@@ -156,7 +156,7 @@ export function DataTable<TData, TValue>({
                                     data-state={row.getIsSelected() && "selected"}
                                     className="border-0 bg-white"
                                     onClick={
-                                        !handleRowClick
+                                        !handleRowClick || screenWidth < 768
                                             ? undefined
                                             : () => handleRowClick(row.original)
                                     }
@@ -167,12 +167,12 @@ export function DataTable<TData, TValue>({
                                             <TableCell
                                                 key={cell.id}
                                                 className={`py-4 w-[150px] min-w-[150px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""} ${!!handleRowClick ? "cursor-pointer" : ""}`}
-                                                style={{
-                                                    ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, {
-                                                        isHeader: false,
-                                                        screenWidth
-                                                    })
-                                                }}
+                                            // style={{
+                                            //     ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, {
+                                            //         isHeader: false,
+                                            //         // screenWidth
+                                            //     })
+                                            // }}
                                             >
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </TableCell>
@@ -249,7 +249,7 @@ const getCommonPinningStyles = (column: Column<TOpportunityTable>, {
     screenWidth
 }: {
     isHeader?: boolean,
-    screenWidth: number
+    screenWidth?: number
 }): CSSProperties => {
     const isPinned = column.getIsPinned()
     const isLastLeftPinnedColumn =
@@ -257,16 +257,16 @@ const getCommonPinningStyles = (column: Column<TOpportunityTable>, {
     const isFirstRightPinnedColumn =
         isPinned === 'right' && column.getIsFirstColumn('right')
 
-    if (screenWidth < 768) {
-        return {
-            left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
-            right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-            opacity: isPinned ? 0.95 : 1,
-            backgroundColor: isPinned && isHeader ? '#d2eefd' : 'inherit',
-            position: isPinned ? 'sticky' : 'relative',
-            width: column.getSize(),
-            zIndex: isPinned ? 1 : 0,
-        }
+    // if (screenWidth < 768) {
+    return {
+        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+        right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+        // opacity: isPinned ? 0.95 : 1,
+        backgroundColor: isPinned && isHeader ? '#d2eefd' : 'inherit',
+        position: isPinned ? 'sticky' : 'relative',
+        width: column.getSize(),
+        zIndex: isPinned ? 1 : 0,
+        // }
     }
 
     return {}

@@ -34,7 +34,6 @@ export default function TopApyOpportunities() {
     const platformIdsParam = searchParams.get('protocol_ids')?.split(',') || [];
     const keywordsParam = searchParams.get("keywords") || "";
     const pageParam = searchParams.get('page');
-    const { width: screenWidth } = useDimensions();
     const [sorting, setSorting] = useState<SortingState>([
         { id: 'apy_current', desc: positionTypeParam === "lend" },
     ]);
@@ -124,8 +123,6 @@ export default function TopApyOpportunities() {
     const tableData = platformIdsParam.length > 0 ? filteredTableDataByPlatformIds : rawTableData;
 
     function handleRowClick(rowData: any) {
-        if (screenWidth < 768) return;
-
         const { tokenAddress, protocol_identifier, chain_id } = rowData;
         const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}`
         router.push(url);
