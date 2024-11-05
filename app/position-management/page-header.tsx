@@ -115,9 +115,9 @@ export default function PageHeader() {
     return (
         <section className="header relative z-[1] flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
             <motion.div className="will-change-transform"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+                // initial={{ opacity: 0.7, y: 30 }}
+                // animate={{ opacity: 1, y: 0 }}
+                // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
             >
                 <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
                     <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
@@ -126,9 +126,9 @@ export default function PageHeader() {
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-[24px] w-full">
                 <motion.div
                     className="flex flex-wrap items-center gap-[16px] will-change-transform"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.5, ease: "easeOut" }}
+                    // initial={{ opacity: 0.7, y: 30 }}
+                    // animate={{ opacity: 1, y: 0 }}
+                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                 >
                     {/* Loading Skeleton */}
                     {isLoadingPlatformData && <LoadingSkeleton />}
@@ -208,9 +208,9 @@ export default function PageHeader() {
                 </motion.div>
                 {/* Page Header Stats */}
                 <motion.div className="header-right flex flex-wrap items-center gap-[24px]"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.7, ease: "easeOut" }}
+                    // initial={{ opacity: 0.7, y: 30 }}
+                    // animate={{ opacity: 1, y: 0 }}
+                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                 >
                     {/* Loading Skeleton */}
                     {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
