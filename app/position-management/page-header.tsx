@@ -13,7 +13,7 @@ import { useSearchParams } from 'next/navigation';
 import useGetPlatformData from '@/hooks/useGetPlatformData';
 import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
-import { TPlatform, TPlatformAsset } from '@/types';
+import { TPlatform, TPlatformAsset, TToken } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { PlatformWebsiteLink } from '@/types/platform';
 import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants';
@@ -23,9 +23,9 @@ export default function PageHeader() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const tokenAddress = searchParams.get("token") || "";
-    const chain_id = searchParams.get("chain_id") || 0;
+    const chain_id: string = searchParams.get("chain_id") || "0";
     const protocol_identifier = searchParams.get("protocol_identifier") || "";
-    const { allChainsData } = useContext(AssetsDataContext);
+    const { allChainsData, allTokensData } = useContext(AssetsDataContext);
 
     // [API_CALL: GET] - Get Platform data
     const {
@@ -39,10 +39,10 @@ export default function PageHeader() {
 
     const tokenDetails = getTokenDetails({
         tokenAddress,
-        platformData
+        platformData: platformData as TPlatform
     })
 
-    const chainDetails: any = getChainDetails({
+    const chainDetails = getChainDetails({
         allChainsData,
         chainIdToMatch: chain_id
     })
@@ -77,11 +77,38 @@ export default function PageHeader() {
     const platformName = platformData.platform.name;
     const platformId = platformData.platform.platform_name;
     const platformLogo = platformData?.platform.logo;
+    const vaultId = platformData?.platform?.vaultId;
+    const morpho_market_id = platformData?.platform?.morpho_market_id;
+    const network_name = chainName;
     const platformWebsiteLink = getPlatformWebsiteLink({
-        tokenAddress,
-        chainName,
         platformId,
+        tokenAddress,
+        chainId: chain_id,
+        vaultId,
+        morpho_market_id,
+        network_name,
     });
+
+    const platformNamesWithLoanTokens = ["morpho", "fluid"];
+    const checkForPairBasedTokens = (platformNames: string[], platformName: string) => platformNames.map(name => name.toLowerCase()).includes(platformName.toLowerCase());
+    const hasPairBasedTokens = checkForPairBasedTokens(platformNamesWithLoanTokens, platformName.split(" ")[0]);
+
+    // If has Collateral Token, then get the Collateral token details
+    const collateralTokenSymbol = platformName.split(" ")[1]?.split("/")[0];
+    const getCollateralTokenDetails = (tokenSymbol: string) => {
+        const collateralTokenDetails = allTokensData[Number(chain_id)]?.find((token: any) => token?.symbol?.toLowerCase() === tokenSymbol?.toLowerCase());
+        return collateralTokenDetails;
+    }
+    const collateralTokenDetails = getCollateralTokenDetails(collateralTokenSymbol);
+
+    // If has Loan Token, then get the loan token details
+    const loanTokenSymbol = platformName.split(" ")[1]?.split("/")[1];
+    const getLoanTokenDetails = (tokenSymbol: string) => {
+        const loanTokenDetails = allTokensData[Number(chain_id)]?.find((token: any) => token?.symbol?.toLowerCase() === tokenSymbol?.toLowerCase());
+        return loanTokenDetails;
+    }
+    const loanTokenDetails = getLoanTokenDetails(loanTokenSymbol);
+
 
     return (
         <section className="header relative z-[1] flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
@@ -106,41 +133,60 @@ export default function PageHeader() {
                     {/* Token Details */}
                     {tokenDetails?.symbol && chainDetails?.logo && !isLoadingPlatformData &&
                         <div className="flex items-center gap-[12px]">
-                            <div className="flex items-center gap-[8px]">
-                                <ImageWithDefault
-                                    src={tokenLogo}
-                                    alt={`${tokenName} Token Logo`}
-                                    width={28}
-                                    height={28}
-                                    className="rounded-full max-w-[28px] max-h-[28px]"
-                                />
-                                <HeadingText level='h4' className='uppercase truncate max-w-[150px]'>{tokenSymbol}</HeadingText>
-                            </div>
-                            <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
-                            <div className="flex items-center gap-[8px]">
-                                <ImageWithDefault
-                                    src={chainLogo}
-                                    alt={`${chainName} Chain Logo`}
-                                    width={28}
-                                    height={28}
-                                    className="rounded-full max-w-[28px] max-h-[28px]"
-                                />
-                                <HeadingText level='h4' className='uppercase truncate max-w-[150px]'>{chainName}</HeadingText>
-                            </div>
+                            {
+                                !hasPairBasedTokens &&
+                                <div className="flex items-center gap-[8px]">
+                                    <ImageWithDefault
+                                        src={tokenLogo}
+                                        alt={`${tokenName} Token Logo`}
+                                        width={28}
+                                        height={28}
+                                        className="rounded-full max-w-[28px] max-h-[28px] object-contain"
+                                    />
+                                    <HeadingText level='h4' className='uppercase'>{tokenSymbol}</HeadingText>
+                                </div>
+                            }
+                            {
+                                hasPairBasedTokens && (
+                                    <>
+                                        <div className="flex items-center gap-[8px]">
+                                            <ImageWithDefault
+                                                src={collateralTokenDetails?.logo}
+                                                alt={`${collateralTokenDetails?.name}`}
+                                                width={28}
+                                                height={28}
+                                                className="rounded-full max-w-[28px] max-h-[28px] object-contain"
+                                            />
+                                            <HeadingText level='h4' className='uppercase'>{collateralTokenDetails?.symbol}</HeadingText>
+                                        </div>
+                                        <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
+                                        <div className="flex items-center gap-[8px]">
+                                            <ImageWithDefault
+                                                src={loanTokenDetails?.logo}
+                                                alt={`${loanTokenDetails?.name}`}
+                                                width={28}
+                                                height={28}
+                                                className="rounded-full max-w-[28px] max-h-[28px]"
+                                            />
+                                            <HeadingText level='h4' className='uppercase'>{loanTokenDetails?.symbol}</HeadingText>
+                                        </div>
+                                    </>
+                                )
+                            }
                         </div>
                     }
                     {/* Platform Details */}
                     {!isLoadingPlatformData && platformLogo &&
-                        <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[200px]'>
-                            <div className="flex items-center gap-1 basis-full truncate">
-                                <ImageWithDefault src={platformLogo} alt={`${platformName}`} width={16} height={16} className='object-contain shrink-0' />
-                                <Label weight='medium' className='leading-[0] shrink-0'>{platformName}</Label>
+                        <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[400px]'>
+                            <div className="flex items-center gap-1">
+                                <ImageWithDefault src={chainLogo} alt={`${chainName}`} width={16} height={16} className='object-contain shrink-0 max-w-[16px] max-h-[16px]' />
+                                <Label weight='medium' className='leading-[0] shrink-0'>{chainName}</Label>
                             </div>
                             <a
-                                className="basis-[67px] inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
+                                className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
                                 href={platformWebsiteLink}
                                 target='_blank'>
-                                <span className="uppercase text-secondary-500 font-medium">more</span>
+                                <span className="uppercase text-secondary-500 font-medium">{platformName.split(" ")[0]}</span>
                                 <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
                             </a>
                         </Badge>
@@ -285,7 +331,7 @@ function getAssetTooltipContent({
             label: "Platform",
             image: platformLogo,
             imageAlt: platformName,
-            displayName: platformName
+            displayName: platformName.split(" ")[0]
         },
     ]
     return (
@@ -308,19 +354,30 @@ function getAssetTooltipContent({
 function getPlatformWebsiteLink({
     tokenAddress,
     chainName,
+    chainId,
     platformId,
+    vaultId,
+    morpho_market_id,
+    network_name,
 }: {
-    tokenAddress: string;
-    chainName: string;
     platformId: string;
+    tokenAddress?: string;
+    chainName?: string;
+    chainId?: string;
+    vaultId?: string;
+    morpho_market_id?: string;
+    network_name?: string;
 }) {
     const platformNameId = platformId?.split("-")[0].toLowerCase();
     const baseUrl = platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
+
+    const formattedNetworkName = network_name?.toLowerCase() === "ethereum" ? "mainnet" : network_name?.toLowerCase();
+
     const paths: any = {
-        aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName)}_v3`,
+        aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName || "")}_v3`,
         compound: `/markets/v2`,
-        fluid: "",
-        morpho: ""
+        fluid: `/stats/${chainId}/vaults#${vaultId}`,
+        morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`
     }
 
     const path = paths[platformNameId];
