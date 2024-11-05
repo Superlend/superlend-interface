@@ -140,8 +140,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 const lendBaseRate = apyCurrent - totalRewards;
                 // Borrow base rate = APY + Asset Total Rewards
                 const borrowBaseRate = apyCurrent + totalRewards;
-                baseRate = isLend ? lendBaseRate : borrowBaseRate;
-                baseRateFormatted = Number(baseRate) < 0.01 ? "<0.01" : getFormattedBaseRate(baseRate);
+                baseRate = Number(isLend ? lendBaseRate : borrowBaseRate);
+                baseRateFormatted = baseRate < 0.01 && baseRate > 0 ? "<0.01" : getFormattedBaseRate(baseRate);
             }
 
             if (!apyCurrent) {
