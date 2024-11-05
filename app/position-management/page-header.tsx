@@ -82,6 +82,7 @@ export default function PageHeader() {
     const network_name = chainName;
     const platformWebsiteLink = getPlatformWebsiteLink({
         platformId,
+        chainName,
         tokenAddress,
         chainId: chain_id,
         vaultId,
@@ -109,6 +110,7 @@ export default function PageHeader() {
     }
     const loanTokenDetails = getLoanTokenDetails(loanTokenSymbol);
 
+    const tokensToDisplay = hasPairBasedTokens ? [collateralTokenDetails, loanTokenDetails] : [tokenDetails];
 
     return (
         <section className="header relative z-[1] flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
@@ -193,13 +195,14 @@ export default function PageHeader() {
                     }
                     {/* Info Tooltip */}
                     <InfoTooltip
+                        size="lg"
                         content={getAssetTooltipContent({
-                            tokenLogo,
-                            tokenName,
+                            tokensToDisplay,
                             chainName,
                             chainLogo,
                             platformName,
-                            platformLogo
+                            platformLogo,
+                            hasPairBasedTokens
                         })}
                     />
                 </motion.div>
@@ -300,27 +303,31 @@ function getPageHeaderStats({
 }
 
 function getAssetTooltipContent({
-    tokenLogo,
-    tokenName,
+    tokensToDisplay,
     chainName,
     chainLogo,
     platformLogo,
     platformName,
+    hasPairBasedTokens
 }: {
-    tokenLogo: string;
-    tokenName: string;
+    tokensToDisplay: TPlatformAsset["token"][];
     chainName: string;
     chainLogo: string;
     platformLogo: string;
     platformName: string;
+    hasPairBasedTokens: boolean;
 }) {
     const TooltipData = [
-        {
-            label: "Token",
-            image: tokenLogo,
-            imageAlt: tokenName,
-            displayName: tokenName
-        },
+        ...tokensToDisplay.map((token: TPlatformAsset["token"], index: number) => {
+            const labels = ["Token", "Collateral Token", "Loan Token"];
+
+            return ({
+                label: labels[hasPairBasedTokens ? index + 1 : index],
+                image: token.logo,
+                imageAlt: token.name,
+                displayName: token.symbol
+            })
+        }),
         {
             label: "Chain",
             image: chainLogo,
