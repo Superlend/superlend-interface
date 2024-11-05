@@ -346,7 +346,7 @@ function getRewardsGroupedByAsset(rewards: TReward[]) {
  * @returns rewards tooltip content
  */
 function getRewardsTooltipContent({ baseRateFormatted, rewards, apyCurrent, positionTypeParam }: { baseRateFormatted: string, rewards: TReward[], apyCurrent: number, positionTypeParam: string }) {
-    const baseRateOperator = positionTypeParam === "lend" ? "-" : "+";
+    const baseRateOperator = positionTypeParam === "lend" ? "+" : "-";
     const isLend = positionTypeParam === "lend";
 
     return (
