@@ -323,22 +323,22 @@ function getAssetTooltipContent({
 
             return ({
                 label: labels[hasPairBasedTokens ? index + 1 : index],
-                image: token.logo,
-                imageAlt: token.name,
-                displayName: token.symbol
+                image: token?.logo || "",
+                imageAlt: token?.name,
+                displayName: token?.symbol,
             })
         }),
         {
             label: "Chain",
-            image: chainLogo,
+            image: chainLogo || "",
             imageAlt: chainName,
             displayName: `${chainName?.slice(0, 1)}${chainName?.toLowerCase().slice(1)}`
         },
         {
             label: "Platform",
-            image: platformLogo,
+            image: platformLogo || "",
             imageAlt: platformName,
-            displayName: platformName.split(" ")[0]
+            displayName: platformName?.split(" ")[0]
         },
     ]
     return (
