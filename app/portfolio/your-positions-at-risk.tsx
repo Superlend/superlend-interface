@@ -15,7 +15,7 @@ import ArrowRightIcon from "@/components/icons/arrow-right-icon";
 import Image from "next/image";
 import ImageWithBadge from "@/components/ImageWithBadge";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleMinus, ShieldAlert, ShieldCheck } from "lucide-react";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import useGetPortfolioData from "@/hooks/useGetPortfolioData";
 import { abbreviateNumber, capitalizeText, convertScientificToNormal, getLowestDisplayValue, hasLowestDisplayValuePrefix, isLowestValue, normalizeResult } from "@/lib/utils";
@@ -288,10 +288,17 @@ export default function YourPositionsAtRiskCarousel({
                 </div>
             }
             {
-                !isLoading && POSITIONS_AT_RISK.length === 0 &&
+                !isLoading && POSITIONS_AT_RISK.length === 0 && PLATFORMS_WITH_POSITIONS?.length > 0 &&
                 <div className="flex items-center justify-start w-full h-full gap-2 ml-5 py-5">
-                    <ShieldCheck className="w-8 h-8 text-secondary-500" />
-                    <BodyText level="body1" weight="semibold" className="text-secondary-500">No positions at risk</BodyText>
+                    <ShieldCheck className="w-5 h-5 text-secondary-800" />
+                    <BodyText level="body1" weight="normal" className="text-secondary-800">You have no positions at risk currently</BodyText>
+                </div>
+            }
+            {
+                !isLoading && POSITIONS_AT_RISK.length === 0 && PLATFORMS_WITH_POSITIONS?.length === 0 &&
+                <div className="flex items-center justify-start w-full h-full gap-2 ml-5 py-5">
+                    <CircleMinus className="w-5 h-5 text-gray-800" />
+                    <BodyText level="body1" weight="normal" className="text-gray-800">You have no positions currently</BodyText>
                 </div>
             }
         </section>
