@@ -4,16 +4,12 @@ import ImageWithBadge from "@/components/ImageWithBadge";
 import ImageWithDefault from "@/components/ImageWithDefault";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import { BodyText, Label } from "@/components/ui/typography";
-import { OpportunitiesContext } from "@/context/opportunities-provider";
-import useDimensions from "@/hooks/useDimensions";
-import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive, getPlatformVersion } from "@/lib/utils";
+import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import { TOpportunityTable, TReward } from "@/types";
-import { PlatformLogo } from "@/types/platform";
 import { ColumnDef } from "@tanstack/react-table";
-import { ChartNoAxesColumnIncreasing, Percent } from "lucide-react";
+import { ChartNoAxesColumnIncreasing } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useContext } from "react";
 
 export const columns: ColumnDef<TOpportunityTable>[] = [
     {
@@ -86,14 +82,16 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => item.platformName,
         cell: ({ row }) => {
             const platformName: string = row.getValue("platformName");
+            const platformLogo = row.original.platformLogo;
 
             return (
                 <span className="flex items-center gap-[8px]">
                     <ImageWithDefault
-                        src={row.original.platformLogo}
-                        alt={row.original.platformName}
+                        src={platformLogo}
+                        alt={`${platformName} logo`}
                         width={20}
-                        height={20} />
+                        height={20}
+                    />
                     <BodyText level={"body2"} weight={"semibold"} className="truncate">
                         {platformName}
                     </BodyText>
@@ -111,6 +109,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const lendTooltipContent = "% interest you earn on deposits over a year. This includes compounding.";
             const borrowTooltipContent = "% interest you pay for your borrows over a year. This includes compunding.";
             const tooltipContent = positionTypeParam === "lend" ? lendTooltipContent : borrowTooltipContent;
+
             return (
                 <InfoTooltip
                     side="bottom"
