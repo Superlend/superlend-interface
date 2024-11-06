@@ -35,9 +35,7 @@ export default function TopApyOpportunities() {
     const platformIdsParam = searchParams.get('protocol_ids')?.split(',') || [];
     const keywordsParam = searchParams.get("keywords") || "";
     const pageParam = searchParams.get('page');
-    const [sorting, setSorting] = useState<SortingState>([
-        { id: 'apy_current', desc: positionTypeParam === "lend" },
-    ]);
+    const sortingParam = searchParams.get('sort')?.split(',') || [];
     const [keywords, setKeywords] = useState<string>(keywordsParam);
     const debouncedKeywords = useDebounce(keywords, 300);
     const [pagination, setPagination] = useState<PaginationState>({
@@ -61,6 +59,13 @@ export default function TopApyOpportunities() {
 
     // Add this ref at component level
     const prevParamsRef = useRef(searchParams.toString());
+
+    const [sorting, setSorting] = useState<SortingState>(() => {
+        if (sortingParam.length === 2) {
+            return [{ id: sortingParam[0], desc: sortingParam[1] === 'desc' }];
+        }
+        return [{ id: 'apy_current', desc: positionTypeParam === "lend" }];
+    });
 
     useEffect(() => {
         setColumnVisibility(() => {
@@ -103,7 +108,7 @@ export default function TopApyOpportunities() {
 
         // Only reset page if filters have changed
         const hasFilterChanged = (prevParams: string, currentParams: URLSearchParams) => {
-            const filterParams = ['position_type', 'token_ids', 'chain_ids', 'protocol_ids', 'keywords'];
+            const filterParams = ['position_type', 'token_ids', 'chain_ids', 'protocol_ids', 'keywords', 'sort'];
             const prevFilters = new URLSearchParams(prevParams);
 
             return filterParams.some(param =>
@@ -121,8 +126,16 @@ export default function TopApyOpportunities() {
         searchParams.get('token_ids'),
         searchParams.get('chain_ids'),
         searchParams.get('protocol_ids'),
-        searchParams.get('keywords')
+        searchParams.get('keywords'),
+        searchParams.get('sort')
     ]);
+
+    useEffect(() => {
+        if (sorting.length > 0) {
+            const sortParam = `${sorting[0].id},${sorting[0].desc ? 'desc' : 'asc'}`;
+            updateSearchParams({ sort: sortParam });
+        }
+    }, [sorting]);
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         return {
