@@ -64,7 +64,7 @@ export default function Portfolio() {
                         <PositionsProvider>
                             <AllPositions walletAddress={WALLET_ADDRESS as `0x${string}` | undefined} />
                         </PositionsProvider>
-                        <TopLowRiskPositions walletAddress={WALLET_ADDRESS as `0x${string}` | undefined} />
+                        {/* <TopLowRiskPositions walletAddress={WALLET_ADDRESS as `0x${string}` | undefined} /> */}
                     </div>
                     {/* <Button variant="primary" className='group uppercase py-[9px] px-[16px] flex items-center gap-[4px]'>
                     transaction history
