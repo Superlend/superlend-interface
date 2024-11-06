@@ -144,7 +144,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 baseRateFormatted = baseRate < 0.01 && baseRate > 0 ? "<0.01" : getFormattedBaseRate(baseRate);
             }
 
-            if (!apyCurrent) {
+            if (apyCurrentFormatted === "0.00") {
                 return (
                     <InfoTooltip
                         label={
