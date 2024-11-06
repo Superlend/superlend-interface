@@ -113,7 +113,7 @@ export default function PageHeader() {
     const tokensToDisplay = hasPairBasedTokens ? [collateralTokenDetails, loanTokenDetails] : [tokenDetails];
 
     return (
-        <section className="header relative z-[1] flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
+        <section className="header relative z-[1] flex flex-col sm:flex-row items-start gap-[24px]">
             <motion.div className="will-change-transform"
                 // initial={{ opacity: 0.7, y: 30 }}
                 // animate={{ opacity: 1, y: 0 }}
@@ -123,7 +123,7 @@ export default function PageHeader() {
                     <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
                 </Button>
             </motion.div>
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-[24px] w-full">
+            <div className="flex flex-col xl:flex-row items-start justify-between gap-[24px] w-full">
                 <motion.div
                     className="flex flex-wrap items-center gap-[16px] will-change-transform"
                     // initial={{ opacity: 0.7, y: 30 }}
@@ -134,7 +134,7 @@ export default function PageHeader() {
                     {isLoadingPlatformData && <LoadingSkeleton />}
                     {/* Token Details */}
                     {tokenDetails?.symbol && chainDetails?.logo && !isLoadingPlatformData &&
-                        <div className="flex items-center gap-[12px]">
+                        <div className="flex items-center flex-wrap gap-[12px]">
                             {
                                 !hasPairBasedTokens &&
                                 <div className="flex items-center gap-[8px]">
@@ -145,7 +145,7 @@ export default function PageHeader() {
                                         height={28}
                                         className="rounded-full max-w-[28px] max-h-[28px] object-contain"
                                     />
-                                    <HeadingText level='h4' className='uppercase'>{tokenSymbol}</HeadingText>
+                                    <HeadingText level='h4' className='uppercase break-words'>{tokenSymbol}</HeadingText>
                                 </div>
                             }
                             {
@@ -159,7 +159,7 @@ export default function PageHeader() {
                                                 height={28}
                                                 className="rounded-full max-w-[28px] max-h-[28px] object-contain"
                                             />
-                                            <HeadingText level='h4' className='uppercase'>{collateralTokenDetails?.symbol}</HeadingText>
+                                            <HeadingText level='h4' className='uppercase break-words'>{collateralTokenDetails?.symbol}</HeadingText>
                                         </div>
                                         <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
                                         <div className="flex items-center gap-[8px]">
@@ -178,36 +178,38 @@ export default function PageHeader() {
                         </div>
                     }
                     {/* Platform Details */}
-                    {!isLoadingPlatformData && platformLogo &&
-                        <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[400px]'>
-                            <div className="flex items-center gap-1">
-                                <ImageWithDefault src={chainLogo} alt={`${chainName}`} width={16} height={16} className='object-contain shrink-0 max-w-[16px] max-h-[16px]' />
-                                <Label weight='medium' className='leading-[0] shrink-0'>{chainName}</Label>
-                            </div>
-                            <a
-                                className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
-                                href={platformWebsiteLink}
-                                target='_blank'>
-                                <span className="uppercase text-secondary-500 font-medium">{platformName.split(" ")[0]}</span>
-                                <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
-                            </a>
-                        </Badge>
-                    }
-                    {/* Info Tooltip */}
-                    <InfoTooltip
-                        size="lg"
-                        content={getAssetTooltipContent({
-                            tokensToDisplay,
-                            chainName,
-                            chainLogo,
-                            platformName,
-                            platformLogo,
-                            hasPairBasedTokens
-                        })}
-                    />
+                    <div className="flex items-center gap-[12px]">
+                        {!isLoadingPlatformData && platformLogo &&
+                            <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[400px]'>
+                                <div className="flex items-center gap-1">
+                                    <ImageWithDefault src={chainLogo} alt={`${chainName}`} width={16} height={16} className='object-contain shrink-0 max-w-[16px] max-h-[16px]' />
+                                    <Label weight='medium' className='leading-[0] shrink-0'>{chainName}</Label>
+                                </div>
+                                <a
+                                    className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
+                                    href={platformWebsiteLink}
+                                    target='_blank'>
+                                    <span className="uppercase text-secondary-500 font-medium">{platformName.split(" ")[0]}</span>
+                                    <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
+                                </a>
+                            </Badge>
+                        }
+                        {/* Info Tooltip */}
+                        <InfoTooltip
+                            size="lg"
+                            content={getAssetTooltipContent({
+                                tokensToDisplay,
+                                chainName,
+                                chainLogo,
+                                platformName,
+                                platformLogo,
+                                hasPairBasedTokens
+                            })}
+                        />
+                    </div>
                 </motion.div>
                 {/* Page Header Stats */}
-                <motion.div className="header-right flex flex-wrap items-center gap-[24px]"
+                <motion.div className="header-right flex flex-wrap items-center shrink-0 gap-[24px]"
                     // initial={{ opacity: 0.7, y: 30 }}
                     // animate={{ opacity: 1, y: 0 }}
                     // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
