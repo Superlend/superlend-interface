@@ -4,15 +4,12 @@ import ImageWithBadge from "@/components/ImageWithBadge";
 import ImageWithDefault from "@/components/ImageWithDefault";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import { BodyText, Label } from "@/components/ui/typography";
-import { OpportunitiesContext } from "@/context/opportunities-provider";
-import useDimensions from "@/hooks/useDimensions";
-import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive, getPlatformVersion } from "@/lib/utils";
+import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import { TOpportunityTable, TReward } from "@/types";
-import { PlatformLogo } from "@/types/platform";
 import { ColumnDef } from "@tanstack/react-table";
-import { ChartNoAxesColumnIncreasing, Percent } from "lucide-react";
+import { ChartNoAxesColumnIncreasing } from "lucide-react";
 import Link from "next/link";
-import { useContext } from "react";
+import { useSearchParams } from "next/navigation";
 
 export const columns: ColumnDef<TOpportunityTable>[] = [
     {
@@ -20,7 +17,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: "Token",
         accessorFn: item => item.tokenSymbol,
         cell: ({ row }) => {
-            const { width: screenWidth } = useDimensions();
             const tokenSymbol: string = row.getValue("tokenSymbol");
             const tokenLogo = row.original.tokenLogo;
             const tokenAddress = row.original.tokenAddress;
@@ -28,7 +24,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const chainId = row.original.chain_id;
             const chainLogo = row.original.chainLogo;
             const chainName = row.original.chainName;
-            const platformId = row.original.protocol_identifier;
+            const protocolIdentifier = row.original.protocol_identifier;
             const tooltipContent = (
                 <span className="flex flex-col gap-[16px]">
                     <span className="flex flex-col gap-[4px]">
@@ -51,7 +47,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-[8px] w-fit max-w-full">
                     <InfoTooltip
-                        hide={screenWidth < 768}
                         label={
                             <ImageWithBadge
                                 mainImg={tokenLogo}
@@ -67,7 +62,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         query: {
                             token: tokenAddress,
                             chain_id: chainId,
-                            protocol_identifier: platformId,
+                            protocol_identifier: protocolIdentifier,
                         }
                     }}
                         className="truncate">
@@ -76,7 +71,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         </BodyText>
 
                     </Link>
-                    {/* <InfoTooltip iconWidth={16} iconHeight={16} content={tooltipContent} /> */}
                 </span>
             )
         },
@@ -88,17 +82,18 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: item => item.platformName,
         cell: ({ row }) => {
             const platformName: string = row.getValue("platformName");
-            const platformVersion = getPlatformVersion(platformName);
+            const platformLogo = row.original.platformLogo;
 
             return (
                 <span className="flex items-center gap-[8px]">
-                    <img
-                        src={row.original.platformLogo || '/images/logos/favicon-32x32.png'}
-                        alt={row.original.platformName}
+                    <ImageWithDefault
+                        src={platformLogo}
+                        alt={`${platformName} logo`}
                         width={20}
-                        height={20} />
+                        height={20}
+                    />
                     <BodyText level={"body2"} weight={"semibold"} className="truncate">
-                        {`${capitalizeText(platformName)} ${platformVersion}`}
+                        {platformName}
                     </BodyText>
                 </span>
             )
@@ -109,10 +104,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorKey: "apy_current",
         accessorFn: item => Number(item.apy_current),
         header: () => {
-            const { positionType } = useContext<any>(OpportunitiesContext);
+            const searchParams = useSearchParams();
+            const positionTypeParam = searchParams.get("position_type") || "lend";
             const lendTooltipContent = "% interest you earn on deposits over a year. This includes compounding.";
             const borrowTooltipContent = "% interest you pay for your borrows over a year. This includes compunding.";
-            const tooltipContent = positionType === "lend" ? lendTooltipContent : borrowTooltipContent;
+            const tooltipContent = positionTypeParam === "lend" ? lendTooltipContent : borrowTooltipContent;
+
             return (
                 <InfoTooltip
                     side="bottom"
@@ -124,23 +121,29 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
         },
         cell: ({ row }) => {
+            const searchParams = useSearchParams();
+            const positionTypeParam = searchParams.get("position_type") || "lend";
             const apyCurrent = Number(row.getValue("apy_current"));
             const apyCurrentFormatted = apyCurrent.toFixed(2);
             const hasRewards = row.original?.rewards && row.original?.rewards.length > 0;
             // Declare tooltip content related variables
-            let baseRate, baseRateFormatted, rewards, totalRewards, rewardFormatted;
+            let baseRate, baseRateFormatted, rewards, totalRewards;
+            const isLend = positionTypeParam === "lend";
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
                 rewards = getRewardsGroupedByAsset(row.original?.rewards)
                 // Get total rewards
-                totalRewards = rewards.reduce((acc, curr) => acc + Number(curr.supply_apy), 0);
-                // Base rate = APY - Asset Total Rewards
-                baseRate = abbreviateNumber(apyCurrent - totalRewards);
-                baseRateFormatted = Number(baseRate) < 0.01 ? "<0.01" : baseRate;
+                totalRewards = rewards.reduce((acc, curr) => acc + Number(isLend ? curr.supply_apy : curr.borrow_apy), 0);
+                // Lend base rate = APY - Asset Total Rewards
+                const lendBaseRate = apyCurrent - totalRewards;
+                // Borrow base rate = APY + Asset Total Rewards
+                const borrowBaseRate = apyCurrent + totalRewards;
+                baseRate = Number(isLend ? lendBaseRate : borrowBaseRate);
+                baseRateFormatted = baseRate < 0.01 && baseRate > 0 ? "<0.01" : getFormattedBaseRate(baseRate);
             }
 
-            if (!apyCurrent) {
+            if (apyCurrentFormatted === "0.00") {
                 return (
                     <InfoTooltip
                         label={
@@ -168,7 +171,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                     <ImageWithDefault src="/icons/sparkles.svg" width={22} height={22} className="cursor-pointer hover:scale-110" />
                                 }
                                 content={
-                                    getRewardsTooltipContent({ baseRateFormatted: baseRateFormatted || '', rewards: rewards || [], apyCurrent: apyCurrent || 0 })
+                                    getRewardsTooltipContent({ baseRateFormatted: baseRateFormatted || '', rewards: rewards || [], apyCurrent: apyCurrent || 0, positionTypeParam })
                                 }
                             />
                         )
@@ -341,11 +344,14 @@ function getRewardsGroupedByAsset(rewards: TReward[]) {
  * @param apyCurrent 
  * @returns rewards tooltip content
  */
-function getRewardsTooltipContent({ baseRateFormatted, rewards, apyCurrent }: { baseRateFormatted: string, rewards: TReward[], apyCurrent: number }) {
+function getRewardsTooltipContent({ baseRateFormatted, rewards, apyCurrent, positionTypeParam }: { baseRateFormatted: string, rewards: TReward[], apyCurrent: number, positionTypeParam: string }) {
+    const baseRateOperator = positionTypeParam === "lend" ? "+" : "-";
+    const isLend = positionTypeParam === "lend";
+
     return (
         <div className="flex flex-col divide-y divide-gray-800">
             <BodyText level="body1" weight="medium" className="py-2 text-gray-800/75">Rate & Rewards</BodyText>
-            <div className="flex items-center justify-between gap-[100px] py-2" style={{ gap: '70px' }}>
+            <div className="flex items-center justify-between gap-[70px] py-2" style={{ gap: '70px' }}>
                 <div className="flex items-center gap-1">
                     <ChartNoAxesColumnIncreasing className="w-[16px] h-[16px] text-gray-800" />
                     <Label weight="medium" className="text-gray-800">Base rate</Label>
@@ -358,20 +364,20 @@ function getRewardsTooltipContent({ baseRateFormatted, rewards, apyCurrent }: { 
                 rewards?.map((reward: TReward) => (
                     <div key={reward.asset.address} className="flex items-center justify-between gap-[100px] py-2" style={{ gap: '70px' }}>
                         <div className="flex items-center gap-1">
-                            <ImageWithDefault src={reward.asset.logo} width={16} height={16} className="inline-block rounded-full object-contain" />
-                            <Label weight="medium" className="truncate text-gray-800 max-w-[100px] truncate" title={reward.asset.name}>
-                                {reward.asset.name}
+                            <ImageWithDefault src={reward?.asset?.logo || ""} width={16} height={16} alt={reward?.asset?.name || ""} className="inline-block rounded-full object-contain" />
+                            <Label weight="medium" className="truncate text-gray-800 max-w-[100px] truncate" title={reward?.asset?.name || ""}>
+                                {reward?.asset?.name || ""}
                             </Label>
                         </div>
                         <BodyText level="body3" weight="medium" className="text-gray-800">
-                            + {abbreviateNumber(reward.supply_apy)}%
+                            {baseRateOperator} {`${(Math.floor(Number(isLend ? reward.supply_apy : reward.borrow_apy) * 100) / 100).toFixed(2)}%`}
                         </BodyText>
                     </div>
                 ))
             }
             <div className="flex items-center justify-between gap-[100px] py-2" style={{ gap: '70px' }}>
                 <div className="flex items-center gap-1">
-                    <ImageWithDefault src="/icons/sparkles.svg" width={16} height={16} className="inline-block" />
+                    <ImageWithDefault src="/icons/sparkles.svg" alt="Net APY" width={16} height={16} className="inline-block" />
                     <Label weight="medium" className="text-gray-800">Net APY</Label>
                 </div>
                 <BodyText level="body3" weight="medium" className="text-gray-800">
@@ -380,4 +386,8 @@ function getRewardsTooltipContent({ baseRateFormatted, rewards, apyCurrent }: { 
             </div>
         </div>
     )
+}
+
+function getFormattedBaseRate(value: number) {
+    return (Math.floor(Number(value) * 100) / 100).toFixed(2);
 }

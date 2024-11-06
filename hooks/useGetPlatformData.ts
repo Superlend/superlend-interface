@@ -28,6 +28,8 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
         name: "",
         logo: "",
         chain_id: 0,
+        vaultId: "",
+        morpho_market_id: "",
       },
       assets: [],
     },

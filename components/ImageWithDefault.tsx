@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-const ImageWithDefault = ({ src, defaultSrc = '/images/fallback-img.png', alt, className, width, height, ...props }: any) => {
+const ImageWithDefault = ({ src, defaultSrc = '/images/fallback-img.png', alt = "", className, width, height, ...props }: any) => {
     const [imageSrc, setImageSrc] = useState(src);
 
     useEffect(() => {

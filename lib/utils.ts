@@ -177,7 +177,7 @@ export function convertScientificToNormal(num: string | number) {
   return coefficient * Math.pow(10, exponent);
 }
 
-function parseScientific(num: number | string) {
+export function parseScientific(num: number | string) {
   const value = num.toString();
   const regex = /([+-]?\d*\.?\d+)(e[+-]?\d+)?/i;
   const match = value.match(regex);

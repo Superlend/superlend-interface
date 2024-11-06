@@ -6,7 +6,7 @@ import { TChain, TToken } from '@/types';
 import { createContext } from 'react';
 
 type TAssetsDataProps = {
-    allTokensData: TToken[],
+    allTokensData: any,
     allChainsData: TChain[]
 };
 

@@ -26,6 +26,7 @@ type TTopApyOpportunitiesProps = {
 }
 
 export default function TopApyOpportunities() {
+    const router = useRouter();
     const updateSearchParams = useUpdateSearchParams();
     const searchParams = useSearchParams();
     const positionTypeParam = searchParams.get("position_type") || "lend";
@@ -34,10 +35,7 @@ export default function TopApyOpportunities() {
     const platformIdsParam = searchParams.get('protocol_ids')?.split(',') || [];
     const keywordsParam = searchParams.get("keywords") || "";
     const pageParam = searchParams.get('page');
-    const { width: screenWidth } = useDimensions();
-    const [sorting, setSorting] = useState<SortingState>([
-        { id: 'apy_current', desc: positionTypeParam === "lend" },
-    ]);
+    const sortingParam = searchParams.get('sort')?.split(',') || [];
     const [keywords, setKeywords] = useState<string>(keywordsParam);
     const debouncedKeywords = useDebounce(keywords, 300);
     const [pagination, setPagination] = useState<PaginationState>({
@@ -48,8 +46,7 @@ export default function TopApyOpportunities() {
         deposits: true,
         borrows: false,
     });
-    const router = useRouter();
-    const pathname = usePathname();
+    const [isTableLoading, setIsTableLoading] = useState(false);
     const {
         data: opportunitiesData,
         isLoading: isLoadingOpportunitiesData
@@ -59,6 +56,16 @@ export default function TopApyOpportunities() {
         tokens: tokenIdsParam
     });
     const { allChainsData } = useContext<any>(AssetsDataContext);
+
+    // Add this ref at component level
+    const prevParamsRef = useRef(searchParams.toString());
+
+    const [sorting, setSorting] = useState<SortingState>(() => {
+        if (sortingParam.length === 2) {
+            return [{ id: sortingParam[0], desc: sortingParam[1] === 'desc' }];
+        }
+        return [{ id: 'apy_current', desc: positionTypeParam === "lend" }];
+    });
 
     useEffect(() => {
         setColumnVisibility(() => {
@@ -75,24 +82,60 @@ export default function TopApyOpportunities() {
         updateSearchParams(params)
     }, [debouncedKeywords])
 
-    // useEffect(() => {
-    //     const pageParam = searchParams.get('page');
-    //     if (pageParam) {
-    //         const pageIndex = Math.max(0, parseInt(pageParam) - 1);
-    //         setPagination(prev => ({ ...prev, pageIndex }));
-    //     }
-    // }, []);
+    // Update pagination state when URL changes
+    useEffect(() => {
+        const pageParam = searchParams.get('page');
+        if (pageParam !== null) {
+            const pageIndex = Math.max(0, parseInt(pageParam) - 1);
+            setPagination(prev => ({
+                ...prev,
+                pageIndex
+            }));
+        } else {
+            // Reset to first page if no page param
+            setPagination(prev => ({
+                ...prev,
+                pageIndex: 0
+            }));
+        }
+    }, [searchParams]);
 
-    // const updatePageInUrl = (newPage: number) => {
-    //     const newParams = new URLSearchParams(searchParams.toString());
-    //     newParams.set("page", newPage.toString());
-    //     router.push(`${pathname}?${newParams.toString()}`, { scroll: false });
-    // };
+    // Add this new effect to reset pagination when other search params change
+    useEffect(() => {
+        // Create a new URLSearchParams object
+        const currentParams = new URLSearchParams(searchParams.toString());
+        const pageParam = currentParams.get('page');
 
-    // const handlePaginationChange = () => {
-    //     setPagination(state => ({ ...state, pageIndex: state.pageIndex + 1 }));
-    //     updatePageInUrl(pagination.pageIndex + 1);
-    // };
+        // Only reset page if filters have changed
+        const hasFilterChanged = (prevParams: string, currentParams: URLSearchParams) => {
+            const filterParams = ['position_type', 'token_ids', 'chain_ids', 'protocol_ids', 'keywords', 'sort'];
+            const prevFilters = new URLSearchParams(prevParams);
+
+            return filterParams.some(param =>
+                prevFilters.get(param) !== currentParams.get(param)
+            );
+        };
+
+        if (hasFilterChanged(prevParamsRef.current, currentParams) && pageParam !== '1') {
+            updateSearchParams({ page: '1' });
+        }
+
+        prevParamsRef.current = searchParams.toString();
+    }, [
+        searchParams.get('position_type'),
+        searchParams.get('token_ids'),
+        searchParams.get('chain_ids'),
+        searchParams.get('protocol_ids'),
+        searchParams.get('keywords'),
+        searchParams.get('sort')
+    ]);
+
+    useEffect(() => {
+        if (sorting.length > 0) {
+            const sortParam = `${sorting[0].id},${sorting[0].desc ? 'desc' : 'asc'}`;
+            updateSearchParams({ sort: sortParam });
+        }
+    }, [sorting]);
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         return {
@@ -104,7 +147,8 @@ export default function TopApyOpportunities() {
             chain_id: item.chain_id,
             chainName: allChainsData.find((chain: any) => Number(chain.chain_id) === Number(item.chain_id))?.name || "",
             protocol_identifier: item.platform.protocol_identifier,
-            platformName: `${item.platform.platform_name}`,
+            platformName: `${item.platform.name}`,
+            platformId: `${item.platform.platform_name}`,
             platformLogo: item.platform.logo,
             apy_current: item.platform.apy.current,
             max_ltv: item.platform.max_ltv,
@@ -117,14 +161,28 @@ export default function TopApyOpportunities() {
     });
 
     const filteredTableDataByPlatformIds = rawTableData.filter((opportunity) => {
-        return platformIdsParam.includes(opportunity.platformName.split("-")[0])
+        return platformIdsParam.includes(opportunity.platformId.split("-")[0])
     });
 
     const tableData = platformIdsParam.length > 0 ? filteredTableDataByPlatformIds : rawTableData;
 
-    function handleRowClick(rowData: any) {
-        if (screenWidth < 768) return;
+    // Calculate total number of pages
+    const totalPages = Math.ceil(tableData.length / 10);
 
+    // Handle pagination changes
+    const handlePaginationChange = useCallback((updatedPagination: PaginationState) => {
+        const newPage = updatedPagination.pageIndex + 1;
+        const currentPage = Number(searchParams.get('page')) || 1;
+
+        // Only update if page actually changes and is within valid range
+        if (newPage !== currentPage && newPage >= 1 && newPage <= totalPages) {
+            updateSearchParams({
+                page: newPage.toString()
+            });
+        }
+    }, [updateSearchParams, searchParams, totalPages]);
+
+    function handleRowClick(rowData: any) {
         const { tokenAddress, protocol_identifier, chain_id } = rowData;
         const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}`
         router.push(url);
@@ -137,6 +195,11 @@ export default function TopApyOpportunities() {
 
     function handleKeywordChange(e: any) {
         setKeywords(e.target.value)
+        // Trigger table UI loading for 1 second
+        setIsTableLoading(true);
+        setTimeout(() => {
+            setIsTableLoading(false);
+        }, 1000);
     }
 
     function handleClearSearch() {
@@ -178,7 +241,7 @@ export default function TopApyOpportunities() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
             >
-                {!isLoadingOpportunitiesData &&
+                {!isLoadingOpportunitiesData && !isTableLoading && (
                     <DataTable
                         columns={columns}
                         data={tableData}
@@ -190,9 +253,11 @@ export default function TopApyOpportunities() {
                         sorting={sorting}
                         setSorting={setSorting}
                         pagination={pagination}
-                        setPagination={setPagination}
-                    />}
-                {isLoadingOpportunitiesData && (
+                        setPagination={handlePaginationChange}
+                        totalPages={Math.ceil(tableData.length / 10)}
+                    />
+                )}
+                {(isLoadingOpportunitiesData || isTableLoading) && (
                     <LoadingSectionSkeleton />
                 )}
             </motion.div>

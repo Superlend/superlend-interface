@@ -13,7 +13,7 @@ import { useSearchParams } from 'next/navigation';
 import useGetPlatformData from '@/hooks/useGetPlatformData';
 import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
-import { TChain, TPlatform, TPlatformAsset } from '@/types';
+import { TPlatform, TPlatformAsset, TToken } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants';
 import { motion } from 'framer-motion';
@@ -30,9 +30,9 @@ export default function PageHeader() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const tokenAddress = searchParams.get("token") || "";
-    const chain_id = searchParams.get("chain_id") || 0;
+    const chain_id: string = searchParams.get("chain_id") || "0";
     const protocol_identifier = searchParams.get("protocol_identifier") || "";
-    const { allChainsData } = useContext(AssetsDataContext);
+    const { allChainsData, allTokensData } = useContext(AssetsDataContext);
 
     // [API_CALL: GET] - Get Platform data
     const {
@@ -46,10 +46,10 @@ export default function PageHeader() {
 
     const tokenDetails: TTokenDetails = getTokenDetails({
         tokenAddress,
-        platformData
+        platformData: platformData as TPlatform
     })
 
-    const chainDetails: TChain | undefined = getChainDetails({
+    const chainDetails = getChainDetails({
         allChainsData,
         chainIdToMatch: chain_id
     })
@@ -91,86 +91,129 @@ export default function PageHeader() {
         platformData: platformData as TPlatform
     })
 
-    const childVariants = {
-        initial: { opacity: 0, y: 30 },
-        animate: { opacity: 1, y: 0 },
+    const platformNamesWithLoanTokens = ["morpho", "fluid"];
+    const checkForPairBasedTokens = (platformNames: string[], platformName: string) => platformNames.map(name => name.toLowerCase()).includes(platformName.toLowerCase());
+    const hasPairBasedTokens = checkForPairBasedTokens(platformNamesWithLoanTokens, platformName.split(" ")[0]);
+
+    // If has Collateral Token, then get the Collateral token details
+    const collateralTokenSymbol = platformName.split(" ")[1]?.split("/")[0];
+    const getCollateralTokenDetails = (tokenSymbol: string) => {
+        const collateralTokenDetails = allTokensData[Number(chain_id)]?.find((token: any) => token?.symbol?.toLowerCase() === tokenSymbol?.toLowerCase());
+        return collateralTokenDetails;
     }
+    const collateralTokenDetails = getCollateralTokenDetails(collateralTokenSymbol);
+
+    // If has Loan Token, then get the loan token details
+    const loanTokenSymbol = platformName.split(" ")[1]?.split("/")[1];
+    const getLoanTokenDetails = (tokenSymbol: string) => {
+        const loanTokenDetails = allTokensData[Number(chain_id)]?.find((token: any) => token?.symbol?.toLowerCase() === tokenSymbol?.toLowerCase());
+        return loanTokenDetails;
+    }
+    const loanTokenDetails = getLoanTokenDetails(loanTokenSymbol);
+
+    const tokensToDisplay = hasPairBasedTokens ? [collateralTokenDetails, loanTokenDetails] : [tokenDetails];
 
     return (
-        <section className="header flex flex-col sm:flex-row items-start xl:items-center gap-[24px]">
-            <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
-                <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
-            </Button>
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-[24px] w-full will-change-transform" >
+        <section className="header relative z-[1] flex flex-col sm:flex-row items-start gap-[24px]">
+            <motion.div className="will-change-transform"
+            // initial={{ opacity: 0.7, y: 30 }}
+            // animate={{ opacity: 1, y: 0 }}
+            // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+            >
+                <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
+                    <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
+                </Button>
+            </motion.div>
+            <div className="flex flex-col xl:flex-row items-start justify-between gap-[24px] w-full">
                 <motion.div
                     className="flex flex-wrap items-center gap-[16px] will-change-transform"
-                    variants={childVariants}
-                    initial="initial"
-                    animate="animate"
-                    transition={{ duration: 0.5, ease: "easeOut" }}
+                // initial={{ opacity: 0.7, y: 30 }}
+                // animate={{ opacity: 1, y: 0 }}
+                // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                 >
                     {/* Loading Skeleton */}
                     {isLoadingPlatformData && <LoadingSkeleton />}
                     {/* Token Details */}
                     {tokenDetails?.symbol && chainDetails?.logo && !isLoadingPlatformData &&
-                        <div className="flex items-center gap-[12px]">
-                            <div className="flex items-center gap-[8px]">
-                                <ImageWithDefault
-                                    src={tokenLogo}
-                                    alt={`${tokenName} Token Logo`}
-                                    width={28}
-                                    height={28}
-                                    className="rounded-full max-w-[28px] max-h-[28px]"
-                                />
-                                <HeadingText level='h4' className='uppercase truncate max-w-[150px]'>{tokenSymbol}</HeadingText>
-                            </div>
-                            <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
-                            <div className="flex items-center gap-[8px]">
-                                <ImageWithDefault
-                                    src={chainLogo}
-                                    alt={`${chainName} Chain Logo`}
-                                    width={28}
-                                    height={28}
-                                    className="rounded-full max-w-[28px] max-h-[28px]"
-                                />
-                                <HeadingText level='h4' className='uppercase truncate max-w-[150px]'>{chainName}</HeadingText>
-                            </div>
+                        <div className="flex items-center flex-wrap gap-[12px]">
+                            {
+                                !hasPairBasedTokens &&
+                                <div className="flex items-center gap-[8px]">
+                                    <ImageWithDefault
+                                        src={tokenLogo}
+                                        alt={`${tokenName} Token Logo`}
+                                        width={28}
+                                        height={28}
+                                        className="rounded-full max-w-[28px] max-h-[28px] object-contain"
+                                    />
+                                    <HeadingText level='h4' className='uppercase break-words'>{tokenSymbol}</HeadingText>
+                                </div>
+                            }
+                            {
+                                hasPairBasedTokens && (
+                                    <>
+                                        <div className="flex items-center gap-[8px]">
+                                            <ImageWithDefault
+                                                src={collateralTokenDetails?.logo}
+                                                alt={`${collateralTokenDetails?.name}`}
+                                                width={28}
+                                                height={28}
+                                                className="rounded-full max-w-[28px] max-h-[28px] object-contain"
+                                            />
+                                            <HeadingText level='h4' className='uppercase break-words'>{collateralTokenDetails?.symbol}</HeadingText>
+                                        </div>
+                                        <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
+                                        <div className="flex items-center gap-[8px]">
+                                            <ImageWithDefault
+                                                src={loanTokenDetails?.logo}
+                                                alt={`${loanTokenDetails?.name}`}
+                                                width={28}
+                                                height={28}
+                                                className="rounded-full max-w-[28px] max-h-[28px]"
+                                            />
+                                            <HeadingText level='h4' className='uppercase'>{loanTokenDetails?.symbol}</HeadingText>
+                                        </div>
+                                    </>
+                                )
+                            }
                         </div>
                     }
                     {/* Platform Details */}
-                    {!isLoadingPlatformData && platformLogo &&
-                        <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit'>
-                            <div className="flex items-center gap-1">
-                                <img src={platformLogo} alt={`${platformName} Platform`} width={16} height={16} className='object-contain shrink-0' />
-                                <Label weight='medium' className='leading-[0]'>{`${platformName.split(" ")[0]} ${getPlatformVersion(platformName)}`}</Label>
-                            </div>
-                            <a
-                                className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
-                                href={platformWebsiteLink}
-                                target='_blank'>
-                                <span className="uppercase text-secondary-500 font-medium">more</span>
-                                <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
-                            </a>
-                        </Badge>
-                    }
-                    {/* Info Tooltip */}
-                    <InfoTooltip
-                        content={getAssetTooltipContent({
-                            tokenLogo,
-                            tokenName,
-                            chainName,
-                            chainLogo,
-                            platformName,
-                            platformLogo
-                        })}
-                    />
+                    <div className="flex items-center gap-[12px]">
+                        {!isLoadingPlatformData && platformLogo &&
+                            <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[400px]'>
+                                <div className="flex items-center gap-1">
+                                    <ImageWithDefault src={chainLogo} alt={`${chainName}`} width={16} height={16} className='object-contain shrink-0 max-w-[16px] max-h-[16px]' />
+                                    <Label weight='medium' className='leading-[0] shrink-0'>{chainName}</Label>
+                                </div>
+                                <a
+                                    className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
+                                    href={platformWebsiteLink}
+                                    target='_blank'>
+                                    <span className="uppercase text-secondary-500 font-medium">{platformName.split(" ")[0]}</span>
+                                    <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
+                                </a>
+                            </Badge>
+                        }
+                        {/* Info Tooltip */}
+                        <InfoTooltip
+                            size="lg"
+                            content={getAssetTooltipContent({
+                                tokensToDisplay,
+                                chainName,
+                                chainLogo,
+                                platformName,
+                                platformLogo,
+                                hasPairBasedTokens
+                            })}
+                        />
+                    </div>
                 </motion.div>
                 {/* Page Header Stats */}
-                <motion.div className="header-right flex flex-wrap items-center gap-[24px] will-change-transform"
-                    variants={childVariants}
-                    initial="initial"
-                    animate="animate"
-                    transition={{ duration: 0.5, ease: "easeOut", delay: 0.4 }}
+                <motion.div className="header-right flex flex-wrap items-center shrink-0 gap-[24px]"
+                // initial={{ opacity: 0.7, y: 30 }}
+                // animate={{ opacity: 1, y: 0 }}
+                // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                 >
                     {/* Loading Skeleton */}
                     {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
@@ -228,38 +271,42 @@ function getPageHeaderStats({
 }
 
 function getAssetTooltipContent({
-    tokenLogo,
-    tokenName,
+    tokensToDisplay,
     chainName,
     chainLogo,
     platformLogo,
     platformName,
+    hasPairBasedTokens
 }: {
-    tokenLogo: string;
-    tokenName: string;
+    tokensToDisplay: TPlatformAsset["token"][];
     chainName: string;
     chainLogo: string;
     platformLogo: string;
     platformName: string;
+    hasPairBasedTokens: boolean;
 }) {
     const TooltipData = [
-        {
-            label: "Token",
-            image: tokenLogo,
-            imageAlt: tokenName,
-            displayName: tokenName
-        },
+        ...tokensToDisplay.map((token: TPlatformAsset["token"], index: number) => {
+            const labels = ["Token", "Collateral Token", "Loan Token"];
+
+            return ({
+                label: labels[hasPairBasedTokens ? index + 1 : index],
+                image: token?.logo || "",
+                imageAlt: token?.name,
+                displayName: token?.symbol,
+            })
+        }),
         {
             label: "Chain",
-            image: chainLogo,
+            image: chainLogo || "",
             imageAlt: chainName,
             displayName: `${chainName?.slice(0, 1)}${chainName?.toLowerCase().slice(1)}`
         },
         {
             label: "Platform",
-            image: platformLogo,
+            image: platformLogo || "",
             imageAlt: platformName,
-            displayName: `${platformName.split(" ")[0]} ${getPlatformVersion(platformName)}`
+            displayName: platformName?.split(" ")[0]
         },
     ]
     return (
@@ -282,20 +329,32 @@ function getAssetTooltipContent({
 function getPlatformWebsiteLink({
     tokenAddress,
     chainName,
-    platformName,
+    chainId,
+    platformId,
+    vaultId,
+    morpho_market_id,
+    network_name,
 }: {
-    tokenAddress: string;
-    chainName: string;
-    platformName: string;
+    platformId: string;
+    tokenAddress?: string;
+    chainName?: string;
+    chainId?: string;
+    vaultId?: string;
+    morpho_market_id?: string;
+    network_name?: string;
 }) {
-    const platformNameId = platformName?.split(" ")[0].toLowerCase();
+    const platformNameId = platformId?.split("-")[0].toLowerCase();
     const baseUrl = platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
+
+    const formattedNetworkName = network_name?.toLowerCase() === "ethereum" ? "mainnet" : network_name?.toLowerCase();
+
     const paths: any = {
-        aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName)}_v3`,
+        aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName || "")}_v3`,
         compound: `/markets/v2`,
-        fluid: "",
-        mopho: ""
+        fluid: `/stats/${chainId}/vaults#${vaultId}`,
+        morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`
     }
+
     const path = paths[platformNameId];
     return `${baseUrl}${path}`
 }
@@ -322,12 +381,20 @@ function getAssetDetails({
     const tokenName = tokenDetails?.name;
     const chainName = chainDetails?.name;
     const chainLogo = chainDetails?.logo;
-    const platformName = platformData.platform.platform_name.split("-").slice(0, 2).join(" ");
+    const platformName = platformData.platform.name;
+    const platformId = platformData.platform.platform_name;
     const platformLogo = platformData?.platform.logo;
+    const vaultId = platformData?.platform?.vaultId;
+    const morpho_market_id = platformData?.platform?.morpho_market_id;
+    const network_name = chainName;
     const platformWebsiteLink = getPlatformWebsiteLink({
-        tokenAddress: tokenDetails?.address,
+        platformId,
         chainName,
-        platformName,
+        tokenAddress: tokenDetails?.address,
+        chainId: chainDetails?.id,
+        vaultId,
+        morpho_market_id,
+        network_name,
     });
 
     return {
