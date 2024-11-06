@@ -5,7 +5,7 @@ import SearchInput from '@/components/inputs/SearchInput';
 import LendBorrowToggle from '@/components/LendBorrowToggle';
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
-import { DataTable } from '@/components/ui/data-table';
+import { DataTable } from '@/components/ui/all-positions-table';
 import { HeadingText } from '@/components/ui/typography'
 import { AssetsDataContext } from '@/context/data-provider';
 import { PositionsContext } from '@/context/positions-provider';
