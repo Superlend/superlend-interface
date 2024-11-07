@@ -73,11 +73,11 @@ export default function DiscoverFiltersDropdown() {
             name: "COMPOUND",
             protocol_id: "COMPOUND"
         },
-        {
-            logo: PlatformLogo.MORPHO,
-            name: "MORPHO",
-            protocol_id: "MORPHO"
-        },
+        // {
+        //     logo: PlatformLogo.MORPHO,
+        //     name: "MORPHO",
+        //     protocol_id: "MORPHO"
+        // },
         {
             logo: PlatformLogo.FLUID,
             name: "FLUID",
