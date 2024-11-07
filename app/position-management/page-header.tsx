@@ -76,20 +76,26 @@ export default function PageHeader() {
         platformData: platformData as TPlatform
     })
 
-    const {
-        tokenSymbol,
-        tokenLogo,
-        tokenName,
+    const tokenSymbol = tokenDetails?.symbol;
+    const tokenLogo = tokenDetails?.logo || "";
+    const tokenName = tokenDetails?.name || "";
+    const chainName = chainDetails?.name || "";
+    const chainLogo = chainDetails?.logo || "";
+    const platformName = platformData.platform.name;
+    const platformId = platformData.platform.platform_name;
+    const platformLogo = platformData?.platform.logo;
+    const vaultId = platformData?.platform?.vaultId;
+    const morpho_market_id = platformData?.platform?.morpho_market_id;
+    const network_name = chainName;
+    const platformWebsiteLink = getPlatformWebsiteLink({
+        platformId,
         chainName,
-        chainLogo,
-        platformName,
-        platformLogo,
-        platformWebsiteLink
-    } = getAssetDetails({
-        tokenDetails,
-        chainDetails,
-        platformData: platformData as TPlatform
-    })
+        tokenAddress: tokenDetails?.address,
+        chainId: chain_id,
+        vaultId,
+        morpho_market_id,
+        network_name,
+    });
 
     const platformNamesWithLoanTokens = ["morpho", "fluid"];
     const checkForPairBasedTokens = (platformNames: string[], platformName: string) => platformNames.map(name => name.toLowerCase()).includes(platformName.toLowerCase());
