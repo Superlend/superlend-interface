@@ -5,7 +5,7 @@ import React from "react";
 import { cn, getLowestDisplayValue, hasLowestDisplayValuePrefix } from "@/lib/utils";
 import ImageWithDefault from "../ImageWithDefault";
 import InfoTooltip from "../tooltips/InfoTooltip";
-import { Label } from "./typography";
+import { BodyText, Label } from "./typography";
 
 interface AvatarCirclesProps {
   className?: string;
@@ -37,7 +37,14 @@ const AvatarCircles = ({
           }
 
           content={
-            avatarDetails && <Label weight="semibold" size="medium" className="">{avatarDetails[index].content}</Label>
+            avatarDetails && (
+              <>
+                {avatarDetails[index].title &&
+                  <Label weight="medium" size="small" className="text-gray-700">{avatarDetails[index].title}</Label>
+                }
+                <BodyText level="body2" weight="medium">{avatarDetails[index].content}</BodyText>
+              </>
+            )
           }
         />
       ))}

@@ -218,21 +218,74 @@ export function getPlatformLogo(platformName: string): string {
 }
 
 /**
- * Extracts the version string subset from a hyphen-delimited platform name, 
+ * Extracts the version string subset from a hyphen-delimited platform name,
  * having version string subset on 1st index position.
- * 
+ *
  * @param {string} platformName - The hyphen-delimited platform name.
  * @returns {string} The extracted version string subset or an empty string if not found.
- * 
+ *
  * Example:
  * - If platformName is "AAVE-V3-ETHEREUM", returns "V3".
  * - If platformName is "FLUID-ETHEREUM", returns an empty string.
  */
 export function getPlatformVersion(platformName: string): string {
-  const versionMatch = platformName?.split("-")[1]?.toLowerCase()?.match(/v2|v3|v\d+/);
+  const versionMatch = platformName
+    ?.split("-")[1]
+    ?.toLowerCase()
+    ?.match(/v2|v3|v\d+/);
   return versionMatch ? versionMatch[0].toUpperCase() : "";
 }
 
 export function capitalizeText(text: string) {
   return `${text.split("-")[0][0]}${text.split("-")[0].slice(1).toLowerCase()}`;
+}
+
+export function getRiskFactor(
+  healthFactor: string | number,
+  midValue: number = 1.5,
+  maxValue: number = 2
+) {
+  const HF = Number(healthFactor);
+  if (HF < midValue)
+    return {
+      label: "high",
+      value: HF,
+      theme: "destructive",
+    };
+  if (HF >= midValue && HF < maxValue)
+    return {
+      label: "medium",
+      value: HF,
+      theme: "yellow",
+    };
+  return {
+    label: "low",
+    value: HF,
+    theme: "green",
+  };
+}
+
+export function getLiquidationRisk(
+  healthFactor: number,
+  midValue: number = 50,
+  maxValue: number = 80
+) {
+  const HF = Number(healthFactor);
+  if (HF < midValue)
+    return {
+      label: "low",
+      value: HF,
+      theme: "green",
+    };
+  if (HF >= midValue && HF < maxValue)
+    return {
+      label: "medium",
+      value: HF,
+      theme: "yellow",
+    };
+  return {
+    label: "High",
+    value: HF,
+    theme: "destructive",
+  };
 }

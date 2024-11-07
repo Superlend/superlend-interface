@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, CircleMinus, ShieldAlert, ShieldCheck } from "lucide-react";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import useGetPortfolioData from "@/hooks/useGetPortfolioData";
-import { abbreviateNumber, capitalizeText, convertScientificToNormal, getLowestDisplayValue, hasLowestDisplayValuePrefix, isLowestValue, normalizeResult } from "@/lib/utils";
+import { abbreviateNumber, capitalizeText, convertScientificToNormal, getLowestDisplayValue, getRiskFactor, hasLowestDisplayValuePrefix, isLowestValue, normalizeResult } from "@/lib/utils";
 import { AssetsDataContext } from "@/context/data-provider";
 import AvatarCircles from "@/components/ui/avatar-circles";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,22 +52,6 @@ export default function YourPositionsAtRiskCarousel({
     } = useGetPortfolioData({
         user_address: walletAddress,
     });
-
-    function getRiskFactor(healthFactor: string | number) {
-        const HF = Number(healthFactor);
-        if (HF < 1.5) return {
-            label: "high",
-            theme: "destructive"
-        }
-        if (HF >= 1.5 && HF < 2) return {
-            label: "medium",
-            theme: "yellow"
-        }
-        return {
-            label: "low",
-            theme: "green"
-        }
-    }
 
     const PLATFORMS_WITH_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0 && platform.health_factor <= 1.5)
 

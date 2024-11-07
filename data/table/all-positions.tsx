@@ -35,6 +35,7 @@ export type TPositionsTable = {
     chainName: string;
     chainLogo: string;
     platform_id: string;
+    protocol_identifier: string;
     platformName: string;
     platformLogo: string;
     apy: number;
@@ -58,6 +59,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             const chainLogo = row.original.chainLogo;
             const chainName = row.original.chainName;
             const platformId = row.original.platform_id;
+            const protocolIdentifier = row.original.protocol_identifier;
             const tooltipContent = (
                 <span className="flex flex-col gap-[16px]">
                     <span className="flex flex-col gap-[4px]">
@@ -96,7 +98,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         query: {
                             token: tokenAddress,
                             chain_id: chainId,
-                            platform_id: platformId,
+                            protocol_identifier: protocolIdentifier,
                         }
                     }}
                         className="truncate">

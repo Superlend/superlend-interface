@@ -4,6 +4,7 @@ export type TGetPortfolioParams = {
   chain_id?: string[];
   platform_id?: string[];
   position_type?: "lend" | "borrow";
+  protocol_identifier?: string[];
 };
 
 type TPosition = {
@@ -24,6 +25,7 @@ type TPosition = {
 type TPlatform = {
   name: string;
   platform_name: string;
+  protocol_identifier: string;
   logo: string;
   chain_id: number;
   positions: TPosition[];
