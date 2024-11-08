@@ -117,7 +117,7 @@ export default function PageHeader() {
     const tokensToDisplay = hasPairBasedTokens ? [collateralTokenDetails, loanTokenDetails] : [tokenDetails];
 
     return (
-        <section className="header relative z-[1] flex flex-col sm:flex-row items-start gap-[24px]">
+        <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
             <motion.div className="will-change-transform"
             // initial={{ opacity: 0.7, y: 30 }}
             // animate={{ opacity: 1, y: 0 }}
