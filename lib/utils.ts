@@ -1,3 +1,7 @@
+import {
+  chainNamesBasedOnAaveMarkets,
+  platformWebsiteLinks,
+} from "@/constants";
 import { Period } from "@/types/periodButtons";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -236,8 +240,26 @@ export function getPlatformVersion(platformName: string): string {
   return versionMatch ? versionMatch[0].toUpperCase() : "";
 }
 
-export function capitalizeText(text: string) {
-  return `${text.split("-")[0][0]}${text.split("-")[0].slice(1).toLowerCase()}`;
+export function capitalizeText(inputString: string) {
+  // Check if the input is a valid string
+  if (typeof inputString !== "string") {
+    throw new Error("Input must be a string");
+  }
+
+  // Split the string into words using space as a delimiter
+  const words = inputString.split(" ");
+
+  // Capitalize the first letter of each word
+  const capitalizedWords = words.map((word) => {
+    // Check if the word is not empty
+    if (word.length > 0) {
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    }
+    return word; // Return empty strings as they are
+  });
+
+  // Join the capitalized words back into a single string
+  return capitalizedWords.join(" ");
 }
 
 export function getRiskFactor(
@@ -288,4 +310,53 @@ export function getLiquidationRisk(
     value: HF,
     theme: "destructive",
   };
+}
+
+export function getPlatformWebsiteLink({
+  tokenAddress,
+  chainName,
+  chainId,
+  platformId,
+  vaultId,
+  morpho_market_id,
+  network_name,
+}: {
+  platformId: string;
+  tokenAddress?: string;
+  chainName?: string;
+  chainId?: string;
+  vaultId?: string;
+  morpho_market_id?: string;
+  network_name?: string;
+}) {
+  const platformNameId = platformId?.split("-")[0].toLowerCase();
+  const baseUrl =
+    platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
+
+  const formattedNetworkName =
+    network_name?.toLowerCase() === "ethereum"
+      ? "mainnet"
+      : network_name?.toLowerCase();
+
+  const paths: any = {
+    aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(
+      chainName || ""
+    )}_v3`,
+    compound: `/markets/v2`,
+    fluid: `/stats/${chainId}/vaults#${vaultId}`,
+    morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
+  };
+
+  const path = paths[platformNameId];
+  return `${baseUrl}${path}`;
+}
+
+export function getChainNameBasedOnAaveMarkets(chainName: string) {
+  if (chainName?.toLowerCase() in chainNamesBasedOnAaveMarkets) {
+    return chainNamesBasedOnAaveMarkets[
+      chainName?.toLowerCase() as keyof typeof chainNamesBasedOnAaveMarkets
+    ];
+  }
+
+  return chainName?.toLowerCase();
 }

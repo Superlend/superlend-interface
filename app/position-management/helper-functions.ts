@@ -15,17 +15,16 @@ export function getTokenDetails({
     decimals: 0,
     price_usd: 0,
   };
-  const asset: TPlatformAsset["token"] =
-    platformData?.assets?.find(
-      (asset: TPlatformAsset) =>
-        asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
-    )?.token || fallbackAsset;
+  const asset: TPlatformAsset["token"] | undefined = platformData?.assets?.find(
+    (asset: TPlatformAsset) =>
+      asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
+  )?.token || fallbackAsset;
 
   return {
-    address: asset?.address || tokenAddress,
-    symbol: asset?.symbol || "",
-    name: asset?.name || "",
-    logo: asset?.logo || "",
+    address: asset?.address,
+    symbol: asset?.symbol,
+    name: asset?.name,
+    logo: asset?.logo,
   };
 }
 

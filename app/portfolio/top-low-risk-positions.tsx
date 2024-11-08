@@ -79,7 +79,7 @@ export default function TopLowRiskPositions({
                 amount: abbreviateNumber(platform.total_borrow, 0),
             },
             positionOn: {
-                platformName: capitalizeText(platform?.platform_name),
+                platformName: capitalizeText(platform?.platform_name.split("-").join(" ")),
                 platformImage: platform?.logo ?? "",
                 chainImage: chainDetails?.logo ?? "",
             },
