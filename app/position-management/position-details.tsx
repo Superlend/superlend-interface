@@ -37,7 +37,6 @@ export default function PositionDetails() {
         chain_id: [String(chain_id)],
     });
 
-    // console.log(portfolioData);
 
     // [API_CALL: GET] - Get Platform data
     const {
@@ -49,11 +48,14 @@ export default function PositionDetails() {
         chain_id: Number(chain_id),
     });
 
+    // Filter user positions
+    const userPositions = portfolioData?.platforms.filter(platform =>
+        platform?.protocol_identifier.toLowerCase() === (platformData?.platform as any)?.protocol_identifier.toLowerCase()
+    );
+
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isConnecting;
 
-    const PLATFORMS_WITH_POSITIONS = portfolioData?.platforms.filter(platform => platform.positions.length > 0)
-    console.log(PLATFORMS_WITH_POSITIONS);
-    const [POSITIONS] = PLATFORMS_WITH_POSITIONS?.map((platform, index: number) => {
+    const [POSITIONS] = userPositions?.map((platform, index: number) => {
         const lendPositions = platform.positions.filter(position => position.type === "lend");
         const borrowPositions = platform.positions.filter(position => position.type === "borrow");
         const chainDetails = allChainsData.find(chain => chain.chain_id === platform.chain_id);
@@ -96,7 +98,7 @@ export default function PositionDetails() {
         }
     })
 
-    const liquidationPrice = Number(POSITIONS?.lendAsset?.amount) * Number(POSITIONS?.lendAsset?.tokenDetails[0].liquidation_threshold);
+    const liquidationPrice = (Number(POSITIONS?.lendAsset?.amount) * Number(POSITIONS?.lendAsset?.tokenDetails[0].liquidation_threshold));
     const liquidationPercentage = calculatePercentage(Number(POSITIONS?.lendAsset?.amount), Number(liquidationPrice));
     const liquidationDetails = {
         liquidationPrice: liquidationPrice,
@@ -125,12 +127,12 @@ export default function PositionDetails() {
     // If user is connected, show position details
     return (
         <motion.section
-            className={`bg-white bg-opacity-40 px-[16px] rounded-6 ${isPairBasedProtocol && PLATFORMS_WITH_POSITIONS.length > 0 ? "pt-[32px] pb-[16px]" : "py-[16px]"}`}
+            className={`bg-white bg-opacity-40 px-[16px] rounded-6 ${isPairBasedProtocol && userPositions.length > 0 ? "pt-[32px] pb-[16px]" : "py-[16px]"}`}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
         >
-            {isPairBasedProtocol && PLATFORMS_WITH_POSITIONS.length > 0 &&
+            {isPairBasedProtocol && userPositions.length > 0 &&
                 <div className="px-[16px]">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-[12px]">
                         <div className="flex items-center gap-[8px]">
@@ -161,7 +163,7 @@ export default function PositionDetails() {
                     isLoading && <Skeleton className='w-full h-[100px]' />
                 }
                 {
-                    !isLoading && PLATFORMS_WITH_POSITIONS.length > 0 &&
+                    !isLoading && userPositions.length > 0 &&
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
                         <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full">
                             <BodyText level='body2'>Your Collateral</BodyText>
@@ -202,7 +204,7 @@ export default function PositionDetails() {
                     </div>
                 }
                 {
-                    !isLoading && PLATFORMS_WITH_POSITIONS.length === 0 &&
+                    !isLoading && userPositions.length === 0 &&
                     <div className="flex flex-col gap-[12px] items-center justify-center h-full">
                         <Image src="/icons/notification-lines-removed.svg" alt="No positions found" width={24} height={24} />
                         <BodyText level='body1'>No positions found currently</BodyText>

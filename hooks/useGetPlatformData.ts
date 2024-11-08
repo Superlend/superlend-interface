@@ -26,6 +26,7 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
       platform: {
         platform_name: "",
         platform_type: "",
+        protocol_identifier: "",
         name: "",
         logo: "",
         chain_id: 0,

@@ -150,6 +150,7 @@ export type TPlatform = {
   platform: {
     name: string;
     platform_name: string;
+    protocol_identifier: string;
     platform_type: string;
     logo: string;
     chain_id: number;
