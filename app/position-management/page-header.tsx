@@ -149,7 +149,7 @@ export default function PageHeader() {
                                         height={28}
                                         className="rounded-full max-w-[28px] max-h-[28px] object-contain"
                                     />
-                                    <HeadingText level='h4' className='uppercase break-words'>{tokenSymbol}</HeadingText>
+                                    <HeadingText level='h4' className='uppercase break-words text-gray-800'>{tokenSymbol}</HeadingText>
                                 </div>
                             }
                             {
@@ -163,7 +163,7 @@ export default function PageHeader() {
                                                 height={28}
                                                 className="rounded-full max-w-[28px] max-h-[28px] object-contain"
                                             />
-                                            <HeadingText level='h4' className='uppercase break-words'>{collateralTokenDetails?.symbol}</HeadingText>
+                                            <HeadingText level='h4' className='uppercase break-words text-gray-800'>{collateralTokenDetails?.symbol}</HeadingText>
                                         </div>
                                         <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
                                         <div className="flex items-center gap-[8px]">
@@ -174,7 +174,7 @@ export default function PageHeader() {
                                                 height={28}
                                                 className="rounded-full max-w-[28px] max-h-[28px]"
                                             />
-                                            <HeadingText level='h4' className='uppercase'>{loanTokenDetails?.symbol}</HeadingText>
+                                            <HeadingText level='h4' className='uppercase text-gray-800'>{loanTokenDetails?.symbol}</HeadingText>
                                         </div>
                                     </>
                                 )
@@ -187,13 +187,13 @@ export default function PageHeader() {
                             <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[400px]'>
                                 <div className="flex items-center gap-1">
                                     <ImageWithDefault src={chainLogo} alt={`${chainName}`} width={16} height={16} className='object-contain shrink-0 max-w-[16px] max-h-[16px]' />
-                                    <Label weight='medium' className='leading-[0] shrink-0'>{chainName}</Label>
+                                    <Label weight='medium' className='leading-[0] shrink-0 capitalize'>{chainName.toLowerCase()}</Label>
                                 </div>
                                 <a
                                     className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
                                     href={platformWebsiteLink}
                                     target='_blank'>
-                                    <span className="uppercase text-secondary-500 font-medium">{platformName.split(" ")[0]}</span>
+                                    <span className="uppercase text-secondary-500 font-medium">{platformId.split("-")[0]}{" "}{getPlatformVersion(platformId)}</span>
                                     <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
                                 </a>
                             </Badge>

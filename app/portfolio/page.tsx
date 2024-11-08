@@ -49,7 +49,7 @@ export default function Portfolio() {
             <MainContainer className='px-0'>
                 <section id='your-portfolio' className="portfolio-page-header flex flex-col md:flex-row gap-[16px] items-start md:items-center justify-between mb-[24px] px-5">
                     <div className="flex flex-col gap-[4px]">
-                        <HeadingText level="h4">Your Portfolio</HeadingText>
+                        <HeadingText level="h4" weight='medium' className='text-gray-800'>Your Portfolio</HeadingText>
                         <BodyText level='body1' className='text-gray-600'>Track all your lending and borrowing positions in one place.</BodyText>
                     </div>
                     {/* <Button variant="primary" className='group uppercase py-[9px] px-[16px] flex items-center gap-[4px]'>

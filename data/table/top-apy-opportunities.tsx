@@ -67,7 +67,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         }
                     }}
                         className="truncate">
-                        <BodyText level={"body2"} weight={"semibold"} className="truncate block shrink-0 hover:text-secondary-500">
+                        <BodyText level={"body2"} weight={"medium"} className="truncate block shrink-0 hover:text-secondary-500">
                             {tokenSymbol}
                         </BodyText>
 
@@ -93,7 +93,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         width={20}
                         height={20}
                     />
-                    <BodyText level={"body2"} weight={"semibold"} className="truncate">
+                    <BodyText level={"body2"} weight={"medium"} className="truncate">
                         {platformName}
                     </BodyText>
                 </span>
@@ -150,7 +150,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <InfoTooltip
                         label={
                             <TooltipText>
-                                <BodyText level={"body2"} weight={"semibold"}>
+                                <BodyText level={"body2"} weight={"medium"}>
                                     {`${apyCurrentFormatted}%`}
                                 </BodyText>
                             </TooltipText>
@@ -163,7 +163,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
 
             return (
                 <span className="flex items-center gap-1" >
-                    <BodyText level={"body2"} weight={"semibold"}>
+                    <BodyText level={"body2"} weight={"medium"}>
                         {`${apyCurrentFormatted}%`}
                     </BodyText>
                     {
@@ -199,13 +199,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-2">
                     {Number(row.getValue("max_ltv")) > 0 &&
-                        <BodyText level={"body2"} weight={"semibold"}>
+                        <BodyText level={"body2"} weight={"medium"}>
                             {`${Number(row.getValue("max_ltv")).toFixed(2)}%`}
                         </BodyText>}
                     {Number(row.getValue("max_ltv")) === 0 &&
                         <InfoTooltip
                             label={<TooltipText>
-                                <BodyText level={"body2"} weight={"semibold"}>
+                                <BodyText level={"body2"} weight={"medium"}>
                                     {`${row.getValue("max_ltv")}%`}
                                 </BodyText>
                             </TooltipText>}
@@ -233,13 +233,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const value: string = row.getValue("deposits");
             if (containsNegativeInteger(value)) {
                 return (
-                    <BodyText level={"body2"} weight={"semibold"}>
+                    <BodyText level={"body2"} weight={"medium"}>
                         -${abbreviateNumber(Number(convertNegativeToPositive(value)))}
                     </BodyText>
                 )
             }
             return (
-                <BodyText level={"body2"} weight={"semibold"}>
+                <BodyText level={"body2"} weight={"medium"}>
                     ${abbreviateNumber(Number(value))}
                 </BodyText>
             )
@@ -262,13 +262,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const value: string = row.getValue("borrows");
             if (containsNegativeInteger(value)) {
                 return (
-                    <BodyText level={"body2"} weight={"semibold"}>
+                    <BodyText level={"body2"} weight={"medium"}>
                         -${abbreviateNumber(Number(convertNegativeToPositive(value)))}
                     </BodyText>
                 )
             }
             return (
-                <BodyText level={"body2"} weight={"semibold"}>
+                <BodyText level={"body2"} weight={"medium"}>
                     ${abbreviateNumber(Number(value))}
                 </BodyText>
             )
@@ -293,7 +293,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <InfoTooltip
                         label={
                             <TooltipText>
-                                <BodyText level={"body2"} weight={"semibold"}>
+                                <BodyText level={"body2"} weight={"medium"}>
                                     {`${Number(row.getValue("utilization")).toFixed(1)}%`}
                                 </BodyText>
                             </TooltipText>
@@ -305,7 +305,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             }
 
             return (
-                <BodyText level={"body2"} weight={"semibold"}>
+                <BodyText level={"body2"} weight={"medium"}>
                     {`${Number(row.getValue("utilization")).toFixed(2)}%`}
                 </BodyText>
             )

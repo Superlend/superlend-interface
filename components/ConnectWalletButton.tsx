@@ -37,10 +37,10 @@ export default function ConnectWalletButton(
                 <Button
                     variant={address ? "default" : "primary"}
                     size={"lg"}
-                    className="rounded-[12px] py-2"
+                    className="rounded-[12px] py-2 capitalize"
                     onClick={onConnect}
                 >
-                    {isDisconnected && "Connect wallet"}
+                    {isDisconnected && "Connect Wallet"}
                     {address && `${address.slice(0, 5)}...${address.slice(address.length - 5)}`}
                 </Button>
             )}

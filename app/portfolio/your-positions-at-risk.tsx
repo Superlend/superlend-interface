@@ -141,7 +141,7 @@ export default function YourPositionsAtRiskCarousel({
         <section id="your-positions-at-risk">
             <div className="section-header flex items-center justify-between mb-[24px] px-5">
                 <div className="flex items-center gap-[12px]">
-                    <HeadingText level="h3" weight='semibold'>Your Positions at Risk</HeadingText>
+                    <HeadingText level="h3" weight='medium' className="text-gray-800">Your Positions at Risk</HeadingText>
                     <InfoTooltip
                         content={
                             <BodyText level="body3" weight="normal">

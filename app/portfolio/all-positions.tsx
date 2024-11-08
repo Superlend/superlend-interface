@@ -131,7 +131,7 @@ export default function AllPositions({
                 <div className="all-positions-header-left w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                     <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
                         <div className="flex items-center gap-[12px]">
-                            <HeadingText level="h3" weight='semibold'>All positions</HeadingText>
+                            <HeadingText level="h3" weight='medium' className="capitalize text-gray-800">All positions</HeadingText>
                             <InfoTooltip
                                 content={
                                     <div className="flex flex-col gap-[4px]">

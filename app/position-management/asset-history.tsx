@@ -86,7 +86,7 @@ export default function AssetHistory() {
                             // hide={blockIndex === 0}
                             />
                             {!isLoadingPlatformHistory &&
-                                <HeadingText level='h3'>
+                                <HeadingText level='h3' weight='medium' className="text-gray-800">
                                     {block.value}
                                 </HeadingText>
                             }

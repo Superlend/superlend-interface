@@ -56,7 +56,7 @@ export default function PortfolioOverview({
                     <div className="positions-net-worth-block h-full px-[24px] md:px-[32px] pt-[28px] flex flex-col items-start justify-between gap-[29px] pb-[24px]">
                         <div className="shrink-0">
                             {isLoading && <Skeleton className='h-10 w-[75%]' />}
-                            {!isLoading && <HeadingText level='h2'>{NET_WORTH}</HeadingText>}
+                            {!isLoading && <HeadingText level='h2' weight='medium' className='text-gray-800'>{NET_WORTH}</HeadingText>}
                             <BodyText level='body1' className='text-gray-600'>Your Positions Net worth</BodyText>
                         </div>
                         <Card className='w-full'>
@@ -66,13 +66,13 @@ export default function PortfolioOverview({
                                         <React.Fragment key={positionIndex}>
                                             <div className="data-block-1">
                                                 {isLoading && <Skeleton className='h-6 w-16' />}
-                                                <div className="flex flex-col gap-5">
+                                                <div className="flex flex-col gap-1">
                                                     {!isLoading && position.icon}
-                                                    {!isLoading && <BodyText level='body1' weight='medium' className='leading-[0]'>{position.data}</BodyText>}
+                                                    {!isLoading && <BodyText level='body1' weight='medium' className='leading-none text-gray-800 mt-2'>{position.data}</BodyText>}
                                                     <Label className="text-gray-600 text-success-500 capitalize">Your {position.label}</Label>
                                                 </div>
                                             </div>
-                                            <span className="hidden md:inline text-gray-500 [&:nth-child(6)]:hidden">|</span>
+                                            <span className="hidden md:inline text-gray-400 [&:nth-child(6)]:hidden">|</span>
                                         </React.Fragment>
                                     ))
                                 }

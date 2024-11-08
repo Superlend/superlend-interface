@@ -127,7 +127,7 @@ export function DataTable<TData, TValue>({
                                         // }}
                                         >
                                             <div className="flex items-center gap-[8px]">
-                                                <BodyText level="body2" weight="normal" className="text-gray-800 select-none">
+                                                <BodyText level="body2" weight="normal" className="text-gray-700 select-none">
                                                     {header.isPlaceholder
                                                         ? null
                                                         : flexRender(
@@ -213,12 +213,12 @@ export function DataTable<TData, TValue>({
                 !!data.length &&
                 <div className="pagination-container flex items-center justify-end sm:justify-between gap-5 flex-wrap py-4 px-4 sm:px-8">
                     <div className="pagination-stats">
-                        <Label size="medium" weight="medium">
+                        <Label size="medium" weight="medium" className="text-gray-700">
                             Page {pagination.pageIndex + 1} of {calculatedPages}
                         </Label>
                     </div>
                     <div className="pagination-controls flex items-center justify-end space-x-2 flex-1 shrink-0 ml-16">
-                        <Label size="medium" weight="medium" className="hidden xs:block shrink-0">
+                        <Label size="medium" weight="medium" className="hidden xs:block shrink-0 text-gray-700">
                             {pagination.pageSize} of {totalRowCount.toLocaleString()} rows
                         </Label>
                         <Button

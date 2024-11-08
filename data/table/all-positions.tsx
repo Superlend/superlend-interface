@@ -102,7 +102,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         }
                     }}
                         className="truncate">
-                        <BodyText level={"body2"} weight={"semibold"} className="truncate block shrink-0 hover:text-secondary-500">
+                        <BodyText level={"body2"} weight={"medium"} className="truncate block shrink-0 hover:text-secondary-500">
                             {tokenSymbol}
                         </BodyText>
                     </Link>
@@ -129,7 +129,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         height={20}
                         className="w-[20px] h-[20px] max-w-[20px] max-h-[20px]"
                     />
-                    <BodyText level="body2" weight="semibold" className="truncate">
+                    <BodyText level="body2" weight="medium" className="truncate">
                         {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
                     </BodyText>
                 </span>
@@ -180,7 +180,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             }
 
             return (
-                <BodyText level="body2" weight="semibold">
+                <BodyText level="body2" weight="medium">
                     {`${sanitizedValue}%`}
                 </BodyText>
             )
@@ -230,7 +230,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             const sanitizedValue = isLowestValue ? "0.01" : abbreviateNumber(value);
 
             return (
-                <BodyText level="body2" weight="semibold">
+                <BodyText level="body2" weight="medium">
                     {`${isLowestValue ? "< " : ""} $${sanitizedValue}`}
                 </BodyText>
             )

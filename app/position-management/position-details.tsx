@@ -135,7 +135,7 @@ export default function PositionDetails() {
                 <div className="px-[16px]">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-[12px]">
                         <div className="flex items-center gap-[8px]">
-                            <BodyText level='body2'>
+                            <BodyText level='body2' className='capitalize'>
                                 Liquidation Risk
                             </BodyText>
                             <Badge variant={liquidationDetails.riskFactor.theme as "destructive" | "yellow" | "green"}>
@@ -143,7 +143,7 @@ export default function PositionDetails() {
                             </Badge>
                         </div>
                         <div className="flex items-center gap-[16px]">
-                            <BodyText level='body2'>
+                            <BodyText level='body2' className='capitalize'>
                                 Liquidation price
                             </BodyText>
                             <div className="flex items-center gap-[6px]">
@@ -165,7 +165,7 @@ export default function PositionDetails() {
                     !isLoading && userPositions.length > 0 &&
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
                         <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full">
-                            <BodyText level='body2'>Your Collateral</BodyText>
+                            <BodyText level='body2' weight='normal' className="text-gray-600">Your Collateral</BodyText>
                             <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
                                 <div className="flex items-center gap-[6px]">
                                     <AvatarCircles
@@ -175,7 +175,7 @@ export default function PositionDetails() {
                                             title: token.symbol
                                         }))}
                                     />
-                                    <HeadingText level='h3'>${abbreviateNumber(Number(POSITIONS?.lendAsset.amount ?? 0))}</HeadingText>
+                                    <HeadingText level='h3' weight='medium' className="text-gray-800">${abbreviateNumber(Number(POSITIONS?.lendAsset.amount ?? 0))}</HeadingText>
                                 </div>
                                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
                                 withdraw
@@ -183,7 +183,7 @@ export default function PositionDetails() {
                             </div>
                         </div>
                         <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full">
-                            <BodyText level='body2'>Your Borrowing</BodyText>
+                            <BodyText level='body2' weight='normal' className="text-gray-600">Your Borrowing</BodyText>
                             <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
                                 <div className="flex items-center gap-[6px]">
                                     <AvatarCircles
@@ -193,7 +193,7 @@ export default function PositionDetails() {
                                             title: token.symbol
                                         }))}
                                     />
-                                    <HeadingText level='h3'>${abbreviateNumber(Number(POSITIONS?.borrowAsset.amount ?? 0))}</HeadingText>
+                                    <HeadingText level='h3' weight='medium' className="text-gray-800">${abbreviateNumber(Number(POSITIONS?.borrowAsset.amount ?? 0))}</HeadingText>
                                 </div>
                                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
                                 repay
@@ -206,7 +206,7 @@ export default function PositionDetails() {
                     !isLoading && userPositions.length === 0 &&
                     <div className="flex flex-col gap-[12px] items-center justify-center h-full">
                         <Image src="/icons/notification-lines-removed.svg" alt="No positions found" width={24} height={24} />
-                        <BodyText level='body1'>No positions found currently</BodyText>
+                        <BodyText level='body1' weight='normal' className="text-gray-600">No positions found currently</BodyText>
                     </div>
                 }
             </div>

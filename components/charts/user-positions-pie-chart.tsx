@@ -231,7 +231,7 @@ export function UserPositionsByPlatform({
                                                 >
                                                     <tspan
                                                         x={viewBox.cx}
-                                                        y={viewBox.cy}
+                                                        y={(viewBox.cy || 0) - 5}
                                                         className="fill-foreground text-3xl font-bold"
                                                     >
                                                         {openPositionsCount.toLocaleString()}
@@ -239,7 +239,7 @@ export function UserPositionsByPlatform({
                                                     <tspan
                                                         x={viewBox.cx}
                                                         y={(viewBox.cy || 0) + 24}
-                                                        className="fill-gray-700 font-medium text-[14px]"
+                                                        className="fill-gray-600 font-medium text-[14px] capitalize"
                                                     >
                                                         Positions open
                                                     </tspan>
@@ -257,7 +257,7 @@ export function UserPositionsByPlatform({
                 <CardFooter className="flex-col gap-2 text-sm">
                     {isLoading && <Skeleton className="h-7 w-full max-w-[200px] rounded-3" />}
                     {!isLoading && totalMarketsCount > 0 &&
-                        <div className="flex items-center gap-2 font-medium leading-none text-gray-700">
+                        <div className="flex items-center gap-2 font-medium leading-none text-gray-600">
                             {totalMarketsCount > 0 &&
                                 <AvatarCircles
                                     avatarUrls={platformDetails.logos}
