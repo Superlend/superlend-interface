@@ -18,7 +18,7 @@ import {
     ChartTooltipContent,
 } from "@/components/ui/chart"
 import { TPortfolio } from "@/types/queries/portfolio"
-import { abbreviateNumber, capitalizeText } from "@/lib/utils"
+import { abbreviateNumber, capitalizeText, convertNegativeToPositive, containsNegativeInteger } from "@/lib/utils"
 import { convertScientificToNormal } from "@/lib/utils"
 import { isLowestValue } from "@/lib/utils"
 import { AssetsDataContext } from "@/context/data-provider"
@@ -42,19 +42,19 @@ const chartDataTemplate = [
 const chartConfig = {
     aave: {
         label: "Aave",
-        color: "hsl(var(--chart-1))",
+        color: "hsl(var(--chart-aave))",
     },
     compound: {
         label: "Compound",
-        color: "hsl(var(--chart-2))",
+        color: "hsl(var(--chart-compound))",
     },
     morpho: {
         label: "Morpho",
-        color: "hsl(var(--chart-3))",
+        color: "hsl(var(--chart-morpho))",
     },
     fluid: {
         label: "Fluid",
-        color: "hsl(var(--chart-4))",
+        color: "hsl(var(--chart-fluid))",
     },
 } satisfies ChartConfig
 
@@ -129,7 +129,7 @@ export function UserPositionsByPlatform({
     const openPositionsCount = PLATFORMS_WITH_POSITIONS.reduce((acc, curr) => {
         return acc + curr.positions.length
     }, 0);
-    const totalPlatformsCount = PLATFORMS_WITH_POSITIONS.length;
+    const totalMarketsCount = PLATFORMS_WITH_POSITIONS.length;
 
     const chartData = PLATFORMS_WITH_POSITIONS.map((platform) => {
         const chainDetails = allChainsData.find(chain => Number(chain.chain_id) === Number(platform.chain_id));
@@ -161,17 +161,24 @@ export function UserPositionsByPlatform({
                 ],
             },
             chartKey: platform.platform_name.split("-")[0].toLowerCase(),
-            chartValue: Number(platform.pnl < MIN_VALUE_REQUIRED ? platform.pnl + MIN_VALUE_PADDING : platform.pnl),
+            chartValue: handleNegativeValue(platform.pnl < MIN_VALUE_REQUIRED ? platform.pnl + MIN_VALUE_PADDING : platform.pnl),
             fill: `var(--color-${platform.platform_name.split("-")[0].toLowerCase()})`,
         }
     })
+
+    function handleNegativeValue(value: string | number) {
+        if (containsNegativeInteger(value)) {
+            return Number(convertNegativeToPositive(value))
+        }
+        return Number(value)
+    }
 
     const platformDetails = {
         logos: chartData.map(data => data.platform.logo),
         platform_names: chartData.map(data => data.platform.id.split("-").join(" ")),
     }
 
-    const platformTooltipNames = platformDetails.platform_names.map(name => ({ content: name }));
+    const platformTooltipNames = platformDetails.platform_names.map(name => ({ content: capitalizeText(name) }));
 
     return (
         <Card className="flex flex-col">
@@ -246,13 +253,20 @@ export function UserPositionsByPlatform({
                     </ChartContainer>
                 }
             </CardContent>
-            {!!totalPlatformsCount &&
+            {!!totalMarketsCount &&
                 <CardFooter className="flex-col gap-2 text-sm">
                     {isLoading && <Skeleton className="h-7 w-full max-w-[200px] rounded-3" />}
-                    {!isLoading && totalPlatformsCount > 0 &&
+                    {!isLoading && totalMarketsCount > 0 &&
                         <div className="flex items-center gap-2 font-medium leading-none text-gray-700">
-                            {totalPlatformsCount > 0 && <AvatarCircles avatarUrls={platformDetails.logos} avatarDetails={platformTooltipNames} />}
-                            Spread across {totalPlatformsCount} platform{totalPlatformsCount > 1 ? "s" : ""}
+                            {totalMarketsCount > 0 &&
+                                <AvatarCircles
+                                    avatarUrls={platformDetails.logos}
+                                    avatarDetails={platformTooltipNames}
+                                    moreItemsCount={totalMarketsCount - 6}
+                                    maxItemsToShow={6}
+                                />
+                            }
+                            Spread across {totalMarketsCount} market{totalMarketsCount > 1 ? "s" : ""}
                         </div>
                     }
                 </CardFooter>

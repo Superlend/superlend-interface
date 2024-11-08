@@ -32,25 +32,28 @@ export default function PortfolioOverview({
         {
             label: "collateral",
             data: COLLATERAL,
-            id: 1
+            id: 1,
+            icon: <img src="/icons/hand-money.svg" alt="Wallet Money Icon" className='w-6 h-6' />
         },
         {
             label: "borrowings",
             data: BORROWINGS,
-            id: 2
+            id: 2,
+            icon: <img src="/icons/cash-out.svg" alt="Cash Out Icon" className='w-6 h-6' />
         },
         {
             label: "earnings",
             data: EARNINGS,
-            id: 3
+            id: 3,
+            icon: <img src="/icons/wallet-money.svg" alt="Earnings Icon" className='w-6 h-6' />
         },
     ]
 
     return (
         <section id='your-stats' className="grid lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_380px] gap-[16px] px-5">
             <article>
-                <Card>
-                    <div className="positions-net-worth-block px-[24px] md:px-[32px] pt-[28px] flex flex-col sm:flex-row sm:items-center gap-[29px] pb-[24px]">
+                <Card className='h-full'>
+                    <div className="positions-net-worth-block h-full px-[24px] md:px-[32px] pt-[28px] flex flex-col items-start justify-between gap-[29px] pb-[24px]">
                         <div className="shrink-0">
                             {isLoading && <Skeleton className='h-10 w-[75%]' />}
                             {!isLoading && <HeadingText level='h2'>{NET_WORTH}</HeadingText>}
@@ -63,8 +66,11 @@ export default function PortfolioOverview({
                                         <React.Fragment key={positionIndex}>
                                             <div className="data-block-1">
                                                 {isLoading && <Skeleton className='h-6 w-16' />}
-                                                {!isLoading && <BodyText level='body1' weight='medium'>{position.data}</BodyText>}
-                                                <Label className="text-gray-600 text-success-500">Your {position.label}</Label>
+                                                <div className="flex flex-col gap-5">
+                                                    {!isLoading && position.icon}
+                                                    {!isLoading && <BodyText level='body1' weight='medium' className='leading-[0]'>{position.data}</BodyText>}
+                                                    <Label className="text-gray-600 text-success-500 capitalize">Your {position.label}</Label>
+                                                </div>
                                             </div>
                                             <span className="hidden md:inline text-gray-500 [&:nth-child(6)]:hidden">|</span>
                                         </React.Fragment>

@@ -12,6 +12,7 @@ interface AvatarCirclesProps {
   moreItemsCount?: number;
   avatarUrls: string[];
   avatarDetails?: any[];
+  maxItemsToShow?: number;
 }
 
 const AvatarCircles = ({
@@ -19,10 +20,13 @@ const AvatarCircles = ({
   className,
   avatarUrls,
   avatarDetails,
+  maxItemsToShow = 3,
 }: AvatarCirclesProps) => {
+  const avatarUrlsToShow = moreItemsCount ? avatarUrls.slice(0, maxItemsToShow) : avatarUrls;
+
   return (
     <div className={cn("z-10 flex -space-x-3 rtl:space-x-reverse", className)}>
-      {avatarUrls.map((url, index) => (
+      {avatarUrlsToShow.map((url, index) => (
         <InfoTooltip
           key={index}
           label={
@@ -48,7 +52,7 @@ const AvatarCircles = ({
           }
         />
       ))}
-      {moreItemsCount && moreItemsCount > 3 &&
+      {moreItemsCount && moreItemsCount > 0 &&
         <span
           className="flex h-[24px] w-[24px] items-center justify-center rounded-full border-2 border-secondary-300/75 bg-white text-center text-xs font-medium text-secondary-500 hover:bg-gray-400 dark:border-gray-800 dark:bg-white dark:text-black"
         >

@@ -101,6 +101,9 @@ const config = {
           green: "hsl(var(--chart-green))",
           orange: "hsl(var(--chart-orange))",
           yellow: "hsl(var(--chart-yellow))",
+          aave: "hsl(var(--chart-aave))",
+          compound: "hsl(var(--chart-compound))",
+          fluidex: "hsl(var(--chart-fluid))",
         },
       },
       borderRadius: {

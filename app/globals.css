@@ -60,6 +60,9 @@
     --chart-green: hsla(137, 85%, 35%, 1);
     --chart-orange: hsla(21, 100%, 50%, 1);
     --chart-yellow: hsla(44, 100%, 47%, 1);
+    --chart-aave: 241 86% 77%;
+    --chart-compound: 162 99% 38%;
+    --chart-fluid: 223 98% 62%;
   }
 
   .dark {
@@ -87,6 +90,9 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --chart-aave: 241 86% 77%;
+    --chart-compound: 162 99% 38%;
+    --chart-fluid: 223 98% 62%;
   }
 }
 
