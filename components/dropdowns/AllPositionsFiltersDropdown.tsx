@@ -26,6 +26,7 @@ import useDimensions from '@/hooks/useDimensions';
 import { PLATFORM_OPTIONS, STABLECOINS_NAMES_LIST } from '@/constants';
 import SearchInput from '../inputs/SearchInput';
 import { PositionsContext, TPositionsContext, TPositionsFilters } from '@/context/positions-provider';
+import { PlatformLogo } from '@/types/platform';
 
 export default function AllPositionsFiltersDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
@@ -52,11 +53,28 @@ export default function AllPositionsFiltersDropdown() {
             logo: token.logo
         }))
 
-    const allPlatformsData = PLATFORM_OPTIONS.map(platform => ({
-        logo: allTokenOptions?.find((token: any) => token.token_id === platform.label.split("-")[0])?.logo || "",
-        name: platform.label,
-        platform_id: platform.value,
-    }));
+    const allPlatformsData = [
+        {
+            logo: PlatformLogo.AAVE,
+            name: "AAVE",
+            platform_id: "AAVE"
+        },
+        {
+            logo: PlatformLogo.COMPOUND,
+            name: "COMPOUND",
+            platform_id: "COMPOUND"
+        },
+        // {
+        //     logo: PlatformLogo.MORPHO,
+        //     name: "MORPHO",
+        //     platform_id: "MORPHO"
+        // },
+        {
+            logo: PlatformLogo.FLUID,
+            name: "FLUID",
+            platform_id: "FLUID"
+        },
+    ]
 
     const FILTER_CATEGORIES = [
         {

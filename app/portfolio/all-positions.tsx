@@ -42,9 +42,7 @@ export default function AllPositions({
         isError: isErrorPortfolioData
     } = useGetPortfolioData({
         user_address: walletAddress,
-        position_type: positionType,
         chain_id: filters.chain_ids,
-        platform_id: filters.platform_ids,
     });
     const { allChainsData } = useContext(AssetsDataContext);
 
@@ -77,10 +75,9 @@ export default function AllPositions({
                 }
             }
         })
-    }).flat(portfolioData?.platforms.length);
+    }).flat(portfolioData?.platforms.length).filter(position => position.type === positionType);
 
     const rawTableData: TPositionsTable[] = POSITIONS?.map((item) => {
-
         return {
             tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,
@@ -96,21 +93,23 @@ export default function AllPositions({
             apy: item.platform.net_apy,
             deposits: calculateScientificNotation(item.amount.toString(), item.token.price_usd.toString(), "multiply").toFixed(10),
             borrows: calculateScientificNotation(item.amount.toString(), item.token.price_usd.toString(), "multiply").toFixed(10),
-            earnings: item.platform.pnl,
+            earnings: ((item.amount - item.initial_amount) * item.token.price_usd),
         }
     });
 
     const filteredTableData = rawTableData.filter((position) => {
-        return filters.token_ids.includes(position.tokenSymbol)
+        const matchesTokenFilter = filters.token_ids.length === 0 || filters.token_ids.includes(position.tokenSymbol);
+        const matchesPlatformFilter = filters.platform_ids.length === 0 || filters.platform_ids.includes(position.platformName);
+        return matchesTokenFilter && matchesPlatformFilter;
     });
 
-    const tableData = filters.token_ids.length > 0 ? filteredTableData : rawTableData;
+    const tableData = filteredTableData;
 
     function handleRowClick(rowData: any) {
         if (screenWidth < 768) return;
 
-        const { tokenAddress, platform_id, chain_id } = rowData;
-        const url = `/position-management?token=${tokenAddress}&platform_id=${platform_id}&chain_id=${chain_id}`
+        const { tokenAddress, protocol_identifier, chain_id } = rowData;
+        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}`
         router.push(url);
     }
 
@@ -130,9 +129,15 @@ export default function AllPositions({
         <section id='all-positions' className="all-positions-container flex flex-col gap-[24px] px-5">
             <div className="all-positions-header flex items-end lg:items-center justify-between gap-[12px]">
                 <div className="all-positions-header-left w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
-                    <div className="flex items-center gap-[12px]">
-                        <HeadingText level="h3" weight='semibold'>All positions</HeadingText>
-                        <InfoTooltip />
+                    <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
+                        <div className="flex items-center gap-[12px]">
+                            <HeadingText level="h3" weight='semibold'>All positions</HeadingText>
+                            <InfoTooltip />
+                        </div>
+                        {/* Filter button for Tablet and below screens */}
+                        <div className="block lg:hidden">
+                            <AllPositionsFiltersDropdown />
+                        </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="w-full sm:max-w-[150px] lg:max-w-[250px]">
@@ -156,14 +161,12 @@ export default function AllPositions({
                         data={tableData}
                         filters={searchKeywords}
                         setFilters={setSearchKeywords}
-                        // handleRowClick={handleRowClick}
+                        handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
                         sorting={sorting}
                         setSorting={setSorting}
                         noDataMessage={"No positions"}
-                    // pagination={undefined}
-                    // setPagination={undefined}
                     />}
                 {isLoadingPortfolioData && (
                     <LoadingSectionSkeleton />

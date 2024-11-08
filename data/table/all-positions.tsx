@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { BodyText, Label } from "@/components/ui/typography";
 import { PositionsContext } from "@/context/positions-provider";
 import useDimensions from "@/hooks/useDimensions";
-import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
+import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive, getPlatformVersion, isLowestValue } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useContext } from "react";
@@ -102,9 +102,9 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         }
                     }}
                         className="truncate">
-                        <span className="truncate block shrink-0 hover:text-secondary-500">
+                        <BodyText level={"body2"} weight={"semibold"} className="truncate block shrink-0 hover:text-secondary-500">
                             {tokenSymbol}
-                        </span>
+                        </BodyText>
                     </Link>
                     {/* <InfoTooltip iconWidth={16} iconHeight={16} content={tooltipContent} /> */}
                 </BodyText>
@@ -118,7 +118,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         accessorFn: item => item.platformName,
         cell: ({ row }) => {
             const platformName: string = row.getValue("platformName");
-            const platformVersion: string = row.original.platform_id.split("-")[1]
+            const platformId: string = row.original.platform_id;
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -129,8 +129,8 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         height={20}
                         className="w-[20px] h-[20px] max-w-[20px] max-h-[20px]"
                     />
-                    <BodyText level="body2" weight="medium" className="truncate">
-                        {`${capitalizeText(platformName)} ${platformVersion}`}
+                    <BodyText level="body2" weight="semibold" className="truncate">
+                        {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
                     </BodyText>
                 </span>
             )
@@ -156,12 +156,15 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             )
         },
         cell: ({ row }) => {
-            if (`${Number(row.getValue("apy")).toFixed(2)}` === "0.00") {
+            const apy: number = Number(row.getValue("apy"));
+            const sanitizedValue = isLowestValue(Number(apy)) ? "<0.01" : getSanitizedValue(Number(apy));
+
+            if (`${apy.toFixed(2)}` === "0.00") {
                 return (
                     <InfoTooltip
                         side="bottom"
                         label={
-                            <TooltipText>{`${Number(row.getValue("apy")).toFixed(2)}%`}</TooltipText>
+                            <TooltipText>{`${apy.toFixed(2)}%`}</TooltipText>
                         }
                         content={"This asset is non-borrowable"}
                     />
@@ -169,9 +172,16 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                 )
             }
 
+            function getSanitizedValue(value: string | number) {
+                if (containsNegativeInteger(value)) {
+                    return `- ${abbreviateNumber(Number(convertNegativeToPositive(value)) ?? 0)}`
+                }
+                return `${abbreviateNumber(Number(value) ?? 0)}`
+            }
+
             return (
-                <BodyText level="body2" weight="medium">
-                    {`${Number(row.getValue("apy")).toFixed(2)}%`}
+                <BodyText level="body2" weight="semibold">
+                    {`${sanitizedValue}%`}
                 </BodyText>
             )
         },
@@ -220,7 +230,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             const sanitizedValue = isLowestValue ? "0.01" : abbreviateNumber(value);
 
             return (
-                <BodyText level="body2" weight="medium">
+                <BodyText level="body2" weight="semibold">
                     {`${isLowestValue ? "< " : ""} $${sanitizedValue}`}
                 </BodyText>
             )
@@ -230,22 +240,43 @@ export const columns: ColumnDef<TPositionsTable>[] = [
     {
         accessorKey: "earnings",
         accessorFn: item => Number(item.earnings),
-        header: "Earnings",
+        header: () => (
+            <InfoTooltip
+                side="bottom"
+                label={
+                    <TooltipText>Earnings</TooltipText>
+                }
+                content={"Earnings are the difference in your collateral balance multiplied by the value of token."}
+            />
+        ),
         cell: ({ row }) => {
-            const value: string = Number(row.getValue("earnings")).toFixed(2);
-            const prefixSign = Number(value) < 0 ? "-" : Number(value) > 0 ? "+" : "";
-            const badgeVariant = Number(value) < 0 ? "destructive" : Number(value) > 0 ? "green" : "default";
+            const { positionType } = useContext<any>(PositionsContext);
+            const value: number = Number(row.getValue("earnings"));
+            const sanitizedValue = isLowestValue(Number(value)) ? "< $0.01" : getSanitizedValue(Number(value));
+
+            const getPrefixSign = () => {
+                if (positionType === "lend") {
+                    return Number(value) < 0 ? "-" : Number(value) > 0 ? "+" : "";
+                }
+                return Number(value) === 0 ? "" : "-";
+            };
+            const getBadgeVariant = () => {
+                if (positionType === "lend") {
+                    return Number(value) < 0 ? "destructive" : Number(value) > 0 ? "green" : "default";
+                }
+                return Number(value) === 0 ? "default" : "destructive";
+            };
 
             function getSanitizedValue(value: string | number) {
                 if (containsNegativeInteger(value)) {
-                    return `$${abbreviateNumber(Number(convertNegativeToPositive(value)) ?? 0)}`
+                    return `- $${abbreviateNumber(Number(convertNegativeToPositive(value)) ?? 0)}`
                 }
                 return `$${abbreviateNumber(Number(value) ?? 0)}`
             }
 
             return (
-                <Badge variant={badgeVariant}>
-                    {prefixSign}{" "}{getSanitizedValue(value)}
+                <Badge variant={getBadgeVariant()}>
+                    {getPrefixSign()}{" "}{sanitizedValue}
                 </Badge>
             )
         },

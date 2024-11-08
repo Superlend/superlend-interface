@@ -18,6 +18,7 @@ type TPosition = {
     price_usd: number;
   };
   amount: number;
+  initial_amount: number;
   apy: number;
   liquidation_threshold: number;
 };
@@ -26,6 +27,9 @@ type TPlatform = {
   name: string;
   platform_name: string;
   protocol_identifier: string;
+  protocol_type: string;
+  vaultId: string;
+  morpho_market_id: string;
   logo: string;
   chain_id: number;
   positions: TPosition[];
