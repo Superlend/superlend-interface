@@ -206,7 +206,7 @@ export default function PositionDetails() {
                     !isLoading && userPositions.length === 0 &&
                     <div className="flex flex-col gap-[12px] items-center justify-center h-full">
                         <Image src="/icons/notification-lines-removed.svg" alt="No positions found" width={24} height={24} />
-                        <BodyText level='body1' weight='normal' className="text-gray-600">No positions found currently</BodyText>
+                        <BodyText level='body1' weight='normal' className="text-gray-600">No positions found</BodyText>
                     </div>
                 }
             </div>

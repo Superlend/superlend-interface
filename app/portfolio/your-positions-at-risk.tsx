@@ -309,7 +309,7 @@ export default function YourPositionsAtRiskCarousel({
                                 POSITIONS_AT_RISK.length === 0 && data?.platforms?.length > 0 && (
                                     <>
                                         <ShieldCheck className="w-5 h-5 text-secondary-800" />
-                                        <BodyText level="body1" weight="normal" className="text-secondary-800">You have no positions at risk currently</BodyText>
+                                        <BodyText level="body1" weight="normal" className="text-secondary-800">You have no positions at risk</BodyText>
                                     </>
                                 )}
                             {
@@ -317,7 +317,7 @@ export default function YourPositionsAtRiskCarousel({
                                 data?.platforms?.length === 0 && (
                                     <>
                                         <CircleMinus className="w-5 h-5 text-gray-800" />
-                                        <BodyText level="body1" weight="normal" className="text-gray-800">You have no positions currently</BodyText>
+                                        <BodyText level="body1" weight="normal" className="text-gray-800">You have no positions</BodyText>
                                     </>
                                 )
                             }
