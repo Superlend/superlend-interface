@@ -17,6 +17,7 @@ import useGetPlatformData from '@/hooks/useGetPlatformData'
 import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import { Skeleton } from '@/components/ui/skeleton'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
+import Image from 'next/image'
 
 export default function PositionDetails() {
     const searchParams = useSearchParams();
@@ -36,6 +37,8 @@ export default function PositionDetails() {
         chain_id: [String(chain_id)],
     });
 
+    // console.log(portfolioData);
+
     // [API_CALL: GET] - Get Platform data
     const {
         data: platformData,
@@ -49,7 +52,7 @@ export default function PositionDetails() {
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isConnecting;
 
     const PLATFORMS_WITH_POSITIONS = portfolioData?.platforms.filter(platform => platform.positions.length > 0)
-
+    console.log(PLATFORMS_WITH_POSITIONS);
     const [POSITIONS] = PLATFORMS_WITH_POSITIONS?.map((platform, index: number) => {
         const lendPositions = platform.positions.filter(position => position.type === "lend");
         const borrowPositions = platform.positions.filter(position => position.type === "borrow");
@@ -157,7 +160,8 @@ export default function PositionDetails() {
                 {
                     isLoading && <Skeleton className='w-full h-[100px]' />
                 }
-                {!isLoading &&
+                {
+                    !isLoading && PLATFORMS_WITH_POSITIONS.length > 0 &&
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
                         <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full">
                             <BodyText level='body2'>Your Collateral</BodyText>
@@ -195,6 +199,13 @@ export default function PositionDetails() {
                             </Button> */}
                             </div>
                         </div>
+                    </div>
+                }
+                {
+                    !isLoading && PLATFORMS_WITH_POSITIONS.length === 0 &&
+                    <div className="flex flex-col gap-[12px] items-center justify-center h-full">
+                        <Image src="/icons/notification-lines-removed.svg" alt="No positions found" width={24} height={24} />
+                        <BodyText level='body1'>No positions found currently</BodyText>
                     </div>
                 }
             </div>
