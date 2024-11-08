@@ -276,7 +276,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
 
             return (
                 <Badge variant={getBadgeVariant()}>
-                    {getPrefixSign()}{" "}{sanitizedValue}
+                    {getPrefixSign()}{" "}{sanitizedValue === "$0.00" ? "N/A" : sanitizedValue}
                 </Badge>
             )
         },
