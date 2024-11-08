@@ -36,7 +36,7 @@ export default function Portfolio() {
                 <InfoBannerWithCta
                     image={'/images/connect-wallet-banner.webp'}
                     title={'Connect Wallet'}
-                    description={'Connect your web3 wallet to be able to view your portfolio and take required actions'}
+                    description={'Connect your wallet to view and manage your portfolio.'}
                     ctaText={'Connect wallet'}
                     ctaOnClick={handleConnectWallet}
                 />
@@ -50,7 +50,7 @@ export default function Portfolio() {
                 <section id='your-portfolio' className="portfolio-page-header flex flex-col md:flex-row gap-[16px] items-start md:items-center justify-between mb-[24px] px-5">
                     <div className="flex flex-col gap-[4px]">
                         <HeadingText level="h4">Your Portfolio</HeadingText>
-                        <BodyText level='body1' className='text-gray-600'>Track all your lend and borrow positions from one place</BodyText>
+                        <BodyText level='body1' className='text-gray-600'>Track all your lending and borrowing positions in one place.</BodyText>
                     </div>
                     {/* <Button variant="primary" className='group uppercase py-[9px] px-[16px] flex items-center gap-[4px]'>
                         transaction history
