@@ -98,7 +98,7 @@ export default function PortfolioOverview({
                     </div> */}
                 </Card>
             </article>
-            <article>
+            <article className='h-full'>
                 <UserPositionsByPlatform
                     data={data}
                     isLoading={isLoading}

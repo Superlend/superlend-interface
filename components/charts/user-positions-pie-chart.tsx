@@ -181,14 +181,14 @@ export function UserPositionsByPlatform({
     const platformTooltipNames = platformDetails.platform_names.map(name => ({ content: capitalizeText(name) }));
 
     return (
-        <Card className="flex flex-col">
+        <Card className="flex flex-col h-full">
             <CardContent className="flex-1 p-0">
                 {
                     isLoading && <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full my-8" />
                 }
                 {
                     !isLoading && chartData.length === 0 &&
-                    <div className="flex flex-col items-center justify-center w-full h-[250px] gap-3">
+                    <div className="flex flex-col items-center justify-center w-full h-[200px] lg:h-full gap-3">
                         <ChartPie strokeWidth={1.5} className="w-8 h-8 text-gray-700" />
                         <BodyText level="body1" weight="normal" className="text-gray-700">No positions to display</BodyText>
                     </div>
