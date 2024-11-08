@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import React, { useContext, useEffect } from 'react';
 import { BodyText, HeadingText, Label } from '@/components/ui/typography';
 import { Badge } from '@/components/ui/badge';
-import { abbreviateNumber, getPlatformVersion, getTokenLogo } from '@/lib/utils';
+import { abbreviateNumber, getPlatformVersion, getPlatformWebsiteLink, getTokenLogo } from '@/lib/utils';
 import ImageWithDefault from '@/components/ImageWithDefault';
 import { Skeleton } from '@/components/ui/skeleton';
 import { notFound, useRouter } from 'next/navigation';
@@ -57,12 +57,9 @@ export default function PageHeader() {
     // Error boundry
     useEffect(() => {
         const hasNoData = isErrorPlatformData || (!tokenDetails?.symbol?.length && !chainDetails?.name?.length);
-
         if (hasNoData && !isLoadingPlatformData) {
             return notFound();
         }
-
-        return;
     }, [
         isErrorPlatformData,
         tokenAddress,
@@ -330,47 +327,6 @@ function getAssetTooltipContent({
             }
         </span>
     )
-}
-
-function getPlatformWebsiteLink({
-    tokenAddress,
-    chainName,
-    chainId,
-    platformId,
-    vaultId,
-    morpho_market_id,
-    network_name,
-}: {
-    platformId: string;
-    tokenAddress?: string;
-    chainName?: string;
-    chainId?: string;
-    vaultId?: string;
-    morpho_market_id?: string;
-    network_name?: string;
-}) {
-    const platformNameId = platformId?.split("-")[0].toLowerCase();
-    const baseUrl = platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
-
-    const formattedNetworkName = network_name?.toLowerCase() === "ethereum" ? "mainnet" : network_name?.toLowerCase();
-
-    const paths: any = {
-        aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName || "")}_v3`,
-        compound: `/markets/v2`,
-        fluid: `/stats/${chainId}/vaults#${vaultId}`,
-        morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`
-    }
-
-    const path = paths[platformNameId];
-    return `${baseUrl}${path}`
-}
-
-function getChainNameBasedOnAaveMarkets(chainName: string) {
-    if (chainName?.toLowerCase() in chainNamesBasedOnAaveMarkets) {
-        return chainNamesBasedOnAaveMarkets[chainName?.toLowerCase() as keyof typeof chainNamesBasedOnAaveMarkets]
-    }
-
-    return chainName?.toLowerCase();
 }
 
 function getAssetDetails({

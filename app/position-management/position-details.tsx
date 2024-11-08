@@ -84,7 +84,7 @@ export default function PositionDetails() {
                 amount: borrowAmount,
             },
             positionOn: {
-                platformName: capitalizeText(platform?.platform_name),
+                platformName: capitalizeText(platform?.platform_name.split("-").join(" ")),
                 platformImage: platform?.logo ?? "",
                 chainName: chainDetails?.name ?? "",
                 chainImage: chainDetails?.logo ?? "",
