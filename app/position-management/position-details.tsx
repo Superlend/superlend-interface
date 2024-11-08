@@ -111,12 +111,12 @@ export default function PositionDetails() {
     if (!walletAddress) {
         return (
             <motion.div
-                className='flex flex-col gap-6 items-center justify-center h-full bg-white bg-opacity-75 rounded-6 py-12'
+                className='flex flex-col gap-6 items-center justify-center h-full bg-white bg-opacity-75 rounded-6 px-5 py-12'
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
             >
-                <BodyText level='body1'>Please connect your wallet to view your positions</BodyText>
+                <BodyText level='body1' className='text-center'>Please connect your wallet to view your positions.</BodyText>
                 <ConnectWalletButton />
             </motion.div>
         )
