@@ -4,6 +4,7 @@ import ImageWithBadge from "@/components/ImageWithBadge";
 import ImageWithDefault from "@/components/ImageWithDefault";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import { BodyText, Label } from "@/components/ui/typography";
+import { PAIR_BASED_PROTOCOLS } from "@/constants";
 import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import { TOpportunityTable, TReward } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
@@ -125,10 +126,11 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const positionTypeParam = searchParams.get("position_type") || "lend";
             const apyCurrent = Number(row.getValue("apy_current"));
             const apyCurrentFormatted = apyCurrent.toFixed(2);
-            const hasRewards = row.original?.rewards && row.original?.rewards.length > 0;
+            const hasRewards = row.original?.additional_rewards && row.original?.rewards.length > 0;
             // Declare tooltip content related variables
             let baseRate, baseRateFormatted, rewards, totalRewards;
             const isLend = positionTypeParam === "lend";
+            const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(row.original?.platformId.split("-")[0].toLowerCase());
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -143,7 +145,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 baseRateFormatted = baseRate < 0.01 && baseRate > 0 ? "<0.01" : getFormattedBaseRate(baseRate);
             }
 
-            if (apyCurrentFormatted === "0.00") {
+            if (apyCurrentFormatted === "0.00" && !isPairBasedProtocol) {
                 return (
                     <InfoTooltip
                         label={
