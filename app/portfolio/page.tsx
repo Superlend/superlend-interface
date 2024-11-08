@@ -17,7 +17,7 @@ import TopLowRiskPositions from './top-low-risk-positions'
 
 export default function Portfolio() {
     const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
-    const WALLET_ADDRESS = process.env.NODE_ENV === "development" ? process.env.NEXT_WALLET_ADDRESS : walletAddress;
+    const WALLET_ADDRESS = process.env.NODE_ENV === "development" ? walletAddress : walletAddress;
 
     const { open: openAuthModal, close: closeAuthModal } = useAppKit();
     const { isClient } = useIsClient();
