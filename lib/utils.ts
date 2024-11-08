@@ -342,7 +342,7 @@ export function getPlatformWebsiteLink({
     aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(
       chainName || ""
     )}_v3`,
-    compound: `/markets/v2`,
+    compound: ``,
     fluid: `/stats/${chainId}/vaults#${vaultId}`,
     morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
   };

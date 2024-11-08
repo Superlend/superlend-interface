@@ -90,7 +90,7 @@ export default function AllPositions({
             platformName: `${item.platform.platform_name.split("-")[0]}`,
             protocol_identifier: item.platform.protocol_identifier,
             platformLogo: item.platform.logo,
-            apy: item.platform.net_apy,
+            apy: item.apy,
             deposits: calculateScientificNotation(item.amount.toString(), item.token.price_usd.toString(), "multiply").toFixed(10),
             borrows: calculateScientificNotation(item.amount.toString(), item.token.price_usd.toString(), "multiply").toFixed(10),
             earnings: ((item.amount - item.initial_amount) * item.token.price_usd),
