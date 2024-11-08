@@ -52,7 +52,6 @@ export default function PositionDetails() {
     const userPositions = portfolioData?.platforms.filter(platform =>
         platform?.protocol_identifier.toLowerCase() === (platformData?.platform as any)?.protocol_identifier.toLowerCase()
     );
-
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isConnecting;
 
     const [POSITIONS] = userPositions?.map((platform, index: number) => {
@@ -98,8 +97,8 @@ export default function PositionDetails() {
         }
     })
 
-    const liquidationPrice = (Number(POSITIONS?.lendAsset?.amount) * Number(POSITIONS?.lendAsset?.tokenDetails[0].liquidation_threshold));
-    const liquidationPercentage = calculatePercentage(Number(POSITIONS?.lendAsset?.amount), Number(liquidationPrice));
+    const liquidationPrice = (Number(POSITIONS?.lendAsset?.amount) * Number(POSITIONS?.lendAsset?.tokenDetails[0].liquidation_threshold)) / 100;
+    const liquidationPercentage = (Number(POSITIONS?.borrowAsset?.amount) / liquidationPrice) * 100;
     const liquidationDetails = {
         liquidationPrice: liquidationPrice,
         assetLogo: POSITIONS?.lendAsset?.tokenDetails[0].logo,
