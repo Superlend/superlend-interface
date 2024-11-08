@@ -56,7 +56,7 @@ export default function InfoBannerWithCta({
                                 {description}
                             </BodyText>
                         </div>
-                        <Button onClick={handleCtaClick} variant={'primary'} size={'lg'} className='uppercase w-full min-[426px]:w-fit rounded-4'>
+                        <Button onClick={handleCtaClick} variant={'primary'} size={'lg'} className='capitalize w-full min-[426px]:w-fit rounded-4'>
                             {ctaText}
                         </Button>
                     </div>

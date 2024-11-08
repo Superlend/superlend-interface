@@ -6,7 +6,7 @@ import LendBorrowToggle from '@/components/LendBorrowToggle';
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { DataTable } from '@/components/ui/all-positions-table';
-import { HeadingText } from '@/components/ui/typography'
+import { BodyText, HeadingText } from '@/components/ui/typography'
 import { AssetsDataContext } from '@/context/data-provider';
 import { PositionsContext } from '@/context/positions-provider';
 import { columns, TPositionsTable } from '@/data/table/all-positions';
@@ -132,7 +132,13 @@ export default function AllPositions({
                     <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
                         <div className="flex items-center gap-[12px]">
                             <HeadingText level="h3" weight='semibold'>All positions</HeadingText>
-                            <InfoTooltip />
+                            <InfoTooltip
+                                content={
+                                    <div className="flex flex-col gap-[4px]">
+                                        <BodyText level='body3'>Track all your lending and borrowing positions in one place.</BodyText>
+                                    </div>
+                                }
+                            />
                         </div>
                         {/* Filter button for Tablet and below screens */}
                         <div className="block lg:hidden">
