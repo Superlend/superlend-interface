@@ -1,31 +1,24 @@
+// components/ConnectWalletButton.tsx
 "use client"
-import React, { useEffect } from 'react';
-import { Skeleton } from "@/components/ui/skeleton";
+import React from 'react';
+import { useAppKit } from '@reown/appkit/react'
+import { useAccount } from 'wagmi';
+import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from './ui/button';
 import useIsClient from '@/hooks/useIsClient';
-import { useWalletConnection } from '@/hooks/useWalletConnection';
 
 export default function ConnectWalletButton() {
     const { isClient } = useIsClient();
-    const { 
-      address, 
-      isConnecting, 
-      isDisconnected, 
-      handleConnect,
-      connectionStatus 
-    } = useWalletConnection();
+    const { open: openAuthModal } = useAppKit();
+    const { address, isConnecting } = useAccount();
 
-    // Debug logging
-    useEffect(() => {
-      console.log('Connection status:', connectionStatus);
-      console.log('Address:', address);
-      console.log('Is connecting:', isConnecting);
-      console.log('Is disconnected:', isDisconnected);
-    }, [connectionStatus, address, isConnecting, isDisconnected]);
+    const handleConnect = () => {
+        openAuthModal();
+    };
 
     const displayAddress = address 
-      ? `${address.slice(0, 5)}...${address.slice(-5)}`
-      : "Connect Wallet";
+        ? `${address.slice(0, 5)}...${address.slice(-5)}`
+        : "Connect Wallet";
 
     return (
         <>
