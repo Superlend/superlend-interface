@@ -16,9 +16,9 @@ if (!projectId) {
 
 // Set up metadata
 const metadata = {
-    name: "appkit-example-scroll",
-    description: "AppKit Example - Scroll",
-    url: "https://scrollapp.com", // origin must match your domain & subdomain
+    name: "Superlend",
+    description: "Superlend",
+    url: "https://beta.superlend.xyz",
     icons: ["https://avatars.githubusercontent.com/u/179229932"]
 }
 
@@ -30,7 +30,7 @@ const modal = createAppKit({
     defaultNetwork: mainnet,
     metadata: metadata,
     features: {
-        analytics: false,
+        analytics: true,
         email: false,
         socials: [],
     },

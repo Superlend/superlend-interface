@@ -1,49 +1,56 @@
 "use client"
-import React, { useEffect, useState } from 'react';
-import { useAppKit } from '@reown/appkit/react'
-import { useAccount } from 'wagmi';
-import { Skeleton } from "@/components/ui/skeleton"
+import React, { useEffect } from 'react';
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from './ui/button';
 import useIsClient from '@/hooks/useIsClient';
+import { useWalletConnection } from '@/hooks/useWalletConnection';
 
-type TProps = {
-    // isConnecting: boolean;
-    // isDisconnected: boolean;
-    // address: `0x${string}` | undefined;
-    // onConnect: () => void;
-}
-
-export default function ConnectWalletButton(
-    //     {
-    //     isConnecting,
-    //     isDisconnected,
-    //     address,
-    //     onConnect,
-    // }: TProps
-) {
+export default function ConnectWalletButton() {
     const { isClient } = useIsClient();
-    const { open: openAuthModal, close: closeAuthModal } = useAppKit();
-    const { address, isConnecting, isDisconnected } = useAccount();
+    const { 
+      address, 
+      isConnecting, 
+      isDisconnected, 
+      handleConnect,
+      connectionStatus 
+    } = useWalletConnection();
 
-    function onConnect() {
-        openAuthModal();
-    }
+    // Debug logging
+    useEffect(() => {
+      console.log('Connection status:', connectionStatus);
+      console.log('Address:', address);
+      console.log('Is connecting:', isConnecting);
+      console.log('Is disconnected:', isDisconnected);
+    }, [connectionStatus, address, isConnecting, isDisconnected]);
+
+    const displayAddress = address 
+      ? `${address.slice(0, 5)}...${address.slice(-5)}`
+      : "Connect Wallet";
 
     return (
         <>
             {!isClient && <Skeleton className='w-[120px] h-[40px]' />}
-            {isClient && isConnecting && <Skeleton className='w-[120px] h-[40px]' />}
+            {isClient && isConnecting && (
+                <Button
+                    variant="default"
+                    size="lg"
+                    className="rounded-[12px] py-2 capitalize"
+                    disabled
+                >
+                    Connecting...
+                </Button>
+            )}
             {isClient && !isConnecting && (
                 <Button
                     variant={address ? "default" : "primary"}
-                    size={"lg"}
+                    size="lg"
                     className="rounded-[12px] py-2 capitalize"
-                    onClick={onConnect}
+                    onClick={handleConnect}
+                    disabled={isConnecting}
                 >
-                    {isDisconnected && "Connect Wallet"}
-                    {address && `${address.slice(0, 5)}...${address.slice(address.length - 5)}`}
+                    {displayAddress}
                 </Button>
             )}
         </>
-    )
+    );
 }
