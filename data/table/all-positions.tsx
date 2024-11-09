@@ -51,6 +51,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         accessorFn: item => item.tokenSymbol,
         cell: ({ row }) => {
             const { width: screenWidth } = useDimensions();
+            const { positionType } = useContext<any>(PositionsContext);
             const tokenSymbol: string = row.getValue("tokenSymbol");
             const tokenLogo = row.original.tokenLogo;
             const tokenAddress = row.original.tokenAddress;
@@ -99,6 +100,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                             token: tokenAddress,
                             chain_id: chainId,
                             protocol_identifier: protocolIdentifier,
+                            position_type: positionType,
                         }
                     }}
                         className="truncate">

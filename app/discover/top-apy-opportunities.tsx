@@ -184,7 +184,7 @@ export default function TopApyOpportunities() {
 
     function handleRowClick(rowData: any) {
         const { tokenAddress, protocol_identifier, chain_id } = rowData;
-        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}`
+        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
         router.push(url);
     }
 

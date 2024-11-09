@@ -18,6 +18,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: "Token",
         accessorFn: item => item.tokenSymbol,
         cell: ({ row }) => {
+            const searchParams = useSearchParams();
+            const positionTypeParam = searchParams.get("position_type") || "lend";
             const tokenSymbol: string = row.getValue("tokenSymbol");
             const tokenLogo = row.original.tokenLogo;
             const tokenAddress = row.original.tokenAddress;
@@ -64,6 +66,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             token: tokenAddress,
                             chain_id: chainId,
                             protocol_identifier: protocolIdentifier,
+                            position_type: positionTypeParam,
                         }
                     }}
                         className="truncate">

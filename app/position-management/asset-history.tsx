@@ -17,8 +17,11 @@ export default function AssetHistory() {
     const tokenAddress = searchParams.get("token") || "";
     // const chain_id = searchParams.get("chain_id") || "";
     const protocol_identifier = searchParams.get("protocol_identifier") || "";
+    const positionType = searchParams.get("position_type") || "lend";
     const [selectedRange, setSelectedRange] = useState<Period>(Period.oneMonth);
-    const [selectedFilter, setSelectedFilter] = useState<any>(HISTORY_CHART_SELECT_OPTIONS[0]);
+    const [selectedFilter, setSelectedFilter] = useState<any>(
+        positionType === "borrow" ? HISTORY_CHART_SELECT_OPTIONS[2] : HISTORY_CHART_SELECT_OPTIONS[0]
+    );
 
     // [API_CALL: GET] - Get Platform history data
     const {
