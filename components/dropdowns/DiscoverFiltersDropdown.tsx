@@ -252,7 +252,7 @@ function FilterCardContent({
                     FILTER_CATEGORIES.map((item: any) => (
                         <motion.div
                             key={item.label}
-                            className="relative w-full"
+                            className="relative md:w-full"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setActiveTab(item)}
@@ -260,7 +260,7 @@ function FilterCardContent({
                         >
                             <Button
                                 size="md"
-                                className={`w-full flex items-center gap-2 py-[8px] px-[8px] border-0 items-center justify-between overflow-hidden ${isActiveTab(item)}`}>
+                                className={`md:w-full flex items-center gap-2 py-[8px] px-[8px] border-0 items-center justify-between overflow-hidden ${isActiveTab(item)}`}>
                                 <Label size='small' weight='medium' className={`w-fit text-left self-start cursor-pointer`}>
                                     {item.label}
                                 </Label>
