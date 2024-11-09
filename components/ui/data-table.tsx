@@ -77,6 +77,12 @@ export function DataTable<TData, TValue>({
             sorting,
             pagination,
         },
+        initialState: {
+            ...initialState,
+            columnPinning: {
+                left: ["tokenSymbol"],
+            }
+        },
         onGlobalFilterChange: setFilters,
         onColumnVisibilityChange: setColumnVisibility,
         onSortingChange: setSorting,
@@ -106,6 +112,32 @@ export function DataTable<TData, TValue>({
         setPagination({ ...pagination, pageIndex: totalPages - 1 });
     };
 
+    const getCommonPinningStyles = (column: Column<TOpportunityTable>, {
+        isHeader,
+    }: {
+        isHeader?: boolean,
+    }): CSSProperties => {
+        const isPinned = column.getIsPinned()
+        const isLastLeftPinnedColumn =
+            isPinned === 'left' && column.getIsLastColumn('left')
+        const isFirstRightPinnedColumn =
+            isPinned === 'right' && column.getIsFirstColumn('right')
+
+        if (screenWidth < 768) {
+            return {
+                left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+                right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+                // opacity: isPinned ? 0.95 : 1,
+                backgroundColor: isPinned && isHeader ? '#d2eefd' : 'inherit',
+                position: isPinned ? 'sticky' : 'relative',
+                width: column.getSize(),
+                zIndex: isPinned ? 1 : 0,
+            }
+        }
+
+        return {}
+    }
+
     return (
         <div className="bg-white bg-opacity-40 rounded-6 border border-transparent overflow-hidden">
             <ScrollArea className="h-[calc(100vh-250px)] max-h-[500px]">
@@ -119,12 +151,11 @@ export function DataTable<TData, TValue>({
                                         <TableHead
                                             key={header.id}
                                             className="pt-[24px] pb-[12px] pl-[32px]"
-                                        // style={{
-                                        //     ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, {
-                                        //         isHeader: true,
-                                        //         // screenWidth
-                                        //     })
-                                        // }}
+                                            style={{
+                                                ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, {
+                                                    isHeader: true,
+                                                })
+                                            }}
                                         >
                                             <div className="flex items-center gap-[8px]">
                                                 <BodyText level="body2" weight="normal" className="text-gray-700 select-none">
@@ -184,12 +215,11 @@ export function DataTable<TData, TValue>({
                                             <TableCell
                                                 key={cell.id}
                                                 className={`py-4 w-[150px] min-w-[150px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""} ${!!handleRowClick ? "cursor-pointer" : ""}`}
-                                            // style={{
-                                            //     ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, {
-                                            //         isHeader: false,
-                                            //         // screenWidth
-                                            //     })
-                                            // }}
+                                                style={{
+                                                    ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, {
+                                                        isHeader: false,
+                                                    })
+                                                }}
                                             >
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </TableCell>
@@ -259,32 +289,4 @@ export function DataTable<TData, TValue>({
             {/* Pagination ENDS */}
         </div >
     )
-}
-
-const getCommonPinningStyles = (column: Column<TOpportunityTable>, {
-    isHeader,
-    screenWidth
-}: {
-    isHeader?: boolean,
-    screenWidth?: number
-}): CSSProperties => {
-    const isPinned = column.getIsPinned()
-    const isLastLeftPinnedColumn =
-        isPinned === 'left' && column.getIsLastColumn('left')
-    const isFirstRightPinnedColumn =
-        isPinned === 'right' && column.getIsFirstColumn('right')
-
-    // if (screenWidth < 768) {
-    return {
-        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
-        right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-        // opacity: isPinned ? 0.95 : 1,
-        backgroundColor: isPinned && isHeader ? '#d2eefd' : 'inherit',
-        position: isPinned ? 'sticky' : 'relative',
-        width: column.getSize(),
-        zIndex: isPinned ? 1 : 0,
-        // }
-    }
-
-    return {}
 }
