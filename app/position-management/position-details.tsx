@@ -97,8 +97,8 @@ export default function PositionDetails() {
         }
     })
 
-    const liquidationPrice = (Number(POSITIONS?.lendAsset?.amount) * Number(POSITIONS?.lendAsset?.tokenDetails[0].liquidation_threshold)) / 100;
-    const liquidationPercentage = (Number(POSITIONS?.borrowAsset?.amount) / liquidationPrice) * 100;
+    const liquidationPrice = (Number(POSITIONS?.lendAsset?.tokenDetails[0].amount) * Number(POSITIONS?.lendAsset?.tokenDetails[0].liquidation_threshold)) / 100;
+    const liquidationPercentage = (Number(POSITIONS?.borrowAsset?.amount) / liquidationPrice) * 100 || 1;
     const liquidationDetails = {
         liquidationPrice: liquidationPrice,
         assetLogo: POSITIONS?.lendAsset?.tokenDetails[0].logo,
