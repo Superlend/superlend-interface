@@ -22,7 +22,7 @@ export default function ConnectWalletButton() {
 
     return (
         <>
-            {!isClient && <Skeleton className='w-[120px] h-[40px]' />}
+            {!isClient && <Skeleton className='w-[100px] md:w-[120px] h-[40px]' />}
             {isClient && isConnecting && (
                 <Button
                     variant="default"
