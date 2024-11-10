@@ -360,3 +360,32 @@ export function getChainNameBasedOnAaveMarkets(chainName: string) {
 
   return chainName?.toLowerCase();
 }
+
+// utils/copyToClipboard.js
+
+export const copyToClipboard = async (text: string) => {
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true; // Return true if copy was successful
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+      return false; // Return false if there was an error
+    }
+  } else {
+    // Fallback for browsers that don't support Clipboard API
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return true;
+    } catch (err) {
+      console.error("Fallback copy failed: ", err);
+      document.body.removeChild(textArea);
+      return false;
+    }
+  }
+};
