@@ -1,31 +1,59 @@
 // components/ConnectWalletButton.tsx
 "use client"
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppKit } from '@reown/appkit/react'
 import { useAccount } from 'wagmi';
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from './ui/button';
 import useIsClient from '@/hooks/useIsClient';
 
-import { ConnectButton } from "thirdweb/react";
+import { ConnectButton, ConnectEmbed, useActiveAccount, useConnect } from "thirdweb/react";
 import { client } from "@/app/client";
+import { createWallet, injectedProvider } from "thirdweb/wallets";
+import { useDisconnect, useActiveWallet } from "thirdweb/react";
+
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+
 
 export default function ConnectWalletButton() {
-    // const { isClient } = useIsClient();
+    const { isClient } = useIsClient();
     // const { open: openAuthModal } = useAppKit();
     // const { address, isConnecting } = useAccount();
+    const { connect, isConnecting, error } = useConnect();
+    const { disconnect } = useDisconnect();
+    const activeAccount = useActiveAccount();
+    const activeWallet = useActiveWallet();
+    const walletAddress = activeAccount?.address;
+    const [openWalletsModal, setOpenWalletsModal] = useState(false);
 
-    // const handleConnect = () => {
-    //     openAuthModal();
-    // };
+    useEffect(() => {
+        setOpenWalletsModal(false);
+    }, [activeWallet]);
 
-    // const displayText = address
-    //     ? `${address.slice(0, 5)}...${address.slice(-5)}`
-    //     : "Connect Wallet";
+    const handleConnect = () => {
+        setOpenWalletsModal(true);
+    };
+
+    const handleDisconnect = () => {
+        if (activeWallet) {
+            disconnect(activeWallet);
+        }
+    }
+
+    const displayText = walletAddress
+        ? `${walletAddress?.slice(0, 5)}...${walletAddress?.slice(-5)}`
+        : "Connect Wallet";
 
     return (
         <>
-            {/* {!isClient && <Skeleton className='w-[100px] md:w-[120px] h-[40px]' />}
+            {!isClient && <Skeleton className='w-[100px] md:w-[120px] h-[40px]' />}
             {isClient && isConnecting && (
                 <Button
                     variant="default"
@@ -38,23 +66,44 @@ export default function ConnectWalletButton() {
             )}
             {isClient && !isConnecting && (
                 <Button
-                    variant={address ? "default" : "primary"}
+                    variant={walletAddress ? "default" : "primary"}
                     size="lg"
                     className="rounded-[12px] py-2 capitalize"
-                    onClick={handleConnect}
+                    onClick={walletAddress ? handleDisconnect : handleConnect}
                     disabled={isConnecting}
                 >
                     {displayText}
                 </Button>
-            )} */}
-
-            <ConnectButton
-                client={client}
-                appMetadata={{
-                    name: "Superlend",
-                    url: "https://beta.superlend.xyz",
-                }}
-            />
+            )}
+            <Wallets open={openWalletsModal} handleClose={() => setOpenWalletsModal(false)} />
         </>
     );
+}
+
+function Wallets({ open, handleClose }: { open: boolean, handleClose: () => void }) {
+    const wallets = [
+        createWallet("io.metamask"),
+        createWallet("com.coinbase.wallet"),
+        createWallet("me.rainbow"),
+    ];
+
+    return (
+        <Dialog open={open} onOpenChange={handleClose}>
+            <DialogContent className="w-fit">
+                <DialogHeader>
+                    <DialogTitle className="text-center">Connect Wallet</DialogTitle>
+                    {/* <DialogDescription>
+                        This action cannot be undone. This will permanently delete your account
+                        and remove your data from our servers.
+                    </DialogDescription> */}
+                </DialogHeader>
+
+                <ConnectEmbed
+                    theme="light"
+                    client={client}
+                    wallets={wallets}
+                />
+            </DialogContent>
+        </Dialog>
+    )
 }
