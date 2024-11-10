@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from './ui/button';
 import useIsClient from '@/hooks/useIsClient';
 
-import { ConnectButton, ConnectEmbed, useActiveAccount, useConnect } from "thirdweb/react";
+import { ConnectButton, ConnectEmbed, lightTheme, useActiveAccount, useConnect } from "thirdweb/react";
 import { client } from "@/app/client";
 import { createWallet, injectedProvider } from "thirdweb/wallets";
 import { useDisconnect, useActiveWallet } from "thirdweb/react";
@@ -51,9 +51,15 @@ export default function ConnectWalletButton() {
         ? `${walletAddress?.slice(0, 5)}...${walletAddress?.slice(-5)}`
         : "Connect Wallet";
 
+    const wallets = [
+        createWallet("io.metamask"),
+        createWallet("com.coinbase.wallet"),
+        createWallet("me.rainbow"),
+    ];
+
     return (
         <>
-            {!isClient && <Skeleton className='w-[100px] md:w-[120px] h-[40px]' />}
+            {/* {!isClient && <Skeleton className='w-[100px] md:w-[120px] h-[40px]' />}
             {isClient && isConnecting && (
                 <Button
                     variant="default"
@@ -75,7 +81,29 @@ export default function ConnectWalletButton() {
                     {displayText}
                 </Button>
             )}
-            <Wallets open={openWalletsModal} handleClose={() => setOpenWalletsModal(false)} />
+            <Wallets open={openWalletsModal} handleClose={() => setOpenWalletsModal(false)} /> */}
+            <div className="rounded-4 overflow-hidden max-h-[40px] w-fit max-w-[165px]">
+                <ConnectButton
+                    client={client}
+                    theme={lightTheme({
+                        colors: {
+                            modalBg: "#fff",
+                            primaryButtonBg: "#f65700",
+                            borderColor: "#fff",
+                        },
+                    })}
+                    connectButton={{
+                        label: "Connect Wallet",
+                        className: "connect-wallet-button",
+                    }}
+                    connectModal={{
+                        title: "Connect Wallet",
+                        // titleIcon: "https://example.com/logo.png",
+                        size: "compact",
+                    }}
+                    wallets={wallets}
+                />
+            </div>
         </>
     );
 }
