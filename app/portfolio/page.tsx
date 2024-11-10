@@ -6,7 +6,7 @@ import React from 'react'
 import PortfolioOverview from './portfolio-overview'
 import { useAccount } from 'wagmi'
 import InfoBannerWithCta from '@/components/InfoBannerWithCta'
-import { useAppKit } from '@reown/appkit/react'
+// import { useAppKit } from '@reown/appkit/react'
 import { Skeleton } from '@/components/ui/skeleton'
 import YourPositionsAtRisk from './your-positions-at-risk'
 import AllPositions from './all-positions'
@@ -14,23 +14,27 @@ import { LoaderCircle } from 'lucide-react'
 import useIsClient from '@/hooks/useIsClient'
 import PositionsProvider from '@/context/positions-provider'
 import TopLowRiskPositions from './top-low-risk-positions'
+import { useActiveAccount, useConnect } from 'thirdweb/react'
 
 export default function Portfolio() {
-    const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
+    // const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
+    const activeAccount = useActiveAccount();
+    const walletAddress = activeAccount?.address;
+    const { connect, isConnecting, error } = useConnect();
     const WALLET_ADDRESS = process.env.NODE_ENV === "development" ? walletAddress : walletAddress;
 
-    const { open: openAuthModal, close: closeAuthModal } = useAppKit();
+    // const { open: openAuthModal, close: closeAuthModal } = useAppKit();
     const { isClient } = useIsClient();
 
     function handleConnectWallet() {
-        openAuthModal();
+        // openAuthModal();
     }
 
     if (isConnecting) {
         return <PortfolioPageLoading />
     }
 
-    if ((!walletAddress || isDisconnected) && !isConnecting) {
+    if (!walletAddress && !isConnecting) {
         return (
             <div className="py-16">
                 <InfoBannerWithCta

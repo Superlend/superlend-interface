@@ -2,13 +2,13 @@
 
 // import { wagmiAdapter, projectId } from '@/config'
 import { createAppKit } from '@reown/appkit/react'
-import { mainnet, arbitrum, avalanche, base, optimism, polygon } from '@reown/appkit/networks'
+// import { mainnet, arbitrum, avalanche, base, optimism, polygon } from '@reown/appkit/networks'
 import React, { type ReactNode } from 'react'
-import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
+// import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
 import { queryClient } from './query-client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import AssetsDataProvider from './data-provider'
-import { siweConfig } from '@/config/siwe'
+// import { siweConfig } from '@/config/siwe'
 import { ThirdwebProvider } from "thirdweb/react";
 
 
