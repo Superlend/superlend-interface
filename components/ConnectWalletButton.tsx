@@ -82,14 +82,14 @@ export default function ConnectWalletButton() {
                 </Button>
             )}
             <Wallets open={openWalletsModal} handleClose={() => setOpenWalletsModal(false)} /> */}
-            <div className="rounded-4 overflow-hidden max-h-[40px] w-fit max-w-[165px]">
+            <div className="rounded-4 overflow-hidden max-h-[40px] w-full md:max-w-[165px]">
                 <ConnectButton
                     client={client}
                     theme={lightTheme({
                         colors: {
                             modalBg: "#fff",
                             primaryButtonBg: "#f65700",
-                            borderColor: "#fff",
+                            borderColor: "#F0F1F2",
                         },
                     })}
                     connectButton={{
@@ -97,7 +97,7 @@ export default function ConnectWalletButton() {
                         className: "connect-wallet-button",
                     }}
                     connectModal={{
-                        title: "Connect Wallet",
+                        title: "Select Wallet",
                         // titleIcon: "https://example.com/logo.png",
                         size: "compact",
                     }}

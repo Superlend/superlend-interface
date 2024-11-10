@@ -16,9 +16,10 @@ type TProps = {
     image: string
     title: string
     description: string
-    ctaText: string
+    ctaText?: string
     ctaHref?: string
     ctaOnClick?: () => void;
+    ctaButton?: React.ReactNode;
 }
 
 export default function InfoBannerWithCta({
@@ -28,6 +29,7 @@ export default function InfoBannerWithCta({
     ctaText,
     ctaHref,
     ctaOnClick,
+    ctaButton,
 }: TProps) {
     const router = useRouter();
 
@@ -56,9 +58,16 @@ export default function InfoBannerWithCta({
                                 {description}
                             </BodyText>
                         </div>
-                        <Button onClick={handleCtaClick} variant={'primary'} size={'lg'} className='capitalize w-full min-[426px]:w-fit rounded-4'>
-                            {ctaText}
-                        </Button>
+                        {!ctaButton &&
+                            <Button onClick={handleCtaClick} variant={'primary'} size={'lg'} className='capitalize w-full min-[426px]:w-fit rounded-4'>
+                                {ctaText}
+                            </Button>
+                        }
+                        {ctaButton && (
+                            <div className='w-full min-[426px]:w-fit'>
+                                {ctaButton}
+                            </div>
+                        )}
                     </div>
                 </CardFooter>
             </Card>

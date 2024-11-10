@@ -15,6 +15,7 @@ import useIsClient from '@/hooks/useIsClient'
 import PositionsProvider from '@/context/positions-provider'
 import TopLowRiskPositions from './top-low-risk-positions'
 import { useActiveAccount, useConnect } from 'thirdweb/react'
+import ConnectWalletButton from '@/components/ConnectWalletButton'
 
 export default function Portfolio() {
     // const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
@@ -41,8 +42,9 @@ export default function Portfolio() {
                     image={'/images/connect-wallet-banner.webp'}
                     title={'Connect Wallet'}
                     description={'Connect your wallet to view and manage your portfolio.'}
-                    ctaText={'Connect wallet'}
-                    ctaOnClick={handleConnectWallet}
+                    // ctaText={'Connect wallet'}
+                    // ctaOnClick={handleConnectWallet}
+                    ctaButton={<ConnectWalletButton />}
                 />
             </div>
         )

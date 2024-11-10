@@ -111,6 +111,7 @@
   font-weight: 600 !important;
   height: 40px !important;
   text-transform: capitalize !important;
+  width: 100% !important;
 }
 
 .tw-connected-wallet__balance {
