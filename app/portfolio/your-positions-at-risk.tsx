@@ -295,7 +295,7 @@ export default function YourPositionsAtRiskCarousel({
             {
                 // loading
                 isLoading &&
-                <div className="relative h-[225px] w-full md:w-[364px] overflow-hidden rounded-6 ml-5">
+                <div className="relative h-[225px] w-[100%] md:w-[364px] overflow-hidden rounded-6 md:ml-5">
                     <Skeleton className="h-full w-full" />
                 </div>
             }
