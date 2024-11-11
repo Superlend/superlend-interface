@@ -18,6 +18,7 @@ import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import { Skeleton } from '@/components/ui/skeleton'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import Image from 'next/image'
+import { useActiveAccount, useConnect } from 'thirdweb/react'
 
 export default function PositionDetails() {
     const searchParams = useSearchParams();
@@ -25,14 +26,17 @@ export default function PositionDetails() {
     // const tokenAddress = searchParams.get("token") || "";
     const chain_id = searchParams.get("chain_id") || 0;
     const protocol_identifier = searchParams.get("protocol_identifier") || "";
-    const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
+    // const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
+    const activeAccount = useActiveAccount();
+    const walletAddress = activeAccount?.address;
+    const { isConnecting } = useConnect();
 
     const {
         data: portfolioData,
         isLoading: isLoadingPortfolioData,
         isError: isErrorPortfolioData
     } = useGetPortfolioData({
-        user_address: walletAddress,
+        user_address: walletAddress as `0x${string}`,
         protocol_identifier: [protocol_identifier],
         chain_id: [String(chain_id)],
     });
