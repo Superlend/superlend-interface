@@ -90,7 +90,7 @@ export default function ConnectWalletButton() {
 
     return (
         <>
-            {!isClient && <Skeleton className='w-[100px] md:w-[120px] h-[40px]' />}
+            {/* {!isClient && <Skeleton className='w-[100px] md:w-[120px] h-[40px]' />}
             {isClient && isConnecting && (
                 <Button
                     variant="default"
@@ -123,8 +123,8 @@ export default function ConnectWalletButton() {
                 handleDisconnect={handleDisconnect}
                 copySuccess={copySuccess}
                 handleCopy={handleCopy}
-            />
-            {/* <div className="rounded-4 overflow-hidden max-h-[40px] w-full md:max-w-[165px]">
+            /> */}
+            <div className="rounded-4 overflow-hidden max-h-[40px] w-full md:max-w-[165px]">
                 <ConnectButton
                     client={client}
                     theme={lightTheme({
@@ -145,7 +145,7 @@ export default function ConnectWalletButton() {
                     }}
                     wallets={wallets}
                 />
-            </div> */}
+            </div>
         </>
     );
 }
