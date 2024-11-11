@@ -19,6 +19,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import Image from 'next/image'
 import { useActiveAccount, useConnect } from 'thirdweb/react'
+import TooltipText from '@/components/tooltips/TooltipText'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
 
 export default function PositionDetails() {
     const searchParams = useSearchParams();
@@ -79,6 +81,7 @@ export default function PositionDetails() {
                     symbol: position.token.symbol,
                     amount: getSanitizedValue(position.amount * position.token.price_usd),
                     liquidation_threshold: position.liquidation_threshold,
+                    tokenAmount: position.amount,
                 })),
                 amount: lendAmount,
             },
@@ -88,6 +91,7 @@ export default function PositionDetails() {
                     logo: position.token.logo,
                     symbol: position.token.symbol,
                     amount: getSanitizedValue(position.amount * position.token.price_usd),
+                    tokenAmount: position.amount,
                 })),
                 amount: borrowAmount,
             },
@@ -101,8 +105,13 @@ export default function PositionDetails() {
         }
     })
 
-    const liquidationPrice = (Number(POSITIONS?.lendAsset?.tokenDetails[0].amount) * Number(POSITIONS?.lendAsset?.tokenDetails[0].liquidation_threshold)) / 100;
-    const liquidationPercentage = (Number(POSITIONS?.borrowAsset?.amount) / liquidationPrice) * 100 || 1;
+    const numerator = Number(POSITIONS?.borrowAsset?.tokenDetails[0]?.amount) || 0;
+    const denominator = (Number(POSITIONS?.lendAsset?.tokenDetails[0]?.liquidation_threshold)) / 100;
+    const tokenAmount = Number(POSITIONS?.lendAsset?.tokenDetails[0]?.tokenAmount);
+
+    const liquidationPrice = numerator / (denominator * tokenAmount);
+
+    const liquidationPercentage = (Number(POSITIONS?.borrowAsset?.tokenDetails[0]?.amount) * 100) / (Number(POSITIONS?.lendAsset?.tokenDetails[0]?.amount) * denominator);
     const liquidationDetails = {
         liquidationPrice: liquidationPrice,
         assetLogo: POSITIONS?.lendAsset?.tokenDetails[0].logo,
@@ -142,9 +151,20 @@ export default function PositionDetails() {
                             <BodyText level='body2' className='capitalize'>
                                 Liquidation Risk
                             </BodyText>
-                            <Badge variant={liquidationDetails.riskFactor.theme as "destructive" | "yellow" | "green"}>
-                                {liquidationDetails.riskFactor.label} risk
-                            </Badge>
+                            {/* If numerator is greater than 0, show the risk factor badge */}
+                            {
+                                numerator > 0 &&
+                                <Badge variant={liquidationDetails.riskFactor.theme as "destructive" | "yellow" | "green"}>
+                                    {liquidationDetails.riskFactor.label} risk
+                                </Badge>
+                            }
+                            {/* If numerator is 0, show the "No liquidation risk" badge */}
+                            {
+                                numerator === 0 &&
+                                <Badge variant="default">
+                                    N/A
+                                </Badge>
+                            }
                         </div>
                         <div className="flex items-center gap-[16px]">
                             <BodyText level='body2' className='capitalize'>
@@ -152,7 +172,23 @@ export default function PositionDetails() {
                             </BodyText>
                             <div className="flex items-center gap-[6px]">
                                 <ImageWithDefault src={liquidationDetails.assetLogo} alt={liquidationDetails.assetSymbol} width={16} height={16} className='rounded-full max-w-[16px] max-h-[16px]' />
-                                <BodyText level='body1' weight='medium'>${abbreviateNumber(liquidationDetails.liquidationPrice)}</BodyText>
+                                {
+                                    numerator > 0 &&
+                                    <BodyText level='body1' weight='medium'>${abbreviateNumber(liquidationDetails.liquidationPrice)}</BodyText>
+                                }
+                                {
+                                    numerator === 0 &&
+                                    <BodyText level='body1' weight='normal'>
+                                        <InfoTooltip
+                                            label={
+                                                <TooltipText className='text-gray-600'>
+                                                    N/A
+                                                </TooltipText>
+                                            }
+                                            content="You do not have any borrows in this vault"
+                                        />
+                                    </BodyText>
+                                }
                             </div>
                         </div>
                     </div>

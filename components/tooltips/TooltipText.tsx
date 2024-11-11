@@ -1,6 +1,8 @@
-export default function TooltipText({ children }: { children: React.ReactNode }) {
+import { cn } from "@/lib/utils";
+
+export default function TooltipText({ children, className }: { children: React.ReactNode, className?: string }) {
     return (
-        <span className="inline-block border-b border-dashed border-gray-800">
+        <span className={cn("inline-block border-b border-dashed border-gray-800", className)}>
             {children}
         </span>
     )
