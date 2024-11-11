@@ -60,6 +60,9 @@
     --chart-green: hsla(137, 85%, 35%, 1);
     --chart-orange: hsla(21, 100%, 50%, 1);
     --chart-yellow: hsla(44, 100%, 47%, 1);
+    --chart-aave: 241 86% 77%;
+    --chart-compound: 162 99% 38%;
+    --chart-fluid: 223 98% 62%;
   }
 
   .dark {
@@ -87,6 +90,9 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --chart-aave: 241 86% 77%;
+    --chart-compound: 162 99% 38%;
+    --chart-fluid: 223 98% 62%;
   }
 }
 
@@ -98,3 +104,37 @@
     @apply bg-background text-foreground;
   }
 }
+
+.connect-wallet-button {
+  padding: 0 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  height: 40px !important;
+  text-transform: capitalize !important;
+  width: 100% !important;
+}
+
+.tw-connected-wallet__balance {
+  display: none !important;
+}
+
+.tw-connected-wallet {
+  padding-block: 0 !important;
+  max-height: 40px !important;
+}
+
+.tw-connected-wallet>:first-child {
+  display: none !important;
+}
+
+.css-1jn7hrs {
+  display: none !important;
+}
+
+.css-qjps8h {
+  min-width: fit-content !important;
+}
+
+/* .tw-connected-wallet > .css-1d4s0we {
+  visibility: hidden !important;
+} */

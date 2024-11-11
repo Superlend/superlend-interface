@@ -29,8 +29,9 @@ import SearchInput from '../inputs/SearchInput';
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams';
 import { useSearchParams } from 'next/navigation';
 import { PlatformLogo, ProtocolIdentifier } from '@/types/platform';
+import { motion } from 'framer-motion';
 
-export default function DiscoverFilterDropdown() {
+export default function DiscoverFiltersDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext);
     const updateSearchParams = useUpdateSearchParams();
@@ -73,11 +74,11 @@ export default function DiscoverFilterDropdown() {
             name: "COMPOUND",
             protocol_id: "COMPOUND"
         },
-        {
-            logo: PlatformLogo.MORPHO,
-            name: "MORPHO",
-            protocol_id: "MORPHO"
-        },
+        // {
+        //     logo: PlatformLogo.MORPHO,
+        //     name: "MORPHO",
+        //     protocol_id: "MORPHO"
+        // },
         {
             logo: PlatformLogo.FLUID,
             name: "FLUID",
@@ -249,20 +250,27 @@ function FilterCardContent({
             <div className="filter-categories flex md:flex-col gap-4 md:gap-2 bg-white py-2 px-4 md:p-[24px_0px_24px_24px]">
                 {
                     FILTER_CATEGORIES.map((item: any) => (
-                        <Button
-                            onClick={() => setActiveTab(item)}
+                        <motion.div
                             key={item.label}
-                            size="md"
-                            className={`flex items-center gap-2 py-[8px] px-[8px] border-0 items-center justify-between overflow-hidden ${isActiveTab(item)}`}>
-                            <Label size='small' weight='medium' className={`w-fit text-left self-start cursor-pointer`}>
-                                {item.label}
-                            </Label>
-                            {!!getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`) &&
-                                <Label size='small' weight='medium' className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer">
-                                    {getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`)}
+                            className="relative md:w-full"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setActiveTab(item)}
+                            onMouseEnter={() => setActiveTab(item)}
+                        >
+                            <Button
+                                size="md"
+                                className={`md:w-full flex items-center gap-2 py-[8px] px-[8px] border-0 items-center justify-between overflow-hidden ${isActiveTab(item)}`}>
+                                <Label size='small' weight='medium' className={`w-fit text-left self-start cursor-pointer`}>
+                                    {item.label}
                                 </Label>
-                            }
-                        </Button>
+                                {!!getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`) &&
+                                    <Label size='small' weight='medium' className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer">
+                                        {getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`)}
+                                    </Label>
+                                }
+                            </Button>
+                        </motion.div>
                     ))
                 }
             </div>

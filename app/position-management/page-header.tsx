@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import React, { useContext, useEffect } from 'react';
 import { BodyText, HeadingText, Label } from '@/components/ui/typography';
 import { Badge } from '@/components/ui/badge';
-import { abbreviateNumber, getPlatformVersion, getTokenLogo } from '@/lib/utils';
+import { abbreviateNumber, getPlatformVersion, getPlatformWebsiteLink, getTokenLogo } from '@/lib/utils';
 import ImageWithDefault from '@/components/ImageWithDefault';
 import { Skeleton } from '@/components/ui/skeleton';
 import { notFound, useRouter } from 'next/navigation';
@@ -15,9 +15,16 @@ import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { TPlatform, TPlatformAsset, TToken } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
-import { PlatformWebsiteLink } from '@/types/platform';
 import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants';
 import { motion } from 'framer-motion';
+import { getChainDetails, getTokenDetails } from './helper-functions';
+
+type TTokenDetails = {
+    address: string;
+    symbol: string;
+    name: string;
+    logo: string;
+}
 
 export default function PageHeader() {
     const router = useRouter();
@@ -37,7 +44,7 @@ export default function PageHeader() {
         chain_id: Number(chain_id),
     });
 
-    const tokenDetails = getTokenDetails({
+    const tokenDetails: TTokenDetails = getTokenDetails({
         tokenAddress,
         platformData: platformData as TPlatform
     })
@@ -50,12 +57,9 @@ export default function PageHeader() {
     // Error boundry
     useEffect(() => {
         const hasNoData = isErrorPlatformData || (!tokenDetails?.symbol?.length && !chainDetails?.name?.length);
-
         if (hasNoData && !isLoadingPlatformData) {
             return notFound();
         }
-
-        return;
     }, [
         isErrorPlatformData,
         tokenAddress,
@@ -70,10 +74,10 @@ export default function PageHeader() {
     })
 
     const tokenSymbol = tokenDetails?.symbol;
-    const tokenLogo = tokenDetails?.logo;
-    const tokenName = tokenDetails?.name;
-    const chainName = chainDetails?.name;
-    const chainLogo = chainDetails?.logo;
+    const tokenLogo = tokenDetails?.logo || "";
+    const tokenName = tokenDetails?.name || "";
+    const chainName = chainDetails?.name || "";
+    const chainLogo = chainDetails?.logo || "";
     const platformName = platformData.platform.name;
     const platformId = platformData.platform.platform_name;
     const platformLogo = platformData?.platform.logo;
@@ -83,7 +87,7 @@ export default function PageHeader() {
     const platformWebsiteLink = getPlatformWebsiteLink({
         platformId,
         chainName,
-        tokenAddress,
+        tokenAddress: tokenDetails?.address,
         chainId: chain_id,
         vaultId,
         morpho_market_id,
@@ -113,11 +117,11 @@ export default function PageHeader() {
     const tokensToDisplay = hasPairBasedTokens ? [collateralTokenDetails, loanTokenDetails] : [tokenDetails];
 
     return (
-        <section className="header relative z-[1] flex flex-col sm:flex-row items-start gap-[24px]">
+        <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
             <motion.div className="will-change-transform"
-                // initial={{ opacity: 0.7, y: 30 }}
-                // animate={{ opacity: 1, y: 0 }}
-                // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+            // initial={{ opacity: 0.7, y: 30 }}
+            // animate={{ opacity: 1, y: 0 }}
+            // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
             >
                 <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
                     <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
@@ -126,9 +130,9 @@ export default function PageHeader() {
             <div className="flex flex-col xl:flex-row items-start justify-between gap-[24px] w-full">
                 <motion.div
                     className="flex flex-wrap items-center gap-[16px] will-change-transform"
-                    // initial={{ opacity: 0.7, y: 30 }}
-                    // animate={{ opacity: 1, y: 0 }}
-                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                // initial={{ opacity: 0.7, y: 30 }}
+                // animate={{ opacity: 1, y: 0 }}
+                // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                 >
                     {/* Loading Skeleton */}
                     {isLoadingPlatformData && <LoadingSkeleton />}
@@ -145,7 +149,7 @@ export default function PageHeader() {
                                         height={28}
                                         className="rounded-full max-w-[28px] max-h-[28px] object-contain"
                                     />
-                                    <HeadingText level='h4' className='uppercase break-words'>{tokenSymbol}</HeadingText>
+                                    <HeadingText level='h4' className='uppercase break-words text-gray-800'>{tokenSymbol}</HeadingText>
                                 </div>
                             }
                             {
@@ -159,7 +163,7 @@ export default function PageHeader() {
                                                 height={28}
                                                 className="rounded-full max-w-[28px] max-h-[28px] object-contain"
                                             />
-                                            <HeadingText level='h4' className='uppercase break-words'>{collateralTokenDetails?.symbol}</HeadingText>
+                                            <HeadingText level='h4' className='uppercase break-words text-gray-800'>{collateralTokenDetails?.symbol}</HeadingText>
                                         </div>
                                         <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
                                         <div className="flex items-center gap-[8px]">
@@ -170,7 +174,7 @@ export default function PageHeader() {
                                                 height={28}
                                                 className="rounded-full max-w-[28px] max-h-[28px]"
                                             />
-                                            <HeadingText level='h4' className='uppercase'>{loanTokenDetails?.symbol}</HeadingText>
+                                            <HeadingText level='h4' className='uppercase text-gray-800'>{loanTokenDetails?.symbol}</HeadingText>
                                         </div>
                                     </>
                                 )
@@ -183,13 +187,13 @@ export default function PageHeader() {
                             <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[400px]'>
                                 <div className="flex items-center gap-1">
                                     <ImageWithDefault src={chainLogo} alt={`${chainName}`} width={16} height={16} className='object-contain shrink-0 max-w-[16px] max-h-[16px]' />
-                                    <Label weight='medium' className='leading-[0] shrink-0'>{chainName}</Label>
+                                    <Label weight='medium' className='leading-[0] shrink-0 capitalize'>{chainName.toLowerCase()}</Label>
                                 </div>
                                 <a
                                     className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
                                     href={platformWebsiteLink}
                                     target='_blank'>
-                                    <span className="uppercase text-secondary-500 font-medium">{platformName.split(" ")[0]}</span>
+                                    <span className="uppercase text-secondary-500 font-medium">{platformId.split("-")[0]}{" "}{getPlatformVersion(platformId)}</span>
                                     <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
                                 </a>
                             </Badge>
@@ -210,9 +214,9 @@ export default function PageHeader() {
                 </motion.div>
                 {/* Page Header Stats */}
                 <motion.div className="header-right flex flex-wrap items-center shrink-0 gap-[24px]"
-                    // initial={{ opacity: 0.7, y: 30 }}
-                    // animate={{ opacity: 1, y: 0 }}
-                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                // initial={{ opacity: 0.7, y: 30 }}
+                // animate={{ opacity: 1, y: 0 }}
+                // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                 >
                     {/* Loading Skeleton */}
                     {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
@@ -252,41 +256,6 @@ export default function PageHeader() {
 }
 
 // Helper functions =================================================
-
-function getTokenDetails({
-    tokenAddress,
-    platformData
-}: {
-    tokenAddress: string;
-    platformData: TPlatform
-}) {
-    const fallbackAsset = {
-        address: tokenAddress,
-        symbol: "",
-        name: "",
-        logo: "",
-        decimals: 0,
-        price_usd: 0,
-    };
-    const asset: TPlatformAsset["token"] = platformData?.assets?.find((asset: TPlatformAsset) => asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase())?.token || fallbackAsset;
-
-    return {
-        address: asset?.address || tokenAddress,
-        symbol: asset?.symbol || "",
-        name: asset?.name || "",
-        logo: asset?.logo || "",
-    }
-}
-
-function getChainDetails({
-    allChainsData,
-    chainIdToMatch
-}: {
-    allChainsData: any[]
-    chainIdToMatch: string | number
-}) {
-    return allChainsData?.find((chain: any) => Number(chain.chain_id) === Number(chainIdToMatch));
-}
 
 function getPageHeaderStats({
     tokenAddress,
@@ -360,46 +329,49 @@ function getAssetTooltipContent({
     )
 }
 
-function getPlatformWebsiteLink({
-    tokenAddress,
-    chainName,
-    chainId,
-    platformId,
-    vaultId,
-    morpho_market_id,
-    network_name,
+function getAssetDetails({
+    tokenDetails,
+    chainDetails,
+    platformData
 }: {
-    platformId: string;
-    tokenAddress?: string;
-    chainName?: string;
-    chainId?: string;
-    vaultId?: string;
-    morpho_market_id?: string;
-    network_name?: string;
+    tokenDetails: TTokenDetails;
+    chainDetails: any;
+    platformData: any
 }) {
-    const platformNameId = platformId?.split("-")[0].toLowerCase();
-    const baseUrl = platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
+    const tokenSymbol = tokenDetails?.symbol;
+    const tokenLogo = tokenDetails?.logo;
+    const tokenName = tokenDetails?.name;
+    const chainName = chainDetails?.name;
+    const chainLogo = chainDetails?.logo;
+    const platformName = platformData.platform.name;
+    const platformId = platformData.platform.platform_name;
+    const platformLogo = platformData?.platform.logo;
+    const vaultId = platformData?.platform?.vaultId;
+    const morpho_market_id = platformData?.platform?.morpho_market_id;
+    const network_name = chainName;
+    const platformWebsiteLink = getPlatformWebsiteLink({
+        platformId,
+        chainName,
+        tokenAddress: tokenDetails?.address,
+        chainId: chainDetails?.id,
+        vaultId,
+        morpho_market_id,
+        network_name,
+    });
 
-    const formattedNetworkName = network_name?.toLowerCase() === "ethereum" ? "mainnet" : network_name?.toLowerCase();
-
-    const paths: any = {
-        aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(chainName || "")}_v3`,
-        compound: `/markets/v2`,
-        fluid: `/stats/${chainId}/vaults#${vaultId}`,
-        morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`
+    return {
+        tokenSymbol,
+        tokenLogo,
+        tokenName,
+        chainName,
+        chainLogo,
+        platformName,
+        platformLogo,
+        platformWebsiteLink
     }
-
-    const path = paths[platformNameId];
-    return `${baseUrl}${path}`
 }
 
-function getChainNameBasedOnAaveMarkets(chainName: string) {
-    if (chainName?.toLowerCase() in chainNamesBasedOnAaveMarkets) {
-        return chainNamesBasedOnAaveMarkets[chainName?.toLowerCase() as keyof typeof chainNamesBasedOnAaveMarkets]
-    }
-
-    return chainName?.toLowerCase();
-}
+// Child Components =================================================
 
 function LoadingSkeleton() {
     return (

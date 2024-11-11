@@ -4,6 +4,7 @@ import ImageWithBadge from "@/components/ImageWithBadge";
 import ImageWithDefault from "@/components/ImageWithDefault";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import { BodyText, Label } from "@/components/ui/typography";
+import { PAIR_BASED_PROTOCOLS } from "@/constants";
 import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import { TOpportunityTable, TReward } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
@@ -17,6 +18,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: "Token",
         accessorFn: item => item.tokenSymbol,
         cell: ({ row }) => {
+            const searchParams = useSearchParams();
+            const positionTypeParam = searchParams.get("position_type") || "lend";
             const tokenSymbol: string = row.getValue("tokenSymbol");
             const tokenLogo = row.original.tokenLogo;
             const tokenAddress = row.original.tokenAddress;
@@ -63,10 +66,11 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             token: tokenAddress,
                             chain_id: chainId,
                             protocol_identifier: protocolIdentifier,
+                            position_type: positionTypeParam,
                         }
                     }}
                         className="truncate">
-                        <BodyText level={"body2"} weight={"semibold"} className="truncate block shrink-0 hover:text-secondary-500">
+                        <BodyText level={"body2"} weight={"medium"} className="truncate block shrink-0 hover:text-secondary-500">
                             {tokenSymbol}
                         </BodyText>
 
@@ -92,7 +96,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         width={20}
                         height={20}
                     />
-                    <BodyText level={"body2"} weight={"semibold"} className="truncate">
+                    <BodyText level={"body2"} weight={"medium"} className="truncate">
                         {platformName}
                     </BodyText>
                 </span>
@@ -125,10 +129,11 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const positionTypeParam = searchParams.get("position_type") || "lend";
             const apyCurrent = Number(row.getValue("apy_current"));
             const apyCurrentFormatted = apyCurrent.toFixed(2);
-            const hasRewards = row.original?.rewards && row.original?.rewards.length > 0;
+            const hasRewards = row.original?.additional_rewards && row.original?.rewards.length > 0;
             // Declare tooltip content related variables
             let baseRate, baseRateFormatted, rewards, totalRewards;
             const isLend = positionTypeParam === "lend";
+            const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(row.original?.platformId.split("-")[0].toLowerCase());
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -143,12 +148,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 baseRateFormatted = baseRate < 0.01 && baseRate > 0 ? "<0.01" : getFormattedBaseRate(baseRate);
             }
 
-            if (apyCurrentFormatted === "0.00") {
+            if (apyCurrentFormatted === "0.00" && !isPairBasedProtocol) {
                 return (
                     <InfoTooltip
                         label={
                             <TooltipText>
-                                <BodyText level={"body2"} weight={"semibold"}>
+                                <BodyText level={"body2"} weight={"medium"}>
                                     {`${apyCurrentFormatted}%`}
                                 </BodyText>
                             </TooltipText>
@@ -161,7 +166,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
 
             return (
                 <span className="flex items-center gap-1" >
-                    <BodyText level={"body2"} weight={"semibold"}>
+                    <BodyText level={"body2"} weight={"medium"}>
                         {`${apyCurrentFormatted}%`}
                     </BodyText>
                     {
@@ -197,13 +202,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-2">
                     {Number(row.getValue("max_ltv")) > 0 &&
-                        <BodyText level={"body2"} weight={"semibold"}>
+                        <BodyText level={"body2"} weight={"medium"}>
                             {`${Number(row.getValue("max_ltv")).toFixed(2)}%`}
                         </BodyText>}
                     {Number(row.getValue("max_ltv")) === 0 &&
                         <InfoTooltip
                             label={<TooltipText>
-                                <BodyText level={"body2"} weight={"semibold"}>
+                                <BodyText level={"body2"} weight={"medium"}>
                                     {`${row.getValue("max_ltv")}%`}
                                 </BodyText>
                             </TooltipText>}
@@ -231,13 +236,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const value: string = row.getValue("deposits");
             if (containsNegativeInteger(value)) {
                 return (
-                    <BodyText level={"body2"} weight={"semibold"}>
+                    <BodyText level={"body2"} weight={"medium"}>
                         -${abbreviateNumber(Number(convertNegativeToPositive(value)))}
                     </BodyText>
                 )
             }
             return (
-                <BodyText level={"body2"} weight={"semibold"}>
+                <BodyText level={"body2"} weight={"medium"}>
                     ${abbreviateNumber(Number(value))}
                 </BodyText>
             )
@@ -260,13 +265,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const value: string = row.getValue("borrows");
             if (containsNegativeInteger(value)) {
                 return (
-                    <BodyText level={"body2"} weight={"semibold"}>
+                    <BodyText level={"body2"} weight={"medium"}>
                         -${abbreviateNumber(Number(convertNegativeToPositive(value)))}
                     </BodyText>
                 )
             }
             return (
-                <BodyText level={"body2"} weight={"semibold"}>
+                <BodyText level={"body2"} weight={"medium"}>
                     ${abbreviateNumber(Number(value))}
                 </BodyText>
             )
@@ -291,7 +296,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <InfoTooltip
                         label={
                             <TooltipText>
-                                <BodyText level={"body2"} weight={"semibold"}>
+                                <BodyText level={"body2"} weight={"medium"}>
                                     {`${Number(row.getValue("utilization")).toFixed(1)}%`}
                                 </BodyText>
                             </TooltipText>
@@ -303,7 +308,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             }
 
             return (
-                <BodyText level={"body2"} weight={"semibold"}>
+                <BodyText level={"body2"} weight={"medium"}>
                     {`${Number(row.getValue("utilization")).toFixed(2)}%`}
                 </BodyText>
             )

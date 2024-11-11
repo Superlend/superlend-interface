@@ -1,3 +1,7 @@
+import {
+  chainNamesBasedOnAaveMarkets,
+  platformWebsiteLinks,
+} from "@/constants";
 import { Period } from "@/types/periodButtons";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -218,21 +222,168 @@ export function getPlatformLogo(platformName: string): string {
 }
 
 /**
- * Extracts the version string subset from a hyphen-delimited platform name, 
+ * Extracts the version string subset from a hyphen-delimited platform name,
  * having version string subset on 1st index position.
- * 
+ *
  * @param {string} platformName - The hyphen-delimited platform name.
  * @returns {string} The extracted version string subset or an empty string if not found.
- * 
+ *
  * Example:
  * - If platformName is "AAVE-V3-ETHEREUM", returns "V3".
  * - If platformName is "FLUID-ETHEREUM", returns an empty string.
  */
 export function getPlatformVersion(platformName: string): string {
-  const versionMatch = platformName?.split("-")[1]?.toLowerCase()?.match(/v2|v3|v\d+/);
+  const versionMatch = platformName
+    ?.split("-")[1]
+    ?.toLowerCase()
+    ?.match(/v2|v3|v\d+/);
   return versionMatch ? versionMatch[0].toUpperCase() : "";
 }
 
-export function capitalizeText(text: string) {
-  return `${text.split("-")[0][0]}${text.split("-")[0].slice(1).toLowerCase()}`;
+export function capitalizeText(inputString: string) {
+  // Check if the input is a valid string
+  if (typeof inputString !== "string") {
+    throw new Error("Input must be a string");
+  }
+
+  // Split the string into words using space as a delimiter
+  const words = inputString.split(" ");
+
+  // Capitalize the first letter of each word
+  const capitalizedWords = words.map((word) => {
+    // Check if the word is not empty
+    if (word.length > 0) {
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    }
+    return word; // Return empty strings as they are
+  });
+
+  // Join the capitalized words back into a single string
+  return capitalizedWords.join(" ");
 }
+
+export function getRiskFactor(
+  healthFactor: string | number,
+  midValue: number = 1.5,
+  maxValue: number = 2
+) {
+  const HF = Number(healthFactor);
+  if (HF < midValue)
+    return {
+      label: "high",
+      value: HF,
+      theme: "destructive",
+    };
+  if (HF >= midValue && HF < maxValue)
+    return {
+      label: "medium",
+      value: HF,
+      theme: "yellow",
+    };
+  return {
+    label: "low",
+    value: HF,
+    theme: "green",
+  };
+}
+
+export function getLiquidationRisk(
+  healthFactor: number,
+  midValue: number = 50,
+  maxValue: number = 80
+) {
+  const HF = Number(healthFactor);
+  if (HF < midValue)
+    return {
+      label: "low",
+      value: HF,
+      theme: "green",
+    };
+  if (HF >= midValue && HF < maxValue)
+    return {
+      label: "medium",
+      value: HF,
+      theme: "yellow",
+    };
+  return {
+    label: "High",
+    value: HF,
+    theme: "destructive",
+  };
+}
+
+export function getPlatformWebsiteLink({
+  tokenAddress,
+  chainName,
+  chainId,
+  platformId,
+  vaultId,
+  morpho_market_id,
+  network_name,
+}: {
+  platformId: string;
+  tokenAddress?: string;
+  chainName?: string;
+  chainId?: string;
+  vaultId?: string;
+  morpho_market_id?: string;
+  network_name?: string;
+}) {
+  const platformNameId = platformId?.split("-")[0].toLowerCase();
+  const baseUrl =
+    platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
+
+  const formattedNetworkName =
+    network_name?.toLowerCase() === "ethereum"
+      ? "mainnet"
+      : network_name?.toLowerCase();
+
+  const paths: any = {
+    aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(
+      chainName || ""
+    )}_v3`,
+    compound: ``,
+    fluid: `/stats/${chainId}/vaults#${vaultId}`,
+    morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
+  };
+
+  const path = paths[platformNameId];
+  return `${baseUrl}${path}`;
+}
+
+export function getChainNameBasedOnAaveMarkets(chainName: string) {
+  if (chainName?.toLowerCase() in chainNamesBasedOnAaveMarkets) {
+    return chainNamesBasedOnAaveMarkets[
+      chainName?.toLowerCase() as keyof typeof chainNamesBasedOnAaveMarkets
+    ];
+  }
+
+  return chainName?.toLowerCase();
+}
+
+export const copyToClipboard = async (text: string) => {
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true; // Return true if copy was successful
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+      return false; // Return false if there was an error
+    }
+  } else {
+    // Fallback for browsers that don't support Clipboard API
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return true;
+    } catch (err) {
+      console.error("Fallback copy failed: ", err);
+      document.body.removeChild(textArea);
+      return false;
+    }
+  }
+};

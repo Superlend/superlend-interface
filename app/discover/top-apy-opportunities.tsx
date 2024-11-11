@@ -3,7 +3,6 @@
 import React, { useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import LendBorrowToggle from '@/components/LendBorrowToggle'
 import { HeadingText } from '@/components/ui/typography'
-import DiscoverFilterDropdown from '@/components/dropdowns/DiscoverFilterDropdown'
 import { columns } from '@/data/table/top-apy-opportunities';
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
@@ -16,6 +15,7 @@ import { AssetsDataContext } from '@/context/data-provider'
 import { OpportunitiesContext } from '@/context/opportunities-provider'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import useDimensions from '@/hooks/useDimensions'
+import DiscoverFiltersDropdown from '@/components/dropdowns/DiscoverFiltersDropdown';
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { motion } from 'framer-motion'
 import { useDebounce } from '@/hooks/useDebounce';
@@ -184,7 +184,7 @@ export default function TopApyOpportunities() {
 
     function handleRowClick(rowData: any) {
         const { tokenAddress, protocol_identifier, chain_id } = rowData;
-        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}`
+        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
         router.push(url);
     }
 
@@ -212,12 +212,12 @@ export default function TopApyOpportunities() {
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                     <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
                         <div className="flex items-center gap-[12px]">
-                            <HeadingText level="h3" weight='semibold'>Top Money Markets</HeadingText>
+                            <HeadingText level="h3" weight='medium' className='text-gray-800'>Top Money Markets</HeadingText>
                             <InfoTooltip content="List of assets from different lending protocols across various chains, offering good APYs" />
                         </div>
                         {/* Filter button for Tablet and below screens */}
                         <div className="block lg:hidden">
-                            <DiscoverFilterDropdown />
+                            <DiscoverFiltersDropdown />
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
@@ -232,7 +232,7 @@ export default function TopApyOpportunities() {
                 {/* Filter buttons for Desktop and above screens */}
                 <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
                     {/* <ChainSelectorDropdown /> */}
-                    <DiscoverFilterDropdown />
+                    <DiscoverFiltersDropdown />
                 </div>
             </div>
             <motion.div
