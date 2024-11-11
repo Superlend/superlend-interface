@@ -35,7 +35,7 @@ import useDimensions from '@/hooks/useDimensions';
 import { Check, Copy, LogOut, X } from 'lucide-react';
 import { BodyText, HeadingText } from './ui/typography';
 import { copyToClipboard } from '@/lib/utils';
-
+import { mainnet } from "thirdweb/chains";
 
 
 export default function ConnectWalletButton() {
@@ -127,6 +127,7 @@ export default function ConnectWalletButton() {
             <div className="rounded-4 overflow-hidden max-h-[40px] w-full md:max-w-[165px]">
                 <ConnectButton
                     client={client}
+                    chain={mainnet}
                     theme={lightTheme({
                         colors: {
                             modalBg: "#fff",
