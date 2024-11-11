@@ -114,9 +114,9 @@
   width: 100% !important;
 }
 
-/* .tw-connected-wallet__balance {
+.tw-connected-wallet__balance {
   display: none !important;
-} */
+}
 
 .tw-connected-wallet {
   padding-block: 0 !important;
