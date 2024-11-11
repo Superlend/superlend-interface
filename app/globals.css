@@ -123,8 +123,16 @@
   max-height: 40px !important;
 }
 
+.tw-connected-wallet>:first-child {
+  display: none !important;
+}
+
 .css-1jn7hrs {
   display: none !important;
+}
+
+.css-qjps8h {
+  min-width: fit-content !important;
 }
 
 /* .tw-connected-wallet > .css-1d4s0we {
