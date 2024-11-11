@@ -1,9 +1,15 @@
 import { Period, PeriodDisplay } from "./types/periodButtons";
-import { PlatformWebsiteLink } from "./types/platform";
+import {
+  PlatformDisplayValue,
+  PlatformValue,
+  PlatformWebsiteLink,
+} from "./types/platform";
 
 export type TPlatformWebsiteLinks = {
   aave: PlatformWebsiteLink.AAVE;
   compound: PlatformWebsiteLink.COMPOUND;
+  fluid: PlatformWebsiteLink.FLUID;
+  morpho: PlatformWebsiteLink.MORPHO;
 };
 
 export type TChainNamesBasedOnAaveMarkets = {
@@ -93,6 +99,8 @@ export const STABLECOINS_NAMES_LIST = [
 export const platformWebsiteLinks: TPlatformWebsiteLinks = {
   aave: PlatformWebsiteLink.AAVE,
   compound: PlatformWebsiteLink.COMPOUND,
+  fluid: PlatformWebsiteLink.FLUID,
+  morpho: PlatformWebsiteLink.MORPHO,
 };
 
 export const SHEET_FORM_URL =
@@ -101,3 +109,50 @@ export const SHEET_FORM_URL =
 export const chainNamesBasedOnAaveMarkets: TChainNamesBasedOnAaveMarkets = {
   bsc: "bnb",
 };
+
+export const PLATFORM_OPTIONS = [
+  {
+    value: PlatformValue.AaveV3Arbitrum,
+    label: PlatformDisplayValue.AaveV3Arbitrum,
+  },
+  {
+    value: PlatformValue.AaveV3Avalanche,
+    label: PlatformDisplayValue.AaveV3Avalanche,
+  },
+  { value: PlatformValue.AaveV3Bsc, label: PlatformDisplayValue.AaveV3Bsc },
+  { value: PlatformValue.AaveV3Base, label: PlatformDisplayValue.AaveV3Base },
+  {
+    value: PlatformValue.AaveV3Ethereum,
+    label: PlatformDisplayValue.AaveV3Ethereum,
+  },
+  // {
+  //   value: PlatformValue.AaveV3Fantom,
+  //   label: PlatformDisplayValue.AaveV3Fantom,
+  // },
+  {
+    value: PlatformValue.AaveV3Gnosis,
+    label: PlatformDisplayValue.AaveV3Gnosis,
+  },
+  { value: PlatformValue.AaveV3Metis, label: PlatformDisplayValue.AaveV3Metis },
+  {
+    value: PlatformValue.AaveV3Optimism,
+    label: PlatformDisplayValue.AaveV3Optimism,
+  },
+  {
+    value: PlatformValue.AaveV3Polygon,
+    label: PlatformDisplayValue.AaveV3Polygon,
+  },
+  { value: PlatformValue.AaveV3Scoll, label: PlatformDisplayValue.AaveV3Scoll },
+  {
+    value: PlatformValue.CompoundV2Ethereum,
+    label: PlatformDisplayValue.CompoundV2Ethereum,
+  },
+  // {
+  //   value: PlatformValue.SparkEthereum,
+  //   label: PlatformDisplayValue.SparkEthereum,
+  // },
+  // { value: PlatformValue.SparkGnosis, label: PlatformDisplayValue.SparkGnosis },
+];
+
+export const POOL_BASED_PROTOCOLS = ["aaveV3", "compoundV2"];
+export const PAIR_BASED_PROTOCOLS = ["morpho", "fluid"];

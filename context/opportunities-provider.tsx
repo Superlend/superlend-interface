@@ -6,13 +6,13 @@ import { createContext, useState } from "react";
 export type TOpportunitiesFilters = {
     token_ids: string[],
     chain_ids: number[];
-    platform_ids: string[];
+    protocol_identifiers: string[];
 }
 
 export const OpportunitiesContext = createContext<any>({
     token_ids: [],
     chain_ids: [],
-    platform_ids: []
+    protocol_identifiers: []
 });
 
 export default function OpportunitiesProvider({ children }: { children: React.ReactNode }) {
@@ -20,7 +20,7 @@ export default function OpportunitiesProvider({ children }: { children: React.Re
     const [filters, setFilters] = useState<TOpportunitiesFilters>({
         token_ids: [],
         chain_ids: [],
-        platform_ids: []
+        protocol_identifiers: []
     });
 
     return (

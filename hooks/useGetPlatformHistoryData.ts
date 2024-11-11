@@ -11,10 +11,10 @@ import { useQuery } from "@tanstack/react-query";
 export default function useGetPlatformHistoryData(
   params: TGetPlatformHistoryParams
 ) {
-  const { platform_id, token, period } = params;
+  const { protocol_identifier, token, period } = params;
 
   const { data, isLoading, isError } = useQuery<TPlatformHistory, Error>({
-    queryKey: ["platformHistory", platform_id, token, period],
+    queryKey: ["platformHistory", protocol_identifier, token, period],
     queryFn: async () => {
       try {
         const responseData = await getPlatformHistoryData(params);

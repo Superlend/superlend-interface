@@ -11,8 +11,8 @@ export enum PlatformValue {
   AaveV3Polygon = "AAVE-V3-POLYGON",
   AaveV3Scoll = "AAVE-V3-SCROLL",
   CompoundV2Ethereum = "COMPOUND-V2-ETHEREUM",
-  SparkEthereum = "SPARK-ETHEREUM",
-  SparkGnosis = "SPARK-GNOSIS",
+  // SparkEthereum = "SPARK-ETHEREUM",
+  // SparkGnosis = "SPARK-GNOSIS",
 }
 
 export enum PlatformDisplayValue {
@@ -28,11 +28,27 @@ export enum PlatformDisplayValue {
   AaveV3Polygon = "AAVE v3 Polygon",
   AaveV3Scoll = "AAVE v3 Scroll",
   CompoundV2Ethereum = "Compound v2 Ethereum",
-  SparkEthereum = "Spark v3 Ethereum",
-  SparkGnosis = "Spark v3 Gnosis",
+  // SparkEthereum = "Spark v3 Ethereum",
+  // SparkGnosis = "Spark v3 Gnosis",
 }
 
 export enum PlatformWebsiteLink {
-  AAVE = "https://app.aave.com/",
-  COMPOUND = "https://app.compound.finance/"
+  AAVE = "https://app.aave.com",
+  COMPOUND = "https://app.compound.finance/markets/v2",
+  FLUID = "https://fluid.instadapp.io",
+  MORPHO = "https://app.morpho.org",
+}
+
+export enum ProtocolIdentifier {
+  AAVE = "0xd90fee53cfefbf93ca503a0d64f59094fed2cf1580b2b045f35d81e133e56efb",
+  COMPOUND = "0x961d4fe13e02e466e2062e39c0e1145d61e984ef53e19d7d269da579873a2c23",
+  FLUID = "0x18b44f70960e14e4f81eea8f78b0aeb027e46f1db1bc047f17b2c6f5c51bc401",
+  MORPHO = "0xfeb0a5f9cc734f26b3fea8a850d764fb476db9a75541009a87f797d4008fcc65",
+}
+
+export enum PlatformLogo {
+  AAVE = "https://superlend-assets.s3.ap-south-1.amazonaws.com/aave.svg",
+  COMPOUND = "https://superlend-assets.s3.ap-south-1.amazonaws.com/compound.svg",
+  FLUID = "https://superlend-assets.s3.ap-south-1.amazonaws.com/fluid_logo.png",
+  MORPHO = "https://superlend-assets.s3.ap-south-1.amazonaws.com/morpho-logo.svg",
 }

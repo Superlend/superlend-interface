@@ -26,18 +26,29 @@ import { TToken } from '@/types';
 import useDimensions from '@/hooks/useDimensions';
 import { STABLECOINS_NAMES_LIST } from '@/constants';
 import SearchInput from '../inputs/SearchInput';
+import useUpdateSearchParams from '@/hooks/useUpdateSearchParams';
+import { useSearchParams } from 'next/navigation';
+import { PlatformLogo, ProtocolIdentifier } from '@/types/platform';
+import { motion } from 'framer-motion';
 
-export default function DiscoverFilterDropdown() {
+export default function DiscoverFiltersDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
-    const { filters, setFilters } = useContext<any>(OpportunitiesContext);
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext);
-    const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(false)
+    const updateSearchParams = useUpdateSearchParams();
+    const searchParams = useSearchParams();
+    const getFiltersFromURL = () => ({
+        token_ids: searchParams.get('token_ids')?.split(',') || [],
+        chain_ids: searchParams.get('chain_ids')?.split(',') || [],
+        protocol_ids: searchParams.get('protocol_ids')?.split(',') || [],
+    });
+    const filters = getFiltersFromURL();
+    const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(STABLECOINS_NAMES_LIST.every(name => filters.token_ids.includes(name)) || false)
     const { width: screenWidth } = useDimensions();
     const isDesktop = screenWidth > 768;
 
-    const hasActiveFilters = !!filters.token_ids.length || !!filters.chain_ids.length || !!filters.platform_ids.length
-    const activeFiltersTotalCount = filters.token_ids.length + filters.chain_ids.length + filters.platform_ids.length;
-    const getActiveFiltersCountByCategory = (filterName: string) => (filters[filterName]?.length);
+    const hasActiveFilters = !!filters.token_ids.length || !!filters.chain_ids.length || !!filters.protocol_ids.length;
+    const activeFiltersTotalCount = filters.token_ids.length + filters.chain_ids.length + filters.protocol_ids.length;
+    const getActiveFiltersCountByCategory = (filterName: keyof typeof filters) => filters[filterName]?.length;
 
     const allTokenOptions = Object.values(allTokensData).flat(1)
         .reduce((acc: TToken[], current: any) => {
@@ -54,14 +65,24 @@ export default function DiscoverFilterDropdown() {
 
     const allPlatformsData = [
         {
-            logo: allTokenOptions?.find((token: any) => token.token_id === 'AAVE')?.logo || "",
+            logo: PlatformLogo.AAVE,
             name: "AAVE",
-            platform_id: "AAVE"
+            protocol_id: "AAVE"
         },
         {
-            logo: allTokenOptions?.find((token: any) => token.token_id === 'COMP')?.logo || "",
+            logo: PlatformLogo.COMPOUND,
             name: "COMPOUND",
-            platform_id: "COMPOUND"
+            protocol_id: "COMPOUND"
+        },
+        // {
+        //     logo: PlatformLogo.MORPHO,
+        //     name: "MORPHO",
+        //     protocol_id: "MORPHO"
+        // },
+        {
+            logo: PlatformLogo.FLUID,
+            name: "FLUID",
+            protocol_id: "FLUID"
         },
     ]
 
@@ -76,7 +97,7 @@ export default function DiscoverFilterDropdown() {
         },
         {
             label: "Platforms",
-            value: "platform",
+            value: "protocol",
         },
     ]
 
@@ -89,8 +110,8 @@ export default function DiscoverFilterDropdown() {
             type: "chain",
             options: allChainsData
         },
-        platform: {
-            type: "platform",
+        protocol: {
+            type: "protocol",
             options: allPlatformsData
         },
     };
@@ -107,25 +128,20 @@ export default function DiscoverFilterDropdown() {
                     searchedList.push(findToken.token_id)
                 }
             })
-            setFilters((state: any) => ({
-                ...state,
-                token_ids: searchedList
-            }))
+            updateSearchParams({ token_ids: searchedList.join(',') });
             setIsStablecoinsSelected(true)
             return
         }
         setIsStablecoinsSelected(false)
-        setFilters((state: any) => ({
-            ...state,
-            token_ids: state.token_ids.filter((tokenId: string) => !STABLECOINS_NAMES_LIST.includes(tokenId))
-        }))
+        const currentTokenIds = filters.token_ids.filter((tokenId: string) => !STABLECOINS_NAMES_LIST.includes(tokenId));
+        updateSearchParams({ token_ids: currentTokenIds.length ? currentTokenIds.join(',') : undefined });
     }
 
     function handleClearFilters() {
-        setFilters({
-            token_ids: [],
-            chain_ids: [],
-            platform_ids: [],
+        updateSearchParams({
+            token_ids: undefined,
+            chain_ids: undefined,
+            protocol_ids: undefined,
         });
         setIsStablecoinsSelected(false)
     }
@@ -234,20 +250,27 @@ function FilterCardContent({
             <div className="filter-categories flex md:flex-col gap-4 md:gap-2 bg-white py-2 px-4 md:p-[24px_0px_24px_24px]">
                 {
                     FILTER_CATEGORIES.map((item: any) => (
-                        <Button
-                            onClick={() => setActiveTab(item)}
+                        <motion.div
                             key={item.label}
-                            size="md"
-                            className={`flex items-center gap-2 py-[8px] px-[8px] border-0 items-center justify-between overflow-hidden ${isActiveTab(item)}`}>
-                            <Label size='small' weight='medium' className={`w-fit text-left self-start cursor-pointer`}>
-                                {item.label}
-                            </Label>
-                            {!!getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`) &&
-                                <Label size='small' weight='medium' className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer">
-                                    {getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`)}
+                            className="relative md:w-full"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setActiveTab(item)}
+                            onMouseEnter={() => setActiveTab(item)}
+                        >
+                            <Button
+                                size="md"
+                                className={`md:w-full flex items-center gap-2 py-[8px] px-[8px] border-0 items-center justify-between overflow-hidden ${isActiveTab(item)}`}>
+                                <Label size='small' weight='medium' className={`w-fit text-left self-start cursor-pointer`}>
+                                    {item.label}
                                 </Label>
-                            }
-                        </Button>
+                                {!!getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`) &&
+                                    <Label size='small' weight='medium' className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer">
+                                        {getActiveFiltersCountByCategory(`${item.value.toLowerCase()}_ids`)}
+                                    </Label>
+                                }
+                            </Button>
+                        </motion.div>
                     ))
                 }
             </div>
@@ -270,38 +293,37 @@ function FilterOptions({
     isStablecoinsSelected: boolean;
     selectStablecoins: any;
 }) {
-    const { filters, setFilters } = useContext<any>(OpportunitiesContext);
+    const updateSearchParams = useUpdateSearchParams();
+    const searchParams = useSearchParams();
     const [searchKeyword, setSearchKeyword] = useState<string>("");
 
     useEffect(() => {
         setSearchKeyword("")
     }, [type])
 
+    const getFiltersFromURL = () => ({
+        token_ids: searchParams.get('token_ids')?.split(',') || [],
+        chain_ids: searchParams.get('chain_ids')?.split(',') || [],
+        protocol_ids: searchParams.get('protocol_ids')?.split(',') || [],
+    });
+
+    const filters = getFiltersFromURL();
     const isSelected = (id: number | string, filterType: string) => {
-        return filters[`${filterType}_ids`]?.includes(id);
+        return filters[`${filterType}_ids` as keyof typeof filters]?.includes(id.toString());
     };
-
     const handleSelection = (id: number | string | null, filterType: string) => {
+        const currentFilters = filters[`${filterType}_ids` as keyof typeof filters];
+        let newFilters: (string | number)[] | undefined;
+
         if (id === null) {
-            setFilters((state: any) => ({
-                ...state,
-                [`${filterType}_ids`]: []
-            }));
-            return;
+            newFilters = [];
+        } else if (isSelected(id, filterType)) {
+            newFilters = currentFilters.filter((selectedId: string) => selectedId !== id.toString());
+        } else {
+            newFilters = [...currentFilters, id.toString()];
         }
 
-        if (isSelected(id, filterType)) {
-            setFilters((state: any) => ({
-                ...state,
-                [`${filterType}_ids`]: state[`${filterType}_ids`].filter((selectedId: any) => selectedId !== id)
-            }));
-            return;
-        }
-
-        setFilters((state: any) => ({
-            ...state,
-            [`${filterType}_ids`]: [...state[`${filterType}_ids`], id]
-        }));
+        updateSearchParams({ [`${filterType}_ids`]: newFilters.length ? newFilters.join(',') : undefined });
     };
 
     return (
@@ -328,7 +350,7 @@ function FilterOptions({
                 <Button
                     variant="outline"
                     size="sm"
-                    className={`${filters[`${type}_ids`]?.length === 0 ? "selected" : ""}`}
+                    className={`${filters[`${type}_ids` as keyof typeof filters]?.length === 0 ? "selected" : ""}`}
                     onClick={() => handleSelection(null, type)}>
                     All {type.charAt(0).toUpperCase() + type.slice(1)}s
                 </Button>

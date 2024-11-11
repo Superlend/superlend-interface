@@ -58,7 +58,7 @@ export default function RadioGroupDropdown({
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
                 <DropdownMenuTrigger asChild>
                     <Button size="lg" className="w-fit data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-800">
-                        {value.label || "Filter by"}
+                        <span className="font-medium">{value.label || "Filter by"}</span>
                         <ChevronDownIcon className={`w-4 h-4 ml-2 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                     </Button>
                 </DropdownMenuTrigger>
