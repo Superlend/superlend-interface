@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-
-const ImageWithDefault = ({ src, defaultSrc = '/images/fallback-img.png', alt, className, width, height }: any) => {
+import Image from 'next/image';
+const ImageWithDefault = ({ src, defaultSrc = '/images/fallback-img.png', alt = "", className, width, height, ...props }: any) => {
     const [imageSrc, setImageSrc] = useState(src);
 
     useEffect(() => {
@@ -14,13 +14,14 @@ const ImageWithDefault = ({ src, defaultSrc = '/images/fallback-img.png', alt, c
     };
 
     return (
-        <img
+        <Image
             className={className || ""}
             width={width}
             height={height}
             src={imageSrc}
             onError={handleError}
             alt={alt}
+            {...props}
         />
     )
 }

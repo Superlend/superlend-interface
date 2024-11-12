@@ -11,10 +11,10 @@ const PortfolioDataInit = {
 };
 
 export default function useGetPortfolioData(params: TGetPortfolioParams) {
-  const { user_address, chain_id, platform_id, position_type } = params;
+  const { user_address, chain_id, platform_id, position_type, protocol_identifier } = params;
 
   const { data, isLoading, isError } = useQuery<TPortfolio>({
-    queryKey: ["portfolio", user_address, chain_id, platform_id, position_type],
+    queryKey: ["portfolio", user_address, chain_id, platform_id, position_type, protocol_identifier],
     queryFn: async () => {
       try {
         const responseData = await getPortfolioData(params);

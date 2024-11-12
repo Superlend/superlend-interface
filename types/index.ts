@@ -112,6 +112,7 @@ export type TOpportunityTable = {
   chainName: string;
   protocol_identifier: string;
   platformName: string;
+  platformId: string;
   platformLogo: string;
   apy_current: string;
   additional_rewards: boolean;
@@ -128,7 +129,7 @@ export type TGetPlatformParams = {
   protocol_identifier: string;
 };
 
-export type TPlatformAssets = {
+export type TPlatformAsset = {
   token: {
     name: string;
     symbol: string;
@@ -149,10 +150,14 @@ export type TPlatform = {
   platform: {
     name: string;
     platform_name: string;
+    protocol_identifier: string;
+    platform_type: string;
     logo: string;
     chain_id: number;
+    vaultId: string;
+    morpho_market_id: string;
   };
-  assets: TPlatformAssets[];
+  assets: TPlatformAsset[];
 };
 
 export type TGetPlatformHistoryParams = {

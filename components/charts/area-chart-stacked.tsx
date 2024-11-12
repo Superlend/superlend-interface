@@ -16,8 +16,9 @@ import { Period } from "@/types/periodButtons"
 import { BodyText, Label } from "../ui/typography"
 import { abbreviateNumber, extractTimeFromDate, formatDateAccordingToPeriod, shortNubers } from "@/lib/utils"
 import { Skeleton } from "../ui/skeleton"
-import { LoaderCircle } from "lucide-react"
+import { ChartLine, LoaderCircle } from "lucide-react"
 import { useState } from "react"
+import ImageWithDefault from "../ImageWithDefault"
 
 interface CustomYAxisTickProps {
     x: number
@@ -144,13 +145,16 @@ export function AreaChartStacked({
         })
         .map(option => option.value);
 
+    const isFilterDisabled = disableCategoryFilters.length === HISTORY_CHART_SELECT_OPTIONS.length;
+
     return (
         <Card className="overflow-hidden">
             <CardContent className="p-0 py-[32px] bg-white">
                 {
                     !data && <GraphLoading />
                 }
-                {data &&
+                {
+                    data && !isFilterDisabled &&
                     <>
                         <div className="px-[20px] flex flex-col sm:flex-row gap-[16px] items-center justify-between">
                             {/* Timeline Filters Tab */}
@@ -176,7 +180,6 @@ export function AreaChartStacked({
                         </div>
 
                         {/* Chart Begins Here */}
-
                         <ChartContainer config={chartConfig} className="h-[250px] w-full">
                             <AreaChart
                                 accessibilityLayer
@@ -188,12 +191,6 @@ export function AreaChartStacked({
                                     bottom: 0
                                 }}
                             >
-                                {/* <defs>
-                            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8} />
-                                <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
-                            </linearGradient>
-                        </defs> */}
                                 <CartesianGrid vertical={false} />
                                 <XAxis
                                     dataKey="timestamp"
@@ -257,6 +254,15 @@ export function AreaChartStacked({
                         </ChartContainer>
                         {/* Chart Ends Here */}
                     </>
+                }
+                {
+                    data && isFilterDisabled &&
+                    <div className="flex flex-col gap-2 items-center justify-center h-[250px] w-full">
+                        <ChartLine className="w-12 h-12 text-gray-600" />
+                        <Label size="large" weight="medium" className="text-gray-600">
+                            No history data found
+                        </Label>
+                    </div>
                 }
             </CardContent>
         </Card>

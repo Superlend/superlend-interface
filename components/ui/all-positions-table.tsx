@@ -41,10 +41,10 @@ interface DataTableProps<TData, TValue> {
     setColumnVisibility?: any
     initialState?: any
     sorting?: SortingState
-    setSorting?: React.Dispatch<React.SetStateAction<SortingState>>
-    pagination: PaginationState
-    setPagination: any
-    totalPages: number
+    setSorting?: React.Dispatch<React.SetStateAction<SortingState>>;
+    noDataMessage?: string;
+    pagination?: PaginationState
+    setPagination?: any
 }
 
 export function DataTable<TData, TValue>({
@@ -58,9 +58,9 @@ export function DataTable<TData, TValue>({
     initialState,
     sorting,
     setSorting,
+    noDataMessage,
     pagination,
     setPagination,
-    totalPages,
 }: DataTableProps<TData, TValue>) {
     const { width: screenWidth } = useDimensions();
 
@@ -71,46 +71,24 @@ export function DataTable<TData, TValue>({
         getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
+        initialState: {
+            ...initialState,
+            columnPinning: {
+                left: ['tokenSymbol'],
+            },
+        },
         state: {
             globalFilter: filters,
             columnVisibility,
             sorting,
-            pagination,
-        },
-        initialState: {
-            ...initialState,
-            columnPinning: {
-                left: ["tokenSymbol"],
-            }
+            // pagination,
         },
         onGlobalFilterChange: setFilters,
         onColumnVisibilityChange: setColumnVisibility,
-        onSortingChange: setSorting,
         enableSortingRemoval: false,
-        onPaginationChange: setPagination,
-        pageCount: Math.ceil(data.length / pagination.pageSize),
-        manualPagination: false,
-    });
-
-    const rows = table.getRowModel().rows;
-    const totalRowCount = table.getFilteredRowModel().rows.length;
-    const calculatedPages = Math.ceil(totalRowCount / pagination.pageSize);
-
-    const handleFirstPage = () => {
-        setPagination({ ...pagination, pageIndex: 0 });
-    };
-
-    const handlePreviousPage = () => {
-        setPagination({ ...pagination, pageIndex: Math.max(0, pagination.pageIndex - 1) });
-    };
-
-    const handleNextPage = () => {
-        setPagination({ ...pagination, pageIndex: Math.min(totalPages - 1, pagination.pageIndex + 1) });
-    };
-
-    const handleLastPage = () => {
-        setPagination({ ...pagination, pageIndex: totalPages - 1 });
-    };
+        onSortingChange: setSorting,
+        // onPaginationChange: setPagination,
+    })
 
     const getCommonPinningStyles = (column: Column<TOpportunityTable>, {
         isHeader,
@@ -144,7 +122,7 @@ export function DataTable<TData, TValue>({
                 <Table>
                     <TableHeader className="[&_tr]:border-0">
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                            <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     const { column } = header
                                     return (
@@ -197,14 +175,14 @@ export function DataTable<TData, TValue>({
                         ))}
                     </TableHeader>
                     <TableBody className="bg-transparent">
-                        {rows?.length ? (
-                            rows.map((row, rowIndex) => (
+                        {table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map((row, rowIndex) => (
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
                                     className="border-0 bg-white"
                                     onClick={
-                                        !handleRowClick || screenWidth < 768
+                                        !handleRowClick
                                             ? undefined
                                             : () => handleRowClick(row.original)
                                     }
@@ -214,7 +192,7 @@ export function DataTable<TData, TValue>({
                                         return (
                                             <TableCell
                                                 key={cell.id}
-                                                className={`py-4 w-[150px] min-w-[150px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""} ${!!handleRowClick ? "cursor-pointer" : ""}`}
+                                                className={`py-4 w-[150px] min-w-[150px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? "first:rounded-tl-5 last:rounded-tr-5" : ""} ${rowIndex == table.getRowModel().rows.length - 1 ? "first:rounded-bl-5 last:rounded-br-5" : ""} ${!!handleRowClick ? "cursor-pointer" : ""}`}
                                                 style={{
                                                     ...getCommonPinningStyles(column as unknown as Column<TOpportunityTable, unknown>, {
                                                         isHeader: false,
@@ -230,7 +208,7 @@ export function DataTable<TData, TValue>({
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    No results
+                                    {noDataMessage || "No results."}
                                 </TableCell>
                             </TableRow>
                         )}
@@ -240,46 +218,46 @@ export function DataTable<TData, TValue>({
             </ScrollArea>
             {/* Pagination STARTS */}
             {
-                !!data.length &&
+                !!table.getRowModel().rows.length &&
                 <div className="pagination-container flex items-center justify-end sm:justify-between gap-5 flex-wrap py-4 px-4 sm:px-8">
                     <div className="pagination-stats">
                         <Label size="medium" weight="medium" className="text-gray-700">
-                            Page {pagination.pageIndex + 1} of {calculatedPages}
+                            {table.getState().pagination.pageIndex + 1} of {table.getPageCount()} pages
                         </Label>
                     </div>
                     <div className="pagination-controls flex items-center justify-end space-x-2 flex-1 shrink-0 ml-16">
                         <Label size="medium" weight="medium" className="hidden xs:block shrink-0 text-gray-700">
-                            {pagination.pageSize} of {totalRowCount.toLocaleString()} rows
+                            {table.getRowModel().rows.length.toLocaleString()} of {table.getRowCount().toLocaleString()} rows
                         </Label>
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={handleFirstPage}
-                            disabled={pagination.pageIndex === 0}
+                            onClick={() => table.firstPage()}
+                            disabled={!table.getCanPreviousPage()}
                         >
                             <ChevronsLeft className="w-5 h-5" />
                         </Button>
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={handlePreviousPage}
-                            disabled={pagination.pageIndex === 0}
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </Button>
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={handleNextPage}
-                            disabled={pagination.pageIndex >= calculatedPages - 1}
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
                         >
                             <ChevronRight className="w-5 h-5" />
                         </Button>
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={handleLastPage}
-                            disabled={pagination.pageIndex >= calculatedPages - 1}
+                            onClick={() => table.lastPage()}
+                            disabled={!table.getCanNextPage()}
                         >
                             <ChevronsRight className="w-5 h-5" />
                         </Button>

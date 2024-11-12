@@ -1,6 +1,8 @@
 "use client"
 
-import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts"
+import * as React from "react"
+import { Label as RechartsLabel, Pie, PieChart } from "recharts"
+
 import {
     Card,
     CardContent,
@@ -15,60 +17,46 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart"
-import StackedIcons from "../StackedIcons"
-import { Badge } from "../ui/badge"
-import { BodyText, Label as LabelText } from "../ui/typography"
 import { TPortfolio } from "@/types/queries/portfolio"
-import ImageWithDefault from "../ImageWithDefault"
-import { abbreviateNumber, capitalizeText, convertScientificToNormal, isLowestValue } from "@/lib/utils"
-import { useContext } from "react"
+import { abbreviateNumber, capitalizeText, convertNegativeToPositive, containsNegativeInteger } from "@/lib/utils"
+import { convertScientificToNormal } from "@/lib/utils"
+import { isLowestValue } from "@/lib/utils"
 import { AssetsDataContext } from "@/context/data-provider"
-import AvatarCircles from "../ui/avatar-circles"
 import { Skeleton } from "../ui/skeleton"
+import AvatarCircles from "../ui/avatar-circles"
+import ImageWithDefault from "../ImageWithDefault"
+import { BodyText, Label } from "../ui/typography"
+import { Badge } from "../ui/badge"
 import { ChartPie } from "lucide-react"
 
-export const description = "A radial chart with stacked sections"
+export const description = "A donut chart with text"
+
+const chartDataTemplate = [
+    { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
+    { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
+    { browser: "firefox", visitors: 287, fill: "var(--color-firefox)" },
+    { browser: "edge", visitors: 173, fill: "var(--color-edge)" },
+    { browser: "other", visitors: 190, fill: "var(--color-other)" },
+]
 
 const chartConfig = {
-    1: {
+    aave: {
         label: "Aave",
-        color: "hsl(var(--chart-1))",
+        color: "hsl(var(--chart-aave))",
     },
-    2: {
+    compound: {
         label: "Compound",
-        color: "hsl(var(--chart-2))",
+        color: "hsl(var(--chart-compound))",
     },
-    3: {
-        label: "Compound",
-        color: "hsl(var(--chart-3))",
+    morpho: {
+        label: "Morpho",
+        color: "hsl(var(--chart-morpho))",
     },
-    4: {
-        label: "Compound",
-        color: "hsl(var(--chart-4))",
-    },
-    5: {
-        label: "Compound",
-        color: "hsl(var(--chart-5))",
+    fluid: {
+        label: "Fluid",
+        color: "hsl(var(--chart-fluid))",
     },
 } satisfies ChartConfig
-
-const ICONS_LIST = [
-    {
-        src: "/images/platforms/aave.webp",
-        alt: "Aave",
-        id: 1,
-    },
-    {
-        src: "/images/platforms/euler.webp",
-        alt: "Euler",
-        id: 2,
-    },
-    {
-        src: "/images/platforms/compound.webp",
-        alt: "Compound",
-        id: 3,
-    },
-];
 
 function CustomToolTip(payload: any) {
     const { platform, chain, lend, borrow } = payload.payload;
@@ -83,6 +71,7 @@ function CustomToolTip(payload: any) {
 
     const borrowAmount = handleLowestValue(borrow?.amount)
     const lendAmount = handleLowestValue(lend?.amount)
+    const totalPositionsPerPlatform = lend?.tokens.length + borrow?.tokens.length;
 
     return (
         <div className="bg-white rounded-4 w-[225px] px-[12px] py-[16px]">
@@ -94,29 +83,29 @@ function CustomToolTip(payload: any) {
                         height={20}
                         className={"max-w-[20px] max-h-[20px] object-contain"}
                     />
-                    <BodyText level="body2" weight="medium">{platform?.id?.split("-")[0]}</BodyText>
+                    <BodyText level="body2" weight="medium" className="truncate max-w-[100px]">{platform?.id?.split("-")[0]}</BodyText>
                 </div>
-                <Badge variant="blue" size="sm">
-                    Borrow / Lend
+                <Badge variant="blue" size="sm" className="w-fit shrink-0">
+                    {totalPositionsPerPlatform.toLocaleString()} position{totalPositionsPerPlatform > 1 ? "s" : ""}
                 </Badge>
             </div>
             <div className="details-block flex flex-col gap-[13px] pt-[12px]">
                 <div className="flex items-center justify-between">
-                    <LabelText> Borrow </LabelText>
+                    <Label> Borrow </Label>
                     <div className="flex items-center gap-[4px]">
                         <BodyText level="body2" weight="medium">{hasLowestValuePrefix(borrow?.amount)} ${borrowAmount}</BodyText>
                         <AvatarCircles avatarUrls={borrow.tokens.map((token: any) => token.logo)} />
                     </div>
                 </div>
                 <div className="flex items-center justify-between">
-                    <LabelText> Lend </LabelText>
+                    <Label> Lend </Label>
                     <div className="flex items-center gap-[4px]">
                         <BodyText level="body2" weight="medium">{hasLowestValuePrefix(lend?.amount)} ${lendAmount}</BodyText>
                         <AvatarCircles avatarUrls={lend.tokens.map((token: any) => token.logo)} />
                     </div>
                 </div>
                 <div className="flex items-center justify-between">
-                    <LabelText> Chain </LabelText>
+                    <Label> Chain </Label>
                     <div className="flex items-center gap-[4px]">
                         <BodyText level="body2" weight="medium">{capitalizeText(chain?.name)}</BodyText>
                         <ImageWithDefault src={chain?.logo} alt="optimism" height={16} width={16} className="max-w-[16px] max-h-[16px]" />
@@ -127,43 +116,25 @@ function CustomToolTip(payload: any) {
     )
 }
 
-const CustomActiveShape = (props: any) => {
-    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
-
-    return (
-        <g>
-            <path
-                d={`
-            M ${cx},${cy}
-            L ${cx + outerRadius * Math.cos(-startAngle * Math.PI / 180)},${cy + outerRadius * Math.sin(-startAngle * Math.PI / 180)}
-            A ${outerRadius},${outerRadius} 0 0 1 ${cx + outerRadius * Math.cos(-endAngle * Math.PI / 180)},${cy + outerRadius * Math.sin(-endAngle * Math.PI / 180)}
-            L ${cx},${cy}
-            Z
-          `}
-                fill={fill}
-                fillOpacity={0.8}
-                stroke={fill}
-                strokeWidth={2}
-            />
-        </g>
-    );
-};
-
-export function RadialChartStacked({
+export function UserPositionsByPlatform({
     data,
     isLoading
 }: {
     data: TPortfolio,
     isLoading: boolean,
 }) {
-    const { allChainsData } = useContext(AssetsDataContext);
+    const { allChainsData } = React.useContext(AssetsDataContext);
+
     const PLATFORMS_WITH_POSITIONS = data.platforms.filter(platform => platform.positions.length > 0);
     const openPositionsCount = PLATFORMS_WITH_POSITIONS.reduce((acc, curr) => {
         return acc + curr.positions.length
     }, 0);
-    const totalPlatformsCount = PLATFORMS_WITH_POSITIONS.length;
+    const totalMarketsCount = PLATFORMS_WITH_POSITIONS.length;
+
     const chartData = PLATFORMS_WITH_POSITIONS.map((platform) => {
         const chainDetails = allChainsData.find(chain => Number(chain.chain_id) === Number(platform.chain_id));
+        const MIN_VALUE_REQUIRED = 5;
+        const MIN_VALUE_PADDING = 0.1;
 
         return {
             platform: {
@@ -189,42 +160,47 @@ export function RadialChartStacked({
                     ...platform.positions.filter(position => position.type === "borrow").map(platform => ({ ...platform.token }))
                 ],
             },
+            chartKey: platform.platform_name.split("-")[0].toLowerCase(),
+            chartValue: handleNegativeValue(platform.pnl < MIN_VALUE_REQUIRED ? platform.pnl + MIN_VALUE_PADDING : platform.pnl),
+            fill: `var(--color-${platform.platform_name.split("-")[0].toLowerCase()})`,
         }
     })
+
+    function handleNegativeValue(value: string | number) {
+        if (containsNegativeInteger(value)) {
+            return Number(convertNegativeToPositive(value))
+        }
+        return Number(value)
+    }
+
     const platformDetails = {
         logos: chartData.map(data => data.platform.logo),
         platform_names: chartData.map(data => data.platform.id.split("-").join(" ")),
     }
-    const platformTooltipNames = platformDetails.platform_names.map(name => ({ content: name }));
+
+    const platformTooltipNames = platformDetails.platform_names.map(name => ({ content: capitalizeText(name) }));
 
     return (
-        <Card className="flex flex-col">
-            <CardContent className="flex flex-1 items-center pb-0">
+        <Card className="flex flex-col h-full">
+            <CardContent className="flex-1 p-0">
                 {
-                    isLoading && <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full mt-8 mb-16" />
+                    isLoading && <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full my-8" />
                 }
                 {
                     !isLoading && chartData.length === 0 &&
-                    <div className="flex flex-col items-center justify-center w-full h-[300px] gap-3">
+                    <div className="flex flex-col items-center justify-center w-full h-[200px] lg:h-full gap-3">
                         <ChartPie strokeWidth={1.5} className="w-8 h-8 text-gray-700" />
                         <BodyText level="body1" weight="normal" className="text-gray-700">No positions to display</BodyText>
                     </div>
                 }
-                {
-                    !isLoading && chartData.length > 0 &&
+                {!isLoading && chartData.length > 0 &&
                     <ChartContainer
                         config={chartConfig}
-                        className="mx-auto aspect-square w-full max-w-[250px]"
+                        className="mx-auto aspect-square max-h-[250px]"
                     >
-                        <RadialBarChart
-                            data={chartData}
-                            // endAngle={180}
-                            innerRadius={90}
-                            outerRadius={140}
-                        >
+                        <PieChart>
                             <ChartTooltip
                                 cursor={false}
-                                // content={<ChartTooltipContent />
                                 content={
                                     <ChartTooltipContent
                                         hideIndicator
@@ -233,58 +209,64 @@ export function RadialChartStacked({
                                     />
                                 }
                             />
-                            <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
-                                <Label
+                            <Pie
+                                data={chartData}
+                                dataKey="chartValue"
+                                nameKey="chartKey"
+                                innerRadius={78}
+                                // strokeWidth={30}
+                                stroke="#fff"
+                                cornerRadius={12}
+                                paddingAngle={1}
+                            >
+                                <RechartsLabel
                                     content={({ viewBox }) => {
                                         if (viewBox && "cx" in viewBox && "cy" in viewBox) {
                                             return (
-                                                <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
+                                                <text
+                                                    x={viewBox.cx}
+                                                    y={viewBox.cy}
+                                                    textAnchor="middle"
+                                                    dominantBaseline="middle"
+                                                >
                                                     <tspan
                                                         x={viewBox.cx}
-                                                        y={(viewBox.cy || 0)}
-                                                        className="fill-foreground text-2xl font-bold"
+                                                        y={(viewBox.cy || 0) - 5}
+                                                        className="fill-foreground text-3xl font-bold"
                                                     >
                                                         {openPositionsCount.toLocaleString()}
                                                     </tspan>
                                                     <tspan
                                                         x={viewBox.cx}
-                                                        y={(viewBox.cy || 0) + 20}
-                                                        className="fill-muted-foreground"
+                                                        y={(viewBox.cy || 0) + 24}
+                                                        className="fill-gray-600 font-medium text-[14px] capitalize"
                                                     >
-                                                        Position{openPositionsCount > 1 ? "s" : ""} open
+                                                        Positions open
                                                     </tspan>
                                                 </text>
                                             )
                                         }
                                     }}
                                 />
-                            </PolarRadiusAxis>
-                            {
-                                chartData.map((data, index) => (
-                                    <RadialBar
-                                        key={index}
-                                        dataKey={(obj) => {
-                                            return Number(obj.platform.pnl) || 1
-                                        }}
-                                        stackId="a"
-                                        cornerRadius={16}
-                                        fill={`var(--color-${index + 1})`}
-                                        className="stroke-transparent stroke-2"
-                                    />
-                                ))
-                            }
-                        </RadialBarChart>
+                            </Pie>
+                        </PieChart>
                     </ChartContainer>
                 }
             </CardContent>
-            {
-                !isLoading && chartData.length > 0 &&
+            {!!totalMarketsCount &&
                 <CardFooter className="flex-col gap-2 text-sm">
                     {isLoading && <Skeleton className="h-7 w-full max-w-[200px] rounded-3" />}
-                    {!isLoading &&
-                        <div className="flex items-center gap-2 font-medium leading-none">
-                            {totalPlatformsCount > 0 && <AvatarCircles avatarUrls={platformDetails.logos} avatarDetails={platformTooltipNames} />}
-                            Spread across {totalPlatformsCount} platform{totalPlatformsCount > 1 ? "s" : ""}
+                    {!isLoading && totalMarketsCount > 0 &&
+                        <div className="flex items-center gap-2 font-medium leading-none text-gray-600">
+                            {totalMarketsCount > 0 &&
+                                <AvatarCircles
+                                    avatarUrls={platformDetails.logos}
+                                    avatarDetails={platformTooltipNames}
+                                    moreItemsCount={totalMarketsCount - 6}
+                                    maxItemsToShow={6}
+                                />
+                            }
+                            Spread across {totalMarketsCount} market{totalMarketsCount > 1 ? "s" : ""}
                         </div>
                     }
                 </CardFooter>

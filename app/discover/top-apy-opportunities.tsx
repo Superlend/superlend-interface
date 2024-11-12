@@ -17,6 +17,8 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import useDimensions from '@/hooks/useDimensions'
 import DiscoverFiltersDropdown from '@/components/dropdowns/DiscoverFiltersDropdown';
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
+import { motion } from 'framer-motion'
+import { useDebounce } from '@/hooks/useDebounce';
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[];
@@ -24,6 +26,7 @@ type TTopApyOpportunitiesProps = {
 }
 
 export default function TopApyOpportunities() {
+    const router = useRouter();
     const updateSearchParams = useUpdateSearchParams();
     const searchParams = useSearchParams();
     const positionTypeParam = searchParams.get("position_type") || "lend";
@@ -32,10 +35,9 @@ export default function TopApyOpportunities() {
     const platformIdsParam = searchParams.get('protocol_ids')?.split(',') || [];
     const keywordsParam = searchParams.get("keywords") || "";
     const pageParam = searchParams.get('page');
-    const { width: screenWidth } = useDimensions();
-    const [sorting, setSorting] = useState<SortingState>([
-        { id: 'apy_current', desc: positionTypeParam === "lend" },
-    ]);
+    const sortingParam = searchParams.get('sort')?.split(',') || [];
+    const [keywords, setKeywords] = useState<string>(keywordsParam);
+    const debouncedKeywords = useDebounce(keywords, 300);
     const [pagination, setPagination] = useState<PaginationState>({
         pageIndex: Number(pageParam) || 0,
         pageSize: 10,
@@ -44,8 +46,7 @@ export default function TopApyOpportunities() {
         deposits: true,
         borrows: false,
     });
-    const router = useRouter();
-    const pathname = usePathname();
+    const [isTableLoading, setIsTableLoading] = useState(false);
     const {
         data: opportunitiesData,
         isLoading: isLoadingOpportunitiesData
@@ -55,6 +56,16 @@ export default function TopApyOpportunities() {
         tokens: tokenIdsParam
     });
     const { allChainsData } = useContext<any>(AssetsDataContext);
+
+    // Add this ref at component level
+    const prevParamsRef = useRef(searchParams.toString());
+
+    const [sorting, setSorting] = useState<SortingState>(() => {
+        if (sortingParam.length === 2) {
+            return [{ id: sortingParam[0], desc: sortingParam[1] === 'desc' }];
+        }
+        return [{ id: 'apy_current', desc: positionTypeParam === "lend" }];
+    });
 
     useEffect(() => {
         setColumnVisibility(() => {
@@ -66,24 +77,65 @@ export default function TopApyOpportunities() {
         setSorting([{ id: 'apy_current', desc: positionTypeParam === "lend" }])
     }, [positionTypeParam])
 
-    // useEffect(() => {
-    //     const pageParam = searchParams.get('page');
-    //     if (pageParam) {
-    //         const pageIndex = Math.max(0, parseInt(pageParam) - 1);
-    //         setPagination(prev => ({ ...prev, pageIndex }));
-    //     }
-    // }, []);
+    useEffect(() => {
+        const params = { keywords: !!debouncedKeywords.trim().length ? debouncedKeywords : undefined }
+        updateSearchParams(params)
+    }, [debouncedKeywords])
 
-    // const updatePageInUrl = (newPage: number) => {
-    //     const newParams = new URLSearchParams(searchParams.toString());
-    //     newParams.set("page", newPage.toString());
-    //     router.push(`${pathname}?${newParams.toString()}`, { scroll: false });
-    // };
+    // Update pagination state when URL changes
+    useEffect(() => {
+        const pageParam = searchParams.get('page');
+        if (pageParam !== null) {
+            const pageIndex = Math.max(0, parseInt(pageParam) - 1);
+            setPagination(prev => ({
+                ...prev,
+                pageIndex
+            }));
+        } else {
+            // Reset to first page if no page param
+            setPagination(prev => ({
+                ...prev,
+                pageIndex: 0
+            }));
+        }
+    }, [searchParams]);
 
-    // const handlePaginationChange = () => {
-    //     setPagination(state => ({ ...state, pageIndex: state.pageIndex + 1 }));
-    //     updatePageInUrl(pagination.pageIndex + 1);
-    // };
+    // Add this new effect to reset pagination when other search params change
+    useEffect(() => {
+        // Create a new URLSearchParams object
+        const currentParams = new URLSearchParams(searchParams.toString());
+        const pageParam = currentParams.get('page');
+
+        // Only reset page if filters have changed
+        const hasFilterChanged = (prevParams: string, currentParams: URLSearchParams) => {
+            const filterParams = ['position_type', 'token_ids', 'chain_ids', 'protocol_ids', 'keywords', 'sort'];
+            const prevFilters = new URLSearchParams(prevParams);
+
+            return filterParams.some(param =>
+                prevFilters.get(param) !== currentParams.get(param)
+            );
+        };
+
+        if (hasFilterChanged(prevParamsRef.current, currentParams) && pageParam !== '1') {
+            updateSearchParams({ page: '1' });
+        }
+
+        prevParamsRef.current = searchParams.toString();
+    }, [
+        searchParams.get('position_type'),
+        searchParams.get('token_ids'),
+        searchParams.get('chain_ids'),
+        searchParams.get('protocol_ids'),
+        searchParams.get('keywords'),
+        searchParams.get('sort')
+    ]);
+
+    useEffect(() => {
+        if (sorting.length > 0) {
+            const sortParam = `${sorting[0].id},${sorting[0].desc ? 'desc' : 'asc'}`;
+            updateSearchParams({ sort: sortParam });
+        }
+    }, [sorting]);
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         return {
@@ -95,7 +147,8 @@ export default function TopApyOpportunities() {
             chain_id: item.chain_id,
             chainName: allChainsData.find((chain: any) => Number(chain.chain_id) === Number(item.chain_id))?.name || "",
             protocol_identifier: item.platform.protocol_identifier,
-            platformName: `${item.platform.platform_name}`,
+            platformName: `${item.platform.name}`,
+            platformId: `${item.platform.platform_name}`,
             platformLogo: item.platform.logo,
             apy_current: item.platform.apy.current,
             max_ltv: item.platform.max_ltv,
@@ -108,16 +161,30 @@ export default function TopApyOpportunities() {
     });
 
     const filteredTableDataByPlatformIds = rawTableData.filter((opportunity) => {
-        return platformIdsParam.includes(opportunity.platformName.split("-")[0])
+        return platformIdsParam.includes(opportunity.platformId.split("-")[0])
     });
 
     const tableData = platformIdsParam.length > 0 ? filteredTableDataByPlatformIds : rawTableData;
 
-    function handleRowClick(rowData: any) {
-        if (screenWidth < 768) return;
+    // Calculate total number of pages
+    const totalPages = Math.ceil(tableData.length / 10);
 
+    // Handle pagination changes
+    const handlePaginationChange = useCallback((updatedPagination: PaginationState) => {
+        const newPage = updatedPagination.pageIndex + 1;
+        const currentPage = Number(searchParams.get('page')) || 1;
+
+        // Only update if page actually changes and is within valid range
+        if (newPage !== currentPage && newPage >= 1 && newPage <= totalPages) {
+            updateSearchParams({
+                page: newPage.toString()
+            });
+        }
+    }, [updateSearchParams, searchParams, totalPages]);
+
+    function handleRowClick(rowData: any) {
         const { tokenAddress, protocol_identifier, chain_id } = rowData;
-        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}`
+        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
         router.push(url);
     }
 
@@ -127,13 +194,16 @@ export default function TopApyOpportunities() {
     };
 
     function handleKeywordChange(e: any) {
-        const params = { keywords: !!e.target.value.trim().length ? e.target.value : undefined, page: undefined }
-        updateSearchParams(params)
+        setKeywords(e.target.value)
+        // Trigger table UI loading for 1 second
+        setIsTableLoading(true);
+        setTimeout(() => {
+            setIsTableLoading(false);
+        }, 1000);
     }
 
     function handleClearSearch() {
-        const params = { keywords: undefined, page: undefined }
-        updateSearchParams(params)
+        setKeywords("")
     }
 
     return (
@@ -142,7 +212,7 @@ export default function TopApyOpportunities() {
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                     <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
                         <div className="flex items-center gap-[12px]">
-                            <HeadingText level="h3" weight='semibold'>Top Money Markets</HeadingText>
+                            <HeadingText level="h3" weight='medium' className='text-gray-800'>Top Money Markets</HeadingText>
                             <InfoTooltip content="List of assets from different lending protocols across various chains, offering good APYs" />
                         </div>
                         {/* Filter button for Tablet and below screens */}
@@ -155,7 +225,7 @@ export default function TopApyOpportunities() {
                             <LendBorrowToggle type={positionTypeParam as TPositionType} handleToggle={toggleOpportunityType} />
                         </div>
                         <div className="sm:max-w-[156px] w-full">
-                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={keywordsParam} />
+                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={keywords} />
                         </div>
                     </div>
                 </div>
@@ -165,13 +235,17 @@ export default function TopApyOpportunities() {
                     <DiscoverFiltersDropdown />
                 </div>
             </div>
-            <div className="top-apy-opportunities-content">
-                {!isLoadingOpportunitiesData &&
+            <motion.div
+                className="top-apy-opportunities-content will-change-transform"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+            >
+                {!isLoadingOpportunitiesData && !isTableLoading && (
                     <DataTable
                         columns={columns}
                         data={tableData}
-                        totalRows={tableData.length}
-                        filters={keywordsParam}
+                        filters={keywords}
                         setFilters={handleKeywordChange}
                         handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
@@ -179,12 +253,14 @@ export default function TopApyOpportunities() {
                         sorting={sorting}
                         setSorting={setSorting}
                         pagination={pagination}
-                        setPagination={setPagination}
-                    />}
-                {isLoadingOpportunitiesData && (
+                        setPagination={handlePaginationChange}
+                        totalPages={Math.ceil(tableData.length / 10)}
+                    />
+                )}
+                {(isLoadingOpportunitiesData || isTableLoading) && (
                     <LoadingSectionSkeleton />
                 )}
-            </div>
+            </motion.div>
         </section>
     )
 }

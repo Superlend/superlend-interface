@@ -15,16 +15,16 @@ export function FeedbackBanner() {
         <div className="flex flex-wrap items-center justify-between gap-5">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col">
-              <HeadingText level="h3" className="text-2xl font-bold">Help Us Innovate in DeFi</HeadingText>
+              <HeadingText level="h3" weight='medium' className="text-2xl font-bold text-gray-800">Help Us Innovate in DeFi</HeadingText>
               {/* <BodyText level="body2" className="text-gray-800  max-w-[600px]">
                 Would a cross-chain yield optimizer be valuable to you?
               </BodyText> */}
             </div>
             <div className="content-body flex flex-col gap-1">
-              <BodyText level="body2" className="max-w-[600px]">
+              <BodyText level="body2" weight='normal' className="max-w-[600px] text-gray-600">
                 Did we miss your favorite token or chain?
               </BodyText>
-              <BodyText level="body2" className="max-w-[600px]">
+              <BodyText level="body2" weight='normal' className="max-w-[600px] text-gray-600">
                 What other features would you love to see here?
               </BodyText>
             </div>

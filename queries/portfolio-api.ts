@@ -6,6 +6,7 @@ export async function getPortfolioData({
   chain_id = [],
   platform_id = [],
   position_type,
+  protocol_identifier = [],
 }: TGetPortfolioParams) {
   const params = new URLSearchParams();
 
@@ -22,6 +23,11 @@ export async function getPortfolioData({
   // Add position_type
   if (position_type) {
     params.append("position_type", position_type);
+  }
+
+  // Add protocol_identifier
+  if (protocol_identifier.length > 0) {
+    params.append("protocol_identifier", protocol_identifier.join(","));
   }
 
   return request<TPortfolio>({

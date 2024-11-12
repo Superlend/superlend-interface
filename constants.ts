@@ -4,6 +4,7 @@ import {
   PlatformValue,
   PlatformWebsiteLink,
 } from "./types/platform";
+
 export type TPlatformWebsiteLinks = {
   aave: PlatformWebsiteLink.AAVE;
   compound: PlatformWebsiteLink.COMPOUND;
@@ -152,3 +153,6 @@ export const PLATFORM_OPTIONS = [
   // },
   // { value: PlatformValue.SparkGnosis, label: PlatformDisplayValue.SparkGnosis },
 ];
+
+export const POOL_BASED_PROTOCOLS = ["aaveV3", "compoundV2"];
+export const PAIR_BASED_PROTOCOLS = ["morpho", "fluid"];

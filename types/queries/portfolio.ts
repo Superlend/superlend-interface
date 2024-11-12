@@ -4,6 +4,7 @@ export type TGetPortfolioParams = {
   chain_id?: string[];
   platform_id?: string[];
   position_type?: "lend" | "borrow";
+  protocol_identifier?: string[];
 };
 
 type TPosition = {
@@ -17,6 +18,7 @@ type TPosition = {
     price_usd: number;
   };
   amount: number;
+  initial_amount: number;
   apy: number;
   liquidation_threshold: number;
 };
@@ -24,6 +26,10 @@ type TPosition = {
 type TPlatform = {
   name: string;
   platform_name: string;
+  protocol_identifier: string;
+  protocol_type: string;
+  vaultId: string;
+  morpho_market_id: string;
   logo: string;
   chain_id: number;
   positions: TPosition[];

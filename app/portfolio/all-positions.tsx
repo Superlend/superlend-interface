@@ -5,25 +5,33 @@ import SearchInput from '@/components/inputs/SearchInput';
 import LendBorrowToggle from '@/components/LendBorrowToggle';
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
-import { DataTable } from '@/components/ui/data-table';
-import { HeadingText } from '@/components/ui/typography'
+import { DataTable } from '@/components/ui/all-positions-table';
+import { BodyText, HeadingText } from '@/components/ui/typography'
 import { AssetsDataContext } from '@/context/data-provider';
 import { PositionsContext } from '@/context/positions-provider';
 import { columns, TPositionsTable } from '@/data/table/all-positions';
 import useDimensions from '@/hooks/useDimensions';
 import useGetPortfolioData from '@/hooks/useGetPortfolioData';
+import { calculateScientificNotation } from '@/lib/utils';
 import { TChain, TPositionType } from '@/types';
+import { SortingState } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
 import React, { useContext, useEffect, useState } from 'react'
 import { useAccount } from 'wagmi';
 
-export default function AllPositions() {
-    const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
-    const address = "0xBbde906d77465aBc098E8c9453Eb80f3a5F794e9";
+type TProps = {
+    walletAddress: `0x${string}` | undefined
+}
+export default function AllPositions({
+    walletAddress
+}: TProps) {
     const router = useRouter();
     const { width: screenWidth } = useDimensions();
     const { filters, positionType, setPositionType } = useContext(PositionsContext);
     const [searchKeywords, setSearchKeywords] = useState<string>("");
+    const [sorting, setSorting] = useState<SortingState>([
+        { id: 'apy', desc: positionType === "lend" },
+    ]);
     const [columnVisibility, setColumnVisibility] = useState({
         deposits: true,
         borrows: false,
@@ -33,12 +41,23 @@ export default function AllPositions() {
         isLoading: isLoadingPortfolioData,
         isError: isErrorPortfolioData
     } = useGetPortfolioData({
-        user_address: address,
-        position_type: positionType,
+        user_address: walletAddress,
         chain_id: filters.chain_ids,
-        platform_id: filters.platform_ids,
     });
     const { allChainsData } = useContext(AssetsDataContext);
+
+    useEffect(() => {
+        setColumnVisibility(() => {
+            return {
+                deposits: positionType === "lend",
+                borrows: positionType === "borrow",
+            }
+        })
+    }, [positionType])
+
+    useEffect(() => {
+        setSorting([{ id: 'apy', desc: positionType === "lend" }])
+    }, [positionType])
 
     const POSITIONS = portfolioData?.platforms?.flatMap(platform => {
         return platform.positions.map(position => {
@@ -56,7 +75,7 @@ export default function AllPositions() {
                 }
             }
         })
-    }).flat(portfolioData?.platforms.length);
+    }).flat(portfolioData?.platforms.length).filter(position => position.type === positionType);
 
     const rawTableData: TPositionsTable[] = POSITIONS?.map((item) => {
         return {
@@ -69,25 +88,28 @@ export default function AllPositions() {
             chainName: item.chain.chain_name,
             platform_id: item.platform.platform_name,
             platformName: `${item.platform.platform_name.split("-")[0]}`,
+            protocol_identifier: item.platform.protocol_identifier,
             platformLogo: item.platform.logo,
-            apy: item.platform.net_apy,
-            deposits: `${Number(item.platform.total_liquidity) * Number(item.token.price_usd)}`,
-            borrows: `${Number(item.platform.total_borrow) * Number(item.token.price_usd)}`,
-            earnings: item.platform.pnl,
+            apy: item.apy,
+            deposits: calculateScientificNotation(item.amount.toString(), item.token.price_usd.toString(), "multiply").toFixed(10),
+            borrows: calculateScientificNotation(item.amount.toString(), item.token.price_usd.toString(), "multiply").toFixed(10),
+            earnings: ((item.amount - item.initial_amount) * item.token.price_usd),
         }
     });
 
     const filteredTableData = rawTableData.filter((position) => {
-        return filters.token_ids.includes(position.tokenSymbol)
+        const matchesTokenFilter = filters.token_ids.length === 0 || filters.token_ids.includes(position.tokenSymbol);
+        const matchesPlatformFilter = filters.platform_ids.length === 0 || filters.platform_ids.includes(position.platformName);
+        return matchesTokenFilter && matchesPlatformFilter;
     });
 
-    const tableData = filters.token_ids.length > 0 ? filteredTableData : rawTableData;
+    const tableData = filteredTableData;
 
     function handleRowClick(rowData: any) {
         if (screenWidth < 768) return;
 
-        const { tokenAddress, platform_id, chain_id } = rowData;
-        const url = `/position-management?token=${tokenAddress}&platform_id=${platform_id}&chain_id=${chain_id}`
+        const { tokenAddress, protocol_identifier, chain_id } = rowData;
+        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`
         router.push(url);
     }
 
@@ -107,9 +129,21 @@ export default function AllPositions() {
         <section id='all-positions' className="all-positions-container flex flex-col gap-[24px] px-5">
             <div className="all-positions-header flex items-end lg:items-center justify-between gap-[12px]">
                 <div className="all-positions-header-left w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
-                    <div className="flex items-center gap-[12px]">
-                        <HeadingText level="h3" weight='semibold'>All positions</HeadingText>
-                        <InfoTooltip />
+                    <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
+                        <div className="flex items-center gap-[12px]">
+                            <HeadingText level="h3" weight='medium' className="capitalize text-gray-800">All positions</HeadingText>
+                            <InfoTooltip
+                                content={
+                                    <div className="flex flex-col gap-[4px]">
+                                        <BodyText level='body3'>Track all your lending and borrowing positions in one place.</BodyText>
+                                    </div>
+                                }
+                            />
+                        </div>
+                        {/* Filter button for Tablet and below screens */}
+                        <div className="block lg:hidden">
+                            <AllPositionsFiltersDropdown />
+                        </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="w-full sm:max-w-[150px] lg:max-w-[250px]">
@@ -133,10 +167,12 @@ export default function AllPositions() {
                         data={tableData}
                         filters={searchKeywords}
                         setFilters={setSearchKeywords}
-                        // handleRowClick={handleRowClick}
+                        handleRowClick={handleRowClick}
                         columnVisibility={columnVisibility}
                         setColumnVisibility={setColumnVisibility}
-                        totalRows={tableData.length}
+                        sorting={sorting}
+                        setSorting={setSorting}
+                        noDataMessage={"No positions"}
                     />}
                 {isLoadingPortfolioData && (
                     <LoadingSectionSkeleton />
