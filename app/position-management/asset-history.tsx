@@ -73,10 +73,18 @@ export default function AssetHistory() {
 
     // [UTILS] - Get formatted average value
     function getFormattedAverageValue(value: number, key?: string) {
+        // [UTILS] - Handle N/A values
         if (!value && value === 0 && (key === "depositRateReward" || key === "variableBorrowRateReward")) {
             return "N/A"
         }
-        return value > 1000000 ? "> 1M%" : abbreviateNumber(value) + "%";
+        // [UTILS] - Handle values less than -1M% and greater than 1M%
+        if (value < -1000000) {
+            return "< -1M%"
+        } else if (value > 1000000) {
+            return "> 1M%"
+        }
+        // [UTILS] - Handle values between 0 and 1M%
+        return abbreviateNumber(value) + "%";
     }
 
     // [FOOTER_STATS] - Footer stats
