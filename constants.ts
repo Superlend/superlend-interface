@@ -58,6 +58,10 @@ export const HISTORY_CHART_SELECT_OPTIONS = [
     value: "variableBorrowRate",
   },
   {
+    label: "Variable Borrow APR with Reward",
+    value: "variableBorrowRateReward",
+  },
+  {
     label: "Utilization Rate",
     value: "utilizationRate",
   },

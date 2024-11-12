@@ -177,6 +177,7 @@ export type TPlatformHistoryProcessMap = {
     depositRate: number;
     depositRateReward: number;
     variableBorrowRate: number;
+    variableBorrowRateReward: number;
     ltv: number;
     liquidationThreshold: number;
     stableBorrowRate: number;
@@ -193,6 +194,7 @@ export type TPlatformHistoryStats = {
   depositRateAverage: number;
   depositRateRewardAverage: number;
   variableBorrowRateAverage: number;
+  variableBorrowRateRewardAverage: number;
   utilizationRateAverage: number;
   prediction: {
     depositRatePredict: number;
