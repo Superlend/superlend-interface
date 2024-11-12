@@ -46,6 +46,10 @@ export const HISTORY_CHART_SELECT_OPTIONS = [
     value: "depositRate",
   },
   {
+    label: "Deposit Rate with Reward",
+    value: "depositRateReward",
+  },
+  {
     label: "LTV",
     value: "ltv",
   },

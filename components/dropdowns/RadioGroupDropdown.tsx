@@ -68,6 +68,7 @@ export default function RadioGroupDropdown({
                             <DropdownMenuRadioItem
                                 key={item.value}
                                 value={item}
+                                title={item.label}
                                 className="cursor-pointer hover:bg-gray-200 flex items-center justify-between gap-2"
                                 disabled={disableFilterOptions.includes(item.value)}
                             >
