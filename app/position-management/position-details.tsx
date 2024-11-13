@@ -114,8 +114,8 @@ export default function PositionDetails() {
     const liquidationPercentage = (Number(POSITIONS?.borrowAsset?.tokenDetails[0]?.amount) * 100) / (Number(POSITIONS?.lendAsset?.tokenDetails[0]?.amount) * denominator);
     const liquidationDetails = {
         liquidationPrice: liquidationPrice,
-        assetLogo: POSITIONS?.lendAsset?.tokenDetails[0].logo,
-        assetSymbol: POSITIONS?.lendAsset?.tokenDetails[0].symbol,
+        assetLogo: POSITIONS?.lendAsset?.tokenDetails[0]?.logo,
+        assetSymbol: POSITIONS?.lendAsset?.tokenDetails[0]?.symbol,
         percentage: liquidationPercentage,
         riskFactor: getLiquidationRisk(liquidationPercentage, 50, 80),
     }
