@@ -149,7 +149,7 @@ export default function PageHeader() {
                                         height={28}
                                         className="rounded-full max-w-[28px] max-h-[28px] object-contain"
                                     />
-                                    <HeadingText level='h4' className='uppercase break-words text-gray-800'>{tokenSymbol}</HeadingText>
+                                    <HeadingText level='h4' className='break-words text-gray-800'>{tokenSymbol}</HeadingText>
                                 </div>
                             }
                             {
@@ -163,7 +163,7 @@ export default function PageHeader() {
                                                 height={28}
                                                 className="rounded-full max-w-[28px] max-h-[28px] object-contain"
                                             />
-                                            <HeadingText level='h4' className='uppercase break-words text-gray-800'>{collateralTokenDetails?.symbol}</HeadingText>
+                                            <HeadingText level='h4' className='break-words text-gray-800'>{collateralTokenDetails?.symbol}</HeadingText>
                                         </div>
                                         <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
                                         <div className="flex items-center gap-[8px]">
