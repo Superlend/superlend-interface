@@ -72,7 +72,7 @@ export default function RadioGroupDropdown({
                                 className="cursor-pointer hover:bg-gray-200 flex items-center justify-between gap-2"
                                 disabled={disableFilterOptions.includes(item.value)}
                             >
-                                <span className="block max-w-[150px] truncate">{item.label}</span>
+                                <span className="block max-w-[180px]">{item.label}</span>
                                 {disableFilterOptions.includes(item.value) && <Badge className='border border-gray-500'>N/A</Badge>}
                             </DropdownMenuRadioItem>
                         ))}
