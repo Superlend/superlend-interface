@@ -40,6 +40,12 @@ export const abbreviateNumber = (
     return (value / 1000000).toFixed(fixed) + "M";
   } else if (value >= 1000) {
     return (value / 1000).toFixed(fixed) + "K";
+  } else if (value <= -1000000000) {
+    return (value / 1000000000).toFixed(fixed) + "B";
+  } else if (value <= -1000000) {
+    return (value / 1000000).toFixed(fixed) + "M";
+  } else if (value <= -1000) {
+    return (value / 1000).toFixed(fixed) + "K";
   } else {
     return value.toFixed(fixed).toString();
   }
