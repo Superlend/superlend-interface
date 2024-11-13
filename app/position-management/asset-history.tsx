@@ -7,10 +7,11 @@ import { useSearchParams } from 'next/navigation';
 import { Period, PeriodLongDisplay, PeriodShortDisplay } from '@/types/periodButtons';
 import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData';
 import { HISTORY_CHART_SELECT_OPTIONS } from '@/constants';
-import { abbreviateNumber, extractTimeFromDate } from '@/lib/utils';
+import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive, extractTimeFromDate } from '@/lib/utils';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
+import ImageWithDefault from '@/components/ImageWithDefault';
 
 export default function AssetHistory() {
     const searchParams = useSearchParams();
@@ -73,49 +74,56 @@ export default function AssetHistory() {
 
     // [UTILS] - Get formatted average value
     function getFormattedAverageValue(value: number, key?: string) {
+        let formattedValue = value;
+        const hasNegativeValue = containsNegativeInteger(value);
+        const negativeSymbol = hasNegativeValue ? "-" : "";
         // [UTILS] - Handle N/A values
         if (!value && value === 0 && (key === "depositRateReward" || key === "variableBorrowRateReward")) {
             return "N/A"
         }
+        // [UTILS] - Handle negative values
+        if (hasNegativeValue) {
+            formattedValue = Number(convertNegativeToPositive(value));
+        }
         // [UTILS] - Handle values less than -1M% and greater than 1M%
-        if (value < -1000000) {
+        if (formattedValue < -1000000) {
             return "< -1M%"
-        } else if (value > 1000000) {
+        } else if (formattedValue > 1000000) {
             return "> 1M%"
         }
-        // [UTILS] - Handle values between 0 and 1M%
-        return abbreviateNumber(value) + "%";
+        // [UTILS] - Handle values between -1M% and 1M%
+        return negativeSymbol + abbreviateNumber(formattedValue) + "%";
     }
 
     // [FOOTER_STATS] - Footer stats
     const HISTORY_CHART_FOOTER_STATS = [
         {
             key: "deposit",
-            label: `Avg Deposit (${PeriodShortDisplay[selectedRange]})`,
+            label: `Avg Deposit`,
             value: getFormattedAverageValue(depositRateAverage),
             show: true,
         },
         {
             key: "depositRateReward",
-            label: `Avg Deposit + Reward (${PeriodShortDisplay[selectedRange]})`,
+            label: `Avg Deposit`,
             value: getFormattedAverageValue(depositRateRewardAverage, "depositRateReward"),
             show: !disableCategoryFilters.includes("depositRateReward"),
         },
         {
             key: "borrow",
-            label: `Avg Borrow (${PeriodShortDisplay[selectedRange]})`,
+            label: `Avg Borrow`,
             value: getFormattedAverageValue(borrowRateAverage),
             show: true,
         },
         {
             key: "variableBorrowRateReward",
-            label: `Avg Borrow + Reward (${PeriodShortDisplay[selectedRange]})`,
+            label: `Avg Borrow`,
             value: getFormattedAverageValue(borrowRateRewardAverage, "variableBorrowRateReward"),
             show: !disableCategoryFilters.includes("variableBorrowRateReward"),
         },
         {
             key: "utilization",
-            label: `Avg Utilization (${PeriodShortDisplay[selectedRange]})`,
+            label: `Avg Utilization`,
             value: getFormattedAverageValue(utilizationRateAverage),
             show: true,
         },
@@ -139,31 +147,36 @@ export default function AssetHistory() {
             />
             <div className="py-[36px] px-[30px] md:px-[55px] grid sm:grid-cols-2 md:grid-cols-3 gap-10">
                 {
-                    HISTORY_CHART_FOOTER_STATS.filter((block) => block.show).map((block, blockIndex) => (
-                        <div key={blockIndex} className="block-1 flex flex-col gap-[4px] sm:gap-[8px] md:gap-[12px]">
-                            <InfoTooltip
-                                label={
-                                    <BodyText level='body2' className={`text-gray-600 border-b cursor-help border-dashed border-gray-800 hover:border-transparent`}>
-                                        {block.label}
-                                    </BodyText>
+                    HISTORY_CHART_FOOTER_STATS
+                        .filter((block) => block.show)
+                        .map((block, blockIndex) => (
+                            <div key={blockIndex} className="block-1 flex flex-col gap-[4px] sm:gap-[8px] md:gap-[12px]">
+                                <InfoTooltip
+                                    label={
+                                        <BodyText level='body2' className={`text-gray-600 border-b cursor-help border-dashed border-gray-800 hover:border-transparent flex items-center gap-[4px]`}>
+                                            {block.label} ({PeriodShortDisplay[selectedRange]}) {hasReward(block.key) && <ImageWithDefault src="/icons/sparkles.svg" alt={`${block.label} With Reward`} width={16} height={16} />}
+                                        </BodyText>
+                                    }
+                                    content={
+                                        `Average ${block.label.split(" ").slice(1).join("").toLowerCase()} rate ${hasReward(block.key) ? "with rewards" : ""} for ${PeriodLongDisplay[selectedRange].toLowerCase()}`
+                                    }
+                                />
+                                {!isLoadingPlatformHistory &&
+                                    <HeadingText level='h3' weight='medium' className="text-gray-800">
+                                        {block.value}
+                                    </HeadingText>
                                 }
-                                content={
-                                    `Average ${block.key.toLowerCase()} rate for ${PeriodLongDisplay[selectedRange].toLowerCase()}`
+                                {
+                                    isLoadingPlatformHistory && <Skeleton className='h-[28px] w-[80px] rounded-4' />
                                 }
-                            // hide={blockIndex === 0}
-                            />
-                            {!isLoadingPlatformHistory &&
-                                <HeadingText level='h3' weight='medium' className="text-gray-800">
-                                    {block.value}
-                                </HeadingText>
-                            }
-                            {
-                                isLoadingPlatformHistory && <Skeleton className='h-[28px] w-[80px] rounded-4' />
-                            }
-                        </div>
-                    ))
+                            </div>
+                        ))
                 }
             </div>
         </motion.section>
     )
+}
+
+function hasReward(key: string) {
+    return key === "depositRateReward" || key === "variableBorrowRateReward";
 }
