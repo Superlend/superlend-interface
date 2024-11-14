@@ -1,3 +1,4 @@
+import { WarningMessages } from "@/constants";
 import { Period } from "./periodButtons";
 
 export type TPositionType = "lend" | "borrow";
@@ -137,6 +138,7 @@ export type TPlatformAsset = {
     address: string;
     decimals: number;
     price_usd: number;
+    warnings: any[];
   };
   supply_apy: number;
   variable_borrow_apy: number;

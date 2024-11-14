@@ -15,9 +15,12 @@ import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { TPlatform, TPlatformAsset, TToken } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
-import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants';
+import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks, WarningMessages } from '@/constants';
 import { motion } from 'framer-motion';
 import { getChainDetails, getTokenDetails } from './helper-functions';
+import { TriangleAlert } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import DangerSquare from '@/components/icons/danger-square';
 
 type TTokenDetails = {
     address: string;
@@ -116,142 +119,152 @@ export default function PageHeader() {
 
     const tokensToDisplay = hasPairBasedTokens ? [collateralTokenDetails, loanTokenDetails] : [tokenDetails];
 
+    // const hasWarnings = platformData.assets.filter((asset: TPlatformAsset) => asset?.token?.warnings?.length > 0).length > 0;
+    // const warningMessages = platformData.assets.filter((asset: TPlatformAsset) => asset?.token?.warnings?.length > 0)?.flatMap((asset: TPlatformAsset) => asset.token.warnings);
+
     return (
-        <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
-            <motion.div className="will-change-transform"
-            // initial={{ opacity: 0.7, y: 30 }}
-            // animate={{ opacity: 1, y: 0 }}
-            // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-            >
-                <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
-                    <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
-                </Button>
-            </motion.div>
-            <div className="flex flex-col xl:flex-row items-start justify-between gap-[24px] w-full">
-                <motion.div
-                    className="flex flex-wrap items-center gap-[16px] will-change-transform"
+        <>
+            {/* {hasWarnings && (
+                warningMessages.map((message: any) => (
+                    <AlertWarning description={WarningMessages[message.type as keyof typeof WarningMessages]} />
+                ))
+            )} */}
+            <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
+                <motion.div className="will-change-transform"
                 // initial={{ opacity: 0.7, y: 30 }}
                 // animate={{ opacity: 1, y: 0 }}
                 // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                 >
-                    {/* Loading Skeleton */}
-                    {isLoadingPlatformData && <LoadingSkeleton />}
-                    {/* Token Details */}
-                    {tokenDetails?.symbol && chainDetails?.logo && !isLoadingPlatformData &&
-                        <div className="flex items-center flex-wrap gap-[12px]">
-                            {
-                                !hasPairBasedTokens &&
-                                <div className="flex items-center gap-[8px]">
-                                    <ImageWithDefault
-                                        src={tokenLogo}
-                                        alt={`${tokenName} Token Logo`}
-                                        width={28}
-                                        height={28}
-                                        className="rounded-full max-w-[28px] max-h-[28px] object-contain"
-                                    />
-                                    <HeadingText level='h4' className='break-words text-gray-800'>{tokenSymbol}</HeadingText>
-                                </div>
-                            }
-                            {
-                                hasPairBasedTokens && (
-                                    <>
-                                        <div className="flex items-center gap-[8px]">
-                                            <ImageWithDefault
-                                                src={collateralTokenDetails?.logo}
-                                                alt={`${collateralTokenDetails?.name}`}
-                                                width={28}
-                                                height={28}
-                                                className="rounded-full max-w-[28px] max-h-[28px] object-contain"
-                                            />
-                                            <HeadingText level='h4' className='break-words text-gray-800'>{collateralTokenDetails?.symbol}</HeadingText>
-                                        </div>
-                                        <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
-                                        <div className="flex items-center gap-[8px]">
-                                            <ImageWithDefault
-                                                src={loanTokenDetails?.logo}
-                                                alt={`${loanTokenDetails?.name}`}
-                                                width={28}
-                                                height={28}
-                                                className="rounded-full max-w-[28px] max-h-[28px]"
-                                            />
-                                            <HeadingText level='h4' className='uppercase text-gray-800'>{loanTokenDetails?.symbol}</HeadingText>
-                                        </div>
-                                    </>
-                                )
-                            }
-                        </div>
-                    }
-                    {/* Platform Details */}
-                    <div className="flex items-center gap-[12px]">
-                        {!isLoadingPlatformData && platformLogo &&
-                            <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[400px]'>
-                                <div className="flex items-center gap-1">
-                                    <ImageWithDefault src={chainLogo} alt={`${chainName}`} width={16} height={16} className='object-contain shrink-0 max-w-[16px] max-h-[16px]' />
-                                    <Label weight='medium' className='leading-[0] shrink-0 capitalize'>{chainName.toLowerCase()}</Label>
-                                </div>
-                                <a
-                                    className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
-                                    href={platformWebsiteLink}
-                                    target='_blank'>
-                                    <span className="uppercase text-secondary-500 font-medium">{platformId.split("-")[0]}{" "}{getPlatformVersion(platformId)}</span>
-                                    <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
-                                </a>
-                            </Badge>
+                    <Button className='py-[8px] px-[12px] rounded-3' onClick={() => router.back()}>
+                        <ArrowLeftIcon width={16} height={16} className='stroke-gray-800' />
+                    </Button>
+                </motion.div>
+                <div className="flex flex-col xl:flex-row items-start justify-between gap-[24px] w-full">
+                    <motion.div
+                        className="flex flex-wrap items-center gap-[16px] will-change-transform"
+                    // initial={{ opacity: 0.7, y: 30 }}
+                    // animate={{ opacity: 1, y: 0 }}
+                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                    >
+                        {/* Loading Skeleton */}
+                        {isLoadingPlatformData && <LoadingSkeleton />}
+                        {/* Token Details */}
+                        {tokenDetails?.symbol && chainDetails?.logo && !isLoadingPlatformData &&
+                            <div className="flex items-center flex-wrap gap-[12px]">
+                                {
+                                    !hasPairBasedTokens &&
+                                    <div className="flex items-center gap-[8px]">
+                                        <ImageWithDefault
+                                            src={tokenLogo}
+                                            alt={`${tokenName} Token Logo`}
+                                            width={28}
+                                            height={28}
+                                            className="rounded-full max-w-[28px] max-h-[28px] object-contain"
+                                        />
+                                        <HeadingText level='h4' className='break-words text-gray-800'>{tokenSymbol}</HeadingText>
+                                    </div>
+                                }
+                                {
+                                    hasPairBasedTokens && (
+                                        <>
+                                            <div className="flex items-center gap-[8px]">
+                                                <ImageWithDefault
+                                                    src={collateralTokenDetails?.logo}
+                                                    alt={`${collateralTokenDetails?.name}`}
+                                                    width={28}
+                                                    height={28}
+                                                    className="rounded-full max-w-[28px] max-h-[28px] object-contain"
+                                                />
+                                                <HeadingText level='h4' className='break-words text-gray-800'>{collateralTokenDetails?.symbol}</HeadingText>
+                                            </div>
+                                            <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
+                                            <div className="flex items-center gap-[8px]">
+                                                <ImageWithDefault
+                                                    src={loanTokenDetails?.logo}
+                                                    alt={`${loanTokenDetails?.name}`}
+                                                    width={28}
+                                                    height={28}
+                                                    className="rounded-full max-w-[28px] max-h-[28px]"
+                                                />
+                                                <HeadingText level='h4' className='uppercase text-gray-800'>{loanTokenDetails?.symbol}</HeadingText>
+                                            </div>
+                                        </>
+                                    )
+                                }
+                            </div>
                         }
-                        {/* Info Tooltip */}
-                        <InfoTooltip
-                            size="lg"
-                            content={getAssetTooltipContent({
-                                tokensToDisplay,
-                                chainName,
-                                chainLogo,
-                                platformName,
-                                platformLogo,
-                                hasPairBasedTokens
-                            })}
-                        />
-                    </div>
-                </motion.div>
-                {/* Page Header Stats */}
-                <motion.div className="header-right flex flex-wrap items-center shrink-0 gap-[24px]"
-                // initial={{ opacity: 0.7, y: 30 }}
-                // animate={{ opacity: 1, y: 0 }}
-                // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-                >
-                    {/* Loading Skeleton */}
-                    {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
-                    {/* Supply APY */}
-                    {!!Number(pageHeaderStats?.supply_apy) &&
-                        <div className="flex items-center max-md:justify-between gap-[4px]">
-                            <BodyText level='body1' className='text-gray-700 shrink-0'>
-                                Supply APY
-                            </BodyText>
-                            <Badge variant="green">
-                                <BodyText level='body1' weight='medium'>
-                                    {pageHeaderStats?.supply_apy}%
-                                </BodyText>
-                            </Badge>
+                        {/* Platform Details */}
+                        <div className="flex items-center gap-[12px]">
+                            {!isLoadingPlatformData && platformLogo &&
+                                <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[400px]'>
+                                    <div className="flex items-center gap-1">
+                                        <ImageWithDefault src={chainLogo} alt={`${chainName}`} width={16} height={16} className='object-contain shrink-0 max-w-[16px] max-h-[16px]' />
+                                        <Label weight='medium' className='leading-[0] shrink-0 capitalize'>{chainName.toLowerCase()}</Label>
+                                    </div>
+                                    <a
+                                        className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
+                                        href={platformWebsiteLink}
+                                        target='_blank'>
+                                        <span className="uppercase text-secondary-500 font-medium">{platformId.split("-")[0]}{" "}{getPlatformVersion(platformId)}</span>
+                                        <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
+                                    </a>
+                                </Badge>
+                            }
+                            {/* Info Tooltip */}
+                            <InfoTooltip
+                                size="lg"
+                                content={getAssetTooltipContent({
+                                    tokensToDisplay,
+                                    chainName,
+                                    chainLogo,
+                                    platformName,
+                                    platformLogo,
+                                    hasPairBasedTokens
+                                })}
+                            />
                         </div>
-                    }
-                    {!!Number(pageHeaderStats?.borrow_rate) && !!Number(pageHeaderStats?.supply_apy) &&
-                        <span className="hidden xs:inline-block text-gray">|</span>
-                    }
-                    {/* Borrow Rate */}
-                    {!!Number(pageHeaderStats?.borrow_rate) &&
-                        <div className="flex items-center max-md:justify-between gap-[4px]">
-                            <BodyText level='body1' className='text-gray-700 shrink-0'>
-                                Borrow Rate
-                            </BodyText>
-                            <Badge variant="yellow">
-                                <BodyText level='body1' weight='medium'>
-                                    {pageHeaderStats?.borrow_rate}%
+                    </motion.div>
+                    {/* Page Header Stats */}
+                    <motion.div className="header-right flex flex-wrap items-center shrink-0 gap-[24px]"
+                    // initial={{ opacity: 0.7, y: 30 }}
+                    // animate={{ opacity: 1, y: 0 }}
+                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                    >
+                        {/* Loading Skeleton */}
+                        {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
+                        {/* Supply APY */}
+                        {!!Number(pageHeaderStats?.supply_apy) &&
+                            <div className="flex items-center max-md:justify-between gap-[4px]">
+                                <BodyText level='body1' className='text-gray-700 shrink-0'>
+                                    Supply APY
                                 </BodyText>
-                            </Badge>
-                        </div>
-                    }
-                </motion.div>
-            </div>
-        </section>
+                                <Badge variant="green">
+                                    <BodyText level='body1' weight='medium'>
+                                        {pageHeaderStats?.supply_apy}%
+                                    </BodyText>
+                                </Badge>
+                            </div>
+                        }
+                        {!!Number(pageHeaderStats?.borrow_rate) && !!Number(pageHeaderStats?.supply_apy) &&
+                            <span className="hidden xs:inline-block text-gray">|</span>
+                        }
+                        {/* Borrow Rate */}
+                        {!!Number(pageHeaderStats?.borrow_rate) &&
+                            <div className="flex items-center max-md:justify-between gap-[4px]">
+                                <BodyText level='body1' className='text-gray-700 shrink-0'>
+                                    Borrow Rate
+                                </BodyText>
+                                <Badge variant="yellow">
+                                    <BodyText level='body1' weight='medium'>
+                                        {pageHeaderStats?.borrow_rate}%
+                                    </BodyText>
+                                </Badge>
+                            </div>
+                        }
+                    </motion.div>
+                </div>
+            </section>
+        </>
     )
 }
 
@@ -388,3 +401,21 @@ function LoadingSkeleton() {
         </div>
     )
 }
+
+function AlertWarning({
+    description
+}: {
+    description: string
+}) {
+    return (
+        <Alert variant="destructive">
+            <AlertDescription className='flex items-center justify-center gap-2'>
+                {/* <TriangleAlert strokeWidth={1.75} className='h-4 w-4' /> */}
+                <DangerSquare width={18} height={18} className='stroke-destructive-foreground shrink-0' />
+                <span className="leading-0 font-medium">
+                    {description}
+                </span>
+            </AlertDescription>
+        </Alert>
+    )
+}   

@@ -14,6 +14,7 @@ export function getTokenDetails({
     logo: "",
     decimals: 0,
     price_usd: 0,
+    warnings: [],
   };
   const asset: TPlatformAsset["token"] | undefined = platformData?.assets?.find(
     (asset: TPlatformAsset) =>
@@ -21,10 +22,10 @@ export function getTokenDetails({
   )?.token || fallbackAsset;
 
   return {
-    address: asset?.address,
-    symbol: asset?.symbol,
-    name: asset?.name,
-    logo: asset?.logo,
+    address: asset?.address || "",
+    symbol: asset?.symbol || "",
+    name: asset?.name || "",
+    logo: asset?.logo || "",
   };
 }
 

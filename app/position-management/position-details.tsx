@@ -2,13 +2,11 @@
 
 import ImageWithDefault from '@/components/ImageWithDefault'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { BodyText, HeadingText } from '@/components/ui/typography'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { useSearchParams } from 'next/navigation'
 import React, { useContext, useState } from 'react'
-import { useAccount } from 'wagmi'
 import { motion } from 'framer-motion'
 import { abbreviateNumber, capitalizeText, convertScientificToNormal, getLiquidationRisk, getLowestDisplayValue, getRiskFactor, hasLowestDisplayValuePrefix, isLowestValue } from '@/lib/utils'
 import { AssetsDataContext } from '@/context/data-provider'
@@ -24,13 +22,9 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import {
     Card,
     CardContent,
-    CardDescription,
-    CardFooter,
     CardHeader,
-    CardTitle,
 } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
-import { title } from 'process'
 import { TPlatform } from '@/types'
 
 type TRow = {
@@ -138,15 +132,24 @@ export default function PositionDetails() {
     const liquidationPercentage = (Number(formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amount) * 100) / (Number(formattedUserPositions?.lendAsset?.tokenDetails[0]?.amount) * denominator);
     const liquidationDetails = {
         liquidationPrice: liquidationPrice,
-        assetLogo: formattedUserPositions?.lendAsset?.tokenDetails[0].logo,
-        assetSymbol: formattedUserPositions?.lendAsset?.tokenDetails[0].symbol,
+        assetLogo: formattedUserPositions?.lendAsset?.tokenDetails[0]?.logo,
+        assetSymbol: formattedUserPositions?.lendAsset?.tokenDetails[0]?.symbol,
         percentage: liquidationPercentage,
         riskFactor: getLiquidationRisk(liquidationPercentage, 50, 80),
     }
     const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(platformData?.platform.platform_type);
 
+    // Loading state
+    if (isLoading) {
+        return (
+            <div className="w-full h-[150px] rounded-6 overflow-hidden">
+                <Skeleton className='w-full h-full' />
+            </div>
+        )
+    }
+
     // If user is not connected, show connect wallet button
-    if (!walletAddress) {
+    if (!isLoading && !walletAddress) {
         return (
             <motion.div
                 className='flex flex-col gap-6 items-center justify-center h-full bg-white bg-opacity-75 rounded-6 px-5 py-12'
@@ -161,7 +164,7 @@ export default function PositionDetails() {
     }
 
     // If user is connected, but does not have any positions, show estimated returns
-    if (userPositions.length === 0) {
+    if (!isLoading && userPositions.length === 0) {
         return (
             <EsimatedReturns
                 platformDetails={platformData}

@@ -162,5 +162,20 @@ export const PLATFORM_OPTIONS = [
   // { value: PlatformValue.SparkGnosis, label: PlatformDisplayValue.SparkGnosis },
 ];
 
-export const POOL_BASED_PROTOCOLS = ["aaveV3", "compoundV2"];
-export const PAIR_BASED_PROTOCOLS = ["morpho", "fluid"];
+export const POOL_BASED_PROTOCOLS = ["aaveV3", "compoundV2"]; // Extracted values from the platform_type field in the backend
+export const PAIR_BASED_PROTOCOLS = ["morpho", "fluid"]; // Extracted values from the platform_type field in the backend
+
+export enum WarningMessages {
+  hardcoded_oracle = "Using a fixed oracle, limits accurate pricing.",
+  low_liquidity = "Low liquidity, may affect borrowing costs.",
+  unrecognized_lender = "Lender unknown, check for risks.",
+  not_whitelisted = "Asset not approved, use cautiously.",
+  unrecognized_oracle = "Oracle unverified, pricing may be inaccurate.",
+  unrecognized_collateral_asset = "Collateral unrecognized, review asset safety.",
+  unrecognized_loan_asset = "Loan asset unknown, check details.",
+  incompatible_oracle_feeds = "Oracle feeds conflict, may affect rates.",
+  bad_debt_unrealized = "Potential bad debt, monitor closely.",
+  incorrect_loan_exchange_rate = "Loan rate error, verify terms.",
+  incorrect_collateral_exchange_rate = "Collateral rate error, double-check values.",
+  unrecognized_oracle_feed = "Oracle feed unknown, pricing reliability in question.",
+}
