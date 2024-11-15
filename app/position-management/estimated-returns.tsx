@@ -131,9 +131,30 @@ export function EstimatedReturns({
             <Card>
                 <CardHeader className='pb-[12px]'>
                     <div className="flex flex-col md:flex-row justify-between md:items-center gap-[12px]">
-                        <BodyText level='body2' weight='normal' className="text-gray-600">
-                            Estimate returns by using slider below
-                        </BodyText>
+                        <div className="flex items-center gap-[8px]">
+                            <BodyText level='body2' weight='normal' className="text-gray-600">
+                                Estimate returns by using slider below
+                            </BodyText>
+                            <InfoTooltip
+                                className="max-w-full"
+                                content={
+                                    <div className="flex flex-col gap-[12px]">
+                                        <HeadingText level='h5' weight='medium' className="text-gray-800 border-b-[2px] border-gray-200 pb-[12px]">
+                                            Estimation Breakdown
+                                        </HeadingText>
+                                        <BodyText level='body2' weight='normal' className="text-gray-600">
+                                            Interest Gain = (Supplied Amount X Supply APY X Duration) / 1200
+                                        </BodyText>
+                                        <BodyText level='body2' weight='normal' className="text-gray-600">
+                                            Interest Loss = (Borrowed Amount X Borrow APY X Duration) / 1200
+                                        </BodyText>
+                                        <BodyText level='body2' weight='medium' className="text-gray-600 border-t-[2px] border-gray-200 pt-[12px]">
+                                            Estimated returns = Interest Gain - Interest Loss
+                                        </BodyText>
+                                    </div>
+                                }
+                            />
+                        </div>
                         <div className="flex items-center gap-[8px]">
                             {/* Title */}
                             <BodyText level='body2' weight='normal' className="text-gray-600">
