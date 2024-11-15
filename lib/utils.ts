@@ -324,6 +324,7 @@ export function getPlatformWebsiteLink({
   chainId,
   platformId,
   vaultId,
+  isFluidVault,
   morpho_market_id,
   network_name,
 }: {
@@ -332,6 +333,7 @@ export function getPlatformWebsiteLink({
   chainName?: string;
   chainId?: string;
   vaultId?: string;
+  isFluidVault?: boolean;
   morpho_market_id?: string;
   network_name?: string;
 }) {
@@ -349,7 +351,9 @@ export function getPlatformWebsiteLink({
       chainName || ""
     )}_v3`,
     compound: ``,
-    fluid: `/stats/${chainId}/vaults#${vaultId}`,
+    fluid: isFluidVault
+      ? `/stats/${chainId}/vaults#${vaultId}`
+      : `/lending/${chainId}`,
     morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
   };
 

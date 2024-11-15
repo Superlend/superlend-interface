@@ -157,6 +157,7 @@ export type TPlatform = {
     logo: string;
     chain_id: number;
     vaultId: string;
+    isVault: boolean;
     morpho_market_id: string;
   };
   assets: TPlatformAsset[];

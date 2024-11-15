@@ -52,3 +52,10 @@ export enum PlatformLogo {
   FLUID = "https://superlend-assets.s3.ap-south-1.amazonaws.com/fluid_logo.png",
   MORPHO = "https://superlend-assets.s3.ap-south-1.amazonaws.com/morpho-logo.svg",
 }
+
+export enum PlatformType {
+  AAVE = "aaveV3",
+  COMPOUND = "compoundV2",
+  FLUID = "fluid",
+  MORPHO = "morpho",
+}

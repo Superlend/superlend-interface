@@ -15,12 +15,13 @@ import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { TPlatform, TPlatformAsset, TToken } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
-import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks, WarningMessages } from '@/constants';
+import { chainNamesBasedOnAaveMarkets, PAIR_BASED_PROTOCOLS, platformWebsiteLinks, POOL_BASED_PROTOCOLS, WarningMessages } from '@/constants';
 import { motion } from 'framer-motion';
 import { getChainDetails, getTokenDetails } from './helper-functions';
 import { TriangleAlert } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import DangerSquare from '@/components/icons/danger-square';
+import { PlatformType } from '@/types/platform';
 
 type TTokenDetails = {
     address: string;
@@ -82,24 +83,28 @@ export default function PageHeader() {
     const chainName = chainDetails?.name || "";
     const chainLogo = chainDetails?.logo || "";
     const platformName = platformData.platform.name;
+    const platformType = platformData.platform.platform_type;
     const platformId = platformData.platform.platform_name;
     const platformLogo = platformData?.platform.logo;
     const vaultId = platformData?.platform?.vaultId;
     const morpho_market_id = platformData?.platform?.morpho_market_id;
     const network_name = chainName;
+    const isFluidVault = platformData?.platform?.platform_type === PlatformType.FLUID && platformData?.platform?.isVault;
     const platformWebsiteLink = getPlatformWebsiteLink({
         platformId,
         chainName,
         tokenAddress: tokenDetails?.address,
         chainId: chain_id,
         vaultId,
+        isFluidVault,
         morpho_market_id,
         network_name,
     });
 
-    const platformNamesWithLoanTokens = ["morpho", "fluid"];
-    const checkForPairBasedTokens = (platformNames: string[], platformName: string) => platformNames.map(name => name.toLowerCase()).includes(platformName.toLowerCase());
-    const hasPairBasedTokens = checkForPairBasedTokens(platformNamesWithLoanTokens, platformName.split(" ")[0]);
+    const checkForPairBasedTokens = (platformTypes: string[], platformType: string) => platformTypes.map(type => type.toLowerCase()).includes(platformType.toLowerCase());
+    const hasPoolBasedTokens = checkForPairBasedTokens(POOL_BASED_PROTOCOLS, platformType);
+    const hasPairBasedTokens = checkForPairBasedTokens(PAIR_BASED_PROTOCOLS, platformType);
+    const isFluidPlatform = platformData?.platform?.platform_type === PlatformType.FLUID;
 
     // If has Collateral Token, then get the Collateral token details
     const collateralTokenSymbol = platformName.split(" ")[1]?.split("/")[0];
@@ -117,10 +122,13 @@ export default function PageHeader() {
     }
     const loanTokenDetails = getLoanTokenDetails(loanTokenSymbol);
 
-    const tokensToDisplay = hasPairBasedTokens ? [collateralTokenDetails, loanTokenDetails] : [tokenDetails];
-
     const hasWarnings = platformData.assets.filter((asset: TPlatformAsset) => asset?.token?.warnings?.length > 0).length > 0;
     const warningMessages = platformData.assets.filter((asset: TPlatformAsset) => asset?.token?.warnings?.length > 0)?.flatMap((asset: TPlatformAsset) => asset.token.warnings);
+
+    const isDisplayOneToken = hasPoolBasedTokens || (isFluidPlatform && !isFluidVault);
+    const isDisplayTwoTokens = !(hasPoolBasedTokens || (isFluidPlatform && !isFluidVault));
+
+    const tokensToDisplayOnTooltip = isDisplayOneToken ? [tokenDetails] : [collateralTokenDetails, loanTokenDetails];
 
     return (
         <>
@@ -153,9 +161,10 @@ export default function PageHeader() {
                         {/* Token Details */}
                         {tokenDetails?.symbol && chainDetails?.logo && !isLoadingPlatformData &&
                             <div className="flex items-center flex-wrap gap-[12px]">
+                                {/* Pool Based Tokens and Fluid Lend Token */}
                                 {
-                                    !hasPairBasedTokens &&
-                                    <div className="flex items-center gap-[8px]">
+                                    isDisplayOneToken &&
+                                    <div className="one-token flex items-center gap-[8px]">
                                         <ImageWithDefault
                                             src={tokenLogo}
                                             alt={`${tokenName} Token Logo`}
@@ -166,10 +175,11 @@ export default function PageHeader() {
                                         <HeadingText level='h4' className='break-words text-gray-800'>{tokenSymbol}</HeadingText>
                                     </div>
                                 }
+                                {/* Pair Based Tokens and Fluid Vault Token */}
                                 {
-                                    hasPairBasedTokens && (
+                                    isDisplayTwoTokens && (
                                         <>
-                                            <div className="flex items-center gap-[8px]">
+                                            <div className="two-tokens collateral-token flex items-center gap-[8px]">
                                                 <ImageWithDefault
                                                     src={collateralTokenDetails?.logo}
                                                     alt={`${collateralTokenDetails?.name}`}
@@ -180,7 +190,7 @@ export default function PageHeader() {
                                                 <HeadingText level='h4' className='break-words text-gray-800'>{collateralTokenDetails?.symbol}</HeadingText>
                                             </div>
                                             <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
-                                            <div className="flex items-center gap-[8px]">
+                                            <div className="two-tokens loan-token flex items-center gap-[8px]">
                                                 <ImageWithDefault
                                                     src={loanTokenDetails?.logo}
                                                     alt={`${loanTokenDetails?.name}`}
@@ -216,7 +226,7 @@ export default function PageHeader() {
                             <InfoTooltip
                                 size="lg"
                                 content={getAssetTooltipContent({
-                                    tokensToDisplay,
+                                    tokensToDisplayOnTooltip,
                                     chainName,
                                     chainLogo,
                                     platformName,
@@ -289,14 +299,14 @@ function getPageHeaderStats({
 }
 
 function getAssetTooltipContent({
-    tokensToDisplay,
+    tokensToDisplayOnTooltip,
     chainName,
     chainLogo,
     platformLogo,
     platformName,
     hasPairBasedTokens
 }: {
-    tokensToDisplay: TPlatformAsset["token"][];
+    tokensToDisplayOnTooltip: TPlatformAsset["token"][];
     chainName: string;
     chainLogo: string;
     platformLogo: string;
@@ -304,7 +314,7 @@ function getAssetTooltipContent({
     hasPairBasedTokens: boolean;
 }) {
     const TooltipData = [
-        ...tokensToDisplay.map((token: TPlatformAsset["token"], index: number) => {
+        ...tokensToDisplayOnTooltip.map((token: TPlatformAsset["token"], index: number) => {
             const labels = ["Token", "Collateral Token", "Loan Token"];
 
             return ({
