@@ -148,7 +148,7 @@ export function EstimatedReturns({
                     </div>
                 </CardHeader>
                 <CardContent className='bg-white rounded-5 px-[32px] py-[28px]'>
-                    <div className="flex flex-col gap-[16px]">
+                    <div className="flex flex-col gap-[36px]">
                         {
                             rows.map(row => (
                                 <div key={row.id} className="flex flex-col gap-[16px]">
