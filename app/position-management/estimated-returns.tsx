@@ -124,7 +124,7 @@ export function EstimatedReturns({
         >
             <Card>
                 <CardHeader className='pb-[12px]'>
-                    <div className="flex justify-between items-center gap-[12px]">
+                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-[12px]">
                         <BodyText level='body2' weight='normal' className="text-gray-600">
                             Estimate returns by using slider below
                         </BodyText>
@@ -138,7 +138,7 @@ export function EstimatedReturns({
                                 label={
                                     <HeadingText level='h4' weight='medium' className="text-gray-800">
                                         <TooltipText>
-                                            ${abbreviateNumber(estimatedEarnings)}
+                                            {abbreviateNumber(estimatedEarnings)}
                                         </TooltipText>
                                     </HeadingText>
                                 }
@@ -152,9 +152,9 @@ export function EstimatedReturns({
                         {
                             rows.map(row => (
                                 <div key={row.id} className="flex flex-col gap-[16px]">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex items-end md:items-center justify-between">
                                         {/* Title */}
-                                        <div className="flex items-center gap-[8px]">
+                                        <div className="flex flex-col md:flex-row md:items-center gap-[8px]">
                                             <BodyText level='body2' weight='normal' className="capitalize text-gray-600">
                                                 {row.title} -
                                             </BodyText>
