@@ -1,4 +1,7 @@
-import { getLowestDisplayValue, hasLowestDisplayValuePrefix } from "@/lib/utils";
+import {
+  getLowestDisplayValue,
+  hasLowestDisplayValuePrefix,
+} from "@/lib/utils";
 import { TPlatform, TPlatformAsset, TChain } from "@/types";
 
 export function getTokenDetails({
@@ -17,10 +20,11 @@ export function getTokenDetails({
     price_usd: 0,
     warnings: [],
   };
-  const asset: TPlatformAsset["token"] | undefined = platformData?.assets?.find(
-    (asset: TPlatformAsset) =>
-      asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
-  )?.token || fallbackAsset;
+  const asset: TPlatformAsset["token"] | undefined =
+    platformData?.assets?.find(
+      (asset: TPlatformAsset) =>
+        asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
+    )?.token || fallbackAsset;
 
   return {
     address: asset?.address || "",
@@ -42,52 +46,45 @@ export function getChainDetails({
   );
 }
 
-export function getStatDisplayValue(value: string | number, hasPrefix: boolean = true) {
-  return `${hasPrefix ? hasLowestDisplayValuePrefix(Number(value)) : ""}${getLowestDisplayValue(Number(value))}`;
+export function getStatDisplayValue(
+  value: string | number,
+  hasPrefix: boolean = true
+) {
+  return `${
+    hasPrefix ? hasLowestDisplayValuePrefix(Number(value)) : ""
+  }${getLowestDisplayValue(Number(value))}`;
 }
 
 // Function to calculate estimated earnings
 /**
-* @param lendCollateral - Amount of collateral supplied
-* @param borrowing - Amount of borrowing
-* @param duration - Duration of investment
-* @returns - Estimated earnings
-*/
+ * @param supplyAPY - Supply APY from API
+ * @param borrowAPY - Borrow APY from API
+ * @param amountSuppliedInUsd - Amount supplied in USD from user
+ * @param amountBorrowedInUsd - Amount borrowed in USD from user
+ * @param duration - Duration in months from user
+ * @returns - Estimated earnings
+ */
 
-/** Calculation logic - 
-Supply APY: 
-𝑅𝑠 (as a decimal, e.g., 0.05 for 5%)
-
-Borrow APY: 
-𝑅𝑏 (as a decimal, e.g., 0.04 for 4%)
-
-Amount supplied: 𝐴𝑠
-Amount borrowed: 𝐴𝑏
-
-supply token price: Price(S)
-borrow token price: Price(B)
-
-Duration of investment: 𝑇
-T (in years; for shorter periods, express as a fraction, e.g., 0.5 for 6 months)
-
-Net Returns = T×(As × Rs x Price(S) ​− Ab ​× Rb x Price(B))
-*/
+/**
+ * Calculation logic:
+ * InterestGain = (Supply amount in USD * Supply apy * duration in months)/1200
+ * InterestLoss = (Borrow amount in USD * Borrow apy * duration in months)/1200
+ * Net estimated earnings = InterestGain - InterestLoss
+ */
 export function getEstimatedEarnings({
   supplyAPY,
   borrowAPY,
-  amountSupplied,
-  amountBorrowed,
-  supplyTokenPrice,
-  borrowTokenPrice,
+  amountSuppliedInUsd,
+  amountBorrowedInUsd,
   duration,
 }: {
   supplyAPY: number;
   borrowAPY: number;
-  amountSupplied: number;
-  amountBorrowed: number;
-  supplyTokenPrice: number;
-  borrowTokenPrice: number;
-  duration: number;
+  amountSuppliedInUsd: number;
+  amountBorrowedInUsd: number;
+  duration: number; // In months
 }) {
-  return duration * (amountSupplied * supplyAPY * supplyTokenPrice - amountBorrowed * borrowAPY * borrowTokenPrice);
+  const interestGain = (amountSuppliedInUsd * supplyAPY * duration) / 1200;
+  const interestLoss = (amountBorrowedInUsd * borrowAPY * duration) / 1200;
+  return interestGain - interestLoss;
 }

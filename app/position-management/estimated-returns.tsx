@@ -13,6 +13,7 @@ import ImageWithDefault from "@/components/ImageWithDefault";
 import { motion } from "framer-motion";
 import TooltipText from "@/components/tooltips/TooltipText";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
+import { useSearchParams } from "next/navigation";
 
 type TRow = {
     id: number;
@@ -25,38 +26,45 @@ type TRow = {
     step: number;
 }
 
+const STABLE_TOKEN_SYMBOLS = ["wBTC", "wETH", "USDC", "USDT"];
+
 export function EstimatedReturns({
     platformDetails
 }: {
     platformDetails: TPlatform;
 }) {
+    const searchParams = useSearchParams();
+    const tokenAddress = searchParams.get("token") || "";
+    const positionType = searchParams.get("position_type") || "lend";
     const [selectedValue, setSelectedValue] = useState({
         lend: 0,
         borrow: 0,
-        duration: 0,
+        duration: 1,
     });
+    let lendAssetDetails, borrowAssetDetails;
 
-    const lendAssetDetails = platformDetails?.assets.filter(asset => !asset.borrow_enabled)[0];
-    const borrowAssetDetails = platformDetails?.assets.filter(asset => asset.borrow_enabled)[0];
+    /*
+    1. If platform_type is aaveV3, then get the lend asset details from the token address
+    2. If platform_type is other than aaveV3, then get the lend asset details from the platform data
+    */
+    if (platformDetails?.platform.platform_type === "aaveV3") {
+        if (positionType === "lend") {
+            lendAssetDetails = platformDetails?.assets.find(asset => asset.token.address === tokenAddress);
+            borrowAssetDetails = platformDetails?.assets.filter(asset => asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0];
+        } else {
+            lendAssetDetails = platformDetails?.assets.filter(asset => !asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0];
+            borrowAssetDetails = platformDetails?.assets.find(asset => asset.token.address === tokenAddress);
+        }
+    } else {
+        lendAssetDetails = platformDetails?.assets.filter(asset => !asset.borrow_enabled)[0];
+        borrowAssetDetails = platformDetails?.assets.filter(asset => asset.borrow_enabled)[0];
+    }
 
-    // console.log("lendAssetDetails", platformDetails?.assets.filter(asset => !asset.borrow_enabled));
-    // console.log("borrowAssetDetails", platformDetails?.assets.filter(asset => asset.borrow_enabled));
-
-    const supplyAPY = (lendAssetDetails?.supply_apy / 100) || 0;
-    const borrowAPY = (borrowAssetDetails?.variable_borrow_apy / 100) || 0;
-    const amountSupplied = selectedValue.lend || 0;
-    const amountBorrowed = selectedValue.borrow || 0;
-    const supplyTokenPrice = supplyAPY * lendAssetDetails?.token?.price_usd || 0;
-    const borrowTokenPrice = borrowAPY * borrowAssetDetails?.token?.price_usd || 0;
-    const duration = selectedValue.duration || 0;
-
-    // console.log("supplyAPY", supplyAPY);
-    // console.log("borrowAPY", borrowAPY);
-    // console.log("amountSupplied", amountSupplied);
-    // console.log("amountBorrowed", amountBorrowed);
-    // console.log("supplyTokenPrice", supplyTokenPrice);
-    // console.log("borrowTokenPrice", borrowTokenPrice);
-    // console.log("duration", duration);
+    const supplyAPY = (lendAssetDetails?.supply_apy) || 0;
+    const borrowAPY = (borrowAssetDetails?.variable_borrow_apy) || 0;
+    const amountSuppliedInUsd = selectedValue?.lend || 0;
+    const amountBorrowedInUsd = selectedValue?.borrow || 0;
+    const duration = selectedValue?.duration || 0;
 
     const handleSelectedValueChange = (value: number, type: "lend" | "borrow" | "duration") => {
         setSelectedValue(prev => ({ ...prev, [type]: value }));
@@ -68,39 +76,37 @@ export function EstimatedReturns({
             key: "lend",
             title: "lend collateral",
             logo: lendAssetDetails?.token.logo,
-            selectedLabel: lendAssetDetails?.token.symbol,
+            selectedLabel: lendAssetDetails?.token.symbol || "",
             selectedValue: selectedValue.lend,
-            totalValue: 1000000,
-            step: 10000,
+            totalValue: 10000,
+            step: 500,
         },
         {
             id: 2,
             key: "borrow",
             title: "borrowing",
             logo: borrowAssetDetails?.token.logo,
-            selectedLabel: borrowAssetDetails?.token.symbol,
+            selectedLabel: borrowAssetDetails?.token.symbol || "",
             selectedValue: selectedValue.borrow,
-            totalValue: 1000000,
-            step: 10000,
+            totalValue: 10000,
+            step: 500,
         },
         {
             id: 3,
             key: "duration",
             title: "Duration",
-            selectedLabel: "years",
+            selectedLabel: selectedValue.duration > 1 ? "Months" : "Month",
             selectedValue: selectedValue.duration,
-            totalValue: 5,
-            step: 0.5,
+            totalValue: 24,
+            step: 1,
         }
     ];
 
     const estimatedEarnings = getEstimatedEarnings({
         supplyAPY,
         borrowAPY,
-        amountSupplied,
-        amountBorrowed,
-        supplyTokenPrice,
-        borrowTokenPrice,
+        amountSuppliedInUsd,
+        amountBorrowedInUsd,
         duration,
     });
 
@@ -131,7 +137,7 @@ export function EstimatedReturns({
                         <div className="flex items-center gap-[8px]">
                             {/* Title */}
                             <BodyText level='body2' weight='normal' className="text-gray-600">
-                                Your earnings
+                                Estimated earnings
                             </BodyText>
                             {/* Info tooltip for earnings */}
                             <InfoTooltip
@@ -160,12 +166,19 @@ export function EstimatedReturns({
                                             </BodyText>
                                             {/* Selected value */}
                                             <div className="flex items-center gap-[6px]">
-                                                {row.logo && <ImageWithDefault src={row.logo} alt={row.selectedLabel} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />}
                                                 {
                                                     !isAssetNotAvailable(row) &&
-                                                    <HeadingText level='h4' weight='medium' className="text-gray-800">
-                                                        {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.selectedValue, row.key === "duration" ? 1 : 0)} {row.selectedLabel}
-                                                    </HeadingText>
+                                                    <>
+                                                        <HeadingText level='h4' weight='medium' className="text-gray-800">
+                                                            {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.selectedValue, row.key === "duration" ? 0 : 1)}
+                                                        </HeadingText>
+                                                        <div className="flex items-center gap-[6px]">
+                                                            {row.logo && <ImageWithDefault src={row.logo} alt={row.selectedLabel} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />}
+                                                            <HeadingText level='h4' weight='medium' className="text-gray-800">
+                                                                {row.selectedLabel}
+                                                            </HeadingText>
+                                                        </div>
+                                                    </>
                                                 }
                                                 {
                                                     isAssetNotAvailable(row) &&
@@ -179,7 +192,7 @@ export function EstimatedReturns({
                                         {
                                             !isAssetNotAvailable(row) &&
                                             <BodyText level='body1' weight='normal' className="text-gray-600">
-                                                {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.totalValue, 0)}{getDisplayedValueSufix(row.key)}
+                                                {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.key === "duration" ? row.totalValue / 12 : row.totalValue, 0)}{getDisplayedValueSufix(row.key)}
                                             </BodyText>
                                         }
                                         {

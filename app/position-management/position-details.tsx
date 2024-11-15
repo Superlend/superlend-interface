@@ -132,7 +132,7 @@ export default function PositionDetails() {
     // Loading state
     if (isLoading) {
         return (
-            <div className="w-full h-[200px] rounded-6 overflow-hidden">
+            <div className="w-full h-[340px] rounded-6 overflow-hidden">
                 <Skeleton className='w-full h-full' />
             </div>
         )
