@@ -8,7 +8,7 @@ import {
 import { Slider } from "@/components/ui/slider"
 import { TPlatform } from '@/types'
 import { BodyText, HeadingText } from "@/components/ui/typography";
-import { abbreviateNumber } from "@/lib/utils";
+import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import ImageWithDefault from "@/components/ImageWithDefault";
 import { motion } from "framer-motion";
 import TooltipText from "@/components/tooltips/TooltipText";
@@ -138,7 +138,7 @@ export function EstimatedReturns({
                                 label={
                                     <HeadingText level='h4' weight='medium' className="text-gray-800">
                                         <TooltipText>
-                                            {abbreviateNumber(estimatedEarnings)}
+                                            {containsNegativeInteger(estimatedEarnings) ? "-" : ""}${abbreviateNumber(Number(convertNegativeToPositive(estimatedEarnings)))}
                                         </TooltipText>
                                     </HeadingText>
                                 }
