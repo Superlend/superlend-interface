@@ -119,16 +119,18 @@ export default function PageHeader() {
 
     const tokensToDisplay = hasPairBasedTokens ? [collateralTokenDetails, loanTokenDetails] : [tokenDetails];
 
-    // const hasWarnings = platformData.assets.filter((asset: TPlatformAsset) => asset?.token?.warnings?.length > 0).length > 0;
-    // const warningMessages = platformData.assets.filter((asset: TPlatformAsset) => asset?.token?.warnings?.length > 0)?.flatMap((asset: TPlatformAsset) => asset.token.warnings);
+    const hasWarnings = platformData.assets.filter((asset: TPlatformAsset) => asset?.token?.warnings?.length > 0).length > 0;
+    const warningMessages = platformData.assets.filter((asset: TPlatformAsset) => asset?.token?.warnings?.length > 0)?.flatMap((asset: TPlatformAsset) => asset.token.warnings);
 
     return (
         <>
-            {/* {hasWarnings && (
-                warningMessages.map((message: any) => (
-                    <AlertWarning description={WarningMessages[message.type as keyof typeof WarningMessages]} />
-                ))
-            )} */}
+            {hasWarnings && (
+                <div className="flex flex-col gap-4">
+                    {warningMessages.map((message: any) => (
+                        <AlertWarning description={WarningMessages[message.type as keyof typeof WarningMessages]} />
+                    ))}
+                </div>
+            )}
             <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
                 <motion.div className="will-change-transform"
                 // initial={{ opacity: 0.7, y: 30 }}
