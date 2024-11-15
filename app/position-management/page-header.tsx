@@ -134,8 +134,8 @@ export default function PageHeader() {
         <>
             {hasWarnings && (
                 <div className="flex flex-col gap-4">
-                    {warningMessages.map((message: any) => (
-                        <AlertWarning description={WarningMessages[message.type as keyof typeof WarningMessages]} />
+                    {warningMessages.map((message: any, index: number) => (
+                        <AlertWarning key={index} description={WarningMessages[message.type as keyof typeof WarningMessages]} />
                     ))}
                 </div>
             )}
