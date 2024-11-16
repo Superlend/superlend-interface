@@ -8,7 +8,7 @@ import {
 import { Slider } from "@/components/ui/slider"
 import { TPlatform } from '@/types'
 import { BodyText, HeadingText } from "@/components/ui/typography";
-import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
+import { abbreviateNumber, cn, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import ImageWithDefault from "@/components/ImageWithDefault";
 import { motion } from "framer-motion";
 import TooltipText from "@/components/tooltips/TooltipText";
@@ -255,7 +255,14 @@ export function EstimatedReturns({
                                             </BodyText>
                                         }
                                     </div>
-                                    <Slider disabled={isAssetNotAvailable(row)} defaultValue={[row.selectedValue]} max={row.totalValue} step={row.step} onValueChange={(value) => handleSelectedValueChange(value[0], row.key)} />
+                                    <Slider
+                                        disabled={isAssetNotAvailable(row)}
+                                        defaultValue={[row.selectedValue]}
+                                        max={row.totalValue}
+                                        step={row.step}
+                                        onValueChange={(value) => handleSelectedValueChange(value[0], row.key)}
+                                        className={cn("group", isAssetNotAvailable(row) && "disabled")}
+                                    />
                                 </div>
                             ))
                         }
