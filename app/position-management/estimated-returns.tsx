@@ -303,7 +303,10 @@ function StableTokensDropdown({
                         <DropdownMenuItem
                             key={asset?.token?.address}
                             onClick={() => setSelectedStableTokenDetails(asset)}
-                            className="flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4"
+                            className={
+                                cn("flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4",
+                                    selectedStableTokenDetails?.token?.address === asset?.token?.address && "bg-gray-400")
+                            }
                         >
                             <ImageWithDefault src={asset?.token?.logo || ""} alt={asset?.token?.symbol || ""} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
                             <BodyText level='body2' weight='medium' className="text-gray-800">{asset?.token?.symbol || ""}</BodyText>
