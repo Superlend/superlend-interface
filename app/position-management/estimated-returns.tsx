@@ -63,18 +63,24 @@ export function EstimatedReturns({
     */
     if (isAaveV3) {
         if (positionType === "lend") {
+            // Get lend asset details
             lendAssetDetails = platformDetails?.assets.find(asset => asset.token.address === tokenAddress);
+            // Get the first borrow asset details
             borrowAssetDetails = platformDetails?.assets.filter(asset => asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0];
-
+            // Get stable borrow assets list
             stableBorrowAssetsList = platformDetails?.assets.filter(asset => asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol));
         } else {
+            // Get stable lend assets list
             stableLendAssetsList = platformDetails?.assets.filter(asset => !asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol));
-
+            // Get the first lend asset details
             lendAssetDetails = platformDetails?.assets.filter(asset => !asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0];
+            // Get borrow asset details
             borrowAssetDetails = platformDetails?.assets.find(asset => asset.token.address === tokenAddress);
         }
     } else {
+        // Get the first lend asset details
         lendAssetDetails = platformDetails?.assets.filter(asset => !asset.borrow_enabled)[0];
+        // Get the first borrow asset details
         borrowAssetDetails = platformDetails?.assets.filter(asset => asset.borrow_enabled)[0];
     }
 
