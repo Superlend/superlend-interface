@@ -1,5 +1,5 @@
 import { getEstimatedEarnings } from "./helper-functions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Card,
     CardContent,
@@ -14,6 +14,16 @@ import { motion } from "framer-motion";
 import TooltipText from "@/components/tooltips/TooltipText";
 import InfoTooltip from "@/components/tooltips/InfoTooltip";
 import { useSearchParams } from "next/navigation";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button";
+import { ChevronDownIcon } from "lucide-react";
+
 
 type TRow = {
     id: number;
@@ -22,6 +32,7 @@ type TRow = {
     logo?: string;
     selectedLabel: string;
     selectedValue: number;
+    hasSelectedValue: boolean;
     totalValue: number;
     step: number;
 }
@@ -41,17 +52,24 @@ export function EstimatedReturns({
         borrow: 0,
         duration: 1,
     });
-    let lendAssetDetails, borrowAssetDetails;
+    const [selectedStableTokenDetails, setSelectedStableTokenDetails] = useState<any>(null);
+    const isAaveV3 = platformDetails?.platform.platform_type === "aaveV3";
+    // Declare asset details for lend and borrow assets
+    let lendAssetDetails: any, borrowAssetDetails: any, stableLendAssetsList: any[] = [], stableBorrowAssetsList: any[] = [];
 
     /*
-    1. If platform_type is aaveV3, then get the lend asset details from the token address
+    1. If platform_type is aaveV3, then get the lend/borrow asset details from the token address
     2. If platform_type is other than aaveV3, then get the lend asset details from the platform data
     */
-    if (platformDetails?.platform.platform_type === "aaveV3") {
+    if (isAaveV3) {
         if (positionType === "lend") {
             lendAssetDetails = platformDetails?.assets.find(asset => asset.token.address === tokenAddress);
             borrowAssetDetails = platformDetails?.assets.filter(asset => asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0];
+
+            stableBorrowAssetsList = platformDetails?.assets.filter(asset => asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol));
         } else {
+            stableLendAssetsList = platformDetails?.assets.filter(asset => !asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol));
+
             lendAssetDetails = platformDetails?.assets.filter(asset => !asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0];
             borrowAssetDetails = platformDetails?.assets.find(asset => asset.token.address === tokenAddress);
         }
@@ -60,8 +78,8 @@ export function EstimatedReturns({
         borrowAssetDetails = platformDetails?.assets.filter(asset => asset.borrow_enabled)[0];
     }
 
-    const supplyAPY = (lendAssetDetails?.supply_apy) || 0;
-    const borrowAPY = (borrowAssetDetails?.variable_borrow_apy) || 0;
+    const supplyAPY = isAaveV3 && positionType === "borrow" ? (selectedStableTokenDetails?.supply_apy) || 0 : (lendAssetDetails?.supply_apy) || 0;
+    const borrowAPY = isAaveV3 && positionType === "lend" ? (selectedStableTokenDetails?.variable_borrow_apy) || 0 : (borrowAssetDetails?.variable_borrow_apy) || 0;
     const amountSuppliedInUsd = selectedValue?.lend || 0;
     const amountBorrowedInUsd = selectedValue?.borrow || 0;
     const duration = selectedValue?.duration || 0;
@@ -78,8 +96,9 @@ export function EstimatedReturns({
             logo: lendAssetDetails?.token.logo,
             selectedLabel: lendAssetDetails?.token.symbol || "",
             selectedValue: selectedValue.lend,
+            hasSelectedValue: !(stableLendAssetsList.length > 0),
             totalValue: 10000,
-            step: 500,
+            step: 50,
         },
         {
             id: 2,
@@ -88,8 +107,9 @@ export function EstimatedReturns({
             logo: borrowAssetDetails?.token.logo,
             selectedLabel: borrowAssetDetails?.token.symbol || "",
             selectedValue: selectedValue.borrow,
+            hasSelectedValue: !(stableBorrowAssetsList.length > 0),
             totalValue: 10000,
-            step: 500,
+            step: 50,
         },
         {
             id: 3,
@@ -97,6 +117,7 @@ export function EstimatedReturns({
             title: "Duration",
             selectedLabel: selectedValue.duration > 1 ? "Months" : "Month",
             selectedValue: selectedValue.duration,
+            hasSelectedValue: true,
             totalValue: 24,
             step: 1,
         }
@@ -139,7 +160,7 @@ export function EstimatedReturns({
                                 className="max-w-full"
                                 content={
                                     <div className="flex flex-col gap-[12px]">
-                                        <HeadingText level='h5' weight='medium' className="text-gray-800 border-b-[2px] border-gray-200 pb-[12px]">
+                                        {/* <HeadingText level='h5' weight='medium' className="text-gray-800 border-b-[2px] border-gray-200 pb-[12px]">
                                             Estimation Breakdown
                                         </HeadingText>
                                         <BodyText level='body2' weight='normal' className="text-gray-600">
@@ -147,8 +168,8 @@ export function EstimatedReturns({
                                         </BodyText>
                                         <BodyText level='body2' weight='normal' className="text-gray-600">
                                             Interest Loss = (Borrowed Amount X Borrow APY X Duration) / 1200
-                                        </BodyText>
-                                        <BodyText level='body2' weight='medium' className="text-gray-600 border-t-[2px] border-gray-200 pt-[12px]">
+                                        </BodyText> */}
+                                        <BodyText level='body2' weight='medium' className="text-gray-600">
                                             Estimated returns = Interest Gain - Interest Loss
                                         </BodyText>
                                     </div>
@@ -193,12 +214,23 @@ export function EstimatedReturns({
                                                         <HeadingText level='h4' weight='medium' className="text-gray-800">
                                                             {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.selectedValue, row.key === "duration" ? 0 : 1)}
                                                         </HeadingText>
-                                                        <div className="flex items-center gap-[6px]">
-                                                            {row.logo && <ImageWithDefault src={row.logo} alt={row.selectedLabel} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />}
-                                                            <HeadingText level='h4' weight='medium' className="text-gray-800">
-                                                                {row.selectedLabel}
-                                                            </HeadingText>
-                                                        </div>
+                                                        {
+                                                            row.hasSelectedValue &&
+                                                            <div className="flex items-center gap-[6px]">
+                                                                {row.logo && <ImageWithDefault src={row.logo} alt={row.selectedLabel} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />}
+                                                                <HeadingText level='h5' weight='medium' className="text-gray-800">
+                                                                    {row.selectedLabel}
+                                                                </HeadingText>
+                                                            </div>
+                                                        }
+                                                        {
+                                                            !row.hasSelectedValue &&
+                                                            <StableTokensDropdown
+                                                                options={row.key === "lend" ? stableLendAssetsList : stableBorrowAssetsList}
+                                                                selectedStableTokenDetails={selectedStableTokenDetails}
+                                                                setSelectedStableTokenDetails={setSelectedStableTokenDetails}
+                                                            />
+                                                        }
                                                     </>
                                                 }
                                                 {
@@ -231,5 +263,47 @@ export function EstimatedReturns({
                 </CardContent>
             </Card>
         </motion.div>
+    )
+}
+
+// Child component
+function StableTokensDropdown({
+    options,
+    selectedStableTokenDetails,
+    setSelectedStableTokenDetails,
+}: {
+    options: any[];
+    selectedStableTokenDetails: any;
+    setSelectedStableTokenDetails: (token: any) => void;
+}) {
+    useEffect(() => {
+        setSelectedStableTokenDetails(options[0]);
+    }, []);
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button size="md" variant="outline" className="group flex items-center gap-1 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-800 rounded-2 focus-visible:ring-0">
+                    <ImageWithDefault src={selectedStableTokenDetails?.token.logo} alt={selectedStableTokenDetails?.token.symbol} width={18} height={18} className='rounded-full max-w-[18px] max-h-[18px]' />
+                    <BodyText level='body2' weight='medium' className="text-gray-800">{selectedStableTokenDetails?.token.symbol}</BodyText>
+                    <ChevronDownIcon className="w-4 h-4 text-gray-600 transition-all duration-300 group-data-[state=open]:rotate-180" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden">
+                <DropdownMenuLabel className="text-gray-600 py-2 px-4">Select Stable Token</DropdownMenuLabel>
+                {
+                    options?.map((asset: any) => (
+                        <DropdownMenuItem
+                            key={asset?.token?.address}
+                            onClick={() => setSelectedStableTokenDetails(asset)}
+                            className="flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4"
+                        >
+                            <ImageWithDefault src={asset?.token?.logo || ""} alt={asset?.token?.symbol || ""} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
+                            <BodyText level='body2' weight='medium' className="text-gray-800">{asset?.token?.symbol || ""}</BodyText>
+                        </DropdownMenuItem>
+                    ))
+                }
+            </DropdownMenuContent>
+        </DropdownMenu>
     )
 }
