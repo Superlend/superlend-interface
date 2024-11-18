@@ -53,36 +53,40 @@ export function EstimatedReturns({
         duration: 1,
     });
     const [selectedStableTokenDetails, setSelectedStableTokenDetails] = useState<any>(null);
+    const [lendAssetDetails, setLendAssetDetails] = useState<any>(null);
+    const [borrowAssetDetails, setBorrowAssetDetails] = useState<any>(null);
+    const [stableLendAssetsList, setStableLendAssetsList] = useState<any[]>([]);
+    const [stableBorrowAssetsList, setStableBorrowAssetsList] = useState<any[]>([]);
     const isAaveV3 = platformDetails?.platform.platform_type === "aaveV3";
-    // Declare asset details for lend and borrow assets
-    let lendAssetDetails: any, borrowAssetDetails: any, stableLendAssetsList: any[] = [], stableBorrowAssetsList: any[] = [];
 
-    /*
-    1. If platform_type is aaveV3, then get the lend/borrow asset details from the token address
-    2. If platform_type is other than aaveV3, then get the lend asset details from the platform data
-    */
-    if (isAaveV3) {
-        if (positionType === "lend") {
-            // Get lend asset details
-            lendAssetDetails = platformDetails?.assets.find(asset => asset.token.address === tokenAddress);
-            // Get the first borrow asset details
-            borrowAssetDetails = platformDetails?.assets.filter(asset => asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0];
-            // Get stable borrow assets list
-            stableBorrowAssetsList = platformDetails?.assets.filter(asset => asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol));
+    useEffect(() => {
+        /*
+            1. If platform_type is aaveV3, then get the lend/borrow asset details from the token address
+            2. If platform_type is other than aaveV3, then get the lend asset details from the platform data
+        */
+        if (isAaveV3) {
+            if (positionType === "lend") {
+                // Get lend asset details
+                setLendAssetDetails(platformDetails?.assets.find(asset => asset.token.address === tokenAddress));
+                // Get the first borrow asset details
+                setBorrowAssetDetails(platformDetails?.assets.filter(asset => asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0]);
+                // Get stable borrow assets list
+                setStableBorrowAssetsList(platformDetails?.assets.filter(asset => asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol)));
+            } else {
+                // Get stable lend assets list
+                setStableLendAssetsList(platformDetails?.assets.filter(asset => !asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol)));
+                // Get the first lend asset details
+                setLendAssetDetails(platformDetails?.assets.filter(asset => !asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0]);
+                // Get borrow asset details
+                setBorrowAssetDetails(platformDetails?.assets.find(asset => asset.token.address === tokenAddress));
+            }
         } else {
-            // Get stable lend assets list
-            stableLendAssetsList = platformDetails?.assets.filter(asset => !asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol));
             // Get the first lend asset details
-            lendAssetDetails = platformDetails?.assets.filter(asset => !asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0];
-            // Get borrow asset details
-            borrowAssetDetails = platformDetails?.assets.find(asset => asset.token.address === tokenAddress);
+            setLendAssetDetails(platformDetails?.assets.filter(asset => !asset.borrow_enabled)[0]);
+            // Get the first borrow asset details
+            setBorrowAssetDetails(platformDetails?.assets.filter(asset => asset.borrow_enabled)[0]);
         }
-    } else {
-        // Get the first lend asset details
-        lendAssetDetails = platformDetails?.assets.filter(asset => !asset.borrow_enabled)[0];
-        // Get the first borrow asset details
-        borrowAssetDetails = platformDetails?.assets.filter(asset => asset.borrow_enabled)[0];
-    }
+    }, [tokenAddress]);
 
     const supplyAPY = isAaveV3 && positionType === "borrow" ? (selectedStableTokenDetails?.supply_apy) || 0 : (lendAssetDetails?.supply_apy) || 0;
     const borrowAPY = isAaveV3 && positionType === "lend" ? (selectedStableTokenDetails?.variable_borrow_apy) || 0 : (borrowAssetDetails?.variable_borrow_apy) || 0;
@@ -217,7 +221,7 @@ export function EstimatedReturns({
                                                 {
                                                     !isAssetNotAvailable(row) &&
                                                     <>
-                                                        <HeadingText level='h4' weight='medium' className="text-gray-800">
+                                                        <HeadingText level='h5' weight='medium' className="text-gray-800">
                                                             {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.selectedValue, row.key === "duration" ? 0 : 1)}
                                                         </HeadingText>
                                                         {
