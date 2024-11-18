@@ -198,7 +198,7 @@ export default function PageHeader() {
                                                     height={28}
                                                     className="rounded-full max-w-[28px] max-h-[28px]"
                                                 />
-                                                <HeadingText level='h4' className='uppercase text-gray-800'>{loanTokenDetails?.symbol}</HeadingText>
+                                                <HeadingText level='h4' className='text-gray-800'>{loanTokenDetails?.symbol}</HeadingText>
                                             </div>
                                         </>
                                     )
