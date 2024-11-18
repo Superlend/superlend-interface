@@ -1,32 +1,20 @@
 "use client"
 
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
-import React from 'react'
-import useGetPortfolioData from '@/hooks/useGetPortfolioData'
+import React, { useContext } from 'react'
 import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive, convertScientificToNormal, isLowestValue } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { UserPositionsByPlatform } from '@/components/charts/user-positions-pie-chart'
+import { PortfolioContext } from '@/context/portfolio-provider'
 
-type TProps = {
-    walletAddress: `0x${string}` | undefined
-}
+export default function PortfolioOverview() {
+    const { portfolioData, isLoadingPortfolioData, isErrorPortfolioData } = useContext(PortfolioContext);
 
-export default function PortfolioOverview({
-    walletAddress
-}: TProps) {
-    const {
-        data,
-        isLoading,
-        isError
-    } = useGetPortfolioData({
-        user_address: walletAddress,
-    });
-
-    const COLLATERAL = getStatDisplayValue(data?.total_supplied);
-    const BORROWINGS = getStatDisplayValue(data?.total_borrowed);
-    const NET_WORTH = getStatDisplayValue(Number(data?.total_supplied ?? 0) - Number(data?.total_borrowed ?? 0));
-    const EARNINGS = getStatDisplayValue(Number(data?.platforms.reduce((acc, curr) => acc + curr.pnl, 0) ?? 0));
+    const COLLATERAL = getStatDisplayValue(portfolioData?.total_supplied);
+    const BORROWINGS = getStatDisplayValue(portfolioData?.total_borrowed);
+    const NET_WORTH = getStatDisplayValue(Number(portfolioData?.total_supplied ?? 0) - Number(portfolioData?.total_borrowed ?? 0));
+    const EARNINGS = getStatDisplayValue(Number(portfolioData?.platforms.reduce((acc, curr) => acc + curr.pnl, 0) ?? 0));
 
     const POSITIONS_BREAKDOWN_DATA = [
         {
@@ -55,8 +43,8 @@ export default function PortfolioOverview({
                 <Card className='h-full'>
                     <div className="positions-net-worth-block h-full px-[24px] md:px-[32px] pt-[28px] flex flex-col items-start justify-between gap-[29px] pb-[24px]">
                         <div className="shrink-0">
-                            {isLoading && <Skeleton className='h-10 w-[75%]' />}
-                            {!isLoading && <HeadingText level='h2' weight='medium' className='text-gray-800'>{NET_WORTH}</HeadingText>}
+                            {isLoadingPortfolioData && <Skeleton className='h-10 w-[75%]' />}
+                            {!isLoadingPortfolioData && <HeadingText level='h2' weight='medium' className='text-gray-800'>{NET_WORTH}</HeadingText>}
                             <BodyText level='body1' className='text-gray-600'>Your Positions Net worth</BodyText>
                         </div>
                         <Card className='w-full'>
@@ -65,10 +53,10 @@ export default function PortfolioOverview({
                                     POSITIONS_BREAKDOWN_DATA.map((position, positionIndex) => (
                                         <React.Fragment key={positionIndex}>
                                             <div className="data-block-1">
-                                                {isLoading && <Skeleton className='h-6 w-16' />}
+                                                {isLoadingPortfolioData && <Skeleton className='h-6 w-16' />}
                                                 <div className="flex flex-col gap-1">
-                                                    {!isLoading && position.icon}
-                                                    {!isLoading && <BodyText level='body1' weight='medium' className='leading-none text-gray-800 mt-2'>{position.data}</BodyText>}
+                                                    {!isLoadingPortfolioData && position.icon}
+                                                    {!isLoadingPortfolioData && <BodyText level='body1' weight='medium' className='leading-none text-gray-800 mt-2'>{position.data}</BodyText>}
                                                     <Label className="text-gray-600 text-success-500 capitalize">Your {position.label}</Label>
                                                 </div>
                                             </div>
@@ -100,8 +88,8 @@ export default function PortfolioOverview({
             </article>
             <article className='h-full'>
                 <UserPositionsByPlatform
-                    data={data}
-                    isLoading={isLoading}
+                    data={portfolioData}
+                    isLoading={isLoadingPortfolioData}
                 />
             </article>
         </section>

@@ -25,10 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAccount } from "wagmi";
 import TooltipText from "@/components/tooltips/TooltipText";
 import { platformWebsiteLinks } from "@/constants";
-
-type TProps = {
-    walletAddress: `0x${string}` | undefined
-}
+import { PortfolioContext } from "@/context/portfolio-provider";
 
 const scrollToPosInit = {
     next: false,
@@ -38,24 +35,16 @@ const scrollToPosInit = {
 const BLUR_ON_LEFT_END_STYLES = "md:[mask-image:linear-gradient(to_right,transparent,white_5%)]"
 const BLUR_ON_RIGHT_END_STYLES = "md:[mask-image:linear-gradient(to_left,transparent,white_5%)]"
 
-export default function YourPositionsAtRiskCarousel({
-    walletAddress
-}: TProps) {
+export default function YourPositionsAtRiskCarousel() {
     const router = useRouter();
     const { allChainsData } = useContext(AssetsDataContext);
     const [api, setApi] = React.useState<CarouselApi>();
     const [current, setCurrent] = React.useState(0);
     const [count, setCount] = React.useState(0);
     const [scrollToPos, setScrollToPos] = React.useState(scrollToPosInit);
-    const {
-        data,
-        isLoading,
-        isError
-    } = useGetPortfolioData({
-        user_address: walletAddress,
-    });
+    const { portfolioData, isLoadingPortfolioData } = useContext(PortfolioContext);
 
-    const PLATFORMS_WITH_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0 && platform.health_factor !== null && platform.health_factor <= 1.5)
+    const PLATFORMS_WITH_POSITIONS = portfolioData?.platforms.filter(platform => platform.positions.length > 0 && platform.health_factor !== null && platform.health_factor <= 1.5)
     const POSITIONS_AT_RISK = PLATFORMS_WITH_POSITIONS?.map((platform, index: number) => {
         const lendPositions = platform.positions.filter(position => position.type === "lend");
         const borrowPositions = platform.positions.filter(position => position.type === "borrow");
@@ -173,7 +162,7 @@ export default function YourPositionsAtRiskCarousel({
             </div>
             {
                 // positions at risk
-                !isLoading && POSITIONS_AT_RISK.length > 0 &&
+                !isLoadingPortfolioData && POSITIONS_AT_RISK.length > 0 &&
                 <Carousel
                     setApi={setApi}
                 // className={
@@ -294,19 +283,19 @@ export default function YourPositionsAtRiskCarousel({
             }
             {
                 // loading
-                isLoading &&
+                isLoadingPortfolioData &&
                 <div className="relative h-[225px] w-[100%] md:w-[364px] overflow-hidden rounded-6 md:ml-5">
                     <Skeleton className="h-full w-full" />
                 </div>
             }
             {
-                !isLoading && (POSITIONS_AT_RISK.length === 0 && data?.platforms?.length > 0 || data?.platforms?.length === 0) && (
+                !isLoadingPortfolioData && (POSITIONS_AT_RISK.length === 0 && portfolioData?.platforms?.length > 0 || portfolioData?.platforms?.length === 0) && (
                     // positions at risk or no positions
                     <div className="max-md:px-4">
                         <div className="flex items-center justify-start w-full h-full gap-2 md:ml-5 py-5 bg-white bg-opacity-50 rounded-6 px-4 py-8 w-full md:w-[364px]">
                             {
                                 // positions at risk
-                                POSITIONS_AT_RISK.length === 0 && data?.platforms?.length > 0 && (
+                                POSITIONS_AT_RISK.length === 0 && portfolioData?.platforms?.length > 0 && (
                                     <>
                                         <ShieldCheck className="w-5 h-5 text-secondary-800" />
                                         <BodyText level="body1" weight="normal" className="text-secondary-800">You have no positions at risk</BodyText>
@@ -314,7 +303,7 @@ export default function YourPositionsAtRiskCarousel({
                                 )}
                             {
                                 // no positions
-                                data?.platforms?.length === 0 && (
+                                portfolioData?.platforms?.length === 0 && (
                                     <>
                                         <CircleMinus className="w-5 h-5 text-gray-800" />
                                         <BodyText level="body1" weight="normal" className="text-gray-800">You have no positions</BodyText>

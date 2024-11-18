@@ -27,6 +27,7 @@ export default function useGetPortfolioData(params: TGetPortfolioParams) {
     },
     staleTime: Infinity,
     refetchInterval: 60000,
+    enabled: !!user_address,
   });
   return {
     data: data || PortfolioDataInit,

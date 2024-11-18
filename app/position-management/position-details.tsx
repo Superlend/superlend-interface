@@ -24,7 +24,7 @@ import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import { Skeleton } from '@/components/ui/skeleton'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import Image from 'next/image'
-import { useActiveAccount, useConnect } from 'thirdweb/react'
+import { useActiveAccount, useIsAutoConnecting } from 'thirdweb/react'
 import TooltipText from '@/components/tooltips/TooltipText'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { EstimatedReturns } from './estimated-returns'
@@ -38,7 +38,7 @@ export default function PositionDetails() {
     const protocol_identifier = searchParams.get("protocol_identifier") || "";
     const activeAccount = useActiveAccount();
     const walletAddress = activeAccount?.address;
-    const { isConnecting } = useConnect();
+    const isAutoConnecting = useIsAutoConnecting();
 
     const {
         data: portfolioData,
@@ -61,7 +61,7 @@ export default function PositionDetails() {
         chain_id: Number(chain_id),
     });
 
-    const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isConnecting;
+    const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isAutoConnecting;
 
     // Filter user positions
     const userPositions = portfolioData?.platforms.filter(platform =>

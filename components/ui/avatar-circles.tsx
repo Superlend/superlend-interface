@@ -52,7 +52,7 @@ const AvatarCircles = ({
           }
         />
       ))}
-      {moreItemsCount && moreItemsCount > 0 &&
+      {!!moreItemsCount && moreItemsCount > 0 &&
         <span
           className="flex h-[24px] w-[24px] items-center justify-center rounded-full border-2 border-secondary-300/75 bg-white text-center text-xs font-medium text-secondary-500 hover:bg-gray-400 dark:border-gray-800 dark:bg-white dark:text-black"
         >
