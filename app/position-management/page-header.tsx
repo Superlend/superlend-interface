@@ -172,7 +172,7 @@ export default function PageHeader() {
                                             height={28}
                                             className="rounded-full max-w-[28px] max-h-[28px] object-contain"
                                         />
-                                        <HeadingText level='h4' className='break-words text-gray-800'>{tokenSymbol}</HeadingText>
+                                        <HeadingText level='h4' weight='medium' className='break-words text-gray-800'>{tokenSymbol}</HeadingText>
                                     </div>
                                 }
                                 {/* Pair Based Tokens and Fluid Vault Token */}
@@ -187,7 +187,7 @@ export default function PageHeader() {
                                                     height={28}
                                                     className="rounded-full max-w-[28px] max-h-[28px] object-contain"
                                                 />
-                                                <HeadingText level='h4' className='break-words text-gray-800'>{collateralTokenDetails?.symbol}</HeadingText>
+                                                <HeadingText level='h4' weight='medium' className='break-words text-gray-800'>{collateralTokenDetails?.symbol}</HeadingText>
                                             </div>
                                             <BodyText level='body1' weight='medium' className='text-gray-500'>/</BodyText>
                                             <div className="two-tokens loan-token flex items-center gap-[8px]">
@@ -198,7 +198,7 @@ export default function PageHeader() {
                                                     height={28}
                                                     className="rounded-full max-w-[28px] max-h-[28px]"
                                                 />
-                                                <HeadingText level='h4' className='text-gray-800'>{loanTokenDetails?.symbol}</HeadingText>
+                                                <HeadingText level='h4' weight='medium' className='text-gray-800'>{loanTokenDetails?.symbol}</HeadingText>
                                             </div>
                                         </>
                                     )
