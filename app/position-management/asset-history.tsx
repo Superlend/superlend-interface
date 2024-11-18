@@ -43,7 +43,7 @@ export default function AssetHistory() {
         const timeStamp = extractTimeFromDate(date, { exclude: ["seconds"] });
 
         const requiredFields = HISTORY_CHART_SELECT_OPTIONS.reduce((acc: any, option) => {
-            acc[option.value] = abbreviateNumber(item.data[option.value]);
+            acc[option.value] = item.data[option.value];
             return acc;
         }, {});
 

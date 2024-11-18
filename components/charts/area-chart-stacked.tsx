@@ -96,7 +96,7 @@ function CustomChartTooltipContent({
     return (
         <div className="flex flex-col items-center gap-[4px] px-1.5 pt-1.5">
             <BodyText level="body2" weight="medium">
-                {value}%
+                {abbreviateNumber(value)}%
             </BodyText>
             <Label size="small" className="text-gray-600">
                 {caption}
