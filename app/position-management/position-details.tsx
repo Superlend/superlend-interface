@@ -29,6 +29,7 @@ import TooltipText from '@/components/tooltips/TooltipText'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { EstimatedReturns } from './estimated-returns'
 import { getStatDisplayValue } from './helper-functions'
+import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 
 export default function PositionDetails() {
     const searchParams = useSearchParams();
@@ -132,9 +133,7 @@ export default function PositionDetails() {
     // Loading state
     if (isLoading) {
         return (
-            <div className="w-full h-[340px] rounded-6 overflow-hidden">
-                <Skeleton className='w-full h-full' />
-            </div>
+            <LoadingSectionSkeleton className="h-[340px]" />
         )
     }
 

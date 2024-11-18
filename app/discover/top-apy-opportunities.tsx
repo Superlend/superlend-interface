@@ -258,7 +258,7 @@ export default function TopApyOpportunities() {
                     />
                 )}
                 {(isLoadingOpportunitiesData || isTableLoading) && (
-                    <LoadingSectionSkeleton />
+                    <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
                 )}
             </motion.div>
         </section>

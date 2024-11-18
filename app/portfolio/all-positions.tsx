@@ -175,7 +175,7 @@ export default function AllPositions({
                         noDataMessage={"No positions"}
                     />}
                 {isLoadingPortfolioData && (
-                    <LoadingSectionSkeleton />
+                    <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
                 )}
             </div>
         </section>
