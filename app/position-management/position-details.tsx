@@ -131,11 +131,11 @@ export default function PositionDetails() {
     const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(platformData?.platform.platform_type);
 
     // Loading state
-    if (isLoading) {
-        return (
-            <LoadingSectionSkeleton className="h-[340px]" />
-        )
-    }
+    // if (isLoading) {
+    //     return (
+    //         <LoadingSectionSkeleton className="h-[340px]" />
+    //     )
+    // }
 
     // If user is not connected, show connect wallet button
     if (!isLoading && !walletAddress) {
