@@ -153,13 +153,13 @@ export default function PositionDetails() {
     }
 
     // If user is connected, but does not have any positions, show estimated returns
-    if (!isLoading && userPositions.length === 0) {
-        return (
-            <EstimatedReturns
-                platformDetails={platformData}
-            />
-        )
-    }
+    // if (!isLoading && userPositions.length === 0) {
+    //     return (
+    //         <EstimatedReturns
+    //             platformDetails={platformData}
+    //         />
+    //     )
+    // }
 
     // If user is connected, and has positions, show position details
     return (
