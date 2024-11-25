@@ -179,3 +179,47 @@ export enum WarningMessages {
   incorrect_collateral_exchange_rate = "Collateral rate error, double-check values.",
   unrecognized_oracle_feed = "Oracle feed unknown, pricing reliability in question.",
 }
+
+export const TOO_MANY_DECIMALS_VALIDATIONS_TEXT =
+  "Decrease digits after decimal point";
+export const CONFIRM_ACTION_IN_WALLET_TEXT =
+  "Confirm the action in your wallet";
+export const CONFIRM_NETWORK_CHANGING =
+  "Confirm the network changing in your wallet";
+export const NETWORK_CHANGING_SUCCESS = "Network successfully changed";
+export const ACTION_CANCEL_TEXT =
+  "Network was not changed because the action was not confirmed in your wallet";
+export const SOMETHING_WENT_WRONG_MESSAGE = "Something went wrong";
+export const DATA_UNAVAILABLE_MESSAGE =
+  "Information is temporarily unavailable. Please try again later.";
+export const SUCCESS_MESSAGE = "Success";
+export const APPROVE_MESSAGE = "Transaction was successful";
+export const TRANSACTION_CANCEL_TEXT =
+  "Transaction was canceled because the action was not confirmed in your wallet";
+
+export const SOMETHING_WENT_WRONG_WITH_RELOAD_MESSAGE =
+  "Something went wrong, please reload the page";
+
+export const ERROR_TOAST_ICON_STYLES = {
+  iconTheme: {
+    primary: "#FFF",
+    secondary: "#090A0A",
+  },
+};
+
+export const POOL_AAVE_MAP: { [key in PlatformValue]: `0x${string}` } = {
+  [PlatformValue.AaveV3Arbitrum]: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+  [PlatformValue.AaveV3Avalanche]: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+  [PlatformValue.AaveV3Bsc]: "0x6807dc923806fE8Fd134338EABCA509979a7e0cB",
+  [PlatformValue.AaveV3Base]: "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5",
+  [PlatformValue.AaveV3Ethereum]: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
+  [PlatformValue.AaveV3Fantom]: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+  [PlatformValue.AaveV3Gnosis]: "0xb50201558B00496A145fE76f7424749556E326D8",
+  [PlatformValue.AaveV3Metis]: "0x90df02551bB792286e8D4f13E0e357b4Bf1D6a57",
+  [PlatformValue.AaveV3Optimism]: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+  [PlatformValue.AaveV3Polygon]: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+  [PlatformValue.AaveV3Scoll]: "0x11fCfe756c05AD438e312a7fd934381537D3cFfe",
+  // [PlatformValue.SparkEthereum]: '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2',
+  // [PlatformValue.SparkGnosis]: '0xb50201558B00496A145fE76f7424749556E326D8',
+  [PlatformValue.CompoundV2Ethereum]: "0x", // not used
+};

@@ -42,7 +42,15 @@ export default function Portfolio() {
     }
 
     if (walletAddress && isClient && !isAutoConnecting) {
+        // const queryClient = new QueryClient()
+
+        // await queryClient.prefetchQuery({
+        //     queryKey: ['opportunities'],
+        //     queryFn: () => useGetOpportunitiesData({ type: "lend" }),
+        // })
+
         return (
+            // <HydrationBoundary state={dehydrate(queryClient)}>
             <PortfolioProvider>
                 <MainContainer className='px-0'>
                     <section id='your-portfolio' className="portfolio-page-header flex flex-col md:flex-row gap-[16px] items-start md:items-center justify-between mb-[24px] px-5">
@@ -71,6 +79,7 @@ export default function Portfolio() {
                     </section>
                 </MainContainer >
             </PortfolioProvider>
+            // </HydrationBoundary>
         )
     }
 

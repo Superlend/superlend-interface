@@ -140,3 +140,12 @@
 /* .tw-connected-wallet > .css-1d4s0we {
   visibility: hidden !important;
 } */
+
+/* Remove number input arrows */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0; 
+}

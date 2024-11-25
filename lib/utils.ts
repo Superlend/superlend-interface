@@ -397,3 +397,24 @@ export const copyToClipboard = async (text: string) => {
     }
   }
 };
+
+export function checkDecimalPlaces(value: string, decimals: number) {
+  if (value.includes('.')) {
+    const decimalPart = value.split('.')[1]
+    if (decimalPart.length > decimals) {
+      return true
+    }
+  }
+
+  return false
+}
+
+export function countCompoundDecimals(
+  decimals: number,
+  underlyingDecimals: number
+) {
+  if (underlyingDecimals !== 18) {
+    return 18 - decimals
+  }
+  return underlyingDecimals
+}
