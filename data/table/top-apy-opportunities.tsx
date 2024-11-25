@@ -103,6 +103,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
         },
         enableSorting: false,
+        enableGlobalFilter: false,
     },
     {
         accessorKey: "apy_current",
@@ -184,7 +185,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 </span >
             )
         },
-        // enableGlobalFilter: false,
+        enableGlobalFilter: false,
     },
     {
         accessorKey: "max_ltv",
@@ -218,7 +219,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
         },
         size: 150,
-        // enableGlobalFilter: false,
+        enableGlobalFilter: false,
     },
     {
         accessorKey: "deposits",
@@ -247,7 +248,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 </BodyText>
             )
         },
-        // enableGlobalFilter: false,
+        enableGlobalFilter: false,
     },
     {
         accessorKey: "borrows",
@@ -276,7 +277,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 </BodyText>
             )
         },
-        // enableGlobalFilter: false,
+        enableGlobalFilter: false,
     },
     {
         accessorKey: "utilization",
@@ -313,7 +314,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 </BodyText>
             )
         },
-        // enableGlobalFilter: false,
+        enableGlobalFilter: false,
     },
 ]
 

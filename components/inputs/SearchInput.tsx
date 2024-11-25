@@ -20,7 +20,7 @@ export default function SearchInput({ className, value, onChange, onClear, place
             {hasKeyword &&
                 <X onClick={onClear}
                     className='absolute right-3 top-1/2 -translate-y-1/2 w-[16px] h-[16px] rounded-full bg-gray-300 hover:bg-gray-400 active:opacity-70 text-gray-600 p-[2px] cursor-pointer' />}
-            <Input placeholder={`${placeholder || "Search"}`} className={`rounded-4 px-10 border-none h-[38px] ${className || ""}`} value={value} onChange={onChange} {...props} />
+            <Input placeholder={`${placeholder || "Search"}`} className={`rounded-4 ${!!hasKeyword ? 'px-10' : 'pl-10'} border-none h-[38px] ${className || ""}`} value={value} onChange={onChange} {...props} />
         </div>
     )
 }

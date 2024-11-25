@@ -225,7 +225,7 @@ export default function TopApyOpportunities() {
                             <LendBorrowToggle type={positionTypeParam as TPositionType} handleToggle={toggleOpportunityType} />
                         </div>
                         <div className="sm:max-w-[156px] w-full">
-                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={keywords} />
+                            <SearchInput onChange={handleKeywordChange} onClear={handleClearSearch} value={keywords} placeholder='Search token' />
                         </div>
                     </div>
                 </div>
