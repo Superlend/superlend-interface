@@ -65,11 +65,11 @@ export default function AllPositionsFiltersDropdown() {
             name: "COMPOUND",
             platform_id: "COMPOUND"
         },
-        // {
-        //     logo: PlatformLogo.MORPHO,
-        //     name: "MORPHO",
-        //     platform_id: "MORPHO"
-        // },
+        {
+            logo: PlatformLogo.MORPHO,
+            name: "MORPHO",
+            platform_id: "MORPHO"
+        },
         {
             logo: PlatformLogo.FLUID,
             name: "FLUID",

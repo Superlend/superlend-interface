@@ -64,6 +64,8 @@ const config = {
         destructive: {
           DEFAULT: "hsl(var(--destructive-background))",
           foreground: "hsl(var(--destructive-foreground))",
+          border: "hsl(var(--destructive-border))",
+          background: "hsl(var(--destructive-background))",
         },
         success: {
           DEFAULT: "hsl(var(--success-background))",

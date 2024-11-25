@@ -239,7 +239,7 @@ export default function TopApyOpportunities() {
                 className="top-apy-opportunities-content will-change-transform"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
             >
                 {!isLoadingOpportunitiesData && !isTableLoading && (
                     <DataTable
@@ -258,7 +258,7 @@ export default function TopApyOpportunities() {
                     />
                 )}
                 {(isLoadingOpportunitiesData || isTableLoading) && (
-                    <LoadingSectionSkeleton />
+                    <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
                 )}
             </motion.div>
         </section>

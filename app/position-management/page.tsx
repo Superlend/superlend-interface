@@ -12,20 +12,24 @@ import {
 } from "@/components/ui/card"
 import { BodyText } from '@/components/ui/typography';
 import PositionDetails from './position-details';
-
+import LendAndBorrowAssets from './lend-and-borrow';
+import PositionManagementProvider from '@/context/position-management-provider';
 
 export default function PositionManagementPage() {
     return (
-        <MainContainer className='flex flex-col gap-[40px]'>
-            <PageHeader />
-            <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-[16px]">
-                <div className='flex flex-col gap-[16px]'>
-                    <PositionDetails />
-                    <AssetHistory />
+        <PositionManagementProvider>
+            <MainContainer className='flex flex-col gap-[40px]'>
+                <PageHeader />
+                <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-[16px]">
+                    <div className='flex flex-col gap-[16px]'>
+                        <PositionDetails />
+                        <AssetHistory />
+                    </div>
+                    {/* <LendAndBorrowAssets /> */}
+                    {/* <BlogCard /> */}
                 </div>
-                {/* <BlogCard /> */}
-            </div>
-        </MainContainer>
+            </MainContainer>
+        </PositionManagementProvider>
     )
 }
 

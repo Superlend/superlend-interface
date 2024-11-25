@@ -22,10 +22,7 @@ import { AssetsDataContext } from "@/context/data-provider";
 import AvatarCircles from "@/components/ui/avatar-circles";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccount } from "wagmi";
-
-type TProps = {
-    walletAddress: `0x${string}` | undefined
-}
+import { PortfolioContext } from "@/context/portfolio-provider";
 
 const scrollToPosInit = {
     next: false,
@@ -35,24 +32,16 @@ const scrollToPosInit = {
 const BLUR_ON_LEFT_END_STYLES = "md:[mask-image:linear-gradient(to_right,transparent,white_5%)]"
 const BLUR_ON_RIGHT_END_STYLES = "md:[mask-image:linear-gradient(to_left,transparent,white_5%)]"
 
-export default function TopLowRiskPositions({
-    walletAddress
-}: TProps) {
+export default function TopLowRiskPositions() {
     const router = useRouter();
     const { allChainsData } = useContext(AssetsDataContext);
     const [api, setApi] = React.useState<CarouselApi>();
     const [current, setCurrent] = React.useState(0);
     const [count, setCount] = React.useState(0);
     const [scrollToPos, setScrollToPos] = React.useState(scrollToPosInit);
-    const {
-        data,
-        isLoading,
-        isError
-    } = useGetPortfolioData({
-        user_address: walletAddress,
-    });
+    const { portfolioData, isLoadingPortfolioData } = useContext(PortfolioContext);
 
-    const PLATFORMS_WITH_LOW_RISK_POSITIONS = data?.platforms.filter(platform => platform.positions.length > 0 && platform.health_factor > 1.5)
+    const PLATFORMS_WITH_LOW_RISK_POSITIONS = portfolioData?.platforms.filter(platform => platform.positions.length > 0 && platform.health_factor > 1.5)
 
     const POSITIONS_AT_LOW_RISK = PLATFORMS_WITH_LOW_RISK_POSITIONS?.map((platform, index: number) => {
         const lendPositions = platform.positions.filter(position => position.type === "lend");
@@ -148,7 +137,7 @@ export default function TopLowRiskPositions({
                     </div>
                 }
             </div>
-            {!isLoading &&
+            {!isLoadingPortfolioData &&
                 <Carousel
                     setApi={setApi}
                 // className={
@@ -246,13 +235,13 @@ export default function TopLowRiskPositions({
                     </CarouselContent>
                 </Carousel>}
             {
-                isLoading &&
+                isLoadingPortfolioData &&
                 <div className="overflow-hidden rounded-6 pl-5">
                     <Skeleton className="h-[225px] w-[364px]" />
                 </div>
             }
             {
-                !isLoading && POSITIONS_AT_LOW_RISK.length === 0 &&
+                !isLoadingPortfolioData && POSITIONS_AT_LOW_RISK.length === 0 &&
                 <div className="flex items-center justify-start w-full h-full gap-2 ml-5 py-5">
                     <ShieldCheck className="w-8 h-8 text-secondary-500" />
                     <BodyText level="body1" weight="semibold" className="text-secondary-500">No positions at risk</BodyText>

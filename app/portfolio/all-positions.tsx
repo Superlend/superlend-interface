@@ -17,17 +17,14 @@ import { TChain, TPositionType } from '@/types';
 import { SortingState } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
 import React, { useContext, useEffect, useState } from 'react'
-import { useAccount } from 'wagmi';
+import { useActiveAccount } from 'thirdweb/react';
 
-type TProps = {
-    walletAddress: `0x${string}` | undefined
-}
-export default function AllPositions({
-    walletAddress
-}: TProps) {
+export default function AllPositions() {
     const router = useRouter();
     const { width: screenWidth } = useDimensions();
     const { filters, positionType, setPositionType } = useContext(PositionsContext);
+    const activeAccount = useActiveAccount();
+    const walletAddress = activeAccount?.address;
     const [searchKeywords, setSearchKeywords] = useState<string>("");
     const [sorting, setSorting] = useState<SortingState>([
         { id: 'apy', desc: positionType === "lend" },
@@ -36,15 +33,15 @@ export default function AllPositions({
         deposits: true,
         borrows: false,
     });
+    const { allChainsData } = useContext(AssetsDataContext);
+
     const {
         data: portfolioData,
         isLoading: isLoadingPortfolioData,
         isError: isErrorPortfolioData
     } = useGetPortfolioData({
-        user_address: walletAddress,
-        chain_id: filters.chain_ids,
+        user_address: walletAddress as `0x${string}` | undefined,
     });
-    const { allChainsData } = useContext(AssetsDataContext);
 
     useEffect(() => {
         setColumnVisibility(() => {
@@ -100,7 +97,8 @@ export default function AllPositions({
     const filteredTableData = rawTableData.filter((position) => {
         const matchesTokenFilter = filters.token_ids.length === 0 || filters.token_ids.includes(position.tokenSymbol);
         const matchesPlatformFilter = filters.platform_ids.length === 0 || filters.platform_ids.includes(position.platformName);
-        return matchesTokenFilter && matchesPlatformFilter;
+        const matchesChainFilter = filters.chain_ids.length === 0 || filters.chain_ids.map(chain => chain.toString()).includes(position.chain_id.toString());
+        return matchesTokenFilter && matchesPlatformFilter && matchesChainFilter;
     });
 
     const tableData = filteredTableData;
@@ -175,7 +173,7 @@ export default function AllPositions({
                         noDataMessage={"No positions"}
                     />}
                 {isLoadingPortfolioData && (
-                    <LoadingSectionSkeleton />
+                    <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
                 )}
             </div>
         </section>

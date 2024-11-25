@@ -40,6 +40,12 @@ export const abbreviateNumber = (
     return (value / 1000000).toFixed(fixed) + "M";
   } else if (value >= 1000) {
     return (value / 1000).toFixed(fixed) + "K";
+  } else if (value <= -1000000000) {
+    return (value / 1000000000).toFixed(fixed) + "B";
+  } else if (value <= -1000000) {
+    return (value / 1000000).toFixed(fixed) + "M";
+  } else if (value <= -1000) {
+    return (value / 1000).toFixed(fixed) + "K";
   } else {
     return value.toFixed(fixed).toString();
   }
@@ -318,6 +324,7 @@ export function getPlatformWebsiteLink({
   chainId,
   platformId,
   vaultId,
+  isFluidVault,
   morpho_market_id,
   network_name,
 }: {
@@ -326,6 +333,7 @@ export function getPlatformWebsiteLink({
   chainName?: string;
   chainId?: string;
   vaultId?: string;
+  isFluidVault?: boolean;
   morpho_market_id?: string;
   network_name?: string;
 }) {
@@ -343,7 +351,9 @@ export function getPlatformWebsiteLink({
       chainName || ""
     )}_v3`,
     compound: ``,
-    fluid: `/stats/${chainId}/vaults#${vaultId}`,
+    fluid: isFluidVault
+      ? `/stats/${chainId}/vaults#${vaultId}`
+      : `/lending/${chainId}`,
     morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
   };
 
@@ -387,3 +397,24 @@ export const copyToClipboard = async (text: string) => {
     }
   }
 };
+
+export function checkDecimalPlaces(value: string, decimals: number) {
+  if (value.includes('.')) {
+    const decimalPart = value.split('.')[1]
+    if (decimalPart.length > decimals) {
+      return true
+    }
+  }
+
+  return false
+}
+
+export function countCompoundDecimals(
+  decimals: number,
+  underlyingDecimals: number
+) {
+  if (underlyingDecimals !== 18) {
+    return 18 - decimals
+  }
+  return underlyingDecimals
+}

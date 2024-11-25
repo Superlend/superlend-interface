@@ -29,6 +29,7 @@ type TProps = {
     iconWidth?: number;
     iconHeight?: number;
     side?: "top" | "bottom" | "left" | "right";
+    className?: string;
 }
 
 const sizes: any = {
@@ -38,7 +39,7 @@ const sizes: any = {
 }
 
 
-export default function InfoTooltip({ label, content, size = "md", hide = false, iconWidth = 16, iconHeight = 16, side }: TProps) {
+export default function InfoTooltip({ label, content, size = "md", hide = false, iconWidth = 16, iconHeight = 16, side, className }: TProps) {
     const [open, setOpen] = useState<boolean>(false);
     const { width: screenWidth } = useDimensions();
     const isDesktop = screenWidth > 768;
@@ -72,7 +73,7 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
                     <TooltipContent
                         side={side}
                         sideOffset={5}
-                        className={`max-w-[280px] ${sizes[size]}`}
+                        className={`${className?.includes('max-w') ? '' : 'max-w-[280px]'} ${sizes[size]}`}
                     >
                         {typeof content === "string" && <Label className='w-fit'>{content}</Label>}
                         {typeof content !== "string" && content}

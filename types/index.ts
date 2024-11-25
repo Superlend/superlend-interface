@@ -1,3 +1,4 @@
+import { WarningMessages } from "@/constants";
 import { Period } from "./periodButtons";
 
 export type TPositionType = "lend" | "borrow";
@@ -137,6 +138,7 @@ export type TPlatformAsset = {
     address: string;
     decimals: number;
     price_usd: number;
+    warnings: any[];
   };
   supply_apy: number;
   variable_borrow_apy: number;
@@ -151,10 +153,11 @@ export type TPlatform = {
     name: string;
     platform_name: string;
     protocol_identifier: string;
-    platform_type: string;
+    platform_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
     logo: string;
     chain_id: number;
     vaultId: string;
+    isVault: boolean;
     morpho_market_id: string;
   };
   assets: TPlatformAsset[];
@@ -175,7 +178,9 @@ export type TPlatformHistoryProcessMap = {
     liquidationPenalty: number;
     blockNumber: number;
     depositRate: number;
+    depositRateReward: number;
     variableBorrowRate: number;
+    variableBorrowRateReward: number;
     ltv: number;
     liquidationThreshold: number;
     stableBorrowRate: number;
@@ -190,12 +195,14 @@ export type TPlatformHistoryProcessMap = {
 
 export type TPlatformHistoryStats = {
   depositRateAverage: number;
+  depositRateRewardAverage: number;
+  variableBorrowRateAverage: number;
+  variableBorrowRateRewardAverage: number;
+  utilizationRateAverage: number;
   prediction: {
     depositRatePredict: number;
     variableBorrowRatePredict: number;
   };
-  utilizationRateAverage: number;
-  variableBorrowRateAverage: number;
 };
 
 export type TPlatformHistory = {

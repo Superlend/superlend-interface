@@ -96,7 +96,7 @@ function CustomChartTooltipContent({
     return (
         <div className="flex flex-col items-center gap-[4px] px-1.5 pt-1.5">
             <BodyText level="body2" weight="medium">
-                {value}%
+                {abbreviateNumber(value)}%
             </BodyText>
             <Label size="small" className="text-gray-600">
                 {caption}
@@ -120,30 +120,9 @@ export function AreaChartStacked({
     selectedFilter,
     handleFilterChange,
     chartData,
+    disableCategoryFilters,
 }: any) {
     const [yAxisDigitCount, setYAxisDigitCount] = useState(0);
-    const data: any[] = chartData?.map((item: any) => {
-        const date = new Date(item.timestamp);
-        const dateOptions: any = { year: 'numeric', month: 'short', day: 'numeric' };
-        const formattedDate = new Intl.DateTimeFormat('en-US', dateOptions).format(date);
-        const timeStamp = extractTimeFromDate(date, { exclude: ["seconds"] });
-
-        const requiredFields = HISTORY_CHART_SELECT_OPTIONS.reduce((acc: any, option) => {
-            acc[option.value] = abbreviateNumber(item.data[option.value]);
-            return acc;
-        }, {});
-
-        return {
-            ...requiredFields,
-            timestamp: selectedRange === Period.oneDay ? timeStamp : formattedDate
-        };
-    });
-
-    const disableCategoryFilters = HISTORY_CHART_SELECT_OPTIONS
-        .filter((option) => {
-            return !data?.some((item: any) => !!Number(item[option.value]))
-        })
-        .map(option => option.value);
 
     const isFilterDisabled = disableCategoryFilters.length === HISTORY_CHART_SELECT_OPTIONS.length;
 
@@ -151,10 +130,10 @@ export function AreaChartStacked({
         <Card className="overflow-hidden">
             <CardContent className="p-0 py-[32px] bg-white">
                 {
-                    !data && <GraphLoading />
+                    !chartData && <GraphLoading />
                 }
                 {
-                    data && !isFilterDisabled &&
+                    chartData && !isFilterDisabled &&
                     <>
                         <div className="px-[20px] flex flex-col sm:flex-row gap-[16px] items-center justify-between">
                             {/* Timeline Filters Tab */}
@@ -183,7 +162,7 @@ export function AreaChartStacked({
                         <ChartContainer config={chartConfig} className="h-[250px] w-full">
                             <AreaChart
                                 accessibilityLayer
-                                data={data}
+                                data={chartData}
                                 margin={{
                                     left: yAxisDigitCount > 4 ? 20 : yAxisDigitCount > 3 ? 10 : 0,
                                     right: 20,
@@ -209,7 +188,7 @@ export function AreaChartStacked({
                                             x={x as number}
                                             y={y as number}
                                             index={index as number}
-                                            length={data.length}
+                                            length={chartData.length}
                                         />
                                     )}
                                 />
@@ -256,7 +235,7 @@ export function AreaChartStacked({
                     </>
                 }
                 {
-                    data && isFilterDisabled &&
+                    chartData && isFilterDisabled &&
                     <div className="flex flex-col gap-2 items-center justify-center h-[250px] w-full">
                         <ChartLine className="w-12 h-12 text-gray-600" />
                         <Label size="large" weight="medium" className="text-gray-600">

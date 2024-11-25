@@ -2,15 +2,21 @@
 
 import ImageWithDefault from '@/components/ImageWithDefault'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { BodyText, HeadingText } from '@/components/ui/typography'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { useSearchParams } from 'next/navigation'
 import React, { useContext } from 'react'
-import { useAccount } from 'wagmi'
 import { motion } from 'framer-motion'
-import { abbreviateNumber, capitalizeText, convertScientificToNormal, getLiquidationRisk, getLowestDisplayValue, getRiskFactor, hasLowestDisplayValuePrefix, isLowestValue } from '@/lib/utils'
+import {
+    abbreviateNumber,
+    capitalizeText,
+    convertScientificToNormal,
+    getLiquidationRisk,
+    getRiskFactor,
+    hasLowestDisplayValuePrefix,
+    isLowestValue
+} from '@/lib/utils'
 import { AssetsDataContext } from '@/context/data-provider'
 import AvatarCircles from '@/components/ui/avatar-circles'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
@@ -18,20 +24,21 @@ import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import { Skeleton } from '@/components/ui/skeleton'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import Image from 'next/image'
-import { useActiveAccount, useConnect } from 'thirdweb/react'
+import { useActiveAccount, useIsAutoConnecting } from 'thirdweb/react'
 import TooltipText from '@/components/tooltips/TooltipText'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
+import { EstimatedReturns } from './estimated-returns'
+import { getStatDisplayValue } from './helper-functions'
+import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 
 export default function PositionDetails() {
     const searchParams = useSearchParams();
     const { allChainsData } = useContext(AssetsDataContext);
-    // const tokenAddress = searchParams.get("token") || "";
     const chain_id = searchParams.get("chain_id") || 0;
     const protocol_identifier = searchParams.get("protocol_identifier") || "";
-    // const { address: walletAddress, isConnecting, isDisconnected } = useAccount();
     const activeAccount = useActiveAccount();
     const walletAddress = activeAccount?.address;
-    const { isConnecting } = useConnect();
+    const isAutoConnecting = useIsAutoConnecting();
 
     const {
         data: portfolioData,
@@ -54,13 +61,15 @@ export default function PositionDetails() {
         chain_id: Number(chain_id),
     });
 
+    const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isAutoConnecting;
+
     // Filter user positions
     const userPositions = portfolioData?.platforms.filter(platform =>
         platform?.protocol_identifier.toLowerCase() === (platformData?.platform as any)?.protocol_identifier.toLowerCase()
     );
-    const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isConnecting;
 
-    const [POSITIONS] = userPositions?.map((platform, index: number) => {
+    // Format user positions
+    const [formattedUserPositions] = userPositions?.map((platform, index: number) => {
         const lendPositions = platform.positions.filter(position => position.type === "lend");
         const borrowPositions = platform.positions.filter(position => position.type === "borrow");
         const chainDetails = allChainsData.find(chain => chain.chain_id === platform.chain_id);
@@ -105,24 +114,31 @@ export default function PositionDetails() {
         }
     })
 
-    const numerator = Number(POSITIONS?.borrowAsset?.tokenDetails[0]?.amount) || 0;
-    const denominator = (Number(POSITIONS?.lendAsset?.tokenDetails[0]?.liquidation_threshold)) / 100;
-    const tokenAmount = Number(POSITIONS?.lendAsset?.tokenDetails[0]?.tokenAmount);
+    const numerator = Number(formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amount) || 0;
+    const denominator = (Number(formattedUserPositions?.lendAsset?.tokenDetails[0]?.liquidation_threshold)) / 100;
+    const tokenAmount = Number(formattedUserPositions?.lendAsset?.tokenDetails[0]?.tokenAmount);
 
     const liquidationPrice = numerator / (denominator * tokenAmount);
 
-    const liquidationPercentage = (Number(POSITIONS?.borrowAsset?.tokenDetails[0]?.amount) * 100) / (Number(POSITIONS?.lendAsset?.tokenDetails[0]?.amount) * denominator);
+    const liquidationPercentage = (Number(formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amount) * 100) / (Number(formattedUserPositions?.lendAsset?.tokenDetails[0]?.amount) * denominator);
     const liquidationDetails = {
         liquidationPrice: liquidationPrice,
-        assetLogo: POSITIONS?.lendAsset?.tokenDetails[0]?.logo,
-        assetSymbol: POSITIONS?.lendAsset?.tokenDetails[0]?.symbol,
+        assetLogo: formattedUserPositions?.lendAsset?.tokenDetails[0]?.logo,
+        assetSymbol: formattedUserPositions?.lendAsset?.tokenDetails[0]?.symbol,
         percentage: liquidationPercentage,
         riskFactor: getLiquidationRisk(liquidationPercentage, 50, 80),
     }
     const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(platformData?.platform.platform_type);
 
+    // Loading state
+    if (isLoading) {
+        return (
+            <LoadingSectionSkeleton className="h-[340px]" />
+        )
+    }
+
     // If user is not connected, show connect wallet button
-    if (!walletAddress) {
+    if (!isLoading && !walletAddress) {
         return (
             <motion.div
                 className='flex flex-col gap-6 items-center justify-center h-full bg-white bg-opacity-75 rounded-6 px-5 py-12'
@@ -136,7 +152,16 @@ export default function PositionDetails() {
         )
     }
 
-    // If user is connected, show position details
+    // If user is connected, but does not have any positions, show estimated returns
+    // if (!isLoading && userPositions.length === 0) {
+    //     return (
+    //         <EstimatedReturns
+    //             platformDetails={platformData}
+    //         />
+    //     )
+    // }
+
+    // If user is connected, and has positions, show position details
     return (
         <motion.section
             className={`bg-white bg-opacity-40 px-[16px] rounded-6 ${isPairBasedProtocol && userPositions.length > 0 ? "pt-[32px] pb-[16px]" : "py-[16px]"}`}
@@ -209,13 +234,13 @@ export default function PositionDetails() {
                             <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
                                 <div className="flex items-center gap-[6px]">
                                     <AvatarCircles
-                                        avatarUrls={POSITIONS?.lendAsset?.tokenImages ?? []}
-                                        avatarDetails={POSITIONS?.lendAsset?.tokenDetails?.map(token => ({
+                                        avatarUrls={formattedUserPositions?.lendAsset?.tokenImages ?? []}
+                                        avatarDetails={formattedUserPositions?.lendAsset?.tokenDetails?.map(token => ({
                                             content: `${hasLowestDisplayValuePrefix(Number(token.amount))} $${getStatDisplayValue(token.amount, false)}`,
                                             title: token.symbol
                                         }))}
                                     />
-                                    <HeadingText level='h3' weight='medium' className="text-gray-800">${abbreviateNumber(Number(POSITIONS?.lendAsset.amount ?? 0))}</HeadingText>
+                                    <HeadingText level='h3' weight='medium' className="text-gray-800">${abbreviateNumber(Number(formattedUserPositions?.lendAsset.amount ?? 0))}</HeadingText>
                                 </div>
                                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
                                 withdraw
@@ -227,13 +252,13 @@ export default function PositionDetails() {
                             <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
                                 <div className="flex items-center gap-[6px]">
                                     <AvatarCircles
-                                        avatarUrls={POSITIONS?.borrowAsset?.tokenImages ?? []}
-                                        avatarDetails={POSITIONS?.borrowAsset?.tokenDetails?.map(token => ({
+                                        avatarUrls={formattedUserPositions?.borrowAsset?.tokenImages ?? []}
+                                        avatarDetails={formattedUserPositions?.borrowAsset?.tokenDetails?.map(token => ({
                                             content: `${hasLowestDisplayValuePrefix(Number(token.amount))} $${getStatDisplayValue(token.amount, false)}`,
                                             title: token.symbol
                                         }))}
                                     />
-                                    <HeadingText level='h3' weight='medium' className="text-gray-800">${abbreviateNumber(Number(POSITIONS?.borrowAsset.amount ?? 0))}</HeadingText>
+                                    <HeadingText level='h3' weight='medium' className="text-gray-800">${abbreviateNumber(Number(formattedUserPositions?.borrowAsset.amount ?? 0))}</HeadingText>
                                 </div>
                                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
                                 repay
@@ -252,12 +277,4 @@ export default function PositionDetails() {
             </div>
         </motion.section>
     )
-}
-
-function getStatDisplayValue(value: string | number, hasPrefix: boolean = true) {
-    return `${hasPrefix ? hasLowestDisplayValuePrefix(Number(value)) : ""}${getLowestDisplayValue(Number(value))}`;
-}
-
-function calculatePercentage(value: number, maxValue: number): number {
-    return (value / maxValue) * 100;
 }
