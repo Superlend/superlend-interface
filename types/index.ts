@@ -153,12 +153,13 @@ export type TPlatform = {
     name: string;
     platform_name: string;
     protocol_identifier: string;
-    platform_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
+    protocol_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
     logo: string;
     chain_id: number;
     vaultId: string;
     isVault: boolean;
     morpho_market_id: string;
+    core_contract: string;
   };
   assets: TPlatformAsset[];
 };

@@ -33,7 +33,7 @@ const AvatarCircles = ({
             <ImageWithDefault
               key={index}
               className="h-[24px] w-[24px] max-w-[24px] max-h-[24px] rounded-full border-2 border-white dark:border-gray-800 delay-75 md:hover:scale-150 transition-transform ease-in delay-150 bg-white"
-              src={url}
+              src={url || ""}
               width={24}
               height={24}
               alt={`Avatar ${index + 1}`}

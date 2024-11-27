@@ -33,14 +33,14 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <span className="flex flex-col gap-[4px]">
                         <Label>Token</Label>
                         <span className="flex items-center gap-[8px]">
-                            <ImageWithDefault alt={tokenSymbol} src={tokenLogo} width={24} height={24} className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]" />
+                            <ImageWithDefault alt={tokenSymbol} src={tokenLogo || ""} width={24} height={24} className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]" />
                             <BodyText level="body2" weight="medium">{tokenName}</BodyText>
                         </span>
                     </span>
                     <span className="flex flex-col gap-[4px]">
                         <Label>Chain</Label>
                         <span className="flex items-center gap-[8px]">
-                            <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]" />
+                            <ImageWithDefault alt={chainName} src={chainLogo || ""} width={24} height={24} className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]" />
                             <BodyText level="body2" weight="medium">{chainName[0]}{chainName.toLowerCase().slice(1)}</BodyText>
                         </span>
                     </span>
@@ -52,8 +52,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <InfoTooltip
                         label={
                             <ImageWithBadge
-                                mainImg={tokenLogo}
-                                badgeImg={chainLogo}
+                                mainImg={tokenLogo || ""}
+                                badgeImg={chainLogo || ""}
                                 mainImgAlt={tokenSymbol}
                                 badgeImgAlt={chainName}
                             />
@@ -91,7 +91,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-[8px]">
                     <ImageWithDefault
-                        src={platformLogo}
+                        src={platformLogo || ""}
                         alt={`${platformName} logo`}
                         width={20}
                         height={20}
@@ -174,7 +174,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         hasRewards && (
                             <InfoTooltip
                                 label={
-                                    <ImageWithDefault src="/icons/sparkles.svg" width={22} height={22} className="cursor-pointer hover:scale-110" />
+                                    <ImageWithDefault src="/icons/sparkles.svg" alt="Rewards" width={22} height={22} className="cursor-pointer hover:scale-110" />
                                 }
                                 content={
                                     getRewardsTooltipContent({ baseRateFormatted: baseRateFormatted || '', rewards: rewards || [], apyCurrent: apyCurrent || 0, positionTypeParam })

@@ -162,8 +162,8 @@ export const PLATFORM_OPTIONS = [
   // { value: PlatformValue.SparkGnosis, label: PlatformDisplayValue.SparkGnosis },
 ];
 
-export const POOL_BASED_PROTOCOLS = ["aaveV3", "compoundV2"]; // Extracted values from the platform_type field in the backend
-export const PAIR_BASED_PROTOCOLS = ["morpho", "fluid"]; // Extracted values from the platform_type field in the backend
+export const POOL_BASED_PROTOCOLS = ["aaveV3", "compoundV2"]; // Extracted values from the protocol_type field in the backend
+export const PAIR_BASED_PROTOCOLS = ["morpho", "fluid"]; // Extracted values from the protocol_type field in the backend
 
 export enum WarningMessages {
   hardcoded_oracle = "Using a fixed oracle, limits accurate pricing.",

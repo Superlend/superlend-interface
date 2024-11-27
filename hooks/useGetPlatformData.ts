@@ -25,7 +25,7 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
     data: data || {
       platform: {
         platform_name: "",
-        platform_type: "aaveV3",
+        protocol_type: "aaveV3",
         protocol_identifier: "",
         name: "",
         logo: "",
@@ -33,6 +33,7 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
         vaultId: "",
         isVault: false,
         morpho_market_id: "",
+        core_contract: "",
       },
       assets: [],
     },

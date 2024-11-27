@@ -2,7 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-const ImageWithDefault = ({ src, defaultSrc = '/images/fallback-img.png', alt = "", className, width, height, ...props }: any) => {
+
+type ImageWithDefaultProps = {
+    src: string;
+    defaultSrc?: string;
+    alt: string;
+    className?: string;
+    width: number;
+    height: number;
+}
+
+const ImageWithDefault = ({ src, defaultSrc = '/images/fallback-img.png', alt = "", className = "", width, height, ...props }: any) => {
     const [imageSrc, setImageSrc] = useState(src);
 
     useEffect(() => {
@@ -15,7 +25,7 @@ const ImageWithDefault = ({ src, defaultSrc = '/images/fallback-img.png', alt = 
 
     return (
         <Image
-            className={className || ""}
+            className={className}
             width={width}
             height={height}
             src={imageSrc}

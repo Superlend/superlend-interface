@@ -37,7 +37,7 @@ export default function ImageWithBadge({
         <span className='relative shrink-0'>
             <ImageWithDefault
                 src={mainImg}
-                alt={mainImgAlt}
+                alt={mainImgAlt || ""}
                 width={mainImgSizes.width}
                 height={mainImgSizes.height}
                 className={`relative rounded-full shrink-0 object-contain ${mainImgSizes.className}`}
@@ -48,7 +48,7 @@ export default function ImageWithBadge({
             />
             <ImageWithDefault
                 src={badgeImg}
-                alt={badgeImgAlt}
+                alt={badgeImgAlt || ""}
                 width={badgeImgSizes.width}
                 height={badgeImgSizes.height}
                 className={`absolute bottom-[-6px] right-[-3px] bg-gray-100 rounded-full ring-2 ring-white ${badgeImgSizes.className} object-contain`}
