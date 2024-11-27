@@ -212,24 +212,26 @@ export function EstimatedReturns({
             <Card>
                 <CardHeader className='pb-[12px]'>
                     <div className="flex flex-col md:flex-row justify-between md:items-center gap-[12px]">
-                        {/* Estimate returns by using slider below */}
-                        <div className="flex items-center gap-[8px]">
-                            <BodyText level='body2' weight='normal' className="text-gray-600">
-                                Estimate returns by using slider below
-                            </BodyText>
-                            <InfoTooltip
-                                content="This is an approximate estimate of returns and not the actual returns as change in supply will affect the overall earnings with time"
-                            />
-                        </div>
-                        <div className="flex items-center gap-[8px]">
-                            <Switch
-                                id="values-format"
-                                checked={isUSDAmount}
-                                onCheckedChange={handleIsUSDAmountChange}
-                            />
-                            <Label htmlFor="values-format" weight="medium" className="text-gray-600">
-                                {isUSDAmount ? "USD" : "Token"} Amount
-                            </Label>
+                        <div className="flex items-center gap-[16px]">
+                            {/* Estimate returns by using slider below */}
+                            <div className="flex items-center gap-[8px]">
+                                <BodyText level='body2' weight='normal' className="text-gray-600">
+                                    Estimate returns by using slider below
+                                </BodyText>
+                                <InfoTooltip
+                                    content="This is an approximate estimate of returns and not the actual returns as change in supply will affect the overall earnings with time"
+                                />
+                            </div>
+                            <div className="flex items-center gap-[8px]">
+                                <Switch
+                                    id="values-format"
+                                    checked={isUSDAmount}
+                                    onCheckedChange={handleIsUSDAmountChange}
+                                />
+                                <Label htmlFor="values-format" weight="medium" className="text-gray-600">
+                                    {isUSDAmount ? "USD" : "Token"} Amount
+                                </Label>
+                            </div>
                         </div>
                         {/* Estimated earnings */}
                         <div className="flex items-center gap-[8px]">
@@ -254,7 +256,7 @@ export function EstimatedReturns({
                                     <div className="flex flex-col gap-[12px]">
                                         <div className="flex flex-col gap-[4px]">
                                             <BodyText level='body2' weight='normal' className="capitalize text-gray-600">
-                                                Supply -
+                                                Interest Gain -
                                             </BodyText>
                                             <div className="flex items-center gap-[6px]">
                                                 <HeadingText level='h5' weight='medium' className="text-gray-800">
@@ -265,7 +267,7 @@ export function EstimatedReturns({
                                         </div>
                                         <div className="flex flex-col gap-[4px]">
                                             <BodyText level='body2' weight='normal' className="capitalize text-gray-600">
-                                                Loan -
+                                                Interest Loss -
                                             </BodyText>
                                             <div className="flex items-center gap-[6px]">
                                                 <HeadingText level='h5' weight='medium' className="text-gray-800">
