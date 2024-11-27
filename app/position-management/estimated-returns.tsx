@@ -212,7 +212,7 @@ export function EstimatedReturns({
             <Card>
                 <CardHeader className='pb-[12px]'>
                     <div className="flex flex-col md:flex-row justify-between md:items-center gap-[12px]">
-                        <div className="flex items-center gap-[16px]">
+                        <div className="flex flex-wrap items-center gap-[16px]">
                             {/* Estimate returns by using slider below */}
                             <div className="flex items-center gap-[8px]">
                                 <BodyText level='body2' weight='normal' className="text-gray-600">
