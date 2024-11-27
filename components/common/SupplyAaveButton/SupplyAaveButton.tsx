@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   useAccount,
+  useConnect,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from 'wagmi'
@@ -21,6 +22,9 @@ import {
 } from '@/constants'
 // import { getErrorText } from '@/lib/getErrorText'
 import { Button } from '@/components/ui/button'
+import { prepareContractCall } from 'thirdweb'
+import { defineChain } from 'thirdweb'
+import { useSearchParams } from 'next/navigation'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 
 interface ISupplyAaveButtonProps {
@@ -45,6 +49,9 @@ const SupplyAaveButton = ({
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({ hash })
   const { address: walletAddress } = useAccount()
   // const { createToast } = useCreatePendingToast()
+  const { isConnected } = useAccount()
+  const { connect, connectors } = useConnect()
+
   const supply = useCallback(async () => {
     try {
       setLastTx('approve')
@@ -77,7 +84,6 @@ const SupplyAaveButton = ({
 
       writeContractAsync({
         address: poolContractAddress,
-        // address: underlyingAssetAdress,
         abi: AAVE_POOL_ABI,
         functionName: 'supply',
         args: [
@@ -87,6 +93,7 @@ const SupplyAaveButton = ({
           0,
         ],
       })
+
     } catch (error) {
       // toast.remove()
       error
@@ -101,12 +108,27 @@ const SupplyAaveButton = ({
     decimals,
   ])
   useEffect(() => {
+    console.log("isSuccess", isSuccess)
+    console.log("lastTx", lastTx)
+
     if (isSuccess && lastTx === 'mint') {
       void supply()
     }
   }, [isSuccess, lastTx, supply])
 
   const onApproveSupply = async () => {
+    if (!isConnected) {
+      // If not connected, prompt connection first
+      try {
+        const connector = connectors[0] // Usually metamask/injected connector
+        await connect({ connector })
+        return
+      } catch (error) {
+        console.error('Connection failed:', error)
+        return
+      }
+    }
+
     try {
       // createToast()
       setLastTx('mint')
@@ -140,6 +162,10 @@ const SupplyAaveButton = ({
           poolContractAddress,
           parseUnits(amount, decimals)],
       })
+      // console.log("underlyingAssetAdress", underlyingAssetAdress)
+      // console.log("poolContractAddress", poolContractAddress)
+      // console.log("amount", amount)
+      // console.log("decimals", decimals)
     } catch (error) {
       // toast.remove()
       error
@@ -148,10 +174,11 @@ const SupplyAaveButton = ({
   return (
     <Button
       disabled={isPending || isLoading || disabled}
-      onClick={() => onApproveSupply()}
+      onClick={onApproveSupply}
+      className="py-3 rounded-5"
+      variant="primary"
     >
-      {/* {getActionName(Action.LEND)} */}
-      Lend
+      {lastTx === "mint" ? "Approve token" : "Supply"}
     </Button>
   )
 }

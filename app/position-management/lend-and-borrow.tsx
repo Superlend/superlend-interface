@@ -19,12 +19,10 @@ import { TPlatformAsset, TPositionType, TToken } from "@/types";
 import { ArrowRightIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useContext, useMemo, useState } from "react";
-import { useIsAutoConnecting, useActiveAccount } from "thirdweb/react";
+import { useIsAutoConnecting, useActiveAccount, useSwitchActiveWalletChain } from "thirdweb/react";
 import { abbreviateNumber, capitalizeText, checkDecimalPlaces, convertScientificToNormal, isLowestValue } from "@/lib/utils";
 import { getRiskFactor } from "@/lib/utils";
 import { BodyText, HeadingText } from "@/components/ui/typography";
-import { Input } from "@/components/ui/input";
-import { getTokenBalances } from "@/lib/getERC20TokenBalances"
 
 import {
     DropdownMenu,
@@ -39,7 +37,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import CustomNumberInput from "@/components/inputs/CustomNumberInput";
 import AAVE_POOL_ABI from "@/data/abi/aaveApproveABI.json";
-import { useBalance, useReadContract } from "wagmi";
+import { useAccount, useBalance, useReadContract } from "wagmi";
 import { formatUnits, BigNumberish } from "ethers";
 // import { PlatformType, PlatformValue } from "@/types/platform";
 
@@ -56,6 +54,11 @@ import { Badge } from "@/components/ui/badge";
 import LoadingSectionSkeleton from "@/components/skeletons/LoadingSection";
 import { POOL_BASED_PROTOCOLS, TOO_MANY_DECIMALS_VALIDATIONS_TEXT } from "@/constants";
 import ActionButton from "@/components/common/ActionButton";
+import { defineChain, getContract } from "thirdweb";
+import { useReadContract as useReadContractThirdweb } from "thirdweb/react";
+import { client } from "../client";
+import { useWalletBalance } from "thirdweb/react";
+import { config } from "@/config";
 
 export default function LendAndBorrowAssets() {
     const [positionType, setPositionType] = useState<TPositionType>('lend');
@@ -65,11 +68,12 @@ export default function LendAndBorrowAssets() {
     // const [balance, setBalance] = useState(0)
     const searchParams = useSearchParams();
     const tokenAddress = searchParams.get("token") || "";
-    const chain_id = searchParams.get("chain_id") || 0;
+    const chain_id = searchParams.get("chain_id") || 1;
     const protocol_identifier = searchParams.get("protocol_identifier") || "";
     const activeAccount = useActiveAccount();
     const walletAddress = activeAccount?.address;
     const isAutoConnecting = useIsAutoConnecting();
+    const switchChain = useSwitchActiveWalletChain();
 
     const {
         data: portfolioData,
@@ -94,6 +98,28 @@ export default function LendAndBorrowAssets() {
 
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData;
 
+    const customChain = defineChain(Number(chain_id));
+
+    // const contract = getContract({
+    //     client,
+    //     address: platformData?.platform?.core_contract,
+    //     chain: customChain,
+    // });
+
+    useEffect(() => {
+        if (!!walletAddress) {
+            switchChain(customChain)
+        }
+    }, [walletAddress, isAutoConnecting]);
+
+    // const { data, isLoading: isLoadingBalance, isError: isErrorBalance } = useWalletBalance({
+    //     chain: customChain,
+    //     address: walletAddress,
+    //     tokenAddress: tokenAddress,
+    //     client,
+    // });
+    // console.log("balance", data, data?.displayValue, data?.symbol);
+
     // Filter user positions
     const [selectedPlatformDetails] = portfolioData?.platforms.filter(platform =>
         platform?.protocol_identifier.toLowerCase() === (platformData?.platform as any)?.protocol_identifier.toLowerCase()
@@ -103,6 +129,7 @@ export default function LendAndBorrowAssets() {
     const borrowPositions = selectedPlatformDetails?.positions?.filter((position) => position.type === "borrow");
     // Check if there are multiple tokens
     // const hasMultipleTokens = positionType === "lend" ? lendPositions?.length > 1 : borrowPositions?.length > 1;
+    const hasPosition = !!selectedPlatformDetails?.positions?.find((position) => position?.token?.address === tokenAddress);
 
     const getAssetDetailsFromPortfolio = (tokenAddress: string) => {
         return {
@@ -115,7 +142,7 @@ export default function LendAndBorrowAssets() {
     }
 
     const getAssetDetails = (tokenAddress: string) => {
-        if (selectedPlatformDetails) {
+        if (!!selectedPlatformDetails && hasPosition) {
             return getAssetDetailsFromPortfolio(tokenAddress)
         }
         return {
@@ -123,22 +150,23 @@ export default function LendAndBorrowAssets() {
                 ...platformData?.assets?.find((platform: TPlatformAsset) => platform?.token?.address === tokenAddress),
                 amount: null,
             },
-            platform: platformData?.platform,
+            ...platformData?.platform
         }
     }
 
     const assetDetails = getAssetDetails(tokenAddress);
 
     // Get balance of token
-    const result = useReadContract({
+    const result: any = useReadContract({
         abi: AAVE_POOL_ABI,
         address: tokenAddress,
         functionName: 'balanceOf',
         args: [walletAddress as `0x${string}`],
         account: walletAddress as `0x${string}`,
     })
+
     // Get balance of wallet
-    const resultData = useBalance({ address: walletAddress as `0x${string}` })
+    // const resultData = useBalance({ address: walletAddress as `0x${string}` })
 
     // Calculate balance
     const balance = useMemo(() => {
@@ -149,24 +177,27 @@ export default function LendAndBorrowAssets() {
             //     : assetDetails?.token?.decimals
             return formatUnits(result.data as BigNumberish, countedDecimals)
         }
-        if (assetDetails && resultData.data) {
-            return formatUnits(
-                resultData.data.value as BigNumberish,
-                resultData.data.decimals
-            )
-        }
+        // if (assetDetails && resultData.data) {
+        //     return formatUnits(
+        //         resultData.data.value as BigNumberish,
+        //         resultData.data.decimals
+        //     )
+        // }
         return '0'
-    }, [result?.data, resultData.data])
+    }, [result?.data])
 
     // useEffect(() => {
     //     if (allTokensData && allChainsData && walletAddress) {
     //         getTokenBalances({
     //             userAddress: walletAddress as `0x${string}`,
+    //             contractAddress: platformData?.platform?.core_contract,
     //             chains: allChainsData.map((chain) => chain.chain_id),
     //             tokens: allTokensData
     //         })
-    //             .then(() => {
-    //                 setBalance(Number(balance))
+    //             .then((data) => {
+    //                 // setBalance(Number(balance))
+    //                 console.log(data);
+
     //             })
     //             .catch((e: Error) => console.error(e))
     //     }
@@ -198,7 +229,7 @@ export default function LendAndBorrowAssets() {
     }
 
     // Check if platform is aaveV3 or compoundV2, else return null
-    if (!POOL_BASED_PROTOCOLS.includes(platformData?.platform?.platform_type)) {
+    if (!POOL_BASED_PROTOCOLS.includes(platformData?.platform?.protocol_type)) {
         return null;
     }
 
@@ -383,21 +414,21 @@ function ConfirmationDialog({
 
                 <div className="flex flex-col gap-[12px]">
                     {/* Block 1 */}
-                    <div className="flex items-center justify-between px-[24px] py-[18.5px] bg-white rounded-5">
+                    <div className="flex flex-wrap items-center justify-between gap-2 px-[24px] py-[18.5px] bg-white rounded-5">
                         <div className="flex items-center gap-[8px]">
                             <ImageWithDefault src={assetDetails?.asset?.token?.logo} alt={assetDetails?.asset?.token?.symbol} width={24} height={24} className='rounded-full max-w-[24px] max-h-[24px]' />
                             <HeadingText level="h3" weight="normal" className="text-gray-800">
-                                {abbreviateNumber(Number(amount))}
+                                {Number(amount)}
                             </HeadingText>
                         </div>
                         <BodyText level="body2" weight="normal" className="text-gray-600">
-                            ~${abbreviateNumber(Number(amount) * Number(assetDetails?.asset?.token?.price_usd))}
+                            ~${Number(amount) * Number(assetDetails?.asset?.token?.price_usd)}
                         </BodyText>
                     </div>
                     {/* Block 2 */}
                     <div className="flex items-center justify-between px-[24px] mb-[4px]">
                         <BodyText level="body2" weight="normal" className="text-gray-600">
-                            Remaining limit
+                            {isLendPositionType(positionType) ? "Bal." : "Remaining limit"}
                         </BodyText>
                         <BodyText level="body2" weight="normal" className="text-gray-600">
                             {Number(balance) - Number(amount)}
@@ -407,24 +438,28 @@ function ConfirmationDialog({
                     <div className="flex flex-col items-center justify-between px-[24px] bg-white rounded-5 divide-y divide-gray-300">
                         <div className="flex items-center justify-between w-full py-[16px]">
                             <BodyText level="body2" weight="normal" className="text-gray-600">
-                                Net APY
+                                {isLendPositionType(positionType) ? "Lend" : "Net"} APY
                             </BodyText>
                             <Badge variant="green">
                                 {abbreviateNumber(Number(assetDetails?.asset?.apy ?? 0))}%
                             </Badge>
                         </div>
-                        <div className="flex items-center justify-between w-full py-[16px]">
-                            <BodyText level="body2" weight="normal" className="text-gray-600">
-                                New limit
-                            </BodyText>
-                            <div className="flex items-center gap-[4px]">
-                                <BodyText level="body2" weight="normal" className="text-gray-800">
-                                    {abbreviateNumber(Number(balance) - Number(amount))}
-                                </BodyText>
-                                <ImageWithDefault src={assetDetails?.asset?.token?.logo} alt={assetDetails?.asset?.token?.symbol} width={16} height={16} className='rounded-full max-w-[16px] max-h-[16px]' />
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between w-full py-[16px]">
+                        {
+                            !isLendPositionType(positionType) && (
+                                <div className="flex items-center justify-between w-full py-[16px]">
+                                    <BodyText level="body2" weight="normal" className="text-gray-600">
+                                        New limit
+                                    </BodyText>
+                                    <div className="flex items-center gap-[4px]">
+                                        <BodyText level="body2" weight="normal" className="text-gray-800">
+                                            {abbreviateNumber(Number(balance) - Number(amount))}
+                                        </BodyText>
+                                        <ImageWithDefault src={assetDetails?.asset?.token?.logo} alt={assetDetails?.asset?.token?.symbol} width={16} height={16} className='rounded-full max-w-[16px] max-h-[16px]' />
+                                    </div>
+                                </div>
+                            )
+                        }
+                        {/* <div className="flex items-center justify-between w-full py-[16px]">
                             <BodyText level="body2" weight="normal" className="text-gray-600">
                                 Gas fees
                             </BodyText>
@@ -434,7 +469,7 @@ function ConfirmationDialog({
                                 </BodyText>
                                 <ImageWithDefault src={'/images/tokens/eth.webp'} alt={"Ethereum"} width={16} height={16} className='rounded-full max-w-[16px] max-h-[16px]' />
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                     {/* Block 4 */}
                     <ActionButton
@@ -449,4 +484,8 @@ function ConfirmationDialog({
         </Dialog>
 
     )
+}
+
+function isLendPositionType(positionType: TPositionType) {
+    return positionType === "lend";
 }

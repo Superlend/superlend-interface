@@ -25,7 +25,7 @@ export default function PositionManagementPage() {
                         <PositionDetails />
                         <AssetHistory />
                     </div>
-                    {/* <LendAndBorrowAssets /> */}
+                    <LendAndBorrowAssets />
                     {/* <BlogCard /> */}
                 </div>
             </MainContainer>

@@ -128,13 +128,19 @@ const BorrowButton = ({
         // )
         // toast.remove()
 
+        // console.log(poolContractAddress);
+        // console.log(underlyingAssetAdress);
+        // console.log(amount);
+        // console.log(asset.asset.token.decimals);
+        // console.log(addressOfWallet);
+
         writeContractAsync({
           address: poolContractAddress,
           abi: AAVE_POOL_ABI,
           functionName: 'borrow',
           args: [
             underlyingAssetAdress,
-            parseUnits(amount, asset.decimals),
+            parseUnits(amount, asset.asset.token.decimals),
             2,
             0,
             addressOfWallet,
@@ -150,14 +156,21 @@ const BorrowButton = ({
 
   const onBorrow = async () => {
     // createToast()
-    if (asset?.platform?.platform_type === PlatformType.COMPOUND) {
+    // console.log(asset);
+
+    if (asset?.protocol_type === PlatformType.COMPOUND) {
       await borrowCompound(asset?.asset?.token?.address, amount)
       return
     }
-    if (asset?.platform?.platform_type === PlatformType.AAVE) {
+    if (asset?.protocol_type === PlatformType.AAVE) {
+      // console.log(POOL_AAVE_MAP[asset?.platform_name as PlatformValue]);
+      // console.log(asset?.asset?.token?.address);
+      // console.log(amount);
+      // console.log(walletAddress);
+
       await borrowAave(
-        POOL_AAVE_MAP[asset.platform.platform_name as PlatformValue],
-        // asset?.asset?.token?.address,
+        // POOL_AAVE_MAP[asset?.platform_name as PlatformValue],
+        asset?.core_contract,
         asset?.asset?.token?.address,
         amount,
         walletAddress as string
@@ -166,7 +179,7 @@ const BorrowButton = ({
     }
   }
   return (
-    <Button variant="primary" disabled={isPending || disabled} onClick={() => onBorrow()}>
+    <Button variant="primary" className="py-3 rounded-5" disabled={isPending || disabled} onClick={onBorrow}>
       {/* {getActionName(Action.BORROW)} */}
       Borrow
     </Button>
