@@ -30,6 +30,7 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { EstimatedReturns } from './estimated-returns'
 import { getStatDisplayValue } from './helper-functions'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
+import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData'
 
 export default function PositionDetails() {
     const searchParams = useSearchParams();
@@ -128,7 +129,7 @@ export default function PositionDetails() {
         percentage: liquidationPercentage,
         riskFactor: getLiquidationRisk(liquidationPercentage, 50, 80),
     }
-    const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(platformData?.platform.platform_type);
+    const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(platformData?.platform.protocol_type);
 
     // Loading state
     // if (isLoading) {
@@ -153,13 +154,13 @@ export default function PositionDetails() {
     }
 
     // If user is connected, but does not have any positions, show estimated returns
-    // if (!isLoading && userPositions.length === 0) {
-    //     return (
-    //         <EstimatedReturns
-    //             platformDetails={platformData}
-    //         />
-    //     )
-    // }
+    if (!isLoading && userPositions.length === 0) {
+        return (
+            <EstimatedReturns
+                platformDetails={platformData}
+            />
+        )
+    }
 
     // If user is connected, and has positions, show position details
     return (

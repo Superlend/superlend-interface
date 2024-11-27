@@ -74,17 +74,21 @@ export function getStatDisplayValue(
 export function getEstimatedEarnings({
   supplyAPY,
   borrowAPY,
-  amountSuppliedInUsd,
-  amountBorrowedInUsd,
+  amountSupplied,
+  amountBorrowed,
   duration,
 }: {
   supplyAPY: number;
   borrowAPY: number;
-  amountSuppliedInUsd: number;
-  amountBorrowedInUsd: number;
+  amountSupplied: number;
+  amountBorrowed: number;
   duration: number; // In months
 }) {
-  const interestGain = (amountSuppliedInUsd * supplyAPY * duration) / 1200;
-  const interestLoss = (amountBorrowedInUsd * borrowAPY * duration) / 1200;
-  return interestGain - interestLoss;
+  const interestGain = (amountSupplied * supplyAPY * duration) / 1200;
+  const interestLoss = (amountBorrowed * borrowAPY * duration) / 1200;
+  return {
+    interestGain,
+    interestLoss,
+    netEstimatedEarnings: interestGain - interestLoss,
+  };
 }
