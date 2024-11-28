@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { BodyText, Label } from "@/components/ui/typography";
 import { PositionsContext } from "@/context/positions-provider";
 import useDimensions from "@/hooks/useDimensions";
-import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive, getPlatformVersion, isLowestValue } from "@/lib/utils";
+import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive, convertScientificToNormal, getPlatformVersion, isLowestNegativeValue, isLowestValue } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useContext } from "react";
@@ -253,8 +253,19 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         ),
         cell: ({ row }) => {
             const { positionType } = useContext<any>(PositionsContext);
-            const value: number = Number(row.getValue("earnings"));
-            const sanitizedValue = isLowestValue(Number(value)) ? "< $0.01" : getSanitizedValue(Number(value));
+
+            // Get the raw value first
+            const rawValue = row.getValue("earnings");
+
+            // Convert scientific notation to regular number string
+            const value = Number(rawValue).toFixed(10);
+
+            const sanitizedValue =
+                Math.abs(Number(value)) === 0
+                    ? "$0.00"
+                    : Math.abs(Number(value)) < 0.01
+                        ? "< $0.01"
+                        : getSanitizedValue(value);
 
             const getPrefixSign = () => {
                 if (positionType === "lend") {
@@ -262,19 +273,21 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                 }
                 return Number(value) === 0 ? "" : "-";
             };
+
+            function getSanitizedValue(value: string) {
+                const numValue = Number(value);
+                if (numValue < 0) {
+                    return `$${abbreviateNumber(Math.abs(numValue))}`
+                }
+                return `$${abbreviateNumber(numValue)}`
+            }
+
             const getBadgeVariant = () => {
                 if (positionType === "lend") {
                     return Number(value) < 0 ? "destructive" : Number(value) > 0 ? "green" : "default";
                 }
                 return Number(value) === 0 ? "default" : "destructive";
             };
-
-            function getSanitizedValue(value: string | number) {
-                if (containsNegativeInteger(value)) {
-                    return `- $${abbreviateNumber(Number(convertNegativeToPositive(value)) ?? 0)}`
-                }
-                return `$${abbreviateNumber(Number(value) ?? 0)}`
-            }
 
             return (
                 <Badge variant={getBadgeVariant()}>

@@ -211,6 +211,10 @@ export function isLowestValue(value: number) {
   return value > 0 && value < 0.01;
 }
 
+export function isLowestNegativeValue(value: number) {
+  return value < -0.01;
+}
+
 export function hasLowestDisplayValuePrefix(value: number) {
   return isLowestValue(Number(value)) ? "<" : "";
 }
@@ -399,14 +403,14 @@ export const copyToClipboard = async (text: string) => {
 };
 
 export function checkDecimalPlaces(value: string, decimals: number) {
-  if (value.includes('.')) {
-    const decimalPart = value.split('.')[1]
+  if (value.includes(".")) {
+    const decimalPart = value.split(".")[1];
     if (decimalPart.length > decimals) {
-      return true
+      return true;
     }
   }
 
-  return false
+  return false;
 }
 
 export function countCompoundDecimals(
@@ -414,7 +418,7 @@ export function countCompoundDecimals(
   underlyingDecimals: number
 ) {
   if (underlyingDecimals !== 18) {
-    return 18 - decimals
+    return 18 - decimals;
   }
-  return underlyingDecimals
+  return underlyingDecimals;
 }
