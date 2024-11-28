@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDownIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { usePositionManagementContext } from "@/context/position-management-provider";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 
 type TRow = {
@@ -62,8 +63,9 @@ export function EstimatedReturns({
     const [borrowAssetDetails, setBorrowAssetDetails] = useState<any>(null);
     const [stableLendAssetsList, setStableLendAssetsList] = useState<any[]>([]);
     const [stableBorrowAssetsList, setStableBorrowAssetsList] = useState<any[]>([]);
-    const isAaveV3 = platformDetails?.platform.protocol_type === "aaveV3";
     const [isUSDAmount, setIsUSDAmount] = useState(false);
+    const isAaveV3 = platformDetails?.platform.protocol_type === "aaveV3";
+    const isMorpho = platformDetails?.platform.protocol_type === "morpho";
 
     useEffect(() => {
         /*
@@ -75,14 +77,14 @@ export function EstimatedReturns({
                 // Get lend asset details
                 setLendAssetDetails(platformDetails?.assets.find(asset => asset.token.address === tokenAddress));
                 // Get the first borrow asset details
-                setBorrowAssetDetails(platformDetails?.assets.filter(asset => asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0]);
+                setBorrowAssetDetails(platformDetails?.assets.filter(asset => asset.borrow_enabled)[0]);
                 // Get stable borrow assets list
-                setStableBorrowAssetsList(platformDetails?.assets.filter(asset => asset.borrow_enabled && STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol)));
+                setStableBorrowAssetsList(platformDetails?.assets.filter(asset => asset.borrow_enabled));
             } else {
                 // Get stable lend assets list
-                setStableLendAssetsList(platformDetails?.assets.filter(asset => STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol)));
+                setStableLendAssetsList(platformDetails?.assets);
                 // Get the first lend asset details
-                setLendAssetDetails(platformDetails?.assets.filter(asset => STABLE_TOKEN_SYMBOLS.includes(asset.token.symbol))[0]);
+                setLendAssetDetails(platformDetails?.assets[0]);
                 // Get borrow asset details
                 setBorrowAssetDetails(platformDetails?.assets.find(asset => asset.token.address === tokenAddress));
             }
@@ -104,7 +106,7 @@ export function EstimatedReturns({
         setSelectedValue(prev => ({ ...prev, borrow: 0 }));
     }, [selectedValue.lend]);
 
-    const supplyAPY = isAaveV3 && positionType === "borrow" ? (selectedStableTokenDetails?.supply_apy) || 0 : (lendAssetDetails?.supply_apy) || 0;
+    const supplyAPY = isMorpho ? 0 : isAaveV3 && positionType === "borrow" ? (selectedStableTokenDetails?.supply_apy) || 0 : (lendAssetDetails?.supply_apy) || 0;
     const borrowAPY = isAaveV3 && positionType === "lend" ? (selectedStableTokenDetails?.variable_borrow_apy) || 0 : (borrowAssetDetails?.variable_borrow_apy) || 0;
     const duration = selectedValue?.duration || 0;
     const assetLTV = platformHistoryData?.processMap[platformHistoryData?.processMap.length - 1]?.data?.ltv || 0;
@@ -368,21 +370,23 @@ function StableTokensDropdown({
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden">
                 <DropdownMenuLabel className="text-gray-600 py-2 px-4 font-normal">Select Token</DropdownMenuLabel>
-                {
-                    options?.map((asset: any) => (
-                        <DropdownMenuItem
-                            key={asset?.token?.address}
-                            onClick={() => setSelectedStableTokenDetails(asset)}
-                            className={
-                                cn("flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4",
-                                    selectedStableTokenDetails?.token?.address === asset?.token?.address && "bg-gray-400")
-                            }
-                        >
-                            <ImageWithDefault src={asset?.token?.logo || ""} alt={asset?.token?.symbol || ""} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
-                            <BodyText level='body2' weight='medium' className="text-gray-800">{asset?.token?.symbol || ""}</BodyText>
-                        </DropdownMenuItem>
-                    ))
-                }
+                <ScrollArea className="h-[200px]">
+                    {
+                        options?.map((asset: any) => (
+                            <DropdownMenuItem
+                                key={asset?.token?.address}
+                                onClick={() => setSelectedStableTokenDetails(asset)}
+                                className={
+                                    cn("flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4",
+                                        selectedStableTokenDetails?.token?.address === asset?.token?.address && "bg-gray-400")
+                                }
+                            >
+                                <ImageWithDefault src={asset?.token?.logo || ""} alt={asset?.token?.symbol || ""} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
+                                <BodyText level='body2' weight='medium' className="text-gray-800">{asset?.token?.symbol || ""}</BodyText>
+                            </DropdownMenuItem>
+                        ))
+                    }
+                </ScrollArea>
             </DropdownMenuContent>
         </DropdownMenu>
     )
