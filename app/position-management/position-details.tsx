@@ -151,6 +151,8 @@ export default function PositionDetails() {
         const liquidationPrice = borrowPowerUsed / liquidationThreshold;
         const liquidationPercentage = (borrowPowerUsed / borrowPower) * 100;
 
+        // console.log(borrowPower);
+
         return {
             assetLogos,
             assetSymbols,
@@ -234,6 +236,8 @@ export default function PositionDetails() {
         )
     }
 
+    // console.log(formattedUserPositions?.borrowAsset.amount);
+
     // If user is connected, and has positions, show position details
     return (
         <motion.section
@@ -284,11 +288,11 @@ export default function PositionDetails() {
                                     />
                                 }
                                 {
-                                    liquidationDetails.hasBorrowed &&
+                                    liquidationDetails.hasBorrowed && liquidationDetails.liquidationPrice !== 0 &&
                                     <BodyText level='body1' weight='medium'>${abbreviateNumber(liquidationDetails.liquidationPrice)}</BodyText>
                                 }
                                 {
-                                    !liquidationDetails.hasBorrowed &&
+                                    !liquidationDetails.hasBorrowed || liquidationDetails.liquidationPrice === 0 &&
                                     <BodyText level='body1' weight='normal'>
                                         <InfoTooltip
                                             label={
