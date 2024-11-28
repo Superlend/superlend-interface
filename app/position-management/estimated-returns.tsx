@@ -65,6 +65,7 @@ export function EstimatedReturns({
     const [stableBorrowAssetsList, setStableBorrowAssetsList] = useState<any[]>([]);
     const [isUSDAmount, setIsUSDAmount] = useState(false);
     const isAaveV3 = platformDetails?.platform.protocol_type === "aaveV3";
+    const isCompoundV2 = platformDetails?.platform.protocol_type === "compoundV2";
     const isMorpho = platformDetails?.platform.protocol_type === "morpho";
 
     useEffect(() => {
@@ -96,28 +97,22 @@ export function EstimatedReturns({
         }
     }, [tokenAddress]);
 
-    // Reset selected values when isUSDAmount changes
-    // useEffect(() => {
-    //     setSelectedValue(DEFAULT_SELECTED_VALUES);
-    // }, [isUSDAmount]);
-
     // Reset borrow value when lend value changes
     useEffect(() => {
         setSelectedValue(prev => ({ ...prev, borrow: 0 }));
     }, [selectedValue.lend]);
 
-    const supplyAPY = isMorpho ? 0 : isAaveV3 && positionType === "borrow" ? (selectedStableTokenDetails?.supply_apy) || 0 : (lendAssetDetails?.supply_apy) || 0;
-    const borrowAPY = isAaveV3 && positionType === "lend" ? (selectedStableTokenDetails?.variable_borrow_apy) || 0 : (borrowAssetDetails?.variable_borrow_apy) || 0;
-    const duration = selectedValue?.duration || 0;
-    const assetLTV = platformHistoryData?.processMap[platformHistoryData?.processMap.length - 1]?.data?.ltv || 0;
-
     const handleSelectedValueChange = (value: number, type: "lend" | "borrow" | "duration") => {
         setSelectedValue(prev => ({ ...prev, [type]: value }));
     }
 
+    const supplyAPY = isMorpho ? 0 : isAaveV3 && positionType === "borrow" ? (selectedStableTokenDetails?.supply_apy) || 0 : (lendAssetDetails?.supply_apy) || 0;
+    const borrowAPY = isAaveV3 && positionType === "lend" ? (selectedStableTokenDetails?.variable_borrow_apy) || 0 : (borrowAssetDetails?.variable_borrow_apy) || 0;
+    const duration = selectedValue?.duration || 0;
+    const assetLTV = platformHistoryData?.processMap[platformHistoryData?.processMap.length - 1]?.data?.ltv || 0;
     const amountSupplied = selectedValue.lend;
     const amountBorrowed = selectedValue.borrow;
-    const maxBorrowAmountInUsd = (assetLTV / 100) * (isUSDAmount ? 1 * selectedValue.lend : lendAssetDetails?.token.price_usd * selectedValue.lend);
+    const maxBorrowAmountInUsd = (assetLTV / 100) * (isUSDAmount ? selectedValue.lend : ((lendAssetDetails?.token.price_usd ?? 0) * selectedValue.lend));
 
     const rows: TRow[] = [
         {
@@ -139,8 +134,8 @@ export function EstimatedReturns({
             selectedLabel: borrowAssetDetails?.token.symbol || "",
             selectedValue: selectedValue.borrow,
             hasSelectedValue: !(stableBorrowAssetsList.length > 0),
-            totalValue: isUSDAmount ? maxBorrowAmountInUsd : maxBorrowAmountInUsd / borrowAssetDetails?.token.price_usd,
-            step: isUSDAmount ? 50 : Math.min(0.01, 50 / borrowAssetDetails?.token.price_usd),
+            totalValue: !lendAssetDetails && isCompoundV2 ? 25000 : isUSDAmount ? maxBorrowAmountInUsd : maxBorrowAmountInUsd / (borrowAssetDetails?.token.price_usd ?? 0),
+            step: isUSDAmount ? 50 : Math.min(0.01, 50 / (borrowAssetDetails?.token.price_usd ?? 0)),
         },
         {
             id: 3,
@@ -166,7 +161,7 @@ export function EstimatedReturns({
         duration,
     });
 
-    const netEstimatedEarningFinal = !isUSDAmount ? (interestGain * lendAssetDetails?.token.price_usd) - (interestLoss * borrowAssetDetails?.token.price_usd) : netEstimatedEarnings;
+    const netEstimatedEarningFinal = isUSDAmount ? netEstimatedEarnings : (interestGain * (lendAssetDetails?.token?.price_usd ?? 0)) - (interestLoss * (borrowAssetDetails?.token?.price_usd ?? 0));
 
     function getDisplayedValuePrefix(key: "lend" | "borrow" | "duration") {
         return key === "lend" || key === "borrow" ? (isUSDAmount ? "$" : "") : "";
@@ -313,9 +308,12 @@ export function EstimatedReturns({
                                         {/* Total value */}
                                         {
                                             !isAssetNotAvailable(row) &&
-                                            <BodyText level='body1' weight='normal' className="text-gray-600">
-                                                {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.key === "duration" ? row.totalValue / 12 : row.totalValue, 0)}{getDisplayedValueSufix(row.key)}
-                                            </BodyText>
+                                            <div className="flex items-center gap-[6px]">
+                                                <BodyText level='body1' weight='normal' className="text-gray-600">
+                                                    {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.key === "duration" ? row.totalValue / 12 : row.totalValue, 0)}{getDisplayedValueSufix(row.key)}
+                                                </BodyText>
+                                                {row.logo && <ImageWithDefault src={row.logo} alt={row.selectedLabel} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />}
+                                            </div>
                                         }
                                         {
                                             isAssetNotAvailable(row) &&
@@ -333,7 +331,7 @@ export function EstimatedReturns({
                                         value={[row.selectedValue]}
                                         onValueChange={(value) => handleSelectedValueChange(value[0], row.key)}
                                         className={cn("group",
-                                            isAssetNotAvailable(row) || (row.key === "borrow" && row.totalValue === 0) && "disabled")}
+                                            isAssetNotAvailable(row) || (row.key === "borrow" && row.totalValue === 0) ? "disabled" : "")}
                                     />
                                 </div>
                             ))
