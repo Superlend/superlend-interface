@@ -47,7 +47,7 @@ export default function PositionDetails() {
         isError: isErrorPortfolioData
     } = useGetPortfolioData({
         user_address: walletAddress as `0x${string}`,
-        protocol_identifier: [protocol_identifier],
+        platform_id: [protocol_identifier],
         chain_id: [String(chain_id)],
     });
 
