@@ -106,8 +106,6 @@ export function EstimatedReturns({
 
     const supplyAPY = isAaveV3 && positionType === "borrow" ? (selectedStableTokenDetails?.supply_apy) || 0 : (lendAssetDetails?.supply_apy) || 0;
     const borrowAPY = isAaveV3 && positionType === "lend" ? (selectedStableTokenDetails?.variable_borrow_apy) || 0 : (borrowAssetDetails?.variable_borrow_apy) || 0;
-    const amountSuppliedInUsd = selectedValue?.lend || 0;
-    const amountBorrowedInUsd = selectedValue?.borrow || 0;
     const duration = selectedValue?.duration || 0;
     const assetLTV = platformHistoryData?.processMap[platformHistoryData?.processMap.length - 1]?.data?.ltv || 0;
 
@@ -115,12 +113,9 @@ export function EstimatedReturns({
         setSelectedValue(prev => ({ ...prev, [type]: value }));
     }
 
-    // const amountSupplied = isUSDAmount ? amountSuppliedInUsd : selectedValue.lend;
-    // const amountBorrowed = isUSDAmount ? amountBorrowedInUsd : selectedValue.borrow;
     const amountSupplied = selectedValue.lend;
     const amountBorrowed = selectedValue.borrow;
-    const maxBorrowAmountInUsd = (assetLTV / 100) * (lendAssetDetails?.token.price_usd * selectedValue.lend);
-    // max borrow amount in usd = ltv/100 * usd_value_of_collat
+    const maxBorrowAmountInUsd = (assetLTV / 100) * (isUSDAmount ? 1 * selectedValue.lend : lendAssetDetails?.token.price_usd * selectedValue.lend);
 
     const rows: TRow[] = [
         {
@@ -142,7 +137,7 @@ export function EstimatedReturns({
             selectedLabel: borrowAssetDetails?.token.symbol || "",
             selectedValue: selectedValue.borrow,
             hasSelectedValue: !(stableBorrowAssetsList.length > 0),
-            totalValue: isUSDAmount ? maxBorrowAmountInUsd : Math.max(maxBorrowAmountInUsd / borrowAssetDetails?.token.price_usd, 5),
+            totalValue: isUSDAmount ? maxBorrowAmountInUsd : maxBorrowAmountInUsd / borrowAssetDetails?.token.price_usd,
             step: isUSDAmount ? 50 : Math.min(0.01, 50 / borrowAssetDetails?.token.price_usd),
         },
         {
@@ -168,6 +163,9 @@ export function EstimatedReturns({
         amountBorrowed,
         duration,
     });
+
+    const netEstimatedEarningFinal = !isUSDAmount ? interestGain * lendAssetDetails?.token.price_usd - interestLoss * borrowAssetDetails?.token.price_usd : netEstimatedEarnings;
+
 
     function getDisplayedValuePrefix(key: "lend" | "borrow" | "duration") {
         return key === "lend" || key === "borrow" ? (isUSDAmount ? "$" : "") : "";
@@ -228,8 +226,8 @@ export function EstimatedReturns({
                                     checked={isUSDAmount}
                                     onCheckedChange={handleIsUSDAmountChange}
                                 />
-                                <Label htmlFor="values-format" weight="medium" className="text-gray-600">
-                                    {isUSDAmount ? "USD" : "Token"} Amount
+                                <Label htmlFor="values-format" weight="normal" className="text-gray-600">
+                                    USD Amount
                                 </Label>
                             </div>
                         </div>
@@ -237,18 +235,14 @@ export function EstimatedReturns({
                         <div className="flex items-center gap-[8px]">
                             {/* Title */}
                             <BodyText level='body2' weight='normal' className="text-gray-600">
-                                Estimated earnings
+                                Estimated Earnings
                             </BodyText>
-                            {/* HeadingText for USD amount */}
-                            {isUSDAmount && <HeadingText level='h4' weight='medium' className="text-gray-800">
-                                {containsNegativeInteger(netEstimatedEarnings) ? "-" : ""}{isUSDAmount ? "$" : ""}{abbreviateNumber(Number(convertNegativeToPositive(netEstimatedEarnings)))}
-                            </HeadingText>}
                             {/* Info tooltip for token amount */}
-                            {!isUSDAmount && <InfoTooltip
+                            <InfoTooltip
                                 label={
                                     <HeadingText level='h4' weight='medium' className="text-gray-800">
                                         <TooltipText>
-                                            {containsNegativeInteger(netEstimatedEarnings) ? "-" : ""}{isUSDAmount ? "$" : ""}{abbreviateNumber(Number(convertNegativeToPositive(netEstimatedEarnings)))}
+                                            {containsNegativeInteger(netEstimatedEarningFinal) ? "-" : ""}${abbreviateNumber(Number(convertNegativeToPositive(netEstimatedEarningFinal)))}
                                         </TooltipText>
                                     </HeadingText>
                                 }
@@ -278,7 +272,7 @@ export function EstimatedReturns({
                                         </div>
                                     </div>
                                 }
-                            />}
+                            />
                         </div>
                     </div>
                 </CardHeader>
@@ -343,15 +337,15 @@ export function EstimatedReturns({
                                         }
                                     </div>
                                     <Slider
-                                        disabled={isAssetNotAvailable(row)}
-                                        key={row.key}
-                                        // || (row.key === "borrow" && selectedValue.borrow === row.totalValue)
+                                        disabled={isAssetNotAvailable(row) || (row.key === "borrow" && row.totalValue === 0)}
+                                        key={`${row.key}-${isUSDAmount ? 'usd' : 'token'}`}
                                         defaultValue={[row.selectedValue]}
                                         max={row.totalValue}
                                         step={row.step}
                                         value={[row.selectedValue]}
                                         onValueChange={(value) => handleSelectedValueChange(value[0], row.key)}
-                                        className={cn("group", isAssetNotAvailable(row) && "disabled")}
+                                        className={cn("group",
+                                            isAssetNotAvailable(row) || (row.key === "borrow" && row.totalValue === 0) && "disabled")}
                                     />
                                 </div>
                             ))
@@ -380,14 +374,14 @@ function StableTokensDropdown({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button size="md" variant="outline" className="group flex items-center gap-1 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-800 rounded-2 focus-visible:ring-0">
+                <Button size="md" variant="outline" className="group flex items-center gap-1 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-800 rounded-2 focus-visible:ring-0 border-none">
                     <ImageWithDefault src={selectedStableTokenDetails?.token.logo} alt={selectedStableTokenDetails?.token.symbol} width={18} height={18} className='rounded-full max-w-[18px] max-h-[18px]' />
                     <BodyText level='body2' weight='medium' className="text-gray-800">{selectedStableTokenDetails?.token.symbol}</BodyText>
                     <ChevronDownIcon className="w-4 h-4 text-gray-600 transition-all duration-300 group-data-[state=open]:rotate-180" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden">
-                <DropdownMenuLabel className="text-gray-600 py-2 px-4">Select Stable Token</DropdownMenuLabel>
+                <DropdownMenuLabel className="text-gray-600 py-2 px-4 font-normal">Select Token</DropdownMenuLabel>
                 {
                     options?.map((asset: any) => (
                         <DropdownMenuItem
