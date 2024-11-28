@@ -38,6 +38,7 @@ type TRow = {
     hasSelectedValue: boolean;
     totalValue: number;
     step: number;
+    show: boolean;
 }
 
 const STABLE_TOKEN_SYMBOLS = ["wBTC", "wETH", "USDC", "USDT"];
@@ -125,17 +126,19 @@ export function EstimatedReturns({
             hasSelectedValue: !(stableLendAssetsList.length > 0),
             totalValue: isUSDAmount ? 25000 : Math.max(25000 / lendAssetDetails?.token.price_usd, 5),
             step: isUSDAmount ? 50 : Math.min(0.01, 50 / lendAssetDetails?.token.price_usd),
+            show: !(isMorpho && positionType === "lend"),
         },
         {
             id: 2,
             key: "borrow",
-            title: "borrowing",
-            logo: borrowAssetDetails?.token.logo,
+            title: (isMorpho && positionType === "lend") ? "Supply" : "Borrowing",
+            logo: isAaveV3 && !!selectedStableTokenDetails ? selectedStableTokenDetails?.token.logo : borrowAssetDetails?.token.logo,
             selectedLabel: borrowAssetDetails?.token.symbol || "",
             selectedValue: selectedValue.borrow,
             hasSelectedValue: !(stableBorrowAssetsList.length > 0),
-            totalValue: !lendAssetDetails && isCompoundV2 ? 25000 : isUSDAmount ? maxBorrowAmountInUsd : maxBorrowAmountInUsd / (borrowAssetDetails?.token.price_usd ?? 0),
+            totalValue: (isMorpho && positionType === "lend") || (!lendAssetDetails && isCompoundV2) ? 25000 : isUSDAmount ? maxBorrowAmountInUsd : maxBorrowAmountInUsd / (borrowAssetDetails?.token.price_usd ?? 0),
             step: isUSDAmount ? 50 : Math.min(0.01, 50 / (borrowAssetDetails?.token.price_usd ?? 0)),
+            show: true,
         },
         {
             id: 3,
@@ -146,6 +149,7 @@ export function EstimatedReturns({
             hasSelectedValue: true,
             totalValue: 24,
             step: 1,
+            show: true,
         }
     ];
 
@@ -262,7 +266,7 @@ export function EstimatedReturns({
                 <CardContent className='bg-white rounded-5 px-[32px] py-[28px]'>
                     <div className="flex flex-col gap-[36px]">
                         {
-                            rows.map(row => (
+                            rows.filter(row => row.show).map(row => (
                                 <div key={row.id} className="flex flex-col gap-[16px]">
                                     <div className="flex items-end md:items-center justify-between">
                                         {/* Title */}
