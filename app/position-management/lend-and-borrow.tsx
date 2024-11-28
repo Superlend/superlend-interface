@@ -401,7 +401,7 @@ function ConfirmationDialog({
                     <ArrowRightIcon width={16} height={16} className='stroke-white group-[:disabled]:opacity-50' />
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent aria-describedby={undefined}>
                 <DialogHeader>
                     <DialogTitle asChild>
                         <HeadingText level="h4" weight="normal" className="text-gray-800 text-center">

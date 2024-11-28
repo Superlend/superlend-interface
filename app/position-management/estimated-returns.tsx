@@ -164,8 +164,7 @@ export function EstimatedReturns({
         duration,
     });
 
-    const netEstimatedEarningFinal = !isUSDAmount ? interestGain * lendAssetDetails?.token.price_usd - interestLoss * borrowAssetDetails?.token.price_usd : netEstimatedEarnings;
-
+    const netEstimatedEarningFinal = !isUSDAmount ? (interestGain * lendAssetDetails?.token.price_usd) - (interestLoss * borrowAssetDetails?.token.price_usd) : netEstimatedEarnings;
 
     function getDisplayedValuePrefix(key: "lend" | "borrow" | "duration") {
         return key === "lend" || key === "borrow" ? (isUSDAmount ? "$" : "") : "";
@@ -180,25 +179,12 @@ export function EstimatedReturns({
     }
 
     function handleIsUSDAmountChange(checked: boolean) {
-        // First reset the values explicitly based on the direction of the change
-        if (checked) {  // false -> true
-            setSelectedValue({
-                lend: 0,
-                borrow: 0,
-                duration: 1,
-            });
-            // Force a small delay before changing the format
-            setTimeout(() => {
-                setIsUSDAmount(checked);
-            }, 0);
-        } else {  // true -> false
-            setIsUSDAmount(checked);
-            setSelectedValue({
-                lend: 0,
-                borrow: 0,
-                duration: 1,
-            });
-        }
+        setIsUSDAmount(checked);
+        setSelectedValue({
+            lend: 0,
+            borrow: 0,
+            duration: 1,
+        });
     }
 
     return (
@@ -254,7 +240,7 @@ export function EstimatedReturns({
                                             </BodyText>
                                             <div className="flex items-center gap-[6px]">
                                                 <HeadingText level='h5' weight='medium' className="text-gray-800">
-                                                    {containsNegativeInteger(interestGain) ? "-" : ""}{isUSDAmount ? "$" : ""}{abbreviateNumber(Number(convertNegativeToPositive(interestGain)))}
+                                                    {containsNegativeInteger(interestGain) ? "-" : ""}${abbreviateNumber(Number(convertNegativeToPositive(interestGain)))}
                                                 </HeadingText>
                                                 <ImageWithDefault src={lendAssetDetails?.token.logo} alt={lendAssetDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
                                             </div>
@@ -265,7 +251,7 @@ export function EstimatedReturns({
                                             </BodyText>
                                             <div className="flex items-center gap-[6px]">
                                                 <HeadingText level='h5' weight='medium' className="text-gray-800">
-                                                    {containsNegativeInteger(interestLoss) ? "-" : ""}{isUSDAmount ? "$" : ""}{abbreviateNumber(Number(convertNegativeToPositive(interestLoss)))}
+                                                    {containsNegativeInteger(interestLoss) ? "-" : ""}${abbreviateNumber(Number(convertNegativeToPositive(interestLoss)))}
                                                 </HeadingText>
                                                 <ImageWithDefault src={borrowAssetDetails?.token.logo} alt={borrowAssetDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
                                             </div>
