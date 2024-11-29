@@ -66,14 +66,14 @@ export function EstimatedReturns({
     const [stableLendAssetsList, setStableLendAssetsList] = useState<any[]>([]);
     const [stableBorrowAssetsList, setStableBorrowAssetsList] = useState<any[]>([]);
     const [isUSDAmount, setIsUSDAmount] = useState(false);
-    const isAaveV3 = platformDetails?.platform.protocol_type === "aaveV3";
-    const isCompoundV2 = platformDetails?.platform.protocol_type === "compoundV2";
-    const isMorpho = platformDetails?.platform.protocol_type === "morpho";
+    const isAaveV3 = platformDetails?.platform.platform_type === "aaveV3";
+    const isCompoundV2 = platformDetails?.platform.platform_type === "compoundV2";
+    const isMorpho = platformDetails?.platform.platform_type === "morpho";
 
     useEffect(() => {
         /*
-            1. If protocol_type is aaveV3, then get the lend/borrow asset details from the token address
-            2. If protocol_type is other than aaveV3, then get the lend asset details from the platform data
+            1. If platform_type is aaveV3, then get the lend/borrow asset details from the token address
+            2. If platform_type is other than aaveV3, then get the lend asset details from the platform data
         */
         if (isAaveV3) {
             if (positionType === "lend") {
@@ -118,7 +118,7 @@ export function EstimatedReturns({
     const amountBorrowed = selectedValue.borrow;
 
 
-    const isPoolBasedProtocol = POOL_BASED_PROTOCOLS.includes(platformDetails?.platform.protocol_type);
+    const isPoolBasedProtocol = POOL_BASED_PROTOCOLS.includes(platformDetails?.platform.platform_type);
     const lendTokenLogo = (isAaveV3 && positionType === "borrow") ? selectedStableTokenDetails?.token.logo : lendAssetDetails?.token.logo;
     const borrowTokenLogo = (isAaveV3 && positionType === "lend") ? selectedStableTokenDetails?.token.logo : borrowAssetDetails?.token.logo;
     const borrowTokenMaxValue = (isAaveV3 && positionType === "lend") ? (selectedStableTokenDetails?.token.price_usd ?? 0) : (borrowAssetDetails?.token.price_usd ?? 0);
