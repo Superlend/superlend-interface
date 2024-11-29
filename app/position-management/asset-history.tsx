@@ -158,7 +158,7 @@ export default function AssetHistory() {
                                         </BodyText>
                                     }
                                     content={
-                                        `Average ${block.label.split(" ").slice(1).join("").toLowerCase()} rate ${hasReward(block.key) ? "with rewards" : ""} for ${PeriodLongDisplay[selectedRange].toLowerCase()}`
+                                        `Average ${block?.label?.split(" ")?.slice(1)?.join("")?.toLowerCase()} rate ${hasReward(block?.key) ? "with rewards" : ""} for ${PeriodLongDisplay[selectedRange]?.toLowerCase()}`
                                     }
                                 />
                                 {!isLoadingPlatformHistory &&
