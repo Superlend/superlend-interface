@@ -16,7 +16,7 @@ import useGetPlatformData from "@/hooks/useGetPlatformData";
 import { usePositionManagementContext } from "@/context/position-management-provider";
 import useGetPortfolioData from "@/hooks/useGetPortfolioData";
 import { TPlatformAsset, TPositionType, TToken } from "@/types";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, ArrowUpRightIcon, CircleCheck, CircleCheckIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useContext, useMemo, useState } from "react";
 import { useIsAutoConnecting, useActiveAccount, useSwitchActiveWalletChain } from "thirdweb/react";
@@ -52,13 +52,15 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge";
 import LoadingSectionSkeleton from "@/components/skeletons/LoadingSection";
-import { POOL_BASED_PROTOCOLS, TOO_MANY_DECIMALS_VALIDATIONS_TEXT } from "@/constants";
+import { POOL_BASED_PROTOCOLS, TOO_MANY_DECIMALS_VALIDATIONS_TEXT, TX_EXPLORER_LINKS } from "@/constants";
 import ActionButton from "@/components/common/ActionButton";
 import { defineChain, getContract } from "thirdweb";
 import { useReadContract as useReadContractThirdweb } from "thirdweb/react";
 import { client } from "../client";
 import { useWalletBalance } from "thirdweb/react";
 import { config } from "@/config";
+import { TLendBorrowTxContext, useLendBorrowTxContext } from "@/context/lend-borrow-tx-provider";
+import { PlatformValue } from "@/types/platform";
 
 export default function LendAndBorrowAssets() {
     const [positionType, setPositionType] = useState<TPositionType>('lend');
@@ -128,7 +130,7 @@ export default function LendAndBorrowAssets() {
     const lendPositions = selectedPlatformDetails?.positions?.filter((position) => position.type === "lend");
     const borrowPositions = selectedPlatformDetails?.positions?.filter((position) => position.type === "borrow");
     // Check if there are multiple tokens
-    // const hasMultipleTokens = positionType === "lend" ? lendPositions?.length > 1 : borrowPositions?.length > 1;
+    // const hasMultipleTokens = isLendPositionType(positionType) ? lendPositions?.length > 1 : borrowPositions?.length > 1;
     const hasPosition = !!selectedPlatformDetails?.positions?.find((position) => position?.token?.address === tokenAddress);
 
     const getAssetDetailsFromPortfolio = (tokenAddress: string) => {
@@ -243,17 +245,17 @@ export default function LendAndBorrowAssets() {
             <Card className="flex flex-col gap-[12px] p-[16px]">
                 <div className="flex items-center justify-between px-[14px]">
                     <BodyText level="body2" weight="normal" className="capitalize text-gray-600">
-                        {positionType === "lend" ? "lend collateral" : `borrow ${assetDetails?.asset?.token?.symbol}`}
+                        {isLendPositionType(positionType) ? "lend collateral" : `borrow ${assetDetails?.asset?.token?.symbol}`}
                     </BodyText>
                     {
-                        positionType === "lend" && (
+                        isLendPositionType(positionType) && (
                             <BodyText level="body2" weight="normal" className="capitalize text-gray-600 flex items-center gap-[4px]">
                                 Bal. {abbreviateNumber(Number(balance))} <span className="inline-block truncate max-w-[70px]">{assetDetails?.asset?.token?.symbol}</span>
                             </BodyText>
                         )
                     }
                     {
-                        positionType === "borrow" && (
+                        !isLendPositionType(positionType) && (
                             <BodyText level="body2" weight="normal" className="capitalize text-gray-600 flex items-center gap-[4px]">
                                 limit - {abbreviateNumber(Number(balance))}
                             </BodyText>
@@ -278,7 +280,7 @@ export default function LendAndBorrowAssets() {
                             !isLoading && hasMultipleTokens && (
                                 <SelectTokensDropdown
                                     key={positionType}
-                                    options={positionType === "lend" ? lendPositions : borrowPositions}
+                                    options={isLendPositionType(positionType) ? lendPositions : borrowPositions}
                                     selectedItemDetails={selectedTokenDetails}
                                     setSelectedItemDetails={(token) => setSelectedTokenDetails(token)}
                                 />
@@ -311,7 +313,7 @@ export default function LendAndBorrowAssets() {
                     </div>
                     <BodyText level="body2" weight="normal" className="mx-auto w-full text-gray-500 py-[16px] text-center max-w-[250px]">
                         {
-                            positionType === "lend" ?
+                            isLendPositionType(positionType) ?
                                 "Enter amount to proceed lending collateral for this position" :
                                 "Enter the amount you want to borrow from this position"
                         }
@@ -388,52 +390,125 @@ function ConfirmationDialog({
     amount: string;
     balance: string;
 }) {
-    // console.log(assetDetails);
+    // console.log("assetDetails", assetDetails)
+    const { lendTx, setLendTx, borrowTx, setBorrowTx } = useLendBorrowTxContext() as TLendBorrowTxContext;
+    const [open, setOpen] = useState(false);
+
+    function handleOpenChange(open: boolean) {
+        setOpen(open);
+        if (!open) {
+            setLendTx({ status: "approve", hash: "" });
+            setBorrowTx({ status: "borrow", hash: "" });
+        }
+    }
+
+    function isShowBlock(status: { lend: boolean, borrow: boolean }) {
+        return isLendPositionType(positionType) ? status.lend : status.borrow;
+    }
+
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 <Button disabled={disabled} variant="primary" className="group flex items-center gap-[4px] py-[13px] w-full rounded-5">
                     <span className="uppercase leading-[0]">
                         {
-                            positionType === "lend" ? "Lend collateral" : "Review & Borrow"
+                            isLendPositionType(positionType) ? "Lend collateral" : "Review & Borrow"
                         }
                     </span>
                     <ArrowRightIcon width={16} height={16} className='stroke-white group-[:disabled]:opacity-50' />
                 </Button>
             </DialogTrigger>
-            <DialogContent aria-describedby={undefined}>
+            <DialogContent aria-describedby={undefined} className="pt-[25px]">
+                {/* Initial Confirmation*/}
                 <DialogHeader>
-                    <DialogTitle asChild>
-                        <HeadingText level="h4" weight="normal" className="text-gray-800 text-center">
-                            {
-                                positionType === "lend" ? "Lend collateral" : `Borrow ${assetDetails?.asset?.token?.symbol}`
-                            }
-                        </HeadingText>
-                    </DialogTitle>
+                    {
+                        isShowBlock({
+                            lend: lendTx.status === "approve",
+                            borrow: borrowTx.status === "borrow"
+                        }) && (
+                            // <DialogTitle asChild>
+                            <HeadingText level="h4" weight="medium" className="text-gray-800 text-center">
+                                {
+                                    isLendPositionType(positionType) ? "Lend collateral" : `Borrow ${assetDetails?.asset?.token?.symbol}`
+                                }
+                            </HeadingText>
+                            // </DialogTitle>
+                        )
+                    }
+                    {/* Confirmation details / Final Tx View */}
+                    {
+                        isShowBlock({
+                            lend: lendTx.status === "lend" || lendTx.status === "view",
+                            borrow: borrowTx.status === "view"
+                        }) && (
+                            <div className="flex flex-col items-center justify-center gap-[6px]">
+                                <ImageWithDefault src={assetDetails?.asset?.token?.logo} alt={assetDetails?.asset?.token?.symbol} width={40} height={40} className='rounded-full max-w-[40px] max-h-[40px]' />
+                                <HeadingText level="h3" weight="medium" className="text-gray-800">
+                                    {amount} {assetDetails?.asset?.token?.symbol}
+                                </HeadingText>
+                                {
+                                    isShowBlock({
+                                        lend: lendTx.status === "view",
+                                        borrow: borrowTx.status === "view"
+                                    }) && (
+                                        <Badge variant="green" className="capitalize flex items-center gap-[4px] font-medium text-[14px]">
+                                            {isLendPositionType(positionType) && lendTx.status === "view" ? "Lent" : "Borrowed"} Successfully
+                                            <CircleCheckIcon width={16} height={16} className="stroke-[#00AD31]" />
+                                        </Badge>
+                                    )
+                                }
+                                {
+                                    isShowBlock({
+                                        lend: lendTx.status === "lend",
+                                        borrow: false
+                                    }) && (
+                                        <Badge variant="green" className="capitalize flex items-center gap-[4px] font-medium text-[14px]">
+                                            Token approved
+                                            <CircleCheckIcon width={16} height={16} className="stroke-[#00AD31]" />
+                                        </Badge>
+                                    )
+                                }
+                            </div>
+                        )
+                    }
                 </DialogHeader>
 
                 <div className="flex flex-col gap-[12px]">
                     {/* Block 1 */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 px-[24px] py-[18.5px] bg-white rounded-5">
-                        <div className="flex items-center gap-[8px]">
-                            <ImageWithDefault src={assetDetails?.asset?.token?.logo} alt={assetDetails?.asset?.token?.symbol} width={24} height={24} className='rounded-full max-w-[24px] max-h-[24px]' />
-                            <HeadingText level="h3" weight="normal" className="text-gray-800">
-                                {Number(amount)}
-                            </HeadingText>
-                        </div>
-                        <BodyText level="body2" weight="normal" className="text-gray-600">
-                            ~${Number(amount) * Number(assetDetails?.asset?.token?.price_usd)}
-                        </BodyText>
-                    </div>
+                    {
+                        isShowBlock({
+                            lend: lendTx.status === "approve",
+                            borrow: borrowTx.status === "borrow"
+                        }) && (
+                            <div className="flex flex-wrap items-center justify-between gap-2 px-[24px] py-[18.5px] bg-white rounded-5">
+                                <div className="flex items-center gap-[8px]">
+                                    <ImageWithDefault src={assetDetails?.asset?.token?.logo} alt={assetDetails?.asset?.token?.symbol} width={24} height={24} className='rounded-full max-w-[24px] max-h-[24px]' />
+                                    <HeadingText level="h3" weight="normal" className="text-gray-800">
+                                        {Number(amount)}
+                                    </HeadingText>
+                                </div>
+                                <BodyText level="body2" weight="normal" className="text-gray-600">
+                                    ~${Number(amount) * Number(assetDetails?.asset?.token?.price_usd)}
+                                </BodyText>
+                            </div>
+                        )
+                    }
                     {/* Block 2 */}
-                    <div className="flex items-center justify-between px-[24px] mb-[4px]">
-                        <BodyText level="body2" weight="normal" className="text-gray-600">
-                            {isLendPositionType(positionType) ? "Bal." : "Remaining limit"}
-                        </BodyText>
-                        <BodyText level="body2" weight="normal" className="text-gray-600">
-                            {Number(balance) - Number(amount)}
-                        </BodyText>
-                    </div>
+                    {
+                        isShowBlock({
+                            lend: lendTx.status === "approve",
+                            borrow: borrowTx.status === "borrow"
+                        }) && (
+                            <div className="flex items-center justify-between px-[24px] mb-[4px]">
+                                <BodyText level="body2" weight="normal" className="text-gray-600">
+                                    {isLendPositionType(positionType) ? "Bal." : "Remaining limit"}
+                                </BodyText>
+                                <BodyText level="body2" weight="normal" className="text-gray-600">
+                                    {Number(balance) - Number(amount)}
+                                </BodyText>
+                            </div>
+                        )
+                    }
                     {/* Block 3 */}
                     <div className="flex flex-col items-center justify-between px-[24px] bg-white rounded-5 divide-y divide-gray-300">
                         <div className="flex items-center justify-between w-full py-[16px]">
@@ -459,9 +534,34 @@ function ConfirmationDialog({
                                 </div>
                             )
                         }
+                        {
+                            isShowBlock({
+                                lend: lendTx.status === "view",
+                                borrow: borrowTx.status === "view"
+                            }) && (
+                                <div className="flex items-center justify-between w-full py-[16px]">
+                                    <BodyText level="body2" weight="normal" className="text-gray-600">
+                                        View on explorer
+                                    </BodyText>
+                                    <div className="flex items-center gap-[4px]">
+                                        <BodyText level="body2" weight="medium" className="text-gray-800 flex items-center gap-[4px]">
+                                            <a
+                                                href={getExplorerLink(isLendPositionType(positionType) ? lendTx.hash : borrowTx.hash, assetDetails?.platform_name)}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-secondary-500"
+                                            >
+                                                {getTruncatedTxHash(isLendPositionType(positionType) ? lendTx.hash : borrowTx.hash)}
+                                            </a>
+                                            <ArrowUpRightIcon width={16} height={16} className="stroke-secondary-500" />
+                                        </BodyText>
+                                    </div>
+                                </div>
+                            )
+                        }
                         {/* <div className="flex items-center justify-between w-full py-[16px]">
                             <BodyText level="body2" weight="normal" className="text-gray-600">
-                                Gas fees
+                                View on explorer
                             </BodyText>
                             <div className="flex items-center gap-[4px]">
                                 <BodyText level="body2" weight="normal" className="text-gray-800">
@@ -474,7 +574,7 @@ function ConfirmationDialog({
                     {/* Block 4 */}
                     <ActionButton
                         disabled={disabled}
-                        handleCloseModal={() => { }}
+                        handleCloseModal={handleOpenChange}
                         asset={assetDetails}
                         amount={amount}
                         positionType={positionType}
@@ -488,4 +588,12 @@ function ConfirmationDialog({
 
 function isLendPositionType(positionType: TPositionType) {
     return positionType === "lend";
+}
+
+function getExplorerLink(hash: string, platform_name: PlatformValue) {
+    return `${TX_EXPLORER_LINKS[platform_name]}/tx/${hash}`;
+}
+
+function getTruncatedTxHash(hash: string) {
+    return `${hash.slice(0, 7)}...${hash.slice(-4)}`;
 }

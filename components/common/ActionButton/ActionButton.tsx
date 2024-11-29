@@ -43,7 +43,7 @@ const ActionButton = ({
     asset.protocol_type === PlatformType.AAVE &&
     positionType === "lend"
   ) {
-    console.log(asset);
+    // console.log(asset);
 
     // console.log('platform_name', asset.platform_name);
     // console.log('tokenAddress', asset.asset.token.address);
@@ -55,8 +55,8 @@ const ActionButton = ({
       <SupplyAaveButton
         disabled={disabled}
         handleCloseModal={handleCloseModal}
-        // poolContractAddress={POOL_AAVE_MAP[asset.platform_name as PlatformValue]}
-        poolContractAddress={asset.core_contract}
+        poolContractAddress={POOL_AAVE_MAP[asset.platform_name as PlatformValue]}
+        // poolContractAddress={asset.core_contract}
         underlyingAssetAdress={asset.asset.token.address}
         amount={amount}
         decimals={asset.asset.token.decimals}

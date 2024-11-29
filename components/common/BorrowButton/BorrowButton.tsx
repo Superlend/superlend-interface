@@ -1,10 +1,10 @@
-import { useAccount, useWriteContract } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt, type BaseError } from 'wagmi'
 // import { Action } from '../../../types/assetsTable'
 // import { getActionName } from '@utils/getActionName'
 // import CustomButton from '@components/ui/CustomButton'
 import COMPOUND_ABI from '@/data/abi/compoundABI.json'
 import AAVE_POOL_ABI from '@/data/abi/aavePoolABI.json'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 // import { AddressType } from '../../../types/address'
 // import { IAssetData } from '@interfaces/IAssetData'
 import {
@@ -22,6 +22,9 @@ import { countCompoundDecimals } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { PlatformType, PlatformValue } from '@/types/platform'
 import { useActiveAccount } from 'thirdweb/react'
+import CustomAlert from '@/components/alerts/CustomAlert'
+import { TLendBorrowTxContext, useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { ArrowRightIcon } from 'lucide-react'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
 interface IBorrowButtonProps {
@@ -31,17 +34,40 @@ interface IBorrowButtonProps {
   handleCloseModal: (isVisible: boolean) => void
 }
 
+const txBtnStatus: Record<string, string> = {
+  pending: 'Borrowing...',
+  confirming: 'Confirming...',
+  success: 'View position',
+  default: 'Borrow'
+}
+
 const BorrowButton = ({
   disabled,
   asset,
   amount,
   handleCloseModal,
 }: IBorrowButtonProps) => {
-  const { writeContractAsync, isPending } = useWriteContract()
+  const { writeContractAsync, isPending, data: hash, error } = useWriteContract()
   // const { address: walletAddress } = useAccount()
   // const { createToast } = useCreatePendingToast()
   const activeAccount = useActiveAccount();
   const walletAddress = activeAccount?.address;
+  const { borrowTx, setBorrowTx } = useLendBorrowTxContext() as TLendBorrowTxContext;
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    })
+
+  useEffect(() => {
+    if (hash) {
+      setBorrowTx({ status: "view", hash });
+    }
+  }, [hash]);
+
+
+  const txBtnText = txBtnStatus[isConfirming ? 'confirming' : isConfirmed ? 'success' : isPending ? 'pending' : 'default']
+
   const borrowCompound = useCallback(
     async (cTokenAddress: string, amount: string) => {
       try {
@@ -146,6 +172,7 @@ const BorrowButton = ({
             addressOfWallet,
           ],
         })
+
       } catch (error) {
         // toast.remove()
         error
@@ -169,8 +196,8 @@ const BorrowButton = ({
       // console.log(walletAddress);
 
       await borrowAave(
-        // POOL_AAVE_MAP[asset?.platform_name as PlatformValue],
-        asset?.core_contract,
+        POOL_AAVE_MAP[asset?.platform_name as PlatformValue],
+        // asset?.core_contract,
         asset?.asset?.token?.address,
         amount,
         walletAddress as string
@@ -179,10 +206,19 @@ const BorrowButton = ({
     }
   }
   return (
-    <Button variant="primary" className="py-3 rounded-5" disabled={isPending || disabled} onClick={onBorrow}>
-      {/* {getActionName(Action.BORROW)} */}
-      Borrow
-    </Button>
+    <>
+      {error && (
+        <CustomAlert description={(error as BaseError).shortMessage || error.message} />
+      )}
+      <Button variant="primary"
+        className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
+        disabled={isPending || isConfirming || disabled}
+        onClick={borrowTx.status === "borrow" ? onBorrow : () => handleCloseModal(false)}
+      >
+        {txBtnText}
+        <ArrowRightIcon width={16} height={16} className='stroke-white group-[:disabled]:opacity-50' />
+      </Button>
+    </>
   )
 }
 

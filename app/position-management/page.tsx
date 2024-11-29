@@ -14,6 +14,7 @@ import { BodyText } from '@/components/ui/typography';
 import PositionDetails from './position-details';
 import LendAndBorrowAssets from './lend-and-borrow';
 import PositionManagementProvider from '@/context/position-management-provider';
+import LendBorrowTxProvider from '@/context/lend-borrow-tx-provider';
 
 export default function PositionManagementPage() {
     return (
@@ -25,7 +26,9 @@ export default function PositionManagementPage() {
                         <PositionDetails />
                         <AssetHistory />
                     </div>
-                    {/* <LendAndBorrowAssets /> */}
+                    <LendBorrowTxProvider>
+                        <LendAndBorrowAssets />
+                    </LendBorrowTxProvider>
                     {/* <BlogCard /> */}
                 </div>
             </MainContainer>
