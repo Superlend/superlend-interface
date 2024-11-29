@@ -84,14 +84,14 @@ export default function PageHeader() {
     const tokenName = tokenDetails?.name || "";
     const chainName = chainDetails?.name || "";
     const chainLogo = chainDetails?.logo || "";
-    const platformName = platformData.platform.name;
-    const platformType = platformData.platform.protocol_type;
-    const platformId = platformData.platform.platform_name;
-    const platformLogo = platformData?.platform.logo;
+    const platformName = platformData?.platform?.name;
+    const platformType = platformData?.platform?.platform_type;
+    const platformId = platformData?.platform?.platform_name;
+    const platformLogo = platformData?.platform?.logo;
     const vaultId = platformData?.platform?.vaultId;
     const morpho_market_id = platformData?.platform?.morpho_market_id;
     const network_name = chainName;
-    const isFluidVault = platformData?.platform?.protocol_type === PlatformType.FLUID && platformData?.platform?.isVault;
+    const isFluidVault = platformData?.platform?.platform_type === PlatformType.FLUID && platformData?.platform?.isVault;
     const platformWebsiteLink = getPlatformWebsiteLink({
         platformId,
         chainName,
@@ -106,7 +106,7 @@ export default function PageHeader() {
     const checkForPairBasedTokens = (platformTypes: string[], platformType: string) => platformTypes.map(type => type?.toLowerCase()).includes(platformType?.toLowerCase());
     const hasPoolBasedTokens = checkForPairBasedTokens(POOL_BASED_PROTOCOLS, platformType);
     const hasPairBasedTokens = checkForPairBasedTokens(PAIR_BASED_PROTOCOLS, platformType);
-    const isFluidPlatform = platformData?.platform?.protocol_type === PlatformType.FLUID;
+    const isFluidPlatform = platformData?.platform?.platform_type === PlatformType.FLUID;
 
     // If has Collateral Token, then get the Collateral token details
     const collateralTokenSymbol = platformName.split(" ")[1]?.split("/")[0];
