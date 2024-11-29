@@ -124,7 +124,7 @@ export default function LendAndBorrowAssets() {
 
     // Filter user positions
     const [selectedPlatformDetails] = portfolioData?.platforms.filter(platform =>
-        platform?.protocol_identifier.toLowerCase() === (platformData?.platform as any)?.protocol_identifier.toLowerCase()
+        platform?.protocol_identifier?.toLowerCase() === (platformData?.platform as any)?.protocol_identifier?.toLowerCase()
     );
     // Filter lend and borrow positions
     const lendPositions = selectedPlatformDetails?.positions?.filter((position) => position.type === "lend");
@@ -289,6 +289,7 @@ export default function LendAndBorrowAssets() {
                         <BodyText level="body2" weight="normal" className="capitalize text-gray-500">|</BodyText>
                         <div className="flex flex-col gap-[4px]">
                             <CustomNumberInput
+                                key={positionType}
                                 amount={amount}
                                 setAmount={(amount) => setAmount(amount)}
                             />
@@ -326,6 +327,7 @@ export default function LendAndBorrowAssets() {
                         assetDetails={assetDetails}
                         amount={amount}
                         balance={balance}
+                        setAmount={setAmount}
                     />
                 </CardFooter>
             </Card>
@@ -382,6 +384,7 @@ function ConfirmationDialog({
     positionType,
     assetDetails,
     amount,
+    setAmount,
     balance,
 }: {
     disabled: boolean;
@@ -389,6 +392,7 @@ function ConfirmationDialog({
     assetDetails: any;
     amount: string;
     balance: string;
+    setAmount: (amount: string) => void;
 }) {
     // console.log("assetDetails", assetDetails)
     const { lendTx, setLendTx, borrowTx, setBorrowTx } = useLendBorrowTxContext() as TLendBorrowTxContext;
@@ -397,6 +401,7 @@ function ConfirmationDialog({
     function handleOpenChange(open: boolean) {
         setOpen(open);
         if (!open) {
+            setAmount('');
             setLendTx({ status: "approve", hash: "" });
             setBorrowTx({ status: "borrow", hash: "" });
         }

@@ -65,11 +65,11 @@ export default function PositionDetails() {
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isAutoConnecting;
 
     const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(platformData?.platform.protocol_type);
-    const isAaveV3 = platformData?.platform.protocol_type === "aaveV3";
+    const isAaveV3 = platformData?.platform?.protocol_type === "aaveV3";
 
     // Get user positions from portfolio data using protocol identifier
     const userPositions = portfolioData?.platforms.filter(platform =>
-        platform?.protocol_identifier.toLowerCase() === (platformData?.platform as any)?.protocol_identifier.toLowerCase()
+        platform?.protocol_identifier?.toLowerCase() === (platformData?.platform as any)?.protocol_identifier?.toLowerCase()
     );
 
     // Format user positions
