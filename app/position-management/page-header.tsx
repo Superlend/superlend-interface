@@ -142,26 +142,40 @@ export default function PageHeader() {
                 </div>
             )}
             {isMorpho && (
-                <CustomAlert
-                    variant="info"
-                    description={
-                        <div className='flex flex-col gap-[4px]'>
-                            <BodyText level='body2' weight='medium' className=''>
-                                Supplying directly to Morpho markets is risky. It requires knowledge, <br /> and the right tools to manage risks properly, and there is a chance that your deposit may become illiquid.
-                            </BodyText>
-                            <BodyText level='body2' weight='medium' className='flex items-center gap-[4px]'>
-                                More details can be found
-                                <a href={MORPHO_ETHERSCAN_TUTORIAL_LINK}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className='w-fit inline-block shrink-0 flex items-center gap-[4px] text-secondary-500 border-b border-secondary-500 hover:border-secondary-500/40 leading-[0.5]'
-                                >
-                                    here
-                                    <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
-                                </a>
-                            </BodyText>
-                        </div>
-                    } />
+                <div className="w-full">
+                    <CustomAlert
+                        variant="info"
+                        hasPrefixIcon={false}
+                        description={
+                            <div className='flex flex-col gap-[4px]'>
+                                <BodyText level='body2' weight='normal'>
+                                    <span className='font-medium'>Note:</span>
+                                    <span className="mx-2">
+                                        Supplying directly to Morpho markets is risky. It requires knowledge, and the right tools to manage risks properly, and there is a chance that your deposit may become illiquid. More details can be found
+                                    </span>
+                                    <a href={MORPHO_ETHERSCAN_TUTORIAL_LINK}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className='w-fit shrink-0 inline-flex items-center gap-[4px] text-secondary-500 border-b border-secondary-500 hover:border-secondary-500/40 leading-[0.5]'
+                                    >
+                                        here
+                                        <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
+                                    </a>
+                                </BodyText>
+                                {/* <BodyText level='body2' weight='medium' className='flex items-center gap-[4px]'>
+                                    More details can be found
+                                    <a href={MORPHO_ETHERSCAN_TUTORIAL_LINK}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className='w-fit inline-block shrink-0 flex items-center gap-[4px] text-secondary-500 border-b border-secondary-500 hover:border-secondary-500/40 leading-[0.5]'
+                                    >
+                                        here
+                                        <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
+                                    </a>
+                                </BodyText> */}
+                            </div>
+                        } />
+                </div>
             )}
             <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
                 <motion.div className="will-change-transform"
