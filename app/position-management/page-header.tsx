@@ -78,7 +78,7 @@ export default function PageHeader() {
         platformData: platformData as TPlatform
     })
 
-    const isMorpho = platformData.platform.platform_name.toLowerCase().includes("morpho");
+    const isMorpho = platformData?.platform?.platform_name?.toLowerCase()?.includes("morpho");
     const tokenSymbol = tokenDetails?.symbol;
     const tokenLogo = tokenDetails?.logo || "";
     const tokenName = tokenDetails?.name || "";
@@ -249,7 +249,7 @@ export default function PageHeader() {
                                 <Badge size="md" className='border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[400px]'>
                                     <div className="flex items-center gap-1">
                                         <ImageWithDefault src={chainLogo} alt={`${chainName}`} width={16} height={16} className='object-contain shrink-0 max-w-[16px] max-h-[16px]' />
-                                        <Label weight='medium' className='leading-[0] shrink-0 capitalize'>{chainName.toLowerCase()}</Label>
+                                        <Label weight='medium' className='leading-[0] shrink-0 capitalize'>{chainName?.toLowerCase()}</Label>
                                     </div>
                                     <a
                                         className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
@@ -327,7 +327,7 @@ function getPageHeaderStats({
     tokenAddress: string;
     platformData: TPlatform
 }) {
-    const [stats] = platformData?.assets?.filter((asset: TPlatformAsset) => asset.token.address.toLowerCase() === tokenAddress.toLowerCase())
+    const [stats] = platformData?.assets?.filter((asset: TPlatformAsset) => asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase())
         .map((item: TPlatformAsset) => ({
             supply_apy: abbreviateNumber(item.supply_apy),
             borrow_rate: abbreviateNumber(item.variable_borrow_apy)
