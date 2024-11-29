@@ -26,6 +26,7 @@ import { ChevronDownIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { usePositionManagementContext } from "@/context/position-management-provider";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { POOL_BASED_PROTOCOLS } from "@/constants";
 
 
 type TRow = {
@@ -81,7 +82,7 @@ export function EstimatedReturns({
                 // Get the first borrow asset details
                 setBorrowAssetDetails(platformDetails?.assets.filter(asset => asset.borrow_enabled)[0]);
                 // Get stable borrow assets list
-                setStableBorrowAssetsList(platformDetails?.assets.filter(asset => asset.borrow_enabled));
+                setStableBorrowAssetsList(platformDetails?.assets);
             } else {
                 // Get stable lend assets list
                 setStableLendAssetsList(platformDetails?.assets);
@@ -115,12 +116,16 @@ export function EstimatedReturns({
     const amountBorrowed = selectedValue.borrow;
     const maxBorrowAmountInUsd = (assetLTV / 100) * (isUSDAmount ? selectedValue.lend : ((lendAssetDetails?.token.price_usd ?? 0) * selectedValue.lend));
 
+    const isPoolBasedProtocol = POOL_BASED_PROTOCOLS.includes(platformDetails?.platform.protocol_type);
+    const lendTokenLogo = (isAaveV3 && positionType === "borrow") ? selectedStableTokenDetails?.token.logo : lendAssetDetails?.token.logo;
+    const borrowTokenLogo = (isAaveV3 && positionType === "lend") ? selectedStableTokenDetails?.token.logo : borrowAssetDetails?.token.logo;
+
     const rows: TRow[] = [
         {
             id: 1,
             key: "lend",
             title: "lend collateral",
-            logo: lendAssetDetails?.token.logo,
+            logo: lendTokenLogo,
             selectedLabel: lendAssetDetails?.token.symbol || "",
             selectedValue: selectedValue.lend,
             hasSelectedValue: !(stableLendAssetsList.length > 0),
@@ -132,7 +137,7 @@ export function EstimatedReturns({
             id: 2,
             key: "borrow",
             title: (isMorpho && positionType === "lend") ? "Supply" : "Borrowing",
-            logo: isAaveV3 && !!selectedStableTokenDetails ? selectedStableTokenDetails?.token.logo : borrowAssetDetails?.token.logo,
+            logo: borrowTokenLogo,
             selectedLabel: borrowAssetDetails?.token.symbol || "",
             selectedValue: selectedValue.borrow,
             hasSelectedValue: !(stableBorrowAssetsList.length > 0),
@@ -243,7 +248,7 @@ export function EstimatedReturns({
                                                 <HeadingText level='h5' weight='medium' className="text-gray-800">
                                                     {containsNegativeInteger(interestGain) ? "-" : ""}${abbreviateNumber(Number(convertNegativeToPositive(interestGain)))}
                                                 </HeadingText>
-                                                <ImageWithDefault src={lendAssetDetails?.token.logo} alt={lendAssetDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
+                                                <ImageWithDefault src={lendTokenLogo} alt={lendAssetDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-[4px]">
@@ -254,7 +259,7 @@ export function EstimatedReturns({
                                                 <HeadingText level='h5' weight='medium' className="text-gray-800">
                                                     {containsNegativeInteger(interestLoss) ? "-" : ""}${abbreviateNumber(Number(convertNegativeToPositive(interestLoss)))}
                                                 </HeadingText>
-                                                <ImageWithDefault src={borrowAssetDetails?.token.logo} alt={borrowAssetDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
+                                                <ImageWithDefault src={borrowTokenLogo} alt={borrowAssetDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
                                             </div>
                                         </div>
                                     </div>
@@ -316,7 +321,14 @@ export function EstimatedReturns({
                                                 <BodyText level='body1' weight='normal' className="text-gray-600">
                                                     {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.key === "duration" ? row.totalValue / 12 : row.totalValue, 0)}{getDisplayedValueSufix(row.key)}
                                                 </BodyText>
-                                                {row.logo && <ImageWithDefault src={row.logo} alt={row.selectedLabel} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />}
+                                                {row.logo &&
+                                                    <ImageWithDefault
+                                                        src={row.logo}
+                                                        alt={row.selectedLabel}
+                                                        width={20}
+                                                        height={20}
+                                                        className='rounded-full max-w-[20px] max-h-[20px]'
+                                                    />}
                                             </div>
                                         }
                                         {
