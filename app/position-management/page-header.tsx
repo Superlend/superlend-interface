@@ -145,9 +145,9 @@ export default function PageHeader() {
                 <CustomAlert
                     variant="info"
                     description={
-                        <div className='flex xl:items-center max-xl:flex-col gap-[4px]'>
+                        <div className='flex flex-col gap-[4px]'>
                             <BodyText level='body2' weight='medium' className=''>
-                                Supplying directly to Morpho markets is risky and not advised by the Morpho team.
+                                Supplying directly to Morpho markets is risky. It requires knowledge, <br /> and the right tools to manage risks properly, and there is a chance that your deposit may become illiquid.
                             </BodyText>
                             <BodyText level='body2' weight='medium' className='flex items-center gap-[4px]'>
                                 More details can be found
