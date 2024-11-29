@@ -30,6 +30,7 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { EstimatedReturns } from './estimated-returns'
 import { getStatDisplayValue } from './helper-functions'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
+import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData'
 
 export default function PositionDetails() {
     const searchParams = useSearchParams();
@@ -46,7 +47,7 @@ export default function PositionDetails() {
         isError: isErrorPortfolioData
     } = useGetPortfolioData({
         user_address: walletAddress as `0x${string}`,
-        protocol_identifier: [protocol_identifier],
+        platform_id: [protocol_identifier],
         chain_id: [String(chain_id)],
     });
 
@@ -63,7 +64,10 @@ export default function PositionDetails() {
 
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isAutoConnecting;
 
-    // Filter user positions
+    const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(platformData?.platform.protocol_type);
+    const isAaveV3 = platformData?.platform.protocol_type === "aaveV3";
+
+    // Get user positions from portfolio data using protocol identifier
     const userPositions = portfolioData?.platforms.filter(platform =>
         platform?.protocol_identifier.toLowerCase() === (platformData?.platform as any)?.protocol_identifier.toLowerCase()
     );
@@ -114,52 +118,125 @@ export default function PositionDetails() {
         }
     })
 
-    const numerator = Number(formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amount) || 0;
-    const denominator = (Number(formattedUserPositions?.lendAsset?.tokenDetails[0]?.liquidation_threshold)) / 100;
-    const tokenAmount = Number(formattedUserPositions?.lendAsset?.tokenDetails[0]?.tokenAmount);
+    // Calculate borrow power and borrow power used for pool based assets
+    function getLiquidationDetailsForPoolBasedAssets() {
+        let borrowPower = 0;
+        let borrowPowerUsed = 0;
+        let collatAmt = 0;
+        let assetLogos: string[] = [];
+        let assetSymbols: string[] = [];
+        let assetDetails: any[] = [];
 
-    const liquidationPrice = numerator / (denominator * tokenAmount);
+        for (const platform of userPositions) {
+            for (const position of platform.positions) {
+                if (position.type === "lend") {
+                    borrowPower +=
+                        ((position.amount * position.liquidation_threshold) / 100) *
+                        position.token.price_usd;
+                    collatAmt += position.amount * position.token.price_usd;
+                    assetLogos.push(position.token.logo);
+                    assetSymbols.push(position.token.symbol);
+                    assetDetails.push({
+                        logo: position.token.logo,
+                        symbol: position.token.symbol,
+                        amount: position.amount,
+                    });
+                } else {
+                    borrowPowerUsed += position.amount * position.token.price_usd;
+                }
+            }
+        }
 
-    const liquidationPercentage = (Number(formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amount) * 100) / (Number(formattedUserPositions?.lendAsset?.tokenDetails[0]?.amount) * denominator);
+        const liquidationThreshold = borrowPower / collatAmt;
+        const liquidationPrice = borrowPowerUsed / liquidationThreshold;
+        const liquidationPercentage = (borrowPowerUsed / borrowPower) * 100;
+
+        // console.log(borrowPower);
+
+        return {
+            assetLogos,
+            assetSymbols,
+            liquidationPrice,
+            liquidationPercentage,
+            riskFactor: getLiquidationRisk(liquidationPercentage, 50, 80),
+            hasBorrowed: borrowPower > 0,
+            assetDetails,
+        };
+    }
+
+    // Calculate borrow power and borrow power used for pair based assets
+    function getLiquidationDetailsForPairBasedAssets() {
+        const numerator = Number(formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amount) || 0;
+        const denominator = (Number(formattedUserPositions?.lendAsset?.tokenDetails[0]?.liquidation_threshold)) / 100;
+        const tokenAmount = Number(formattedUserPositions?.lendAsset?.tokenDetails[0]?.tokenAmount);
+        const liquidationPrice = numerator / (denominator * tokenAmount);
+        const liquidationPercentage = (Number(formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amount) * 100) / (Number(formattedUserPositions?.lendAsset?.tokenDetails[0]?.amount) * denominator);
+        const assetDetails = formattedUserPositions?.lendAsset?.tokenDetails;
+
+        return {
+            assetLogos: [formattedUserPositions?.lendAsset?.tokenDetails[0]?.logo],
+            assetSymbols: [formattedUserPositions?.lendAsset?.tokenDetails[0]?.symbol],
+            liquidationPrice,
+            liquidationPercentage,
+            riskFactor: getLiquidationRisk(liquidationPercentage, 50, 80),
+            hasBorrowed: numerator > 0,
+            assetDetails,
+        };
+    }
+
+    const {
+        liquidationPrice,
+        liquidationPercentage,
+        riskFactor,
+        hasBorrowed,
+        assetLogos,
+        assetSymbols,
+        assetDetails
+    } = isAaveV3 ? getLiquidationDetailsForPoolBasedAssets() : getLiquidationDetailsForPairBasedAssets();
+
+    // Liquidation details
     const liquidationDetails = {
         liquidationPrice: liquidationPrice,
-        assetLogo: formattedUserPositions?.lendAsset?.tokenDetails[0]?.logo,
-        assetSymbol: formattedUserPositions?.lendAsset?.tokenDetails[0]?.symbol,
+        assetLogos,
+        assetSymbols,
         percentage: liquidationPercentage,
-        riskFactor: getLiquidationRisk(liquidationPercentage, 50, 80),
+        riskFactor,
+        hasBorrowed,
+        assetDetails,
     }
-    const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(platformData?.platform.platform_type);
 
     // Loading state
-    // if (isLoading) {
-    //     return (
-    //         <LoadingSectionSkeleton className="h-[340px]" />
-    //     )
-    // }
-
-    // If user is not connected, show connect wallet button
-    if (!isLoading && !walletAddress) {
+    if (isLoading) {
         return (
-            <motion.div
-                className='flex flex-col gap-6 items-center justify-center h-full bg-white bg-opacity-75 rounded-6 px-5 py-12'
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
-            >
-                <BodyText level='body1' className='text-center'>Please connect your wallet to view your positions.</BodyText>
-                <ConnectWalletButton />
-            </motion.div>
+            <LoadingSectionSkeleton className="h-[250px]" />
         )
     }
 
-    // If user is connected, but does not have any positions, show estimated returns
-    // if (!isLoading && userPositions.length === 0) {
+    // If user is not connected, show connect wallet button
+    // if (!isLoading && !walletAddress) {
     //     return (
-    //         <EstimatedReturns
-    //             platformDetails={platformData}
-    //         />
+    //         <motion.div
+    //             className='flex flex-col gap-6 items-center justify-center h-full bg-white bg-opacity-75 rounded-6 px-5 py-12'
+    //             initial={{ opacity: 0, y: 30 }}
+    //             animate={{ opacity: 1, y: 0 }}
+    //             transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
+    //         >
+    //             <BodyText level='body1' className='text-center'>Please connect your wallet to view your positions.</BodyText>
+    //             <ConnectWalletButton />
+    //         </motion.div>
     //     )
     // }
+
+    // If user is connected, but does not have any positions, show estimated returns
+    if (!isLoading && userPositions.length === 0) {
+        return (
+            <EstimatedReturns
+                platformDetails={platformData}
+            />
+        )
+    }
+
+    // console.log(formattedUserPositions?.borrowAsset.amount);
 
     // If user is connected, and has positions, show position details
     return (
@@ -169,7 +246,7 @@ export default function PositionDetails() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
         >
-            {isPairBasedProtocol && userPositions.length > 0 &&
+            {(isAaveV3 || isPairBasedProtocol) && userPositions.length > 0 &&
                 <div className="px-[16px]">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-[12px]">
                         <div className="flex items-center gap-[8px]">
@@ -178,14 +255,14 @@ export default function PositionDetails() {
                             </BodyText>
                             {/* If numerator is greater than 0, show the risk factor badge */}
                             {
-                                numerator > 0 &&
+                                liquidationDetails.hasBorrowed &&
                                 <Badge variant={liquidationDetails.riskFactor.theme as "destructive" | "yellow" | "green"}>
                                     {liquidationDetails.riskFactor.label} risk
                                 </Badge>
                             }
                             {/* If numerator is 0, show the "No liquidation risk" badge */}
                             {
-                                numerator === 0 &&
+                                !liquidationDetails.hasBorrowed &&
                                 <Badge variant="default">
                                     N/A
                                 </Badge>
@@ -196,13 +273,26 @@ export default function PositionDetails() {
                                 Liquidation price
                             </BodyText>
                             <div className="flex items-center gap-[6px]">
-                                <ImageWithDefault src={liquidationDetails.assetLogo} alt={liquidationDetails.assetSymbol} width={16} height={16} className='rounded-full max-w-[16px] max-h-[16px]' />
                                 {
-                                    numerator > 0 &&
+                                    isPairBasedProtocol &&
+                                    <ImageWithDefault src={liquidationDetails.assetLogos[0]} alt={liquidationDetails.assetSymbols[0]} width={16} height={16} className='rounded-full max-w-[16px] max-h-[16px]' />
+                                }
+                                {
+                                    !isPairBasedProtocol &&
+                                    <AvatarCircles
+                                        avatarUrls={liquidationDetails.assetLogos}
+                                    // avatarDetails={liquidationDetails.assetDetails.map(asset => ({
+                                    //     content: `${hasLowestDisplayValuePrefix(Number(asset.amount))} $${getStatDisplayValue(asset.amount, false)}`,
+                                    //     title: asset.symbol
+                                    // }))}
+                                    />
+                                }
+                                {
+                                    (liquidationDetails.hasBorrowed && liquidationDetails.liquidationPrice !== 0) &&
                                     <BodyText level='body1' weight='medium'>${abbreviateNumber(liquidationDetails.liquidationPrice)}</BodyText>
                                 }
                                 {
-                                    numerator === 0 &&
+                                    (!liquidationDetails.hasBorrowed || liquidationDetails.liquidationPrice === 0) &&
                                     <BodyText level='body1' weight='normal'>
                                         <InfoTooltip
                                             label={

@@ -31,7 +31,7 @@ import { coinbaseWallet, injected } from "wagmi/connectors";
 
 export const config = createConfig({
 	chains: [mainnet, sepolia, polygon, base, baseSepolia, arbitrum],
-	// connectors: [injected(), coinbaseWallet({ appName: "Superlend" })],
+	connectors: [injected(), coinbaseWallet({ appName: "Superlend" })],
 	ssr: true,
 	transports: {
 		[mainnet.id]: http(),

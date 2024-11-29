@@ -27,6 +27,8 @@ const ActionButton = ({
   positionType
 }: IActionButtonSelectComponent) => {
   // const { selectedAction } = useContext(ActionContext)
+  // console.log(asset);
+
   if (positionType === "borrow") {
     return (
       <BorrowButton
@@ -38,34 +40,42 @@ const ActionButton = ({
     )
   }
   if (
-    asset.platform.platform_type.includes(PlatformType.AAVE) &&
+    asset.protocol_type === PlatformType.AAVE &&
     positionType === "lend"
   ) {
+    // console.log(asset);
+
+    // console.log('platform_name', asset.platform_name);
+    // console.log('tokenAddress', asset.asset.token.address);
+    // console.log('amount', amount);
+    // console.log('decimals', asset.asset.token.decimals);
+
+
     return (
       <SupplyAaveButton
         disabled={disabled}
         handleCloseModal={handleCloseModal}
-        poolContractAddress={POOL_AAVE_MAP[asset.platform as PlatformValue]}
-        underlyingAssetAdress={asset.asset}
+        poolContractAddress={POOL_AAVE_MAP[asset.platform_name as PlatformValue]}
+        // poolContractAddress={asset.core_contract}
+        underlyingAssetAdress={asset.asset.token.address}
         amount={amount}
-        decimals={asset.decimals}
+        decimals={asset.asset.token.decimals}
       />
     )
   }
   if (
-    // asset.platform === PlatformValue.CompoundV2Ethereum &&
-    asset.platform.platform_type.includes(PlatformType.COMPOUND) &&
-    asset.symbol === 'cETH'
+    asset.protocol_type === PlatformType.COMPOUND &&
+    asset.asset.token.symbol === 'cETH'
   ) {
     return (
       <SupplyETHCompoundButton
         disabled={disabled}
         handleCloseModal={handleCloseModal}
-        cTokenAddress={asset.tokenId}
+        cTokenAddress={asset.asset.token.address}
         amount={amount}
         decimals={countCompoundDecimals(
-          asset.decimals,
-          asset.underlyingDecimals
+          asset.asset.token.decimals,
+          asset.asset.underlyingDecimals
         )}
       />
     )
@@ -74,10 +84,10 @@ const ActionButton = ({
     <SupplyERC20CompoundButton
       disabled={disabled}
       handleCloseModal={handleCloseModal}
-      underlyingToken={asset.underlyingAsset}
-      cTokenAddress={asset.tokenId}
+      underlyingToken={asset.asset.underlyingAsset}
+      cTokenAddress={asset.asset.token.address}
       amount={amount}
-      decimals={countCompoundDecimals(asset.decimals, asset.underlyingDecimals)}
+      decimals={countCompoundDecimals(asset.asset.token.decimals, asset.asset.underlyingDecimals)}
     />
   )
 }

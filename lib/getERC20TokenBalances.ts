@@ -26,10 +26,12 @@ export async function getTokenBalances({
   chains,
   tokens,
   userAddress,
+  contractAddress
 }: {
   chains: number[];
   tokens: Record<number, TToken[]>;
   userAddress: `0x${string}`;
+  contractAddress: string;
 }) {
   // console.log("chains", chains);
   // console.log("tokens", tokens);
@@ -44,7 +46,7 @@ export async function getTokenBalances({
     for (const token of tokens[chain]) {
       calls.push({
         reference: token.address,
-        contractAddress: token.address,
+        contractAddress: contractAddress,
         abi: erc20Abi,
         calls: [
           {
@@ -79,6 +81,7 @@ export async function getTokenBalances({
       //   "formatted balance ",
       //   formattedBalance
       // );
+      return formattedBalance
     }
   }
 }

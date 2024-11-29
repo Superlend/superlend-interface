@@ -89,6 +89,7 @@ function CustomToolTip(payload: any) {
             <div className="flex items-center justify-between border-b border-gray-400 pb-[12px]">
                 <div className="flex items-center gap-1">
                     <ImageWithDefault
+                        alt={platform?.name}
                         src={platform?.logo || ""}
                         width={20}
                         height={20}

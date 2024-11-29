@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
+  BaseError,
   useAccount,
+  useConnect,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from 'wagmi'
@@ -21,6 +23,13 @@ import {
 } from '@/constants'
 // import { getErrorText } from '@/lib/getErrorText'
 import { Button } from '@/components/ui/button'
+import { prepareContractCall } from 'thirdweb'
+import { defineChain } from 'thirdweb'
+import { useSearchParams } from 'next/navigation'
+import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import CustomAlert from '@/components/alerts/CustomAlert'
+import { ArrowRightIcon } from 'lucide-react'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 
 interface ISupplyAaveButtonProps {
@@ -40,11 +49,33 @@ const SupplyAaveButton = ({
   disabled,
   handleCloseModal,
 }: ISupplyAaveButtonProps) => {
-  const { writeContractAsync, data: hash, isPending } = useWriteContract()
+  const { writeContractAsync, isPending, data: hash, error } = useWriteContract()
   const [lastTx, setLastTx] = useState<'mint' | 'approve'>('mint')
-  const { isSuccess, isLoading } = useWaitForTransactionReceipt({ hash })
+  // const { isSuccess, isLoading } = useWaitForTransactionReceipt({ hash })
   const { address: walletAddress } = useAccount()
   // const { createToast } = useCreatePendingToast()
+  const { isConnected } = useAccount()
+  const { connect, connectors } = useConnect()
+  const { lendTx, setLendTx } = useLendBorrowTxContext() as TLendBorrowTxContext;
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    })
+
+  const txBtnStatus: Record<string, string> = {
+    pending: lastTx === 'mint' ? 'Approving token...' : 'Lending token...',
+    confirming: 'Confirming...',
+    success: 'View position',
+    default: lastTx === 'mint' ? 'Approve token' : 'Lend token'
+  }
+
+  const getTxButtonText = (isPending: boolean, isConfirming: boolean, isConfirmed: boolean) => {
+    return txBtnStatus[isConfirming ? 'confirming' : isConfirmed ? lastTx === 'approve' ? 'success' : 'default' : isPending ? 'pending' : 'default']
+  }
+
+  const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+
   const supply = useCallback(async () => {
     try {
       setLastTx('approve')
@@ -77,7 +108,6 @@ const SupplyAaveButton = ({
 
       writeContractAsync({
         address: poolContractAddress,
-        // address: underlyingAssetAdress,
         abi: AAVE_POOL_ABI,
         functionName: 'supply',
         args: [
@@ -87,6 +117,7 @@ const SupplyAaveButton = ({
           0,
         ],
       })
+
     } catch (error) {
       // toast.remove()
       error
@@ -100,13 +131,35 @@ const SupplyAaveButton = ({
     writeContractAsync,
     decimals,
   ])
+
   useEffect(() => {
-    if (isSuccess && lastTx === 'mint') {
-      void supply()
+    if (isConfirmed && lastTx === 'mint') {
+      setLendTx({ status: "lend", hash: hash || "" })
+      supply()
     }
-  }, [isSuccess, lastTx, supply])
+
+    if (isConfirmed && lastTx === 'approve') {
+      setLendTx({ status: "view", hash: hash || "" })
+    }
+
+    // if (isConfirmed && lastTx === 'mint') {
+    //   void supply()
+    // }
+  }, [isConfirmed, lastTx])
 
   const onApproveSupply = async () => {
+    if (!isConnected) {
+      // If not connected, prompt connection first
+      try {
+        const connector = connectors[0] // Usually metamask/injected connector
+        await connect({ connector })
+        return
+      } catch (error) {
+        console.error('Connection failed:', error)
+        return
+      }
+    }
+
     try {
       // createToast()
       setLastTx('mint')
@@ -140,19 +193,39 @@ const SupplyAaveButton = ({
           poolContractAddress,
           parseUnits(amount, decimals)],
       })
+
+      // console.log("underlyingAssetAdress", underlyingAssetAdress)
+      // console.log("poolContractAddress", poolContractAddress)
+      // console.log("amount", amount)
+      // console.log("decimals", decimals)
     } catch (error) {
       // toast.remove()
       error
     }
   }
   return (
-    <Button
-      disabled={isPending || isLoading || disabled}
-      onClick={() => onApproveSupply()}
-    >
-      {/* {getActionName(Action.LEND)} */}
-      Lend
-    </Button>
+    <>
+      {error && (
+        <CustomAlert description={(error as BaseError).shortMessage || error.message} />
+      )}
+      <Button
+        disabled={isPending || isConfirming || disabled}
+        onClick={() => {
+          if (lendTx.status === "approve") {
+            onApproveSupply();
+          } else if (lendTx.status === "lend") {
+            supply();
+          } else {
+            handleCloseModal(false);
+          }
+        }}
+        className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
+        variant="primary"
+      >
+        {txBtnText}
+        <ArrowRightIcon width={16} height={16} className='stroke-white group-[:disabled]:opacity-50' />
+      </Button>
+    </>
   )
 }
 

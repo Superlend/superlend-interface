@@ -60,7 +60,7 @@ const getBodyClassName = (level: IBodyTextProps["level"] = "body1", weight: IBod
     return `${bodySizes[level]} ${fontWeights[weight]} ${COMMON_STYLES} ${className}`;
 }
 
-export function BodyText({ children, level, weight, className, as }: IBodyTextProps) {
+export function BodyText({ children, level, weight, className }: IBodyTextProps) {
     return (
         <p className={getBodyClassName(level, weight, className)}>{children}</p>
     )

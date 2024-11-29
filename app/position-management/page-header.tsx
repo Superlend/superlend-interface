@@ -15,13 +15,14 @@ import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { TPlatform, TPlatformAsset, TToken } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
-import { chainNamesBasedOnAaveMarkets, PAIR_BASED_PROTOCOLS, platformWebsiteLinks, POOL_BASED_PROTOCOLS, WarningMessages } from '@/constants';
+import { chainNamesBasedOnAaveMarkets, MORPHO_ETHERSCAN_TUTORIAL_LINK, PAIR_BASED_PROTOCOLS, platformWebsiteLinks, POOL_BASED_PROTOCOLS, WarningMessages } from '@/constants';
 import { motion } from 'framer-motion';
 import { getChainDetails, getTokenDetails } from './helper-functions';
-import { TriangleAlert } from 'lucide-react';
+import { ExternalLink, TriangleAlert } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import DangerSquare from '@/components/icons/danger-square';
 import { PlatformType } from '@/types/platform';
+import CustomAlert from '@/components/alerts/CustomAlert';
 
 type TTokenDetails = {
     address: string;
@@ -77,19 +78,20 @@ export default function PageHeader() {
         platformData: platformData as TPlatform
     })
 
+    const isMorpho = platformData.platform.platform_name.toLowerCase().includes("morpho");
     const tokenSymbol = tokenDetails?.symbol;
     const tokenLogo = tokenDetails?.logo || "";
     const tokenName = tokenDetails?.name || "";
     const chainName = chainDetails?.name || "";
     const chainLogo = chainDetails?.logo || "";
     const platformName = platformData.platform.name;
-    const platformType = platformData.platform.platform_type;
+    const platformType = platformData.platform.protocol_type;
     const platformId = platformData.platform.platform_name;
     const platformLogo = platformData?.platform.logo;
     const vaultId = platformData?.platform?.vaultId;
     const morpho_market_id = platformData?.platform?.morpho_market_id;
     const network_name = chainName;
-    const isFluidVault = platformData?.platform?.platform_type === PlatformType.FLUID && platformData?.platform?.isVault;
+    const isFluidVault = platformData?.platform?.protocol_type === PlatformType.FLUID && platformData?.platform?.isVault;
     const platformWebsiteLink = getPlatformWebsiteLink({
         platformId,
         chainName,
@@ -104,7 +106,7 @@ export default function PageHeader() {
     const checkForPairBasedTokens = (platformTypes: string[], platformType: string) => platformTypes.map(type => type.toLowerCase()).includes(platformType.toLowerCase());
     const hasPoolBasedTokens = checkForPairBasedTokens(POOL_BASED_PROTOCOLS, platformType);
     const hasPairBasedTokens = checkForPairBasedTokens(PAIR_BASED_PROTOCOLS, platformType);
-    const isFluidPlatform = platformData?.platform?.platform_type === PlatformType.FLUID;
+    const isFluidPlatform = platformData?.platform?.protocol_type === PlatformType.FLUID;
 
     // If has Collateral Token, then get the Collateral token details
     const collateralTokenSymbol = platformName.split(" ")[1]?.split("/")[0];
@@ -137,6 +139,42 @@ export default function PageHeader() {
                     {warningMessages.map((message: any, index: number) => (
                         <AlertWarning key={index} description={WarningMessages[message.type as keyof typeof WarningMessages]} />
                     ))}
+                </div>
+            )}
+            {isMorpho && (
+                <div className="w-full">
+                    <CustomAlert
+                        variant="info"
+                        hasPrefixIcon={false}
+                        description={
+                            <div className='flex flex-col gap-[4px]'>
+                                <BodyText level='body2' weight='normal'>
+                                    <span className='font-medium'>Note:</span>
+                                    <span className="mx-2">
+                                        Supplying directly to Morpho markets is risky. It requires knowledge, and the right tools to manage risks properly, and there is a chance that your deposit may become illiquid. More details can be found
+                                    </span>
+                                    <a href={MORPHO_ETHERSCAN_TUTORIAL_LINK}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className='w-fit shrink-0 inline-flex items-center gap-[4px] text-secondary-500 border-b border-secondary-500 hover:border-secondary-500/40 leading-[0.5]'
+                                    >
+                                        here
+                                        <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
+                                    </a>
+                                </BodyText>
+                                {/* <BodyText level='body2' weight='medium' className='flex items-center gap-[4px]'>
+                                    More details can be found
+                                    <a href={MORPHO_ETHERSCAN_TUTORIAL_LINK}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className='w-fit inline-block shrink-0 flex items-center gap-[4px] text-secondary-500 border-b border-secondary-500 hover:border-secondary-500/40 leading-[0.5]'
+                                    >
+                                        here
+                                        <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
+                                    </a>
+                                </BodyText> */}
+                            </div>
+                        } />
                 </div>
             )}
             <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">

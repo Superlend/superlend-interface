@@ -8,7 +8,7 @@ import { PAIR_BASED_PROTOCOLS } from "@/constants";
 import { abbreviateNumber, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import { TOpportunityTable, TReward } from "@/types";
 import { ColumnDef } from "@tanstack/react-table";
-import { ChartNoAxesColumnIncreasing } from "lucide-react";
+import { ChartNoAxesColumnIncreasing, ShieldAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -33,14 +33,14 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <span className="flex flex-col gap-[4px]">
                         <Label>Token</Label>
                         <span className="flex items-center gap-[8px]">
-                            <ImageWithDefault alt={tokenSymbol} src={tokenLogo} width={24} height={24} className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]" />
+                            <ImageWithDefault alt={tokenSymbol} src={tokenLogo || ""} width={24} height={24} className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]" />
                             <BodyText level="body2" weight="medium">{tokenName}</BodyText>
                         </span>
                     </span>
                     <span className="flex flex-col gap-[4px]">
                         <Label>Chain</Label>
                         <span className="flex items-center gap-[8px]">
-                            <ImageWithDefault alt={chainName} src={chainLogo} width={24} height={24} className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]" />
+                            <ImageWithDefault alt={chainName} src={chainLogo || ""} width={24} height={24} className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]" />
                             <BodyText level="body2" weight="medium">{chainName[0]}{chainName.toLowerCase().slice(1)}</BodyText>
                         </span>
                     </span>
@@ -52,8 +52,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <InfoTooltip
                         label={
                             <ImageWithBadge
-                                mainImg={tokenLogo}
-                                badgeImg={chainLogo}
+                                mainImg={tokenLogo || ""}
+                                badgeImg={chainLogo || ""}
                                 mainImgAlt={tokenSymbol}
                                 badgeImgAlt={chainName}
                             />
@@ -87,11 +87,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const platformName: string = row.getValue("platformName");
             const platformLogo = row.original.platformLogo;
+            const isMorpho = row.original.platformId.toLowerCase().includes("morpho");
 
             return (
                 <span className="flex items-center gap-[8px]">
                     <ImageWithDefault
-                        src={platformLogo}
+                        src={platformLogo || ""}
                         alt={`${platformName} logo`}
                         width={20}
                         height={20}
@@ -99,6 +100,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <BodyText level={"body2"} weight={"medium"} className="truncate">
                         {platformName}
                     </BodyText>
+                    {isMorpho && <InfoTooltip
+                        // label={
+                        //     <ShieldAlertIcon width={18} height={18} className="text-[#D19900] shrink-0" />
+                        // }
+                        content="Supplying directly to Morpho markets is risky and not advised by the Morpho team"
+                    />}
                 </span>
             )
         },
@@ -174,7 +181,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         hasRewards && (
                             <InfoTooltip
                                 label={
-                                    <ImageWithDefault src="/icons/sparkles.svg" width={22} height={22} className="cursor-pointer hover:scale-110" />
+                                    <ImageWithDefault src="/icons/sparkles.svg" alt="Rewards" width={22} height={22} className="cursor-pointer hover:scale-110" />
                                 }
                                 content={
                                     getRewardsTooltipContent({ baseRateFormatted: baseRateFormatted || '', rewards: rewards || [], apyCurrent: apyCurrent || 0, positionTypeParam })

@@ -162,8 +162,8 @@ export const PLATFORM_OPTIONS = [
   // { value: PlatformValue.SparkGnosis, label: PlatformDisplayValue.SparkGnosis },
 ];
 
-export const POOL_BASED_PROTOCOLS = ["aaveV3", "compoundV2"]; // Extracted values from the platform_type field in the backend
-export const PAIR_BASED_PROTOCOLS = ["morpho", "fluid"]; // Extracted values from the platform_type field in the backend
+export const POOL_BASED_PROTOCOLS = ["aaveV3", "compoundV2"]; // Extracted values from the protocol_type field in the backend
+export const PAIR_BASED_PROTOCOLS = ["morpho", "fluid"]; // Extracted values from the protocol_type field in the backend
 
 export enum WarningMessages {
   hardcoded_oracle = "Using a fixed oracle, limits accurate pricing.",
@@ -213,7 +213,7 @@ export const POOL_AAVE_MAP: { [key in PlatformValue]: `0x${string}` } = {
   [PlatformValue.AaveV3Bsc]: "0x6807dc923806fE8Fd134338EABCA509979a7e0cB",
   [PlatformValue.AaveV3Base]: "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5",
   [PlatformValue.AaveV3Ethereum]: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
-  [PlatformValue.AaveV3Fantom]: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+  // [PlatformValue.AaveV3Fantom]: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
   [PlatformValue.AaveV3Gnosis]: "0xb50201558B00496A145fE76f7424749556E326D8",
   [PlatformValue.AaveV3Metis]: "0x90df02551bB792286e8D4f13E0e357b4Bf1D6a57",
   [PlatformValue.AaveV3Optimism]: "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
@@ -223,3 +223,23 @@ export const POOL_AAVE_MAP: { [key in PlatformValue]: `0x${string}` } = {
   // [PlatformValue.SparkGnosis]: '0xb50201558B00496A145fE76f7424749556E326D8',
   [PlatformValue.CompoundV2Ethereum]: "0x", // not used
 };
+
+export const TX_EXPLORER_LINKS: { [key in PlatformValue]: string } = {
+  [PlatformValue.AaveV3Arbitrum]: "https://arbiscan.io",
+  [PlatformValue.AaveV3Avalanche]: "https://snowtrace.io",
+  [PlatformValue.AaveV3Bsc]: "https://bscscan.com",
+  [PlatformValue.AaveV3Base]: "https://basescan.org",
+  [PlatformValue.AaveV3Ethereum]: "https://etherscan.io",
+  [PlatformValue.AaveV3Gnosis]: "https://gnosisscan.io",
+  [PlatformValue.AaveV3Metis]: "https://metis.blockscout.com",
+  [PlatformValue.AaveV3Optimism]: "https://optimistic.etherscan.io",
+  [PlatformValue.AaveV3Polygon]: "https://polygonscan.com",
+  [PlatformValue.AaveV3Scoll]: "https://scrollscan.io",
+  [PlatformValue.CompoundV2Ethereum]: "https://etherscan.io",
+};
+
+export const APPROXIMATE_ESTIMATE_OF_RETURNS_TOOLTIP_CONTENT =
+  "This is an approximate estimate of returns and not the actual returns as change in supply will affect the overall earnings with time";
+
+export const MORPHO_ETHERSCAN_TUTORIAL_LINK =
+  "https://docs.morpho.org/morpho/tutorials/etherscan-use/";

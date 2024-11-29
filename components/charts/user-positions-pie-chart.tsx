@@ -79,6 +79,7 @@ function CustomToolTip(payload: any) {
                 <div className="flex items-center gap-1">
                     <ImageWithDefault
                         src={platform?.logo || ""}
+                        alt={platform?.name || ""}
                         width={20}
                         height={20}
                         className={"max-w-[20px] max-h-[20px] object-contain"}
@@ -108,7 +109,7 @@ function CustomToolTip(payload: any) {
                     <Label> Chain </Label>
                     <div className="flex items-center gap-[4px]">
                         <BodyText level="body2" weight="medium">{capitalizeText(chain?.name)}</BodyText>
-                        <ImageWithDefault src={chain?.logo} alt="optimism" height={16} width={16} className="max-w-[16px] max-h-[16px]" />
+                        <ImageWithDefault src={chain?.logo || ""} alt={chain?.name || ""} height={16} width={16} className="max-w-[16px] max-h-[16px]" />
                     </div>
                 </div>
             </div>
