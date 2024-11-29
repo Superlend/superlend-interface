@@ -108,7 +108,7 @@ export function EstimatedReturns({
     }
 
     const supplyAPY = isMorpho ? 0 : isAaveV3 && positionType === "borrow" ? (selectedStableTokenDetails?.supply_apy) || 0 : (lendAssetDetails?.supply_apy) || 0;
-    const borrowAPY = isAaveV3 && positionType === "lend" ? (selectedStableTokenDetails?.variable_borrow_apy) || 0 : (borrowAssetDetails?.variable_borrow_apy) || 0;
+    const borrowAPY = isMorpho ? -(borrowAssetDetails?.supply_apy) : isAaveV3 && positionType === "lend" ? (selectedStableTokenDetails?.variable_borrow_apy) || 0 : (borrowAssetDetails?.variable_borrow_apy) || 0;
     const duration = selectedValue?.duration || 0;
     const assetLTV = platformHistoryData?.processMap[platformHistoryData?.processMap.length - 1]?.data?.ltv || 0;
     const amountSupplied = selectedValue.lend;
@@ -204,7 +204,7 @@ export function EstimatedReturns({
                                     Estimate returns by using slider below
                                 </BodyText>
                                 <InfoTooltip
-                                    content="This is an approximate estimate of returns and not the actual returns as change in supply will affect the overall earnings with time"
+                                    content={`This is an approximate estimate of returns ${isMorpho ? "(including rewards)" : ""}`}
                                 />
                             </div>
                             <div className="flex items-center gap-[8px]">
@@ -213,7 +213,7 @@ export function EstimatedReturns({
                                     checked={isUSDAmount}
                                     onCheckedChange={handleIsUSDAmountChange}
                                 />
-                                <Label htmlFor="values-format" weight="normal" className="text-gray-600">
+                                <Label htmlFor="values-format" weight="normal" className="text-gray-600 sm:text-[14px]">
                                     USD Amount
                                 </Label>
                             </div>

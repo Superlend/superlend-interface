@@ -281,18 +281,18 @@ export default function PositionDetails() {
                                     !isPairBasedProtocol &&
                                     <AvatarCircles
                                         avatarUrls={liquidationDetails.assetLogos}
-                                        avatarDetails={liquidationDetails.assetDetails.map(asset => ({
-                                            content: `${hasLowestDisplayValuePrefix(Number(asset.amount))} $${getStatDisplayValue(asset.amount, false)}`,
-                                            title: asset.symbol
-                                        }))}
+                                    // avatarDetails={liquidationDetails.assetDetails.map(asset => ({
+                                    //     content: `${hasLowestDisplayValuePrefix(Number(asset.amount))} $${getStatDisplayValue(asset.amount, false)}`,
+                                    //     title: asset.symbol
+                                    // }))}
                                     />
                                 }
                                 {
-                                    liquidationDetails.hasBorrowed && liquidationDetails.liquidationPrice !== 0 &&
+                                    (liquidationDetails.hasBorrowed && liquidationDetails.liquidationPrice !== 0) &&
                                     <BodyText level='body1' weight='medium'>${abbreviateNumber(liquidationDetails.liquidationPrice)}</BodyText>
                                 }
                                 {
-                                    !liquidationDetails.hasBorrowed || liquidationDetails.liquidationPrice === 0 &&
+                                    (!liquidationDetails.hasBorrowed || liquidationDetails.liquidationPrice === 0) &&
                                     <BodyText level='body1' weight='normal'>
                                         <InfoTooltip
                                             label={
