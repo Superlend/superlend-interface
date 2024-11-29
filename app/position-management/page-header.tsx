@@ -15,13 +15,14 @@ import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
 import { TPlatform, TPlatformAsset, TToken } from '@/types';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
-import { chainNamesBasedOnAaveMarkets, PAIR_BASED_PROTOCOLS, platformWebsiteLinks, POOL_BASED_PROTOCOLS, WarningMessages } from '@/constants';
+import { chainNamesBasedOnAaveMarkets, MORPHO_ETHERSCAN_TUTORIAL_LINK, PAIR_BASED_PROTOCOLS, platformWebsiteLinks, POOL_BASED_PROTOCOLS, WarningMessages } from '@/constants';
 import { motion } from 'framer-motion';
 import { getChainDetails, getTokenDetails } from './helper-functions';
-import { TriangleAlert } from 'lucide-react';
+import { ExternalLink, TriangleAlert } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import DangerSquare from '@/components/icons/danger-square';
 import { PlatformType } from '@/types/platform';
+import CustomAlert from '@/components/alerts/CustomAlert';
 
 type TTokenDetails = {
     address: string;
@@ -77,6 +78,7 @@ export default function PageHeader() {
         platformData: platformData as TPlatform
     })
 
+    const isMorpho = platformData.platform.platform_name.toLowerCase().includes("morpho");
     const tokenSymbol = tokenDetails?.symbol;
     const tokenLogo = tokenDetails?.logo || "";
     const tokenName = tokenDetails?.name || "";
@@ -138,6 +140,28 @@ export default function PageHeader() {
                         <AlertWarning key={index} description={WarningMessages[message.type as keyof typeof WarningMessages]} />
                     ))}
                 </div>
+            )}
+            {isMorpho && (
+                <CustomAlert
+                    variant="info"
+                    description={
+                        <div className='flex xl:items-center max-xl:flex-col gap-[4px]'>
+                            <BodyText level='body2' weight='medium' className=''>
+                                Supplying directly to Morpho markets is risky and not advised by the Morpho team.
+                            </BodyText>
+                            <BodyText level='body2' weight='medium' className='flex items-center gap-[4px]'>
+                                More details can be found
+                                <a href={MORPHO_ETHERSCAN_TUTORIAL_LINK}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className='w-fit inline-block shrink-0 flex items-center gap-[4px] text-secondary-500 border-b border-secondary-500 hover:border-secondary-500/40 leading-[0.5]'
+                                >
+                                    here
+                                    <ArrowRightIcon weight='3' className='stroke-secondary-500 -rotate-45' />
+                                </a>
+                            </BodyText>
+                        </div>
+                    } />
             )}
             <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
                 <motion.div className="will-change-transform"

@@ -1,20 +1,24 @@
-import { TriangleAlert } from 'lucide-react';
+import { InfoIcon, TriangleAlert } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import DangerSquare from '@/components/icons/danger-square';
 
 export default function CustomAlert({
+    variant = "destructive",
     description
 }: {
-    description: string
+    variant?: "destructive" | "warning" | "info",
+    description: React.ReactNode | string
 }) {
     return (
-        <Alert variant="destructive">
+        <Alert variant={variant}>
             <AlertDescription className='flex items-center justify-center gap-2'>
-                {/* <TriangleAlert strokeWidth={1.75} className='h-4 w-4' /> */}
-                <DangerSquare width={18} height={18} className='stroke-destructive-foreground shrink-0' />
-                <span className="leading-0 font-medium">
+                {variant === "destructive" && <DangerSquare width={18} height={18} className='stroke-destructive-foreground shrink-0' />}
+                {variant === "warning" && <TriangleAlert width={18} height={18} className='stroke-warning-foreground shrink-0' />}
+                {variant === "info" && <InfoIcon width={18} height={18} className='stroke-info-foreground shrink-0' />}
+                {typeof description === "string" && <span className="leading-0 font-medium">
                     {description}
-                </span>
+                </span>}
+                {typeof description !== "string" && description}
             </AlertDescription>
         </Alert>
     )
