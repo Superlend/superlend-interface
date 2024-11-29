@@ -116,7 +116,7 @@ export function EstimatedReturns({
 
     const amountSupplied = selectedValue.lend;
     const amountBorrowed = selectedValue.borrow;
-   
+
 
     const isPoolBasedProtocol = POOL_BASED_PROTOCOLS.includes(platformDetails?.platform.protocol_type);
     const lendTokenLogo = (isAaveV3 && positionType === "borrow") ? selectedStableTokenDetails?.token.logo : lendAssetDetails?.token.logo;
@@ -251,30 +251,43 @@ export function EstimatedReturns({
                                     </HeadingText>
                                 }
                                 content={
-                                    <div className="flex flex-col gap-[12px]">
-                                        <div className="flex flex-col gap-[4px]">
-                                            <BodyText level='body2' weight='normal' className="capitalize text-gray-600">
-                                                Interest Gain -
-                                            </BodyText>
-                                            <div className="flex items-center gap-[6px]">
-                                                <HeadingText level='h5' weight='medium' className="text-gray-800">
-                                                    {containsNegativeInteger(interestGain) ? "-" : ""}{isUSDAmount ? "$" : ""}{abbreviateNumber(Number(convertNegativeToPositive(interestGain)))}
-                                                </HeadingText>
-                                                <ImageWithDefault src={lendTokenDetails?.token.logo} alt={lendTokenDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
+                                    !isMorpho ?
+                                        (<div className="flex flex-col gap-[12px]">
+                                            <div className="flex flex-col gap-[4px]">
+                                                <BodyText level='body2' weight='normal' className="capitalize text-gray-600">
+                                                    Accrued Earnings -
+                                                </BodyText>
+                                                <div className="flex items-center gap-[6px]">
+                                                    <HeadingText level='h5' weight='medium' className="text-gray-800">
+                                                        {containsNegativeInteger(interestGain) ? "-" : ""}{isUSDAmount ? "$" : ""}{abbreviateNumber(Number(convertNegativeToPositive(interestGain)))}
+                                                    </HeadingText>
+                                                    <ImageWithDefault src={lendTokenDetails?.token.logo} alt={lendTokenDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="flex flex-col gap-[4px]">
-                                            <BodyText level='body2' weight='normal' className="capitalize text-gray-600">
-                                                Interest Loss -
-                                            </BodyText>
-                                            <div className="flex items-center gap-[6px]">
-                                                <HeadingText level='h5' weight='medium' className="text-gray-800">
-                                                    {containsNegativeInteger(interestLoss) ? "-" : ""}{isUSDAmount ? "$" : ""}{abbreviateNumber(Number(convertNegativeToPositive(interestLoss)))}
-                                                </HeadingText>
-                                                <ImageWithDefault src={borrowTokenDetails?.token.logo} alt={borrowTokenDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
+                                            <div className="flex flex-col gap-[4px]">
+                                                <BodyText level='body2' weight='normal' className="capitalize text-gray-600">
+                                                    Interest Paid -
+                                                </BodyText>
+                                                <div className="flex items-center gap-[6px]">
+                                                    <HeadingText level='h5' weight='medium' className="text-gray-800">
+                                                        {containsNegativeInteger(interestLoss) ? "-" : ""}{isUSDAmount ? "$" : ""}{abbreviateNumber(Number(convertNegativeToPositive(interestLoss)))}
+                                                    </HeadingText>
+                                                    <ImageWithDefault src={borrowTokenDetails?.token.logo} alt={borrowTokenDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
+                                        </div>) : (
+                                            <div className="flex flex-col gap-[4px]">
+                                                <BodyText level='body2' weight='normal' className="capitalize text-gray-600">
+                                                    Accrued Earnings -
+                                                </BodyText>
+                                                <div className="flex items-center gap-[6px]">
+                                                    <HeadingText level='h5' weight='medium' className="text-gray-800">
+                                                        {containsNegativeInteger(-interestLoss) ? "-" : ""}{isUSDAmount ? "$" : ""}{abbreviateNumber(Number(convertNegativeToPositive(interestLoss)))}
+                                                    </HeadingText>
+                                                    <ImageWithDefault src={borrowTokenDetails?.token.logo} alt={borrowTokenDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
+                                                </div>
+                                            </div>
+                                        )
                                 }
                             />
                         </div>
