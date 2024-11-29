@@ -26,9 +26,9 @@ export default function PositionManagementPage() {
                         <PositionDetails />
                         <AssetHistory />
                     </div>
-                    <LendBorrowTxProvider>
+                    {/* <LendBorrowTxProvider>
                         <LendAndBorrowAssets />
-                    </LendBorrowTxProvider>
+                    </LendBorrowTxProvider> */}
                     {/* <BlogCard /> */}
                 </div>
             </MainContainer>
