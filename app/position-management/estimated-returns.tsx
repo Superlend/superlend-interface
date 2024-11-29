@@ -102,7 +102,7 @@ export function EstimatedReturns({
     // Reset borrow value when lend value changes
     useEffect(() => {
         setSelectedValue(prev => ({ ...prev, borrow: 0 }));
-    }, [selectedValue.lend]);
+    }, [selectedValue.lend, selectedStableTokenDetails?.token.logo]);
 
     const handleSelectedValueChange = (value: number, type: "lend" | "borrow" | "duration") => {
         setSelectedValue(prev => ({ ...prev, [type]: value }));
@@ -111,38 +111,50 @@ export function EstimatedReturns({
     const supplyAPY = isMorpho ? 0 : isAaveV3 && positionType === "borrow" ? (selectedStableTokenDetails?.supply_apy) || 0 : (lendAssetDetails?.supply_apy) || 0;
     const borrowAPY = isMorpho ? -(borrowAssetDetails?.supply_apy) : isAaveV3 && positionType === "lend" ? (selectedStableTokenDetails?.variable_borrow_apy) || 0 : (borrowAssetDetails?.variable_borrow_apy) || 0;
     const duration = selectedValue?.duration || 0;
-    const assetLTV = platformHistoryData?.processMap[platformHistoryData?.processMap.length - 1]?.data?.ltv || 0;
+
+    const assetLTV = (isAaveV3 && positionType === "lend") ? lendAssetDetails?.ltv : selectedStableTokenDetails?.ltv;
+
     const amountSupplied = selectedValue.lend;
     const amountBorrowed = selectedValue.borrow;
-    const maxBorrowAmountInUsd = (assetLTV / 100) * (isUSDAmount ? selectedValue.lend : ((lendAssetDetails?.token.price_usd ?? 0) * selectedValue.lend));
+   
 
     const isPoolBasedProtocol = POOL_BASED_PROTOCOLS.includes(platformDetails?.platform.protocol_type);
     const lendTokenLogo = (isAaveV3 && positionType === "borrow") ? selectedStableTokenDetails?.token.logo : lendAssetDetails?.token.logo;
     const borrowTokenLogo = (isAaveV3 && positionType === "lend") ? selectedStableTokenDetails?.token.logo : borrowAssetDetails?.token.logo;
+    const borrowTokenMaxValue = (isAaveV3 && positionType === "lend") ? (selectedStableTokenDetails?.token.price_usd ?? 0) : (borrowAssetDetails?.token.price_usd ?? 0);
+    const lendTokenMaxValue = (isAaveV3 && positionType === "borrow") ? (selectedStableTokenDetails?.token.price_usd ?? 0) : (lendAssetDetails?.token.price_usd ?? 0);
+
+    const lendTokenDetails = (isAaveV3 && positionType === "borrow") ? selectedStableTokenDetails : lendAssetDetails;
+    const borrowTokenDetails = (isAaveV3 && positionType === "lend") ? selectedStableTokenDetails : borrowAssetDetails;
+    const maxBorrowAmountInUsd = (assetLTV / 100) * (isUSDAmount ? selectedValue.lend : ((lendTokenDetails?.token.price_usd ?? 0) * selectedValue.lend));
+
+    useEffect(() => {
+        setSelectedStableTokenDetails(positionType === "borrow" ? stableLendAssetsList[0] : stableBorrowAssetsList[0]);
+    }, [stableLendAssetsList, stableBorrowAssetsList]);
 
     const rows: TRow[] = [
         {
             id: 1,
             key: "lend",
             title: "lend collateral",
-            logo: lendTokenLogo,
-            selectedLabel: lendAssetDetails?.token.symbol || "",
+            logo: lendTokenDetails?.token.logo,
+            selectedLabel: lendTokenDetails?.token.symbol || "",
             selectedValue: selectedValue.lend,
             hasSelectedValue: !(stableLendAssetsList.length > 0),
-            totalValue: isUSDAmount ? 25000 : Math.max(25000 / lendAssetDetails?.token.price_usd, 5),
-            step: isUSDAmount ? 50 : Math.min(0.01, 50 / lendAssetDetails?.token.price_usd),
+            totalValue: isUSDAmount ? 25000 : Math.max(25000 / lendTokenDetails?.token.price_usd, 5),
+            step: isUSDAmount ? 50 : Math.min(0.01, 50 / lendTokenDetails?.token.price_usd),
             show: !(isMorpho && positionType === "lend"),
         },
         {
             id: 2,
             key: "borrow",
             title: (isMorpho && positionType === "lend") ? "Supply" : "Borrowing",
-            logo: borrowTokenLogo,
-            selectedLabel: borrowAssetDetails?.token.symbol || "",
+            logo: borrowTokenDetails?.token.logo,
+            selectedLabel: borrowTokenDetails?.token.symbol || "",
             selectedValue: selectedValue.borrow,
             hasSelectedValue: !(stableBorrowAssetsList.length > 0),
-            totalValue: (isMorpho && positionType === "lend") || (!lendAssetDetails && isCompoundV2) ? 25000 : isUSDAmount ? maxBorrowAmountInUsd : maxBorrowAmountInUsd / (borrowAssetDetails?.token.price_usd ?? 0),
-            step: isUSDAmount ? 50 : Math.min(0.01, 50 / (borrowAssetDetails?.token.price_usd ?? 0)),
+            totalValue: (isMorpho && positionType === "lend") || (!lendAssetDetails && isCompoundV2) ? 25000 : isUSDAmount ? maxBorrowAmountInUsd : (maxBorrowAmountInUsd / borrowTokenDetails?.token.price_usd),
+            step: isUSDAmount ? 50 : Math.min(0.01, 50 / borrowTokenDetails?.token.price_usd),
             show: true,
         },
         {
@@ -246,9 +258,9 @@ export function EstimatedReturns({
                                             </BodyText>
                                             <div className="flex items-center gap-[6px]">
                                                 <HeadingText level='h5' weight='medium' className="text-gray-800">
-                                                    {containsNegativeInteger(interestGain) ? "-" : ""}${abbreviateNumber(Number(convertNegativeToPositive(interestGain)))}
+                                                    {containsNegativeInteger(interestGain) ? "-" : ""}{isUSDAmount ? "$" : ""}{abbreviateNumber(Number(convertNegativeToPositive(interestGain)))}
                                                 </HeadingText>
-                                                <ImageWithDefault src={lendTokenLogo} alt={lendAssetDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
+                                                <ImageWithDefault src={lendTokenDetails?.token.logo} alt={lendTokenDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-[4px]">
@@ -257,9 +269,9 @@ export function EstimatedReturns({
                                             </BodyText>
                                             <div className="flex items-center gap-[6px]">
                                                 <HeadingText level='h5' weight='medium' className="text-gray-800">
-                                                    {containsNegativeInteger(interestLoss) ? "-" : ""}${abbreviateNumber(Number(convertNegativeToPositive(interestLoss)))}
+                                                    {containsNegativeInteger(interestLoss) ? "-" : ""}{isUSDAmount ? "$" : ""}{abbreviateNumber(Number(convertNegativeToPositive(interestLoss)))}
                                                 </HeadingText>
-                                                <ImageWithDefault src={borrowTokenLogo} alt={borrowAssetDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
+                                                <ImageWithDefault src={borrowTokenDetails?.token.logo} alt={borrowTokenDetails?.token.symbol} width={20} height={20} className='rounded-full max-w-[20px] max-h-[20px]' />
                                             </div>
                                         </div>
                                     </div>
@@ -285,7 +297,7 @@ export function EstimatedReturns({
                                                     !isAssetNotAvailable(row) &&
                                                     <>
                                                         <HeadingText level='h5' weight='medium' className="text-gray-800">
-                                                            {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.selectedValue, row.key === "duration" ? 0 : 1)}
+                                                            {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.selectedValue, row.key === "duration" ? 0 : 2)}
                                                         </HeadingText>
                                                         {
                                                             row.hasSelectedValue &&
@@ -319,7 +331,7 @@ export function EstimatedReturns({
                                             !isAssetNotAvailable(row) &&
                                             <div className="flex items-center gap-[6px]">
                                                 <BodyText level='body1' weight='normal' className="text-gray-600">
-                                                    {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.key === "duration" ? row.totalValue / 12 : row.totalValue, 0)}{getDisplayedValueSufix(row.key)}
+                                                    {getDisplayedValuePrefix(row.key)}{abbreviateNumber(row.key === "duration" ? row.totalValue / 12 : row.totalValue, row.key === "duration" ? 0 : 2)}{getDisplayedValueSufix(row.key)}
                                                 </BodyText>
                                                 {row.logo &&
                                                     <ImageWithDefault
@@ -369,9 +381,9 @@ function StableTokensDropdown({
     selectedStableTokenDetails: any;
     setSelectedStableTokenDetails: (token: any) => void;
 }) {
-    useEffect(() => {
-        setSelectedStableTokenDetails(options[0]);
-    }, []);
+    // useEffect(() => {
+    //     setSelectedStableTokenDetails(options[0]);
+    // }, []);
 
     return (
         <DropdownMenu>
