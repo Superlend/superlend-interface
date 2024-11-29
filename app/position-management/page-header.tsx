@@ -103,7 +103,7 @@ export default function PageHeader() {
         network_name,
     });
 
-    const checkForPairBasedTokens = (platformTypes: string[], platformType: string) => platformTypes.map(type => type.toLowerCase()).includes(platformType.toLowerCase());
+    const checkForPairBasedTokens = (platformTypes: string[], platformType: string) => platformTypes.map(type => type?.toLowerCase()).includes(platformType?.toLowerCase());
     const hasPoolBasedTokens = checkForPairBasedTokens(POOL_BASED_PROTOCOLS, platformType);
     const hasPairBasedTokens = checkForPairBasedTokens(PAIR_BASED_PROTOCOLS, platformType);
     const isFluidPlatform = platformData?.platform?.protocol_type === PlatformType.FLUID;
