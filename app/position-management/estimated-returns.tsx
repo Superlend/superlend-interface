@@ -147,7 +147,7 @@ export function EstimatedReturns({
             selectedLabel: borrowTokenDetails?.token.symbol || "",
             selectedValue: selectedValue.borrow,
             hasSelectedValue: !(stableBorrowAssetsList.length > 0),
-            totalValue: (isMorpho && positionType === "lend") || (!lendAssetDetails && isCompoundV2) ? 25000 : isUSDAmount ? maxBorrowAmountInUsd : (maxBorrowAmountInUsd / borrowTokenDetails?.token.price_usd ?? 0),
+            totalValue: (isMorpho && positionType === "lend") || (!lendAssetDetails && isCompoundV2) ? 25000 : isUSDAmount ? maxBorrowAmountInUsd : (maxBorrowAmountInUsd / (borrowTokenDetails?.token.price_usd ?? 0)),
             step: isUSDAmount ? 50 : Math.min(0.01, 50 / borrowTokenDetails?.token.price_usd),
             show: true,
         },
