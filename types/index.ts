@@ -154,7 +154,7 @@ export type TPlatform = {
     platform_name: string;
     protocol_identifier: string;
     // protocol_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
-    platform_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
+    protocol_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
     logo: string;
     chain_id: number;
     vaultId: string;

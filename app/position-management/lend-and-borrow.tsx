@@ -231,7 +231,7 @@ export default function LendAndBorrowAssets() {
     }
 
     // Check if platform is aaveV3 or compoundV2, else return null
-    if (!POOL_BASED_PROTOCOLS.includes(platformData?.platform?.platform_type)) {
+    if (!POOL_BASED_PROTOCOLS.includes(platformData?.platform?.protocol_type)) {
         return null;
     }
 

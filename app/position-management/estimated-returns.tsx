@@ -66,14 +66,15 @@ export function EstimatedReturns({
     const [stableLendAssetsList, setStableLendAssetsList] = useState<any[]>([]);
     const [stableBorrowAssetsList, setStableBorrowAssetsList] = useState<any[]>([]);
     const [isUSDAmount, setIsUSDAmount] = useState(false);
-    const isAaveV3 = platformDetails?.platform.platform_type === "aaveV3";
-    const isCompoundV2 = platformDetails?.platform.platform_type === "compoundV2";
-    const isMorpho = platformDetails?.platform.platform_type === "morpho";
+    const isAaveV3 = platformDetails?.platform.protocol_type === "aaveV3";
+    const isCompoundV2 = platformDetails?.platform.protocol_type === "compoundV2";
+    const isMorpho = platformDetails?.platform.protocol_type === "morpho";
+    const isFluidVault = platformDetails?.platform.isVault;
 
     useEffect(() => {
         /*
-            1. If platform_type is aaveV3, then get the lend/borrow asset details from the token address
-            2. If platform_type is other than aaveV3, then get the lend asset details from the platform data
+            1. If protocol_type is aaveV3, then get the lend/borrow asset details from the token address
+            2. If protocol_type is other than aaveV3, then get the lend asset details from the platform data
         */
         if (isAaveV3) {
             if (positionType === "lend") {
@@ -112,17 +113,10 @@ export function EstimatedReturns({
     const borrowAPY = isMorpho ? -(borrowAssetDetails?.supply_apy) : isAaveV3 && positionType === "lend" ? (selectedStableTokenDetails?.variable_borrow_apy) || 0 : (borrowAssetDetails?.variable_borrow_apy) || 0;
     const duration = selectedValue?.duration || 0;
 
-    const assetLTV = (isAaveV3 && positionType === "lend") ? lendAssetDetails?.ltv : selectedStableTokenDetails?.ltv;
+    const assetLTV = lendAssetDetails?.ltv;
 
     const amountSupplied = selectedValue.lend;
     const amountBorrowed = selectedValue.borrow;
-
-
-    const isPoolBasedProtocol = POOL_BASED_PROTOCOLS.includes(platformDetails?.platform.platform_type);
-    const lendTokenLogo = (isAaveV3 && positionType === "borrow") ? selectedStableTokenDetails?.token.logo : lendAssetDetails?.token.logo;
-    const borrowTokenLogo = (isAaveV3 && positionType === "lend") ? selectedStableTokenDetails?.token.logo : borrowAssetDetails?.token.logo;
-    const borrowTokenMaxValue = (isAaveV3 && positionType === "lend") ? (selectedStableTokenDetails?.token.price_usd ?? 0) : (borrowAssetDetails?.token.price_usd ?? 0);
-    const lendTokenMaxValue = (isAaveV3 && positionType === "borrow") ? (selectedStableTokenDetails?.token.price_usd ?? 0) : (lendAssetDetails?.token.price_usd ?? 0);
 
     const lendTokenDetails = (isAaveV3 && positionType === "borrow") ? selectedStableTokenDetails : lendAssetDetails;
     const borrowTokenDetails = (isAaveV3 && positionType === "lend") ? selectedStableTokenDetails : borrowAssetDetails;
@@ -141,8 +135,8 @@ export function EstimatedReturns({
             selectedLabel: lendTokenDetails?.token.symbol || "",
             selectedValue: selectedValue.lend,
             hasSelectedValue: !(stableLendAssetsList.length > 0),
-            totalValue: isUSDAmount ? 25000 : Math.max(25000 / lendTokenDetails?.token.price_usd, 5),
-            step: isUSDAmount ? 50 : Math.min(0.01, 50 / lendTokenDetails?.token.price_usd),
+            totalValue: isUSDAmount ? 25000 : Math.max(25000 / (lendTokenDetails?.token.price_usd ?? 0), 5),
+            step: isUSDAmount ? 50 : Math.min(0.01, 50 / (lendTokenDetails?.token.price_usd ?? 0)),
             show: !(isMorpho && positionType === "lend"),
         },
         {
@@ -153,7 +147,7 @@ export function EstimatedReturns({
             selectedLabel: borrowTokenDetails?.token.symbol || "",
             selectedValue: selectedValue.borrow,
             hasSelectedValue: !(stableBorrowAssetsList.length > 0),
-            totalValue: (isMorpho && positionType === "lend") || (!lendAssetDetails && isCompoundV2) ? 25000 : isUSDAmount ? maxBorrowAmountInUsd : (maxBorrowAmountInUsd / borrowTokenDetails?.token.price_usd),
+            totalValue: (isMorpho && positionType === "lend") || (!lendAssetDetails && isCompoundV2) ? 25000 : isUSDAmount ? maxBorrowAmountInUsd : (maxBorrowAmountInUsd / borrowTokenDetails?.token.price_usd ?? 0),
             step: isUSDAmount ? 50 : Math.min(0.01, 50 / borrowTokenDetails?.token.price_usd),
             show: true,
         },
