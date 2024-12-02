@@ -22,7 +22,7 @@ const PlatformDataInit: TPlatform = {
         platform_name: "",
         protocol_identifier: "",
         // protocol_type: "aaveV3",
-        platform_type: "aaveV3",
+        protocol_type: "aaveV3",
         logo: "",
         chain_id: 0,
         vaultId: "",
