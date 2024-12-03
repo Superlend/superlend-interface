@@ -80,7 +80,7 @@ export default function PositionDetails() {
 
         function getSanitizedValue(value: number) {
             const normalValue = Number(convertScientificToNormal(value));
-            return isLowestValue(normalValue) ? normalValue.toFixed(20) : normalValue;
+            return isLowestValue(normalValue) ? normalValue?.toFixed(20) : normalValue;
         }
 
         const lendAmount = getSanitizedValue(platform?.total_liquidity)
