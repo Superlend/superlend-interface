@@ -119,14 +119,14 @@ export default function LendAndBorrowAssets() {
     const borrowPositions = selectedPlatformDetails?.positions?.filter((position) => position.type === "borrow");
     // Check if there are multiple tokens
     // const hasMultipleTokens = isLendPositionType(positionType) ? lendPositions?.length > 1 : borrowPositions?.length > 1;
-    const hasPosition = !!selectedPlatformDetails?.positions?.find((position) => position?.token?.address === tokenAddress);
+    const hasPosition = !!selectedPlatformDetails?.positions?.find((position) => position?.token?.address.toLowerCase() === tokenAddress.toLowerCase());
 
     const getAssetDetailsFromPortfolio = (tokenAddress: string) => {
         return {
             ...selectedPlatformDetails,
             positions: null,
             asset: {
-                ...selectedPlatformDetails?.positions?.find((position) => position?.token?.address === tokenAddress)
+                ...selectedPlatformDetails?.positions?.find((position) => position?.token?.address.toLowerCase() === tokenAddress.toLowerCase())
             }
         }
     }
@@ -137,7 +137,7 @@ export default function LendAndBorrowAssets() {
         }
         return {
             asset: {
-                ...platformData?.assets?.find((platform: TPlatformAsset) => platform?.token?.address === tokenAddress),
+                ...platformData?.assets?.find((platform: TPlatformAsset) => platform?.token?.address.toLowerCase() === tokenAddress.toLowerCase()),
                 amount: null,
             },
             ...platformData?.platform
