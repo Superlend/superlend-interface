@@ -413,6 +413,15 @@ export function checkDecimalPlaces(value: string, decimals: number) {
   return false;
 }
 
+export function decimalPlacesCount(value: string) {
+  if (value.includes(".")) {
+    const decimalPart = value.split(".")[1];
+    return decimalPart.length;
+  }
+
+  return 0;
+}
+
 export function countCompoundDecimals(
   decimals: number,
   underlyingDecimals: number

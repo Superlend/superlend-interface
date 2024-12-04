@@ -15,7 +15,7 @@ import {
   SOMETHING_WENT_WRONG_MESSAGE,
   SUCCESS_MESSAGE,
 } from '../../../constants'
-import { parseUnits } from 'ethers'
+import { parseUnits } from 'ethers/lib/utils'
 // import toast from 'react-hot-toast'
 // import { getErrorText } from '@utils/getErrorText'
 import { countCompoundDecimals } from '@/lib/utils'
@@ -25,6 +25,7 @@ import { useActiveAccount } from 'thirdweb/react'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { TLendBorrowTxContext, useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import { ArrowRightIcon } from 'lucide-react'
+import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
 interface IBorrowButtonProps {
@@ -64,7 +65,6 @@ const BorrowButton = ({
       setBorrowTx({ status: "view", hash });
     }
   }, [hash]);
-
 
   const txBtnText = txBtnStatus[isConfirming ? 'confirming' : isConfirmed ? 'success' : isPending ? 'pending' : 'default']
 
@@ -106,7 +106,8 @@ const BorrowButton = ({
             parseUnits(
               amount,
               // countCompoundDecimals(asset.decimals, asset.underlyingDecimals)
-              countCompoundDecimals(asset.decimals, asset.decimals)
+              // countCompoundDecimals(asset.decimals, asset.decimals)
+              asset.decimals
             ),
           ],
         })
@@ -183,7 +184,6 @@ const BorrowButton = ({
 
   const onBorrow = async () => {
     // createToast()
-    // console.log(asset);
 
     if (asset?.protocol_type === PlatformType.COMPOUND) {
       await borrowCompound(asset?.asset?.token?.address, amount)
