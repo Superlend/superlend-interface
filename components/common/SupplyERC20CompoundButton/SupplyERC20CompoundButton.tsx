@@ -5,7 +5,7 @@ import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { useEffect, useState } from 'react'
 // import { AddressType } from '../../../types/address'
 import COMPOUND_ABI from '@/data/abi/compoundABIerc20.json'
-import { parseUnits } from 'ethers'
+import { parseUnits } from 'ethers/lib/utils'
 // import toast from 'react-hot-toast'
 import {
   APPROVE_MESSAGE,
