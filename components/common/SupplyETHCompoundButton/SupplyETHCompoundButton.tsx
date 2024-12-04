@@ -1,7 +1,7 @@
 // import CustomButton from '@components/ui/CustomButton'
 import { useWriteContract } from 'wagmi'
 import COMPOUND_ABI from '@/data/abi/compoundABI.json'
-import { parseUnits } from 'ethers'
+import { parseUnits } from 'ethers/lib/utils'
 // import { AddressType } from '@/types/address'
 // import { getActionName } from '@/lib/getActionName'
 // import { Action } from '@/types/assetsTable'
@@ -65,6 +65,7 @@ const SupplyETHCompoundButton = ({
         abi: COMPOUND_ABI,
         functionName: 'mint',
         args: [],
+        //@ts-ignore
         value: parseUnits(amount, decimals),
       })
     } catch (error) {

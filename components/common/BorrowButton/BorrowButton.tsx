@@ -15,7 +15,7 @@ import {
   SOMETHING_WENT_WRONG_MESSAGE,
   SUCCESS_MESSAGE,
 } from '../../../constants'
-import { parseUnits } from 'ethers'
+import { parseUnits } from 'ethers/lib/utils'
 // import toast from 'react-hot-toast'
 // import { getErrorText } from '@utils/getErrorText'
 import { countCompoundDecimals } from '@/lib/utils'

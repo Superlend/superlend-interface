@@ -12,7 +12,7 @@ import AAVE_POOL_ABI from '@/data/abi/aavePoolABI.json'
 // import { getActionName } from '@/lib/getActionName'
 // import { Action } from '@/types/assetsTable'
 // import { AddressType } from '@/types/address'
-import { parseUnits } from 'ethers'
+import { parseUnits } from 'ethers/lib/utils'
 // import toast from 'react-hot-toast'
 import {
   APPROVE_MESSAGE,

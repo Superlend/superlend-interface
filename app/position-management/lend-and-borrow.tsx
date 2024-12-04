@@ -38,7 +38,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import CustomNumberInput from "@/components/inputs/CustomNumberInput";
 import AAVE_POOL_ABI from "@/data/abi/aaveApproveABI.json";
 import { useAccount, useBalance, useReadContract } from "wagmi";
-import { formatUnits, BigNumberish } from "ethers";
+import { formatUnits } from "ethers/lib/utils";
+import { BigNumberish } from "ethers";
 // import { PlatformType, PlatformValue } from "@/types/platform";
 
 
