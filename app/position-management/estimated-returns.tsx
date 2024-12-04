@@ -79,7 +79,7 @@ export function EstimatedReturns({
         if (isAaveV3) {
             if (positionType === "lend") {
                 // Get lend asset details
-                setLendAssetDetails(platformDetails?.assets.find(asset => asset.token.address === tokenAddress));
+                setLendAssetDetails(platformDetails?.assets.find(asset => asset.token.address.toLowerCase() === tokenAddress.toLowerCase()));
                 // Get the first borrow asset details
                 setBorrowAssetDetails(platformDetails?.assets.filter(asset => asset.borrow_enabled)[0]);
                 // Get stable borrow assets list
@@ -90,7 +90,7 @@ export function EstimatedReturns({
                 // Get the first lend asset details
                 setLendAssetDetails(platformDetails?.assets[0]);
                 // Get borrow asset details
-                setBorrowAssetDetails(platformDetails?.assets.find(asset => asset.token.address === tokenAddress));
+                setBorrowAssetDetails(platformDetails?.assets.find(asset => asset.token.address.toLowerCase() === tokenAddress.toLowerCase()));
             }
         } else {
             // Get the first lend asset details
