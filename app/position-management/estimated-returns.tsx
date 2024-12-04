@@ -103,12 +103,14 @@ export function EstimatedReturns({
     // Reset borrow value when lend value changes
     useEffect(() => {
         setSelectedValue(prev => ({ ...prev, borrow: 0 }));
-    }, [selectedValue.lend, selectedStableTokenDetails?.token.logo]);
+    }, [selectedValue.lend]);
 
-    // Reset lend value when lend dropdown value changes
+    // Reset lend and borrow value when stable token dropdown value changes
     useEffect(() => {
         if (positionType === "borrow") {
             setSelectedValue(prev => ({ ...prev, lend: 0, borrow: 0 }));
+        } else {
+            setSelectedValue(prev => ({ ...prev, borrow: 0 }));
         }
     }, [selectedStableTokenDetails?.token.logo]);
 
@@ -366,7 +368,7 @@ export function EstimatedReturns({
                                     </div>
                                     <Slider
                                         disabled={isAssetNotAvailable(row) || (row.key === "borrow" && row.totalValue === 0)}
-                                        key={`${row.key}-${isUSDAmount ? 'usd' : 'token'}-${selectedStableTokenDetails?.token.logo}-${selectedValue.lend}`}
+                                        key={`${row.key}-${isUSDAmount ? 'usd' : 'token'}-${selectedStableTokenDetails?.token.logo}-${selectedValue.lend === 0}`}
                                         defaultValue={[row.selectedValue]}
                                         max={row.totalValue}
                                         step={row.step}
