@@ -79,7 +79,7 @@ export function EstimatedReturns({
         if (isAaveV3) {
             if (positionType === "lend") {
                 // Get lend asset details
-                setLendAssetDetails(platformDetails?.assets.find(asset => asset.token.address === tokenAddress));
+                setLendAssetDetails(platformDetails?.assets.find(asset => asset.token.address.toLowerCase() === tokenAddress.toLowerCase()));
                 // Get the first borrow asset details
                 setBorrowAssetDetails(platformDetails?.assets.filter(asset => asset.borrow_enabled)[0]);
                 // Get stable borrow assets list
@@ -90,7 +90,7 @@ export function EstimatedReturns({
                 // Get the first lend asset details
                 setLendAssetDetails(platformDetails?.assets[0]);
                 // Get borrow asset details
-                setBorrowAssetDetails(platformDetails?.assets.find(asset => asset.token.address === tokenAddress));
+                setBorrowAssetDetails(platformDetails?.assets.find(asset => asset.token.address.toLowerCase() === tokenAddress.toLowerCase()));
             }
         } else {
             // Get the first lend asset details
@@ -103,7 +103,16 @@ export function EstimatedReturns({
     // Reset borrow value when lend value changes
     useEffect(() => {
         setSelectedValue(prev => ({ ...prev, borrow: 0 }));
-    }, [selectedValue.lend, selectedStableTokenDetails?.token.logo]);
+    }, [selectedValue.lend]);
+
+    // Reset lend and borrow value when stable token dropdown value changes
+    useEffect(() => {
+        if (positionType === "borrow") {
+            setSelectedValue(prev => ({ ...prev, lend: 0, borrow: 0 }));
+        } else {
+            setSelectedValue(prev => ({ ...prev, borrow: 0 }));
+        }
+    }, [selectedStableTokenDetails?.token.logo]);
 
     const handleSelectedValueChange = (value: number, type: "lend" | "borrow" | "duration") => {
         setSelectedValue(prev => ({ ...prev, [type]: value }));
@@ -359,7 +368,7 @@ export function EstimatedReturns({
                                     </div>
                                     <Slider
                                         disabled={isAssetNotAvailable(row) || (row.key === "borrow" && row.totalValue === 0)}
-                                        key={`${row.key}-${isUSDAmount ? 'usd' : 'token'}`}
+                                        key={`${row.key}-${isUSDAmount ? 'usd' : 'token'}-${selectedStableTokenDetails?.token.logo}-${selectedValue.lend === 0}`}
                                         defaultValue={[row.selectedValue]}
                                         max={row.totalValue}
                                         step={row.step}
