@@ -17,6 +17,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { ArrowRightIcon } from 'lucide-react'
 import CustomAlert from '@/components/alerts/CustomAlert'
+import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 // import { getErrorText } from '@utils/getErrorText'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
@@ -40,6 +42,7 @@ const SupplyERC20CompoundButton = ({
   const { writeContractAsync, data: hash, isPending, error } = useWriteContract()
   const [lastTx, setLastTx] = useState<'mint' | 'approve'>('mint')
   // const { createToast } = useCreatePendingToast()
+  const { lendTx, setLendTx } = useLendBorrowTxContext() as TLendBorrowTxContext;
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
@@ -95,8 +98,14 @@ const SupplyERC20CompoundButton = ({
         error
       }
     }
+
     if (isConfirmed && lastTx === 'mint') {
+      setLendTx({ status: "lend", hash: hash || "" })
       void supply()
+    }
+
+    if (isConfirmed && lastTx === 'approve') {
+      setLendTx({ status: "view", hash: hash || "" })
     }
   }, [
     isConfirmed,
