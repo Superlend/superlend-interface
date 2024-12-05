@@ -99,7 +99,7 @@ const BorrowButton = ({
         // toast.remove()
 
         writeContractAsync({
-          address: cTokenAddress,
+          address: cTokenAddress as `0x${string}`,
           abi: COMPOUND_ABI,
           functionName: 'borrow',
           args: [
@@ -162,7 +162,7 @@ const BorrowButton = ({
         // console.log(addressOfWallet);
 
         writeContractAsync({
-          address: poolContractAddress,
+          address: poolContractAddress as `0x${string}`,
           abi: AAVE_POOL_ABI,
           functionName: 'borrow',
           args: [

@@ -124,6 +124,7 @@ export default function LendAndBorrowAssets() {
     const getAssetDetailsFromPortfolio = (tokenAddress: string) => {
         return {
             ...selectedPlatformDetails,
+            core_contract: platformData?.platform?.core_contract,
             positions: null,
             asset: {
                 ...selectedPlatformDetails?.positions?.find((position) => position?.token?.address.toLowerCase() === tokenAddress.toLowerCase())
@@ -164,7 +165,7 @@ export default function LendAndBorrowAssets() {
     // Get balance of token
     const result: any = useReadContract({
         abi: AAVE_POOL_ABI,
-        address: tokenAddress,
+        address: tokenAddress as `0x${string}`,
         functionName: 'balanceOf',
         args: [walletAddress as `0x${string}`],
         account: walletAddress as `0x${string}`,
@@ -288,19 +289,18 @@ export default function LendAndBorrowAssets() {
 
     const disabledButton: boolean = useMemo(
         () =>
-            Number(amount) > Number(isLendPositionType(positionType) ? balance : parsedUserData?.availableBorrowsETH ?? 0) ||
-            // assetDetails?.isFrozen ||
-            !hasCollateral ||
-            Number(amount) <= 0 ||
+            (Number(amount) > Number(isLendPositionType(positionType) ? balance : parsedUserData?.availableBorrowsETH ?? 0)) ||
+            (isLendPositionType(positionType) ? false : !hasCollateral) ||
+            (Number(amount) <= 0) ||
             toManyDecimals,
-        [amount, balance, toManyDecimals]
+        [amount, balance, parsedUserData?.availableBorrowsETH, toManyDecimals, hasCollateral, positionType]
     )
 
     // console.log("disabledButton",
-    //     Number(amount) > Number(isLendPositionType(positionType) ? balance : parsedUserData?.availableBorrowsETH ?? 0),
-    //     !hasCollateral,
-    //     Number(amount) <= 0,
-    //     toManyDecimals
+    // (Number(amount) > Number(isLendPositionType(positionType) ? balance : parsedUserData?.availableBorrowsETH ?? 0)) ||
+    // (isLendPositionType(positionType) ? false : !hasCollateral) ||
+    // (Number(amount) <= 0) ||
+    // toManyDecimals,
     // );
 
     // Loading skeleton

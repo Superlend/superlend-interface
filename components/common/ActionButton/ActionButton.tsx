@@ -71,11 +71,11 @@ const ActionButton = ({
       <SupplyETHCompoundButton
         disabled={disabled}
         handleCloseModal={handleCloseModal}
-        cTokenAddress={asset.asset.token.address}
+        cTokenAddress={asset.core_contract}
         amount={amount}
         decimals={countCompoundDecimals(
           asset.asset.token.decimals,
-          asset.asset.underlyingDecimals
+          asset.asset.token.decimals
         )}
       />
     )
@@ -84,10 +84,10 @@ const ActionButton = ({
     <SupplyERC20CompoundButton
       disabled={disabled}
       handleCloseModal={handleCloseModal}
-      underlyingToken={asset.asset.underlyingAsset}
-      cTokenAddress={asset.asset.token.address}
+      underlyingToken={asset.asset.token.address}
+      cTokenAddress={asset.core_contract}
       amount={amount}
-      decimals={countCompoundDecimals(asset.asset.token.decimals, asset.asset.underlyingDecimals)}
+      decimals={countCompoundDecimals(asset.asset.token.decimals, asset.asset.token.decimals)}
     />
   )
 }
