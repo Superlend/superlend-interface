@@ -25,6 +25,7 @@ import { useActiveAccount } from 'thirdweb/react'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { TLendBorrowTxContext, useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import { ArrowRightIcon } from 'lucide-react'
+import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
 interface IBorrowButtonProps {
@@ -65,7 +66,6 @@ const BorrowButton = ({
     }
   }, [hash]);
 
-
   const txBtnText = txBtnStatus[isConfirming ? 'confirming' : isConfirmed ? 'success' : isPending ? 'pending' : 'default']
 
   const borrowCompound = useCallback(
@@ -99,14 +99,15 @@ const BorrowButton = ({
         // toast.remove()
 
         writeContractAsync({
-          address: cTokenAddress,
+          address: cTokenAddress as `0x${string}`,
           abi: COMPOUND_ABI,
           functionName: 'borrow',
           args: [
             parseUnits(
               amount,
               // countCompoundDecimals(asset.decimals, asset.underlyingDecimals)
-              countCompoundDecimals(asset.decimals, asset.decimals)
+              // countCompoundDecimals(asset.decimals, asset.decimals)
+              asset.decimals
             ),
           ],
         })
@@ -161,7 +162,7 @@ const BorrowButton = ({
         // console.log(addressOfWallet);
 
         writeContractAsync({
-          address: poolContractAddress,
+          address: poolContractAddress as `0x${string}`,
           abi: AAVE_POOL_ABI,
           functionName: 'borrow',
           args: [
@@ -183,7 +184,6 @@ const BorrowButton = ({
 
   const onBorrow = async () => {
     // createToast()
-    // console.log(asset);
 
     if (asset?.protocol_type === PlatformType.COMPOUND) {
       await borrowCompound(asset?.asset?.token?.address, amount)

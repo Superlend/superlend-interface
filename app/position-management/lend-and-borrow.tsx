@@ -11,16 +11,14 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { AssetsDataContext } from "@/context/data-provider";
 import useGetPlatformData from "@/hooks/useGetPlatformData";
-import { usePositionManagementContext } from "@/context/position-management-provider";
 import useGetPortfolioData from "@/hooks/useGetPortfolioData";
-import { TPlatformAsset, TPositionType, TToken } from "@/types";
+import { TPlatformAsset, TPositionType } from "@/types";
 import { ArrowRightIcon, ArrowUpRightIcon, CircleCheck, CircleCheckIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useContext, useMemo, useState } from "react";
 import { useIsAutoConnecting, useActiveAccount, useSwitchActiveWalletChain } from "thirdweb/react";
-import { abbreviateNumber, capitalizeText, checkDecimalPlaces, convertScientificToNormal, isLowestValue } from "@/lib/utils";
+import { abbreviateNumber, capitalizeText, checkDecimalPlaces, convertScientificToNormal, decimalPlacesCount, getLowestDisplayValue, isLowestValue } from "@/lib/utils";
 import { getRiskFactor } from "@/lib/utils";
 import { BodyText, HeadingText } from "@/components/ui/typography";
 
@@ -38,8 +36,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import CustomNumberInput from "@/components/inputs/CustomNumberInput";
 import AAVE_POOL_ABI from "@/data/abi/aaveApproveABI.json";
 import { useAccount, useBalance, useReadContract } from "wagmi";
-import { formatUnits } from "ethers/lib/utils";
 import { BigNumberish } from "ethers";
+import { formatUnits } from "ethers/lib/utils";
 // import { PlatformType, PlatformValue } from "@/types/platform";
 
 
@@ -55,20 +53,17 @@ import { Badge } from "@/components/ui/badge";
 import LoadingSectionSkeleton from "@/components/skeletons/LoadingSection";
 import { POOL_BASED_PROTOCOLS, TOO_MANY_DECIMALS_VALIDATIONS_TEXT, TX_EXPLORER_LINKS } from "@/constants";
 import ActionButton from "@/components/common/ActionButton";
-import { defineChain, getContract } from "thirdweb";
-import { useReadContract as useReadContractThirdweb } from "thirdweb/react";
-import { client } from "../client";
-import { useWalletBalance } from "thirdweb/react";
-import { config } from "@/config";
+import { defineChain } from "thirdweb";
 import { TLendBorrowTxContext, useLendBorrowTxContext } from "@/context/lend-borrow-tx-provider";
 import { PlatformValue } from "@/types/platform";
+import { getMaxAmountAvailableToBorrow } from "@/lib/getMaxAmountAvailableToBorrow";
+import ConnectWalletButton from "@/components/ConnectWalletButton";
 
 export default function LendAndBorrowAssets() {
+    const { erc20TokensBalanceData } = useLendBorrowTxContext();
     const [positionType, setPositionType] = useState<TPositionType>('lend');
     const [selectedTokenDetails, setSelectedTokenDetails] = useState<any>(null);
-    const { allTokensData, allChainsData } = useContext(AssetsDataContext);
     const [amount, setAmount] = useState('')
-    // const [balance, setBalance] = useState(0)
     const searchParams = useSearchParams();
     const tokenAddress = searchParams.get("token") || "";
     const chain_id = searchParams.get("chain_id") || 1;
@@ -103,25 +98,11 @@ export default function LendAndBorrowAssets() {
 
     const customChain = defineChain(Number(chain_id));
 
-    // const contract = getContract({
-    //     client,
-    //     address: platformData?.platform?.core_contract,
-    //     chain: customChain,
-    // });
-
     useEffect(() => {
         if (!!walletAddress) {
             switchChain(customChain)
         }
     }, [walletAddress, isAutoConnecting]);
-
-    // const { data, isLoading: isLoadingBalance, isError: isErrorBalance } = useWalletBalance({
-    //     chain: customChain,
-    //     address: walletAddress,
-    //     tokenAddress: tokenAddress,
-    //     client,
-    // });
-    // console.log("balance", data, data?.displayValue, data?.symbol);
 
     // Filter user positions
     const [selectedPlatformDetails] = portfolioData?.platforms.filter(platform =>
@@ -132,14 +113,15 @@ export default function LendAndBorrowAssets() {
     const borrowPositions = selectedPlatformDetails?.positions?.filter((position) => position.type === "borrow");
     // Check if there are multiple tokens
     // const hasMultipleTokens = isLendPositionType(positionType) ? lendPositions?.length > 1 : borrowPositions?.length > 1;
-    const hasPosition = !!selectedPlatformDetails?.positions?.find((position) => position?.token?.address === tokenAddress);
+    const hasPosition = !!selectedPlatformDetails?.positions?.find((position) => position?.token?.address.toLowerCase() === tokenAddress.toLowerCase());
 
     const getAssetDetailsFromPortfolio = (tokenAddress: string) => {
         return {
             ...selectedPlatformDetails,
+            core_contract: platformData?.platform?.core_contract,
             positions: null,
             asset: {
-                ...selectedPlatformDetails?.positions?.find((position) => position?.token?.address === tokenAddress)
+                ...selectedPlatformDetails?.positions?.find((position) => position?.token?.address.toLowerCase() === tokenAddress.toLowerCase())
             }
         }
     }
@@ -150,7 +132,7 @@ export default function LendAndBorrowAssets() {
         }
         return {
             asset: {
-                ...platformData?.assets?.find((platform: TPlatformAsset) => platform?.token?.address === tokenAddress),
+                ...platformData?.assets?.find((platform: TPlatformAsset) => platform?.token?.address.toLowerCase() === tokenAddress.toLowerCase()),
                 amount: null,
             },
             ...platformData?.platform
@@ -159,56 +141,23 @@ export default function LendAndBorrowAssets() {
 
     const assetDetails = getAssetDetails(tokenAddress);
 
-    // Get balance of token
-    const result: any = useReadContract({
-        abi: AAVE_POOL_ABI,
-        address: tokenAddress,
-        functionName: 'balanceOf',
-        args: [walletAddress as `0x${string}`],
-        account: walletAddress as `0x${string}`,
-    })
-
-    // Get balance of wallet
-    // const resultData = useBalance({ address: walletAddress as `0x${string}` })
+    // Max amount to borrow calculations
+    const maxAmountToBorrow = getMaxAmountAvailableToBorrow(
+        {
+            availableLiquidity: 0,
+            borrowCap: 0,
+            totalDebt: 0,
+            decimals: 18,
+        },
+        {
+            availableBorrowsMarketReferenceCurrency: 0,
+        },
+        "Variable"
+    );
+    const formattedMaxAmountToBorrow = maxAmountToBorrow.toString(10);
 
     // Calculate balance
-    const balance = useMemo(() => {
-        if (assetDetails && result?.data) {
-            const countedDecimals = assetDetails?.asset.token?.decimals;
-            // assetDetails.platform.platform_name === PlatformValue.CompoundV2Ethereum
-            //     ? assetDetails?.underlyingDecimals
-            //     : assetDetails?.token?.decimals
-            return formatUnits(result.data as BigNumberish, countedDecimals)
-        }
-        // if (assetDetails && resultData.data) {
-        //     return formatUnits(
-        //         resultData.data.value as BigNumberish,
-        //         resultData.data.decimals
-        //     )
-        // }
-        return '0'
-    }, [result?.data])
-
-    // useEffect(() => {
-    //     if (allTokensData && allChainsData && walletAddress) {
-    //         getTokenBalances({
-    //             userAddress: walletAddress as `0x${string}`,
-    //             contractAddress: platformData?.platform?.core_contract,
-    //             chains: allChainsData.map((chain) => chain.chain_id),
-    //             tokens: allTokensData
-    //         })
-    //             .then((data) => {
-    //                 // setBalance(Number(balance))
-    //                 console.log(data);
-
-    //             })
-    //             .catch((e: Error) => console.error(e))
-    //     }
-    // }, [
-    //     allTokensData,
-    //     allChainsData,
-    //     walletAddress
-    // ])
+    const balance = (erc20TokensBalanceData[Number(chain_id)]?.[tokenAddress.toLowerCase()]?.balanceFormatted ?? 0).toString();
 
     const toManyDecimals = useMemo(() => {
         if (assetDetails) {
@@ -217,22 +166,101 @@ export default function LendAndBorrowAssets() {
         return false
     }, [assetDetails, amount])
 
+    const userAccountData = useReadContract({
+        address: platformData?.platform?.core_contract as `0x${string}`,
+        abi: AAVE_POOL_ABI,
+        functionName: 'getUserAccountData',
+        args: [walletAddress as `0x${string}`],
+    })
+
+    // Add this to parse the user account data
+    const parsedUserData = useMemo(() => {
+        if (!userAccountData.data) return null;
+
+        const [
+            totalCollateralETH,
+            totalDebtETH,
+            availableBorrowsETH,
+            currentLiquidationThreshold,
+            ltv,
+            healthFactor
+        ] = userAccountData.data as any;
+
+        return {
+            totalCollateralETH: formatUnits(totalCollateralETH, 18),
+            totalDebtETH: formatUnits(totalDebtETH, 18),
+            availableBorrowsETH: formatUnits(availableBorrowsETH, 18),
+            currentLiquidationThreshold: Number(currentLiquidationThreshold) / 10000, // Convert basis points to percentage
+            ltv: Number(ltv) / 10000, // Convert basis points to percentage
+            healthFactor: formatUnits(healthFactor, 18)
+        }
+    }, [userAccountData.data]);
+
+    // Add this console log to see the formatted values
+    // console.log("Parsed User Data:", parsedUserData);
+
+    const isPoolBasedProtocol = POOL_BASED_PROTOCOLS.includes(platformData?.platform?.protocol_type);
+
+    // You can check if user has collateral like this
+    const hasCollateral = useMemo(() => {
+        return parsedUserData && Number(parsedUserData.totalCollateralETH) > 0;
+    }, [parsedUserData]);
+
+    // And check if user can borrow
+    const canBorrow = useMemo(() => {
+        return parsedUserData && Number(parsedUserData.availableBorrowsETH) > 0;
+    }, [parsedUserData]);
+
+    const lendErrorMessage = useMemo(() => {
+        if (Number(amount) > Number(balance) || Number(balance) <= 0) {
+            return 'You do not have enough balance';
+        } else if (toManyDecimals) {
+            return TOO_MANY_DECIMALS_VALIDATIONS_TEXT;
+        } else {
+            return null;
+        }
+    }, [amount, balance, toManyDecimals]);
+
+    const borrowErrorMessage = useMemo(() => {
+        if (toManyDecimals) {
+            return TOO_MANY_DECIMALS_VALIDATIONS_TEXT;
+        }
+        if (!hasCollateral) {
+            return "You do not have any collateral"
+        }
+        if (!canBorrow || Number(amount) > Number(parsedUserData?.availableBorrowsETH ?? 0)) {
+            return "You do not have any borrow limit"
+        }
+        return null;
+    }, [hasCollateral, canBorrow, amount, balance, toManyDecimals]);
+
+    const errorMessage = useMemo(() => {
+        return isLendPositionType(positionType) ? lendErrorMessage : borrowErrorMessage;
+    }, [positionType, lendErrorMessage, borrowErrorMessage]);
+
     const disabledButton: boolean = useMemo(
         () =>
-            Number(amount) > Number(balance) ||
-            // assetDetails?.isFrozen ||
-            Number(amount) <= 0 ||
+            (Number(amount) > Number(isLendPositionType(positionType) ? balance : parsedUserData?.availableBorrowsETH ?? 0)) ||
+            (isLendPositionType(positionType) ? false : !hasCollateral) ||
+            (Number(amount) <= 0) ||
             toManyDecimals,
-        [amount, balance, toManyDecimals]
+        [amount, balance, parsedUserData?.availableBorrowsETH, toManyDecimals, hasCollateral, positionType]
     )
 
+    // console.log("disabledButton",
+    // (Number(amount) > Number(isLendPositionType(positionType) ? balance : parsedUserData?.availableBorrowsETH ?? 0)) ||
+    // (isLendPositionType(positionType) ? false : !hasCollateral) ||
+    // (Number(amount) <= 0) ||
+    // toManyDecimals,
+    // );
+
     // Loading skeleton
-    if (isLoading) {
+    if (isLoading && isPoolBasedProtocol) {
         return <LoadingSectionSkeleton className="h-[300px] w-full" />
     }
 
     // Check if platform is aaveV3 or compoundV2, else return null
-    if (!POOL_BASED_PROTOCOLS.includes(platformData?.platform?.protocol_type)) {
+    if (!isPoolBasedProtocol) {
         return null;
     }
 
@@ -251,14 +279,14 @@ export default function LendAndBorrowAssets() {
                     {
                         isLendPositionType(positionType) && (
                             <BodyText level="body2" weight="normal" className="capitalize text-gray-600 flex items-center gap-[4px]">
-                                Bal. {abbreviateNumber(Number(balance))} <span className="inline-block truncate max-w-[70px]">{assetDetails?.asset?.token?.symbol}</span>
+                                Bal. {abbreviateNumber(Number(getLowestDisplayValue(Number(balance ?? 0))), 2)} <span className="inline-block truncate max-w-[70px]">{assetDetails?.asset?.token?.symbol}</span>
                             </BodyText>
                         )
                     }
                     {
                         !isLendPositionType(positionType) && (
                             <BodyText level="body2" weight="normal" className="capitalize text-gray-600 flex items-center gap-[4px]">
-                                limit - {abbreviateNumber(Number(balance))}
+                                limit - {abbreviateNumber(Number(parsedUserData?.availableBorrowsETH ?? 0), decimalPlacesCount(parsedUserData?.availableBorrowsETH ?? '0'))}
                             </BodyText>
                         )
                     }
@@ -294,7 +322,7 @@ export default function LendAndBorrowAssets() {
                                 amount={amount}
                                 setAmount={(amount) => setAmount(amount)}
                             />
-                            <span className="text-xs text-destructive-foreground">
+                            {/* <span className="text-xs text-destructive-foreground">
                                 {
                                     Number(amount) > Number(balance)
                                         ? 'You do not have enough balance'
@@ -302,34 +330,49 @@ export default function LendAndBorrowAssets() {
                                             ? TOO_MANY_DECIMALS_VALIDATIONS_TEXT
                                             : null
                                 }
-                            </span>
+                            </span> */}
                         </div>
                         <Button
                             variant="link"
                             className="uppercase text-[14px] font-medium ml-auto"
-                            onClick={() => setAmount(balance.toString())}
-                            disabled={Number(amount) === Number(balance)}
+                            onClick={() => setAmount(isLendPositionType(positionType) ? balance ?? '0' : parsedUserData?.availableBorrowsETH ?? '0')}
+                            disabled={Number(amount) === Number(isLendPositionType(positionType) ? balance ?? '0' : parsedUserData?.availableBorrowsETH ?? 0)}
                         >
                             max
                         </Button>
                     </div>
-                    <BodyText level="body2" weight="normal" className="mx-auto w-full text-gray-500 py-[16px] text-center max-w-[250px]">
-                        {
-                            isLendPositionType(positionType) ?
-                                "Enter amount to proceed lending collateral for this position" :
-                                "Enter the amount you want to borrow from this position"
-                        }
-                    </BodyText>
+                    {walletAddress &&
+                        <BodyText level="body2" weight="normal" className="mx-auto w-full text-gray-500 py-[16px] text-center max-w-[250px]">
+                            {
+                                !errorMessage && (isLendPositionType(positionType) ?
+                                    "Enter amount to proceed lending collateral for this position" :
+                                    "Enter the amount you want to borrow from this position")
+                            }
+                            {
+                                errorMessage && (
+                                    <span className="text-xs text-destructive-foreground">
+                                        {errorMessage}
+                                    </span>
+                                )
+                            }
+                        </BodyText>
+                    }
                 </CardContent>
-                <CardFooter className="p-0">
-                    <ConfirmationDialog
-                        disabled={disabledButton}
-                        positionType={positionType}
-                        assetDetails={assetDetails}
-                        amount={amount}
-                        balance={balance}
-                        setAmount={setAmount}
-                    />
+                <CardFooter className="p-0 justify-center">
+                    {
+                        !walletAddress && (
+                            <ConnectWalletButton />
+                        )
+                    }
+                    {walletAddress &&
+                        <ConfirmationDialog
+                            disabled={disabledButton}
+                            positionType={positionType}
+                            assetDetails={assetDetails}
+                            amount={amount}
+                            balance={balance}
+                            setAmount={setAmount}
+                        />}
                 </CardFooter>
             </Card>
         </section>
@@ -412,6 +455,10 @@ function ConfirmationDialog({
         return isLendPositionType(positionType) ? status.lend : status.borrow;
     }
 
+    const inputUsdAmount = useMemo(() => {
+        return Number(amount) * Number(assetDetails?.asset?.token?.price_usd)
+    }, [amount, assetDetails?.asset?.token?.price_usd])
+
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
@@ -490,11 +537,11 @@ function ConfirmationDialog({
                                 <div className="flex items-center gap-[8px]">
                                     <ImageWithDefault src={assetDetails?.asset?.token?.logo} alt={assetDetails?.asset?.token?.symbol} width={24} height={24} className='rounded-full max-w-[24px] max-h-[24px]' />
                                     <HeadingText level="h3" weight="normal" className="text-gray-800">
-                                        {Number(amount)}
+                                        {Number(amount).toFixed(decimalPlacesCount(amount))}
                                     </HeadingText>
                                 </div>
                                 <BodyText level="body2" weight="normal" className="text-gray-600">
-                                    ~${Number(amount) * Number(assetDetails?.asset?.token?.price_usd)}
+                                    ~${inputUsdAmount.toFixed(decimalPlacesCount(inputUsdAmount.toString()))}
                                 </BodyText>
                             </div>
                         )
