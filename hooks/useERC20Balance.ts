@@ -114,8 +114,12 @@ export const useERC20Balance = (address: string) => {
     // console.log("data", data);
 
     // console.log(!!address, !!tokenList, chainList.length > 0, !data);
-
-    if (!!address && !!tokenList && chainList.length > 0) {
+    if (
+      !!address &&
+      !!tokenList &&
+      chainList.length > 0 &&
+      Object.keys(data).length === 0
+    ) {
       getERC20Balance(address);
     }
   }, [address, tokenList, chainList]);
