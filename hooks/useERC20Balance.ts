@@ -6,12 +6,15 @@ import { ContractCallContext, ContractCallResults } from "ethereum-multicall";
 import ERC20ABI from "../data/abi/erc20ABI.json";
 import { BigNumber } from "ethers";
 import { formatUnits } from "ethers/lib/utils";
+import { useAssetsData } from "@/context/data-provider";
 
-export const useERC20Balance = (account?: string) => {
-  const { data: tokenListRaw } = useGetTokensData();
+export const useERC20Balance = (address: string) => {
+  const { allTokensData, allChainsData } = useAssetsData();
   const { ethMulticall } = useEthersMulticall();
-  const tokenList = tokenListRaw as unknown as Record<number, TToken[]>;
-  const chainList: string[] = [];
+  const tokenList = allTokensData as unknown as Record<number, TToken[]>;
+  const chainList: string[] = allChainsData.map((chain) =>
+    chain.chain_id.toString()
+  );
   const [data, setData] = useState<
     Record<
       number,
@@ -23,7 +26,7 @@ export const useERC20Balance = (account?: string) => {
 
   const getERC20Balance = async (address: string) => {
     try {
-      if (isLoading) return;
+      // if (isLoading) return;
 
       setIsError(false);
       setIsLoading(true);
@@ -59,6 +62,7 @@ export const useERC20Balance = (account?: string) => {
         }
         chainLevelRequest.push(Promise.all(requests));
       }
+
       const multichainResults = await Promise.all(chainLevelRequest);
       const result: Record<
         number,
@@ -104,10 +108,17 @@ export const useERC20Balance = (account?: string) => {
   };
 
   useEffect(() => {
-    if (account && tokenList && chainList && !data) {
-      getERC20Balance(account);
+    // console.log('address', address);
+    // console.log('tokenList', tokenList);
+    // console.log('chainList', chainList);
+    // console.log("data", data);
+
+    // console.log(!!address, !!tokenList, chainList.length > 0, !data);
+
+    if (!!address && !!tokenList && chainList.length > 0) {
+      getERC20Balance(address);
     }
-  }, [account, tokenList, chainList]);
+  }, [address, tokenList, chainList]);
 
   return { data, isLoading, isError, getERC20Balance };
 };

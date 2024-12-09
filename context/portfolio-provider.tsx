@@ -10,6 +10,7 @@ export type TPortfolioContext = {
   portfolioData: TPortfolio;
   isLoadingPortfolioData: boolean;
   isErrorPortfolioData: boolean;
+  erc20TokensBalanceData: Record<number, Record<string, { balanceRaw: string; balanceFormatted: number }>>;
 };
 
 const PortfolioDataInit = {
@@ -22,6 +23,7 @@ export const PortfolioContext = createContext<TPortfolioContext>({
   portfolioData: PortfolioDataInit,
   isLoadingPortfolioData: false,
   isErrorPortfolioData: false,
+  erc20TokensBalanceData: {},
 });
 
 export default function PortfolioProvider({
@@ -41,11 +43,15 @@ export default function PortfolioProvider({
     user_address: walletAddress as `0x${string}` | undefined,
   });
 
-  const { getERC20Balance } = useERC20Balance(walletAddress);
+  const { data: erc20TokensBalanceData } = useERC20Balance(walletAddress as `0x${string}`);
 
-  useEffect(() => {
-    if (walletAddress) getERC20Balance(walletAddress);
-  }, [walletAddress]);
+  // useEffect(() => {
+  //   if (walletAddress) getERC20Balance(walletAddress);
+  // }, [walletAddress]);
+
+  // useEffect(() => {
+  //   console.log(erc20TokensBalanceData);
+  // }, [erc20TokensBalanceData, walletAddress]);
 
   return (
     <PortfolioContext.Provider
@@ -53,6 +59,7 @@ export default function PortfolioProvider({
         portfolioData,
         isLoadingPortfolioData,
         isErrorPortfolioData,
+        erc20TokensBalanceData
       }}
     >
       {children}
