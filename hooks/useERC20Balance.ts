@@ -108,12 +108,6 @@ export const useERC20Balance = (address: string) => {
   };
 
   useEffect(() => {
-    // console.log('address', address);
-    // console.log('tokenList', tokenList);
-    // console.log('chainList', chainList);
-    // console.log("data", data);
-
-    // console.log(!!address, !!tokenList, chainList.length > 0, !data);
     if (
       !!address &&
       !!tokenList &&

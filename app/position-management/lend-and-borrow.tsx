@@ -11,11 +11,9 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { AssetsDataContext } from "@/context/data-provider";
 import useGetPlatformData from "@/hooks/useGetPlatformData";
-import { usePositionManagementContext } from "@/context/position-management-provider";
 import useGetPortfolioData from "@/hooks/useGetPortfolioData";
-import { TPlatformAsset, TPositionType, TToken } from "@/types";
+import { TPlatformAsset, TPositionType } from "@/types";
 import { ArrowRightIcon, ArrowUpRightIcon, CircleCheck, CircleCheckIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useContext, useMemo, useState } from "react";
@@ -55,22 +53,17 @@ import { Badge } from "@/components/ui/badge";
 import LoadingSectionSkeleton from "@/components/skeletons/LoadingSection";
 import { POOL_BASED_PROTOCOLS, TOO_MANY_DECIMALS_VALIDATIONS_TEXT, TX_EXPLORER_LINKS } from "@/constants";
 import ActionButton from "@/components/common/ActionButton";
-import { defineChain, getContract } from "thirdweb";
-import { useReadContract as useReadContractThirdweb } from "thirdweb/react";
-import { client } from "../client";
-import { useWalletBalance } from "thirdweb/react";
-import { config } from "@/config";
+import { defineChain } from "thirdweb";
 import { TLendBorrowTxContext, useLendBorrowTxContext } from "@/context/lend-borrow-tx-provider";
 import { PlatformValue } from "@/types/platform";
 import { getMaxAmountAvailableToBorrow } from "@/lib/getMaxAmountAvailableToBorrow";
 import ConnectWalletButton from "@/components/ConnectWalletButton";
 
 export default function LendAndBorrowAssets() {
+    const { erc20TokensBalanceData } = useLendBorrowTxContext();
     const [positionType, setPositionType] = useState<TPositionType>('lend');
     const [selectedTokenDetails, setSelectedTokenDetails] = useState<any>(null);
-    const { allTokensData, allChainsData } = useContext(AssetsDataContext);
     const [amount, setAmount] = useState('')
-    // const [balance, setBalance] = useState(0)
     const searchParams = useSearchParams();
     const tokenAddress = searchParams.get("token") || "";
     const chain_id = searchParams.get("chain_id") || 1;
@@ -148,7 +141,7 @@ export default function LendAndBorrowAssets() {
 
     const assetDetails = getAssetDetails(tokenAddress);
 
-    // amount calculations
+    // Max amount to borrow calculations
     const maxAmountToBorrow = getMaxAmountAvailableToBorrow(
         {
             availableLiquidity: 0,
@@ -163,32 +156,8 @@ export default function LendAndBorrowAssets() {
     );
     const formattedMaxAmountToBorrow = maxAmountToBorrow.toString(10);
 
-    // Get balance of token
-    const result: any = useReadContract({
-        abi: AAVE_POOL_ABI,
-        address: tokenAddress as `0x${string}`,
-        functionName: 'balanceOf',
-        args: [walletAddress as `0x${string}`],
-        account: walletAddress as `0x${string}`,
-    })
-
     // Calculate balance
-    const balance = useMemo(() => {
-        if (assetDetails && result?.data) {
-            const countedDecimals = assetDetails?.asset.token?.decimals;
-            // assetDetails.platform.platform_name === PlatformValue.CompoundV2Ethereum
-            //     ? assetDetails?.underlyingDecimals
-            //     : assetDetails?.token?.decimals
-            return formatUnits(result?.data as BigNumberish, countedDecimals)
-        }
-        // if (assetDetails && resultData.data) {
-        //     return formatUnits(
-        //         resultData.data.value as BigNumberish,
-        //         resultData.data.decimals
-        //     )
-        // }
-        return '0'
-    }, [result?.data])
+    const balance = (erc20TokensBalanceData[Number(chain_id)]?.[tokenAddress.toLowerCase()]?.balanceFormatted ?? 0).toString();
 
     const toManyDecimals = useMemo(() => {
         if (assetDetails) {
@@ -268,27 +237,6 @@ export default function LendAndBorrowAssets() {
     const errorMessage = useMemo(() => {
         return isLendPositionType(positionType) ? lendErrorMessage : borrowErrorMessage;
     }, [positionType, lendErrorMessage, borrowErrorMessage]);
-
-    // useEffect(() => {
-    //     if (allTokensData && allChainsData && walletAddress) {
-    //         getTokenBalances({
-    //             userAddress: walletAddress as `0x${string}`,
-    //             contractAddress: platformData?.platform?.core_contract,
-    //             chains: allChainsData.map((chain) => chain.chain_id),
-    //             tokens: allTokensData
-    //         })
-    //             .then((data) => {
-    //                 // setBalance(Number(balance))
-    //                 console.log(data);
-
-    //             })
-    //             .catch((e: Error) => console.error(e))
-    //     }
-    // }, [
-    //     allTokensData,
-    //     allChainsData,
-    //     walletAddress
-    // ])
 
     const disabledButton: boolean = useMemo(
         () =>

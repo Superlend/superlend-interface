@@ -2,7 +2,7 @@
 
 import useGetPortfolioData from "@/hooks/useGetPortfolioData";
 import { TPortfolio } from "@/types/queries/portfolio";
-import { createContext, useEffect } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { useActiveAccount } from "thirdweb/react";
 import { useERC20Balance } from "../hooks/useERC20Balance";
 
@@ -65,4 +65,10 @@ export default function PortfolioProvider({
       {children}
     </PortfolioContext.Provider>
   );
+}
+
+export const usePortfolioData = () => {
+  const context = useContext(PortfolioContext);
+  if (!context) throw new Error('usePortfolioData must be used within an PortfolioProvider');
+  return context;
 }
