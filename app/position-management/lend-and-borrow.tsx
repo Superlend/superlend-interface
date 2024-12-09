@@ -20,7 +20,7 @@ import { ArrowRightIcon, ArrowUpRightIcon, CircleCheck, CircleCheckIcon } from "
 import { useSearchParams } from "next/navigation";
 import { useContext, useMemo, useState } from "react";
 import { useIsAutoConnecting, useActiveAccount, useSwitchActiveWalletChain } from "thirdweb/react";
-import { abbreviateNumber, capitalizeText, checkDecimalPlaces, convertScientificToNormal, decimalPlacesCount, isLowestValue } from "@/lib/utils";
+import { abbreviateNumber, capitalizeText, checkDecimalPlaces, convertScientificToNormal, decimalPlacesCount, getLowestDisplayValue, isLowestValue } from "@/lib/utils";
 import { getRiskFactor } from "@/lib/utils";
 import { BodyText, HeadingText } from "@/components/ui/typography";
 
@@ -63,6 +63,7 @@ import { config } from "@/config";
 import { TLendBorrowTxContext, useLendBorrowTxContext } from "@/context/lend-borrow-tx-provider";
 import { PlatformValue } from "@/types/platform";
 import { getMaxAmountAvailableToBorrow } from "@/lib/getMaxAmountAvailableToBorrow";
+import ConnectWalletButton from "@/components/ConnectWalletButton";
 
 export default function LendAndBorrowAssets() {
     const [positionType, setPositionType] = useState<TPositionType>('lend');
@@ -229,6 +230,8 @@ export default function LendAndBorrowAssets() {
     // Add this console log to see the formatted values
     // console.log("Parsed User Data:", parsedUserData);
 
+    const isPoolBasedProtocol = POOL_BASED_PROTOCOLS.includes(platformData?.platform?.protocol_type);
+
     // You can check if user has collateral like this
     const hasCollateral = useMemo(() => {
         return parsedUserData && Number(parsedUserData.totalCollateralETH) > 0;
@@ -304,12 +307,12 @@ export default function LendAndBorrowAssets() {
     // );
 
     // Loading skeleton
-    if (isLoading) {
+    if (isLoading && isPoolBasedProtocol) {
         return <LoadingSectionSkeleton className="h-[300px] w-full" />
     }
 
     // Check if platform is aaveV3 or compoundV2, else return null
-    if (!POOL_BASED_PROTOCOLS.includes(platformData?.platform?.protocol_type)) {
+    if (!isPoolBasedProtocol) {
         return null;
     }
 
@@ -328,7 +331,7 @@ export default function LendAndBorrowAssets() {
                     {
                         isLendPositionType(positionType) && (
                             <BodyText level="body2" weight="normal" className="capitalize text-gray-600 flex items-center gap-[4px]">
-                                Bal. {abbreviateNumber(Number(balance ?? 0), decimalPlacesCount(balance ?? '0'))} <span className="inline-block truncate max-w-[70px]">{assetDetails?.asset?.token?.symbol}</span>
+                                Bal. {abbreviateNumber(Number(getLowestDisplayValue(Number(balance ?? 0))), 2)} <span className="inline-block truncate max-w-[70px]">{assetDetails?.asset?.token?.symbol}</span>
                             </BodyText>
                         )
                     }
@@ -390,30 +393,38 @@ export default function LendAndBorrowAssets() {
                             max
                         </Button>
                     </div>
-                    <BodyText level="body2" weight="normal" className="mx-auto w-full text-gray-500 py-[16px] text-center max-w-[250px]">
-                        {
-                            !errorMessage && (isLendPositionType(positionType) ?
-                                "Enter amount to proceed lending collateral for this position" :
-                                "Enter the amount you want to borrow from this position")
-                        }
-                        {
-                            errorMessage && (
-                                <span className="text-xs text-destructive-foreground">
-                                    {errorMessage}
-                                </span>
-                            )
-                        }
-                    </BodyText>
+                    {walletAddress &&
+                        <BodyText level="body2" weight="normal" className="mx-auto w-full text-gray-500 py-[16px] text-center max-w-[250px]">
+                            {
+                                !errorMessage && (isLendPositionType(positionType) ?
+                                    "Enter amount to proceed lending collateral for this position" :
+                                    "Enter the amount you want to borrow from this position")
+                            }
+                            {
+                                errorMessage && (
+                                    <span className="text-xs text-destructive-foreground">
+                                        {errorMessage}
+                                    </span>
+                                )
+                            }
+                        </BodyText>
+                    }
                 </CardContent>
-                <CardFooter className="p-0">
-                    <ConfirmationDialog
-                        disabled={disabledButton}
-                        positionType={positionType}
-                        assetDetails={assetDetails}
-                        amount={amount}
-                        balance={balance}
-                        setAmount={setAmount}
-                    />
+                <CardFooter className="p-0 justify-center">
+                    {
+                        !walletAddress && (
+                            <ConnectWalletButton />
+                        )
+                    }
+                    {walletAddress &&
+                        <ConfirmationDialog
+                            disabled={disabledButton}
+                            positionType={positionType}
+                            assetDetails={assetDetails}
+                            amount={amount}
+                            balance={balance}
+                            setAmount={setAmount}
+                        />}
                 </CardFooter>
             </Card>
         </section>
