@@ -6,8 +6,9 @@ import {
 } from '@aave/contract-helpers';
 import { useEthersMulticall } from '../useEthereumMulticall';
 import { useState } from 'react';
-import { formatReservesAndIncentives, formatUserSummaryAndIncentives } from '@aave/math-utils';
+import { formatReserves, formatUserSummary } from '@aave/math-utils';
 import { getAddress } from 'ethers/lib/utils';
+import { getMaxAmountAvailableToBorrow } from '../../lib/getMaxAmountAvailableToBorrow';
 
 export const useAaveV3Data = () => {
   const activeAccount = useActiveAccount();
@@ -25,27 +26,18 @@ export const useAaveV3Data = () => {
     uiPoolDataProviderAddress: string,
     lendingPoolAddressProvider: string
   ) => {
-    try {
-      if (!walletAddress) return Promise.resolve();
-      const uiPoolDataProviderInstance = new UiPoolDataProvider({
-        uiPoolDataProviderAddress: getAddress(uiPoolDataProviderAddress),
-        provider: providers[chainId],
-        chainId: chainId,
-      });
-      console.log(
-        await uiPoolDataProviderInstance.getReservesData({
-          lendingPoolAddressProvider: getAddress(lendingPoolAddressProvider),
-        })
-      );
-      const result = await uiPoolDataProviderInstance.getReservesHumanized({
-        lendingPoolAddressProvider: getAddress(lendingPoolAddressProvider),
-      });
-      setReserveData(result);
-      console.log('reserve data ', reserveData);
-      return result;
-    } catch (error) {
-      console.log(error);
-    }
+    if (!walletAddress) return Promise.resolve();
+    const uiPoolDataProviderInstance = new UiPoolDataProvider({
+      uiPoolDataProviderAddress: getAddress(uiPoolDataProviderAddress),
+      provider: providers[chainId],
+      chainId: chainId,
+    });
+
+    const result = await uiPoolDataProviderInstance.getReservesHumanized({
+      lendingPoolAddressProvider: getAddress(lendingPoolAddressProvider),
+    });
+    setReserveData(result);
+    return result;
   };
 
   const fetchUserData = async (
@@ -53,25 +45,20 @@ export const useAaveV3Data = () => {
     uiPoolDataProviderAddress: string,
     lendingPoolAddressProvider: string
   ) => {
-    try {
-      if (!walletAddress) return Promise.resolve();
+    if (!walletAddress) return Promise.resolve();
 
-      const uiPoolDataProviderInstance = new UiPoolDataProvider({
-        uiPoolDataProviderAddress: getAddress(uiPoolDataProviderAddress),
-        provider: providers[chainId],
-        chainId: chainId,
-      });
+    const uiPoolDataProviderInstance = new UiPoolDataProvider({
+      uiPoolDataProviderAddress: getAddress(uiPoolDataProviderAddress),
+      provider: providers[chainId],
+      chainId: chainId,
+    });
 
-      const result = await uiPoolDataProviderInstance.getUserReservesHumanized({
-        lendingPoolAddressProvider: getAddress(lendingPoolAddressProvider),
-        user: getAddress(walletAddress),
-      });
-      setUserData(result);
-      console.log('user data ', userData);
-      return result;
-    } catch (error) {
-      console.log(error);
-    }
+    const result = await uiPoolDataProviderInstance.getUserReservesHumanized({
+      lendingPoolAddressProvider: getAddress(lendingPoolAddressProvider),
+      user: getAddress(walletAddress),
+    });
+    setUserData(result);
+    return result;
   };
 
   const fetchAaveV3Data = async (
@@ -79,54 +66,66 @@ export const useAaveV3Data = () => {
     uiPoolDataProviderAddress: string,
     lendingPoolAddressProvider: string
   ) => {
-    fetchReservesData(chainId, uiPoolDataProviderAddress, lendingPoolAddressProvider)
-      .then((r) => console.log(r))
-      .catch((e) => console.error(e));
-    fetchUserData(chainId, uiPoolDataProviderAddress, lendingPoolAddressProvider)
-      .then((r) => console.log(r))
-      .catch((e) => console.error(e));
+    const result = await Promise.all([
+      fetchReservesData(chainId, uiPoolDataProviderAddress, lendingPoolAddressProvider),
+      fetchUserData(chainId, uiPoolDataProviderAddress, lendingPoolAddressProvider),
+    ]);
+
+    return result;
   };
 
-  const getMaxBorrowAmount = (token: string) => {
-    if (!reserveData || !userData) return;
-    const reserve = reserveData.reservesData.find(
+  const getMaxBorrowAmount = (
+    token: string,
+    allData?: [
+      ReservesDataHumanized,
+      {
+        userReserves: UserReserveDataHumanized[];
+        userEmodeCategoryId: number;
+      },
+    ]
+  ) => {
+    const _reserveData = allData ? allData[0] : reserveData;
+    const _userData = allData ? allData[1] : userData;
+    if (!_reserveData || !_userData) return;
+    const reserve = _reserveData.reservesData.find(
       (r) => r.underlyingAsset.toLowerCase() === token.toLowerCase()
     );
-    const baseCurrencyData = reserveData.baseCurrencyData;
-    const userReserve = userData.userReserves.find(
+    const baseCurrencyData = _reserveData.baseCurrencyData;
+    const userReserve = _userData.userReserves.find(
       (r) => r.underlyingAsset === token.toLowerCase()
     );
     if (!reserve || !userReserve) return;
 
-    const currentTimestamp = Date.now();
-    ///
+    const currentTimestamp = Math.floor(Date.now() / 1000);
 
-    const formattedPoolReserves = formatReservesAndIncentives({
-      reserves: reserveData.reservesData,
+    const formattedPoolReserves = formatReserves({
+      reserves: _reserveData.reservesData as any,
       currentTimestamp,
       marketReferenceCurrencyDecimals: baseCurrencyData.marketReferenceCurrencyDecimals,
       marketReferencePriceInUsd: baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-      reserveIncentives: [],
     }).map((r) => ({
       ...r,
       isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
       isWrappedBaseAsset: false,
     }));
 
-    ///
-
-    const user = formatUserSummaryAndIncentives({
-      currentTimestamp: Date.now(),
+    const user = formatUserSummary({
+      currentTimestamp: currentTimestamp,
       marketReferencePriceInUsd: baseCurrencyData.marketReferenceCurrencyPriceInUsd,
       marketReferenceCurrencyDecimals: baseCurrencyData.marketReferenceCurrencyDecimals,
-      userReserves: userData.userReserves,
+      userReserves: _userData.userReserves,
       formattedReserves: formattedPoolReserves,
-      userEmodeCategoryId: userData.userEmodeCategoryId,
-      reserveIncentives: [],
-      userIncentives: [],
+      userEmodeCategoryId: _userData.userEmodeCategoryId,
     });
-
-    console.log('user ', user);
+    const maxToBorrow = getMaxAmountAvailableToBorrow(
+      formattedPoolReserves.find((p) => p.underlyingAsset.toLowerCase() === token),
+      user
+    );
+    console.log(
+      'max to borrow ',
+      maxToBorrow.amount.toString(),
+      maxToBorrow.amountFormatted.toString()
+    );
   };
 
   const getMaxSupplyAmount = async (token: string) => {};

@@ -10,8 +10,8 @@
     "format": "prettier . --write"
   },
   "dependencies": {
-    "@aave/contract-helpers": "^1.30.5",
-    "@aave/math-utils": "^1.30.5",
+    "@aave/contract-helpers": "npm:@marsfoundation/contract-helpers@1.13.7",
+    "@aave/math-utils": "^1.13.5",
     "@next/third-parties": "^14.2.15",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.1",

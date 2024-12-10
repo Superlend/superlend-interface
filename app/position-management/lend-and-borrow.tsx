@@ -118,13 +118,17 @@ export default function LendAndBorrowAssets() {
   }, [walletAddress, isAutoConnecting]);
 
   useEffect(() => {
-    if (walletAddress && platformData.platform.protocol_type === 'aaveV3') {
+    if (
+      walletAddress &&
+      platformData.assets.length > 0 &&
+      platformData.platform.protocol_type === 'aaveV3'
+    ) {
       fetchAaveV3Data(
         Number(chain_id),
         platformData.platform.uiPoolDataProvider!,
         platformData.platform.poolAddressesProvider!
       ).then((r) => {
-        getMaxBorrowAmount(tokenAddress.toLowerCase());
+        getMaxBorrowAmount(tokenAddress.toLowerCase(), r);
       });
     }
   }, [walletAddress, platformData]);
@@ -180,19 +184,19 @@ export default function LendAndBorrowAssets() {
   const assetDetails = getAssetDetails(tokenAddress);
 
   // Max amount to borrow calculations
-  const maxAmountToBorrow = getMaxAmountAvailableToBorrow(
-    {
-      availableLiquidity: 0,
-      borrowCap: 0,
-      totalDebt: 0,
-      decimals: 18,
-    },
-    {
-      availableBorrowsMarketReferenceCurrency: 0,
-    },
-    'Variable'
-  );
-  const formattedMaxAmountToBorrow = maxAmountToBorrow.toString(10);
+  //   const maxAmountToBorrow = getMaxAmountAvailableToBorrow(
+  //     {
+  //       availableLiquidity: 0,
+  //       borrowCap: 0,
+  //       totalDebt: 0,
+  //       decimals: 18,
+  //     },
+  //     {
+  //       availableBorrowsMarketReferenceCurrency: 0,
+  //     },
+  //     'Variable'
+  //   );
+  //   const formattedMaxAmountToBorrow = maxAmountToBorrow.toString(10);
 
   // Calculate balance
   const balance = (
