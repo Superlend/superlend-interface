@@ -1,16 +1,16 @@
-"use client"
+'use client';
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 
 export default function useIsClient() {
-    const [isClient, setIsClient] = useState(false)
+  const [isClient, setIsClient] = useState(false);
 
-    useEffect(() => {
-        setIsClient(true)
-    }, [])
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-    return {
-        isClient,
-        setIsClient,
-    }
+  return {
+    isClient,
+    setIsClient,
+  };
 }

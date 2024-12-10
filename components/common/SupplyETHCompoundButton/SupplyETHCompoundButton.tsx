@@ -1,7 +1,7 @@
 // import CustomButton from '@components/ui/CustomButton'
-import { useWriteContract } from 'wagmi'
-import COMPOUND_ABI from '@/data/abi/compoundABI.json'
-import { parseUnits } from 'ethers/lib/utils'
+import { useWriteContract } from 'wagmi';
+import COMPOUND_ABI from '@/data/abi/compoundABI.json';
+import { parseUnits } from 'ethers/lib/utils';
 // import { AddressType } from '@/types/address'
 // import { getActionName } from '@/lib/getActionName'
 // import { Action } from '@/types/assetsTable'
@@ -11,18 +11,18 @@ import {
   ERROR_TOAST_ICON_STYLES,
   SOMETHING_WENT_WRONG_MESSAGE,
   SUCCESS_MESSAGE,
-} from '@/constants'
-import { Button } from '@/components/ui/button'
-import { ArrowRightIcon } from 'lucide-react'
+} from '@/constants';
+import { Button } from '@/components/ui/button';
+import { ArrowRightIcon } from 'lucide-react';
 // import { getErrorText } from '@utils/getErrorText'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
 interface ISupplyETHCompoundButtonProps {
-  disabled: boolean
-  cTokenAddress: string
-  amount: string
-  decimals: number
-  handleCloseModal: (isVisible: boolean) => void
+  disabled: boolean;
+  cTokenAddress: string;
+  amount: string;
+  decimals: number;
+  handleCloseModal: (isVisible: boolean) => void;
 }
 
 const SupplyETHCompoundButton = ({
@@ -32,7 +32,7 @@ const SupplyETHCompoundButton = ({
   disabled,
   handleCloseModal,
 }: ISupplyETHCompoundButtonProps) => {
-  const { writeContractAsync, isPending } = useWriteContract()
+  const { writeContractAsync, isPending } = useWriteContract();
   // const { createToast } = useCreatePendingToast()
 
   const onSupply = async () => {
@@ -72,22 +72,27 @@ const SupplyETHCompoundButton = ({
         functionName: 'mint',
         args: [],
         value: parseUnits(amount, decimals) as unknown as bigint,
-      })
+      });
     } catch (error) {
       // toast.remove()
-      error
+      error;
     }
-  }
+  };
   return (
-    <Button variant="primary"
+    <Button
+      variant="primary"
       className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
       disabled={isPending || disabled}
       onClick={onSupply}
     >
       Lend
-      <ArrowRightIcon width={16} height={16} className='stroke-white group-[:disabled]:opacity-50' />
+      <ArrowRightIcon
+        width={16}
+        height={16}
+        className="stroke-white group-[:disabled]:opacity-50"
+      />
     </Button>
-  )
-}
+  );
+};
 
-export default SupplyETHCompoundButton
+export default SupplyETHCompoundButton;

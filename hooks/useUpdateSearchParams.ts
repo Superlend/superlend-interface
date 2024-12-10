@@ -1,4 +1,4 @@
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 export type TNewParams = {
   [key: string]: any;

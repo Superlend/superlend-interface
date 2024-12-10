@@ -1,7 +1,7 @@
-import { getChainsData } from "@/queries/chains-api";
-import { getTokensData } from "@/queries/tokens-api";
-import { TChain, TToken } from "@/types";
-import { useQuery } from "@tanstack/react-query";
+import { getChainsData } from '@/queries/chains-api';
+import { getTokensData } from '@/queries/tokens-api';
+import { TChain, TToken } from '@/types';
+import { useQuery } from '@tanstack/react-query';
 // import { getAssetsData } from "../services/assets-api";
 // import {
 //   ERROR_TOAST_ICON_STYLES,
@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 export default function useGetChainsData() {
   const { data, isLoading, isError } = useQuery<TChain[], Error>({
     // enabled: !isMyPositionsEnabled,
-    queryKey: ["chains"],
+    queryKey: ['chains'],
     queryFn: async () => {
       try {
         const responseData = await getChainsData();

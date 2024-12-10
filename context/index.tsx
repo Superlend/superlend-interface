@@ -1,19 +1,17 @@
-'use client'
+'use client';
 
-import { config } from '@/config'
+import { config } from '@/config';
 // import { wagmiAdapter, projectId } from '@/config'
 // import { createAppKit } from '@reown/appkit/react'
 // import { mainnet, arbitrum, avalanche, base, optimism, polygon } from '@reown/appkit/networks'
 // import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
-import React, { type ReactNode } from 'react'
-import { queryClient } from './query-client'
-import { QueryClientProvider } from '@tanstack/react-query'
-import AssetsDataProvider from './data-provider'
-import { ThirdwebProvider } from "thirdweb/react";
-import { WagmiProvider } from 'wagmi'
-import { Config, cookieToInitialState } from 'wagmi'
-
-
+import React, { type ReactNode } from 'react';
+import { queryClient } from './query-client';
+import { QueryClientProvider } from '@tanstack/react-query';
+import AssetsDataProvider from './data-provider';
+import { ThirdwebProvider } from 'thirdweb/react';
+import { WagmiProvider } from 'wagmi';
+import { Config, cookieToInitialState } from 'wagmi';
 
 // if (!projectId) {
 //     throw new Error('Project ID is not defined')
@@ -43,19 +41,17 @@ import { Config, cookieToInitialState } from 'wagmi'
 // })
 
 function ContextProvider({ children, cookies }: { children: ReactNode; cookies: string | null }) {
-    const initialState = cookieToInitialState(config as Config, cookies)
+  const initialState = cookieToInitialState(config as Config, cookies);
 
-    return (
-        <ThirdwebProvider>
-            <WagmiProvider config={config} initialState={initialState}>
-                <QueryClientProvider client={queryClient}>
-                    <AssetsDataProvider>
-                        {children}
-                    </AssetsDataProvider>
-                </QueryClientProvider>
-            </WagmiProvider>
-        </ThirdwebProvider>
-    )
+  return (
+    <ThirdwebProvider>
+      <WagmiProvider config={config} initialState={initialState}>
+        <QueryClientProvider client={queryClient}>
+          <AssetsDataProvider>{children}</AssetsDataProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </ThirdwebProvider>
+  );
 }
 
-export default ContextProvider
+export default ContextProvider;

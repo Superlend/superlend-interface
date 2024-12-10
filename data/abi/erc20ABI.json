@@ -328,18 +328,14 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "account", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
     "name": "balanceOf",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "_account", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "_account", "type": "address" }],
     "name": "blacklist",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -353,9 +349,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "uint256", "name": "_amount", "type": "uint256" }
-    ],
+    "inputs": [{ "internalType": "uint256", "name": "_amount", "type": "uint256" }],
     "name": "burn",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -458,18 +452,14 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "string", "name": "newName", "type": "string" }
-    ],
+    "inputs": [{ "internalType": "string", "name": "newName", "type": "string" }],
     "name": "initializeV2",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "lostAndFound", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "lostAndFound", "type": "address" }],
     "name": "initializeV2_1",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -490,18 +480,14 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "_account", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "_account", "type": "address" }],
     "name": "isBlacklisted",
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "account", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
     "name": "isMinter",
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "view",
@@ -525,9 +511,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "minter", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "minter", "type": "address" }],
     "name": "minterAllowance",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
@@ -541,9 +525,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "owner", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "owner", "type": "address" }],
     "name": "nonces",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
@@ -638,9 +620,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "minter", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "minter", "type": "address" }],
     "name": "removeMinter",
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
     "stateMutability": "nonpayable",
@@ -704,9 +684,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "newOwner", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "newOwner", "type": "address" }],
     "name": "transferOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -745,9 +723,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "_account", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "_account", "type": "address" }],
     "name": "unBlacklist",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -787,18 +763,14 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "_newPauser", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "_newPauser", "type": "address" }],
     "name": "updatePauser",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "newRescuer", "type": "address" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "newRescuer", "type": "address" }],
     "name": "updateRescuer",
     "outputs": [],
     "stateMutability": "nonpayable",

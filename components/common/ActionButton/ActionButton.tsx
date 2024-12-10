@@ -1,22 +1,22 @@
 // import { IAssetData } from '@interfaces/IAssetData'
-import { useContext } from 'react'
+import { useContext } from 'react';
 // import { Action } from '../../../types/assetsTable'
-import BorrowButton from '../BorrowButton'
+import BorrowButton from '../BorrowButton';
 // import { ActionContext } from '@contexts/actionContext'
-import SupplyAaveButton from '../SupplyAaveButton'
+import SupplyAaveButton from '../SupplyAaveButton';
 // import { POOL_AAVE_MAP } from '../../../constants'
-import { PlatformType, PlatformValue } from '../../../types/platform'
-import SupplyETHCompoundButton from '../SupplyETHCompoundButton'
-import SupplyERC20CompoundButton from '../SupplyERC20CompoundButton'
-import { countCompoundDecimals } from '@/lib/utils'
-import { POOL_AAVE_MAP } from '@/constants'
+import { PlatformType, PlatformValue } from '../../../types/platform';
+import SupplyETHCompoundButton from '../SupplyETHCompoundButton';
+import SupplyERC20CompoundButton from '../SupplyERC20CompoundButton';
+import { countCompoundDecimals } from '@/lib/utils';
+import { POOL_AAVE_MAP } from '@/constants';
 
 interface IActionButtonSelectComponent {
-  disabled?: boolean
-  asset: any
-  amount: string
-  handleCloseModal: (isVisible: boolean) => void
-  positionType: "lend" | "borrow"
+  disabled?: boolean;
+  asset: any;
+  amount: string;
+  handleCloseModal: (isVisible: boolean) => void;
+  positionType: 'lend' | 'borrow';
 }
 
 const ActionButton = ({
@@ -24,12 +24,12 @@ const ActionButton = ({
   asset,
   amount,
   handleCloseModal,
-  positionType
+  positionType,
 }: IActionButtonSelectComponent) => {
   // const { selectedAction } = useContext(ActionContext)
   // console.log(asset);
 
-  if (positionType === "borrow") {
+  if (positionType === 'borrow') {
     return (
       <BorrowButton
         disabled={disabled}
@@ -37,19 +37,15 @@ const ActionButton = ({
         asset={asset}
         amount={amount}
       />
-    )
+    );
   }
-  if (
-    asset.protocol_type === PlatformType.AAVE &&
-    positionType === "lend"
-  ) {
+  if (asset.protocol_type === PlatformType.AAVE && positionType === 'lend') {
     // console.log(asset);
 
     // console.log('platform_name', asset.platform_name);
     // console.log('tokenAddress', asset.asset.token.address);
     // console.log('amount', amount);
     // console.log('decimals', asset.asset.token.decimals);
-
 
     return (
       <SupplyAaveButton
@@ -61,24 +57,18 @@ const ActionButton = ({
         amount={amount}
         decimals={asset.asset.token.decimals}
       />
-    )
+    );
   }
-  if (
-    asset.protocol_type === PlatformType.COMPOUND &&
-    asset.asset.token.symbol === 'cETH'
-  ) {
+  if (asset.protocol_type === PlatformType.COMPOUND && asset.asset.token.symbol === 'cETH') {
     return (
       <SupplyETHCompoundButton
         disabled={disabled}
         handleCloseModal={handleCloseModal}
         cTokenAddress={asset.core_contract}
         amount={amount}
-        decimals={countCompoundDecimals(
-          asset.asset.token.decimals,
-          asset.asset.token.decimals
-        )}
+        decimals={countCompoundDecimals(asset.asset.token.decimals, asset.asset.token.decimals)}
       />
-    )
+    );
   }
   return (
     <SupplyERC20CompoundButton
@@ -89,7 +79,7 @@ const ActionButton = ({
       amount={amount}
       decimals={countCompoundDecimals(asset.asset.token.decimals, asset.asset.token.decimals)}
     />
-  )
-}
+  );
+};
 
-export default ActionButton
+export default ActionButton;

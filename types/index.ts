@@ -1,7 +1,7 @@
-import { WarningMessages } from "@/constants";
-import { Period } from "./periodButtons";
+import { WarningMessages } from '@/constants';
+import { Period } from './periodButtons';
 
-export type TPositionType = "lend" | "borrow";
+export type TPositionType = 'lend' | 'borrow';
 
 export type TToken = {
   address: string;
@@ -50,7 +50,7 @@ export type TRefreshResponse = TLoginResponse;
 
 // Opportunities
 export type TGetOpportunitiesParams = {
-  type: "lend" | "borrow";
+  type: 'lend' | 'borrow';
   chain_ids?: number[];
   tokens?: string[];
   trend?: boolean;
@@ -154,13 +154,15 @@ export type TPlatform = {
     platform_name: string;
     protocol_identifier: string;
     // protocol_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
-    protocol_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
+    protocol_type: 'aaveV3' | 'compoundV2' | 'morpho' | 'fluid';
     logo: string;
     chain_id: number;
     vaultId: string;
     isVault: boolean;
     morpho_market_id: string;
     core_contract: string;
+    poolAddressesProvider?: string;
+    uiPoolDataProvider?: string;
   };
   assets: TPlatformAsset[];
 };

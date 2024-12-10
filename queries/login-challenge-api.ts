@@ -1,11 +1,9 @@
-import { TGetLoginChallengeParams, TLoginChallengeResponse } from "@/types";
-import { request } from "./request";
+import { TGetLoginChallengeParams, TLoginChallengeResponse } from '@/types';
+import { request } from './request';
 
-export async function getLoginChallenge({
-  user_address,
-}: TGetLoginChallengeParams) {
+export async function getLoginChallenge({ user_address }: TGetLoginChallengeParams) {
   return request<TLoginChallengeResponse>({
-    method: "GET",
+    method: 'GET',
     path: `/auth/challenge/${user_address}`,
   });
 }

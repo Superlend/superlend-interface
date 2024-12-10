@@ -1,4 +1,4 @@
-@import "../public/fonts/basier-circle/stylesheet.css";
+@import '../public/fonts/basier-circle/stylesheet.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -125,7 +125,7 @@
   max-height: 40px !important;
 }
 
-.tw-connected-wallet>:first-child {
+.tw-connected-wallet > :first-child {
   display: none !important;
 }
 
@@ -142,10 +142,10 @@
 } */
 
 /* Remove number input arrows */
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    margin: 0; 
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  margin: 0;
 }

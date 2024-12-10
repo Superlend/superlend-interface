@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { getPlatformData } from "@/queries/platform-api";
-import { TGetPlatformParams, TOpportunity, TPlatform } from "@/types";
-import { useQuery } from "@tanstack/react-query";
+import { getPlatformData } from '@/queries/platform-api';
+import { TGetPlatformParams, TOpportunity, TPlatform } from '@/types';
+import { useQuery } from '@tanstack/react-query';
 
 export default function useGetPlatformData(params: TGetPlatformParams) {
   const { protocol_identifier, chain_id } = params;
 
   const { data, isLoading, isError } = useQuery<TPlatform>({
-    queryKey: ["platform", protocol_identifier, chain_id],
+    queryKey: ['platform', protocol_identifier, chain_id],
     queryFn: async () => {
       try {
         const responseData = await getPlatformData(params);
         return responseData;
       } catch (error) {
         // toast.error(SOMETHING_WENT_WRONG_MESSAGE, ERROR_TOAST_ICON_STYLES);
-        throw new Error("There was an error while fetching Platform data");
+        throw new Error('There was an error while fetching Platform data');
       }
     },
     staleTime: Infinity,
@@ -24,17 +24,19 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
   return {
     data: data || {
       platform: {
-        platform_name: "",
+        platform_name: '',
         // protocol_type: "aaveV3",
-        protocol_type: "aaveV3",
-        protocol_identifier: "",
-        name: "",
-        logo: "",
+        protocol_type: 'aaveV3',
+        protocol_identifier: '',
+        name: '',
+        logo: '',
         chain_id: 0,
-        vaultId: "",
+        vaultId: '',
         isVault: false,
-        morpho_market_id: "",
-        core_contract: "",
+        morpho_market_id: '',
+        core_contract: '',
+        uiPoolDataProvider: '',
+        poolAddressesProvider: '',
       },
       assets: [],
     },
