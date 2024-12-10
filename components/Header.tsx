@@ -14,6 +14,7 @@ import {
 import { Menu, X } from 'lucide-react';
 import { motion } from "framer-motion"
 import ConnectWalletButton from './ConnectWalletButton';
+import Link from 'next/link';
 
 type TTab = {
   id: number;
@@ -48,13 +49,15 @@ const Header: React.FC = () => {
     router.push(`${tab.href}`);
   };
 
-  const BUTTON_DEFAULT_DESKTOP_STYLES = "group self-stretch px-6 max-lg:px-5 rounded-[14px] uppercase hover:text-primary";
+  const BUTTON_DEFAULT_DESKTOP_STYLES = "group self-stretch p-0 rounded-[14px] uppercase hover:text-primary";
   const BUTTON_INACTIVE_DESKTOP_STYLES = `${BUTTON_DEFAULT_DESKTOP_STYLES} opacity-50 hover:opacity-100`;
   const BUTTON_ACTIVE_DESKTOP_STYLES = `${BUTTON_DEFAULT_DESKTOP_STYLES}`;
 
   const BUTTON_DEFAULT_MOBILE_STYLES = "group self-stretch border-0 p-0 mx-4 my-2";
   const BUTTON_INACTIVE_MOBILE_STYLES = `${BUTTON_DEFAULT_MOBILE_STYLES} opacity-50`;
   const BUTTON_ACTIVE_MOBILE_STYLES = `${BUTTON_DEFAULT_MOBILE_STYLES} text-primary hover:text-primary active`;
+
+  const LINK_DEFAULT_STYLES = "flex items-center justify-center gap-2 px-1 py-2";
 
   function isSelected(tab: TTab) {
     return tab.id === activeTab?.id;
@@ -99,11 +102,21 @@ const Header: React.FC = () => {
           </Button>
           <nav className="hidden md:flex gap-3 lg:gap-5 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">
             {tabs.map((tab) => (
-              <Button key={tab.id} variant={isSelected(tab) ? "default" : "ghost"} size="lg" className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`} onClick={() => handleTabClick(tab)}>
-                <div className="flex items-center justify-center gap-2">
+              <Button
+                key={tab.id}
+                variant={isSelected(tab) ? "default" : "ghost"}
+                size="lg"
+                className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`}
+              // onClick={() => handleTabClick(tab)}
+              >
+                <Link
+                  onClick={() => handleTabClick(tab)}
+                  href={tab.href}
+                  className={`${LINK_DEFAULT_STYLES}`}
+                >
                   <tab.icon />
                   <span className='leading-[0]'>{tab.name}</span>
-                </div>
+                </Link>
               </Button>
             ))}
           </nav>
@@ -120,11 +133,21 @@ const Header: React.FC = () => {
       <div className="z-50 fixed bottom-0 left-0 md:hidden w-full flex justify-center">
         <nav className="flex gap-3 lg:gap-5 items-center justify-center self-stretch py-1.5 px-10 text-sm tracking-normal leading-none whitespace-nowrap text-stone-800 w-full bg-white bg-opacity-40 backdrop-blur">
           {tabs.map((tab) => (
-            <Button key={tab.id} variant={"ghost"} size="lg" className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`} onClick={() => handleTabClick(tab)}>
-              <div className="flex flex-col items-center justify-center gap-3">
+            <Button
+              key={tab.id}
+              variant={"ghost"}
+              size="lg"
+              className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`}
+            // onClick={() => handleTabClick(tab)}
+            >
+              <Link
+                onClick={() => handleTabClick(tab)}
+                href={tab.href}
+                className={`${LINK_DEFAULT_STYLES}`}
+              >
                 <tab.icon className='max-sm:w-5 max-sm:h-5' />
                 <span className='hidden max-md:inline-block leading-[0] text-inherit'>{tab.name}</span>
-              </div>
+              </Link>
             </Button>
           ))}
         </nav>
