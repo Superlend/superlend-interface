@@ -2,7 +2,7 @@
 
 import useGetPlatformData from "@/hooks/useGetPlatformData";
 import useGetPlatformHistoryData from "@/hooks/useGetPlatformHistoryData";
-import { TPlatform } from "@/types";
+import { TPlatform } from "@/types/platform";
 import { Period } from "@/types/periodButtons";
 import { useSearchParams } from "next/navigation";
 import { createContext, useContext } from "react";

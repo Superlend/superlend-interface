@@ -6,7 +6,7 @@ import {
     CardHeader,
 } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
-import { TPlatform } from '@/types'
+import { TPlatform } from '@/types/platform'
 import { BodyText, HeadingText, Label } from "@/components/ui/typography";
 import { abbreviateNumber, cn, containsNegativeInteger, convertNegativeToPositive } from "@/lib/utils";
 import ImageWithDefault from "@/components/ImageWithDefault";

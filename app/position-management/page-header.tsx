@@ -13,7 +13,7 @@ import { useSearchParams } from 'next/navigation';
 import useGetPlatformData from '@/hooks/useGetPlatformData';
 import { AssetsDataContext } from '@/context/data-provider';
 import InfoTooltip from '@/components/tooltips/InfoTooltip';
-import { TPlatform, TPlatformAsset, TToken } from '@/types';
+import { TPlatform, TPlatformAsset } from '@/types/platform';
 import ArrowRightIcon from '@/components/icons/arrow-right-icon';
 import { chainNamesBasedOnAaveMarkets, MORPHO_ETHERSCAN_TUTORIAL_LINK, PAIR_BASED_PROTOCOLS, platformWebsiteLinks, POOL_BASED_PROTOCOLS, WarningMessages } from '@/constants';
 import { motion } from 'framer-motion';

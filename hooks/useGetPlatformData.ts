@@ -1,7 +1,8 @@
 "use client";
 
 import { getPlatformData } from "@/queries/platform-api";
-import { TGetPlatformParams, TOpportunity, TPlatform } from "@/types";
+import { TPlatform } from "@/types/platform";
+import { TGetPlatformParams } from "@/types/queries/platform";
 import { useQuery } from "@tanstack/react-query";
 
 export default function useGetPlatformData(params: TGetPlatformParams) {

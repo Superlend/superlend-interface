@@ -1,7 +1,8 @@
 "use client"
 
 import useGetPortfolioData from "@/hooks/useGetPortfolioData";
-import { TChain, TPositionType } from "@/types";
+import { TPositionType } from "@/types";
+import { TChain } from "@/types/chain";
 import { TPortfolio } from "@/types/queries/portfolio";
 import { createContext, Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
 import { useActiveAccount } from "thirdweb/react";

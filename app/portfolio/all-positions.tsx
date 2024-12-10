@@ -13,7 +13,7 @@ import { columns, TPositionsTable } from '@/data/table/all-positions';
 import useDimensions from '@/hooks/useDimensions';
 import useGetPortfolioData from '@/hooks/useGetPortfolioData';
 import { calculateScientificNotation } from '@/lib/utils';
-import { TChain, TPositionType } from '@/types';
+import { TPositionType } from '@/types';
 import { SortingState } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
 import React, { useContext, useEffect, useState } from 'react'

@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/card"
 import useGetPlatformData from "@/hooks/useGetPlatformData";
 import useGetPortfolioData from "@/hooks/useGetPortfolioData";
-import { TPlatformAsset, TPositionType } from "@/types";
+import { TPlatformAsset } from "@/types/platform";
+import { TPositionType } from "@/types";
 import { ArrowRightIcon, ArrowUpRightIcon, CircleCheck, CircleCheckIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useContext, useMemo, useState } from "react";

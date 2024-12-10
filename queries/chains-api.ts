@@ -1,4 +1,4 @@
-import { TChain } from "@/types";
+import { TChain } from "@/types/chain";
 import { request } from "./request";
 
 export async function getChainsData() {

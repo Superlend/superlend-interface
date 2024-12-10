@@ -1,6 +1,5 @@
 import { getChainsData } from "@/queries/chains-api";
-import { getTokensData } from "@/queries/tokens-api";
-import { TChain, TToken } from "@/types";
+import { TChain } from "@/types/chain";
 import { useQuery } from "@tanstack/react-query";
 // import { getAssetsData } from "../services/assets-api";
 // import {

@@ -2,7 +2,7 @@
 
 import useGetChainsData from '@/hooks/useGetChainsData';
 import useGetTokensData from '@/hooks/useGetTokensData';
-import { TChain, TToken } from '@/types';
+import { TChain } from '@/types/chain';
 import { createContext, useContext } from 'react';
 
 type TAssetsDataProps = {
