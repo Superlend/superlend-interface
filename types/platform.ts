@@ -24,7 +24,6 @@ export type TPlatform = {
     name: string;
     platform_name: string;
     protocol_identifier: string;
-    // protocol_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
     protocol_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
     logo: string;
     chain_id: number;
@@ -32,6 +31,8 @@ export type TPlatform = {
     isVault: boolean;
     morpho_market_id: string;
     core_contract: string;
+    uiPoolDataProvider: string;
+    poolAddressesProvider: string;
   };
   assets: TPlatformAsset[];
 };

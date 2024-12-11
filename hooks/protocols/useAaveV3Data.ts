@@ -117,15 +117,22 @@ export const useAaveV3Data = () => {
       formattedReserves: formattedPoolReserves,
       userEmodeCategoryId: _userData.userEmodeCategoryId,
     });
+
     const maxToBorrow = getMaxAmountAvailableToBorrow(
       formattedPoolReserves.find((p) => p.underlyingAsset.toLowerCase() === token),
       user
     );
+
     console.log(
       'max to borrow ',
       maxToBorrow.amount.toString(),
       maxToBorrow.amountFormatted.toString()
     );
+
+    return {
+      maxToBorrow: maxToBorrow.amount || 0,
+      maxToBorrowFormatted: maxToBorrow.amountFormatted || 0,
+    };
   };
 
   const getMaxSupplyAmount = async (token: string) => {};

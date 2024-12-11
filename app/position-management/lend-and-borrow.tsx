@@ -30,7 +30,6 @@ import {
 } from '@/lib/utils';
 import { getRiskFactor } from '@/lib/utils';
 import { BodyText, HeadingText } from '@/components/ui/typography';
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,11 +43,8 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import CustomNumberInput from '@/components/inputs/CustomNumberInput';
 import AAVE_POOL_ABI from '@/data/abi/aaveApproveABI.json';
-import { useAccount, useBalance, useReadContract } from 'wagmi';
-import { BigNumberish } from 'ethers';
+import { useReadContract } from 'wagmi';
 import { formatUnits } from 'ethers/lib/utils';
-// import { PlatformType, PlatformValue } from "@/types/platform";
-
 import {
   Dialog,
   DialogContent,
@@ -68,15 +64,14 @@ import ActionButton from '@/components/common/ActionButton';
 import { defineChain } from 'thirdweb';
 import { TLendBorrowTxContext, useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider';
 import { PlatformValue } from '@/types/platform';
-import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
 import { useAaveV3Data } from '../../hooks/protocols/useAaveV3Data';
 
 export default function LendAndBorrowAssets() {
   const { erc20TokensBalanceData } = useLendBorrowTxContext();
   const [positionType, setPositionType] = useState<TPositionType>('lend');
-  const [selectedTokenDetails, setSelectedTokenDetails] = useState<any>(null);
   const [amount, setAmount] = useState('');
+  const [maxBorrowAmount, setMaxBorrowAmount] = useState(0);
   const searchParams = useSearchParams();
   const tokenAddress = searchParams.get('token') || '';
   const chain_id = searchParams.get('chain_id') || 1;
@@ -85,6 +80,7 @@ export default function LendAndBorrowAssets() {
   const walletAddress = activeAccount?.address;
   const isAutoConnecting = useIsAutoConnecting();
   const switchChain = useSwitchActiveWalletChain();
+  const { reserveData, userData, fetchAaveV3Data, getMaxBorrowAmount } = useAaveV3Data();
 
   const {
     data: portfolioData,
@@ -95,8 +91,6 @@ export default function LendAndBorrowAssets() {
     platform_id: [protocol_identifier],
     chain_id: [String(chain_id)],
   });
-
-  const { reserveData, userData, fetchAaveV3Data, getMaxBorrowAmount } = useAaveV3Data();
 
   // [API_CALL: GET] - Get Platform data
   const {
@@ -112,12 +106,14 @@ export default function LendAndBorrowAssets() {
 
   const customChain = defineChain(Number(chain_id));
 
+  // Switch chain
   useEffect(() => {
     if (!!walletAddress) {
       switchChain(customChain);
     }
-  }, [walletAddress, isAutoConnecting]);
+  }, [walletAddress, isAutoConnecting, customChain]);
 
+  // Get max borrow amount
   useEffect(() => {
     if (
       walletAddress &&
@@ -129,7 +125,9 @@ export default function LendAndBorrowAssets() {
         platformData.platform.uiPoolDataProvider!,
         platformData.platform.poolAddressesProvider!
       ).then((r) => {
-        getMaxBorrowAmount(tokenAddress.toLowerCase(), r);
+        const maxBorrowAmount = getMaxBorrowAmount(tokenAddress.toLowerCase(), r as any);
+        setMaxBorrowAmount(Number(maxBorrowAmount?.maxToBorrowFormatted ?? 0));
+        // console.log('maxBorrowAmount', Number(maxBorrowAmount?.maxToBorrowFormatted ?? 0));
       });
     }
   }, [walletAddress, platformData]);
@@ -140,15 +138,6 @@ export default function LendAndBorrowAssets() {
       platform?.protocol_identifier?.toLowerCase() ===
       (platformData?.platform as any)?.protocol_identifier?.toLowerCase()
   );
-  // Filter lend and borrow positions
-  const lendPositions = selectedPlatformDetails?.positions?.filter(
-    (position) => position.type === 'lend'
-  );
-  const borrowPositions = selectedPlatformDetails?.positions?.filter(
-    (position) => position.type === 'borrow'
-  );
-  // Check if there are multiple tokens
-  // const hasMultipleTokens = isLendPositionType(positionType) ? lendPositions?.length > 1 : borrowPositions?.length > 1;
   const hasPosition = !!selectedPlatformDetails?.positions?.find(
     (position) => position?.token?.address.toLowerCase() === tokenAddress.toLowerCase()
   );
@@ -184,26 +173,12 @@ export default function LendAndBorrowAssets() {
 
   const assetDetails = getAssetDetails(tokenAddress);
 
-  // Max amount to borrow calculations
-  //   const maxAmountToBorrow = getMaxAmountAvailableToBorrow(
-  //     {
-  //       availableLiquidity: 0,
-  //       borrowCap: 0,
-  //       totalDebt: 0,
-  //       decimals: 18,
-  //     },
-  //     {
-  //       availableBorrowsMarketReferenceCurrency: 0,
-  //     },
-  //     'Variable'
-  //   );
-  //   const formattedMaxAmountToBorrow = maxAmountToBorrow.toString(10);
-
-  // Calculate balance
+  // Get balance
   const balance = (
     erc20TokensBalanceData[Number(chain_id)]?.[tokenAddress.toLowerCase()]?.balanceFormatted ?? 0
   ).toString();
 
+  // Check if amount has too many decimals
   const toManyDecimals = useMemo(() => {
     if (assetDetails) {
       return checkDecimalPlaces(amount, assetDetails?.asset?.token?.decimals ?? 0);
@@ -211,6 +186,7 @@ export default function LendAndBorrowAssets() {
     return false;
   }, [assetDetails, amount]);
 
+  // Get user account data
   const userAccountData = useReadContract({
     address: platformData?.platform?.core_contract as `0x${string}`,
     abi: AAVE_POOL_ABI,
@@ -241,9 +217,6 @@ export default function LendAndBorrowAssets() {
     };
   }, [userAccountData.data]);
 
-  // Add this console log to see the formatted values
-  // console.log("Parsed User Data:", parsedUserData);
-
   const isPoolBasedProtocol = POOL_BASED_PROTOCOLS.includes(platformData?.platform?.protocol_type);
 
   // You can check if user has collateral like this
@@ -273,7 +246,7 @@ export default function LendAndBorrowAssets() {
     if (!hasCollateral) {
       return 'You do not have any collateral';
     }
-    if (!canBorrow || Number(amount) > Number(parsedUserData?.availableBorrowsETH ?? 0)) {
+    if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
       return 'You do not have any borrow limit';
     }
     return null;
@@ -286,16 +259,16 @@ export default function LendAndBorrowAssets() {
   const disabledButton: boolean = useMemo(
     () =>
       Number(amount) >
-        Number(
-          isLendPositionType(positionType) ? balance : (parsedUserData?.availableBorrowsETH ?? 0)
-        ) ||
+      Number(
+        isLendPositionType(positionType) ? balance : maxBorrowAmount
+      ) ||
       (isLendPositionType(positionType) ? false : !hasCollateral) ||
       Number(amount) <= 0 ||
       toManyDecimals,
     [
       amount,
       balance,
-      parsedUserData?.availableBorrowsETH,
+      maxBorrowAmount,
       toManyDecimals,
       hasCollateral,
       positionType,
@@ -303,7 +276,7 @@ export default function LendAndBorrowAssets() {
   );
 
   // console.log("disabledButton",
-  // (Number(amount) > Number(isLendPositionType(positionType) ? balance : parsedUserData?.availableBorrowsETH ?? 0)) ||
+  // (Number(amount) > Number(isLendPositionType(positionType) ? balance : maxBorrowAmount ?? 0)) ||
   // (isLendPositionType(positionType) ? false : !hasCollateral) ||
   // (Number(amount) <= 0) ||
   // toManyDecimals,
@@ -353,8 +326,8 @@ export default function LendAndBorrowAssets() {
             >
               limit -{' '}
               {abbreviateNumber(
-                Number(parsedUserData?.availableBorrowsETH ?? 0),
-                decimalPlacesCount(parsedUserData?.availableBorrowsETH ?? '0')
+                (maxBorrowAmount ?? 0),
+                decimalPlacesCount(maxBorrowAmount.toString() ?? '0')
               )}
             </BodyText>
           )}
@@ -390,15 +363,6 @@ export default function LendAndBorrowAssets() {
                 amount={amount}
                 setAmount={(amount) => setAmount(amount)}
               />
-              {/* <span className="text-xs text-destructive-foreground">
-                                {
-                                    Number(amount) > Number(balance)
-                                        ? 'You do not have enough balance'
-                                        : toManyDecimals
-                                            ? TOO_MANY_DECIMALS_VALIDATIONS_TEXT
-                                            : null
-                                }
-                            </span> */}
             </div>
             <Button
               variant="link"
@@ -407,7 +371,7 @@ export default function LendAndBorrowAssets() {
                 setAmount(
                   isLendPositionType(positionType)
                     ? (balance ?? '0')
-                    : (parsedUserData?.availableBorrowsETH ?? '0')
+                    : (maxBorrowAmount.toString() ?? '0')
                 )
               }
               disabled={
@@ -415,7 +379,7 @@ export default function LendAndBorrowAssets() {
                 Number(
                   isLendPositionType(positionType)
                     ? (balance ?? '0')
-                    : (parsedUserData?.availableBorrowsETH ?? 0)
+                    : (maxBorrowAmount ?? 0)
                 )
               }
             >
@@ -573,59 +537,59 @@ function ConfirmationDialog({
             lend: lendTx.status === 'approve',
             borrow: borrowTx.status === 'borrow',
           }) && (
-            // <DialogTitle asChild>
-            <HeadingText level="h4" weight="medium" className="text-gray-800 text-center">
-              {isLendPositionType(positionType)
-                ? 'Lend collateral'
-                : `Borrow ${assetDetails?.asset?.token?.symbol}`}
-            </HeadingText>
-            // </DialogTitle>
-          )}
+              // <DialogTitle asChild>
+              <HeadingText level="h4" weight="medium" className="text-gray-800 text-center">
+                {isLendPositionType(positionType)
+                  ? 'Lend collateral'
+                  : `Borrow ${assetDetails?.asset?.token?.symbol}`}
+              </HeadingText>
+              // </DialogTitle>
+            )}
           {/* Confirmation details / Final Tx View */}
           {isShowBlock({
             lend: lendTx.status === 'lend' || lendTx.status === 'view',
             borrow: borrowTx.status === 'view',
           }) && (
-            <div className="flex flex-col items-center justify-center gap-[6px]">
-              <ImageWithDefault
-                src={assetDetails?.asset?.token?.logo}
-                alt={assetDetails?.asset?.token?.symbol}
-                width={40}
-                height={40}
-                className="rounded-full max-w-[40px] max-h-[40px]"
-              />
-              <HeadingText level="h3" weight="medium" className="text-gray-800">
-                {amount} {assetDetails?.asset?.token?.symbol}
-              </HeadingText>
-              {isShowBlock({
-                lend: lendTx.status === 'view',
-                borrow: borrowTx.status === 'view',
-              }) && (
-                <Badge
-                  variant="green"
-                  className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
-                >
-                  {isLendPositionType(positionType) && lendTx.status === 'view'
-                    ? 'Lent'
-                    : 'Borrowed'}{' '}
-                  Successfully
-                  <CircleCheckIcon width={16} height={16} className="stroke-[#00AD31]" />
-                </Badge>
-              )}
-              {isShowBlock({
-                lend: lendTx.status === 'lend',
-                borrow: false,
-              }) && (
-                <Badge
-                  variant="green"
-                  className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
-                >
-                  Token approved
-                  <CircleCheckIcon width={16} height={16} className="stroke-[#00AD31]" />
-                </Badge>
-              )}
-            </div>
-          )}
+              <div className="flex flex-col items-center justify-center gap-[6px]">
+                <ImageWithDefault
+                  src={assetDetails?.asset?.token?.logo}
+                  alt={assetDetails?.asset?.token?.symbol}
+                  width={40}
+                  height={40}
+                  className="rounded-full max-w-[40px] max-h-[40px]"
+                />
+                <HeadingText level="h3" weight="medium" className="text-gray-800">
+                  {amount} {assetDetails?.asset?.token?.symbol}
+                </HeadingText>
+                {isShowBlock({
+                  lend: lendTx.status === 'view',
+                  borrow: borrowTx.status === 'view',
+                }) && (
+                    <Badge
+                      variant="green"
+                      className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
+                    >
+                      {isLendPositionType(positionType) && lendTx.status === 'view'
+                        ? 'Lent'
+                        : 'Borrowed'}{' '}
+                      Successfully
+                      <CircleCheckIcon width={16} height={16} className="stroke-[#00AD31]" />
+                    </Badge>
+                  )}
+                {isShowBlock({
+                  lend: lendTx.status === 'lend',
+                  borrow: false,
+                }) && (
+                    <Badge
+                      variant="green"
+                      className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
+                    >
+                      Token approved
+                      <CircleCheckIcon width={16} height={16} className="stroke-[#00AD31]" />
+                    </Badge>
+                  )}
+              </div>
+            )}
         </DialogHeader>
 
         <div className="flex flex-col gap-[12px]">
@@ -634,38 +598,38 @@ function ConfirmationDialog({
             lend: lendTx.status === 'approve',
             borrow: borrowTx.status === 'borrow',
           }) && (
-            <div className="flex flex-wrap items-center justify-between gap-2 px-[24px] py-[18.5px] bg-white rounded-5">
-              <div className="flex items-center gap-[8px]">
-                <ImageWithDefault
-                  src={assetDetails?.asset?.token?.logo}
-                  alt={assetDetails?.asset?.token?.symbol}
-                  width={24}
-                  height={24}
-                  className="rounded-full max-w-[24px] max-h-[24px]"
-                />
-                <HeadingText level="h3" weight="normal" className="text-gray-800">
-                  {Number(amount).toFixed(decimalPlacesCount(amount))}
-                </HeadingText>
+              <div className="flex flex-wrap items-center justify-between gap-2 px-[24px] py-[18.5px] bg-white rounded-5">
+                <div className="flex items-center gap-[8px]">
+                  <ImageWithDefault
+                    src={assetDetails?.asset?.token?.logo}
+                    alt={assetDetails?.asset?.token?.symbol}
+                    width={24}
+                    height={24}
+                    className="rounded-full max-w-[24px] max-h-[24px]"
+                  />
+                  <HeadingText level="h3" weight="normal" className="text-gray-800">
+                    {Number(amount).toFixed(decimalPlacesCount(amount))}
+                  </HeadingText>
+                </div>
+                <BodyText level="body2" weight="normal" className="text-gray-600">
+                  ~${inputUsdAmount.toFixed(decimalPlacesCount(inputUsdAmount.toString()))}
+                </BodyText>
               </div>
-              <BodyText level="body2" weight="normal" className="text-gray-600">
-                ~${inputUsdAmount.toFixed(decimalPlacesCount(inputUsdAmount.toString()))}
-              </BodyText>
-            </div>
-          )}
+            )}
           {/* Block 2 */}
           {isShowBlock({
             lend: lendTx.status === 'approve',
             borrow: borrowTx.status === 'borrow',
           }) && (
-            <div className="flex items-center justify-between px-[24px] mb-[4px]">
-              <BodyText level="body2" weight="normal" className="text-gray-600">
-                {isLendPositionType(positionType) ? 'Bal.' : 'Remaining limit'}
-              </BodyText>
-              <BodyText level="body2" weight="normal" className="text-gray-600">
-                {Number(balance) - Number(amount)}
-              </BodyText>
-            </div>
-          )}
+              <div className="flex items-center justify-between px-[24px] mb-[4px]">
+                <BodyText level="body2" weight="normal" className="text-gray-600">
+                  {isLendPositionType(positionType) ? 'Bal.' : 'Remaining limit'}
+                </BodyText>
+                <BodyText level="body2" weight="normal" className="text-gray-600">
+                  {Number(balance) - Number(amount)}
+                </BodyText>
+              </div>
+            )}
           {/* Block 3 */}
           <div className="flex flex-col items-center justify-between px-[24px] bg-white rounded-5 divide-y divide-gray-300">
             <div className="flex items-center justify-between w-full py-[16px]">
@@ -699,34 +663,34 @@ function ConfirmationDialog({
               lend: lendTx.status === 'view',
               borrow: borrowTx.status === 'view',
             }) && (
-              <div className="flex items-center justify-between w-full py-[16px]">
-                <BodyText level="body2" weight="normal" className="text-gray-600">
-                  View on explorer
-                </BodyText>
-                <div className="flex items-center gap-[4px]">
-                  <BodyText
-                    level="body2"
-                    weight="medium"
-                    className="text-gray-800 flex items-center gap-[4px]"
-                  >
-                    <a
-                      href={getExplorerLink(
-                        isLendPositionType(positionType) ? lendTx.hash : borrowTx.hash,
-                        assetDetails?.platform_name
-                      )}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-secondary-500"
-                    >
-                      {getTruncatedTxHash(
-                        isLendPositionType(positionType) ? lendTx.hash : borrowTx.hash
-                      )}
-                    </a>
-                    <ArrowUpRightIcon width={16} height={16} className="stroke-secondary-500" />
+                <div className="flex items-center justify-between w-full py-[16px]">
+                  <BodyText level="body2" weight="normal" className="text-gray-600">
+                    View on explorer
                   </BodyText>
+                  <div className="flex items-center gap-[4px]">
+                    <BodyText
+                      level="body2"
+                      weight="medium"
+                      className="text-gray-800 flex items-center gap-[4px]"
+                    >
+                      <a
+                        href={getExplorerLink(
+                          isLendPositionType(positionType) ? lendTx.hash : borrowTx.hash,
+                          assetDetails?.platform_name
+                        )}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-secondary-500"
+                      >
+                        {getTruncatedTxHash(
+                          isLendPositionType(positionType) ? lendTx.hash : borrowTx.hash
+                        )}
+                      </a>
+                      <ArrowUpRightIcon width={16} height={16} className="stroke-secondary-500" />
+                    </BodyText>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
             {/* <div className="flex items-center justify-between w-full py-[16px]">
                             <BodyText level="body2" weight="normal" className="text-gray-600">
                                 View on explorer

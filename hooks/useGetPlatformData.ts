@@ -26,7 +26,6 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
     data: data || {
       platform: {
         platform_name: '',
-        // protocol_type: "aaveV3",
         protocol_type: 'aaveV3',
         protocol_identifier: '',
         name: '',
