@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { formatReserves, formatUserSummary } from '@aave/math-utils';
 import { getAddress } from 'ethers/lib/utils';
 import { getMaxAmountAvailableToBorrow } from '../../lib/getMaxAmountAvailableToBorrow';
+import { hasExponent, normalizeResult, parseScientific } from '@/lib/utils';
 
 export const useAaveV3Data = () => {
   const activeAccount = useActiveAccount();
@@ -123,15 +124,20 @@ export const useAaveV3Data = () => {
       user
     );
 
-    console.log(
-      'max to borrow ',
-      maxToBorrow.amount.toString(),
-      maxToBorrow.amountFormatted.toString()
-    );
+    // Check if the maxToBorrow.amountFormatted has an exponent, and return the formatted value
+    const maxAmountToBorrowFormatted = hasExponent(maxToBorrow.amountFormatted.toString())
+      ? maxToBorrow.amountFormatted.toFixed(10)
+      : maxToBorrow.amountFormatted.toString();
+
+    // console.log(
+    //   'max to borrow ',
+    //   maxToBorrow.amount.toString(),
+    //   maxAmountToBorrowFormatted,
+    // );
 
     return {
-      maxToBorrow: maxToBorrow.amount || 0,
-      maxToBorrowFormatted: maxToBorrow.amountFormatted || 0,
+      maxToBorrow: maxToBorrow.amount.toString() || '0',
+      maxToBorrowFormatted: maxAmountToBorrowFormatted || '0',
     };
   };
 

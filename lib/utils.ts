@@ -191,6 +191,12 @@ export function parseScientific(num: number | string) {
   return [coefficient, exponent];
 }
 
+export function hasExponent(value: string) {
+  const regex = /([+-]?\d*\.?\d+)(e[+-]?\d+)?/i;
+  const match = value.match(regex);
+  return match ? true : false;
+}
+
 export function normalizeResult(coefficient: number, exponent: number) {
   // Normalize to standard decimal format
   return coefficient * Math.pow(10, exponent);

@@ -17,18 +17,14 @@ import { TPositionType } from '@/types';
 import { TPlatformAsset } from '@/types/platform';
 import { ArrowRightIcon, ArrowUpRightIcon, CircleCheck, CircleCheckIcon } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { useContext, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useIsAutoConnecting, useActiveAccount, useSwitchActiveWalletChain } from 'thirdweb/react';
 import {
   abbreviateNumber,
-  capitalizeText,
   checkDecimalPlaces,
-  convertScientificToNormal,
   decimalPlacesCount,
   getLowestDisplayValue,
-  isLowestValue,
 } from '@/lib/utils';
-import { getRiskFactor } from '@/lib/utils';
 import { BodyText, HeadingText } from '@/components/ui/typography';
 import {
   DropdownMenu,
@@ -71,7 +67,7 @@ export default function LendAndBorrowAssets() {
   const { erc20TokensBalanceData } = useLendBorrowTxContext();
   const [positionType, setPositionType] = useState<TPositionType>('lend');
   const [amount, setAmount] = useState('');
-  const [maxBorrowAmount, setMaxBorrowAmount] = useState(0);
+  const [maxBorrowAmount, setMaxBorrowAmount] = useState('0');
   const searchParams = useSearchParams();
   const tokenAddress = searchParams.get('token') || '';
   const chain_id = searchParams.get('chain_id') || 1;
@@ -125,9 +121,17 @@ export default function LendAndBorrowAssets() {
         platformData.platform.uiPoolDataProvider!,
         platformData.platform.poolAddressesProvider!
       ).then((r) => {
-        const maxBorrowAmount = getMaxBorrowAmount(tokenAddress.toLowerCase(), r as any);
-        setMaxBorrowAmount(Number(maxBorrowAmount?.maxToBorrowFormatted ?? 0));
-        // console.log('maxBorrowAmount', Number(maxBorrowAmount?.maxToBorrowFormatted ?? 0));
+        const maxBorrowAmount = getMaxBorrowAmount(tokenAddress.toLowerCase(), r as any) ?? {
+          maxToBorrow: '0',
+          maxToBorrowFormatted: '0',
+        };
+        const decimals = assetDetails?.asset?.token?.decimals ?? 0;
+        const maxAmountToBorrow = Math.abs(Number(maxBorrowAmount?.maxToBorrowFormatted))?.toFixed(
+          decimals
+        );
+        const hasZeroLimit = !Math.abs(Number(maxAmountToBorrow));
+        setMaxBorrowAmount(hasZeroLimit ? '0' : maxAmountToBorrow);
+        // console.log('maxBorrowAmount', maxBorrowAmount?.maxToBorrowFormatted);
       });
     }
   }, [walletAddress, platformData]);
@@ -282,6 +286,10 @@ export default function LendAndBorrowAssets() {
   // toManyDecimals,
   // );
 
+  const isDisabledMaxBtn = useMemo(() => {
+    return (Number(amount) === Number(maxBorrowAmount)) || !walletAddress;
+  }, [amount, maxBorrowAmount, walletAddress]);
+
   // Loading skeleton
   if (isLoading && isPoolBasedProtocol) {
     return <LoadingSectionSkeleton className="h-[300px] w-full" />;
@@ -306,7 +314,7 @@ export default function LendAndBorrowAssets() {
               ? 'lend collateral'
               : `borrow ${assetDetails?.asset?.token?.symbol}`}
           </BodyText>
-          {isLendPositionType(positionType) && (
+          {walletAddress && isLendPositionType(positionType) && (
             <BodyText
               level="body2"
               weight="normal"
@@ -318,17 +326,14 @@ export default function LendAndBorrowAssets() {
               </span>
             </BodyText>
           )}
-          {!isLendPositionType(positionType) && (
+          {walletAddress && !isLendPositionType(positionType) && (
             <BodyText
               level="body2"
               weight="normal"
               className="capitalize text-gray-600 flex items-center gap-[4px]"
             >
               limit -{' '}
-              {abbreviateNumber(
-                (maxBorrowAmount ?? 0),
-                decimalPlacesCount(maxBorrowAmount.toString() ?? '0')
-              )}
+              {maxBorrowAmount}
             </BodyText>
           )}
         </div>
@@ -371,17 +376,10 @@ export default function LendAndBorrowAssets() {
                 setAmount(
                   isLendPositionType(positionType)
                     ? (balance ?? '0')
-                    : (maxBorrowAmount.toString() ?? '0')
+                    : (maxBorrowAmount ?? '0')
                 )
               }
-              disabled={
-                Number(amount) ===
-                Number(
-                  isLendPositionType(positionType)
-                    ? (balance ?? '0')
-                    : (maxBorrowAmount ?? 0)
-                )
-              }
+              disabled={isDisabledMaxBtn}
             >
               max
             </Button>
