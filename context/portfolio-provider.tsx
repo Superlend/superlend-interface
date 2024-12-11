@@ -1,16 +1,19 @@
-"use client";
+'use client';
 
-import useGetPortfolioData from "@/hooks/useGetPortfolioData";
-import { TPortfolio } from "@/types/queries/portfolio";
-import { createContext, useContext, useEffect } from "react";
-import { useActiveAccount } from "thirdweb/react";
-import { useERC20Balance } from "../hooks/useERC20Balance";
+import useGetPortfolioData from '@/hooks/useGetPortfolioData';
+import { TPortfolio } from '@/types/queries/portfolio';
+import { createContext, useContext, useEffect } from 'react';
+import { useActiveAccount } from 'thirdweb/react';
+import { useERC20Balance } from '../hooks/useERC20Balance';
 
 export type TPortfolioContext = {
   portfolioData: TPortfolio;
   isLoadingPortfolioData: boolean;
   isErrorPortfolioData: boolean;
-  erc20TokensBalanceData: Record<number, Record<string, { balanceRaw: string; balanceFormatted: number }>>;
+  erc20TokensBalanceData: Record<
+    number,
+    Record<string, { balanceRaw: string; balanceFormatted: number }>
+  >;
 };
 
 const PortfolioDataInit = {
@@ -26,11 +29,7 @@ export const PortfolioContext = createContext<TPortfolioContext>({
   erc20TokensBalanceData: {},
 });
 
-export default function PortfolioProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const activeAccount = useActiveAccount();
   const walletAddress = activeAccount?.address;
 
@@ -59,7 +58,7 @@ export default function PortfolioProvider({
         portfolioData,
         isLoadingPortfolioData,
         isErrorPortfolioData,
-        erc20TokensBalanceData
+        erc20TokensBalanceData,
       }}
     >
       {children}
@@ -71,4 +70,4 @@ export const usePortfolioData = () => {
   const context = useContext(PortfolioContext);
   if (!context) throw new Error('usePortfolioData must be used within an PortfolioProvider');
   return context;
-}
+};

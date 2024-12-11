@@ -1,140 +1,133 @@
 // components/ConnectWalletButton.tsx
-"use client"
+'use client';
 import React, { useEffect, useState } from 'react';
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from './ui/button';
 import useIsClient from '@/hooks/useIsClient';
-import { client } from "@/app/client";
+import { client } from '@/app/client';
 
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 import {
-    Drawer,
-    DrawerClose,
-    DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
-} from "@/components/ui/drawer"
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 import useDimensions from '@/hooks/useDimensions';
 import { Check, Copy, LogOut, X } from 'lucide-react';
 import { BodyText, HeadingText } from './ui/typography';
 import { copyToClipboard } from '@/lib/utils';
-import { arbitrum, base, mainnet, polygon, scroll, optimism, gnosis } from "thirdweb/chains";
+import { arbitrum, base, mainnet, polygon, scroll, optimism, gnosis } from 'thirdweb/chains';
 
-import { createThirdwebClient, defineChain, getContract } from "thirdweb";
-import { viemAdapter } from "thirdweb/adapters/viem";
+import { createThirdwebClient, defineChain, getContract } from 'thirdweb';
+import { viemAdapter } from 'thirdweb/adapters/viem';
 import {
-    useSetActiveWallet,
-    PayEmbed,
-    ConnectButton,
-    TransactionButton,
-    useActiveWallet,
-    MediaRenderer,
-    useReadContract,
-    lightTheme,
-} from "thirdweb/react";
-import { createWallet, createWalletAdapter } from "thirdweb/wallets";
-import { claimTo, getNFT } from "thirdweb/extensions/erc1155";
-import {
-    useAccount,
-    useConnect,
-    useDisconnect,
-    useSwitchChain,
-    useWalletClient,
-} from "wagmi";
-
+  useSetActiveWallet,
+  PayEmbed,
+  ConnectButton,
+  TransactionButton,
+  useActiveWallet,
+  MediaRenderer,
+  useReadContract,
+  lightTheme,
+} from 'thirdweb/react';
+import { createWallet, createWalletAdapter } from 'thirdweb/wallets';
+import { claimTo, getNFT } from 'thirdweb/extensions/erc1155';
+import { useAccount, useConnect, useDisconnect, useSwitchChain, useWalletClient } from 'wagmi';
 
 export default function ConnectWalletButton() {
-    const { isClient } = useIsClient();
+  const { isClient } = useIsClient();
 
-    const wagmiAccount = useAccount();
-    const { connectors, connect, status, error } = useConnect();
-    const { disconnectAsync } = useDisconnect();
-    // This is how to set a wagmi account in the thirdweb context to use with all the thirdweb components including Pay
-    const { data: walletClient } = useWalletClient();
-    const { switchChainAsync } = useSwitchChain();
-    const setActiveWallet = useSetActiveWallet();
+  const wagmiAccount = useAccount();
+  const { connectors, connect, status, error } = useConnect();
+  const { disconnectAsync } = useDisconnect();
+  // This is how to set a wagmi account in the thirdweb context to use with all the thirdweb components including Pay
+  const { data: walletClient } = useWalletClient();
+  const { switchChainAsync } = useSwitchChain();
+  const setActiveWallet = useSetActiveWallet();
 
-    // useEffect(() => {
-    //     const setActive = async () => {
-    //         if (walletClient) {
-    //             const adaptedAccount = viemAdapter.walletClient.fromViem({
-    //                 walletClient: walletClient as any, // accounts for wagmi/viem version mismatches
-    //             });
-    //             const w = createWalletAdapter({
-    //                 adaptedAccount,
-    //                 chain: defineChain(await walletClient.getChainId()),
-    //                 client,
-    //                 onDisconnect: async () => {
-    //                     await disconnectAsync();
-    //                 },
-    //                 switchChain: async (chain) => {
-    //                     await switchChainAsync({ chainId: chain.id as any });
-    //                 },
-    //             });
-    //             setActiveWallet(w);
-    //         }
-    //     };
-    //     setActive();
-    // }, [walletClient, disconnectAsync, switchChainAsync, setActiveWallet]);
+  // useEffect(() => {
+  //     const setActive = async () => {
+  //         if (walletClient) {
+  //             const adaptedAccount = viemAdapter.walletClient.fromViem({
+  //                 walletClient: walletClient as any, // accounts for wagmi/viem version mismatches
+  //             });
+  //             const w = createWalletAdapter({
+  //                 adaptedAccount,
+  //                 chain: defineChain(await walletClient.getChainId()),
+  //                 client,
+  //                 onDisconnect: async () => {
+  //                     await disconnectAsync();
+  //                 },
+  //                 switchChain: async (chain) => {
+  //                     await switchChainAsync({ chainId: chain.id as any });
+  //                 },
+  //             });
+  //             setActiveWallet(w);
+  //         }
+  //     };
+  //     setActive();
+  // }, [walletClient, disconnectAsync, switchChainAsync, setActiveWallet]);
 
-    // handle disconnecting from wagmi
-    // const thirdwebWallet = useActiveWallet();
-    // useEffect(() => {
-    //     const disconnectIfNeeded = async () => {
-    //         if (thirdwebWallet && wagmiAccount.status === "disconnected") {
-    //             await thirdwebWallet.disconnect();
-    //         }
-    //     };
-    //     disconnectIfNeeded();
-    // }, [wagmiAccount, thirdwebWallet]);
+  // handle disconnecting from wagmi
+  // const thirdwebWallet = useActiveWallet();
+  // useEffect(() => {
+  //     const disconnectIfNeeded = async () => {
+  //         if (thirdwebWallet && wagmiAccount.status === "disconnected") {
+  //             await thirdwebWallet.disconnect();
+  //         }
+  //     };
+  //     disconnectIfNeeded();
+  // }, [wagmiAccount, thirdwebWallet]);
 
-    // useEffect(() => {
-    //     setOpenWalletsModal(false);
-    // }, [activeWallet]);
+  // useEffect(() => {
+  //     setOpenWalletsModal(false);
+  // }, [activeWallet]);
 
-    // const handleConnect = () => {
-    //     setOpenWalletsModal(true);
-    // };
+  // const handleConnect = () => {
+  //     setOpenWalletsModal(true);
+  // };
 
-    // const handleOpenAccountInfo = () => {
-    //     setOpenAccountInfoModal(true);
-    // }
+  // const handleOpenAccountInfo = () => {
+  //     setOpenAccountInfoModal(true);
+  // }
 
-    // const handleDisconnect = () => {
-    //     if (activeWallet) {
-    //         disconnect(activeWallet);
-    //         setOpenAccountInfoModal(false);
-    //     }
-    // }
+  // const handleDisconnect = () => {
+  //     if (activeWallet) {
+  //         disconnect(activeWallet);
+  //         setOpenAccountInfoModal(false);
+  //     }
+  // }
 
-    // const displayText = walletAddress
-    //     ? `${walletAddress?.slice(0, 5)}...${walletAddress?.slice(-5)}`
-    //     : "Connect Wallet";
+  // const displayText = walletAddress
+  //     ? `${walletAddress?.slice(0, 5)}...${walletAddress?.slice(-5)}`
+  //     : "Connect Wallet";
 
-    const wallets = [
-        createWallet("io.metamask"),
-        createWallet("com.coinbase.wallet"),
-        createWallet("me.rainbow"),
-    ];
+  const wallets = [
+    createWallet('io.metamask'),
+    createWallet('com.coinbase.wallet'),
+    createWallet('me.rainbow'),
+  ];
 
-    const metis = defineChain(1088);
-    const bsc = defineChain(56);
-    const avalanche = defineChain(43114);
+  const metis = defineChain(1088);
+  const bsc = defineChain(56);
+  const avalanche = defineChain(43114);
 
-    return (
-        <>
-            {/* {!isClient && <Skeleton className='w-[100px] md:w-[120px] h-[40px]' />}
+  return (
+    <>
+      {/* {!isClient && <Skeleton className='w-[100px] md:w-[120px] h-[40px]' />}
             {isClient && isConnecting && (
                 <Button
                     variant="default"
@@ -168,42 +161,42 @@ export default function ConnectWalletButton() {
                 copySuccess={copySuccess}
                 handleCopy={handleCopy}
             /> */}
-            <div className="rounded-4 overflow-hidden max-h-[40px] w-full md:max-w-[165px]">
-                <ConnectButton
-                    client={client}
-                    chains={[
-                        mainnet,
-                        arbitrum,
-                        polygon,
-                        base,
-                        scroll,
-                        optimism,
-                        gnosis,
-                        metis,
-                        bsc,
-                        avalanche,
-                    ]}
-                    theme={lightTheme({
-                        colors: {
-                            modalBg: "#fff",
-                            primaryButtonBg: "#f65700",
-                            borderColor: "#F0F1F2",
-                        },
-                    })}
-                    connectButton={{
-                        label: "Connect Wallet",
-                        className: "connect-wallet-button",
-                    }}
-                    connectModal={{
-                        title: "Select Wallet",
-                        // titleIcon: "https://example.com/logo.png",
-                        size: "compact",
-                    }}
-                    wallets={wallets}
-                />
-            </div>
-        </>
-    );
+      <div className="rounded-4 overflow-hidden max-h-[40px] w-full md:max-w-[165px]">
+        <ConnectButton
+          client={client}
+          chains={[
+            mainnet,
+            arbitrum,
+            polygon,
+            base,
+            scroll,
+            optimism,
+            gnosis,
+            metis,
+            bsc,
+            avalanche,
+          ]}
+          theme={lightTheme({
+            colors: {
+              modalBg: '#fff',
+              primaryButtonBg: '#f65700',
+              borderColor: '#F0F1F2',
+            },
+          })}
+          connectButton={{
+            label: 'Connect Wallet',
+            className: 'connect-wallet-button',
+          }}
+          connectModal={{
+            title: 'Select Wallet',
+            // titleIcon: "https://example.com/logo.png",
+            size: 'compact',
+          }}
+          wallets={wallets}
+        />
+      </div>
+    </>
+  );
 }
 
 // function Wallets({ open, handleClose }: { open: boolean, handleClose: () => void }) {

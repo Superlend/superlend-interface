@@ -1,10 +1,7 @@
-import { InterestRate } from "@aave/contract-helpers";
-import {
-  FormatUserSummaryAndIncentivesResponse,
-  valueToBigNumber,
-} from "@aave/math-utils";
-import BigNumber from "bignumber.js";
-import { ethers } from "ethers";
+import { InterestRate } from '@aave/contract-helpers';
+import { FormatUserSummaryAndIncentivesResponse, valueToBigNumber } from '@aave/math-utils';
+import BigNumber from 'bignumber.js';
+import { ethers } from 'ethers';
 
 // import {
 //   ComputedReserveData,
@@ -17,19 +14,14 @@ import { ethers } from "ethers";
  * @param userReserve
  * @param user
  */
-export function getMaxAmountAvailableToBorrow(
-  poolReserve: any,
-  user: any,
-  rateMode: string
-) {
+export function getMaxAmountAvailableToBorrow(poolReserve: any, user: any, rateMode?: string) {
   // const availableInPoolUSD = poolReserve.availableLiquidityUSD;
   // const availableForUserUSD = BigNumber.min(user.availableBorrowsUSD, availableInPoolUSD);
 
   const availableBorrowCap =
-    poolReserve.borrowCap === "0"
+    poolReserve.borrowCap === '0'
       ? valueToBigNumber(ethers.constants.MaxUint256.toString())
       : valueToBigNumber(Number(poolReserve.borrowCap));
-
   const availableLiquidity = BigNumber.max(
     BigNumber.min(
       valueToBigNumber(poolReserve.availableLiquidity).div(
@@ -39,23 +31,12 @@ export function getMaxAmountAvailableToBorrow(
     ),
     0
   );
-
   let maxUserAmountToBorrow = BigNumber.min(
     valueToBigNumber(user?.availableBorrowsMarketReferenceCurrency || 0).div(
       poolReserve.formattedPriceInMarketReferenceCurrency
     ),
     availableLiquidity.toString()
   );
-
-  if (rateMode === InterestRate.Stable) {
-    maxUserAmountToBorrow = BigNumber.min(
-      maxUserAmountToBorrow,
-      // TODO: put MAX_STABLE_RATE_BORROW_SIZE_PERCENT on uipooldataprovider instead of using the static value here
-      valueToBigNumber(poolReserve.formattedAvailableLiquidity).multipliedBy(
-        0.25
-      )
-    );
-  }
 
   // const shouldAddMargin =
   //   /**
@@ -85,20 +66,19 @@ export function getMaxAmountAvailableToBorrow(
   //       .shiftedBy(-(user.isolatedReserve?.debtCeilingDecimals || 0))
   //       .multipliedBy('0.99')
   //       .lt(user.availableBorrowsUSD));
-
-  return maxUserAmountToBorrow.multipliedBy("0.99");
+  const amountFormatted = maxUserAmountToBorrow.multipliedBy('0.99');
+  return {
+    amount: amountFormatted
+      .multipliedBy(new BigNumber(10).pow(poolReserve.decimals))
+      .decimalPlaces(0),
+    amountFormatted,
+  };
 
   // return shouldAddMargin ?  : maxUserAmountToBorrow;
 }
 
 export function assetCanBeBorrowedByUser(
-  {
-    borrowingEnabled,
-    isActive,
-    borrowableInIsolation,
-    eModeCategoryId,
-    isFrozen,
-  }: any,
+  { borrowingEnabled, isActive, borrowableInIsolation, eModeCategoryId, isFrozen }: any,
   user: any
 ) {
   if (!borrowingEnabled || !isActive || isFrozen) return false;

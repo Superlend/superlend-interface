@@ -1,12 +1,28 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { CircleCheckBig, File, LoaderCircle, MessageSquare, MessageSquareCode, PaperclipIcon, XIcon } from "lucide-react"
-import { HeadingText, Label } from "./ui/typography"
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  CircleCheckBig,
+  File,
+  LoaderCircle,
+  MessageSquare,
+  MessageSquareCode,
+  PaperclipIcon,
+  XIcon,
+} from 'lucide-react';
+import { HeadingText, Label } from './ui/typography';
 import {
   Drawer,
   DrawerClose,
@@ -16,38 +32,42 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
-import useDimensions from "@/hooks/useDimensions"
-import axios from "axios"
-import { SHEET_FORM_URL } from "@/constants"
-import { DialogClose } from "@radix-ui/react-dialog"
+} from '@/components/ui/drawer';
+import useDimensions from '@/hooks/useDimensions';
+import axios from 'axios';
+import { SHEET_FORM_URL } from '@/constants';
+import { DialogClose } from '@radix-ui/react-dialog';
 
 export function FeedbackFormDialog() {
   const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [feedback, setFeedback] = useState("");
-  const [attachments, setAttachments] = useState<File[]>([])
-  const { width: screenWidth } = useDimensions()
+  const [email, setEmail] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const { width: screenWidth } = useDimensions();
   const isDesktop = screenWidth > 768;
   const isFormEmpty = !feedback.trim().length;
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)
-  const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setFeedback(e.target.value)
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value);
+  const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+    setFeedback(e.target.value);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setAttachments(prevAttachments => [...prevAttachments, ...Array.from(e.target.files as FileList)])
+      setAttachments((prevAttachments) => [
+        ...prevAttachments,
+        ...Array.from(e.target.files as FileList),
+      ]);
     }
-  }
+  };
 
   const handleRemoveAttachment = (index: number) => {
-    setAttachments(prevAttachments => prevAttachments.filter((_, i) => i !== index))
-  }
+    setAttachments((prevAttachments) => prevAttachments.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
     const data = new FormData();
     data.append('email', email.trim());
     data.append('feedback', feedback.trim());
@@ -56,21 +76,21 @@ export function FeedbackFormDialog() {
     // });
     try {
       await axios.post(SHEET_FORM_URL, data);
-      setIsLoading(false)
-      setIsFeedbackSubmitted(true)
+      setIsLoading(false);
+      setIsFeedbackSubmitted(true);
       // Reset form after submission
-      setEmail("")
-      setFeedback("")
+      setEmail('');
+      setFeedback('');
       // setAttachments([])
     } catch (error) {
-      setIsLoading(false)
-      setIsFeedbackSubmitted(false)
+      setIsLoading(false);
+      setIsFeedbackSubmitted(false);
       console.log(error);
     }
-  }
+  };
 
   function showNewFeedbackForm() {
-    return setIsFeedbackSubmitted(false)
+    return setIsFeedbackSubmitted(false);
   }
 
   const getFormTemplate = () => {
@@ -147,17 +167,24 @@ export function FeedbackFormDialog() {
         <DialogFooter className="mt-2">
           <div className="grid grid-cols-2 gap-3">
             <DialogClose asChild>
-              <Button size={'lg'} variant="secondary" className='w-full'>Cancel</Button>
+              <Button size={'lg'} variant="secondary" className="w-full">
+                Cancel
+              </Button>
             </DialogClose>
-            <Button type="submit" size={'lg'} variant={'primary'} disabled={isLoading || isFormEmpty}>
-              {isLoading && <LoaderCircle className='text-white w-4 h-4 animate-spin mr-1' />}
+            <Button
+              type="submit"
+              size={'lg'}
+              variant={'primary'}
+              disabled={isLoading || isFormEmpty}
+            >
+              {isLoading && <LoaderCircle className="text-white w-4 h-4 animate-spin mr-1" />}
               Submit Feedback
             </Button>
           </div>
         </DialogFooter>
       </form>
-    )
-  }
+    );
+  };
 
   if (isDesktop) {
     return (
@@ -174,14 +201,12 @@ export function FeedbackFormDialog() {
           <DialogHeader>
             <DialogTitle className="text-gray-800">Share Your Thoughts</DialogTitle>
             <DialogDescription className="text-gray-800">
-              We appreciate your feedback. {!isFeedbackSubmitted && "Please fill out the form below."}
+              We appreciate your feedback.{' '}
+              {!isFeedbackSubmitted && 'Please fill out the form below.'}
             </DialogDescription>
           </DialogHeader>
-          {!isFeedbackSubmitted &&
-            <div className="">
-              {getFormTemplate()}
-            </div>}
-          {isFeedbackSubmitted &&
+          {!isFeedbackSubmitted && <div className="">{getFormTemplate()}</div>}
+          {isFeedbackSubmitted && (
             <>
               <div className="flex flex-col items-center justify-center gap-5 py-10">
                 <CircleCheckBig className="w-[60px] h-[60px] text-success-text" />
@@ -189,17 +214,19 @@ export function FeedbackFormDialog() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <DialogClose asChild>
-                  <Button size={'lg'} variant="secondary" className='w-full'>Close</Button>
+                  <Button size={'lg'} variant="secondary" className="w-full">
+                    Close
+                  </Button>
                 </DialogClose>
                 <Button type="submit" size={'lg'} variant={'primary'} onClick={showNewFeedbackForm}>
                   Give New Feedback
                 </Button>
               </div>
             </>
-          }
+          )}
         </DialogContent>
       </Dialog>
-    )
+    );
   }
 
   return (
@@ -216,14 +243,11 @@ export function FeedbackFormDialog() {
         <DrawerHeader>
           <DrawerTitle>Share Your Thoughts</DrawerTitle>
           <DrawerDescription>
-            We appreciate your feedback. {!isFeedbackSubmitted && "Please fill out the form below."}
+            We appreciate your feedback. {!isFeedbackSubmitted && 'Please fill out the form below.'}
           </DrawerDescription>
         </DrawerHeader>
-        {!isFeedbackSubmitted &&
-          <div className="sm:p-4">
-            {getFormTemplate()}
-          </div>}
-        {isFeedbackSubmitted &&
+        {!isFeedbackSubmitted && <div className="sm:p-4">{getFormTemplate()}</div>}
+        {isFeedbackSubmitted && (
           <>
             <div className="flex flex-col items-center justify-center gap-5 py-10">
               <CircleCheckBig className="w-[60px] h-[60px] text-success-text" />
@@ -231,16 +255,17 @@ export function FeedbackFormDialog() {
             </div>
             <div className="grid grid-cols-2 gap-5">
               <DialogClose asChild>
-                <Button size={'lg'} variant="secondary" className='w-full'>Cancel</Button>
+                <Button size={'lg'} variant="secondary" className="w-full">
+                  Cancel
+                </Button>
               </DialogClose>
               <Button type="submit" size={'lg'} variant={'primary'} onClick={showNewFeedbackForm}>
                 Give New Feedback
               </Button>
             </div>
           </>
-        }
+        )}
       </DrawerContent>
     </Drawer>
-
-  )
+  );
 }

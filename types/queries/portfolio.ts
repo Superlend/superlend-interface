@@ -3,7 +3,7 @@ export type TGetPortfolioParams = {
   user_address: `0x${string}` | undefined;
   chain_id?: string[];
   platform_id?: string[];
-  position_type?: "lend" | "borrow";
+  position_type?: 'lend' | 'borrow';
   protocol_identifier?: string[];
 };
 
@@ -59,13 +59,13 @@ export type TUserPosition = {
       name: string;
       logo: string;
       chain_id: number;
-    }
+    },
   ];
   recommended_change: [
     {
       message: string;
       action: string;
-    }
+    },
   ];
   lend_amount_usd: number;
   borrow_amount_usd: number;

@@ -1,11 +1,11 @@
 // import CustomButton from '@components/ui/CustomButton'
 // import { getActionName } from '@utils/getActionName'
 // import { Action } from '../../../types/assetsTable'
-import { BaseError, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
-import { useEffect, useState } from 'react'
+import { BaseError, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useEffect, useState } from 'react';
 // import { AddressType } from '../../../types/address'
-import COMPOUND_ABI from '@/data/abi/compoundABIerc20.json'
-import { parseUnits } from 'ethers/lib/utils'
+import COMPOUND_ABI from '@/data/abi/compoundABIerc20.json';
+import { parseUnits } from 'ethers/lib/utils';
 // import toast from 'react-hot-toast'
 import {
   APPROVE_MESSAGE,
@@ -13,22 +13,22 @@ import {
   ERROR_TOAST_ICON_STYLES,
   SOMETHING_WENT_WRONG_MESSAGE,
   SUCCESS_MESSAGE,
-} from '@/constants'
-import { Button } from '@/components/ui/button'
-import { ArrowRightIcon } from 'lucide-react'
-import CustomAlert from '@/components/alerts/CustomAlert'
-import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
-import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+} from '@/constants';
+import { Button } from '@/components/ui/button';
+import { ArrowRightIcon } from 'lucide-react';
+import CustomAlert from '@/components/alerts/CustomAlert';
+import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider';
+import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider';
 // import { getErrorText } from '@utils/getErrorText'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
 interface ISupplyERC20CompoundButtonProps {
-  underlyingToken: string
-  cTokenAddress: string
-  amount: string
-  decimals: number
-  handleCloseModal: (isVisible: boolean) => void
-  disabled: boolean
+  underlyingToken: string;
+  cTokenAddress: string;
+  amount: string;
+  decimals: number;
+  handleCloseModal: (isVisible: boolean) => void;
+  disabled: boolean;
 }
 
 const SupplyERC20CompoundButton = ({
@@ -39,33 +39,42 @@ const SupplyERC20CompoundButton = ({
   disabled,
   handleCloseModal,
 }: ISupplyERC20CompoundButtonProps) => {
-  const { writeContractAsync, data: hash, isPending, error } = useWriteContract()
-  const [lastTx, setLastTx] = useState<'mint' | 'approve'>('mint')
+  const { writeContractAsync, data: hash, isPending, error } = useWriteContract();
+  const [lastTx, setLastTx] = useState<'mint' | 'approve'>('mint');
   // const { createToast } = useCreatePendingToast()
   const { lendTx, setLendTx } = useLendBorrowTxContext() as TLendBorrowTxContext;
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash,
-    })
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
 
   const txBtnStatus: Record<string, string> = {
     pending: lastTx === 'mint' ? 'Approving token...' : 'Lending token...',
     confirming: 'Confirming...',
     success: 'View position',
-    default: lastTx === 'mint' ? 'Approve token' : 'Lend token'
-  }
+    default: lastTx === 'mint' ? 'Approve token' : 'Lend token',
+  };
 
   const getTxButtonText = (isPending: boolean, isConfirming: boolean, isConfirmed: boolean) => {
-    return txBtnStatus[isConfirming ? 'confirming' : isConfirmed ? lastTx === 'approve' ? 'success' : 'default' : isPending ? 'pending' : 'default']
-  }
+    return txBtnStatus[
+      isConfirming
+        ? 'confirming'
+        : isConfirmed
+          ? lastTx === 'approve'
+            ? 'success'
+            : 'default'
+          : isPending
+            ? 'pending'
+            : 'default'
+    ];
+  };
 
-  const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+  const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed);
 
   useEffect(() => {
     const supply = async () => {
       try {
-        setLastTx('approve')
+        setLastTx('approve');
         // handleCloseModal(false)
         // await toast.promise(
         //   writeContractAsync({
@@ -92,35 +101,27 @@ const SupplyERC20CompoundButton = ({
           abi: COMPOUND_ABI,
           functionName: 'mint',
           args: [parseUnits(amount, decimals)],
-        })
+        });
       } catch (error) {
         // toast.remove()
-        error
+        error;
       }
-    }
+    };
 
     if (isConfirmed && lastTx === 'mint') {
-      setLendTx({ status: "lend", hash: hash || "" })
-      void supply()
+      setLendTx({ status: 'lend', hash: hash || '' });
+      void supply();
     }
 
     if (isConfirmed && lastTx === 'approve') {
-      setLendTx({ status: "view", hash: hash || "" })
+      setLendTx({ status: 'view', hash: hash || '' });
     }
-  }, [
-    isConfirmed,
-    amount,
-    cTokenAddress,
-    writeContractAsync,
-    lastTx,
-    decimals,
-    handleCloseModal,
-  ])
+  }, [isConfirmed, amount, cTokenAddress, writeContractAsync, lastTx, decimals, handleCloseModal]);
 
   const onApproveSupply = async () => {
     try {
       // createToast()
-      setLastTx('mint')
+      setLastTx('mint');
       // await toast.promise(
       //   writeContractAsync({
       //     address: underlyingToken,
@@ -152,27 +153,30 @@ const SupplyERC20CompoundButton = ({
         abi: COMPOUND_ABI,
         functionName: 'approve',
         args: [cTokenAddress, parseUnits(amount, decimals)],
-      })
+      });
     } catch (error) {
       // toast.remove()
-      error
+      error;
     }
-  }
+  };
   return (
     <>
-      {error && (
-        <CustomAlert description={(error as BaseError).shortMessage || error.message} />
-      )}
-      <Button variant="primary"
+      {error && <CustomAlert description={(error as BaseError).shortMessage || error.message} />}
+      <Button
+        variant="primary"
         className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
         disabled={isPending || isConfirming || disabled}
         onClick={onApproveSupply}
       >
         {txBtnText}
-        <ArrowRightIcon width={16} height={16} className='stroke-white group-[:disabled]:opacity-50' />
+        <ArrowRightIcon
+          width={16}
+          height={16}
+          className="stroke-white group-[:disabled]:opacity-50"
+        />
       </Button>
     </>
-  )
-}
+  );
+};
 
-export default SupplyERC20CompoundButton
+export default SupplyERC20CompoundButton;

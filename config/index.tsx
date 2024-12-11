@@ -25,26 +25,26 @@
 
 // ===========================================================================
 
-import { http, createConfig } from "wagmi";
-import { base, baseSepolia, mainnet, polygon, sepolia, arbitrum } from "wagmi/chains";
-import { coinbaseWallet, injected } from "wagmi/connectors";
+import { http, createConfig } from 'wagmi';
+import { base, baseSepolia, mainnet, polygon, sepolia, arbitrum } from 'wagmi/chains';
+import { coinbaseWallet, injected } from 'wagmi/connectors';
 
 export const config = createConfig({
-	chains: [mainnet, sepolia, polygon, base, baseSepolia, arbitrum],
-	connectors: [injected(), coinbaseWallet({ appName: "Superlend" })],
-	ssr: true,
-	transports: {
-		[mainnet.id]: http(),
-		[sepolia.id]: http(),
-		[polygon.id]: http(),
-		[base.id]: http(),
-		[baseSepolia.id]: http(),
-		[arbitrum.id]: http(),
-	},
+  chains: [mainnet, sepolia, polygon, base, baseSepolia, arbitrum],
+  connectors: [injected(), coinbaseWallet({ appName: 'Superlend' })],
+  ssr: true,
+  transports: {
+    [mainnet.id]: http(),
+    [sepolia.id]: http(),
+    [polygon.id]: http(),
+    [base.id]: http(),
+    [baseSepolia.id]: http(),
+    [arbitrum.id]: http(),
+  },
 });
 
-declare module "wagmi" {
-	interface Register {
-		config: typeof config;
-	}
+declare module 'wagmi' {
+  interface Register {
+    config: typeof config;
+  }
 }
