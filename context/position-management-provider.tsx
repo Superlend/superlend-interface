@@ -21,7 +21,6 @@ const PlatformDataInit: TPlatform = {
     name: '',
     platform_name: '',
     protocol_identifier: '',
-    // protocol_type: "aaveV3",
     protocol_type: 'aaveV3',
     logo: '',
     chain_id: 0,
@@ -29,6 +28,8 @@ const PlatformDataInit: TPlatform = {
     isVault: false,
     morpho_market_id: '',
     core_contract: '',
+    uiPoolDataProvider: '',
+    poolAddressesProvider: '',
   },
   assets: [],
 };
