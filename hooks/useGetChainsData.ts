@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 export default function useGetChainsData() {
   const { data, isLoading, isError } = useQuery<TChain[], Error>({
     // enabled: !isMyPositionsEnabled,
-    queryKey: ["chains"],
+    queryKey: ['chains'],
     queryFn: async () => {
       try {
         const responseData = await getChainsData();

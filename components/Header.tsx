@@ -6,13 +6,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import HomeIcon from './icons/home-icon';
 import CompassIcon from './icons/compass-icon';
 import PieChartIcon from './icons/pie-chart-icon';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-} from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet';
 import { Menu, X } from 'lucide-react';
-import { motion } from "framer-motion"
+import { motion } from 'framer-motion';
 import ConnectWalletButton from './ConnectWalletButton';
 import Link from 'next/link';
 
@@ -20,18 +16,18 @@ type TTab = {
   id: number;
   name: string;
   href: string;
-  icon: React.FC<{ height?: number, width?: number, className?: string }>;
+  icon: React.FC<{ height?: number; width?: number; className?: string }>;
 };
 
 const tabs: TTab[] = [
   // { id: 1, name: 'Home', href: "/", icon: HomeIcon },
-  { id: 2, name: 'Discover', href: "/discover", icon: CompassIcon },
-  { id: 3, name: 'Portfolio', href: "/portfolio", icon: PieChartIcon },
+  { id: 2, name: 'Discover', href: '/discover', icon: CompassIcon },
+  { id: 3, name: 'Portfolio', href: '/portfolio', icon: PieChartIcon },
 ];
 
 const activeTabInitialValue = (pathname: string) => {
-  return tabs.find(tab => tab.href === pathname) || null;
-}
+  return tabs.find((tab) => tab.href === pathname) || null;
+};
 
 const Header: React.FC = () => {
   const router = useRouter();
@@ -53,7 +49,7 @@ const Header: React.FC = () => {
   const BUTTON_INACTIVE_DESKTOP_STYLES = `${BUTTON_DEFAULT_DESKTOP_STYLES} opacity-50 hover:opacity-100`;
   const BUTTON_ACTIVE_DESKTOP_STYLES = `${BUTTON_DEFAULT_DESKTOP_STYLES}`;
 
-  const BUTTON_DEFAULT_MOBILE_STYLES = "group self-stretch border-0 p-0 mx-4 my-2";
+  const BUTTON_DEFAULT_MOBILE_STYLES = 'group self-stretch border-0 p-0 mx-4 my-2';
   const BUTTON_INACTIVE_MOBILE_STYLES = `${BUTTON_DEFAULT_MOBILE_STYLES} opacity-50`;
   const BUTTON_ACTIVE_MOBILE_STYLES = `${BUTTON_DEFAULT_MOBILE_STYLES} text-primary hover:text-primary active`;
 
@@ -72,21 +68,25 @@ const Header: React.FC = () => {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.3
-      }
-    }
-  }
+        staggerChildren: 0.3,
+      },
+    },
+  };
 
   const menuItemVariant = {
     hidden: { opacity: 0, x: -20 },
-    show: { opacity: 1, x: 0 }
-  }
+    show: { opacity: 1, x: 0 },
+  };
 
   return (
     <>
       <header className="z-50 sticky top-0 md:top-5 left-0 max-w-[1200px] w-full mx-auto md:px-5">
         <div className="flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center py-0 pr-[8px] pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
-          <Button variant="ghost" className='md:w-[24px] md:w-fit p-0' onClick={() => router.push('/')}>
+          <Button
+            variant="ghost"
+            className="md:w-[24px] md:w-fit p-0"
+            onClick={() => router.push('/')}
+          >
             {/* <img
             loading="lazy"
             src={"/images/logos/favicon-32x32.png"}
@@ -95,7 +95,7 @@ const Header: React.FC = () => {
           /> */}
             <img
               loading="lazy"
-              src={"/images/logos/superlend-logo.webp"}
+              src={'/images/logos/superlend-logo.webp'}
               alt="Superlend logo"
               className="object-contain shrink-0 my-auto aspect-[6.54] w-36 cursor-pointer"
             />

@@ -1,15 +1,9 @@
-import { providers as ethersProviders } from "ethers";
-import { useEffect, useState } from "react";
-import {
-  ContractCallContext,
-  ContractCallResults,
-  Multicall,
-} from "ethereum-multicall";
+import { providers as ethersProviders } from 'ethers';
+import { useEffect, useState } from 'react';
+import { ContractCallContext, ContractCallResults, Multicall } from 'ethereum-multicall';
 
 export const useEthersMulticall = () => {
-  const [providers, setProviders] = useState<
-    Record<number, ethersProviders.JsonRpcProvider>
-  >({});
+  const [providers, setProviders] = useState<Record<number, ethersProviders.JsonRpcProvider>>({});
   const [multicall, setMulticall] = useState<Record<number, Multicall>>({});
   const [isLoading, setIsLoading] = useState<Boolean>(false);
   const [isError, setIsError] = useState(false);

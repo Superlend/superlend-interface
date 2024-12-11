@@ -1,7 +1,7 @@
-import { WarningMessages } from "@/constants";
-import { Period } from "./periodButtons";
+import { WarningMessages } from '@/constants';
+import { Period } from './periodButtons';
 
-export type TPositionType = "lend" | "borrow";
+export type TPositionType = 'lend' | 'borrow';
 
 export type TToken = {
   address: string;
@@ -44,7 +44,7 @@ export type TRefreshResponse = TLoginResponse;
 
 // Opportunities
 export type TGetOpportunitiesParams = {
-  type: "lend" | "borrow";
+  type: 'lend' | 'borrow';
   chain_ids?: number[];
   tokens?: string[];
   trend?: boolean;

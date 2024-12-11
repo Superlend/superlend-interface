@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { getPortfolioData } from "@/queries/portfolio-api";
-import { TGetPortfolioParams, TPortfolio } from "@/types/queries/portfolio";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { getPortfolioData } from '@/queries/portfolio-api';
+import { TGetPortfolioParams, TPortfolio } from '@/types/queries/portfolio';
+import { useQueries, useQuery } from '@tanstack/react-query';
 
 const PortfolioDataInit = {
   platforms: [],
@@ -11,17 +11,11 @@ const PortfolioDataInit = {
 };
 
 export default function useGetPortfolioData(params: TGetPortfolioParams) {
-  const {
-    user_address,
-    chain_id,
-    platform_id,
-    position_type,
-    protocol_identifier,
-  } = params;
+  const { user_address, chain_id, platform_id, position_type, protocol_identifier } = params;
 
   const { data, isLoading, isError } = useQuery<TPortfolio>({
     queryKey: [
-      "portfolio",
+      'portfolio',
       user_address,
       chain_id,
       platform_id,

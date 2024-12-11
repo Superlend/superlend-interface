@@ -1,6 +1,6 @@
-import { getTokensData } from "@/queries/tokens-api";
-import { TGetTokensParams, TToken } from "@/types";
-import { useQuery } from "@tanstack/react-query";
+import { getTokensData } from '@/queries/tokens-api';
+import { TGetTokensParams, TToken } from '@/types';
+import { useQuery } from '@tanstack/react-query';
 // import { getAssetsData } from "../services/assets-api";
 // import {
 //   ERROR_TOAST_ICON_STYLES,
@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 export default function useGetTokensData(params: TGetTokensParams = {}) {
   const { data, isLoading, isError } = useQuery<TToken[], Error>({
     // enabled: !isMyPositionsEnabled,
-    queryKey: ["tokens"],
+    queryKey: ['tokens'],
     queryFn: async () => {
       try {
         const responseData = await getTokensData(params);

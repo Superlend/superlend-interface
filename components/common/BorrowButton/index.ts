@@ -1,3 +1,3 @@
-import BorrowButton from './BorrowButton'
+import BorrowButton from './BorrowButton';
 
-export default BorrowButton
+export default BorrowButton;

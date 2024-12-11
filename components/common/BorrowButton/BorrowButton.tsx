@@ -1,10 +1,10 @@
-import { useWriteContract, useWaitForTransactionReceipt, type BaseError } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt, type BaseError } from 'wagmi';
 // import { Action } from '../../../types/assetsTable'
 // import { getActionName } from '@utils/getActionName'
 // import CustomButton from '@components/ui/CustomButton'
-import COMPOUND_ABI from '@/data/abi/compoundABI.json'
-import AAVE_POOL_ABI from '@/data/abi/aavePoolABI.json'
-import { useCallback, useEffect } from 'react'
+import COMPOUND_ABI from '@/data/abi/compoundABI.json';
+import AAVE_POOL_ABI from '@/data/abi/aavePoolABI.json';
+import { useCallback, useEffect } from 'react';
 // import { AddressType } from '../../../types/address'
 // import { IAssetData } from '@interfaces/IAssetData'
 import {
@@ -14,59 +14,56 @@ import {
   // POOL_AAVE_MAP,
   SOMETHING_WENT_WRONG_MESSAGE,
   SUCCESS_MESSAGE,
-} from '../../../constants'
-import { parseUnits } from 'ethers/lib/utils'
+} from '../../../constants';
+import { parseUnits } from 'ethers/lib/utils';
 // import toast from 'react-hot-toast'
 // import { getErrorText } from '@utils/getErrorText'
-import { countCompoundDecimals } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { PlatformType, PlatformValue } from '@/types/platform'
-import { useActiveAccount } from 'thirdweb/react'
-import CustomAlert from '@/components/alerts/CustomAlert'
-import { TLendBorrowTxContext, useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
-import { ArrowRightIcon } from 'lucide-react'
-import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow'
+import { countCompoundDecimals } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { PlatformType, PlatformValue } from '@/types/platform';
+import { useActiveAccount } from 'thirdweb/react';
+import CustomAlert from '@/components/alerts/CustomAlert';
+import { TLendBorrowTxContext, useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider';
+import { ArrowRightIcon } from 'lucide-react';
+import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow';
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
 interface IBorrowButtonProps {
-  disabled: boolean
-  asset: any
-  amount: string
-  handleCloseModal: (isVisible: boolean) => void
+  disabled: boolean;
+  asset: any;
+  amount: string;
+  handleCloseModal: (isVisible: boolean) => void;
 }
 
 const txBtnStatus: Record<string, string> = {
   pending: 'Borrowing...',
   confirming: 'Confirming...',
   success: 'View position',
-  default: 'Borrow'
-}
+  default: 'Borrow',
+};
 
-const BorrowButton = ({
-  disabled,
-  asset,
-  amount,
-  handleCloseModal,
-}: IBorrowButtonProps) => {
-  const { writeContractAsync, isPending, data: hash, error } = useWriteContract()
+const BorrowButton = ({ disabled, asset, amount, handleCloseModal }: IBorrowButtonProps) => {
+  const { writeContractAsync, isPending, data: hash, error } = useWriteContract();
   // const { address: walletAddress } = useAccount()
   // const { createToast } = useCreatePendingToast()
   const activeAccount = useActiveAccount();
   const walletAddress = activeAccount?.address;
   const { borrowTx, setBorrowTx } = useLendBorrowTxContext() as TLendBorrowTxContext;
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash,
-    })
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
 
   useEffect(() => {
     if (hash) {
-      setBorrowTx({ status: "view", hash });
+      setBorrowTx({ status: 'view', hash });
     }
   }, [hash]);
 
-  const txBtnText = txBtnStatus[isConfirming ? 'confirming' : isConfirmed ? 'success' : isPending ? 'pending' : 'default']
+  const txBtnText =
+    txBtnStatus[
+      isConfirming ? 'confirming' : isConfirmed ? 'success' : isPending ? 'pending' : 'default'
+    ];
 
   const borrowCompound = useCallback(
     async (cTokenAddress: string, amount: string) => {
@@ -110,14 +107,14 @@ const BorrowButton = ({
               asset.decimals
             ),
           ],
-        })
+        });
       } catch (error) {
         // toast.remove()
-        error
+        error;
       }
     },
     [writeContractAsync, asset, handleCloseModal]
-  )
+  );
 
   const borrowAave = useCallback(
     async (
@@ -172,22 +169,21 @@ const BorrowButton = ({
             0,
             addressOfWallet,
           ],
-        })
-
+        });
       } catch (error) {
         // toast.remove()
-        error
+        error;
       }
     },
     [writeContractAsync, asset, handleCloseModal]
-  )
+  );
 
   const onBorrow = async () => {
     // createToast()
 
     if (asset?.protocol_type === PlatformType.COMPOUND) {
-      await borrowCompound(asset?.asset?.token?.address, amount)
-      return
+      await borrowCompound(asset?.asset?.token?.address, amount);
+      return;
     }
     if (asset?.protocol_type === PlatformType.AAVE) {
       // console.log(POOL_AAVE_MAP[asset?.platform_name as PlatformValue]);
@@ -201,25 +197,28 @@ const BorrowButton = ({
         asset?.asset?.token?.address,
         amount,
         walletAddress as string
-      )
-      return
+      );
+      return;
     }
-  }
+  };
   return (
     <>
-      {error && (
-        <CustomAlert description={(error as BaseError).shortMessage || error.message} />
-      )}
-      <Button variant="primary"
+      {error && <CustomAlert description={(error as BaseError).shortMessage || error.message} />}
+      <Button
+        variant="primary"
         className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
         disabled={isPending || isConfirming || disabled}
-        onClick={borrowTx.status === "borrow" ? onBorrow : () => handleCloseModal(false)}
+        onClick={borrowTx.status === 'borrow' ? onBorrow : () => handleCloseModal(false)}
       >
         {txBtnText}
-        <ArrowRightIcon width={16} height={16} className='stroke-white group-[:disabled]:opacity-50' />
+        <ArrowRightIcon
+          width={16}
+          height={16}
+          className="stroke-white group-[:disabled]:opacity-50"
+        />
       </Button>
     </>
-  )
-}
+  );
+};
 
-export default BorrowButton
+export default BorrowButton;

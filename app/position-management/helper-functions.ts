@@ -14,24 +14,24 @@ export function getTokenDetails({
 }) {
   const fallbackAsset = {
     address: tokenAddress,
-    symbol: "",
-    name: "",
-    logo: "",
+    symbol: '',
+    name: '',
+    logo: '',
     decimals: 0,
     price_usd: 0,
     warnings: [],
   };
-  const asset: TPlatformAsset["token"] | undefined =
+  const asset: TPlatformAsset['token'] | undefined =
     platformData?.assets?.find(
       (asset: TPlatformAsset) =>
         asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
     )?.token || fallbackAsset;
 
   return {
-    address: asset?.address || "",
-    symbol: asset?.symbol || "",
-    name: asset?.name || "",
-    logo: asset?.logo || "",
+    address: asset?.address || '',
+    symbol: asset?.symbol || '',
+    name: asset?.name || '',
+    logo: asset?.logo || '',
   };
 }
 
@@ -42,17 +42,12 @@ export function getChainDetails({
   allChainsData: TChain[];
   chainIdToMatch: string | number;
 }) {
-  return allChainsData?.find(
-    (chain: any) => Number(chain.chain_id) === Number(chainIdToMatch)
-  );
+  return allChainsData?.find((chain: any) => Number(chain.chain_id) === Number(chainIdToMatch));
 }
 
-export function getStatDisplayValue(
-  value: string | number,
-  hasPrefix: boolean = true
-) {
+export function getStatDisplayValue(value: string | number, hasPrefix: boolean = true) {
   return `${
-    hasPrefix ? hasLowestDisplayValuePrefix(Number(value)) : ""
+    hasPrefix ? hasLowestDisplayValuePrefix(Number(value)) : ''
   }${getLowestDisplayValue(Number(value))}`;
 }
 

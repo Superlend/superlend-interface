@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState } from 'react';
 
 type DimensionsType = {
-    width: number;
-    height: number;
-}
+  width: number;
+  height: number;
+};
 
 const dimensionsInit = {
-    height: 0,
-    width: 0,
-}
+  height: 0,
+  width: 0,
+};
 
 export default function useDimensions() {
-    const [dimensions, setDimensions] = useState<DimensionsType>(dimensionsInit);
+  const [dimensions, setDimensions] = useState<DimensionsType>(dimensionsInit);
 
     useLayoutEffect(() => {
         const updateDimensions = function () {
