@@ -6,25 +6,18 @@ import { HeadingText } from '@/components/ui/typography'
 import { columns } from '@/data/table/top-apy-opportunities';
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
-import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table'
+import { PaginationState, SortingState } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { TChain } from '@/types/chain'
 import { TOpportunityTable, TPositionType } from '@/types'
 import { DataTable } from '@/components/ui/data-table'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
-import { OpportunitiesContext } from '@/context/opportunities-provider'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import useDimensions from '@/hooks/useDimensions'
 import DiscoverFiltersDropdown from '@/components/dropdowns/DiscoverFiltersDropdown';
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { motion } from 'framer-motion'
 import { useDebounce } from '@/hooks/useDebounce';
-
-type TTopApyOpportunitiesProps = {
-    tableData: TOpportunityTable[];
-    columns: ColumnDef<TOpportunityTable>[];
-}
 
 export default function TopApyOpportunities() {
     const router = useRouter();
@@ -123,12 +116,12 @@ export default function TopApyOpportunities() {
 
         prevParamsRef.current = searchParams.toString();
     }, [
-        searchParams.get('position_type'),
-        searchParams.get('token_ids'),
-        searchParams.get('chain_ids'),
-        searchParams.get('protocol_ids'),
-        searchParams.get('keywords'),
-        searchParams.get('sort')
+        positionTypeParam,
+        tokenIdsParam,
+        chainIdsParam,
+        platformIdsParam,
+        keywordsParam,
+        sortingParam,
     ]);
 
     useEffect(() => {
@@ -168,7 +161,9 @@ export default function TopApyOpportunities() {
     const tableData = platformIdsParam.length > 0 ? filteredTableDataByPlatformIds : rawTableData;
 
     // Calculate total number of pages
-    const totalPages = Math.ceil(tableData.length / 10);
+    const totalPages = useMemo(() => {
+        return Math.ceil(tableData.length / 10);
+    }, [tableData]);
 
     // Handle pagination changes
     const handlePaginationChange = useCallback((updatedPagination: PaginationState) => {
@@ -245,7 +240,7 @@ export default function TopApyOpportunities() {
                 {!isLoadingOpportunitiesData && !isTableLoading && (
                     <DataTable
                         columns={columns}
-                        data={tableData}
+                        data={tableData ?? []}
                         filters={keywords}
                         setFilters={handleKeywordChange}
                         handleRowClick={handleRowClick}
@@ -255,7 +250,7 @@ export default function TopApyOpportunities() {
                         setSorting={setSorting}
                         pagination={pagination}
                         setPagination={handlePaginationChange}
-                        totalPages={Math.ceil(tableData.length / 10)}
+                        totalPages={totalPages}
                     />
                 )}
                 {(isLoadingOpportunitiesData || isTableLoading) && (

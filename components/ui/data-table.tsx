@@ -23,7 +23,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { BodyText, Label } from "./typography";
-import React, { CSSProperties } from "react";
+import React, { CSSProperties, useMemo } from "react";
 import { ArrowDownWideNarrow, ArrowUpWideNarrow, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronsUpDown } from "lucide-react";
 import InfoTooltip from "../tooltips/InfoTooltip";
 import { Button } from "./button";
@@ -63,6 +63,8 @@ export function DataTable<TData, TValue>({
     totalPages,
 }: DataTableProps<TData, TValue>) {
     const { width: screenWidth } = useDimensions();
+    const isMobile = useMemo(() => screenWidth < 768, [screenWidth]);
+    const pageCount = useMemo(() => Math.ceil(data.length / pagination.pageSize), [data.length, pagination.pageSize]);
 
     const table = useReactTable({
         data,
@@ -88,7 +90,7 @@ export function DataTable<TData, TValue>({
         onSortingChange: setSorting,
         enableSortingRemoval: false,
         onPaginationChange: setPagination,
-        pageCount: Math.ceil(data.length / pagination.pageSize),
+        pageCount: pageCount,
         manualPagination: false,
     });
 
@@ -123,7 +125,7 @@ export function DataTable<TData, TValue>({
         const isFirstRightPinnedColumn =
             isPinned === 'right' && column.getIsFirstColumn('right')
 
-        if (screenWidth < 768) {
+        if (isMobile) {
             return {
                 left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
                 right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
@@ -204,7 +206,7 @@ export function DataTable<TData, TValue>({
                                     data-state={row.getIsSelected() && "selected"}
                                     className="border-0 bg-white"
                                     onClick={
-                                        !handleRowClick || screenWidth < 768
+                                        !handleRowClick || isMobile
                                             ? undefined
                                             : () => handleRowClick(row.original)
                                     }

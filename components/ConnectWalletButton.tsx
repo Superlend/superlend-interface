@@ -25,7 +25,6 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer"
-import useDimensions from '@/hooks/useDimensions';
 import { Check, Copy, LogOut, X } from 'lucide-react';
 import { BodyText, HeadingText } from './ui/typography';
 import { copyToClipboard } from '@/lib/utils';

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     Tooltip,
     TooltipContent,
@@ -42,7 +42,7 @@ const sizes: any = {
 export default function InfoTooltip({ label, content, size = "md", hide = false, iconWidth = 16, iconHeight = 16, side, className }: TProps) {
     const [open, setOpen] = useState<boolean>(false);
     const { width: screenWidth } = useDimensions();
-    const isDesktop = screenWidth > 768;
+    const isDesktop = useMemo(() => screenWidth > 768, [screenWidth]);
 
     function handleTooltipToggle(state: boolean) {
         return () => {

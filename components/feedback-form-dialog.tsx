@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -29,7 +29,7 @@ export function FeedbackFormDialog() {
   const [feedback, setFeedback] = useState("");
   const [attachments, setAttachments] = useState<File[]>([])
   const { width: screenWidth } = useDimensions()
-  const isDesktop = screenWidth > 768;
+  const isDesktop = useMemo(() => screenWidth > 768, [screenWidth]);
   const isFormEmpty = !feedback.trim().length;
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)

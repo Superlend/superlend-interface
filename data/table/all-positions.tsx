@@ -11,7 +11,7 @@ import useDimensions from "@/hooks/useDimensions";
 import { abbreviateNumber, capitalizeText, containsNegativeInteger, convertNegativeToPositive, convertScientificToNormal, getPlatformVersion, isLowestNegativeValue, isLowestValue } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 
 export type TPositions = {
     token: string
@@ -51,6 +51,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         accessorFn: item => item.tokenSymbol,
         cell: ({ row }) => {
             const { width: screenWidth } = useDimensions();
+            const isMobile = useMemo(() => screenWidth < 768, [screenWidth]);
             const { positionType } = useContext<any>(PositionsContext);
             const tokenSymbol: string = row.getValue("tokenSymbol") || "";
             const tokenLogo = row.original.tokenLogo || "";
@@ -83,7 +84,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             return (
                 <BodyText level="body2" weight="medium" className="flex items-center gap-[8px] w-fit max-w-full">
                     <InfoTooltip
-                        hide={screenWidth < 768}
+                        hide={isMobile}
                         label={
                             <ImageWithBadge
                                 mainImg={tokenLogo}

@@ -16,7 +16,7 @@ import { calculateScientificNotation } from '@/lib/utils';
 import { TPositionType } from '@/types';
 import { SortingState } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { useActiveAccount } from 'thirdweb/react';
 
 export default function AllPositions() {
@@ -103,13 +103,13 @@ export default function AllPositions() {
 
     const tableData = filteredTableData;
 
-    function handleRowClick(rowData: any) {
+    const handleRowClick = useCallback((rowData: any) => {
         if (screenWidth < 768) return;
 
         const { tokenAddress, protocol_identifier, chain_id } = rowData;
         const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`
         router.push(url);
-    }
+    }, [screenWidth]);
 
     const toggleOpportunityType = (positionType: TPositionType): void => {
         setPositionType(positionType);

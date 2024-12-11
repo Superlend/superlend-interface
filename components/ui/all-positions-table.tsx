@@ -23,7 +23,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { BodyText, Label } from "./typography";
-import React, { CSSProperties } from "react";
+import React, { CSSProperties, useMemo } from "react";
 import { ArrowDownWideNarrow, ArrowUpWideNarrow, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ChevronsUpDown } from "lucide-react";
 import InfoTooltip from "../tooltips/InfoTooltip";
 import { Button } from "./button";
@@ -63,6 +63,7 @@ export function DataTable<TData, TValue>({
     setPagination,
 }: DataTableProps<TData, TValue>) {
     const { width: screenWidth } = useDimensions();
+    const isMobile = useMemo(() => screenWidth < 768, [screenWidth]);
 
     const table = useReactTable({
         data,
@@ -101,7 +102,7 @@ export function DataTable<TData, TValue>({
         const isFirstRightPinnedColumn =
             isPinned === 'right' && column.getIsFirstColumn('right')
 
-        if (screenWidth < 768) {
+        if (isMobile) {
             return {
                 left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
                 right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,

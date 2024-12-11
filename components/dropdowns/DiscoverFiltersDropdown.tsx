@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -44,7 +44,7 @@ export default function DiscoverFiltersDropdown() {
     const filters = getFiltersFromURL();
     const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(STABLECOINS_NAMES_LIST.every(name => filters.token_ids.includes(name)) || false)
     const { width: screenWidth } = useDimensions();
-    const isDesktop = screenWidth > 768;
+    const isDesktop = useMemo(() => screenWidth > 768, [screenWidth]);
 
     const hasActiveFilters = !!filters.token_ids.length || !!filters.chain_ids.length || !!filters.protocol_ids.length;
     const activeFiltersTotalCount = filters.token_ids.length + filters.chain_ids.length + filters.protocol_ids.length;
