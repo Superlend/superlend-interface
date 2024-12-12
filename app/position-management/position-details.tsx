@@ -31,6 +31,7 @@ import { EstimatedReturns } from './estimated-returns';
 import { getStatDisplayValue } from './helper-functions';
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection';
 import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData';
+import { Button } from '@/components/ui/button';
 
 export default function PositionDetails() {
   const searchParams = useSearchParams();
@@ -196,8 +197,8 @@ export default function PositionDetails() {
     assetSymbols,
     assetDetails,
   } = isAaveV3
-    ? getLiquidationDetailsForPoolBasedAssets()
-    : getLiquidationDetailsForPairBasedAssets();
+      ? getLiquidationDetailsForPoolBasedAssets()
+      : getLiquidationDetailsForPairBasedAssets();
 
   // Liquidation details
   const liquidationDetails = {
@@ -282,10 +283,10 @@ export default function PositionDetails() {
                 {!isPairBasedProtocol && (
                   <AvatarCircles
                     avatarUrls={liquidationDetails.assetLogos}
-                    // avatarDetails={liquidationDetails.assetDetails.map(asset => ({
-                    //     content: `${hasLowestDisplayValuePrefix(Number(asset.amount))} $${getStatDisplayValue(asset.amount, false)}`,
-                    //     title: asset.symbol
-                    // }))}
+                  // avatarDetails={liquidationDetails.assetDetails.map(asset => ({
+                  //     content: `${hasLowestDisplayValuePrefix(Number(asset.amount))} $${getStatDisplayValue(asset.amount, false)}`,
+                  //     title: asset.symbol
+                  // }))}
                   />
                 )}
                 {liquidationDetails.hasBorrowed && liquidationDetails.liquidationPrice !== 0 && (
@@ -332,12 +333,12 @@ export default function PositionDetails() {
                     )}
                   />
                   <HeadingText level="h3" weight="medium" className="text-gray-800">
-                    ${abbreviateNumber(Number(formattedUserPositions?.lendAsset.amount ?? 0))}
+                    {hasLowestDisplayValuePrefix(Number(formattedUserPositions?.lendAsset.amount ?? 0))} ${abbreviateNumber(Number(formattedUserPositions?.lendAsset.amount ?? 0))}
                   </HeadingText>
                 </div>
                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
-                                withdraw
-                            </Button> */}
+                  withdraw
+                </Button> */}
               </div>
             </div>
             <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full">
@@ -356,12 +357,12 @@ export default function PositionDetails() {
                     )}
                   />
                   <HeadingText level="h3" weight="medium" className="text-gray-800">
-                    ${abbreviateNumber(Number(formattedUserPositions?.borrowAsset.amount ?? 0))}
+                    {hasLowestDisplayValuePrefix(Number(formattedUserPositions?.borrowAsset.amount ?? 0))} ${abbreviateNumber(Number(formattedUserPositions?.borrowAsset.amount ?? 0))}
                   </HeadingText>
                 </div>
                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
-                                repay
-                            </Button> */}
+                  repay
+                </Button> */}
               </div>
             </div>
           </div>
