@@ -6,9 +6,8 @@ import TopApyOpportunities from './top-apy-opportunities'
 import OpportunitiesProvider from '@/context/opportunities-provider'
 
 export default async function DiscoverPageComponents() {
-
     return (
-        <MainContainer className='flex flex-col gap-[72px] px-0'>
+        <MainContainer className="flex flex-col gap-[72px] px-0">
             <OpportunitiesProvider>
                 <TopApyOpportunities />
             </OpportunitiesProvider>

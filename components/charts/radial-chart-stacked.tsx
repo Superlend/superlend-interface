@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts"
+import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from 'recharts'
 import {
     Card,
     CardContent,
@@ -8,77 +8,82 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card"
+} from '@/components/ui/card'
 import {
     ChartConfig,
     ChartContainer,
     ChartTooltip,
     ChartTooltipContent,
-} from "@/components/ui/chart"
-import StackedIcons from "../StackedIcons"
-import { Badge } from "../ui/badge"
-import { BodyText, Label as LabelText } from "../ui/typography"
-import { TPortfolio } from "@/types/queries/portfolio"
-import ImageWithDefault from "../ImageWithDefault"
-import { abbreviateNumber, capitalizeText, convertScientificToNormal, isLowestValue } from "@/lib/utils"
-import { useContext } from "react"
-import { AssetsDataContext } from "@/context/data-provider"
-import AvatarCircles from "../ui/avatar-circles"
-import { Skeleton } from "../ui/skeleton"
-import { ChartPie } from "lucide-react"
+} from '@/components/ui/chart'
+import StackedIcons from '../StackedIcons'
+import { Badge } from '../ui/badge'
+import { BodyText, Label as LabelText } from '../ui/typography'
+import { TPortfolio } from '@/types/queries/portfolio'
+import ImageWithDefault from '../ImageWithDefault'
+import {
+    abbreviateNumber,
+    capitalizeText,
+    convertScientificToNormal,
+    isLowestValue,
+} from '@/lib/utils'
+import { useContext } from 'react'
+import { AssetsDataContext } from '@/context/data-provider'
+import AvatarCircles from '../ui/avatar-circles'
+import { Skeleton } from '../ui/skeleton'
+import { ChartPie } from 'lucide-react'
 
-export const description = "A radial chart with stacked sections"
+export const description = 'A radial chart with stacked sections'
 
 const chartConfig = {
     1: {
-        label: "Aave",
-        color: "hsl(var(--chart-1))",
+        label: 'Aave',
+        color: 'hsl(var(--chart-1))',
     },
     2: {
-        label: "Compound",
-        color: "hsl(var(--chart-2))",
+        label: 'Compound',
+        color: 'hsl(var(--chart-2))',
     },
     3: {
-        label: "Compound",
-        color: "hsl(var(--chart-3))",
+        label: 'Compound',
+        color: 'hsl(var(--chart-3))',
     },
     4: {
-        label: "Compound",
-        color: "hsl(var(--chart-4))",
+        label: 'Compound',
+        color: 'hsl(var(--chart-4))',
     },
     5: {
-        label: "Compound",
-        color: "hsl(var(--chart-5))",
+        label: 'Compound',
+        color: 'hsl(var(--chart-5))',
     },
 } satisfies ChartConfig
 
 const ICONS_LIST = [
     {
-        src: "/images/platforms/aave.webp",
-        alt: "Aave",
+        src: '/images/platforms/aave.webp',
+        alt: 'Aave',
         id: 1,
     },
     {
-        src: "/images/platforms/euler.webp",
-        alt: "Euler",
+        src: '/images/platforms/euler.webp',
+        alt: 'Euler',
         id: 2,
     },
     {
-        src: "/images/platforms/compound.webp",
-        alt: "Compound",
+        src: '/images/platforms/compound.webp',
+        alt: 'Compound',
         id: 3,
     },
-];
+]
 
 function CustomToolTip(payload: any) {
-    const { platform, chain, lend, borrow } = payload.payload;
+    const { platform, chain, lend, borrow } = payload.payload
 
     function hasLowestValuePrefix(value: number) {
-        return isLowestValue(Number(value)) ? "< " : "";
+        return isLowestValue(Number(value)) ? '< ' : ''
     }
 
     function handleLowestValue(value: number) {
-        return isLowestValue(Number(value)) ? 0.01 : value;
+        return isLowestValue(Number(value)) ? 0.01 : value
     }
 
     const borrowAmount = handleLowestValue(borrow?.amount)
@@ -90,12 +95,14 @@ function CustomToolTip(payload: any) {
                 <div className="flex items-center gap-1">
                     <ImageWithDefault
                         alt={platform?.name}
-                        src={platform?.logo || ""}
+                        src={platform?.logo || ''}
                         width={20}
                         height={20}
-                        className={"max-w-[20px] max-h-[20px] object-contain"}
+                        className={'max-w-[20px] max-h-[20px] object-contain'}
                     />
-                    <BodyText level="body2" weight="medium">{platform?.id?.split("-")[0]}</BodyText>
+                    <BodyText level="body2" weight="medium">
+                        {platform?.id?.split('-')[0]}
+                    </BodyText>
                 </div>
                 <Badge variant="blue" size="sm">
                     Borrow / Lend
@@ -105,22 +112,43 @@ function CustomToolTip(payload: any) {
                 <div className="flex items-center justify-between">
                     <LabelText> Borrow </LabelText>
                     <div className="flex items-center gap-[4px]">
-                        <BodyText level="body2" weight="medium">{hasLowestValuePrefix(borrow?.amount)} ${borrowAmount}</BodyText>
-                        <AvatarCircles avatarUrls={borrow.tokens.map((token: any) => token.logo)} />
+                        <BodyText level="body2" weight="medium">
+                            {hasLowestValuePrefix(borrow?.amount)} $
+                            {borrowAmount}
+                        </BodyText>
+                        <AvatarCircles
+                            avatarUrls={borrow.tokens.map(
+                                (token: any) => token.logo
+                            )}
+                        />
                     </div>
                 </div>
                 <div className="flex items-center justify-between">
                     <LabelText> Lend </LabelText>
                     <div className="flex items-center gap-[4px]">
-                        <BodyText level="body2" weight="medium">{hasLowestValuePrefix(lend?.amount)} ${lendAmount}</BodyText>
-                        <AvatarCircles avatarUrls={lend.tokens.map((token: any) => token.logo)} />
+                        <BodyText level="body2" weight="medium">
+                            {hasLowestValuePrefix(lend?.amount)} ${lendAmount}
+                        </BodyText>
+                        <AvatarCircles
+                            avatarUrls={lend.tokens.map(
+                                (token: any) => token.logo
+                            )}
+                        />
                     </div>
                 </div>
                 <div className="flex items-center justify-between">
                     <LabelText> Chain </LabelText>
                     <div className="flex items-center gap-[4px]">
-                        <BodyText level="body2" weight="medium">{capitalizeText(chain?.name)}</BodyText>
-                        <ImageWithDefault src={chain?.logo} alt="optimism" height={16} width={16} className="max-w-[16px] max-h-[16px]" />
+                        <BodyText level="body2" weight="medium">
+                            {capitalizeText(chain?.name)}
+                        </BodyText>
+                        <ImageWithDefault
+                            src={chain?.logo}
+                            alt="optimism"
+                            height={16}
+                            width={16}
+                            className="max-w-[16px] max-h-[16px]"
+                        />
                     </div>
                 </div>
             </div>
@@ -129,15 +157,16 @@ function CustomToolTip(payload: any) {
 }
 
 const CustomActiveShape = (props: any) => {
-    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } =
+        props
 
     return (
         <g>
             <path
                 d={`
             M ${cx},${cy}
-            L ${cx + outerRadius * Math.cos(-startAngle * Math.PI / 180)},${cy + outerRadius * Math.sin(-startAngle * Math.PI / 180)}
-            A ${outerRadius},${outerRadius} 0 0 1 ${cx + outerRadius * Math.cos(-endAngle * Math.PI / 180)},${cy + outerRadius * Math.sin(-endAngle * Math.PI / 180)}
+            L ${cx + outerRadius * Math.cos((-startAngle * Math.PI) / 180)},${cy + outerRadius * Math.sin((-startAngle * Math.PI) / 180)}
+            A ${outerRadius},${outerRadius} 0 0 1 ${cx + outerRadius * Math.cos((-endAngle * Math.PI) / 180)},${cy + outerRadius * Math.sin((-endAngle * Math.PI) / 180)}
             L ${cx},${cy}
             Z
           `}
@@ -147,24 +176,28 @@ const CustomActiveShape = (props: any) => {
                 strokeWidth={2}
             />
         </g>
-    );
-};
+    )
+}
 
 export function RadialChartStacked({
     data,
-    isLoading
+    isLoading,
 }: {
-    data: TPortfolio,
-    isLoading: boolean,
+    data: TPortfolio
+    isLoading: boolean
 }) {
-    const { allChainsData } = useContext(AssetsDataContext);
-    const PLATFORMS_WITH_POSITIONS = data.platforms.filter(platform => platform.positions.length > 0);
+    const { allChainsData } = useContext(AssetsDataContext)
+    const PLATFORMS_WITH_POSITIONS = data.platforms.filter(
+        (platform) => platform.positions.length > 0
+    )
     const openPositionsCount = PLATFORMS_WITH_POSITIONS.reduce((acc, curr) => {
         return acc + curr.positions.length
-    }, 0);
-    const totalPlatformsCount = PLATFORMS_WITH_POSITIONS.length;
+    }, 0)
+    const totalPlatformsCount = PLATFORMS_WITH_POSITIONS.length
     const chartData = PLATFORMS_WITH_POSITIONS.map((platform) => {
-        const chainDetails = allChainsData.find(chain => Number(chain.chain_id) === Number(platform.chain_id));
+        const chainDetails = allChainsData.find(
+            (chain) => Number(chain.chain_id) === Number(platform.chain_id)
+        )
 
         return {
             platform: {
@@ -176,43 +209,58 @@ export function RadialChartStacked({
             chain: {
                 id: chainDetails?.chain_id,
                 name: chainDetails?.name,
-                logo: chainDetails?.logo
+                logo: chainDetails?.logo,
             },
             lend: {
                 amount: getSanitizedValue(platform.total_liquidity),
                 tokens: [
-                    ...platform.positions.filter(position => position.type === "lend").map(platform => ({ ...platform.token }))
+                    ...platform.positions
+                        .filter((position) => position.type === 'lend')
+                        .map((platform) => ({ ...platform.token })),
                 ],
             },
             borrow: {
                 amount: getSanitizedValue(platform.total_borrow),
                 tokens: [
-                    ...platform.positions.filter(position => position.type === "borrow").map(platform => ({ ...platform.token }))
+                    ...platform.positions
+                        .filter((position) => position.type === 'borrow')
+                        .map((platform) => ({ ...platform.token })),
                 ],
             },
         }
     })
     const platformDetails = {
-        logos: chartData.map(data => data.platform.logo),
-        platform_names: chartData.map(data => data.platform.id.split("-").join(" ")),
+        logos: chartData.map((data) => data.platform.logo),
+        platform_names: chartData.map((data) =>
+            data.platform.id.split('-').join(' ')
+        ),
     }
-    const platformTooltipNames = platformDetails.platform_names.map(name => ({ content: name }));
+    const platformTooltipNames = platformDetails.platform_names.map((name) => ({
+        content: name,
+    }))
 
     return (
         <Card className="flex flex-col">
             <CardContent className="flex flex-1 items-center pb-0">
-                {
-                    isLoading && <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full mt-8 mb-16" />
-                }
-                {
-                    !isLoading && chartData.length === 0 &&
+                {isLoading && (
+                    <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full mt-8 mb-16" />
+                )}
+                {!isLoading && chartData.length === 0 && (
                     <div className="flex flex-col items-center justify-center w-full h-[300px] gap-3">
-                        <ChartPie strokeWidth={1.5} className="w-8 h-8 text-gray-700" />
-                        <BodyText level="body1" weight="normal" className="text-gray-700">No positions to display</BodyText>
+                        <ChartPie
+                            strokeWidth={1.5}
+                            className="w-8 h-8 text-gray-700"
+                        />
+                        <BodyText
+                            level="body1"
+                            weight="normal"
+                            className="text-gray-700"
+                        >
+                            No positions to display
+                        </BodyText>
                     </div>
-                }
-                {
-                    !isLoading && chartData.length > 0 &&
+                )}
+                {!isLoading && chartData.length > 0 && (
                     <ChartContainer
                         config={chartConfig}
                         className="mx-auto aspect-square w-full max-w-[250px]"
@@ -230,29 +278,52 @@ export function RadialChartStacked({
                                     <ChartTooltipContent
                                         hideIndicator
                                         className="rounded-6"
-                                        labelFormatter={(label, payload) => <CustomToolTip payload={payload[0].payload} />}
+                                        labelFormatter={(label, payload) => (
+                                            <CustomToolTip
+                                                payload={payload[0].payload}
+                                            />
+                                        )}
                                     />
                                 }
                             />
-                            <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+                            <PolarRadiusAxis
+                                tick={false}
+                                tickLine={false}
+                                axisLine={false}
+                            >
                                 <Label
                                     content={({ viewBox }) => {
-                                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                        if (
+                                            viewBox &&
+                                            'cx' in viewBox &&
+                                            'cy' in viewBox
+                                        ) {
                                             return (
-                                                <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle">
+                                                <text
+                                                    x={viewBox.cx}
+                                                    y={viewBox.cy}
+                                                    textAnchor="middle"
+                                                >
                                                     <tspan
                                                         x={viewBox.cx}
-                                                        y={(viewBox.cy || 0)}
+                                                        y={viewBox.cy || 0}
                                                         className="fill-foreground text-2xl font-bold"
                                                     >
                                                         {openPositionsCount.toLocaleString()}
                                                     </tspan>
                                                     <tspan
                                                         x={viewBox.cx}
-                                                        y={(viewBox.cy || 0) + 20}
+                                                        y={
+                                                            (viewBox.cy || 0) +
+                                                            20
+                                                        }
                                                         className="fill-muted-foreground"
                                                     >
-                                                        Position{openPositionsCount > 1 ? "s" : ""} open
+                                                        Position
+                                                        {openPositionsCount > 1
+                                                            ? 's'
+                                                            : ''}{' '}
+                                                        open
                                                     </tspan>
                                                 </text>
                                             )
@@ -260,41 +331,48 @@ export function RadialChartStacked({
                                     }}
                                 />
                             </PolarRadiusAxis>
-                            {
-                                chartData.map((data, index) => (
-                                    <RadialBar
-                                        key={index}
-                                        dataKey={(obj) => {
-                                            return Number(obj.platform.pnl) || 1
-                                        }}
-                                        stackId="a"
-                                        cornerRadius={16}
-                                        fill={`var(--color-${index + 1})`}
-                                        className="stroke-transparent stroke-2"
-                                    />
-                                ))
-                            }
+                            {chartData.map((data, index) => (
+                                <RadialBar
+                                    key={index}
+                                    dataKey={(obj) => {
+                                        return Number(obj.platform.pnl) || 1
+                                    }}
+                                    stackId="a"
+                                    cornerRadius={16}
+                                    fill={`var(--color-${index + 1})`}
+                                    className="stroke-transparent stroke-2"
+                                />
+                            ))}
                         </RadialBarChart>
                     </ChartContainer>
-                }
+                )}
             </CardContent>
-            {
-                !isLoading && chartData.length > 0 &&
+            {!isLoading && chartData.length > 0 && (
                 <CardFooter className="flex-col gap-2 text-sm">
-                    {isLoading && <Skeleton className="h-7 w-full max-w-[200px] rounded-3" />}
-                    {!isLoading &&
+                    {isLoading && (
+                        <Skeleton className="h-7 w-full max-w-[200px] rounded-3" />
+                    )}
+                    {!isLoading && (
                         <div className="flex items-center gap-2 font-medium leading-none">
-                            {totalPlatformsCount > 0 && <AvatarCircles avatarUrls={platformDetails.logos} avatarDetails={platformTooltipNames} />}
-                            Spread across {totalPlatformsCount} platform{totalPlatformsCount > 1 ? "s" : ""}
+                            {totalPlatformsCount > 0 && (
+                                <AvatarCircles
+                                    avatarUrls={platformDetails.logos}
+                                    avatarDetails={platformTooltipNames}
+                                />
+                            )}
+                            Spread across {totalPlatformsCount} platform
+                            {totalPlatformsCount > 1 ? 's' : ''}
                         </div>
-                    }
+                    )}
                 </CardFooter>
-            }
+            )}
         </Card>
     )
 }
 
 function getSanitizedValue(value: number) {
-    const normalValue = Number(convertScientificToNormal(value));
-    return isLowestValue(normalValue) ? normalValue.toFixed(10) : abbreviateNumber(normalValue);
+    const normalValue = Number(convertScientificToNormal(value))
+    return isLowestValue(normalValue)
+        ? normalValue.toFixed(10)
+        : abbreviateNumber(normalValue)
 }
