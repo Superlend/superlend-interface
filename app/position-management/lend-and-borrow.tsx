@@ -90,7 +90,7 @@ export default function LendAndBorrowAssets() {
     const walletAddress = activeAccount?.address
     const isAutoConnecting = useIsAutoConnecting()
     const switchChain = useSwitchActiveWalletChain()
-    const { reserveData, userData, fetchAaveV3Data, getMaxBorrowAmount } =
+    const { fetchAaveV3Data, getMaxBorrowAmount, getAllowance } =
         useAaveV3Data()
 
     const {
@@ -151,6 +151,14 @@ export default function LendAndBorrowAssets() {
                 setMaxBorrowAmount(hasZeroLimit ? '0' : maxAmountToBorrow)
                 // console.log('maxBorrowAmount', maxBorrowAmount?.maxToBorrowFormatted);
             })
+
+            getAllowance(
+                Number(chain_id),
+                platformData.platform.core_contract,
+                tokenAddress
+            ).then((r) =>
+                console.log('fetched this token allowance ', r, r.toString())
+            )
         }
     }, [walletAddress, platformData])
 

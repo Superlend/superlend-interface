@@ -9,7 +9,9 @@ import { useState } from 'react'
 import { formatReserves, formatUserSummary } from '@aave/math-utils'
 import { getAddress } from 'ethers/lib/utils'
 import { getMaxAmountAvailableToBorrow } from '../../lib/getMaxAmountAvailableToBorrow'
-import { hasExponent, normalizeResult, parseScientific } from '@/lib/utils'
+import { hasExponent } from '@/lib/utils'
+import { erc20Abi } from 'viem'
+import { Contract } from 'ethers'
 
 export const useAaveV3Data = () => {
     const activeAccount = useActiveAccount()
@@ -64,6 +66,16 @@ export const useAaveV3Data = () => {
             })
         setUserData(result)
         return result
+    }
+
+    const getAllowance = async (
+        chainId: number,
+        spender: string,
+        token: string
+    ) => {
+        const contract = new Contract(token, erc20Abi, providers[chainId])
+        const approval = await contract.allowance(walletAddress, spender)
+        return approval
     }
 
     const fetchAaveV3Data = async (
@@ -166,6 +178,7 @@ export const useAaveV3Data = () => {
     return {
         reserveData,
         userData,
+        getAllowance,
         fetchAaveV3Data,
         getMaxBorrowAmount,
     }
