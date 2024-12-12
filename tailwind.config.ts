@@ -105,7 +105,8 @@ const config = {
           yellow: "hsl(var(--chart-yellow))",
           aave: "hsl(var(--chart-aave))",
           compound: "hsl(var(--chart-compound))",
-          fluidex: "hsl(var(--chart-fluid))",
+          fluid: "hsl(var(--chart-fluid))",
+          superlend: "hsl(var(--chart-superlend))",
         },
       },
       borderRadius: {

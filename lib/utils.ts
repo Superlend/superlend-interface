@@ -350,16 +350,17 @@ export function getPlatformWebsiteLink({
       ? "mainnet"
       : network_name?.toLowerCase();
 
-  const paths: any = {
-    aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(
-      chainName || ""
-    )}_v3`,
-    compound: ``,
-    fluid: isFluidVault
-      ? `/stats/${chainId}/vaults#${vaultId}`
-      : `/lending/${chainId}`,
-    morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
-  };
+    const paths: any = {
+        aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(
+            chainName || ''
+        )}_v3`,
+        compound: ``,
+        fluid: isFluidVault
+            ? `/stats/${chainId}/vaults#${vaultId}`
+            : `/lending/${chainId}`,
+        morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
+        superlend: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=etherlink`,
+    }
 
   const path = paths[platformNameId];
   return `${baseUrl}${path}`;

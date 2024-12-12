@@ -84,6 +84,11 @@ export default function DiscoverFiltersDropdown() {
             name: "FLUID",
             protocol_id: "FLUID"
         },
+        {
+            logo: PlatformLogo.SUPERLEND,
+            name: 'SUPERLEND',
+            protocol_id: 'SUPERLEND',
+        },
     ]
 
     const FILTER_CATEGORIES = [
