@@ -15,8 +15,8 @@ import { Contract } from 'ethers'
 
 export const useAaveV3Data = () => {
     const activeAccount = useActiveAccount()
-    const { providers } = useEthersMulticall()
     const walletAddress = activeAccount?.address
+    const { providers } = useEthersMulticall(walletAddress)
 
     const [reserveData, setReserveData] =
         useState<void | ReservesDataHumanized>()
