@@ -1,5 +1,5 @@
-import { Period } from "../periodButtons";
-import { TPlatformAsset } from "../platform"
+import { Period } from '../periodButtons'
+import { TPlatformAsset } from '../platform'
 
 export type TGetPlatformParams = {
     chain_id: number
@@ -7,10 +7,10 @@ export type TGetPlatformParams = {
 }
 
 export type TGetPlatformHistoryParams = {
-    protocol_identifier: string;
-    token: string;
-    period: Period.oneDay | Period.oneMonth | Period.oneWeek | Period.oneYear;
-  };
+    protocol_identifier: string
+    token: string
+    period: Period.oneDay | Period.oneMonth | Period.oneWeek | Period.oneYear
+}
 
 export type TGetPlatformResponse = {
     data: TPlatformAsset[]

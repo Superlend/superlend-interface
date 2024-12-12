@@ -1,3 +1,3 @@
-import SupplyAaveButton from './SupplyAaveButton';
+import SupplyAaveButton from './SupplyAaveButton'
 
-export default SupplyAaveButton;
+export default SupplyAaveButton

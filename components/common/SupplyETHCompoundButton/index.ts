@@ -1,3 +1,3 @@
-import SupplyETHCompoundButton from './SupplyETHCompoundButton';
+import SupplyETHCompoundButton from './SupplyETHCompoundButton'
 
-export default SupplyETHCompoundButton;
+export default SupplyETHCompoundButton
