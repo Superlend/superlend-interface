@@ -51,7 +51,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import AAVE_POOL_ABI from '@/data/abi/aaveApproveABI.json'
 import { useReadContract } from 'wagmi'
-import { formatUnits } from 'ethers/lib/utils'
+import { formatUnits, parseUnits } from 'ethers/lib/utils'
 import {
     Dialog,
     DialogContent,
@@ -76,12 +76,16 @@ import {
 import { PlatformValue } from '@/types/platform'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import { useAaveV3Data } from '../../hooks/protocols/useAaveV3Data'
+import { BigNumber } from 'ethers'
+import { useERC20Balance } from '@/hooks/useERC20Balance'
+import { useAssetsDataContext } from '@/context/data-provider'
 
 export default function LendAndBorrowAssets() {
-    const { erc20TokensBalanceData } = useLendBorrowTxContext()
+    const { erc20TokensBalanceData } = useAssetsDataContext()
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [amount, setAmount] = useState('')
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
+    const [allowanceBN, setAllowanceBN] = useState(BigNumber.from(0))
     const searchParams = useSearchParams()
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
@@ -112,6 +116,10 @@ export default function LendAndBorrowAssets() {
         protocol_identifier,
         chain_id: Number(chain_id),
     })
+
+    // const { data: erc20TokensBalanceData } = useERC20Balance(
+    //     walletAddress as `0x${string}`
+    // )
 
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData
 
@@ -149,16 +157,16 @@ export default function LendAndBorrowAssets() {
                 )?.toFixed(decimals)
                 const hasZeroLimit = !Math.abs(Number(maxAmountToBorrow))
                 setMaxBorrowAmount(hasZeroLimit ? '0' : maxAmountToBorrow)
-                // console.log('maxBorrowAmount', maxBorrowAmount?.maxToBorrowFormatted);
             })
 
+            // Get allowance
             getAllowance(
                 Number(chain_id),
                 platformData.platform.core_contract,
                 tokenAddress
-            ).then((r) =>
-                console.log('fetched this token allowance ', r, r.toString())
-            )
+            ).then((r: BigNumber) => {
+                setAllowanceBN(r)
+            })
         }
     }, [walletAddress, platformData])
 
@@ -206,8 +214,8 @@ export default function LendAndBorrowAssets() {
         }
     }
 
-    const assetDetails = getAssetDetails(tokenAddress)
-
+    const assetDetails = getAssetDetails(tokenAddress);
+    
     // Get balance
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[tokenAddress.toLowerCase()]
@@ -463,6 +471,7 @@ export default function LendAndBorrowAssets() {
                             assetDetails={assetDetails}
                             amount={amount}
                             balance={balance}
+                            allowanceBN={allowanceBN}
                             maxBorrowAmount={maxBorrowAmount}
                             setAmount={setAmount}
                         />
@@ -545,6 +554,7 @@ function ConfirmationDialog({
     setAmount,
     balance,
     maxBorrowAmount,
+    allowanceBN,
 }: {
     disabled: boolean
     positionType: TPositionType
@@ -553,6 +563,7 @@ function ConfirmationDialog({
     balance: string
     maxBorrowAmount: string
     setAmount: (amount: string) => void
+    allowanceBN: BigNumber
 }) {
     // console.log("assetDetails", assetDetails)
     const { lendTx, setLendTx, borrowTx, setBorrowTx } =
@@ -862,6 +873,7 @@ function ConfirmationDialog({
                         handleCloseModal={handleOpenChange}
                         asset={assetDetails}
                         amount={amount}
+                        allowanceBN={allowanceBN}
                         positionType={positionType}
                     />
                 </div>

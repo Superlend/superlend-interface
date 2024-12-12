@@ -30,6 +30,7 @@ import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { ArrowRightIcon } from 'lucide-react'
+import { BigNumber } from 'ethers'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 
 interface ISupplyAaveButtonProps {
@@ -39,6 +40,7 @@ interface ISupplyAaveButtonProps {
     amount: string
     decimals: number
     handleCloseModal: (isVisible: boolean) => void
+    allowanceBN: BigNumber
 }
 
 const SupplyAaveButton = ({
@@ -48,6 +50,7 @@ const SupplyAaveButton = ({
     decimals,
     disabled,
     handleCloseModal,
+    allowanceBN,
 }: ISupplyAaveButtonProps) => {
     const {
         writeContractAsync,
@@ -85,12 +88,12 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? lastTx === 'approve'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? lastTx === 'approve'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
@@ -152,6 +155,13 @@ const SupplyAaveButton = ({
     ])
 
     useEffect(() => {
+        if (amount) {
+            const amountBN = parseUnits(amount, decimals)
+            console.log('amountBN.gt(allowanceBN)', amountBN.gt(allowanceBN))
+            console.log('amountBN', amountBN.toString())
+            console.log('allowanceBN', allowanceBN.toString())
+        }
+
         if (isConfirmed && lastTx === 'mint') {
             setLendTx({ status: 'lend', hash: hash || '' })
             supply()
@@ -220,6 +230,7 @@ const SupplyAaveButton = ({
             error
         }
     }
+
     return (
         <>
             {error && (

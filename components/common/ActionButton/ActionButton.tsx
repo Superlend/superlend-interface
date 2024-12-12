@@ -10,6 +10,7 @@ import SupplyETHCompoundButton from '../SupplyETHCompoundButton'
 import SupplyERC20CompoundButton from '../SupplyERC20CompoundButton'
 import { countCompoundDecimals } from '@/lib/utils'
 import { POOL_AAVE_MAP } from '@/constants'
+import { BigNumber } from 'ethers'
 
 interface IActionButtonSelectComponent {
     disabled?: boolean
@@ -17,12 +18,14 @@ interface IActionButtonSelectComponent {
     amount: string
     handleCloseModal: (isVisible: boolean) => void
     positionType: 'lend' | 'borrow'
+    allowanceBN: BigNumber
 }
 
 const ActionButton = ({
     disabled = false,
     asset,
     amount,
+    allowanceBN,
     handleCloseModal,
     positionType,
 }: IActionButtonSelectComponent) => {
@@ -58,6 +61,7 @@ const ActionButton = ({
                 underlyingAssetAdress={asset.asset.token.address}
                 amount={amount}
                 decimals={asset.asset.token.decimals}
+                allowanceBN={allowanceBN}
             />
         )
     }
