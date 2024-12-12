@@ -223,7 +223,7 @@ export function hasLowestDisplayValuePrefix(value: number) {
 }
 
 export function getLowestDisplayValue(value: number): string {
-    return isLowestValue(Number(value)) ? "0.01" : abbreviateNumber(value)
+    return isLowestValue(Number(value)) ? '0.01' : abbreviateNumber(value)
 }
 
 export function getTokenLogo(tokenSymbol: string): string {

@@ -294,12 +294,12 @@ export default function LendAndBorrowAssets() {
 
     const disabledButton: boolean = useMemo(
         () =>
-            (Number(amount) >
+            Number(amount) >
                 Number(
                     isLendPositionType(positionType) ? balance : maxBorrowAmount
-                )) ||
+                ) ||
             (isLendPositionType(positionType) ? false : !hasCollateral) ||
-            (Number(amount) <= 0) ||
+            Number(amount) <= 0 ||
             toManyDecimals,
         [
             amount,
@@ -311,7 +311,11 @@ export default function LendAndBorrowAssets() {
         ]
     )
 
-    const isDisabledMaxBtn = (Number(amount) === (isLendPositionType(positionType) ? Number(balance) : Number(maxBorrowAmount))) || !walletAddress
+    const isDisabledMaxBtn =
+        Number(amount) ===
+            (isLendPositionType(positionType)
+                ? Number(balance)
+                : Number(maxBorrowAmount)) || !walletAddress
 
     // Loading skeleton
     if (isLoading && isPoolBasedProtocol) {
@@ -567,7 +571,9 @@ function ConfirmationDialog({
         const amountFormatted = hasExponent(amount)
             ? Math.abs(Number(amount)).toFixed(10)
             : amount.toString()
-        const amountFormattedForLowestValue = getLowestDisplayValue(Number(amountFormatted))
+        const amountFormattedForLowestValue = getLowestDisplayValue(
+            Number(amountFormatted)
+        )
         return `~${hasLowestDisplayValuePrefix(Number(amountFormatted))}$${amountFormattedForLowestValue}`
     }
 
@@ -728,7 +734,7 @@ function ConfirmationDialog({
                                 weight="normal"
                                 className="text-gray-600"
                             >
-                                { (isLendPositionType(positionType)
+                                {(isLendPositionType(positionType)
                                     ? Number(balance)
                                     : Number(maxBorrowAmount)) - Number(amount)}
                             </BodyText>
@@ -770,7 +776,10 @@ function ConfirmationDialog({
                                         className="text-gray-800"
                                     >
                                         {abbreviateNumber(
-                                          (isLendPositionType(positionType) ? Number(balance) : Number(maxBorrowAmount)) - Number(amount)
+                                            (isLendPositionType(positionType)
+                                                ? Number(balance)
+                                                : Number(maxBorrowAmount)) -
+                                                Number(amount)
                                         )}
                                     </BodyText>
                                     <ImageWithDefault
