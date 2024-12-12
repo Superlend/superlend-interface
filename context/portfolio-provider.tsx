@@ -4,16 +4,16 @@ import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { TPortfolio } from '@/types/queries/portfolio'
 import { createContext, useContext, useEffect } from 'react'
 import { useActiveAccount } from 'thirdweb/react'
-import { useERC20Balance } from '../hooks/useERC20Balance'
+// import { useERC20Balance } from '../hooks/useERC20Balance'
 
 export type TPortfolioContext = {
     portfolioData: TPortfolio
     isLoadingPortfolioData: boolean
     isErrorPortfolioData: boolean
-    erc20TokensBalanceData: Record<
-        number,
-        Record<string, { balanceRaw: string; balanceFormatted: number }>
-    >
+    // erc20TokensBalanceData: Record<
+    //     number,
+    //     Record<string, { balanceRaw: string; balanceFormatted: number }>
+    // >
 }
 
 const PortfolioDataInit = {
@@ -26,7 +26,7 @@ export const PortfolioContext = createContext<TPortfolioContext>({
     portfolioData: PortfolioDataInit,
     isLoadingPortfolioData: false,
     isErrorPortfolioData: false,
-    erc20TokensBalanceData: {},
+    // erc20TokensBalanceData: {},
 })
 
 export default function PortfolioProvider({
@@ -46,9 +46,9 @@ export default function PortfolioProvider({
         user_address: walletAddress as `0x${string}` | undefined,
     })
 
-    const { data: erc20TokensBalanceData } = useERC20Balance(
-        walletAddress as `0x${string}`
-    )
+    // const { data: erc20TokensBalanceData } = useERC20Balance(
+    //     walletAddress as `0x${string}`
+    // )
 
     // useEffect(() => {
     //   if (walletAddress) getERC20Balance(walletAddress);
@@ -64,7 +64,7 @@ export default function PortfolioProvider({
                 portfolioData,
                 isLoadingPortfolioData,
                 isErrorPortfolioData,
-                erc20TokensBalanceData,
+                // erc20TokensBalanceData,
             }}
         >
             {children}

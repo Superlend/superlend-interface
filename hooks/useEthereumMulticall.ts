@@ -6,7 +6,7 @@ import {
     Multicall,
 } from 'ethereum-multicall'
 
-export const useEthersMulticall = () => {
+export const useEthersMulticall = (walletAddress: string | undefined) => {
     const [providers, setProviders] = useState<
         Record<number, ethersProviders.JsonRpcProvider>
     >({})
@@ -87,10 +87,13 @@ export const useEthersMulticall = () => {
     }
 
     useEffect(() => {
-        if (!Object.keys(providers).length || !Object.keys(multicall).length) {
+        if (
+            !!walletAddress &&
+            (!Object.keys(providers).length || !Object.keys(multicall).length)
+        ) {
             initalizeEthMulticall()
         }
-    }, [providers, multicall, isError])
+    }, [providers, multicall, isError, walletAddress])
 
     return {
         providers,

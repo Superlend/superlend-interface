@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react'
-import useGetTokensData from './useGetTokensData'
 import { TToken } from '../types'
 import { useEthersMulticall } from './useEthereumMulticall'
 import { ContractCallContext, ContractCallResults } from 'ethereum-multicall'
 import ERC20ABI from '../data/abi/erc20ABI.json'
 import { BigNumber } from 'ethers'
 import { formatUnits } from 'ethers/lib/utils'
-import { useAssetsData } from '@/context/data-provider'
+import { useAssetsDataContext } from '@/context/data-provider'
 
 export const useERC20Balance = (address: string) => {
-    const { allTokensData, allChainsData } = useAssetsData()
-    const { ethMulticall } = useEthersMulticall()
+    const { allTokensData, allChainsData } = useAssetsDataContext()
+    const { ethMulticall } = useEthersMulticall(address)
     const tokenList = allTokensData as unknown as Record<number, TToken[]>
     const chainList: string[] = allChainsData.map((chain) =>
         chain.chain_id.toString()
@@ -26,7 +25,7 @@ export const useERC20Balance = (address: string) => {
 
     const getERC20Balance = async (address: string) => {
         try {
-            // if (isLoading) return;
+            // if (isLoading) return
 
             setIsError(false)
             setIsLoading(true)
@@ -70,6 +69,7 @@ export const useERC20Balance = (address: string) => {
             > = {}
             for (const singlechainResult of multichainResults) {
                 for (const tokenResults of singlechainResult) {
+                    if (!tokenResults) continue
                     for (const key of Object.keys(tokenResults.results)) {
                         const shards = key.split('-')
                         const tokenAddress = shards[0]
@@ -97,8 +97,7 @@ export const useERC20Balance = (address: string) => {
                 const chainId = Number(key)
                 for (const token of tokenList[chainId]) {
                     const tokenResult =
-                        result[chainId][token.address.toLowerCase()]
-                    if (!tokenResult) continue
+                        result[chainId][token?.address?.toLowerCase()]
                     result[chainId][
                         token.address.toLowerCase()
                     ].balanceFormatted = Number(
@@ -125,7 +124,7 @@ export const useERC20Balance = (address: string) => {
         ) {
             getERC20Balance(address)
         }
-    }, [address, tokenList, chainList])
+    }, [!!address, !!Object.keys(tokenList).length, !!chainList.length])
 
     return { data, isLoading, isError, getERC20Balance }
 }
