@@ -24,6 +24,7 @@ import {
   checkDecimalPlaces,
   decimalPlacesCount,
   getLowestDisplayValue,
+  hasExponent,
 } from '@/lib/utils';
 import { BodyText, HeadingText } from '@/components/ui/typography';
 import {
@@ -286,9 +287,7 @@ export default function LendAndBorrowAssets() {
   // toManyDecimals,
   // );
 
-  const isDisabledMaxBtn = useMemo(() => {
-    return (Number(amount) === Number(maxBorrowAmount)) || !walletAddress;
-  }, [amount, maxBorrowAmount, walletAddress]);
+  const isDisabledMaxBtn = (Number(amount) === Number(maxBorrowAmount)) || !walletAddress;
 
   // Loading skeleton
   if (isLoading && isPoolBasedProtocol) {
@@ -506,9 +505,14 @@ function ConfirmationDialog({
     return isLendPositionType(positionType) ? status.lend : status.borrow;
   }
 
-  const inputUsdAmount = useMemo(() => {
-    return Number(amount) * Number(assetDetails?.asset?.token?.price_usd);
-  }, [amount, assetDetails?.asset?.token?.price_usd]);
+  const inputUsdAmount = Number(amount) * Number(assetDetails?.asset?.token?.price_usd);
+
+  function handleInputUsdAmount(amount: string) {
+    const amountFormatted = hasExponent(amount)
+      ? (Math.abs(Number(amount))).toFixed(10)
+      : amount.toString();
+    return abbreviateNumber(Number(amountFormatted));
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -596,22 +600,22 @@ function ConfirmationDialog({
             lend: lendTx.status === 'approve',
             borrow: borrowTx.status === 'borrow',
           }) && (
-              <div className="flex flex-wrap items-center justify-between gap-2 px-[24px] py-[18.5px] bg-white rounded-5">
-                <div className="flex items-center gap-[8px]">
-                  <ImageWithDefault
-                    src={assetDetails?.asset?.token?.logo}
-                    alt={assetDetails?.asset?.token?.symbol}
-                    width={24}
-                    height={24}
-                    className="rounded-full max-w-[24px] max-h-[24px]"
-                  />
+              <div className="flex items-center gap-[8px] px-[24px] py-[18.5px] bg-white rounded-5 w-full">
+                <ImageWithDefault
+                  src={assetDetails?.asset?.token?.logo}
+                  alt={assetDetails?.asset?.token?.symbol}
+                  width={24}
+                  height={24}
+                  className="rounded-full max-w-[24px] max-h-[24px]"
+                />
+                <div className="flex flex-wrap items-center justify-between gap-1 w-full">
                   <HeadingText level="h3" weight="normal" className="text-gray-800">
                     {Number(amount).toFixed(decimalPlacesCount(amount))}
                   </HeadingText>
+                  <BodyText level="body2" weight="normal" className="text-gray-600">
+                    ~${handleInputUsdAmount(inputUsdAmount.toString())}
+                  </BodyText>
                 </div>
-                <BodyText level="body2" weight="normal" className="text-gray-600">
-                  ~${inputUsdAmount.toFixed(decimalPlacesCount(inputUsdAmount.toString()))}
-                </BodyText>
               </div>
             )}
           {/* Block 2 */}
