@@ -34,6 +34,7 @@ import {
     decimalPlacesCount,
     getLowestDisplayValue,
     hasExponent,
+    hasLowestDisplayValuePrefix,
 } from '@/lib/utils'
 import { BodyText, HeadingText } from '@/components/ui/typography'
 import {
@@ -293,12 +294,12 @@ export default function LendAndBorrowAssets() {
 
     const disabledButton: boolean = useMemo(
         () =>
-            Number(amount) >
+            (Number(amount) >
                 Number(
                     isLendPositionType(positionType) ? balance : maxBorrowAmount
-                ) ||
+                )) ||
             (isLendPositionType(positionType) ? false : !hasCollateral) ||
-            Number(amount) <= 0 ||
+            (Number(amount) <= 0) ||
             toManyDecimals,
         [
             amount,
@@ -310,15 +311,7 @@ export default function LendAndBorrowAssets() {
         ]
     )
 
-    // console.log("disabledButton",
-    // (Number(amount) > Number(isLendPositionType(positionType) ? balance : maxBorrowAmount ?? 0)) ||
-    // (isLendPositionType(positionType) ? false : !hasCollateral) ||
-    // (Number(amount) <= 0) ||
-    // toManyDecimals,
-    // );
-
-    const isDisabledMaxBtn =
-        Number(amount) === Number(maxBorrowAmount) || !walletAddress
+    const isDisabledMaxBtn = (Number(amount) === (isLendPositionType(positionType) ? Number(balance) : Number(maxBorrowAmount))) || !walletAddress
 
     // Loading skeleton
     if (isLoading && isPoolBasedProtocol) {
@@ -458,6 +451,7 @@ export default function LendAndBorrowAssets() {
                             assetDetails={assetDetails}
                             amount={amount}
                             balance={balance}
+                            maxBorrowAmount={maxBorrowAmount}
                             setAmount={setAmount}
                         />
                     )}
@@ -538,12 +532,14 @@ function ConfirmationDialog({
     amount,
     setAmount,
     balance,
+    maxBorrowAmount,
 }: {
     disabled: boolean
     positionType: TPositionType
     assetDetails: any
     amount: string
     balance: string
+    maxBorrowAmount: string
     setAmount: (amount: string) => void
 }) {
     // console.log("assetDetails", assetDetails)
@@ -571,7 +567,8 @@ function ConfirmationDialog({
         const amountFormatted = hasExponent(amount)
             ? Math.abs(Number(amount)).toFixed(10)
             : amount.toString()
-        return abbreviateNumber(Number(amountFormatted))
+        const amountFormattedForLowestValue = getLowestDisplayValue(Number(amountFormatted))
+        return `~${hasLowestDisplayValuePrefix(Number(amountFormatted))}$${amountFormattedForLowestValue}`
     }
 
     return (
@@ -704,7 +701,6 @@ function ConfirmationDialog({
                                     weight="normal"
                                     className="text-gray-600"
                                 >
-                                    ~$
                                     {handleInputUsdAmount(
                                         inputUsdAmount.toString()
                                     )}
@@ -732,7 +728,9 @@ function ConfirmationDialog({
                                 weight="normal"
                                 className="text-gray-600"
                             >
-                                {Number(balance) - Number(amount)}
+                                { (isLendPositionType(positionType)
+                                    ? Number(balance)
+                                    : Number(maxBorrowAmount)) - Number(amount)}
                             </BodyText>
                         </div>
                     )}
@@ -772,7 +770,7 @@ function ConfirmationDialog({
                                         className="text-gray-800"
                                     >
                                         {abbreviateNumber(
-                                            Number(balance) - Number(amount)
+                                          (isLendPositionType(positionType) ? Number(balance) : Number(maxBorrowAmount)) - Number(amount)
                                         )}
                                     </BodyText>
                                     <ImageWithDefault
