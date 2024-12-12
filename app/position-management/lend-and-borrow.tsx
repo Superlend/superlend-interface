@@ -77,11 +77,10 @@ import { PlatformValue } from '@/types/platform'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import { useAaveV3Data } from '../../hooks/protocols/useAaveV3Data'
 import { BigNumber } from 'ethers'
-import { useERC20Balance } from '@/hooks/useERC20Balance'
-import { useAssetsDataContext } from '@/context/data-provider'
+import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 
 export default function LendAndBorrowAssets() {
-    const { erc20TokensBalanceData } = useAssetsDataContext()
+    const { erc20TokensBalanceData } = useUserTokenBalancesContext()
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [amount, setAmount] = useState('')
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
@@ -116,10 +115,6 @@ export default function LendAndBorrowAssets() {
         protocol_identifier,
         chain_id: Number(chain_id),
     })
-
-    // const { data: erc20TokensBalanceData } = useERC20Balance(
-    //     walletAddress as `0x${string}`
-    // )
 
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData
 

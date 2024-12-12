@@ -59,24 +59,22 @@ const SupplyAaveButton = ({
         error,
     } = useWriteContract()
     const [lastTx, setLastTx] = useState<'mint' | 'approve'>('mint')
-    // const { isSuccess, isLoading } = useWaitForTransactionReceipt({ hash })
-    const { address: walletAddress } = useAccount()
-    // const { createToast } = useCreatePendingToast()
-    const { isConnected } = useAccount()
-    const { connect, connectors } = useConnect()
-    const { lendTx, setLendTx } =
-        useLendBorrowTxContext() as TLendBorrowTxContext
-
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
             hash,
         })
+    const { address: walletAddress } = useAccount()
+    // const { createToast } = useCreatePendingToast()
+    const { isConnected } = useAccount()
+    const { connect, connectors } = useConnect()
+    const { lendTx, setLendTx } = useLendBorrowTxContext() as TLendBorrowTxContext
+
 
     const txBtnStatus: Record<string, string> = {
-        pending: lastTx === 'mint' ? 'Approving token...' : 'Lending token...',
+        pending: lendTx.status === 'approve' ? 'Approving token...' : 'Lending token...',
         confirming: 'Confirming...',
         success: 'View position',
-        default: lastTx === 'mint' ? 'Approve token' : 'Lend token',
+        default: lendTx.status === 'approve' ? 'Approve token' : 'Lend token',
     }
 
     const getTxButtonText = (
@@ -84,11 +82,14 @@ const SupplyAaveButton = ({
         isConfirming: boolean,
         isConfirmed: boolean
     ) => {
+        // console.log('isPending', isPending)
+        // console.log('isConfirming', isConfirming)
+        // console.log('isConfirmed', isConfirmed)
         return txBtnStatus[
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? lastTx === 'approve'
+                    ? lendTx.status === 'view'
                         ? 'success'
                         : 'default'
                     : isPending
@@ -101,33 +102,7 @@ const SupplyAaveButton = ({
 
     const supply = useCallback(async () => {
         try {
-            setLastTx('approve')
-            // handleCloseModal(false)
-            // await toast.promise(
-            //   writeContractAsync({
-            //     // address: poolContractAddress,
-            //     abi: AAVE_POOL_ABI,
-            //     functionName: 'supply',
-            //     args: [
-            //       underlyingAssetAdress,
-            //       parseUnits(amount, decimals),
-            //       walletAddress,
-            //       0,
-            //     ],
-            //   }),
-            //   {
-            //     loading: CONFIRM_ACTION_IN_WALLET_TEXT,
-            //     success: SUCCESS_MESSAGE,
-            //     error: (error: { message: string }) => {
-            //       if (error && error.message) {
-            //         return getErrorText(error)
-            //       }
-            //       return SOMETHING_WENT_WRONG_MESSAGE
-            //     },
-            //   },
-            //   ERROR_TOAST_ICON_STYLES
-            // )
-            // toast.remove()
+            setLendTx({ status: 'lend', hash: '' })
 
             writeContractAsync({
                 address: poolContractAddress,
@@ -141,7 +116,6 @@ const SupplyAaveButton = ({
                 ],
             })
         } catch (error) {
-            // toast.remove()
             error
         }
     }, [
@@ -157,24 +131,26 @@ const SupplyAaveButton = ({
     useEffect(() => {
         if (amount) {
             const amountBN = parseUnits(amount, decimals)
-            console.log('amountBN.gt(allowanceBN)', amountBN.gt(allowanceBN))
-            console.log('amountBN', amountBN.toString())
-            console.log('allowanceBN', allowanceBN.toString())
+
+            if (allowanceBN.gt(amountBN)) {
+                setLendTx({ status: 'lend', hash: '' })
+            } else {
+                setLendTx({ status: 'approve', hash: '' })
+            }
+        }
+    }, [amount, decimals, allowanceBN])
+
+    useEffect(() => {
+        if (isConfirmed && lendTx.status === 'approve') {
+            supply().then(() => {
+                setLendTx({ status: 'lend', hash: '' })
+            })
         }
 
-        if (isConfirmed && lastTx === 'mint') {
-            setLendTx({ status: 'lend', hash: hash || '' })
-            supply()
-        }
-
-        if (isConfirmed && lastTx === 'approve') {
+        if (isConfirmed && lendTx.status === 'lend') {
             setLendTx({ status: 'view', hash: hash || '' })
         }
-
-        // if (isConfirmed && lastTx === 'mint') {
-        //   void supply()
-        // }
-    }, [isConfirmed, lastTx])
+    }, [isConfirmed, lendTx.status])
 
     const onApproveSupply = async () => {
         if (!isConnected) {
@@ -190,29 +166,12 @@ const SupplyAaveButton = ({
         }
 
         try {
-            // createToast()
-            setLastTx('mint')
-            // await toast.promise(
-            //   writeContractAsync({
-            //     address: underlyingAssetAdress,
-            //     abi: AAVE_APPROVE_ABI,
-            //     functionName: 'approve',
-            //     args: [
-            //       // poolContractAddress,
-            //       parseUnits(amount, decimals)],
-            //   }),
-            //   {
-            //     loading: CONFIRM_ACTION_IN_WALLET_TEXT,
-            //     success: APPROVE_MESSAGE,
-            //     error: (error: { message: string }) => {
-            //       if (error && error.message) {
-            //         return getErrorText(error)
-            //       }
-            //       return SOMETHING_WENT_WRONG_MESSAGE
-            //     },
-            //   },
-            //   ERROR_TOAST_ICON_STYLES
-            // )
+            setLendTx({ status: 'approve', hash: '' })
+
+            // console.log("underlyingAssetAdress", underlyingAssetAdress)
+            // console.log("poolContractAddress", poolContractAddress)
+            // console.log("amount", amount)
+            // console.log("decimals", decimals)
 
             writeContractAsync({
                 address: underlyingAssetAdress,
@@ -220,13 +179,7 @@ const SupplyAaveButton = ({
                 functionName: 'approve',
                 args: [poolContractAddress, parseUnits(amount, decimals)],
             })
-
-            // console.log("underlyingAssetAdress", underlyingAssetAdress)
-            // console.log("poolContractAddress", poolContractAddress)
-            // console.log("amount", amount)
-            // console.log("decimals", decimals)
         } catch (error) {
-            // toast.remove()
             error
         }
     }

@@ -7,7 +7,7 @@ import { BigNumber } from 'ethers'
 import { formatUnits } from 'ethers/lib/utils'
 import { useAssetsDataContext } from '@/context/data-provider'
 
-export const useERC20Balance = (address: string) => {
+export const useERC20Balance = (address: string | undefined) => {
     const { allTokensData, allChainsData } = useAssetsDataContext()
     const { ethMulticall } = useEthersMulticall(address)
     const tokenList = allTokensData as unknown as Record<number, TToken[]>
@@ -23,16 +23,16 @@ export const useERC20Balance = (address: string) => {
     const [isLoading, setIsLoading] = useState<Boolean>(false)
     const [isError, setIsError] = useState<Boolean>(false)
 
-    const getERC20Balance = async (address: string) => {
+    const getERC20Balance = async (address: string | undefined) => {
         try {
-            // if (isLoading) return
+            if (isLoading) return
 
             setIsError(false)
             setIsLoading(true)
 
             const chainLevelRequest: Promise<ContractCallResults[]>[] = []
             for (const key of Object.keys(tokenList)) {
-                if (!key) continue
+                // if (!key) continue
                 const calls: ContractCallContext[][] = [[]]
                 let currentIdx = 0
                 for (const token of tokenList[Number(key)]) {
@@ -71,6 +71,7 @@ export const useERC20Balance = (address: string) => {
                 for (const tokenResults of singlechainResult) {
                     if (!tokenResults) continue
                     for (const key of Object.keys(tokenResults.results)) {
+                        // if (!key) continue
                         const shards = key.split('-')
                         const tokenAddress = shards[0]
                         const chainId = Number(shards[1])
@@ -85,19 +86,23 @@ export const useERC20Balance = (address: string) => {
                         if (!result[chainId]) result[chainId] = {}
                         const balanceRaw = balanceBN.toString()
                         const balanceFormatted = 0
+                        // if (result?.[chainId]?.[tokenAddress]) {
                         result[chainId][tokenAddress] = {
                             balanceRaw,
                             balanceFormatted,
                         }
+                        // }
                     }
                 }
             }
 
             for (const key of Object.keys(tokenList)) {
                 const chainId = Number(key)
+                if (!result[chainId]) continue
                 for (const token of tokenList[chainId]) {
                     const tokenResult =
-                        result[chainId][token?.address?.toLowerCase()]
+                        result[chainId][token.address.toLowerCase()]
+                    if (!tokenResult) continue
                     result[chainId][
                         token.address.toLowerCase()
                     ].balanceFormatted = Number(
@@ -124,7 +129,7 @@ export const useERC20Balance = (address: string) => {
         ) {
             getERC20Balance(address)
         }
-    }, [!!address, !!Object.keys(tokenList).length, !!chainList.length])
+    }, [!!address, !!tokenList, chainList.length > 0, data])
 
     return { data, isLoading, isError, getERC20Balance }
 }

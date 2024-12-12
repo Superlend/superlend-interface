@@ -23,10 +23,6 @@ export type TLendBorrowTxContext = {
     setLendTx: (lendTx: TLendBorrowTx) => void
     borrowTx: TBorrowTx
     setBorrowTx: (borrowTx: TBorrowTx) => void
-    // erc20TokensBalanceData: Record<
-    //     number,
-    //     Record<string, { balanceRaw: string; balanceFormatted: number }>
-    // >
 }
 
 export default function LendBorrowTxProvider({
@@ -41,9 +37,6 @@ export default function LendBorrowTxProvider({
         status: 'approve',
         hash: '',
     })
-    // const { data: erc20TokensBalanceData } = useERC20Balance(
-    //     walletAddress as `0x${string}`
-    // )
 
     const [borrowTx, setBorrowTx] = useState<TBorrowTx>({
         status: 'borrow',
@@ -57,7 +50,6 @@ export default function LendBorrowTxProvider({
                 setLendTx,
                 borrowTx,
                 setBorrowTx,
-                // erc20TokensBalanceData,
             }}
         >
             {children}
