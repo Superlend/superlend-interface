@@ -67,11 +67,14 @@ const SupplyAaveButton = ({
     // const { createToast } = useCreatePendingToast()
     const { isConnected } = useAccount()
     const { connect, connectors } = useConnect()
-    const { lendTx, setLendTx } = useLendBorrowTxContext() as TLendBorrowTxContext
-
+    const { lendTx, setLendTx } =
+        useLendBorrowTxContext() as TLendBorrowTxContext
 
     const txBtnStatus: Record<string, string> = {
-        pending: lendTx.status === 'approve' ? 'Approving token...' : 'Lending token...',
+        pending:
+            lendTx.status === 'approve'
+                ? 'Approving token...'
+                : 'Lending token...',
         confirming: 'Confirming...',
         success: 'View position',
         default: lendTx.status === 'approve' ? 'Approve token' : 'Lend token',
@@ -89,12 +92,12 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? lendTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? lendTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 

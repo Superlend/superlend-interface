@@ -209,8 +209,8 @@ export default function LendAndBorrowAssets() {
         }
     }
 
-    const assetDetails = getAssetDetails(tokenAddress);
-    
+    const assetDetails = getAssetDetails(tokenAddress)
+
     // Get balance
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[tokenAddress.toLowerCase()]
