@@ -64,6 +64,7 @@
     --chart-compound: 162 99% 38%;
     --chart-morpho: 238 73% 40%;
     --chart-fluid: 223 98% 62%;
+    --chart-superlend: 21 100% 50%;
   }
 
   .dark {
@@ -95,6 +96,7 @@
     --chart-compound: 162 99% 38%;
     --chart-morpho: 238 73% 40%;
     --chart-fluid: 223 98% 62%;
+    --chart-superlend: 21 100% 50%;
   }
 }
 

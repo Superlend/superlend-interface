@@ -33,10 +33,11 @@ export enum PlatformDisplayValue {
 }
 
 export enum PlatformWebsiteLink {
-  AAVE = "https://app.aave.com",
-  COMPOUND = "https://app.compound.finance/markets/v2",
-  FLUID = "https://fluid.instadapp.io",
-  MORPHO = "https://app.morpho.org",
+    AAVE = 'https://app.aave.com',
+    COMPOUND = 'https://app.compound.finance/markets/v2',
+    FLUID = 'https://fluid.instadapp.io',
+    MORPHO = 'https://app.morpho.org',
+    SUPERLEND = 'https://markets.superlend.xyz',
 }
 
 export enum ProtocolIdentifier {
@@ -47,10 +48,11 @@ export enum ProtocolIdentifier {
 }
 
 export enum PlatformLogo {
-  AAVE = "https://superlend-assets.s3.ap-south-1.amazonaws.com/aave.svg",
-  COMPOUND = "https://superlend-assets.s3.ap-south-1.amazonaws.com/compound.svg",
-  FLUID = "https://superlend-assets.s3.ap-south-1.amazonaws.com/fluid_logo.png",
-  MORPHO = "https://superlend-assets.s3.ap-south-1.amazonaws.com/morpho-logo.svg",
+    AAVE = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/aave.svg',
+    COMPOUND = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/compound.svg',
+    FLUID = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/fluid_logo.png',
+    MORPHO = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/morpho-logo.svg',
+    SUPERLEND = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend.svg',
 }
 
 export enum PlatformType {

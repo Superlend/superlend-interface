@@ -6,11 +6,12 @@ import {
 } from "./types/platform";
 
 export type TPlatformWebsiteLinks = {
-  aave: PlatformWebsiteLink.AAVE;
-  compound: PlatformWebsiteLink.COMPOUND;
-  fluid: PlatformWebsiteLink.FLUID;
-  morpho: PlatformWebsiteLink.MORPHO;
-};
+    aave: PlatformWebsiteLink.AAVE
+    compound: PlatformWebsiteLink.COMPOUND
+    fluid: PlatformWebsiteLink.FLUID
+    morpho: PlatformWebsiteLink.MORPHO
+    superlend: PlatformWebsiteLink.SUPERLEND
+}
 
 export type TChainNamesBasedOnAaveMarkets = {
   bsc: "bnb";
@@ -105,11 +106,12 @@ export const STABLECOINS_NAMES_LIST = [
 ];
 
 export const platformWebsiteLinks: TPlatformWebsiteLinks = {
-  aave: PlatformWebsiteLink.AAVE,
-  compound: PlatformWebsiteLink.COMPOUND,
-  fluid: PlatformWebsiteLink.FLUID,
-  morpho: PlatformWebsiteLink.MORPHO,
-};
+    aave: PlatformWebsiteLink.AAVE,
+    compound: PlatformWebsiteLink.COMPOUND,
+    fluid: PlatformWebsiteLink.FLUID,
+    morpho: PlatformWebsiteLink.MORPHO,
+    superlend: PlatformWebsiteLink.SUPERLEND,
+}
 
 export const SHEET_FORM_URL =
   "https://script.google.com/macros/s/AKfycbwdG0b3rOiiRL0UP0KwHSBZfwVYRyeDZrJfVKAAV7yoVPGglaRaIanX91S_yRIl0ZYw/exec";

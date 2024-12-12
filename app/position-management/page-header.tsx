@@ -250,34 +250,28 @@ export default function PageHeader() {
                         {/* Loading Skeleton */}
                         {isLoadingPlatformData && <Skeleton className='w-[80%] sm:w-[300px] h-[35px]' />}
                         {/* Supply APY */}
-                        {!!Number(pageHeaderStats?.supply_apy) &&
-                            <div className="flex items-center max-md:justify-between gap-[4px]">
-                                <BodyText level='body1' className='text-gray-700 shrink-0'>
-                                    Supply APY
+                        <div className="flex items-center max-md:justify-between gap-[4px]">
+                            <BodyText level='body1' className='text-gray-700 shrink-0'>
+                                Supply APY
+                            </BodyText>
+                            <Badge variant="green">
+                                <BodyText level='body1' weight='medium'>
+                                    {pageHeaderStats?.supply_apy}%
                                 </BodyText>
-                                <Badge variant="green">
-                                    <BodyText level='body1' weight='medium'>
-                                        {pageHeaderStats?.supply_apy}%
-                                    </BodyText>
-                                </Badge>
-                            </div>
-                        }
-                        {!!Number(pageHeaderStats?.borrow_rate) && !!Number(pageHeaderStats?.supply_apy) &&
-                            <span className="hidden xs:inline-block text-gray">|</span>
-                        }
+                            </Badge>
+                        </div>
+                        <span className="hidden xs:inline-block text-gray">|</span>
                         {/* Borrow Rate */}
-                        {!!Number(pageHeaderStats?.borrow_rate) &&
-                            <div className="flex items-center max-md:justify-between gap-[4px]">
-                                <BodyText level='body1' className='text-gray-700 shrink-0'>
-                                    Borrow Rate
+                        <div className="flex items-center max-md:justify-between gap-[4px]">
+                            <BodyText level='body1' className='text-gray-700 shrink-0'>
+                                Borrow Rate
+                            </BodyText>
+                            <Badge variant="yellow">
+                                <BodyText level='body1' weight='medium'>
+                                    {pageHeaderStats?.borrow_rate}%
                                 </BodyText>
-                                <Badge variant="yellow">
-                                    <BodyText level='body1' weight='medium'>
-                                        {pageHeaderStats?.borrow_rate}%
-                                    </BodyText>
-                                </Badge>
-                            </div>
-                        }
+                            </Badge>
+                        </div>
                     </motion.div>
                 </div>
             </section>
