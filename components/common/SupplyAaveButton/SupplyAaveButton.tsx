@@ -135,7 +135,7 @@ const SupplyAaveButton = ({
         if (amount) {
             const amountBN = parseUnits(amount, decimals)
 
-            if (allowanceBN.gt(amountBN)) {
+            if (allowanceBN.gte(amountBN)) {
                 setLendTx({ status: 'lend', hash: '' })
             } else {
                 setLendTx({ status: 'approve', hash: '' })

@@ -365,23 +365,31 @@ export default function PageHeader() {
                         )}
                         {/* Supply APY */}
                         <div className="flex items-center max-md:justify-between gap-[4px]">
-                            <BodyText level='body1' className='text-gray-700 shrink-0'>
+                            <BodyText
+                                level="body1"
+                                className="text-gray-700 shrink-0"
+                            >
                                 Supply APY
                             </BodyText>
                             <Badge variant="green">
-                                <BodyText level='body1' weight='medium'>
+                                <BodyText level="body1" weight="medium">
                                     {pageHeaderStats?.supply_apy}%
                                 </BodyText>
                             </Badge>
                         </div>
-                        <span className="hidden xs:inline-block text-gray">|</span>
+                        <span className="hidden xs:inline-block text-gray">
+                            |
+                        </span>
                         {/* Borrow Rate */}
                         <div className="flex items-center max-md:justify-between gap-[4px]">
-                            <BodyText level='body1' className='text-gray-700 shrink-0'>
+                            <BodyText
+                                level="body1"
+                                className="text-gray-700 shrink-0"
+                            >
                                 Borrow Rate
                             </BodyText>
                             <Badge variant="yellow">
-                                <BodyText level='body1' weight='medium'>
+                                <BodyText level="body1" weight="medium">
                                     {pageHeaderStats?.borrow_rate}%
                                 </BodyText>
                             </Badge>

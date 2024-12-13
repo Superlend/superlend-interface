@@ -5,6 +5,7 @@ import {
     ContractCallResults,
     Multicall,
 } from 'ethereum-multicall'
+import { MULTICALL_ADDRESSES } from '../lib/constants'
 
 export const useEthersMulticall = (walletAddress: string | undefined) => {
     const [providers, setProviders] = useState<
@@ -44,6 +45,9 @@ export const useEthersMulticall = (walletAddress: string | undefined) => {
                     42161: new ethersProviders.JsonRpcProvider(
                         `https://arb-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
                     ),
+                    42793: new ethersProviders.JsonRpcProvider(
+                        `https://plend-etherlink-mainnet-djs2w.zeeve.net/TuychDxGCScIED1nCk0m/rpc`
+                    ),
                     43114: new ethersProviders.JsonRpcProvider(
                         `https://avax-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
                     ),
@@ -58,6 +62,8 @@ export const useEthersMulticall = (walletAddress: string | undefined) => {
                 _multicall[chainId] = new Multicall({
                     ethersProvider: _providers[chainId],
                     tryAggregate: true,
+                    multicallCustomContractAddress:
+                        MULTICALL_ADDRESSES[Number(chain)],
                 })
             }
             setMulticall(_multicall)

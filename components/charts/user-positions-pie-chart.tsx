@@ -62,8 +62,8 @@ const chartConfig = {
         color: 'hsl(var(--chart-fluid))',
     },
     superlend: {
-        label: "Superlend",
-        color: "hsl(var(--chart-superlend))",
+        label: 'Superlend',
+        color: 'hsl(var(--chart-superlend))',
     },
 } satisfies ChartConfig
 
