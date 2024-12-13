@@ -81,7 +81,7 @@ import { BigNumber } from 'ethers'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 
 export default function LendAndBorrowAssets() {
-    const { erc20TokensBalanceData } = useUserTokenBalancesContext()
+    const { erc20TokensBalanceData, isLoading: isLoadingUserTokenBalances } = useUserTokenBalancesContext()
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [amount, setAmount] = useState('')
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
@@ -374,12 +374,14 @@ export default function LendAndBorrowAssets() {
                             className="capitalize text-gray-600 flex items-center gap-[4px]"
                         >
                             Bal.{' '}
-                            {abbreviateNumber(
-                                Number(
-                                    getLowestDisplayValue(Number(balance ?? 0))
-                                ),
-                                2
-                            )}{' '}
+                            {isLoadingUserTokenBalances ?
+                                <Skeleton className="w-[40px] h-[16px] rounded-2" /> :
+                                abbreviateNumber(
+                                    Number(
+                                        getLowestDisplayValue(Number(balance ?? 0))
+                                    ),
+                                    2
+                                )}{' '}
                             <span className="inline-block truncate max-w-[70px]">
                                 {assetDetails?.asset?.token?.symbol}
                             </span>
@@ -390,8 +392,8 @@ export default function LendAndBorrowAssets() {
                             level="body2"
                             weight="normal"
                             className="capitalize text-gray-600 flex items-center gap-[4px]"
-                        >
-                            limit - {maxBorrowAmount}
+                            >
+                                limit - {isLoadingUserTokenBalances ? <Skeleton className="w-[40px] h-[16px] rounded-2" /> : maxBorrowAmount}
                         </BodyText>
                     )}
                 </div>

@@ -9,10 +9,12 @@ import { useActiveAccount } from 'thirdweb/react'
 
 type TUserTokenBalancesProps = {
     erc20TokensBalanceData: any
+    isLoading: Boolean
 }
 
 export const UserTokenBalancesContext = createContext<TUserTokenBalancesProps>({
     erc20TokensBalanceData: {},
+    isLoading: false,
 })
 
 export default function UserTokenBalancesProvider({
@@ -23,7 +25,7 @@ export default function UserTokenBalancesProvider({
     const activeAccount = useActiveAccount()
     const walletAddress = activeAccount?.address
 
-    const { data: erc20TokensBalanceData } = useERC20Balance(
+    const { data: erc20TokensBalanceData, isLoading } = useERC20Balance(
         walletAddress as `0x${string}`
     )
 
@@ -31,6 +33,7 @@ export default function UserTokenBalancesProvider({
         <UserTokenBalancesContext.Provider
             value={{
                 erc20TokensBalanceData,
+                isLoading,
             }}
         >
             {children}
