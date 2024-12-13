@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import MainContainer from '@/components/MainContainer'
 import { BodyText, HeadingText } from '@/components/ui/typography'
@@ -16,11 +16,11 @@ import ConnectWalletButton from '@/components/ConnectWalletButton'
 import PositionsProvider from '@/context/positions-provider'
 
 export default function Portfolio() {
-    const activeAccount = useActiveAccount();
-    const walletAddress = activeAccount?.address;
-    const isAutoConnecting = useIsAutoConnecting();
+    const activeAccount = useActiveAccount()
+    const walletAddress = activeAccount?.address
+    const isAutoConnecting = useIsAutoConnecting()
 
-    const { isClient } = useIsClient();
+    const { isClient } = useIsClient()
 
     if (isClient && isAutoConnecting) {
         return <PortfolioPageLoading />
@@ -32,7 +32,9 @@ export default function Portfolio() {
                 <InfoBannerWithCta
                     image={'/images/connect-wallet-banner.webp'}
                     title={'Connect Wallet'}
-                    description={'Connect your wallet to view and manage your portfolio.'}
+                    description={
+                        'Connect your wallet to view and manage your portfolio.'
+                    }
                     // ctaText={'Connect wallet'}
                     // ctaOnClick={handleConnectWallet}
                     ctaButton={<ConnectWalletButton />}
@@ -52,11 +54,23 @@ export default function Portfolio() {
         return (
             // <HydrationBoundary state={dehydrate(queryClient)}>
             <PortfolioProvider>
-                <MainContainer className='px-0'>
-                    <section id='your-portfolio' className="portfolio-page-header flex flex-col md:flex-row gap-[16px] items-start md:items-center justify-between mb-[24px] px-5">
+                <MainContainer className="px-0">
+                    <section
+                        id="your-portfolio"
+                        className="portfolio-page-header flex flex-col md:flex-row gap-[16px] items-start md:items-center justify-between mb-[24px] px-5"
+                    >
                         <div className="flex flex-col gap-[4px]">
-                            <HeadingText level="h4" weight='medium' className='text-gray-800'>Your Portfolio</HeadingText>
-                            <BodyText level='body1' className='text-gray-600'>Track all your lending and borrowing positions in one place.</BodyText>
+                            <HeadingText
+                                level="h4"
+                                weight="medium"
+                                className="text-gray-800"
+                            >
+                                Your Portfolio
+                            </HeadingText>
+                            <BodyText level="body1" className="text-gray-600">
+                                Track all your lending and borrowing positions
+                                in one place.
+                            </BodyText>
                         </div>
                         {/* <Button variant="primary" className='group uppercase py-[9px] px-[16px] flex items-center gap-[4px]'>
                         transaction history
@@ -77,7 +91,7 @@ export default function Portfolio() {
                     <ArrowRightIcon width={16} height={16} weight='2' className='stroke-white group-hover:opacity-75 group-active:opacity-75' />
                 </Button> */}
                     </section>
-                </MainContainer >
+                </MainContainer>
             </PortfolioProvider>
             // </HydrationBoundary>
         )
@@ -90,8 +104,8 @@ function PortfolioPageLoading() {
     return (
         <MainContainer>
             <div className="relative h-[500px] w-full rounded-6 overflow-hidden">
-                <Skeleton className='z-[0] relative w-full h-full' />
-                <LoaderCircle className='z-[1] absolute left-[45%] top-[45%] md:left-1/2 text-primary w-8 h-8 animate-spin' />
+                <Skeleton className="z-[0] relative w-full h-full" />
+                <LoaderCircle className="z-[1] absolute left-[45%] top-[45%] md:left-1/2 text-primary w-8 h-8 animate-spin" />
             </div>
         </MainContainer>
     )

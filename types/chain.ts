@@ -1,7 +1,5 @@
-export interface IChain {
-    id: number;
-    name: string;
-    chainId: number;
-    chainName: string;
-    image: string;
+export type TChain = {
+    chain_id: number
+    logo: string | null
+    name: string
 }
