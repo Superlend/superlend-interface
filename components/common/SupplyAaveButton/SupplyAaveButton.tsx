@@ -31,6 +31,7 @@ import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { ArrowRightIcon } from 'lucide-react'
 import { BigNumber } from 'ethers'
+import { getErrorText } from '@/lib/getErrorText'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 
 interface ISupplyAaveButtonProps {
@@ -76,7 +77,7 @@ const SupplyAaveButton = ({
     const txBtnStatus: Record<string, string> = {
         pending: lendTx.status === 'approve' ? 'Approving token...' : 'Lending token...',
         confirming: 'Confirming...',
-        success: 'View position',
+        success: 'Close',
         default: lendTx.status === 'approve' ? 'Approve token' : 'Lend token',
     }
 
@@ -136,7 +137,7 @@ const SupplyAaveButton = ({
             if (lendTx.allowanceBN.gte(amountBN)) {
                 setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '' }))
             } else {
-                setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'approve', hash: '' }))
+                setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'approve', hash: '', errorMessage: 'Insufficient allowance' }))
             }
         }
     }, [amount, decimals, lendTx.allowanceBN])
@@ -149,12 +150,12 @@ const SupplyAaveButton = ({
 
         if (isConfirmed && lendTx.status === 'approve') {
             supply().then(() => {
-                setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '' }))
+                setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '', errorMessage: '' }))
             })
         }
 
         if (isConfirmed && lendTx.status === 'lend') {
-            setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'view', hash: hash || '' }))
+            setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'view', hash: hash || '', errorMessage: '' }))
         }
     }, [isConfirmed, lendTx.status])
 
@@ -192,10 +193,19 @@ const SupplyAaveButton = ({
 
     return (
         <>
-            {error && (
+            {(error) && (
                 <CustomAlert
                     description={
-                        (error as BaseError).shortMessage || error.message
+                        error && error.message
+                            ? getErrorText(error)
+                            : SOMETHING_WENT_WRONG_MESSAGE
+                    }
+                />
+            )}
+            {(lendTx.errorMessage.length > 0) && (
+                <CustomAlert
+                    description={
+                        lendTx.errorMessage
                     }
                 />
             )}
@@ -214,11 +224,12 @@ const SupplyAaveButton = ({
                 variant="primary"
             >
                 {txBtnText}
-                <ArrowRightIcon
-                    width={16}
-                    height={16}
-                    className="stroke-white group-[:disabled]:opacity-50"
-                />
+                {(lendTx.status !== 'view' && !isPending && !isConfirming) &&
+                    <ArrowRightIcon
+                        width={16}
+                        height={16}
+                        className="stroke-white group-[:disabled]:opacity-50"
+                    />}
             </Button>
         </>
     )

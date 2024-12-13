@@ -11,13 +11,15 @@ const LendBorrowTxInitialState: TLendBorrowTxContext = {
         hash: '',
         allowanceBN: BigNumber.from(0),
         isRefreshingAllowance: false,
+        errorMessage: '',
     },
-    setLendTx: () => {},
+    setLendTx: () => { },
     borrowTx: {
         status: 'borrow',
         hash: '',
+        errorMessage: '',
     },
-    setBorrowTx: () => {},
+    setBorrowTx: () => { },
 }
 
 export const LendBorrowTxContext = createContext<
@@ -29,11 +31,13 @@ export type TLendBorrowTx = {
     hash: string
     allowanceBN: BigNumber
     isRefreshingAllowance: boolean
+    errorMessage: string
 }
 
 export type TBorrowTx = {
     status: 'borrow' | 'view'
     hash: string
+    errorMessage: string
 }
 
 export type TLendBorrowTxContext = {
@@ -56,11 +60,13 @@ export default function LendBorrowTxProvider({
         hash: '',
         allowanceBN: BigNumber.from(0),
         isRefreshingAllowance: false,
+        errorMessage: '',
     })
 
     const [borrowTx, setBorrowTx] = useState<TBorrowTx>({
         status: 'borrow',
         hash: '',
+        errorMessage: '',
     })
 
     return (

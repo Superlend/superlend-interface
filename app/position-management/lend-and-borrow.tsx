@@ -20,6 +20,7 @@ import {
     ArrowUpRightIcon,
     CircleCheck,
     CircleCheckIcon,
+    X,
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
@@ -392,8 +393,8 @@ export default function LendAndBorrowAssets() {
                             level="body2"
                             weight="normal"
                             className="capitalize text-gray-600 flex items-center gap-[4px]"
-                            >
-                                limit - {isLoadingUserTokenBalances ? <Skeleton className="w-[40px] h-[16px] rounded-2" /> : maxBorrowAmount}
+                        >
+                            limit - {isLoadingUserTokenBalances ? <Skeleton className="w-[40px] h-[16px] rounded-2" /> : maxBorrowAmount}
                         </BodyText>
                     )}
                 </div>
@@ -580,8 +581,8 @@ function ConfirmationDialog({
         setOpen(open)
         if (!open) {
             setAmount('')
-            setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'approve', hash: '', isRefreshingAllowance: false }))
-            setBorrowTx((prev: TLendBorrowTx) => ({ ...prev, status: 'borrow', hash: '' }))
+            setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'approve', hash: '', allowanceBN: BigNumber.from(0), isRefreshingAllowance: false, errorMessage: '' }))
+            setBorrowTx((prev: TLendBorrowTx) => ({ ...prev, status: 'borrow', hash: '', errorMessage: '' }))
         }
     }
 
@@ -610,9 +611,10 @@ function ConfirmationDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog open={open}>
             <DialogTrigger asChild>
                 <Button
+                    onClick={() => setOpen(true)}
                     disabled={disabled}
                     variant="primary"
                     className="group flex items-center gap-[4px] py-[13px] w-full rounded-5"
@@ -630,6 +632,13 @@ function ConfirmationDialog({
                 </Button>
             </DialogTrigger>
             <DialogContent aria-describedby={undefined} className="pt-[25px]">
+                <Button
+                    variant="ghost"
+                    onClick={() => handleOpenChange(false)}
+                    className="h-6 w-6 flex items-center justify-center absolute right-4 top-5 rounded-full opacity-70 bg-white ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground p-0">
+                    <X strokeWidth={2.5} className="h-4 w-4 text-black" />
+                    <span className="sr-only">Close</span>
+                </Button>
                 {/* Initial Confirmation*/}
                 <DialogHeader>
                     {isShowBlock({
