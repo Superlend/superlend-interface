@@ -208,7 +208,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         : getFormattedBaseRate(baseRate)
             }
 
-            if (apyCurrentFormatted === '0.00' && !isPairBasedProtocol) {
+            if (apyCurrentFormatted === "0.00" && !isPairBasedProtocol && !isLend) {
                 return (
                     <InfoTooltip
                         label={

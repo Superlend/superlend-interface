@@ -344,16 +344,14 @@ export function getPlatformWebsiteLink({
     morpho_market_id?: string
     network_name?: string
 }) {
-    const platformNameId = platformId?.split('-')[0].toLowerCase()
-    const baseUrl =
-        platformWebsiteLinks[
-            platformNameId as keyof typeof platformWebsiteLinks
-        ]
+  const platformNameId = platformId?.split("-")[0].toLowerCase();
+  const baseUrl =
+    platformWebsiteLinks[platformNameId as keyof typeof platformWebsiteLinks];
 
-    const formattedNetworkName =
-        network_name?.toLowerCase() === 'ethereum'
-            ? 'mainnet'
-            : network_name?.toLowerCase()
+  const formattedNetworkName =
+    network_name?.toLowerCase() === "ethereum"
+      ? "mainnet"
+      : network_name?.toLowerCase();
 
     const paths: any = {
         aave: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=proto_${getChainNameBasedOnAaveMarkets(
@@ -364,10 +362,11 @@ export function getPlatformWebsiteLink({
             ? `/stats/${chainId}/vaults#${vaultId}`
             : `/lending/${chainId}`,
         morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
+        superlend: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=etherlink`,
     }
 
-    const path = paths[platformNameId]
-    return `${baseUrl}${path}`
+  const path = paths[platformNameId];
+  return `${baseUrl}${path}`;
 }
 
 export function getChainNameBasedOnAaveMarkets(chainName: string) {
