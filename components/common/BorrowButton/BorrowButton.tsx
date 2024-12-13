@@ -45,7 +45,7 @@ interface IBorrowButtonProps {
 const txBtnStatus: Record<string, string> = {
     pending: 'Borrowing...',
     confirming: 'Confirming...',
-    success: 'View position',
+    success: 'Close',
     default: 'Borrow',
 }
 
