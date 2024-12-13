@@ -1,16 +1,34 @@
 'use client'
 
 import { useERC20Balance } from '@/hooks/useERC20Balance'
+import { BigNumber } from 'ethers'
 import { createContext, useContext, useState } from 'react'
 import { useActiveAccount } from 'thirdweb/react'
 
+const LendBorrowTxInitialState: TLendBorrowTxContext = {
+    lendTx: {
+        status: 'approve',
+        hash: '',
+        allowanceBN: BigNumber.from(0),
+        isRefreshingAllowance: false,
+    },
+    setLendTx: () => {},
+    borrowTx: {
+        status: 'borrow',
+        hash: '',
+    },
+    setBorrowTx: () => {},
+}
+
 export const LendBorrowTxContext = createContext<
-    TLendBorrowTxContext | undefined
->(undefined)
+    TLendBorrowTxContext
+>(LendBorrowTxInitialState)
 
 export type TLendBorrowTx = {
     status: 'approve' | 'lend' | 'view'
     hash: string
+    allowanceBN: BigNumber
+    isRefreshingAllowance: boolean
 }
 
 export type TBorrowTx = {
@@ -20,9 +38,9 @@ export type TBorrowTx = {
 
 export type TLendBorrowTxContext = {
     lendTx: TLendBorrowTx
-    setLendTx: (lendTx: TLendBorrowTx) => void
+    setLendTx: any
     borrowTx: TBorrowTx
-    setBorrowTx: (borrowTx: TBorrowTx) => void
+    setBorrowTx: any
 }
 
 export default function LendBorrowTxProvider({
@@ -36,6 +54,8 @@ export default function LendBorrowTxProvider({
     const [lendTx, setLendTx] = useState<TLendBorrowTx>({
         status: 'approve',
         hash: '',
+        allowanceBN: BigNumber.from(0),
+        isRefreshingAllowance: false,
     })
 
     const [borrowTx, setBorrowTx] = useState<TBorrowTx>({

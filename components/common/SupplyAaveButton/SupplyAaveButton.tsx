@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
     BaseError,
     useAccount,
@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button'
 import { prepareContractCall } from 'thirdweb'
 import { defineChain } from 'thirdweb'
 import { useSearchParams } from 'next/navigation'
-import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { TLendBorrowTx, useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { ArrowRightIcon } from 'lucide-react'
@@ -69,6 +69,9 @@ const SupplyAaveButton = ({
     const { connect, connectors } = useConnect()
     const { lendTx, setLendTx } = useLendBorrowTxContext() as TLendBorrowTxContext
 
+    const amountBN = useMemo(() => {
+        return amount ? parseUnits(amount, decimals) : BigNumber.from(0)
+    }, [amount, decimals])
 
     const txBtnStatus: Record<string, string> = {
         pending: lendTx.status === 'approve' ? 'Approving token...' : 'Lending token...',
@@ -102,7 +105,7 @@ const SupplyAaveButton = ({
 
     const supply = useCallback(async () => {
         try {
-            setLendTx({ status: 'lend', hash: '' })
+            setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '' }))
 
             writeContractAsync({
                 address: poolContractAddress,
@@ -129,26 +132,29 @@ const SupplyAaveButton = ({
     ])
 
     useEffect(() => {
-        if (amount) {
-            const amountBN = parseUnits(amount, decimals)
-
-            if (allowanceBN.gte(amountBN)) {
-                setLendTx({ status: 'lend', hash: '' })
+        if (lendTx.status !== 'view') {
+            if (lendTx.allowanceBN.gte(amountBN)) {
+                setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '' }))
             } else {
-                setLendTx({ status: 'approve', hash: '' })
+                setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'approve', hash: '' }))
             }
         }
-    }, [amount, decimals, allowanceBN])
+    }, [amount, decimals, lendTx.allowanceBN])
 
     useEffect(() => {
+        // console.log("isConfirmed", isConfirmed)
+        // console.log("lendTx.status", lendTx.status)
+        // console.log("amountBN", amountBN.toString())
+        // console.log("lendTx.allowanceBN", lendTx.allowanceBN.toString())
+
         if (isConfirmed && lendTx.status === 'approve') {
             supply().then(() => {
-                setLendTx({ status: 'lend', hash: '' })
+                setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '' }))
             })
         }
 
         if (isConfirmed && lendTx.status === 'lend') {
-            setLendTx({ status: 'view', hash: hash || '' })
+            setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'view', hash: hash || '' }))
         }
     }, [isConfirmed, lendTx.status])
 
@@ -166,7 +172,7 @@ const SupplyAaveButton = ({
         }
 
         try {
-            setLendTx({ status: 'approve', hash: '' })
+            setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'approve', hash: '' }))
 
             // console.log("underlyingAssetAdress", underlyingAssetAdress)
             // console.log("poolContractAddress", poolContractAddress)
