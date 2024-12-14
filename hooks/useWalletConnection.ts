@@ -29,7 +29,7 @@
 //     if (isMobileDevice && ethereum?.isMetaMask) {
 //       // If MetaMask is installed on mobile, use direct connection
 //       try {
-//         await connectAsync({ 
+//         await connectAsync({
 //           connector: metaMask()
 //         });
 //       } catch (error) {

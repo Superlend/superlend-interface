@@ -1,58 +1,56 @@
-import {
-  getLowestDisplayValue,
-  hasLowestDisplayValuePrefix,
-} from "@/lib/utils";
-import { TPlatform, TPlatformAsset, TChain } from "@/types";
+import { getLowestDisplayValue, hasLowestDisplayValuePrefix } from '@/lib/utils'
+import { TPlatform, TPlatformAsset, TChain } from '@/types'
 
 export function getTokenDetails({
-  tokenAddress,
-  platformData,
+    tokenAddress,
+    platformData,
 }: {
-  tokenAddress: string;
-  platformData: TPlatform;
+    tokenAddress: string
+    platformData: TPlatform
 }) {
-  const fallbackAsset = {
-    address: tokenAddress,
-    symbol: "",
-    name: "",
-    logo: "",
-    decimals: 0,
-    price_usd: 0,
-    warnings: [],
-  };
-  const asset: TPlatformAsset["token"] | undefined =
-    platformData?.assets?.find(
-      (asset: TPlatformAsset) =>
-        asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
-    )?.token || fallbackAsset;
+    const fallbackAsset = {
+        address: tokenAddress,
+        symbol: '',
+        name: '',
+        logo: '',
+        decimals: 0,
+        price_usd: 0,
+        warnings: [],
+    }
+    const asset: TPlatformAsset['token'] | undefined =
+        platformData?.assets?.find(
+            (asset: TPlatformAsset) =>
+                asset?.token?.address?.toLowerCase() ===
+                tokenAddress?.toLowerCase()
+        )?.token || fallbackAsset
 
-  return {
-    address: asset?.address || "",
-    symbol: asset?.symbol || "",
-    name: asset?.name || "",
-    logo: asset?.logo || "",
-  };
+    return {
+        address: asset?.address || '',
+        symbol: asset?.symbol || '',
+        name: asset?.name || '',
+        logo: asset?.logo || '',
+    }
 }
 
 export function getChainDetails({
-  allChainsData,
-  chainIdToMatch,
+    allChainsData,
+    chainIdToMatch,
 }: {
-  allChainsData: TChain[];
-  chainIdToMatch: string | number;
+    allChainsData: TChain[]
+    chainIdToMatch: string | number
 }) {
-  return allChainsData?.find(
-    (chain: any) => Number(chain.chain_id) === Number(chainIdToMatch)
-  );
+    return allChainsData?.find(
+        (chain: any) => Number(chain.chain_id) === Number(chainIdToMatch)
+    )
 }
 
 export function getStatDisplayValue(
-  value: string | number,
-  hasPrefix: boolean = true
+    value: string | number,
+    hasPrefix: boolean = true
 ) {
-  return `${
-    hasPrefix ? hasLowestDisplayValuePrefix(Number(value)) : ""
-  }${getLowestDisplayValue(Number(value))}`;
+    return `${
+        hasPrefix ? hasLowestDisplayValuePrefix(Number(value)) : ''
+    }${getLowestDisplayValue(Number(value))}`
 }
 
 // Function to calculate estimated earnings
@@ -72,23 +70,23 @@ export function getStatDisplayValue(
  * Net estimated earnings = InterestGain - InterestLoss
  */
 export function getEstimatedEarnings({
-  supplyAPY,
-  borrowAPY,
-  amountSupplied,
-  amountBorrowed,
-  duration,
+    supplyAPY,
+    borrowAPY,
+    amountSupplied,
+    amountBorrowed,
+    duration,
 }: {
-  supplyAPY: number;
-  borrowAPY: number;
-  amountSupplied: number;
-  amountBorrowed: number;
-  duration: number; // In months
+    supplyAPY: number
+    borrowAPY: number
+    amountSupplied: number
+    amountBorrowed: number
+    duration: number // In months
 }) {
-  const interestGain = (amountSupplied * supplyAPY * duration) / 1200;
-  const interestLoss = (amountBorrowed * borrowAPY * duration) / 1200;
-  return {
-    interestGain,
-    interestLoss,
-    netEstimatedEarnings: interestGain - interestLoss,
-  };
+    const interestGain = (amountSupplied * supplyAPY * duration) / 1200
+    const interestLoss = (amountBorrowed * borrowAPY * duration) / 1200
+    return {
+        interestGain,
+        interestLoss,
+        netEstimatedEarnings: interestGain - interestLoss,
+    }
 }

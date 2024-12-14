@@ -5,7 +5,7 @@ import Container from './Container'
 
 export default function Footer() {
     return (
-        <footer className='w-full h-full'>
+        <footer className="w-full h-full">
             <Container>
                 <FeedbackBanner />
             </Container>

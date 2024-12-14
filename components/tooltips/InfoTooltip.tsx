@@ -1,48 +1,56 @@
-"use client"
+'use client'
 
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from '@/components/ui/tooltip'
 import {
     Drawer,
     DrawerClose,
     DrawerContent,
     DrawerFooter,
     DrawerTrigger,
-} from "@/components/ui/drawer"
-import { motion } from "framer-motion"
-import { Label } from '../ui/typography';
-import InfoCircleIcon from '../icons/info-circle-icon';
-import useDimensions from '@/hooks/useDimensions';
-import { Button } from '../ui/button';
-import { DialogTitle } from '@radix-ui/react-dialog';
+} from '@/components/ui/drawer'
+import { motion } from 'framer-motion'
+import { Label } from '../ui/typography'
+import InfoCircleIcon from '../icons/info-circle-icon'
+import useDimensions from '@/hooks/useDimensions'
+import { Button } from '../ui/button'
+import { DialogTitle } from '@radix-ui/react-dialog'
 
 type TProps = {
-    label?: any;
-    content?: any;
-    size?: string;
-    hide?: boolean;
-    iconWidth?: number;
-    iconHeight?: number;
-    side?: "top" | "bottom" | "left" | "right";
-    className?: string;
+    label?: any
+    content?: any
+    size?: string
+    hide?: boolean
+    iconWidth?: number
+    iconHeight?: number
+    side?: 'top' | 'bottom' | 'left' | 'right'
+    className?: string
 }
 
 const sizes: any = {
-    lg: "py-[18px] px-[22px]",
-    md: "py-[12px] px-[16px]",
-    sm: "py-[6px] px-[12px]"
+    lg: 'py-[18px] px-[22px]',
+    md: 'py-[12px] px-[16px]',
+    sm: 'py-[6px] px-[12px]',
 }
 
-
-export default function InfoTooltip({ label, content, size = "md", hide = false, iconWidth = 16, iconHeight = 16, side, className }: TProps) {
-    const [open, setOpen] = useState<boolean>(false);
-    const { width: screenWidth } = useDimensions();
-    const isDesktop = screenWidth > 768;
+export default function InfoTooltip({
+    label,
+    content,
+    size = 'md',
+    hide = false,
+    iconWidth = 16,
+    iconHeight = 16,
+    side,
+    className,
+}: TProps) {
+    const [open, setOpen] = useState<boolean>(false)
+    const { width: screenWidth } = useDimensions()
+    const isDesktop = screenWidth > 768
 
     function handleTooltipToggle(state: boolean) {
         return () => {
@@ -62,11 +70,15 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
                             onHoverEnd={handleTooltipToggle(false)}
                             onMouseEnter={handleTooltipToggle(true)}
                             onMouseLeave={handleTooltipToggle(false)}
-                            className='w-fit inline-block shrink-0 cursor-help'
+                            className="w-fit inline-block shrink-0 cursor-help"
                         >
-                            {!label &&
-                                <InfoCircleIcon width={iconWidth} height={iconHeight} weight='1.5' />
-                            }
+                            {!label && (
+                                <InfoCircleIcon
+                                    width={iconWidth}
+                                    height={iconHeight}
+                                    weight="1.5"
+                                />
+                            )}
                             {label && label}
                         </motion.span>
                     </TooltipTrigger>
@@ -75,12 +87,13 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
                         sideOffset={5}
                         className={`${className?.includes('max-w') ? '' : 'max-w-[280px]'} ${sizes[size]}`}
                     >
-                        {typeof content === "string" && <Label className='w-fit'>{content}</Label>}
-                        {typeof content !== "string" && content}
+                        {typeof content === 'string' && (
+                            <Label className="w-fit">{content}</Label>
+                        )}
+                        {typeof content !== 'string' && content}
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-
         )
     }
 
@@ -89,26 +102,38 @@ export default function InfoTooltip({ label, content, size = "md", hide = false,
             <DrawerTrigger asChild>
                 <span
                     onClick={handleTooltipToggle(true)}
-                    className='w-fit inline-block shrink-0'
+                    className="w-fit inline-block shrink-0"
                 >
-                    {!label &&
-                        <InfoCircleIcon width={iconWidth} height={iconHeight} weight='1.5' />
-                    }
+                    {!label && (
+                        <InfoCircleIcon
+                            width={iconWidth}
+                            height={iconHeight}
+                            weight="1.5"
+                        />
+                    )}
                     {label && label}
                 </span>
             </DrawerTrigger>
             <DrawerContent>
                 <div className="p-4 pb-8">
-                    {typeof content === "string" && <Label className='w-fit'>{content}</Label>}
-                    {typeof content !== "string" && content}
+                    {typeof content === 'string' && (
+                        <Label className="w-fit">{content}</Label>
+                    )}
+                    {typeof content !== 'string' && content}
                 </div>
                 <DrawerFooter>
                     <DrawerClose asChild>
-                        <Button size={'lg'} variant="outline" className='w-full' onClick={handleTooltipToggle(false)}>Close</Button>
+                        <Button
+                            size={'lg'}
+                            variant="outline"
+                            className="w-full"
+                            onClick={handleTooltipToggle(false)}
+                        >
+                            Close
+                        </Button>
                     </DrawerClose>
                 </DrawerFooter>
             </DrawerContent>
         </Drawer>
-
     )
 }

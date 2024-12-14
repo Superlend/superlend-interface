@@ -1,7 +1,11 @@
 import { motion } from 'framer-motion'
 import React from 'react'
 
-export default function FadeInBlock({ children }: { children: React.ReactNode }) {
+export default function FadeInBlock({
+    children,
+}: {
+    children: React.ReactNode
+}) {
     return (
         <motion.div
             initial={{ opacity: 0 }}
