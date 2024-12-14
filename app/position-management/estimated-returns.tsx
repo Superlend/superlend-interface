@@ -185,7 +185,18 @@ export function EstimatedReturns({
         duration,
     });
 
-    const netEstimatedEarningFinal = isUSDAmount ? netEstimatedEarnings : (interestGain * (lendAssetDetails?.token?.price_usd ?? 0)) - (interestLoss * (borrowAssetDetails?.token?.price_usd ?? 0));
+    const lendTokenPrice =
+        positionType === 'lend'
+            ? (lendAssetDetails?.token?.price_usd ?? 0)
+            : (selectedStableTokenDetails?.token?.price_usd ?? 0)
+    const borrowTokenPrice =
+        positionType === 'borrow'
+            ? (borrowAssetDetails?.token?.price_usd ?? 0)
+            : (selectedStableTokenDetails?.token?.price_usd ?? 0)
+
+    const netEstimatedEarningFinal = isUSDAmount
+        ? netEstimatedEarnings
+        : interestGain * lendTokenPrice - interestLoss * borrowTokenPrice
 
     function getDisplayedValuePrefix(key: "lend" | "borrow" | "duration") {
         return key === "lend" || key === "borrow" ? (isUSDAmount ? "$" : "") : "";
