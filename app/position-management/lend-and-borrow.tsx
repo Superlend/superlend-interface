@@ -605,12 +605,19 @@ function ConfirmationDialog({
         useLendBorrowTxContext() as TLendBorrowTxContext
     const [open, setOpen] = useState(false)
 
+    function resetLendBorrowTx() {
+        setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'approve', hash: '', allowanceBN: BigNumber.from(0), isRefreshingAllowance: false, errorMessage: '' }))
+        setBorrowTx((prev: TLendBorrowTx) => ({ ...prev, status: 'borrow', hash: '', errorMessage: '' }))
+    }
+
     function handleOpenChange(open: boolean) {
+        // When opening the dialog, reset the amount and the tx status
         setOpen(open)
+        setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'approve', hash: '' }))
+        // When closing the dialog, reset the amount and the tx status
         if (!open) {
-            setAmount('')
-            setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'approve', hash: '', allowanceBN: BigNumber.from(0), isRefreshingAllowance: false, errorMessage: '' }))
-            setBorrowTx((prev: TLendBorrowTx) => ({ ...prev, status: 'borrow', hash: '', errorMessage: '' }))
+            setAmount('');
+            resetLendBorrowTx();
         }
     }
 
@@ -642,7 +649,7 @@ function ConfirmationDialog({
         <Dialog open={open}>
             <DialogTrigger asChild>
                 <Button
-                    onClick={() => setOpen(true)}
+                    onClick={() => handleOpenChange(true)}
                     disabled={disabled}
                     variant="primary"
                     className="group flex items-center gap-[4px] py-[13px] w-full rounded-5"

@@ -104,7 +104,7 @@ const SupplyAaveButton = ({
 
     const supply = useCallback(async () => {
         try {
-            setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '' }))
+            setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '', errorMessage: '' }))
 
             writeContractAsync({
                 address: poolContractAddress,
