@@ -13,18 +13,18 @@ const LendBorrowTxInitialState: TLendBorrowTxContext = {
         isRefreshingAllowance: false,
         errorMessage: '',
     },
-    setLendTx: () => { },
+    setLendTx: () => {},
     borrowTx: {
         status: 'borrow',
         hash: '',
         errorMessage: '',
     },
-    setBorrowTx: () => { },
+    setBorrowTx: () => {},
 }
 
-export const LendBorrowTxContext = createContext<
-    TLendBorrowTxContext
->(LendBorrowTxInitialState)
+export const LendBorrowTxContext = createContext<TLendBorrowTxContext>(
+    LendBorrowTxInitialState
+)
 
 export type TLendBorrowTx = {
     status: 'approve' | 'lend' | 'view'

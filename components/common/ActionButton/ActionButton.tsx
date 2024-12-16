@@ -27,7 +27,6 @@ const ActionButton = ({
     handleCloseModal,
     positionType,
 }: IActionButtonSelectComponent) => {
-
     if (positionType === 'borrow') {
         return (
             <BorrowButton

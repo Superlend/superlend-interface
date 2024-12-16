@@ -246,13 +246,13 @@ const BorrowButton = ({
                 }
             >
                 {txBtnText}
-                {(borrowTx.status !== 'view' && !isPending && !isConfirming) &&
+                {borrowTx.status !== 'view' && !isPending && !isConfirming && (
                     <ArrowRightIcon
                         width={16}
                         height={16}
                         className="stroke-white group-[:disabled]:opacity-50"
                     />
-                }
+                )}
             </Button>
         </>
     )
