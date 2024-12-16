@@ -41,7 +41,6 @@ interface ISupplyAaveButtonProps {
     amount: string
     decimals: number
     handleCloseModal: (isVisible: boolean) => void
-    allowanceBN: BigNumber
 }
 
 const SupplyAaveButton = ({
@@ -51,7 +50,6 @@ const SupplyAaveButton = ({
     decimals,
     disabled,
     handleCloseModal,
-    allowanceBN,
 }: ISupplyAaveButtonProps) => {
     const {
         writeContractAsync,

@@ -18,19 +18,15 @@ interface IActionButtonSelectComponent {
     amount: string
     handleCloseModal: (isVisible: boolean) => void
     positionType: 'lend' | 'borrow'
-    allowanceBN: BigNumber
 }
 
 const ActionButton = ({
     disabled = false,
     asset,
     amount,
-    allowanceBN,
     handleCloseModal,
     positionType,
 }: IActionButtonSelectComponent) => {
-    // const { selectedAction } = useContext(ActionContext)
-    // console.log(asset);
 
     if (positionType === 'borrow') {
         return (
@@ -43,8 +39,6 @@ const ActionButton = ({
         )
     }
     if (asset.protocol_type === PlatformType.AAVE && positionType === 'lend') {
-        // console.log(asset);
-
         // console.log('platform_name', asset.platform_name);
         // console.log('tokenAddress', asset.asset.token.address);
         // console.log('amount', amount);
@@ -57,11 +51,9 @@ const ActionButton = ({
                 poolContractAddress={
                     POOL_AAVE_MAP[asset.platform_name as PlatformValue]
                 }
-                // poolContractAddress={asset.core_contract}
                 underlyingAssetAdress={asset.asset.token.address}
                 amount={amount}
                 decimals={asset.asset.token.decimals}
-                allowanceBN={allowanceBN}
             />
         )
     }

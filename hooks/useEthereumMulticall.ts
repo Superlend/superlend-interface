@@ -17,7 +17,7 @@ export const useEthersMulticall = (walletAddress: string | undefined) => {
 
     const initalizeEthMulticall = () => {
         try {
-            if (isLoading) return
+            // if (isLoading) return
             setIsLoading(true)
             const _providers: Record<number, ethersProviders.JsonRpcProvider> =
                 {
@@ -93,13 +93,10 @@ export const useEthersMulticall = (walletAddress: string | undefined) => {
     }
 
     useEffect(() => {
-        if (
-            !!walletAddress &&
-            (!Object.keys(providers).length || !Object.keys(multicall).length)
-        ) {
+        if (!Object.keys(providers).length || !Object.keys(multicall).length) {
             initalizeEthMulticall()
         }
-    }, [providers, multicall, isError, walletAddress])
+    }, [providers, multicall, isError])
 
     return {
         providers,

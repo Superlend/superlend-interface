@@ -5,18 +5,75 @@ import {
     UserReserveDataHumanized,
 } from '@aave/contract-helpers'
 import { useEthersMulticall } from '../useEthereumMulticall'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { formatReserves, formatUserSummary } from '@aave/math-utils'
 import { getAddress } from 'ethers/lib/utils'
 import { getMaxAmountAvailableToBorrow } from '../../lib/getMaxAmountAvailableToBorrow'
 import { hasExponent } from '@/lib/utils'
 import { erc20Abi } from 'viem'
 import { Contract } from 'ethers'
+import { BigNumber } from 'ethers'
 
 export const useAaveV3Data = () => {
     const activeAccount = useActiveAccount()
     const walletAddress = activeAccount?.address
     const { providers } = useEthersMulticall(walletAddress)
+    const [providerStatus, setProviderStatus] = useState({
+        isReady: false,
+        isInitializing: true,
+        error: null as string | null
+    });
+
+    // Enhanced provider readiness check
+    useEffect(() => {
+        const initializeProviders = async () => {
+            setProviderStatus(prev => ({ ...prev, isInitializing: true }));
+
+            if (!providers || Object.keys(providers).length === 0) {
+                setProviderStatus({
+                    isReady: false,
+                    isInitializing: false,
+                    error: "No providers available"
+                });
+                return;
+            }
+
+            try {
+                // Test provider functionality
+                const chainIds = Object.keys(providers);
+                const providerTests = await Promise.all(
+                    chainIds.map(async (chainId) => {
+                        const provider = providers[Number(chainId)];
+                        if (!provider) return false;
+                        
+                        try {
+                            // Try to get the network - a basic operation that should always work
+                            await provider.getNetwork();
+                            return true;
+                        } catch {
+                            return false;
+                        }
+                    })
+                );
+
+                const hasWorkingProvider = providerTests.some(result => result);
+
+                setProviderStatus({
+                    isReady: hasWorkingProvider,
+                    isInitializing: false,
+                    error: hasWorkingProvider ? null : "No working providers found"
+                });
+            } catch (error) {
+                setProviderStatus({
+                    isReady: false,
+                    isInitializing: false,
+                    error: error instanceof Error ? error.message : "Unknown error initializing providers"
+                });
+            }
+        };
+
+        initializeProviders();
+    }, [providers]);
 
     const [reserveData, setReserveData] =
         useState<void | ReservesDataHumanized>()
@@ -30,18 +87,36 @@ export const useAaveV3Data = () => {
         uiPoolDataProviderAddress: string,
         lendingPoolAddressProvider: string
     ) => {
-        if (!walletAddress) return Promise.resolve()
-        const uiPoolDataProviderInstance = new UiPoolDataProvider({
-            uiPoolDataProviderAddress: getAddress(uiPoolDataProviderAddress),
-            provider: providers[chainId],
-            chainId: chainId,
-        })
+        if (!providerStatus.isReady || !providers || !providers[chainId]) {
+            console.log("Provider not ready for fetchReservesData", {
+                isProvidersReady: providerStatus.isReady,
+                hasProviders: !!providers,
+                chainSupported: providers?.[chainId] ? 'yes' : 'no'
+            });
+            return Promise.resolve();
+        }
 
-        const result = await uiPoolDataProviderInstance.getReservesHumanized({
-            lendingPoolAddressProvider: getAddress(lendingPoolAddressProvider),
-        })
-        setReserveData(result)
-        return result
+        if (!walletAddress || !uiPoolDataProviderAddress || !lendingPoolAddressProvider) {
+            console.log("Missing required parameters for fetchReservesData");
+            return Promise.resolve();
+        }
+
+        try {
+            const uiPoolDataProviderInstance = new UiPoolDataProvider({
+                uiPoolDataProviderAddress: getAddress(uiPoolDataProviderAddress),
+                provider: providers[chainId],
+                chainId: chainId,
+            })
+
+            const result = await uiPoolDataProviderInstance.getReservesHumanized({
+                lendingPoolAddressProvider: getAddress(lendingPoolAddressProvider),
+            })
+            setReserveData(result)
+            return result
+        } catch (error) {
+            console.error("Error in fetchReservesData:", error);
+            return Promise.resolve();
+        }
     }
 
     const fetchUserData = async (
@@ -49,23 +124,37 @@ export const useAaveV3Data = () => {
         uiPoolDataProviderAddress: string,
         lendingPoolAddressProvider: string
     ) => {
-        if (!walletAddress) return Promise.resolve()
+        if (!providerStatus.isReady || !providers || !providers[chainId]) {
+            console.log("Provider not ready for fetchUserData", {
+                isProvidersReady: providerStatus.isReady,
+                hasProviders: !!providers,
+                chainSupported: providers?.[chainId] ? 'yes' : 'no'
+            });
+            return Promise.resolve();
+        }
 
-        const uiPoolDataProviderInstance = new UiPoolDataProvider({
-            uiPoolDataProviderAddress: getAddress(uiPoolDataProviderAddress),
-            provider: providers[chainId],
-            chainId: chainId,
-        })
+        if (!walletAddress || !uiPoolDataProviderAddress || !lendingPoolAddressProvider) {
+            console.log("Missing required parameters for fetchUserData");
+            return Promise.resolve();
+        }
 
-        const result =
-            await uiPoolDataProviderInstance.getUserReservesHumanized({
-                lendingPoolAddressProvider: getAddress(
-                    lendingPoolAddressProvider
-                ),
+        try {
+            const uiPoolDataProviderInstance = new UiPoolDataProvider({
+                uiPoolDataProviderAddress: getAddress(uiPoolDataProviderAddress),
+                provider: providers[chainId],
+                chainId: chainId,
+            })
+
+            const result = await uiPoolDataProviderInstance.getUserReservesHumanized({
+                lendingPoolAddressProvider: getAddress(lendingPoolAddressProvider),
                 user: getAddress(walletAddress),
             })
-        setUserData(result)
-        return result
+            setUserData(result)
+            return result
+        } catch (error) {
+            console.error("Error in fetchUserData:", error);
+            return Promise.resolve();
+        }
     }
 
     const getAllowance = async (
@@ -73,9 +162,19 @@ export const useAaveV3Data = () => {
         spender: string,
         token: string
     ) => {
-        const contract = new Contract(token, erc20Abi, providers[chainId])
-        const approval = await contract.allowance(walletAddress, spender)
-        return approval
+        if (!providerStatus.isReady || !providers[chainId]) {
+            console.log("Providers not ready or chain not supported")
+            return BigNumber.from(0)
+        }
+
+        try {
+            const contract = new Contract(token, erc20Abi, providers[chainId])
+            const approval = await contract.allowance(walletAddress, spender)
+            return approval
+        } catch (error) {
+            console.error("Error getting allowance:", error)
+            return BigNumber.from(0)
+        }
     }
 
     const fetchAaveV3Data = async (
@@ -83,20 +182,29 @@ export const useAaveV3Data = () => {
         uiPoolDataProviderAddress: string,
         lendingPoolAddressProvider: string
     ) => {
-        const result = await Promise.all([
-            fetchReservesData(
-                chainId,
-                uiPoolDataProviderAddress,
-                lendingPoolAddressProvider
-            ),
-            fetchUserData(
-                chainId,
-                uiPoolDataProviderAddress,
-                lendingPoolAddressProvider
-            ),
-        ])
+        if (!providerStatus.isReady) {
+            console.log("Providers not ready for fetchAaveV3Data");
+            return Promise.resolve([undefined, undefined]);
+        }
 
-        return result
+        try {
+            const result = await Promise.all([
+                fetchReservesData(
+                    chainId,
+                    uiPoolDataProviderAddress,
+                    lendingPoolAddressProvider
+                ),
+                fetchUserData(
+                    chainId,
+                    uiPoolDataProviderAddress,
+                    lendingPoolAddressProvider
+                ),
+            ])
+            return result
+        } catch (error) {
+            console.error("Error in fetchAaveV3Data:", error);
+            return [undefined, undefined];
+        }
     }
 
     const getMaxBorrowAmount = (
@@ -181,5 +289,6 @@ export const useAaveV3Data = () => {
         getAllowance,
         fetchAaveV3Data,
         getMaxBorrowAmount,
+        providerStatus,
     }
 }

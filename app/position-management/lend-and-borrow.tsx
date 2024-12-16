@@ -23,7 +23,7 @@ import {
     X,
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import {
     useIsAutoConnecting,
     useActiveAccount,
@@ -46,7 +46,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ChevronDownIcon } from 'lucide-react'
-import { useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
@@ -86,7 +85,7 @@ export default function LendAndBorrowAssets() {
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [amount, setAmount] = useState('')
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
-    const [allowanceBN, setAllowanceBN] = useState(BigNumber.from(0))
+    const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] = useState(false);
     const searchParams = useSearchParams()
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
@@ -95,7 +94,7 @@ export default function LendAndBorrowAssets() {
     const walletAddress = activeAccount?.address
     const isAutoConnecting = useIsAutoConnecting()
     const switchChain = useSwitchActiveWalletChain()
-    const { fetchAaveV3Data, getMaxBorrowAmount, getAllowance } =
+    const { fetchAaveV3Data, getMaxBorrowAmount, getAllowance, providerStatus } =
         useAaveV3Data()
     const { lendTx, setLendTx } = useLendBorrowTxContext() as TLendBorrowTxContext
 
@@ -119,7 +118,9 @@ export default function LendAndBorrowAssets() {
         chain_id: Number(chain_id),
     })
 
-    const isLoading = isLoadingPortfolioData || isLoadingPlatformData
+    const isLoading =
+        isLoadingPortfolioData ||
+        isLoadingPlatformData;
 
     const customChain = defineChain(Number(chain_id))
 
@@ -132,16 +133,25 @@ export default function LendAndBorrowAssets() {
 
     // Get max borrow amount
     useEffect(() => {
+        setIsLoadingMaxBorrowingAmount(true);
         if (
             walletAddress &&
+            walletAddress.length > 0 &&
             platformData.assets.length > 0 &&
-            platformData.platform.protocol_type === 'aaveV3'
+            platformData.platform.protocol_type === 'aaveV3' &&
+            providerStatus.isReady
         ) {
             fetchAaveV3Data(
                 Number(chain_id),
                 platformData.platform.uiPoolDataProvider!,
                 platformData.platform.poolAddressesProvider!
             ).then((r) => {
+                if (!r || !r[0]) {  // Add null check
+                    setMaxBorrowAmount('0');
+                    setIsLoadingMaxBorrowingAmount(false);
+                    return;
+                }
+
                 const maxBorrowAmount = getMaxBorrowAmount(
                     tokenAddress.toLowerCase(),
                     r as any
@@ -155,22 +165,44 @@ export default function LendAndBorrowAssets() {
                 )?.toFixed(decimals)
                 const hasZeroLimit = !Math.abs(Number(maxAmountToBorrow))
                 setMaxBorrowAmount(hasZeroLimit ? '0' : maxAmountToBorrow)
+                setIsLoadingMaxBorrowingAmount(false);
             })
+                .catch((error) => {
+                    console.log("error fetching max borrow amount", error);
+                    setMaxBorrowAmount('0');
+                    setIsLoadingMaxBorrowingAmount(false);
+                })
         }
-    }, [walletAddress, platformData])
+    }, [walletAddress, platformData, providerStatus.isReady])
 
     useEffect(() => {
-        // Get allowance
-        getAllowance(
-            Number(chain_id),
-            platformData.platform.core_contract,
+        if (
+            providerStatus.isReady &&
+            walletAddress &&
+            platformData.platform?.core_contract &&
             tokenAddress
-        ).then((r: BigNumber) => {
-            // setAllowanceBN(r)
-            setLendTx((prev: TLendBorrowTx) => ({ ...prev, allowanceBN: r, isRefreshingAllowance: false }))
-            console.log("allowanceBN - lend/borrow", r.toString())
-        })
-    }, [walletAddress, platformData, lendTx.status, amount, lendTx.isRefreshingAllowance])
+        ) {
+            getAllowance(
+                Number(chain_id),
+                platformData.platform.core_contract,
+                tokenAddress
+            ).then((r: BigNumber) => {
+                setLendTx((prev: TLendBorrowTx) => ({
+                    ...prev,
+                    allowanceBN: r,
+                    isRefreshingAllowance: false
+                }))
+                // console.log("allowanceBN - lend/borrow", r.toString())
+            })
+        }
+    }, [
+        walletAddress,
+        platformData,
+        lendTx.status,
+        amount,
+        lendTx.isRefreshingAllowance,
+        providerStatus.isReady
+    ])
 
     // Filter user positions
     const [selectedPlatformDetails] = portfolioData?.platforms.filter(
@@ -394,7 +426,7 @@ export default function LendAndBorrowAssets() {
                             weight="normal"
                             className="capitalize text-gray-600 flex items-center gap-[4px]"
                         >
-                            limit - {isLoadingUserTokenBalances ? <Skeleton className="w-[40px] h-[16px] rounded-2" /> : maxBorrowAmount}
+                            limit - {isLoadingMaxBorrowingAmount ? <Skeleton className="w-[40px] h-[16px] rounded-2" /> : maxBorrowAmount}
                         </BodyText>
                     )}
                 </div>
@@ -478,7 +510,6 @@ export default function LendAndBorrowAssets() {
                             assetDetails={assetDetails}
                             amount={amount}
                             balance={balance}
-                            allowanceBN={allowanceBN}
                             maxBorrowAmount={maxBorrowAmount}
                             setAmount={setAmount}
                         />
@@ -561,7 +592,6 @@ function ConfirmationDialog({
     setAmount,
     balance,
     maxBorrowAmount,
-    allowanceBN,
 }: {
     disabled: boolean
     positionType: TPositionType
@@ -570,9 +600,7 @@ function ConfirmationDialog({
     balance: string
     maxBorrowAmount: string
     setAmount: (amount: string) => void
-    allowanceBN: BigNumber
 }) {
-    // console.log("assetDetails", assetDetails)
     const { lendTx, setLendTx, borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
     const [open, setOpen] = useState(false)
@@ -897,7 +925,6 @@ function ConfirmationDialog({
                         handleCloseModal={handleOpenChange}
                         asset={assetDetails}
                         amount={amount}
-                        allowanceBN={allowanceBN}
                         positionType={positionType}
                     />
                 </div>
