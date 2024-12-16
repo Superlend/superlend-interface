@@ -146,6 +146,9 @@ export default function LendAndBorrowAssets() {
             platformData.platform.protocol_type === 'aaveV3' &&
             providerStatus.isReady
         ) {
+            const _borrowableTokens = platformData.assets.filter(
+                (a) => a.borrow_enabled
+            )
             fetchAaveV3Data(
                 Number(chain_id),
                 platformData.platform.uiPoolDataProvider!,
@@ -158,19 +161,37 @@ export default function LendAndBorrowAssets() {
                         setIsLoadingMaxBorrowingAmount(false)
                         return
                     }
-
-                    const maxBorrowAmount = getMaxBorrowAmount(
-                        tokenAddress.toLowerCase(),
-                        r as any
-                    ) ?? {
-                        maxToBorrow: '0',
-                        maxToBorrowFormatted: '0',
+                    const maxBorrowAmounts: Record<
+                        string,
+                        {
+                            maxToBorrow: string
+                            maxToBorrowFormatted: string
+                        }
+                    > = {}
+                    for (const borrowToken of _borrowableTokens) {
+                        const borrowTokenAddress =
+                            borrowToken.token.address.toLowerCase()
+                        maxBorrowAmounts[borrowTokenAddress] =
+                            getMaxBorrowAmount(
+                                borrowTokenAddress,
+                                r as any
+                            ) ?? {
+                                maxToBorrow: '0',
+                                maxToBorrowFormatted: '0',
+                            }
                     }
-                    const decimals = assetDetails?.asset?.token?.decimals ?? 0
+
+                    const currentTokenDetails = assetDetails?.asset?.token
+                    const decimals = currentTokenDetails?.decimals ?? 0
                     const maxAmountToBorrow = Math.abs(
-                        Number(maxBorrowAmount?.maxToBorrowFormatted)
+                        Number(
+                            maxBorrowAmounts[
+                                currentTokenDetails!.address.toLowerCase()
+                            ]?.maxToBorrowFormatted
+                        )
                     )?.toFixed(decimals)
                     const hasZeroLimit = !Math.abs(Number(maxAmountToBorrow))
+
                     setMaxBorrowAmount(hasZeroLimit ? '0' : maxAmountToBorrow)
                     setIsLoadingMaxBorrowingAmount(false)
                 })
