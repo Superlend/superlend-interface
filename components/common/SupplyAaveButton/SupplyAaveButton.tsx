@@ -131,31 +131,26 @@ const SupplyAaveButton = ({
     ])
 
     useEffect(() => {
-        if (lendTx.status !== 'view') {
+        if (lendTx.status === 'view') return;
+        
+        if (!isConfirmed) {
+            // Only update status based on allowance when not in a confirmed state
             if (lendTx.allowanceBN.gte(amountBN)) {
-                setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '' }))
+                setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '', errorMessage: '' }))
             } else {
                 setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'approve', hash: '', errorMessage: 'Insufficient allowance' }))
             }
+        } else {
+            // Handle confirmation state transitions
+            if (lendTx.status === 'approve') {
+                supply().then(() => {
+                    setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '', errorMessage: '' }))
+                })
+            } else if (lendTx.status === 'lend') {
+                setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'view', hash: hash || '', errorMessage: '' }))
+            }
         }
-    }, [amount, decimals, lendTx.allowanceBN])
-
-    useEffect(() => {
-        // console.log("isConfirmed", isConfirmed)
-        // console.log("lendTx.status", lendTx.status)
-        // console.log("amountBN", amountBN.toString())
-        // console.log("lendTx.allowanceBN", lendTx.allowanceBN.toString())
-
-        if (isConfirmed && lendTx.status === 'approve') {
-            supply().then(() => {
-                setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'lend', hash: '', errorMessage: '' }))
-            })
-        }
-
-        if (isConfirmed && lendTx.status === 'lend') {
-            setLendTx((prev: TLendBorrowTx) => ({ ...prev, status: 'view', hash: hash || '', errorMessage: '' }))
-        }
-    }, [isConfirmed, lendTx.status])
+    }, [amount, decimals, lendTx.allowanceBN, isConfirmed, lendTx.status])
 
     const onApproveSupply = async () => {
         if (!isConnected) {
