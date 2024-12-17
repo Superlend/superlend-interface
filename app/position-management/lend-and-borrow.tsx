@@ -280,6 +280,11 @@ export default function LendAndBorrowAssets() {
         }
     }, [lendTx.status, borrowTx.status])
 
+    // Set selected borrow token details
+    useEffect(() => {
+        setSelectedBorrowTokenDetails(borrowTokensDetails[0])
+    }, [!!borrowTokensDetails.length])
+
     // Filter user positions
     const [selectedPlatformDetails] = portfolioData?.platforms.filter(
         (platform) =>
@@ -478,10 +483,6 @@ export default function LendAndBorrowAssets() {
     if (!(isAaveV3Protocol && isPolygonChain)) {
         return null
     }
-
-    useEffect(() => {
-        setSelectedBorrowTokenDetails(borrowTokensDetails[0])
-    }, [borrowTokensDetails.length > 0])
 
     // Render component
     return (
