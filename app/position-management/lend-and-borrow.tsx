@@ -811,6 +811,10 @@ function ConfirmationDialog({
     )
     const isTxInProgress = isLendTxInProgress || isBorrowTxInProgress
 
+    const lendTxSpinnerColor = lendTx.isPending ? 'text-secondary-500' : 'text-primary';
+    const borrowTxSpinnerColor = borrowTx.isPending ? 'text-secondary-500' : 'text-primary';
+    const txSpinnerColor = isLendPositionType(positionType) ? lendTxSpinnerColor : borrowTxSpinnerColor;
+
     return (
         <Dialog open={open}>
             <DialogTrigger asChild>
@@ -847,7 +851,7 @@ function ConfirmationDialog({
                 {isTxInProgress && (
                     <div className="flex flex-col items-center justify-center gap-6 mt-6">
                         <LoaderCircle
-                            className="text-secondary-500 w-28 h-28 animate-spin rounded-full"
+                            className={`${txSpinnerColor} w-28 h-28 animate-spin rounded-full`}
                             strokeWidth={2.5}
                         />
                         <BodyText
@@ -858,7 +862,7 @@ function ConfirmationDialog({
                             {getTxInProgressText({
                                 amount,
                                 tokenName: assetDetails?.asset?.token?.symbol,
-                                txStatus: isLendPositionType(positionType) ? lendTx.status : borrowTx.status,
+                                txStatus: isLendPositionType(positionType) ? lendTx : borrowTx,
                             })}
                         </BodyText>
                     </div>
@@ -1169,13 +1173,24 @@ function getTxInProgressText({
 }: {
     amount: string
     tokenName: string
-    txStatus: string
+    txStatus: TLendTx | TBorrowTx
 }) {
     const formattedText = `${amount} ${tokenName}`
-    const textByStatus: Record<string, string> = {
-        approve: `Approve spending of ${formattedText} from your wallet`,
-        lend: `Approve transaction for lending of ${formattedText} from your wallet`,
-        borrow: `Approve transaction for borrowing of ${formattedText} from your wallet`,
+    const isPending = txStatus.isPending;
+    const isConfirming = txStatus.isConfirming;
+    let textByStatus: any = {}
+    if (isPending) {
+        textByStatus = {
+            approve: `Approve spending of ${formattedText} from your wallet`,
+            lend: `Approve transaction for lending of ${formattedText} from your wallet`,
+            borrow: `Approve transaction for borrowing of ${formattedText} from your wallet`,
+        }
+    } else if (isConfirming) {
+        textByStatus = {
+            approve: `Confirming transaction for spending of ${formattedText} from your wallet`,
+            lend: `Confirming transaction for lending of ${formattedText} from your wallet`,
+            borrow: `Confirming transaction for borrowing of ${formattedText} from your wallet`,
+        }
     }
-    return textByStatus[txStatus]
+    return textByStatus[txStatus.status]
 }
