@@ -91,11 +91,11 @@ const BorrowButton = ({
 
     const txBtnText =
         txBtnStatus[
-        isConfirming
-            ? 'confirming'
-            : isConfirmed
-                ? 'success'
-                : isPending
+            isConfirming
+                ? 'confirming'
+                : isConfirmed
+                  ? 'success'
+                  : isPending
                     ? 'pending'
                     : 'default'
         ]
@@ -237,7 +237,7 @@ const BorrowButton = ({
         }
     }
     return (
-        <div className='flex flex-col gap-2'>
+        <div className="flex flex-col gap-2">
             {error && (
                 <CustomAlert
                     description={

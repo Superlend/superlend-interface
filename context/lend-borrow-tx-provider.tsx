@@ -15,7 +15,7 @@ const LendBorrowTxInitialState: TLendBorrowTxContext = {
         isPending: false,
         isConfirming: false,
     },
-    setLendTx: () => { },
+    setLendTx: () => {},
     borrowTx: {
         status: 'borrow',
         hash: '',
@@ -23,7 +23,7 @@ const LendBorrowTxInitialState: TLendBorrowTxContext = {
         isPending: false,
         isConfirming: false,
     },
-    setBorrowTx: () => { },
+    setBorrowTx: () => {},
 }
 
 export const LendBorrowTxContext = createContext<TLendBorrowTxContext>(

@@ -95,12 +95,12 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? lendTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? lendTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 
@@ -135,14 +135,13 @@ const SupplyAaveButton = ({
                     walletAddress,
                     0,
                 ],
+            }).catch((error) => {
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                }))
             })
-                .catch((error) => {
-                    setLendTx((prev: TLendTx) => ({
-                        ...prev,
-                        isPending: false,
-                        isConfirming: false,
-                    }))
-                })
         } catch (error) {
             error
         }
@@ -252,7 +251,7 @@ const SupplyAaveButton = ({
     }
 
     return (
-        <div className='flex flex-col gap-2'>
+        <div className="flex flex-col gap-2">
             {error && (
                 <CustomAlert
                     description={
