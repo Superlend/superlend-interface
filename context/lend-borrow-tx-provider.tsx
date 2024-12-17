@@ -12,36 +12,44 @@ const LendBorrowTxInitialState: TLendBorrowTxContext = {
         allowanceBN: BigNumber.from(0),
         isRefreshingAllowance: false,
         errorMessage: '',
+        isPending: false,
+        isConfirming: false,
     },
-    setLendTx: () => {},
+    setLendTx: () => { },
     borrowTx: {
         status: 'borrow',
         hash: '',
         errorMessage: '',
+        isPending: false,
+        isConfirming: false,
     },
-    setBorrowTx: () => {},
+    setBorrowTx: () => { },
 }
 
 export const LendBorrowTxContext = createContext<TLendBorrowTxContext>(
     LendBorrowTxInitialState
 )
 
-export type TLendBorrowTx = {
+export type TLendTx = {
     status: 'approve' | 'lend' | 'view'
     hash: string
     allowanceBN: BigNumber
     isRefreshingAllowance: boolean
     errorMessage: string
+    isPending: boolean
+    isConfirming: boolean
 }
 
 export type TBorrowTx = {
     status: 'borrow' | 'view'
     hash: string
     errorMessage: string
+    isPending: boolean
+    isConfirming: boolean
 }
 
 export type TLendBorrowTxContext = {
-    lendTx: TLendBorrowTx
+    lendTx: TLendTx
     setLendTx: any
     borrowTx: TBorrowTx
     setBorrowTx: any
@@ -55,18 +63,22 @@ export default function LendBorrowTxProvider({
     // const activeAccount = useActiveAccount()
     // const walletAddress = activeAccount?.address
 
-    const [lendTx, setLendTx] = useState<TLendBorrowTx>({
+    const [lendTx, setLendTx] = useState<TLendTx>({
         status: 'approve',
         hash: '',
         allowanceBN: BigNumber.from(0),
         isRefreshingAllowance: false,
         errorMessage: '',
+        isPending: false,
+        isConfirming: false,
     })
 
     const [borrowTx, setBorrowTx] = useState<TBorrowTx>({
         status: 'borrow',
         hash: '',
         errorMessage: '',
+        isPending: false,
+        isConfirming: false,
     })
 
     return (

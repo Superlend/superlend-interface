@@ -28,6 +28,7 @@ import { PlatformType, PlatformValue } from '@/types/platform'
 import { useActiveAccount } from 'thirdweb/react'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import {
+    TBorrowTx,
     TLendBorrowTxContext,
     useLendBorrowTxContext,
 } from '@/context/lend-borrow-tx-provider'
@@ -79,13 +80,22 @@ const BorrowButton = ({
         }
     }, [hash])
 
+    // Update the status(Loading states) of the lendTx based on the isPending and isConfirming states
+    useEffect(() => {
+        setBorrowTx((prev: TBorrowTx) => ({
+            ...prev,
+            isPending: isPending,
+            isConfirming: isConfirming,
+        }))
+    }, [isPending, isConfirming])
+
     const txBtnText =
         txBtnStatus[
-            isConfirming
-                ? 'confirming'
-                : isConfirmed
-                  ? 'success'
-                  : isPending
+        isConfirming
+            ? 'confirming'
+            : isConfirmed
+                ? 'success'
+                : isPending
                     ? 'pending'
                     : 'default'
         ]
@@ -227,7 +237,7 @@ const BorrowButton = ({
         }
     }
     return (
-        <>
+        <div className='flex flex-col gap-2'>
             {error && (
                 <CustomAlert
                     description={
@@ -254,7 +264,7 @@ const BorrowButton = ({
                     />
                 )}
             </Button>
-        </>
+        </div>
     )
 }
 

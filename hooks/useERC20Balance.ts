@@ -20,8 +20,9 @@ export const useERC20Balance = (address: string | undefined) => {
             Record<string, { balanceRaw: string; balanceFormatted: number }>
         >
     >({})
-    const [isLoading, setIsLoading] = useState<Boolean>(false)
-    const [isError, setIsError] = useState<Boolean>(false)
+    const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [isError, setIsError] = useState<boolean>(false)
+    const [isRefreshing, setIsRefreshing] = useState(false)
 
     const getERC20Balance = async (address: string | undefined) => {
         try {
@@ -111,25 +112,33 @@ export const useERC20Balance = (address: string | undefined) => {
                 }
             }
             setData(result)
-
-            setIsLoading(false)
         } catch (error) {
             console.log(error)
             setIsError(true)
+        } finally {
+            setIsRefreshing(false)
             setIsLoading(false)
         }
     }
 
     useEffect(() => {
         if (
-            !!address &&
-            !!tokenList &&
-            chainList.length > 0 &&
-            Object.keys(data).length === 0
+            (!!address &&
+                !!tokenList &&
+                chainList.length > 0 &&
+                Object.keys(data).length === 0) ||
+            isRefreshing
         ) {
             getERC20Balance(address)
         }
-    }, [!!address, !!tokenList, chainList.length > 0, data])
+    }, [!!address, !!tokenList, chainList.length > 0, data, isRefreshing])
 
-    return { data, isLoading, isError, getERC20Balance }
+    return {
+        data,
+        isLoading,
+        isError,
+        getERC20Balance,
+        isRefreshing,
+        setIsRefreshing,
+    }
 }

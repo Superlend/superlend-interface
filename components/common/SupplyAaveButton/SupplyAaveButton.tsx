@@ -27,7 +27,7 @@ import { prepareContractCall } from 'thirdweb'
 import { defineChain } from 'thirdweb'
 import { useSearchParams } from 'next/navigation'
 import {
-    TLendBorrowTx,
+    TLendTx,
     useLendBorrowTxContext,
 } from '@/context/lend-borrow-tx-provider'
 import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
@@ -91,19 +91,16 @@ const SupplyAaveButton = ({
         isConfirming: boolean,
         isConfirmed: boolean
     ) => {
-        // console.log('isPending', isPending)
-        // console.log('isConfirming', isConfirming)
-        // console.log('isConfirmed', isConfirmed)
         return txBtnStatus[
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? lendTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? lendTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
@@ -111,12 +108,22 @@ const SupplyAaveButton = ({
 
     const supply = useCallback(async () => {
         try {
-            setLendTx((prev: TLendBorrowTx) => ({
+            setLendTx((prev: TLendTx) => ({
                 ...prev,
                 status: 'lend',
                 hash: '',
                 errorMessage: '',
             }))
+
+            // if (!lendTx.allowanceBN.gte(amountBN)) {
+            //     setLendTx((prev: TLendTx) => ({
+            //         ...prev,
+            //         status: 'approve',
+            //         hash: '',
+            //         errorMessage: 'Insufficient allowance',
+            //     }))
+            //     return
+            // }
 
             writeContractAsync({
                 address: poolContractAddress,
@@ -129,6 +136,13 @@ const SupplyAaveButton = ({
                     0,
                 ],
             })
+                .catch((error) => {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                    }))
+                })
         } catch (error) {
             error
         }
@@ -142,20 +156,30 @@ const SupplyAaveButton = ({
         decimals,
     ])
 
+    // Update the status(Loading states) of the lendTx based on the isPending and isConfirming states
+    useEffect(() => {
+        setLendTx((prev: TLendTx) => ({
+            ...prev,
+            isPending: isPending,
+            isConfirming: isConfirming,
+        }))
+    }, [isPending, isConfirming])
+
+    // Update the status of the lendTx based on the allowance and the confirmation state
     useEffect(() => {
         if (lendTx.status === 'view') return
 
         if (!isConfirmed) {
             // Only update status based on allowance when not in a confirmed state
             if (lendTx.allowanceBN.gte(amountBN)) {
-                setLendTx((prev: TLendBorrowTx) => ({
+                setLendTx((prev: TLendTx) => ({
                     ...prev,
                     status: 'lend',
                     hash: '',
                     errorMessage: '',
                 }))
             } else {
-                setLendTx((prev: TLendBorrowTx) => ({
+                setLendTx((prev: TLendTx) => ({
                     ...prev,
                     status: 'approve',
                     hash: '',
@@ -165,16 +189,9 @@ const SupplyAaveButton = ({
         } else {
             // Handle confirmation state transitions
             if (lendTx.status === 'approve') {
-                supply().then(() => {
-                    setLendTx((prev: TLendBorrowTx) => ({
-                        ...prev,
-                        status: 'lend',
-                        hash: '',
-                        errorMessage: '',
-                    }))
-                })
+                supply()
             } else if (lendTx.status === 'lend') {
-                setLendTx((prev: TLendBorrowTx) => ({
+                setLendTx((prev: TLendTx) => ({
                     ...prev,
                     status: 'view',
                     hash: hash || '',
@@ -198,16 +215,17 @@ const SupplyAaveButton = ({
         }
 
         try {
-            setLendTx((prev: TLendBorrowTx) => ({
-                ...prev,
-                status: 'approve',
-                hash: '',
-            }))
-
             // console.log("underlyingAssetAdress", underlyingAssetAdress)
             // console.log("poolContractAddress", poolContractAddress)
             // console.log("amount", amount)
             // console.log("decimals", decimals)
+
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                status: 'approve',
+                hash: '',
+                errorMessage: '',
+            }))
 
             writeContractAsync({
                 address: underlyingAssetAdress,
@@ -215,13 +233,26 @@ const SupplyAaveButton = ({
                 functionName: 'approve',
                 args: [poolContractAddress, parseUnits(amount, decimals)],
             })
+                .then(() => {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        isRefreshingAllowance: true,
+                    }))
+                })
+                .catch((error) => {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                    }))
+                })
         } catch (error) {
             error
         }
     }
 
     return (
-        <>
+        <div className='flex flex-col gap-2'>
             {error && (
                 <CustomAlert
                     description={
@@ -231,9 +262,9 @@ const SupplyAaveButton = ({
                     }
                 />
             )}
-            {lendTx.errorMessage.length > 0 && (
+            {/* {lendTx.errorMessage.length > 0 && (
                 <CustomAlert description={lendTx.errorMessage} />
-            )}
+            )} */}
             <Button
                 disabled={isPending || isConfirming || disabled}
                 onClick={() => {
@@ -257,7 +288,7 @@ const SupplyAaveButton = ({
                     />
                 )}
             </Button>
-        </>
+        </div>
     )
 }
 
