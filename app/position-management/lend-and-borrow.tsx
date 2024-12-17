@@ -854,7 +854,7 @@ function ConfirmationDialog({
                             {getTxInProgressText({
                                 amount,
                                 tokenName: assetDetails?.asset?.token?.symbol,
-                                txStatus: lendTx.status,
+                                txStatus: isLendPositionType(positionType) ? lendTx.status : borrowTx.status,
                             })}
                         </BodyText>
                     </div>
@@ -1168,10 +1168,10 @@ function getTxInProgressText({
     txStatus: string
 }) {
     const formattedText = `${amount} ${tokenName}`
-    const lendingTextByStatus: Record<string, string> = {
+    const textByStatus: Record<string, string> = {
         approve: `Approve spending of ${formattedText} from your wallet`,
         lend: `Approve transaction for lending of ${formattedText} from your wallet`,
         borrow: `Approve transaction for borrowing of ${formattedText} from your wallet`,
     }
-    return lendingTextByStatus[txStatus]
+    return textByStatus[txStatus]
 }
