@@ -81,6 +81,7 @@ import ConnectWalletButton from '@/components/ConnectWalletButton'
 import { useAaveV3Data } from '../../hooks/protocols/useAaveV3Data'
 import { BigNumber } from 'ethers'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 export default function LendAndBorrowAssets() {
     const {
@@ -92,8 +93,9 @@ export default function LendAndBorrowAssets() {
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [amount, setAmount] = useState('')
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
-    const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] =
-        useState(false)
+    const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] = useState(false)
+    const [borrowTokensDetails, setBorrowTokensDetails] = useState<TPlatformAsset[]>([])
+    const [selectedBorrowTokenDetails, setSelectedBorrowTokenDetails] = useState<TPlatformAsset | null>(null)
     const searchParams = useSearchParams()
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
@@ -181,6 +183,7 @@ export default function LendAndBorrowAssets() {
                             maxToBorrowFormatted: string
                         }
                     > = {}
+                    setBorrowTokensDetails(_borrowableTokens);
                     for (const borrowToken of _borrowableTokens) {
                         const borrowTokenAddress =
                             borrowToken.token.address.toLowerCase()
@@ -194,7 +197,7 @@ export default function LendAndBorrowAssets() {
                             }
                     }
 
-                    const currentTokenDetails = assetDetails?.asset?.token
+                    const currentTokenDetails = selectedBorrowTokenDetails?.token
                     const decimals = currentTokenDetails?.decimals ?? 0
                     const maxAmountToBorrow = Math.abs(
                         Number(
@@ -214,7 +217,7 @@ export default function LendAndBorrowAssets() {
                     setIsLoadingMaxBorrowingAmount(false)
                 })
         }
-    }, [walletAddress, platformData, providerStatus.isReady, borrowTx.status])
+    }, [walletAddress, platformData, providerStatus.isReady, borrowTx.status, selectedBorrowTokenDetails?.token?.address])
 
     useEffect(() => {
         if (
@@ -301,7 +304,24 @@ export default function LendAndBorrowAssets() {
         }
     }
 
+    function formatSelectedBorrowTokenDetails(tokenAddress: string) {
+        return {
+            asset: {
+                ...platformData?.assets?.find(
+                    (platform: TPlatformAsset) =>
+                        platform?.token?.address.toLowerCase() ===
+                        tokenAddress.toLowerCase()
+                ),
+                amount: null,
+            },
+            ...platformData?.platform,
+        }
+    }
+
     const assetDetails = getAssetDetails(tokenAddress)
+    const selectedBorrowTokenDetailsFormatted = formatSelectedBorrowTokenDetails(selectedBorrowTokenDetails?.token?.address ?? '')
+    // console.log('assetDetails', assetDetails)
+    // console.log('selectedBorrowTokenDetailsFormatted', selectedBorrowTokenDetailsFormatted)
 
     // Get balance
     const balance = (
@@ -311,10 +331,10 @@ export default function LendAndBorrowAssets() {
 
     // Check if amount has too many decimals
     const toManyDecimals = useMemo(() => {
-        if (assetDetails) {
+        if (assetDetails || selectedBorrowTokenDetails) {
             return checkDecimalPlaces(
                 amount,
-                assetDetails?.asset?.token?.decimals ?? 0
+                isLendPositionType(positionType) ? (assetDetails?.asset?.token?.decimals ?? 0) : (selectedBorrowTokenDetails?.token?.decimals ?? 0)
             )
         }
         return false
@@ -418,7 +438,10 @@ export default function LendAndBorrowAssets() {
         Number(amount) ===
         (isLendPositionType(positionType)
             ? Number(balance)
-            : Number(maxBorrowAmount)) || !walletAddress
+            : Number(maxBorrowAmount)) ||
+        !walletAddress ||
+        isLoadingMaxBorrowingAmount ||
+        isLoadingErc20TokensBalanceData
 
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
     const isPolygonChain = Number(chain_id) === 137
@@ -491,7 +514,8 @@ export default function LendAndBorrowAssets() {
                         {isLoading && (
                             <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
                         )}
-                        {!isLoading && (
+                        {/* Lend position type - Selected token image */}
+                        {!isLoading && isLendPositionType(positionType) && (
                             <ImageWithDefault
                                 src={assetDetails?.asset?.token?.logo || ''}
                                 alt={assetDetails?.asset?.token?.symbol || ''}
@@ -500,16 +524,15 @@ export default function LendAndBorrowAssets() {
                                 height={24}
                             />
                         )}
-                        {/* {
-                            !isLoading && hasMultipleTokens && (
-                                <SelectTokensDropdown
-                                    key={positionType}
-                                    options={isLendPositionType(positionType) ? lendPositions : borrowPositions}
-                                    selectedItemDetails={selectedTokenDetails}
-                                    setSelectedItemDetails={(token) => setSelectedTokenDetails(token)}
-                                />
-                            )
-                        } */}
+                        {/* Borrow position type - Select token dropdown */}
+                        {!isLoading && !isLendPositionType(positionType) && (
+                            <SelectTokensDropdown
+                                key={positionType}
+                                options={borrowTokensDetails}
+                                selectedItemDetails={selectedBorrowTokenDetails}
+                                setSelectedItemDetails={(token) => setSelectedBorrowTokenDetails(token)}
+                            />
+                        )}
                         <BodyText
                             level="body2"
                             weight="normal"
@@ -563,7 +586,7 @@ export default function LendAndBorrowAssets() {
                         <ConfirmationDialog
                             disabled={disabledButton}
                             positionType={positionType}
-                            assetDetails={assetDetails}
+                            assetDetails={isLendPositionType(positionType) ? assetDetails : selectedBorrowTokenDetailsFormatted}
                             amount={amount}
                             balance={balance}
                             maxBorrowAmount={maxBorrowAmount}
@@ -582,9 +605,9 @@ function SelectTokensDropdown({
     selectedItemDetails,
     setSelectedItemDetails,
 }: {
-    options: any[]
-    selectedItemDetails: any
-    setSelectedItemDetails: (token: any) => void
+    options: TPlatformAsset[]
+    selectedItemDetails: TPlatformAsset | null
+    setSelectedItemDetails: (token: TPlatformAsset) => void
 }) {
     useEffect(() => {
         setSelectedItemDetails(options[0])
@@ -609,32 +632,34 @@ function SelectTokensDropdown({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden">
-                {options?.map((asset: any) => (
-                    <DropdownMenuItem
-                        key={asset?.token?.address}
-                        onClick={() => setSelectedItemDetails(asset)}
-                        className={cn(
-                            'flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4',
-                            selectedItemDetails?.token?.address ===
-                            asset?.token?.address && 'bg-gray-400'
-                        )}
-                    >
-                        <ImageWithDefault
-                            src={asset?.token?.logo || ''}
-                            alt={asset?.token?.symbol || ''}
-                            width={24}
-                            height={24}
-                            className="rounded-full max-w-[24px] max-h-[24px]"
-                        />
-                        <BodyText
-                            level="body2"
-                            weight="medium"
-                            className="text-gray-800"
+                <ScrollArea className="h-[200px]">
+                    {options?.map((asset: any) => (
+                        <DropdownMenuItem
+                            key={asset?.token?.address}
+                            onClick={() => setSelectedItemDetails(asset)}
+                            className={cn(
+                                'flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4',
+                                selectedItemDetails?.token?.address ===
+                                asset?.token?.address && 'bg-gray-400'
+                            )}
                         >
-                            {asset?.token?.symbol || ''}
-                        </BodyText>
-                    </DropdownMenuItem>
-                ))}
+                            <ImageWithDefault
+                                src={asset?.token?.logo || ''}
+                                alt={asset?.token?.symbol || ''}
+                                width={24}
+                                height={24}
+                                className="rounded-full max-w-[24px] max-h-[24px]"
+                            />
+                            <BodyText
+                                level="body2"
+                                weight="medium"
+                                className="text-gray-800"
+                            >
+                                {asset?.token?.symbol || ''}
+                            </BodyText>
+                        </DropdownMenuItem>
+                    ))}
+                </ScrollArea>
             </DropdownMenuContent>
         </DropdownMenu>
     )
