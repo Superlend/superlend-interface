@@ -481,6 +481,10 @@ export default function LendAndBorrowAssets() {
         return null
     }
 
+    useEffect(() => {
+        setSelectedBorrowTokenDetails(borrowTokensDetails[0])
+    }, [borrowTokensDetails.length > 0])
+
     // Render component
     return (
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
@@ -546,7 +550,7 @@ export default function LendAndBorrowAssets() {
                             <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
                         )}
                         {/* Lend position type - Selected token image */}
-                        {!isLoading && isLendPositionType(positionType) && (
+                        {(!isLoading && isLendPositionType(positionType)) && (
                             <ImageWithDefault
                                 src={assetDetails?.asset?.token?.logo || ''}
                                 alt={assetDetails?.asset?.token?.symbol || ''}
@@ -556,14 +560,12 @@ export default function LendAndBorrowAssets() {
                             />
                         )}
                         {/* Borrow position type - Select token dropdown */}
-                        {!isLoading && !isLendPositionType(positionType) && (
+                        {(!isLoading && !isLendPositionType(positionType)) && (
                             <SelectTokensDropdown
                                 key={positionType}
                                 options={borrowTokensDetails}
                                 selectedItemDetails={selectedBorrowTokenDetails}
-                                setSelectedItemDetails={(token) =>
-                                    setSelectedBorrowTokenDetails(token)
-                                }
+                                setSelectedItemDetails={setSelectedBorrowTokenDetails}
                             />
                         )}
                         <BodyText
