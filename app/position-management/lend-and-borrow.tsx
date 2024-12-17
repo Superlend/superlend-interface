@@ -238,26 +238,27 @@ export default function LendAndBorrowAssets() {
             !!platformData.platform?.core_contract &&
             !!tokenAddress
         ) {
-            console.log(
-                'getAllowance()',
-                lendTx.allowanceBN.toString(),
-                lendTx.isRefreshingAllowance
-            )
+            // console.log(
+            //     'getAllowance()',
+            //     lendTx.allowanceBN.toString(),
+            //     lendTx.isRefreshingAllowance
+            // )
             getAllowance(
                 Number(chain_id),
                 platformData.platform.core_contract,
                 tokenAddress
             ).then((r: BigNumber) => {
-                console.log(
-                    'getAllowance().then()',
-                    r.toString(),
-                    lendTx.isRefreshingAllowance
-                )
+                // console.log(
+                //     'getAllowance().then()',
+                //     r.toString(),
+                //     lendTx.isRefreshingAllowance
+                // )
                 setLendTx((prev: TLendTx) => ({
                     ...prev,
                     allowanceBN: r,
                     isRefreshingAllowance: false,
                 }))
+                // console.log("lendTx in getAllowance()", lendTx)
                 // console.log("allowanceBN - getAllowance()", r.toString())
             })
         }
@@ -739,6 +740,7 @@ function ConfirmationDialog({
             errorMessage: '',
             isPending: false,
             isConfirming: false,
+            isConfirmed: false,
         }))
         setBorrowTx((prev: TLendTx) => ({
             ...prev,
@@ -759,6 +761,7 @@ function ConfirmationDialog({
             hash: '',
             isPending: false,
             isConfirming: false,
+            isConfirmed: false,
         }))
         // When closing the dialog, reset the amount and the tx status
         if (!open) {

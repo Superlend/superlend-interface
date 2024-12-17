@@ -60,9 +60,10 @@ const SupplyAaveButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    const [lastTx, setLastTx] = useState<'mint' | 'approve'>('mint')
+    const [lastTx, setLastTx] = useState<boolean>(false);
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
+            confirmations: 5,
             hash,
         })
     const { address: walletAddress } = useAccount()
@@ -95,19 +96,24 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? lendTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? lendTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
+    console.log("isPending", isPending)
+    console.log("isConfirming", isConfirming)
+    console.log("isConfirmed", isConfirmed)
+
     const supply = useCallback(async () => {
         try {
+            setLastTx(false)
             setLendTx((prev: TLendTx) => ({
                 ...prev,
                 status: 'lend',
@@ -161,14 +167,26 @@ const SupplyAaveButton = ({
             ...prev,
             isPending: isPending,
             isConfirming: isConfirming,
+            isConfirmed: isConfirmed,
+            isRefreshingAllowance: isConfirmed
         }))
-    }, [isPending, isConfirming])
+    }, [isPending, isConfirming, isConfirmed])
+
+    // useEffect(() => {
+    //     if (isConfirmed) {
+    //         setLendTx((prev: TLendTx) => ({
+    //             ...prev,
+    //             isRefreshingAllowance: true,
+    //             isConfirmed: false,
+    //         }))
+    //     }
+    // }, [isConfirmed])
 
     // Update the status of the lendTx based on the allowance and the confirmation state
     useEffect(() => {
         if (lendTx.status === 'view') return
 
-        if (!isConfirmed) {
+        if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
             // Only update status based on allowance when not in a confirmed state
             if (lendTx.allowanceBN.gte(amountBN)) {
                 setLendTx((prev: TLendTx) => ({
@@ -177,6 +195,7 @@ const SupplyAaveButton = ({
                     hash: '',
                     errorMessage: '',
                 }))
+                // console.log("changing status to lend")
             } else {
                 setLendTx((prev: TLendTx) => ({
                     ...prev,
@@ -184,12 +203,32 @@ const SupplyAaveButton = ({
                     hash: '',
                     errorMessage: 'Insufficient allowance',
                 }))
+                // console.log("changing status to approve")
             }
-        } else {
+        } else if (lendTx.isConfirmed && !lendTx.isConfirming && !lendTx.isPending) {
             // Handle confirmation state transitions
+            console.log("lendTx", lendTx)
             if (lendTx.status === 'approve') {
-                supply()
-            } else if (lendTx.status === 'lend') {
+                // The below condition needs to be checked after the allowance is refreshed
+                if (lendTx.allowanceBN.gte(amountBN)) {
+                    // console.log("changing status to lend from approve")
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        status: 'lend',
+                        hash: hash || '',
+                        errorMessage: '',
+                    }))
+                    setLastTx(true)
+                } else {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        status: 'approve',
+                        hash: '',
+                        errorMessage: 'Insufficient allowance',
+                    }))
+                }
+            } else if (lendTx.status === 'lend' && !lastTx) {
+                // console.log("changing status to view")
                 setLendTx((prev: TLendTx) => ({
                     ...prev,
                     status: 'view',
@@ -198,7 +237,16 @@ const SupplyAaveButton = ({
                 }))
             }
         }
-    }, [amount, decimals, lendTx.allowanceBN, isConfirmed, lendTx.status])
+    }, [
+        amount,
+        decimals,
+        lendTx.allowanceBN,
+        lendTx.isPending,
+        lendTx.isConfirming,
+        lendTx.isConfirmed,
+        // lendTx.status
+    ]
+    )
 
     const onApproveSupply = async () => {
         if (!isConnected) {
@@ -232,12 +280,13 @@ const SupplyAaveButton = ({
                 functionName: 'approve',
                 args: [poolContractAddress, parseUnits(amount, decimals)],
             })
-                .then(() => {
-                    setLendTx((prev: TLendTx) => ({
-                        ...prev,
-                        isRefreshingAllowance: true,
-                    }))
-                })
+                // .then((data) => {
+                //     console.log("data", data)
+                //     setLendTx((prev: TLendTx) => ({
+                //         ...prev,
+                //         isRefreshingAllowance: true,
+                //     }))
+                // })
                 .catch((error) => {
                     setLendTx((prev: TLendTx) => ({
                         ...prev,
