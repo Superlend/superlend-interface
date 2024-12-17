@@ -1021,7 +1021,7 @@ function ConfirmationDialog({
                                     </BodyText>
                                     <Badge variant="green">
                                         {abbreviateNumber(
-                                            Number(assetDetails?.asset?.apy ?? 0)
+                                            isLendPositionType(positionType) ? Number(assetDetails?.asset?.apy ?? 0) : Number(assetDetails?.asset?.variable_borrow_apy ?? 0)
                                         )}
                                         %
                                     </Badge>
