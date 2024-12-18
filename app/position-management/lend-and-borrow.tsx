@@ -100,6 +100,16 @@ export default function LendAndBorrowAssets() {
     >([])
     const [selectedBorrowTokenDetails, setSelectedBorrowTokenDetails] =
         useState<TPlatformAsset | null>(null)
+    const [maxBorrowTokensAmount, setMaxBorrowTokensAmount] = useState<
+        Record<
+            string,
+            {
+                maxToBorrow: string
+                maxToBorrowFormatted: string
+            }
+        >
+    >({})
+
     const searchParams = useSearchParams()
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
@@ -202,20 +212,7 @@ export default function LendAndBorrowAssets() {
                             }
                     }
 
-                    const currentTokenDetails =
-                        selectedBorrowTokenDetails?.token
-                    const decimals = currentTokenDetails?.decimals ?? 0
-                    const maxAmountToBorrow = Math.abs(
-                        Number(
-                            maxBorrowAmounts[
-                                currentTokenDetails?.address.toLowerCase() ?? ''
-                            ]?.maxToBorrowFormatted
-                        )
-                    )?.toFixed(decimals)
-                    const hasZeroLimit = !Math.abs(Number(maxAmountToBorrow))
-
-                    setMaxBorrowAmount(hasZeroLimit ? '0' : maxAmountToBorrow)
-                    setIsLoadingMaxBorrowingAmount(false)
+                    setMaxBorrowTokensAmount(maxBorrowAmounts)
                 })
                 .catch((error) => {
                     console.log('error fetching max borrow amount', error)
@@ -223,13 +220,25 @@ export default function LendAndBorrowAssets() {
                     setIsLoadingMaxBorrowingAmount(false)
                 })
         }
-    }, [
-        walletAddress,
-        platformData,
-        providerStatus.isReady,
-        borrowTx.status,
-        selectedBorrowTokenDetails?.token?.address,
-    ])
+    }, [walletAddress, platformData, providerStatus.isReady, borrowTx.status])
+
+    useEffect(() => {
+        if (!Object.keys(maxBorrowTokensAmount).length) return
+
+        const currentTokenDetails = selectedBorrowTokenDetails?.token
+        const decimals = currentTokenDetails?.decimals ?? 0
+        const maxAmountToBorrow = Math.abs(
+            Number(
+                maxBorrowTokensAmount[
+                    currentTokenDetails?.address.toLowerCase() ?? ''
+                ]?.maxToBorrowFormatted
+            )
+        )?.toFixed(decimals)
+        const hasZeroLimit = !Math.abs(Number(maxAmountToBorrow))
+
+        setMaxBorrowAmount(hasZeroLimit ? '0' : maxAmountToBorrow)
+        setIsLoadingMaxBorrowingAmount(false)
+    }, [selectedBorrowTokenDetails?.token?.address, maxBorrowTokensAmount])
 
     useEffect(() => {
         if (
