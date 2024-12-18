@@ -108,9 +108,9 @@ const SupplyAaveButton = ({
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
-    console.log('isPending', isPending)
-    console.log('isConfirming', isConfirming)
-    console.log('isConfirmed', isConfirmed)
+    // console.log('isPending', isPending)
+    // console.log('isConfirming', isConfirming)
+    // console.log('isConfirmed', isConfirmed)
 
     const supply = useCallback(async () => {
         try {

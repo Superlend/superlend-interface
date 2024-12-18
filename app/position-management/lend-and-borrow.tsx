@@ -220,7 +220,7 @@ export default function LendAndBorrowAssets() {
                     setIsLoadingMaxBorrowingAmount(false)
                 })
         }
-    }, [walletAddress, platformData, providerStatus.isReady, borrowTx.status])
+    }, [walletAddress, platformData, providerStatus.isReady, borrowTx.status, lendTx.status])
 
     useEffect(() => {
         if (!Object.keys(maxBorrowTokensAmount).length) return
@@ -548,7 +548,7 @@ export default function LendAndBorrowAssets() {
                             {isLoadingMaxBorrowingAmount ? (
                                 <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
                             ) : (
-                                maxBorrowAmount
+                                handleSmallestValue(maxBorrowAmount)
                             )}
                         </BodyText>
                     )}
@@ -802,13 +802,6 @@ function ConfirmationDialog({
         return `~${hasLowestDisplayValuePrefix(Number(amountFormatted))}$${amountFormattedForLowestValue}`
     }
 
-    function handleSmallestValue(amount: string) {
-        const amountFormatted = hasExponent(amount)
-            ? Math.abs(Number(amount)).toFixed(10)
-            : amount.toString()
-        return `${hasLowestDisplayValuePrefix(Number(amountFormatted))} ${getLowestDisplayValue(Number(amountFormatted))}`
-    }
-
     const isLendTxPending = lendTx.isPending || lendTx.isConfirming
     const isBorrowTxPending = borrowTx.isPending || borrowTx.isConfirming
 
@@ -872,7 +865,7 @@ function ConfirmationDialog({
                 {isTxInProgress && (
                     <div className="flex flex-col items-center justify-center gap-6 mt-6">
                         <LoaderCircle
-                            className={`${txSpinnerColor} w-28 h-28 animate-spin rounded-full`}
+                            className={`text-secondary-500 w-28 h-28 animate-spin rounded-full`}
                             strokeWidth={2.5}
                         />
                         <BodyText
@@ -1216,4 +1209,11 @@ function getTxInProgressText({
         }
     }
     return textByStatus[txStatus.status]
+}
+
+function handleSmallestValue(amount: string) {
+    const amountFormatted = hasExponent(amount)
+        ? Math.abs(Number(amount)).toFixed(10)
+        : amount.toString()
+    return `${hasLowestDisplayValuePrefix(Number(amountFormatted))} ${getLowestDisplayValue(Number(amountFormatted))}`
 }
