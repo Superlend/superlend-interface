@@ -220,7 +220,13 @@ export default function LendAndBorrowAssets() {
                     setIsLoadingMaxBorrowingAmount(false)
                 })
         }
-    }, [walletAddress, platformData, providerStatus.isReady, borrowTx.status, lendTx.status])
+    }, [
+        walletAddress,
+        platformData,
+        providerStatus.isReady,
+        borrowTx.status,
+        lendTx.status,
+    ])
 
     useEffect(() => {
         if (!Object.keys(maxBorrowTokensAmount).length) return
