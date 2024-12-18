@@ -9,11 +9,9 @@ import React, { type ReactNode } from 'react'
 import { queryClient } from './query-client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import AssetsDataProvider from './data-provider'
-import { ThirdwebProvider } from "thirdweb/react";
+import { ThirdwebProvider } from 'thirdweb/react'
 import { WagmiProvider } from 'wagmi'
 import { Config, cookieToInitialState } from 'wagmi'
-
-
 
 // if (!projectId) {
 //     throw new Error('Project ID is not defined')
@@ -42,16 +40,20 @@ import { Config, cookieToInitialState } from 'wagmi'
 //     themeMode: 'light',
 // })
 
-function ContextProvider({ children, cookies }: { children: ReactNode; cookies: string | null }) {
+function ContextProvider({
+    children,
+    cookies,
+}: {
+    children: ReactNode
+    cookies: string | null
+}) {
     const initialState = cookieToInitialState(config as Config, cookies)
 
     return (
         <ThirdwebProvider>
             <WagmiProvider config={config} initialState={initialState}>
                 <QueryClientProvider client={queryClient}>
-                    <AssetsDataProvider>
-                        {children}
-                    </AssetsDataProvider>
+                    <AssetsDataProvider>{children}</AssetsDataProvider>
                 </QueryClientProvider>
             </WagmiProvider>
         </ThirdwebProvider>

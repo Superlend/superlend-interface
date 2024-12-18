@@ -1,4 +1,4 @@
-@import "../public/fonts/basier-circle/stylesheet.css";
+@import '../public/fonts/basier-circle/stylesheet.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -101,42 +101,42 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
 }
 
 .connect-wallet-button {
-  padding: 0 !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  height: 40px !important;
-  text-transform: capitalize !important;
-  width: 100% !important;
+    padding: 0 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    height: 40px !important;
+    text-transform: capitalize !important;
+    width: 100% !important;
 }
 
 .tw-connected-wallet__balance {
-  display: none !important;
+    display: none !important;
 }
 
 .tw-connected-wallet {
-  padding-block: 0 !important;
-  max-height: 40px !important;
+    padding-block: 0 !important;
+    max-height: 40px !important;
 }
 
-.tw-connected-wallet>:first-child {
-  display: none !important;
+.tw-connected-wallet > :first-child {
+    display: none !important;
 }
 
 .css-1jn7hrs {
-  display: none !important;
+    display: none !important;
 }
 
 .css-qjps8h {
-  min-width: fit-content !important;
+    min-width: fit-content !important;
 }
 
 /* .tw-connected-wallet > .css-1d4s0we {
@@ -144,10 +144,10 @@
 } */
 
 /* Remove number input arrows */
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    margin: 0; 
+    margin: 0;
 }

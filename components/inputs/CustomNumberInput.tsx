@@ -37,4 +37,4 @@ const CustomNumberInput = ({ amount, setAmount }: ICustomNumberInputProps) => {
     )
 }
 
-export default CustomNumberInput;
+export default CustomNumberInput
