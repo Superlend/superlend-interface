@@ -97,12 +97,12 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? lendTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? lendTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 
@@ -305,16 +305,32 @@ const SupplyAaveButton = ({
 
     return (
         <div className="flex flex-col gap-2">
-            {lendTx.status === 'approve' &&
+            {lendTx.status === 'approve' && (
                 <CustomAlert
                     variant="info"
                     hasPrefixIcon={false}
                     description={
-                        <BodyText level="body2" weight="normal" className="text-secondary-500">
-                            Note: You need to complete an approval transaction granting Superlend smart contracts permission to move funds from your wallet as the first step before supplying the asset.
-                            <a href="https://eips.ethereum.org/EIPS/eip-2612" target="_blank" className="text-secondary-500 pb-[0.5px] border-b border-secondary-500 hover:border-secondary-200 ml-1">Learn more</a>.
+                        <BodyText
+                            level="body2"
+                            weight="normal"
+                            className="text-secondary-500"
+                        >
+                            Note: You need to complete an approval transaction
+                            granting Superlend smart contracts permission to
+                            move funds from your wallet as the first step before
+                            supplying the asset.
+                            <a
+                                href="https://eips.ethereum.org/EIPS/eip-2612"
+                                target="_blank"
+                                className="text-secondary-500 pb-[0.5px] border-b border-secondary-500 hover:border-secondary-200 ml-1"
+                            >
+                                Learn more
+                            </a>
+                            .
                         </BodyText>
-                    } />}
+                    }
+                />
+            )}
             {error && (
                 <CustomAlert
                     description={
