@@ -96,6 +96,7 @@ export type TOpportunity = {
             avg_30days: string
         }
         rewards: TReward[]
+        isVault?: boolean
     }
     trend: {
         value: string
@@ -122,6 +123,7 @@ export type TOpportunityTable = {
     deposits: string
     borrows: string
     utilization: string
+    isVault: boolean
 }
 
 // Platform

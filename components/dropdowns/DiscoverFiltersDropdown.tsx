@@ -95,8 +95,15 @@ export default function DiscoverFiltersDropdown() {
         },
         {
             logo: PlatformLogo.MORPHO,
-            name: 'MORPHO',
-            protocol_id: 'MORPHO',
+            name: 'MORPHO VAULTS',
+            protocol_id: 'MORPHO_VAULTS',
+            isVault: true,
+        },
+        {
+            logo: PlatformLogo.MORPHO,
+            name: 'MORPHO MARKETS',
+            protocol_id: 'MORPHO_MARKETS',
+            isVault: false,
         },
         {
             logo: PlatformLogo.FLUID,
@@ -339,16 +346,16 @@ function FilterCardContent({
                             {!!getActiveFiltersCountByCategory(
                                 `${item.value.toLowerCase()}_ids`
                             ) && (
-                                <Label
-                                    size="small"
-                                    weight="medium"
-                                    className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer"
-                                >
-                                    {getActiveFiltersCountByCategory(
-                                        `${item.value.toLowerCase()}_ids`
-                                    )}
-                                </Label>
-                            )}
+                                    <Label
+                                        size="small"
+                                        weight="medium"
+                                        className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer"
+                                    >
+                                        {getActiveFiltersCountByCategory(
+                                            `${item.value.toLowerCase()}_ids`
+                                        )}
+                                    </Label>
+                                )}
                         </Button>
                     </motion.div>
                 ))}

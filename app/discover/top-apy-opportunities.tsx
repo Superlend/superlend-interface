@@ -26,6 +26,7 @@ import DiscoverFiltersDropdown from '@/components/dropdowns/DiscoverFiltersDropd
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { motion } from 'framer-motion'
 import { useDebounce } from '@/hooks/useDebounce'
+import { PlatformType } from '@/types/platform'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -185,13 +186,20 @@ export default function TopApyOpportunities() {
             utilization: item.platform.utilization_rate,
             additional_rewards: item.platform.additional_rewards,
             rewards: item.platform.rewards,
+            isVault: item.platform.isVault || false,
         }
     })
 
     const filteredTableDataByPlatformIds = rawTableData.filter(
         (opportunity) => {
+            const isVault = opportunity.isVault
+            const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
+            const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
+
+            const compareWith = `${opportunity.platformId.split('-')[0]}${isMorpho ? `_${morphoSuffix}` : ''}`
+            
             return platformIdsParam.includes(
-                opportunity.platformId.split('-')[0]
+                compareWith.trim()
             )
         }
     )
