@@ -107,8 +107,12 @@ export default function PageHeader() {
     const vaultId = platformData?.platform?.vaultId
     const morpho_market_id = platformData?.platform?.morpho_market_id
     const network_name = chainName
+    const core_contract = platformData?.platform?.core_contract
     const isFluidVault =
         platformData?.platform?.protocol_type === PlatformType.FLUID &&
+        platformData?.platform?.isVault
+    const isMorphoVault =
+        platformData?.platform?.protocol_type === PlatformType.MORPHO &&
         platformData?.platform?.isVault
     const platformWebsiteLink = getPlatformWebsiteLink({
         platformId,
@@ -117,6 +121,8 @@ export default function PageHeader() {
         chainId: chain_id,
         vaultId,
         isFluidVault,
+        isMorphoVault,
+        core_contract,
         morpho_market_id,
         network_name,
     })
@@ -172,10 +178,11 @@ export default function PageHeader() {
         ?.flatMap((asset: TPlatformAsset) => asset.token.warnings)
 
     const isDisplayOneToken =
-        hasPoolBasedTokens || (isFluidPlatform && !isFluidVault)
+        hasPoolBasedTokens || (isFluidPlatform && !isFluidVault) || (isMorpho && isMorphoVault)
     const isDisplayTwoTokens = !(
         hasPoolBasedTokens ||
-        (isFluidPlatform && !isFluidVault)
+        (isFluidPlatform && !isFluidVault) ||
+        (isMorpho && isMorphoVault)
     )
 
     const tokensToDisplayOnTooltip = isDisplayOneToken
@@ -191,7 +198,7 @@ export default function PageHeader() {
                             key={index}
                             description={
                                 WarningMessages[
-                                    message.type as keyof typeof WarningMessages
+                                message.type as keyof typeof WarningMessages
                                 ]
                             }
                         />
@@ -202,9 +209,9 @@ export default function PageHeader() {
             <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
                 <motion.div
                     className="will-change-transform"
-                    // initial={{ opacity: 0.7, y: 30 }}
-                    // animate={{ opacity: 1, y: 0 }}
-                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                // initial={{ opacity: 0.7, y: 30 }}
+                // animate={{ opacity: 1, y: 0 }}
+                // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                 >
                     <Button
                         className="py-[8px] px-[12px] rounded-3"
@@ -220,9 +227,9 @@ export default function PageHeader() {
                 <div className="flex flex-col xl:flex-row items-start justify-between gap-[24px] w-full">
                     <motion.div
                         className="flex flex-wrap items-center gap-[16px] will-change-transform"
-                        // initial={{ opacity: 0.7, y: 30 }}
-                        // animate={{ opacity: 1, y: 0 }}
-                        // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                    // initial={{ opacity: 0.7, y: 30 }}
+                    // animate={{ opacity: 1, y: 0 }}
+                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                     >
                         {/* Loading Skeleton */}
                         {isLoadingPlatformData && <LoadingSkeleton />}
@@ -355,9 +362,9 @@ export default function PageHeader() {
                     {/* Page Header Stats */}
                     <motion.div
                         className="header-right flex flex-wrap items-center shrink-0 gap-[24px]"
-                        // initial={{ opacity: 0.7, y: 30 }}
-                        // animate={{ opacity: 1, y: 0 }}
-                        // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                    // initial={{ opacity: 0.7, y: 30 }}
+                    // animate={{ opacity: 1, y: 0 }}
+                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                     >
                         {/* Loading Skeleton */}
                         {isLoadingPlatformData && (
