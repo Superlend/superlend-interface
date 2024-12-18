@@ -60,7 +60,7 @@ const SupplyAaveButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    const [lastTx, setLastTx] = useState<boolean>(false);
+    const [lastTx, setLastTx] = useState<boolean>(false)
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
             confirmations: 5,
@@ -96,20 +96,20 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? lendTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? lendTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
-    console.log("isPending", isPending)
-    console.log("isConfirming", isConfirming)
-    console.log("isConfirmed", isConfirmed)
+    console.log('isPending', isPending)
+    console.log('isConfirming', isConfirming)
+    console.log('isConfirmed', isConfirmed)
 
     const supply = useCallback(async () => {
         try {
@@ -168,7 +168,7 @@ const SupplyAaveButton = ({
             isPending: isPending,
             isConfirming: isConfirming,
             isConfirmed: isConfirmed,
-            isRefreshingAllowance: isConfirmed
+            isRefreshingAllowance: isConfirmed,
         }))
     }, [isPending, isConfirming, isConfirmed])
 
@@ -205,9 +205,13 @@ const SupplyAaveButton = ({
                 }))
                 // console.log("changing status to approve")
             }
-        } else if (lendTx.isConfirmed && !lendTx.isConfirming && !lendTx.isPending) {
+        } else if (
+            lendTx.isConfirmed &&
+            !lendTx.isConfirming &&
+            !lendTx.isPending
+        ) {
             // Handle confirmation state transitions
-            console.log("lendTx", lendTx)
+            console.log('lendTx', lendTx)
             if (lendTx.status === 'approve') {
                 // The below condition needs to be checked after the allowance is refreshed
                 if (lendTx.allowanceBN.gte(amountBN)) {
@@ -245,8 +249,7 @@ const SupplyAaveButton = ({
         lendTx.isConfirming,
         lendTx.isConfirmed,
         // lendTx.status
-    ]
-    )
+    ])
 
     const onApproveSupply = async () => {
         if (!isConnected) {
