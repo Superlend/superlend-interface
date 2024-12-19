@@ -226,6 +226,8 @@ export default function LendAndBorrowAssets() {
         providerStatus.isReady,
         borrowTx.status,
         lendTx.status,
+        lendTx.isConfirmed,
+        borrowTx.isConfirmed,
     ])
 
     useEffect(() => {
@@ -294,14 +296,14 @@ export default function LendAndBorrowAssets() {
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
-        if (lendTx.status === 'view') {
+        if (lendTx.status === 'view' && lendTx.isConfirmed) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
 
-        if (borrowTx.status === 'view') {
+        if (borrowTx.status === 'view' && borrowTx.isConfirmed) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [lendTx.status, borrowTx.status])
+    }, [lendTx.status, borrowTx.status, lendTx.isConfirmed, borrowTx.isConfirmed])
 
     // Set selected borrow token details
     useEffect(() => {

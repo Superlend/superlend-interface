@@ -16,15 +16,16 @@ const LendBorrowTxInitialState: TLendBorrowTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setLendTx: () => {},
+    setLendTx: () => { },
     borrowTx: {
         status: 'borrow',
         hash: '',
         errorMessage: '',
         isPending: false,
         isConfirming: false,
+        isConfirmed: false,
     },
-    setBorrowTx: () => {},
+    setBorrowTx: () => { },
 }
 
 export const LendBorrowTxContext = createContext<TLendBorrowTxContext>(
@@ -48,6 +49,7 @@ export type TBorrowTx = {
     errorMessage: string
     isPending: boolean
     isConfirming: boolean
+    isConfirmed: boolean
 }
 
 export type TLendBorrowTxContext = {
@@ -82,6 +84,7 @@ export default function LendBorrowTxProvider({
         errorMessage: '',
         isPending: false,
         isConfirming: false,
+        isConfirmed: false,
     })
 
     return (
