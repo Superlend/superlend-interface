@@ -38,6 +38,7 @@ type TPlatform = {
     pnl: number
     total_liquidity: number
     total_borrow: number
+    isVault: boolean
 }
 
 export type TPortfolio = {

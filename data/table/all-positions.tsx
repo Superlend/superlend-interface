@@ -51,6 +51,7 @@ export type TPositionsTable = {
     deposits: string
     borrows: string
     earnings: number
+    isVault: boolean
 }
 
 export const columns: ColumnDef<TPositionsTable>[] = [
