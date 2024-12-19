@@ -310,6 +310,11 @@ export default function LendAndBorrowAssets() {
         setSelectedBorrowTokenDetails(borrowTokensDetails[0])
     }, [!!borrowTokensDetails.length])
 
+    // Reset Amount
+    useEffect(() => {
+        setAmount('')
+    }, [positionType, selectedBorrowTokenDetails?.token?.address])
+
     // Filter user positions
     const [selectedPlatformDetails] = portfolioData?.platforms.filter(
         (platform) =>
@@ -535,7 +540,7 @@ export default function LendAndBorrowAssets() {
                     >
                         {isLendPositionType(positionType)
                             ? 'lend collateral'
-                            : `borrow ${assetDetails?.asset?.token?.symbol}`}
+                            : `borrow ${selectedBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
                     {walletAddress && isLendPositionType(positionType) && (
                         <BodyText
@@ -543,7 +548,7 @@ export default function LendAndBorrowAssets() {
                             weight="normal"
                             className="capitalize text-gray-600 flex items-center gap-[4px]"
                         >
-                            Bal.{' '}
+                            Bal:{' '}
                             {isLoadingErc20TokensBalanceData ? (
                                 <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
                             ) : (
@@ -557,7 +562,11 @@ export default function LendAndBorrowAssets() {
                                 )
                             )}
                             <span className="inline-block truncate max-w-[70px]">
-                                {assetDetails?.asset?.token?.symbol}
+                                {
+                                    isLendPositionType(positionType) ?
+                                        assetDetails?.asset?.token?.symbol
+                                        : selectedBorrowTokenDetails?.token?.symbol
+                                }
                             </span>
                         </BodyText>
                     )}
@@ -567,7 +576,7 @@ export default function LendAndBorrowAssets() {
                             weight="normal"
                             className="capitalize text-gray-600 flex items-center gap-[4px]"
                         >
-                            limit -{' '}
+                            limit:{' '}
                             {isLoadingMaxBorrowingAmount ? (
                                 <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
                             ) : (
@@ -920,7 +929,7 @@ function ConfirmationDialog({
                             <HeadingText
                                 level="h4"
                                 weight="medium"
-                                className="text-gray-800 text-center"
+                                className="text-gray-800 text-center capitalize"
                             >
                                 {isLendPositionType(positionType)
                                     ? 'Lend collateral'
@@ -1035,15 +1044,15 @@ function ConfirmationDialog({
                         borrow:
                             borrowTx.status === 'borrow' && !isBorrowTxPending,
                     }) && (
-                            <div className="flex items-center justify-between px-[24px] mb-[4px]">
+                            <div className={`flex items-center ${isLendPositionType(positionType) ? 'justify-end' : 'justify-between'} px-[24px] mb-[4px] gap-1`}>
                                 <BodyText
                                     level="body2"
                                     weight="normal"
                                     className="text-gray-600"
                                 >
                                     {isLendPositionType(positionType)
-                                        ? 'Bal.'
-                                        : 'Remaining limit'}
+                                        ? 'Bal:'
+                                        : 'Remaining limit:'}
                                 </BodyText>
                                 <BodyText
                                     level="body2"
