@@ -218,6 +218,12 @@ export default function YourPositionsAtRiskCarousel() {
                 )}
             </div>
             {
+                // loading
+                isLoadingPortfolioData && (
+                    <CarouselCardsSkeleton />
+                )
+            }
+            {
                 // positions at risk
                 !isLoadingPortfolioData && POSITIONS_AT_RISK.length > 0 && (
                     <Carousel
@@ -439,14 +445,6 @@ export default function YourPositionsAtRiskCarousel() {
                     </Carousel>
                 )
             }
-            {
-                // loading
-                isLoadingPortfolioData && (
-                    <div className="relative h-[225px] w-[100%] md:w-[364px] overflow-hidden rounded-6 md:ml-5">
-                        <Skeleton className="h-full w-full" />
-                    </div>
-                )
-            }
             {!isLoadingPortfolioData &&
                 ((POSITIONS_AT_RISK.length === 0 &&
                     portfolioData?.platforms?.length > 0) ||
@@ -497,4 +495,18 @@ function getStatDisplayValue(
     hasPrefix: boolean = true
 ) {
     return `${hasPrefix ? hasLowestDisplayValuePrefix(Number(value)) : ''}${getLowestDisplayValue(Number(value))}`
+}
+
+function CarouselCardsSkeleton() {
+    return (
+        <Carousel>
+            <CarouselContent className="ml-4 md:ml-1.5 space-x-4">
+                {[...Array(3)].map((_, index) => (
+                    <CarouselItem key={index} className="basis-[80%] min-[450px]:basis-[364px] md:basis-[364px] rounded-6 overflow-auto md:ml-5 pl-0">
+                        <Skeleton className="h-[225px] w-full bg-gray-300" />
+                    </CarouselItem>
+                ))}
+            </CarouselContent>
+        </Carousel>
+    )
 }
