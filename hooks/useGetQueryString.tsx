@@ -15,5 +15,5 @@ export default function useGetQueryString() {
         },
         [searchParams]
     )
-    return createQueryString;
+    return createQueryString
 }

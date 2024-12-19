@@ -1,7 +1,9 @@
 @font-face {
     font-family: 'Basier Circle';
     src: url('BasierCircle-BoldItalic.eot');
-    src: local('Basier Circle Bold Italic'), local('BasierCircle-BoldItalic'),
+    src:
+        local('Basier Circle Bold Italic'),
+        local('BasierCircle-BoldItalic'),
         url('BasierCircle-BoldItalic.eot?#iefix') format('embedded-opentype'),
         url('BasierCircle-BoldItalic.woff2') format('woff2'),
         url('BasierCircle-BoldItalic.woff') format('woff'),
@@ -13,7 +15,9 @@
 @font-face {
     font-family: 'Basier Circle';
     src: url('BasierCircle-Bold.eot');
-    src: local('Basier Circle Bold'), local('BasierCircle-Bold'),
+    src:
+        local('Basier Circle Bold'),
+        local('BasierCircle-Bold'),
         url('BasierCircle-Bold.eot?#iefix') format('embedded-opentype'),
         url('BasierCircle-Bold.woff2') format('woff2'),
         url('BasierCircle-Bold.woff') format('woff'),
@@ -25,7 +29,9 @@
 @font-face {
     font-family: 'Basier Circle';
     src: url('BasierCircle-MediumItalic.eot');
-    src: local('Basier Circle Medium Itali'), local('BasierCircle-MediumItalic'),
+    src:
+        local('Basier Circle Medium Itali'),
+        local('BasierCircle-MediumItalic'),
         url('BasierCircle-MediumItalic.eot?#iefix') format('embedded-opentype'),
         url('BasierCircle-MediumItalic.woff2') format('woff2'),
         url('BasierCircle-MediumItalic.woff') format('woff'),
@@ -37,7 +43,9 @@
 @font-face {
     font-family: 'Basier Circle';
     src: url('BasierCircle-Italic.eot');
-    src: local('Basier Circle Italic'), local('BasierCircle-Italic'),
+    src:
+        local('Basier Circle Italic'),
+        local('BasierCircle-Italic'),
         url('BasierCircle-Italic.eot?#iefix') format('embedded-opentype'),
         url('BasierCircle-Italic.woff2') format('woff2'),
         url('BasierCircle-Italic.woff') format('woff'),
@@ -49,7 +57,9 @@
 @font-face {
     font-family: 'Basier Circle';
     src: url('BasierCircle-SemiBold.eot');
-    src: local('Basier Circle SemiBold'), local('BasierCircle-SemiBold'),
+    src:
+        local('Basier Circle SemiBold'),
+        local('BasierCircle-SemiBold'),
         url('BasierCircle-SemiBold.eot?#iefix') format('embedded-opentype'),
         url('BasierCircle-SemiBold.woff2') format('woff2'),
         url('BasierCircle-SemiBold.woff') format('woff'),
@@ -61,7 +71,9 @@
 @font-face {
     font-family: 'Basier Circle';
     src: url('BasierCircle-Medium.eot');
-    src: local('Basier Circle Medium'), local('BasierCircle-Medium'),
+    src:
+        local('Basier Circle Medium'),
+        local('BasierCircle-Medium'),
         url('BasierCircle-Medium.eot?#iefix') format('embedded-opentype'),
         url('BasierCircle-Medium.woff2') format('woff2'),
         url('BasierCircle-Medium.woff') format('woff'),
@@ -73,7 +85,9 @@
 @font-face {
     font-family: 'Basier Circle';
     src: url('BasierCircle-Regular.eot');
-    src: local('Basier Circle Regular'), local('BasierCircle-Regular'),
+    src:
+        local('Basier Circle Regular'),
+        local('BasierCircle-Regular'),
         url('BasierCircle-Regular.eot?#iefix') format('embedded-opentype'),
         url('BasierCircle-Regular.woff2') format('woff2'),
         url('BasierCircle-Regular.woff') format('woff'),
@@ -85,12 +99,14 @@
 @font-face {
     font-family: 'Basier Circle';
     src: url('BasierCircle-SemiBoldItalic.eot');
-    src: local('Basier Circle SemiBold Ita'), local('BasierCircle-SemiBoldItalic'),
-        url('BasierCircle-SemiBoldItalic.eot?#iefix') format('embedded-opentype'),
+    src:
+        local('Basier Circle SemiBold Ita'),
+        local('BasierCircle-SemiBoldItalic'),
+        url('BasierCircle-SemiBoldItalic.eot?#iefix')
+            format('embedded-opentype'),
         url('BasierCircle-SemiBoldItalic.woff2') format('woff2'),
         url('BasierCircle-SemiBoldItalic.woff') format('woff'),
         url('BasierCircle-SemiBoldItalic.ttf') format('truetype');
     font-weight: 600;
     font-style: italic;
 }
-
