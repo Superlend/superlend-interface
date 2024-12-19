@@ -80,7 +80,7 @@ export default function PortfolioOverview() {
                     <div className="positions-net-worth-block h-full px-[24px] md:px-[32px] pt-[28px] flex flex-col items-start justify-between gap-[29px] pb-[24px]">
                         <div className="shrink-0">
                             {isLoadingPortfolioData && (
-                                <Skeleton className="h-10 w-[75%]" />
+                                <Skeleton className="h-10 w-[75%] bg-gray-300" />
                             )}
                             {!isLoadingPortfolioData && (
                                 <HeadingText
@@ -102,7 +102,7 @@ export default function PortfolioOverview() {
                                         <React.Fragment key={positionIndex}>
                                             <div className="data-block-1">
                                                 {isLoadingPortfolioData && (
-                                                    <Skeleton className="h-6 w-16" />
+                                                    <Skeleton className="h-6 w-16 bg-gray-300" />
                                                 )}
                                                 <div className="flex flex-col gap-1">
                                                     {!isLoadingPortfolioData &&
