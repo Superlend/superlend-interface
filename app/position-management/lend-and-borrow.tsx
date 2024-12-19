@@ -497,6 +497,14 @@ export default function LendAndBorrowAssets() {
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
     const isPolygonChain = Number(chain_id) === 137
 
+    const isLoadingHelperText = isLendPositionType(positionType) ? isLoadingErc20TokensBalanceData : isLoadingMaxBorrowingAmount;
+
+    function getLoadingHelperText() {
+        return isLendPositionType(positionType) ?
+            'Loading balance...'
+            : 'Loading borrow limit...'
+    }
+
     // Loading skeleton
     if (isLoading && isAaveV3Protocol && isPolygonChain) {
         return <LoadingSectionSkeleton className="h-[300px] w-full" />
@@ -636,11 +644,14 @@ export default function LendAndBorrowAssets() {
                             weight="normal"
                             className="mx-auto w-full text-gray-500 py-[16px] text-center max-w-[250px]"
                         >
-                            {!errorMessage &&
+                            {
+                                isLoadingHelperText && getLoadingHelperText()
+                            }
+                            {(!errorMessage && !isLoadingHelperText) &&
                                 (isLendPositionType(positionType)
                                     ? 'Enter amount to proceed with supplying collateral for this position'
                                     : 'Enter the amount you want to borrow from this position')}
-                            {errorMessage && (
+                            {(errorMessage && !isLoadingHelperText) && (
                                 <span className="text-xs text-destructive-foreground">
                                     {errorMessage}
                                 </span>
