@@ -1226,21 +1226,21 @@ function getTxInProgressText({
     tokenName: string
     txStatus: TLendTx | TBorrowTx
 }) {
-    const formattedText = `${amount} ${tokenName}`
+    const formattedText = `${amount}${tokenName}`
     const isPending = txStatus.isPending
     const isConfirming = txStatus.isConfirming
     let textByStatus: any = {}
     if (isPending) {
         textByStatus = {
-            approve: `Approve spending of ${formattedText} from your wallet`,
-            lend: `Approve transaction for lending of ${formattedText} from your wallet`,
-            borrow: `Approve transaction for borrowing of ${formattedText} from your wallet`,
+            approve: `Approve spending ${formattedText} from your wallet`,
+            lend: `Approve transaction for lending ${formattedText} from your wallet`,
+            borrow: `Approve transaction for borrowing ${formattedText} from your wallet`,
         }
     } else if (isConfirming) {
         textByStatus = {
-            approve: `Confirming transaction for spending of ${formattedText} from your wallet`,
-            lend: `Confirming transaction for lending of ${formattedText} from your wallet`,
-            borrow: `Confirming transaction for borrowing of ${formattedText} from your wallet`,
+            approve: `Confirming transaction for spending ${formattedText} from your wallet`,
+            lend: `Confirming transaction for lending ${formattedText} from your wallet`,
+            borrow: `Confirming transaction for borrowing ${formattedText} from your wallet`,
         }
     }
     return textByStatus[txStatus.status]
