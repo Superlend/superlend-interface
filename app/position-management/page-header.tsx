@@ -92,9 +92,8 @@ export default function PageHeader() {
         platformData: platformData as TPlatform,
     })
 
-    const isMorpho = platformData?.platform?.platform_name
-        ?.toLowerCase()
-        ?.includes('morpho')
+    const isMorpho = platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() === PlatformType.MORPHO
+    const isVault = platformData?.platform?.isVault
     const tokenSymbol = tokenDetails?.symbol
     const tokenLogo = tokenDetails?.logo || ''
     const tokenName = tokenDetails?.name || ''
@@ -126,6 +125,8 @@ export default function PageHeader() {
         morpho_market_id,
         network_name,
     })
+
+    const formattedBorrowRate = isMorphoVault ? "N/A" : `${pageHeaderStats?.borrow_rate}%`;
 
     const checkForPairBasedTokens = (
         platformTypes: string[],
@@ -205,7 +206,7 @@ export default function PageHeader() {
                     ))}
                 </div>
             )}
-            {isMorpho && <MorphoMarketAlert />}
+            {(isMorpho && !isVault) && <MorphoMarketAlert />}
             <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
                 <motion.div
                     className="will-change-transform"
@@ -391,7 +392,7 @@ export default function PageHeader() {
                                     </BodyText>
                                     <Badge variant="yellow">
                                         <BodyText level='body1' weight='medium'>
-                                            {pageHeaderStats?.borrow_rate}%
+                                            {formattedBorrowRate}
                                         </BodyText>
                                     </Badge>
                                 </div>
