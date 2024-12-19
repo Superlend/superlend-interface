@@ -388,8 +388,8 @@ export default function PositionDetails() {
             <div className="bg-white rounded-4 py-[32px] px-[22px] md:px-[44px]">
                 {isLoading && <Skeleton className="w-full h-[100px]" />}
                 {!isLoading && userPositions.length > 0 && (
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-                        <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-5">
+                        <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full h-full">
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -430,7 +430,7 @@ export default function PositionDetails() {
                             </Button> */}
                             </div>
                         </div>
-                        <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full">
+                        <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full h-full">
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -452,21 +452,13 @@ export default function PositionDetails() {
                                             })
                                         )}
                                     />
-                                    <HeadingText
-                                        level="h3"
-                                        weight="medium"
-                                        className="text-gray-800"
-                                    >
-                                        {(isMorpho && isVault) ? (
-                                            <InfoTooltip
-                                                label={
-                                                    <TooltipText className="text-gray-600">
-                                                        N/A
-                                                    </TooltipText>
-                                                }
-                                                content={morphoVaultsYourBorrowingTooltipText}
-                                            />
-                                        ) : (
+                                    {/* Your borrowed amount */}
+                                    {!(isMorpho && isVault) &&
+                                        <HeadingText
+                                            level="h3"
+                                            weight="medium"
+                                            className="text-gray-800"
+                                        >
                                             <span>
                                                 $
                                                 {abbreviateNumber(
@@ -476,8 +468,20 @@ export default function PositionDetails() {
                                                     )
                                                 )}
                                             </span>
-                                        )}
-                                    </HeadingText>
+                                        </HeadingText>}
+                                    {/* Borrowed amount for Morpho vaults */}
+                                    {(isMorpho && isVault) && (
+                                        <InfoTooltip
+                                            label={
+                                                <BodyText level="body1" weight="normal" className="text-gray-600">
+                                                    <TooltipText className="text-gray-600">
+                                                        N/A
+                                                    </TooltipText>
+                                                </BodyText>
+                                            }
+                                            content={morphoVaultsYourBorrowingTooltipText}
+                                        />
+                                    )}
                                 </div>
                                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
                                 repay
