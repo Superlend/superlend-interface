@@ -61,10 +61,9 @@ const SupplyAaveButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    const [lastTx, setLastTx] = useState<boolean>(false)
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
-            confirmations: 5,
+            confirmations: 2,
             hash,
         })
     const { address: walletAddress } = useAccount()
@@ -110,7 +109,6 @@ const SupplyAaveButton = ({
 
     const supply = useCallback(async () => {
         try {
-            setLastTx(false)
             setLendTx((prev: TLendTx) => ({
                 ...prev,
                 status: 'lend',
@@ -189,6 +187,12 @@ const SupplyAaveButton = ({
     }, [lendTx.allowanceBN])
 
     useEffect(() => {
+        if ((lendTx.status === 'approve' || lendTx.status === 'lend') && hash) {
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                hash: hash || '',
+            }))
+        }
         if (lendTx.status === 'view' && hash) {
             setLendTx((prev: TLendTx) => ({
                 ...prev,
@@ -248,7 +252,7 @@ const SupplyAaveButton = ({
                             weight="normal"
                             className="text-secondary-500"
                         >
-                            Note: You need to complete an approval transaction
+                            Note: You need to complete an &apos;approval transaction&apos;
                             granting Superlend smart contracts permission to
                             move funds from your wallet as the first step before
                             supplying the asset.
@@ -258,8 +262,7 @@ const SupplyAaveButton = ({
                                 className="text-secondary-500 pb-[0.5px] border-b border-secondary-500 hover:border-secondary-200 ml-1"
                             >
                                 Learn more
-                            </a>
-                            .
+                            </a>.
                         </BodyText>
                     }
                 />

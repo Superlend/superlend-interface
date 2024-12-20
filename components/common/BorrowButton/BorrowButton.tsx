@@ -74,7 +74,11 @@ const BorrowButton = ({
 
     useEffect(() => {
         if (hash) {
-            setBorrowTx({ status: 'view', hash })
+            setBorrowTx((prev: TBorrowTx) => ({
+                ...prev,
+                status: 'view',
+                hash,
+            }))
         }
     }, [hash])
 
@@ -84,8 +88,9 @@ const BorrowButton = ({
             ...prev,
             isPending: isPending,
             isConfirming: isConfirming,
+            isConfirmed: isConfirmed,
         }))
-    }, [isPending, isConfirming])
+    }, [isPending, isConfirming, isConfirmed])
 
     const txBtnText =
         txBtnStatus[

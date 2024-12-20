@@ -853,6 +853,10 @@ function ConfirmationDialog({
         ? lendTxSpinnerColor
         : borrowTxSpinnerColor
 
+    const canDisplayExplorerLinkWhileLoading = isLendPositionType(positionType)
+        ? (lendTx.hash.length > 0) && (lendTx.isConfirming || lendTx.isPending)
+        : (borrowTx.hash.length > 0) && (borrowTx.isConfirming || borrowTx.isPending)
+
     return (
         <Dialog open={open}>
             <DialogTrigger asChild>
@@ -879,7 +883,7 @@ function ConfirmationDialog({
                     <Button
                         variant="ghost"
                         onClick={() => handleOpenChange(false)}
-                        className="h-6 w-6 flex items-center justify-center absolute right-4 top-5 rounded-full opacity-70 bg-white ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground p-0"
+                        className="h-6 w-6 flex items-center justify-center absolute right-6 top-6 rounded-full opacity-70 bg-white ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground p-0"
                     >
                         <X strokeWidth={2.5} className="h-4 w-4 text-black" />
                         <span className="sr-only">Close</span>
@@ -906,6 +910,47 @@ function ConfirmationDialog({
                                 positionType,
                             })}
                         </BodyText>
+                        {canDisplayExplorerLinkWhileLoading &&
+                            <div className="flex items-center justify-between w-full py-[16px] bg-white rounded-5 px-[24px]">
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-gray-600"
+                                >
+                                    View on explorer
+                                </BodyText>
+                                <div className="flex items-center gap-[4px]">
+                                    <BodyText
+                                        level="body2"
+                                        weight="medium"
+                                        className="text-gray-800 flex items-center gap-[4px]"
+                                    >
+                                        <a
+                                            href={getExplorerLink(
+                                                isLendPositionType(positionType)
+                                                    ? lendTx.hash
+                                                    : borrowTx.hash,
+                                                assetDetails?.platform_name
+                                            )}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-secondary-500"
+                                        >
+                                            {getTruncatedTxHash(
+                                                isLendPositionType(positionType)
+                                                    ? lendTx.hash
+                                                    : borrowTx.hash
+                                            )}
+                                        </a>
+                                        <ArrowUpRightIcon
+                                            width={16}
+                                            height={16}
+                                            className="stroke-secondary-500"
+                                        />
+                                    </BodyText>
+                                </div>
+                            </div>
+                        }
                     </div>
                 )}
                 {/* Initial Confirmation UI */}
@@ -1033,31 +1078,21 @@ function ConfirmationDialog({
                     {/* Block 2 */}
                     {isShowBlock({
                         lend: lendTx.status === 'approve' && !isLendTxInProgress,
-                        borrow:
-                            borrowTx.status === 'borrow' && !isBorrowTxInProgress,
+                        borrow: false,
                     }) && (
-                            <div className={`flex items-center ${isLendPositionType(positionType) ? 'justify-end' : 'justify-between'} px-[24px] mb-[4px] gap-1`}>
+                            <div
+                                className={`flex items-center ${isLendPositionType(positionType) ? 'justify-end' : 'justify-between'} px-[24px] mb-[4px] gap-1`}>
                                 <BodyText
                                     level="body2"
                                     weight="normal"
                                     className="text-gray-600"
                                 >
-                                    {isLendPositionType(positionType)
-                                        ? 'Bal:'
-                                        : 'Remaining limit:'}
+                                    Bal:
                                 </BodyText>
-                                <BodyText
-                                    level="body2"
-                                    weight="normal"
-                                    className="text-gray-600"
-                                >
-                                    {handleSmallestValue(
-                                        (isLendPositionType(positionType)
-                                            ? balance
-                                            : Number(maxBorrowAmount) -
-                                            Number(amount)
-                                        ).toString()
-                                    )}
+                                <BodyText level="body2" weight="normal" className="text-gray-600">
+                                    {handleSmallestValue((Number(balance) - Number(amount)).toString())}
+                                    {" "}
+                                    {assetDetails?.asset?.token?.symbol}
                                 </BodyText>
                             </div>
                         )}
@@ -1108,12 +1143,14 @@ function ConfirmationDialog({
                                             weight="normal"
                                             className="text-gray-800"
                                         >
-                                            {abbreviateNumber(
-                                                (isLendPositionType(positionType)
-                                                    ? Number(balance)
-                                                    : Number(maxBorrowAmount)) -
-                                                Number(amount)
-                                            )}
+                                            {
+                                                abbreviateNumber(
+                                                    (isLendPositionType(positionType)
+                                                        ? (Number(balance) -
+                                                            Number(amount))
+                                                        : (Number(maxBorrowAmount)) -
+                                                        Number(amount)))
+                                            }
                                         </BodyText>
                                         <ImageWithDefault
                                             src={assetDetails?.asset?.token?.logo}
@@ -1126,8 +1163,8 @@ function ConfirmationDialog({
                                 </div>
                             )}
                         {isShowBlock({
-                            lend: lendTx.status === 'view' && !isLendTxInProgress,
-                            borrow: borrowTx.status === 'view' && !isBorrowTxInProgress,
+                            lend: (lendTx.status === 'lend' || lendTx.status === 'view') && (lendTx.hash.length > 0) && !isLendTxInProgress,
+                            borrow: borrowTx.status === 'view' && (borrowTx.hash.length > 0) && !isBorrowTxInProgress,
                         }) && (
                                 <div className="flex items-center justify-between w-full py-[16px]">
                                     <BodyText
