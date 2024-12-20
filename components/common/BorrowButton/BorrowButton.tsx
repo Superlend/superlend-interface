@@ -80,7 +80,14 @@ const BorrowButton = ({
                 hash,
             }))
         }
-    }, [hash])
+
+        if (hash && isConfirmed) {
+            setBorrowTx((prev: TBorrowTx) => ({
+                ...prev,
+                isConfirmed: isConfirmed,
+            }))
+        }
+    }, [hash, isConfirmed])
 
     // Update the status(Loading states) of the lendTx based on the isPending and isConfirming states
     useEffect(() => {
