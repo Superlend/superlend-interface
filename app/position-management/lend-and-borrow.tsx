@@ -379,7 +379,7 @@ export default function LendAndBorrowAssets() {
         }
     }
 
-    const assetDetails = getAssetDetails(tokenAddress)
+    const assetDetails: any = getAssetDetails(tokenAddress)
     const selectedBorrowTokenDetailsFormatted =
         formatSelectedBorrowTokenDetails(
             selectedBorrowTokenDetails?.token?.address ?? ''
@@ -679,19 +679,42 @@ export default function LendAndBorrowAssets() {
                 <CardFooter className="p-0 justify-center">
                     {!walletAddress && <ConnectWalletButton />}
                     {walletAddress && (
-                        <ConfirmationDialog
-                            disabled={disabledButton}
-                            positionType={positionType}
-                            assetDetails={
-                                isLendPositionType(positionType)
-                                    ? assetDetails
-                                    : selectedBorrowTokenDetailsFormatted
-                            }
-                            amount={amount}
-                            balance={balance}
-                            maxBorrowAmount={maxBorrowAmount}
-                            setAmount={setAmount}
-                        />
+                        <div className="flex flex-col gap-[12px] w-full">
+                            <div className="flex items-center justify-between w-full py-[16px] px-[24px] rounded-5 bg-white border border-gray-200">
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-gray-600"
+                                >
+                                    Net APY
+                                </BodyText>
+                                <Badge variant="green">
+                                    {abbreviateNumber(
+                                        isLendPositionType(positionType)
+                                            ? Number(
+                                                assetDetails?.asset?.apy ?? 0
+                                            )
+                                            : Number(
+                                                selectedBorrowTokenDetails?.variable_borrow_apy ?? 0
+                                            )
+                                    )}
+                                    %
+                                </Badge>
+                            </div>
+                            <ConfirmationDialog
+                                disabled={disabledButton}
+                                positionType={positionType}
+                                assetDetails={
+                                    isLendPositionType(positionType)
+                                        ? assetDetails
+                                        : selectedBorrowTokenDetailsFormatted
+                                }
+                                amount={amount}
+                                balance={balance}
+                                maxBorrowAmount={maxBorrowAmount}
+                                setAmount={setAmount}
+                            />
+                        </div>
                     )}
                 </CardFooter>
             </Card>
@@ -1122,8 +1145,7 @@ function ConfirmationDialog({
                                                     assetDetails?.asset?.apy ?? 0
                                                 )
                                                 : Number(
-                                                    assetDetails?.asset
-                                                        ?.variable_borrow_apy ?? 0
+                                                    assetDetails?.variable_borrow_apy ?? 0
                                                 )
                                         )}
                                         %
