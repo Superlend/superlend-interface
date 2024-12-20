@@ -202,17 +202,17 @@ const SupplyAaveButton = ({
     }, [hash, lendTx.status])
 
     const onApproveSupply = async () => {
-        if (!isConnected) {
-            // If not connected, prompt connection first
-            try {
-                const connector = connectors[0] // Usually metamask/injected connector
-                await connect({ connector })
-                return
-            } catch (error) {
-                console.error('Connection failed:', error)
-                return
-            }
-        }
+        // if (!isConnected) {
+        //     // If not connected, prompt connection first
+        //     try {
+        //         const connector = connectors[0] // Usually metamask/injected connector
+        //         await connect({ connector })
+        //         return
+        //     } catch (error) {
+        //         console.error('Connection failed:', error)
+        //         return
+        //     }
+        // }
 
         try {
             setLendTx((prev: TLendTx) => ({
