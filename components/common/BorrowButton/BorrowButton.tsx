@@ -186,7 +186,7 @@ const BorrowButton = ({
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={isPending || isConfirming || disabled}
+                disabled={(isPending || isConfirming || disabled) && borrowTx.status !== 'view'}
                 onClick={
                     borrowTx.status === 'borrow'
                         ? onBorrow
