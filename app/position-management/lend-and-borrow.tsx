@@ -229,7 +229,7 @@ export default function LendAndBorrowAssets() {
         }
     }, [
         walletAddress,
-        platformData,
+        Object.keys(platformData.platform).length,
         providerStatus.isReady,
         borrowTx.status,
         lendTx.status,
@@ -285,7 +285,7 @@ export default function LendAndBorrowAssets() {
                 const positionTypeBasedAssetDetails = isLendPositionType(positionType) ? (assetDetails?.asset?.token?.decimals ?? 0) : (selectedBorrowTokenDetails?.token?.decimals ?? 0)
                 const amountBN = parseUnits(Boolean(amount) ? amount : '0', positionTypeBasedAssetDetails);
                 // Update the status of the lendTx based on the allowance and the confirmation state
-                if (lendTx.status === 'approve') {
+                if (lendTx.status === 'approve' && lendTx.isConfirmed) {
                     setLendTx((prev: TLendTx) => ({
                         ...prev,
                         status: r.gte(amountBN) ? 'lend' : 'approve',
@@ -552,7 +552,9 @@ export default function LendAndBorrowAssets() {
             : Number(maxBorrowAmount)) ||
         !walletAddress ||
         isLoadingMaxBorrowingAmount ||
-        isLoadingErc20TokensBalanceData
+        isLoadingErc20TokensBalanceData ||
+        Number(balance) <= 0 ||
+        Number(maxBorrowAmount) <= 0
 
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
     const isPolygonChain = Number(chain_id) === 137
@@ -917,14 +919,6 @@ function ConfirmationDialog({
     function handleOpenChange(open: boolean) {
         // When opening the dialog, reset the amount and the tx status
         setOpen(open)
-        setLendTx((prev: TLendTx) => ({
-            ...prev,
-            status: 'approve',
-            hash: '',
-            isPending: false,
-            isConfirming: false,
-            isConfirmed: false,
-        }))
         // When closing the dialog, reset the amount and the tx status
         if (!open) {
             setAmount('')
@@ -1243,7 +1237,7 @@ function ConfirmationDialog({
                             )}
                         {isShowBlock({
                             lend: false,
-                            borrow: !isBorrowTxInProgress,
+                            borrow: (borrowTx.status === 'borrow' && !isBorrowTxInProgress),
                         }) && (
                                 <div className="flex items-center justify-between w-full py-[16px]">
                                     <BodyText

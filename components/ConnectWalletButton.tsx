@@ -130,6 +130,7 @@ export default function ConnectWalletButton() {
 
     const wallets = [
         createWallet('io.metamask'),
+        createWallet('com.okex.wallet'),
         createWallet('com.coinbase.wallet'),
         createWallet('me.rainbow'),
     ]
