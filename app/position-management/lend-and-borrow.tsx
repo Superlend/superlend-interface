@@ -909,6 +909,7 @@ function ConfirmationDialog({
             hash: '',
             isPending: false,
             isConfirming: false,
+            isConfirmed: false,
             errorMessage: '',
         }))
     }

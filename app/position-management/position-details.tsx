@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress'
 import { BodyText, HeadingText } from '@/components/ui/typography'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { useSearchParams } from 'next/navigation'
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
     abbreviateNumber,
@@ -43,8 +43,12 @@ export default function PositionDetails() {
     const walletAddress = activeAccount?.address
     const isAutoConnecting = useIsAutoConnecting()
     const { lendTx, borrowTx } = useLendBorrowTxContext()
+    const [refresh, setRefresh] = useState(false)
 
-    const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
+    useEffect(() => {
+        const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
+        setRefresh(isRefresh)
+    }, [lendTx, borrowTx])
 
     const {
         data: portfolioData,
@@ -54,7 +58,7 @@ export default function PositionDetails() {
         user_address: walletAddress as `0x${string}`,
         platform_id: [protocol_identifier],
         chain_id: [String(chain_id)],
-        is_refresh: isRefresh,
+        is_refresh: refresh,
     })
 
     // [API_CALL: GET] - Get Platform data

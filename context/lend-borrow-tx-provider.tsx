@@ -1,9 +1,7 @@
 'use client'
 
-import { useERC20Balance } from '@/hooks/useERC20Balance'
 import { BigNumber } from 'ethers'
 import { createContext, useContext, useState } from 'react'
-import { useActiveAccount } from 'thirdweb/react'
 
 const LendBorrowTxInitialState: TLendBorrowTxContext = {
     lendTx: {
