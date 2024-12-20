@@ -174,7 +174,8 @@ export default function ConnectWalletButton() {
                 copySuccess={copySuccess}
                 handleCopy={handleCopy}
             /> */}
-            <div className="rounded-4 overflow-hidden max-h-[40px] w-full md:max-w-[165px]">
+            {/* md:max-w-[165px] */}
+            <div className="rounded-4 overflow-hidden max-h-[40px] w-full">
                 <ConnectButton
                     client={client}
                     chains={[
