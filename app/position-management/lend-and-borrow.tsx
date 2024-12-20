@@ -282,7 +282,8 @@ export default function LendAndBorrowAssets() {
                     isRefreshingAllowance: false,
                 }))
                 // Check if the allowance is greater than or equal to the amount
-                const amountBN = parseUnits(Boolean(amount) ? amount : '0', assetDetails?.asset?.token?.decimals ?? 0);
+                const positionTypeBasedAssetDetails = isLendPositionType(positionType) ? (assetDetails?.asset?.token?.decimals ?? 0) : (selectedBorrowTokenDetails?.token?.decimals ?? 0)
+                const amountBN = parseUnits(Boolean(amount) ? amount : '0', positionTypeBasedAssetDetails);
                 // Update the status of the lendTx based on the allowance and the confirmation state
                 if (lendTx.status === 'approve') {
                     setLendTx((prev: TLendTx) => ({
