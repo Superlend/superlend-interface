@@ -1229,10 +1229,10 @@ function ConfirmationDialog({
                                         {abbreviateNumber(
                                             isLendPositionType(positionType)
                                                 ? Number(
-                                                    assetDetails?.asset?.apy ?? 0
+                                                    ((assetDetails?.asset?.apy || assetDetails?.apy) ?? 0)
                                                 )
                                                 : Number(
-                                                    assetDetails?.asset?.variable_borrow_apy ?? 0
+                                                    ((assetDetails?.asset?.variable_borrow_apy || assetDetails?.variable_borrow_apy) ?? 0)
                                                 )
                                         )}
                                         %
