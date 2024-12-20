@@ -592,7 +592,7 @@ export default function LendAndBorrowAssets() {
                     )}
                 </div>
                 <CardContent className="p-0 bg-white rounded-5">
-                    <div className="rounded-5 border border-gray-200 shadow-[0px_4px_16px_rgba(0,0,0,0.04)] py-[12px] px-[16px] flex items-center gap-[12px]">
+                    <div className={cn(isLendPositionType(positionType) ? 'border rounded-5 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]' : 'border-t rounded-t-5', "border-gray-200 py-[12px] px-[16px] flex items-center gap-[12px]")}>
                         {isLoading && (
                             <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
                         )}
@@ -655,6 +655,29 @@ export default function LendAndBorrowAssets() {
                             max
                         </Button>
                     </div>
+                    {/* Net APY - ONLY FOR BORROW TAB */}
+                    {!isLendPositionType(positionType) &&
+                        <div className="flex items-center justify-between w-full py-[12px] px-[24px] rounded-b-5 bg-white border-y border-gray-200 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]">
+                            <BodyText
+                                level="body3"
+                                weight="normal"
+                                className="text-gray-600"
+                            >
+                                Net APY
+                            </BodyText>
+                            <Badge variant="green">
+                                {abbreviateNumber(
+                                    isLendPositionType(positionType)
+                                        ? Number(
+                                            assetDetails?.asset?.apy ?? 0
+                                        )
+                                        : Number(
+                                            selectedBorrowTokenDetails?.variable_borrow_apy ?? 0
+                                        )
+                                )}
+                                %
+                            </Badge>
+                        </div>}
                     {walletAddress && (
                         <BodyText
                             level="body2"
@@ -680,27 +703,28 @@ export default function LendAndBorrowAssets() {
                     {!walletAddress && <ConnectWalletButton />}
                     {walletAddress && (
                         <div className="flex flex-col gap-[12px] w-full">
-                            <div className="flex items-center justify-between w-full py-[16px] px-[24px] rounded-5 bg-white border border-gray-200">
-                                <BodyText
-                                    level="body2"
-                                    weight="normal"
-                                    className="text-gray-600"
-                                >
-                                    Net APY
-                                </BodyText>
-                                <Badge variant="green">
-                                    {abbreviateNumber(
-                                        isLendPositionType(positionType)
-                                            ? Number(
-                                                assetDetails?.asset?.apy ?? 0
-                                            )
-                                            : Number(
-                                                selectedBorrowTokenDetails?.variable_borrow_apy ?? 0
-                                            )
-                                    )}
-                                    %
-                                </Badge>
-                            </div>
+                            {/* {!isLendPositionType(positionType) &&
+                                <div className="flex items-center justify-between w-full py-[16px] px-[24px] rounded-5 bg-white border border-gray-200">
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="text-gray-600"
+                                    >
+                                        Net APY
+                                    </BodyText>
+                                    <Badge variant="green">
+                                        {abbreviateNumber(
+                                            isLendPositionType(positionType)
+                                                ? Number(
+                                                    assetDetails?.asset?.apy ?? 0
+                                                )
+                                                : Number(
+                                                    selectedBorrowTokenDetails?.variable_borrow_apy ?? 0
+                                                )
+                                        )}
+                                        %
+                                    </Badge>
+                                </div>} */}
                             <ConfirmationDialog
                                 disabled={disabledButton}
                                 positionType={positionType}

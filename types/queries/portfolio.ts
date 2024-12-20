@@ -5,6 +5,7 @@ export type TGetPortfolioParams = {
     platform_id?: string[]
     position_type?: 'lend' | 'borrow'
     protocol_identifier?: string[]
+    is_refresh?: boolean
 }
 
 type TPosition = {

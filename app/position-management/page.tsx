@@ -23,7 +23,9 @@ export default function PositionManagementPage() {
                 <PageHeader />
                 <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-[16px]">
                     <div className="flex flex-col gap-[16px]">
-                        <PositionDetails />
+                        <LendBorrowTxProvider>
+                            <PositionDetails />
+                        </LendBorrowTxProvider>
                         <AssetHistory />
                     </div>
                     <LendBorrowTxProvider>

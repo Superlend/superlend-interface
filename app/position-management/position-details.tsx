@@ -32,6 +32,7 @@ import { getStatDisplayValue } from './helper-functions'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData'
 import { Button } from '@/components/ui/button'
+import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 
 export default function PositionDetails() {
     const searchParams = useSearchParams()
@@ -41,6 +42,9 @@ export default function PositionDetails() {
     const activeAccount = useActiveAccount()
     const walletAddress = activeAccount?.address
     const isAutoConnecting = useIsAutoConnecting()
+    const { lendTx, borrowTx } = useLendBorrowTxContext()
+
+    const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
 
     const {
         data: portfolioData,
@@ -50,6 +54,7 @@ export default function PositionDetails() {
         user_address: walletAddress as `0x${string}`,
         platform_id: [protocol_identifier],
         chain_id: [String(chain_id)],
+        is_refresh: isRefresh,
     })
 
     // [API_CALL: GET] - Get Platform data
@@ -63,7 +68,7 @@ export default function PositionDetails() {
     })
 
     const isLoading =
-        isLoadingPortfolioData || isLoadingPlatformData || isAutoConnecting
+        isLoadingPortfolioData || isLoadingPlatformData
 
     const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
         platformData?.platform?.protocol_type
@@ -241,8 +246,8 @@ export default function PositionDetails() {
         assetSymbols,
         assetDetails,
     } = isAaveV3
-        ? getLiquidationDetailsForPoolBasedAssets()
-        : getLiquidationDetailsForPairBasedAssets()
+            ? getLiquidationDetailsForPoolBasedAssets()
+            : getLiquidationDetailsForPairBasedAssets()
 
     // Liquidation details
     const liquidationDetails = {
@@ -302,9 +307,9 @@ export default function PositionDetails() {
                                 <Badge
                                     variant={
                                         liquidationDetails.riskFactor.theme as
-                                            | 'destructive'
-                                            | 'yellow'
-                                            | 'green'
+                                        | 'destructive'
+                                        | 'yellow'
+                                        | 'green'
                                     }
                                 >
                                     {liquidationDetails.riskFactor.label} risk
@@ -334,15 +339,15 @@ export default function PositionDetails() {
                                         avatarUrls={
                                             liquidationDetails.assetLogos
                                         }
-                                        // avatarDetails={liquidationDetails.assetDetails.map(asset => ({
-                                        //     content: `${hasLowestDisplayValuePrefix(Number(asset.amount))} $${getStatDisplayValue(asset.amount, false)}`,
-                                        //     title: asset.symbol
-                                        // }))}
+                                    // avatarDetails={liquidationDetails.assetDetails.map(asset => ({
+                                    //     content: `${hasLowestDisplayValuePrefix(Number(asset.amount))} $${getStatDisplayValue(asset.amount, false)}`,
+                                    //     title: asset.symbol
+                                    // }))}
                                     />
                                 )}
                                 {liquidationDetails.hasBorrowed &&
                                     liquidationDetails.liquidationPrice !==
-                                        0 && (
+                                    0 && (
                                         <BodyText level="body1" weight="medium">
                                             $
                                             {abbreviateNumber(
@@ -352,18 +357,18 @@ export default function PositionDetails() {
                                     )}
                                 {(!liquidationDetails.hasBorrowed ||
                                     liquidationDetails.liquidationPrice ===
-                                        0) && (
-                                    <BodyText level="body1" weight="normal">
-                                        <InfoTooltip
-                                            label={
-                                                <TooltipText className="text-gray-600">
-                                                    N/A
-                                                </TooltipText>
-                                            }
-                                            content="You do not have any borrows in this vault"
-                                        />
-                                    </BodyText>
-                                )}
+                                    0) && (
+                                        <BodyText level="body1" weight="normal">
+                                            <InfoTooltip
+                                                label={
+                                                    <TooltipText className="text-gray-600">
+                                                        N/A
+                                                    </TooltipText>
+                                                }
+                                                content="You do not have any borrows in this vault"
+                                            />
+                                        </BodyText>
+                                    )}
                             </div>
                         </div>
                     </div>
@@ -372,9 +377,9 @@ export default function PositionDetails() {
                             value={liquidationDetails.percentage}
                             variant={
                                 liquidationDetails.riskFactor.theme as
-                                    | 'destructive'
-                                    | 'yellow'
-                                    | 'green'
+                                | 'destructive'
+                                | 'yellow'
+                                | 'green'
                             }
                         />
                     </div>
@@ -391,6 +396,7 @@ export default function PositionDetails() {
                                 className="text-gray-600"
                             >
                                 Your Collateral
+                               {isLoadingPortfolioData && "LOADING.."}
                             </BodyText>
                             <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
                                 <div className="flex items-center gap-[6px]">

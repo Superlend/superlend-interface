@@ -17,6 +17,7 @@ export default function useGetPortfolioData(params: TGetPortfolioParams) {
         platform_id,
         position_type,
         protocol_identifier,
+        is_refresh,
     } = params
 
     const { data, isLoading, isError } = useQuery<TPortfolio>({
@@ -27,6 +28,7 @@ export default function useGetPortfolioData(params: TGetPortfolioParams) {
             platform_id,
             position_type,
             protocol_identifier,
+            is_refresh,
         ],
         queryFn: async () => {
             try {
