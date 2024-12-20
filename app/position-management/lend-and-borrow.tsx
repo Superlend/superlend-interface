@@ -38,7 +38,7 @@ import {
     hasExponent,
     hasLowestDisplayValuePrefix,
 } from '@/lib/utils'
-import { BodyText, HeadingText } from '@/components/ui/typography'
+import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -82,6 +82,8 @@ import { useAaveV3Data } from '../../hooks/protocols/useAaveV3Data'
 import { BigNumber } from 'ethers'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { calculateHealthFactorFromBalancesBigUnits } from '@aave/math-utils'
+import { valueToBigNumber } from '@aave/math-utils'
 
 export default function LendAndBorrowAssets() {
     const {
@@ -106,6 +108,7 @@ export default function LendAndBorrowAssets() {
             {
                 maxToBorrow: string
                 maxToBorrowFormatted: string
+                user: any
             }
         >
     >({})
@@ -196,6 +199,7 @@ export default function LendAndBorrowAssets() {
                         {
                             maxToBorrow: string
                             maxToBorrowFormatted: string
+                            user: any
                         }
                     > = {}
                     setBorrowTokensDetails(_borrowableTokens)
@@ -209,6 +213,7 @@ export default function LendAndBorrowAssets() {
                             ) ?? {
                                 maxToBorrow: '0',
                                 maxToBorrowFormatted: '0',
+                                user: {}
                             }
                     }
 
@@ -449,6 +454,45 @@ export default function LendAndBorrowAssets() {
     const canBorrow = useMemo(() => {
         return parsedUserData && Number(parsedUserData.availableBorrowsETH) > 0
     }, [parsedUserData])
+
+    const getHealthFactorValues = (maxBorrowTokensAmount: any): {
+        healthFactor: any,
+        newHealthFactor: any
+    } => {
+        const borrowTokenDetails = maxBorrowTokensAmount?.[selectedBorrowTokenDetails?.token?.address ?? ''] ?? {}
+
+        const { user } = borrowTokenDetails;
+
+        if (user) {
+            const amountToBorrowInUsd = valueToBigNumber(amount).multipliedBy(selectedBorrowTokenDetails?.token?.price_usd ?? 0)
+
+            const newHealthFactor = calculateHealthFactorFromBalancesBigUnits({
+                collateralBalanceMarketReferenceCurrency: user.totalCollateralUSD,
+                borrowBalanceMarketReferenceCurrency: valueToBigNumber(user.totalBorrowsUSD).plus(
+                    amountToBorrowInUsd
+                ),
+                currentLiquidationThreshold: user.currentLiquidationThreshold ?? 0,
+            });
+
+            const healthFactor = calculateHealthFactorFromBalancesBigUnits({
+                collateralBalanceMarketReferenceCurrency: user.totalCollateralUSD,
+                borrowBalanceMarketReferenceCurrency: valueToBigNumber(user.totalBorrowsUSD),
+                currentLiquidationThreshold: user.currentLiquidationThreshold ?? 0,
+            })
+
+            return {
+                healthFactor,
+                newHealthFactor
+            }
+        }
+
+        return {
+            healthFactor: 0,
+            newHealthFactor: 0
+        }
+    }
+
+    const healthFactorValues = getHealthFactorValues(maxBorrowTokensAmount);
 
     const lendErrorMessage = useMemo(() => {
         if (Number(amount) > Number(balance) || Number(balance) <= 0) {
@@ -737,6 +781,7 @@ export default function LendAndBorrowAssets() {
                                 balance={balance}
                                 maxBorrowAmount={maxBorrowAmount}
                                 setAmount={setAmount}
+                                healthFactorValues={healthFactorValues}
                             />
                         </div>
                     )}
@@ -820,6 +865,7 @@ function ConfirmationDialog({
     setAmount,
     balance,
     maxBorrowAmount,
+    healthFactorValues,
 }: {
     disabled: boolean
     positionType: TPositionType
@@ -828,6 +874,10 @@ function ConfirmationDialog({
     balance: string
     maxBorrowAmount: string
     setAmount: (amount: string) => void
+    healthFactorValues: {
+        healthFactor: any,
+        newHealthFactor: any
+    }
 }) {
     const { lendTx, setLendTx, borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
@@ -1169,7 +1219,7 @@ function ConfirmationDialog({
                                                     assetDetails?.asset?.apy ?? 0
                                                 )
                                                 : Number(
-                                                    assetDetails?.variable_borrow_apy ?? 0
+                                                    assetDetails?.asset?.variable_borrow_apy ?? 0
                                                 )
                                         )}
                                         %
@@ -1213,6 +1263,26 @@ function ConfirmationDialog({
                                     </div>
                                 </div>
                             )}
+                        {
+                            isShowBlock({
+                                lend: false,
+                                borrow: (borrowTx.status === 'borrow' && !isBorrowTxInProgress),
+                            }) && (
+                                <div className="flex items-center justify-between w-full py-[16px]">
+                                    <BodyText level="body2" weight="normal" className="text-gray-600">
+                                        Health factor
+                                    </BodyText>
+                                    <div className="flex flex-col items-end justify-end gap-[4px]">
+                                        <BodyText level="body2" weight="normal" className={`${(Number(healthFactorValues.newHealthFactor)) < Number(1.5) ? 'text-red-500' : 'text-gray-800'}`}>
+                                            {(healthFactorValues.newHealthFactor).toFixed(2)}
+                                        </BodyText>
+                                        <Label size="small" className="text-gray-600">
+                                            Liquidation at &lt;1.0
+                                        </Label>
+                                    </div>
+                                </div>
+                            )
+                        }
                         {isShowBlock({
                             lend: (lendTx.status === 'lend' || lendTx.status === 'view') && (lendTx.hash.length > 0) && !isLendTxInProgress,
                             borrow: borrowTx.status === 'view' && (borrowTx.hash.length > 0) && !isBorrowTxInProgress,

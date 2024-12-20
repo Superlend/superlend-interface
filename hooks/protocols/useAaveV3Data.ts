@@ -303,6 +303,7 @@ export const useAaveV3Data = () => {
         return {
             maxToBorrow: maxToBorrow.amount.toString() || '0',
             maxToBorrowFormatted: maxAmountToBorrowFormatted || '0',
+            user,
         }
     }
 
