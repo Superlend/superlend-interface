@@ -281,6 +281,7 @@ export default function LendAndBorrowAssets() {
                     setLendTx((prev: TLendTx) => ({
                         ...prev,
                         status: r.gte(amountBN) ? 'lend' : 'approve',
+                        errorMessage: r.gte(amountBN) ? '' : 'Insufficient allowance',
                         isConfirming: false,
                     }))
                 }
@@ -837,21 +838,9 @@ function ConfirmationDialog({
         return `~${hasLowestDisplayValuePrefix(Number(amountFormatted))}$${amountFormattedForLowestValue}`
     }
 
-    const isLendTxPending = lendTx.isPending || lendTx.isConfirming
-    const isBorrowTxPending = borrowTx.isPending || borrowTx.isConfirming
+    const isLendTxInProgress = lendTx.isPending || lendTx.isConfirming
+    const isBorrowTxInProgress = borrowTx.isPending || borrowTx.isConfirming
 
-    const isLendTxInProgress = !(
-        lendTx.status === 'view' ||
-        (lendTx.status === 'approve' && !isLendTxPending) ||
-        (lendTx.status === 'lend' && !isLendTxPending)
-    )
-    const isBorrowTxInProgress = !(
-        borrowTx.status === 'view' ||
-        (borrowTx.status === 'borrow' && !isBorrowTxPending)
-    )
-    const canCloseLendBorrowDialog = !(
-        isLendTxInProgress || isBorrowTxInProgress
-    )
     const isTxInProgress = isLendTxInProgress || isBorrowTxInProgress
 
     const lendTxSpinnerColor = lendTx.isPending
@@ -886,7 +875,7 @@ function ConfirmationDialog({
                 </Button>
             </DialogTrigger>
             <DialogContent aria-describedby={undefined} className="pt-[25px]">
-                {canCloseLendBorrowDialog && (
+                {!isTxInProgress && (
                     <Button
                         variant="ghost"
                         onClick={() => handleOpenChange(false)}
@@ -914,6 +903,7 @@ function ConfirmationDialog({
                                 txStatus: isLendPositionType(positionType)
                                     ? lendTx
                                     : borrowTx,
+                                positionType,
                             })}
                         </BodyText>
                     </div>
@@ -921,9 +911,9 @@ function ConfirmationDialog({
                 {/* Initial Confirmation UI */}
                 <DialogHeader>
                     {isShowBlock({
-                        lend: lendTx.status === 'approve' && !isLendTxPending,
+                        lend: lendTx.status === 'approve' && !isLendTxInProgress,
                         borrow:
-                            borrowTx.status === 'borrow' && !isBorrowTxPending,
+                            borrowTx.status === 'borrow' && !isBorrowTxInProgress,
                     }) && (
                             // <DialogTitle asChild>
                             <HeadingText
@@ -940,9 +930,11 @@ function ConfirmationDialog({
                     {/* Confirmation details UI */}
                     {isShowBlock({
                         lend:
-                            (lendTx.status === 'lend' && !isLendTxPending) ||
-                            lendTx.status === 'view',
-                        borrow: borrowTx.status === 'view',
+                            (lendTx.status === 'lend' && !isLendTxInProgress) ||
+                            (lendTx.status === 'view' && !isLendTxInProgress),
+                        borrow:
+                            // (borrowTx.status === 'borrow' && !isBorrowTxInProgress) ||
+                            (borrowTx.status === 'view' && !isBorrowTxInProgress),
                     }) && (
                             <div className="flex flex-col items-center justify-center gap-[6px]">
                                 <ImageWithDefault
@@ -969,9 +961,9 @@ function ConfirmationDialog({
                                         >
                                             {isLendPositionType(positionType) &&
                                                 lendTx.status === 'view'
-                                                ? 'Lent'
-                                                : 'Borrowed'}{' '}
-                                            Successfully
+                                                ? 'Lend'
+                                                : 'Borrow'}{' '}
+                                            Successful
                                             <CircleCheckIcon
                                                 width={16}
                                                 height={16}
@@ -982,7 +974,7 @@ function ConfirmationDialog({
                                 {isShowBlock({
                                     lend:
                                         lendTx.status === 'lend' &&
-                                        !isLendTxPending,
+                                        !isLendTxInProgress,
                                     borrow: false,
                                 }) && (
                                         <Badge
@@ -1004,9 +996,9 @@ function ConfirmationDialog({
                 <div className="flex flex-col gap-[12px]">
                     {/* Block 1 */}
                     {isShowBlock({
-                        lend: lendTx.status === 'approve' && !isLendTxPending,
+                        lend: lendTx.status === 'approve' && !isLendTxInProgress,
                         borrow:
-                            borrowTx.status === 'borrow' && !isBorrowTxPending,
+                            borrowTx.status === 'borrow' && !isBorrowTxInProgress,
                     }) && (
                             <div className="flex items-center gap-[8px] px-[24px] py-[18.5px] bg-white rounded-5 w-full">
                                 <ImageWithDefault
@@ -1040,9 +1032,9 @@ function ConfirmationDialog({
                         )}
                     {/* Block 2 */}
                     {isShowBlock({
-                        lend: lendTx.status === 'approve' && !isLendTxPending,
+                        lend: lendTx.status === 'approve' && !isLendTxInProgress,
                         borrow:
-                            borrowTx.status === 'borrow' && !isBorrowTxPending,
+                            borrowTx.status === 'borrow' && !isBorrowTxInProgress,
                     }) && (
                             <div className={`flex items-center ${isLendPositionType(positionType) ? 'justify-end' : 'justify-between'} px-[24px] mb-[4px] gap-1`}>
                                 <BodyText
@@ -1072,8 +1064,8 @@ function ConfirmationDialog({
                     {/* Block 3 */}
                     <div className="flex flex-col items-center justify-between px-[24px] bg-white rounded-5 divide-y divide-gray-300">
                         {isShowBlock({
-                            lend: !isLendTxPending,
-                            borrow: !isBorrowTxPending,
+                            lend: !isLendTxInProgress,
+                            borrow: !isBorrowTxInProgress,
                         }) && (
                                 <div className="flex items-center justify-between w-full py-[16px]">
                                     <BodyText
@@ -1100,7 +1092,7 @@ function ConfirmationDialog({
                             )}
                         {isShowBlock({
                             lend: false,
-                            borrow: !isBorrowTxPending,
+                            borrow: !isBorrowTxInProgress,
                         }) && (
                                 <div className="flex items-center justify-between w-full py-[16px]">
                                     <BodyText
@@ -1134,8 +1126,8 @@ function ConfirmationDialog({
                                 </div>
                             )}
                         {isShowBlock({
-                            lend: lendTx.status === 'view',
-                            borrow: borrowTx.status === 'view',
+                            lend: lendTx.status === 'view' && !isLendTxInProgress,
+                            borrow: borrowTx.status === 'view' && !isBorrowTxInProgress,
                         }) && (
                                 <div className="flex items-center justify-between w-full py-[16px]">
                                     <BodyText
@@ -1221,15 +1213,18 @@ function getTxInProgressText({
     amount,
     tokenName,
     txStatus,
+    positionType,
 }: {
     amount: string
     tokenName: string
     txStatus: TLendTx | TBorrowTx
+    positionType: TPositionType
 }) {
-    const formattedText = `${amount}${tokenName}`
+    const formattedText = `${amount} ${tokenName}`
     const isPending = txStatus.isPending
     const isConfirming = txStatus.isConfirming
     let textByStatus: any = {}
+
     if (isPending) {
         textByStatus = {
             approve: `Approve spending ${formattedText} from your wallet`,
@@ -1241,6 +1236,7 @@ function getTxInProgressText({
             approve: `Confirming transaction for spending ${formattedText} from your wallet`,
             lend: `Confirming transaction for lending ${formattedText} from your wallet`,
             borrow: `Confirming transaction for borrowing ${formattedText} from your wallet`,
+            view: `Confirming transaction for ${isLendPositionType(positionType) ? 'lending' : 'borrowing'} ${formattedText} from your wallet`,
         }
     }
     return textByStatus[txStatus.status]

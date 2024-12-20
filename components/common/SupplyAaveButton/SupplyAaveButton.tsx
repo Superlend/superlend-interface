@@ -273,9 +273,9 @@ const SupplyAaveButton = ({
                     }
                 />
             )}
-            {/* {lendTx.errorMessage.length > 0 && (
+            {lendTx.errorMessage.length > 0 && (
                 <CustomAlert description={lendTx.errorMessage} />
-            )} */}
+            )}
             <Button
                 disabled={isPending || isConfirming || disabled}
                 onClick={() => {
