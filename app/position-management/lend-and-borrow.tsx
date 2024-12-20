@@ -84,6 +84,8 @@ import { useUserTokenBalancesContext } from '@/context/user-token-balances-provi
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { calculateHealthFactorFromBalancesBigUnits } from '@aave/math-utils'
 import { valueToBigNumber } from '@aave/math-utils'
+import CustomAlert from '@/components/alerts/CustomAlert'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export default function LendAndBorrowAssets() {
     const {
@@ -882,6 +884,11 @@ function ConfirmationDialog({
     const { lendTx, setLendTx, borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
     const [open, setOpen] = useState(false)
+    const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
+
+    useEffect(() => {
+        setHasAcknowledgedRisk(false)
+    }, [open])
 
     function resetLendBorrowTx() {
         setLendTx((prev: TLendTx) => ({
@@ -958,6 +965,12 @@ function ConfirmationDialog({
     const canDisplayExplorerLinkWhileLoading = isLendPositionType(positionType)
         ? (lendTx.hash.length > 0) && (lendTx.isConfirming || lendTx.isPending)
         : (borrowTx.hash.length > 0) && (borrowTx.isConfirming || borrowTx.isPending)
+
+    function isHfLow() {
+        return (Number(healthFactorValues.newHealthFactor.toString())) < Number(1.5)
+    }
+
+    const disableActionButton = disabled || (!hasAcknowledgedRisk && !isLendPositionType(positionType) && isHfLow())
 
     return (
         <Dialog open={open}>
@@ -1272,10 +1285,16 @@ function ConfirmationDialog({
                                     <BodyText level="body2" weight="normal" className="text-gray-600">
                                         Health factor
                                     </BodyText>
-                                    <div className="flex flex-col items-end justify-end gap-[4px]">
-                                        <BodyText level="body2" weight="normal" className={`${(Number(healthFactorValues.newHealthFactor)) < Number(1.5) ? 'text-red-500' : 'text-gray-800'}`}>
-                                            {(healthFactorValues.newHealthFactor).toFixed(2)}
-                                        </BodyText>
+                                    <div className="flex flex-col items-end justify-end gap-2">
+                                        <div className="flex items-center gap-2">
+                                            <BodyText level="body2" weight="normal" className={`'text-gray-800'`}>
+                                                {(healthFactorValues.healthFactor).toFixed(2)}
+                                            </BodyText>
+                                            <ArrowRightIcon width={16} height={16} className="stroke-gray-800" strokeWidth={2.5} />
+                                            <BodyText level="body2" weight="normal" className={`${isHfLow() ? 'text-red-500' : 'text-gray-800'}`}>
+                                                {(healthFactorValues.newHealthFactor).toFixed(2)}
+                                            </BodyText>
+                                        </div>
                                         <Label size="small" className="text-gray-600">
                                             Liquidation at &lt;1.0
                                         </Label>
@@ -1339,10 +1358,28 @@ function ConfirmationDialog({
                             </div>
                         </div> */}
                     </div>
+                    {
+                        isShowBlock({
+                            lend: false,
+                            borrow: (borrowTx.status === 'borrow' && !isBorrowTxInProgress && isHfLow()),
+                        }) && (
+                            <div className="flex flex-col items-center justify-center">
+                                <CustomAlert
+                                    description="Borrowing this amount is not advisable, as the heath factor is close to 1, posing a risk of liquidation."
+                                />
+                                <div className="flex items-center gap-2 w-fit my-5" onClick={() => setHasAcknowledgedRisk(!hasAcknowledgedRisk)}>
+                                    <Checkbox id="terms" checked={hasAcknowledgedRisk} />
+                                    <Label size="medium" className="text-gray-800" id="terms">
+                                        I acknowledge the risks involved.
+                                    </Label>
+                                </div>
+                            </div>
+                        )
+                    }
                     {/* Block 4 */}
                     <div className={`${isTxInProgress ? 'invisible h-0' : ''}`}>
                         <ActionButton
-                            disabled={disabled}
+                            disabled={disableActionButton}
                             handleCloseModal={handleOpenChange}
                             asset={assetDetails}
                             amount={amount}
