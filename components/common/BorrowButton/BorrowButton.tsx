@@ -84,6 +84,7 @@ const BorrowButton = ({
         if (hash && isConfirmed) {
             setBorrowTx((prev: TBorrowTx) => ({
                 ...prev,
+                status: 'view',
                 isConfirmed: isConfirmed,
             }))
         }
