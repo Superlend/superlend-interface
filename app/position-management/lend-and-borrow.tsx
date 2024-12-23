@@ -567,6 +567,12 @@ export default function LendAndBorrowAssets() {
             : 'Loading borrow limit...'
     }
 
+    function getMaxDecimalsToDisplay(): number {
+        return isLendPositionType(positionType) ?
+            (assetDetails?.asset?.token?.symbol.toLowerCase().includes('btc') || assetDetails?.asset?.token?.symbol.toLowerCase().includes('eth')) ? 4 : 2
+            : (selectedBorrowTokenDetails?.token?.symbol.toLowerCase().includes('btc') || selectedBorrowTokenDetails?.token?.symbol.toLowerCase().includes('eth')) ? 4 : 2
+    }
+
     // Loading skeleton
     if (isLoading && isAaveV3Protocol && isPolygonChain) {
         return <LoadingSectionSkeleton className="h-[300px] w-full" />
@@ -610,10 +616,11 @@ export default function LendAndBorrowAssets() {
                                 abbreviateNumber(
                                     Number(
                                         getLowestDisplayValue(
-                                            Number(balance ?? 0)
+                                            Number(balance ?? 0),
+                                            getMaxDecimalsToDisplay()
                                         )
                                     ),
-                                    2
+                                    getMaxDecimalsToDisplay()
                                 )
                             )}
                             <span className="inline-block truncate max-w-[70px]">
@@ -635,7 +642,7 @@ export default function LendAndBorrowAssets() {
                             {isLoadingMaxBorrowingAmount ? (
                                 <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
                             ) : (
-                                handleSmallestValue(maxBorrowAmount)
+                                handleSmallestValue(maxBorrowAmount, getMaxDecimalsToDisplay())
                             )}
                         </BodyText>
                     )}
@@ -1419,9 +1426,9 @@ function getTxInProgressText({
     return textByStatus[txStatus.status]
 }
 
-function handleSmallestValue(amount: string) {
+function handleSmallestValue(amount: string, maxDecimalsToDisplay: number = 2) {
     const amountFormatted = hasExponent(amount)
         ? Math.abs(Number(amount)).toFixed(10)
         : amount.toString()
-    return `${hasLowestDisplayValuePrefix(Number(amountFormatted))} ${getLowestDisplayValue(Number(amountFormatted))}`
+    return `${hasLowestDisplayValuePrefix(Number(amountFormatted), maxDecimalsToDisplay)} ${getLowestDisplayValue(Number(amountFormatted), maxDecimalsToDisplay)}`
 }

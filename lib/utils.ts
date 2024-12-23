@@ -210,20 +210,30 @@ export function normalizeResult(coefficient: number, exponent: number) {
     return coefficient * Math.pow(10, exponent)
 }
 
-export function isLowestValue(value: number) {
-    return value > 0 && value < 0.01
+export function isLowestValue(value: number, maxDecimalsToDisplay: number = 2) {
+    return value > 0 && value < (maxDecimalsToDisplay === 2 ? 0.01 : 0.0001)
 }
 
 export function isLowestNegativeValue(value: number) {
     return value < -0.01
 }
 
-export function hasLowestDisplayValuePrefix(value: number) {
-    return isLowestValue(Number(value)) ? '<' : ''
+export function hasLowestDisplayValuePrefix(
+    value: number,
+    maxDecimalsToDisplay: number = 2
+) {
+    return isLowestValue(Number(value), maxDecimalsToDisplay) ? '<' : ''
 }
 
-export function getLowestDisplayValue(value: number): string {
-    return isLowestValue(Number(value)) ? '0.01' : abbreviateNumber(value)
+export function getLowestDisplayValue(
+    value: number,
+    maxDecimalsToDisplay: number = 2
+): string {
+    return isLowestValue(Number(value), maxDecimalsToDisplay)
+        ? maxDecimalsToDisplay === 2
+            ? '0.01'
+            : '0.0001'
+        : abbreviateNumber(value, maxDecimalsToDisplay)
 }
 
 export function getTokenLogo(tokenSymbol: string): string {
