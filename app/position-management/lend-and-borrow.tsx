@@ -714,7 +714,8 @@ export default function LendAndBorrowAssets() {
                             >
                                 Net APY
                             </BodyText>
-                            <Badge variant="green">
+                            {isLoadingMaxBorrowingAmount && <Skeleton className="w-[50px] h-[20px]" />}
+                            {!isLoadingMaxBorrowingAmount && <Badge variant="green">
                                 {abbreviateNumber(
                                     isLendPositionType(positionType)
                                         ? Number(
@@ -725,7 +726,7 @@ export default function LendAndBorrowAssets() {
                                         )
                                 )}
                                 %
-                            </Badge>
+                            </Badge>}
                         </div>}
                     {walletAddress && (
                         <BodyText
@@ -752,28 +753,6 @@ export default function LendAndBorrowAssets() {
                     {!walletAddress && <ConnectWalletButton />}
                     {walletAddress && (
                         <div className="flex flex-col gap-[12px] w-full">
-                            {/* {!isLendPositionType(positionType) &&
-                                <div className="flex items-center justify-between w-full py-[16px] px-[24px] rounded-5 bg-white border border-gray-200">
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className="text-gray-600"
-                                    >
-                                        Net APY
-                                    </BodyText>
-                                    <Badge variant="green">
-                                        {abbreviateNumber(
-                                            isLendPositionType(positionType)
-                                                ? Number(
-                                                    assetDetails?.asset?.apy ?? 0
-                                                )
-                                                : Number(
-                                                    selectedBorrowTokenDetails?.variable_borrow_apy ?? 0
-                                                )
-                                        )}
-                                        %
-                                    </Badge>
-                                </div>} */}
                             <ConfirmationDialog
                                 disabled={disabledButton}
                                 positionType={positionType}
