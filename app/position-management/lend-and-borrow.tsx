@@ -868,6 +868,13 @@ function ConfirmationDialog({
     const [open, setOpen] = useState(false)
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
 
+    // Reset the tx status when the dialog is closed
+    useEffect(() => {
+        return () => {
+            resetLendBorrowTx()
+        }
+    }, [])
+
     useEffect(() => {
         setHasAcknowledgedRisk(false)
     }, [open])

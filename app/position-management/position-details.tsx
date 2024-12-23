@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress'
 import { BodyText, HeadingText } from '@/components/ui/typography'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { useSearchParams } from 'next/navigation'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
     abbreviateNumber,
@@ -80,14 +80,14 @@ export default function PositionDetails() {
     const isAaveV3 = platformData?.platform?.protocol_type === 'aaveV3'
 
     // Get user positions from portfolio data using protocol identifier
-    const userPositions = portfolioData?.platforms.filter(
+    const userPositions = useMemo(() => portfolioData?.platforms.filter(
         (platform) =>
             platform?.protocol_identifier?.toLowerCase() ===
             (platformData?.platform as any)?.protocol_identifier?.toLowerCase()
-    )
+    ), [portfolioData, platformData, isLoadingPortfolioData])
 
     // Format user positions
-    const [formattedUserPositions] = userPositions?.map(
+    const [formattedUserPositions] = useMemo(() => userPositions?.map(
         (platform, index: number) => {
             const lendPositions = platform.positions.filter(
                 (position) => position.type === 'lend'
@@ -150,7 +150,7 @@ export default function PositionDetails() {
                 riskFactor: getRiskFactor(platform.health_factor),
             }
         }
-    )
+    ), [userPositions, isLoadingPortfolioData])
 
     // Calculate borrow power and borrow power used for pool based assets
     function getLiquidationDetailsForPoolBasedAssets() {
@@ -400,7 +400,6 @@ export default function PositionDetails() {
                                 className="text-gray-600"
                             >
                                 Your Collateral
-                               {isLoadingPortfolioData && "LOADING.."}
                             </BodyText>
                             <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
                                 <div className="flex items-center gap-[6px]">
