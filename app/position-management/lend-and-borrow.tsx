@@ -1252,7 +1252,8 @@ function ConfirmationDialog({
                                                         ? (Number(balance) -
                                                             Number(amount))
                                                         : (Number(maxBorrowAmount)) -
-                                                        Number(amount)))
+                                                        Number(amount))
+                                                    )
                                             }
                                         </BodyText>
                                         <ImageWithDefault

@@ -48,7 +48,8 @@ export default function PositionDetails() {
     useEffect(() => {
         const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
         setRefresh(isRefresh)
-    }, [lendTx, borrowTx])
+    }, [lendTx.status, lendTx.isConfirmed, borrowTx.status, borrowTx.isConfirmed])
+
 
     const {
         data: portfolioData,
