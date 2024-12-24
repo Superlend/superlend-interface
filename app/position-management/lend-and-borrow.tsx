@@ -30,6 +30,7 @@ import { useMemo, useState, useEffect } from 'react'
 //     useActiveAccount,
 //     useSwitchActiveWalletChain,
 // } from 'thirdweb/react'
+import { switchChain } from '@wagmi/core'
 import {
     abbreviateNumber,
     checkDecimalPlaces,
@@ -51,7 +52,7 @@ import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import AAVE_POOL_ABI from '@/data/abi/aaveApproveABI.json'
-import { useAccount, useReadContract } from 'wagmi'
+import { Config, useAccount, useReadContract } from 'wagmi'
 import { formatUnits, parseUnits } from 'ethers/lib/utils'
 import {
     Dialog,
@@ -86,6 +87,7 @@ import { calculateHealthFactorFromBalancesBigUnits } from '@aave/math-utils'
 import { valueToBigNumber } from '@aave/math-utils'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { Checkbox } from '@/components/ui/checkbox'
+import { config } from '@/config'
 
 export default function LendAndBorrowAssets() {
     const {
@@ -160,11 +162,11 @@ export default function LendAndBorrowAssets() {
     // const customChain = defineChain(Number(chain_id))
 
     // Switch chain
-    // useEffect(() => {
-    //     if (!!walletAddress) {
-    //         switchChain(customChain)
-    //     }
-    // }, [walletAddress, isAutoConnecting, customChain])
+    useEffect(() => {
+        if (!!walletAddress) {
+            switchChain(config as Config, { chainId: Number(chain_id) })
+        }
+    }, [walletAddress, Number(chain_id)])
 
     // Set position type, to select lend or borrow tab -
     // - when user navigates to this page with position type param
