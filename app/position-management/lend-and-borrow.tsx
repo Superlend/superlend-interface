@@ -25,11 +25,11 @@ import {
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useMemo, useState, useEffect } from 'react'
-import {
-    useIsAutoConnecting,
-    useActiveAccount,
-    useSwitchActiveWalletChain,
-} from 'thirdweb/react'
+// import {
+//     useIsAutoConnecting,
+//     useActiveAccount,
+//     useSwitchActiveWalletChain,
+// } from 'thirdweb/react'
 import {
     abbreviateNumber,
     checkDecimalPlaces,
@@ -51,7 +51,7 @@ import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import AAVE_POOL_ABI from '@/data/abi/aaveApproveABI.json'
-import { useReadContract } from 'wagmi'
+import { useAccount, useReadContract } from 'wagmi'
 import { formatUnits, parseUnits } from 'ethers/lib/utils'
 import {
     Dialog,
@@ -69,7 +69,7 @@ import {
     TX_EXPLORER_LINKS,
 } from '@/constants'
 import ActionButton from '@/components/common/ActionButton'
-import { defineChain } from 'thirdweb'
+// import { defineChain } from 'thirdweb'
 import {
     TLendTx,
     TLendBorrowTxContext,
@@ -121,10 +121,11 @@ export default function LendAndBorrowAssets() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType =
         (searchParams.get('position_type') as TPositionType) || 'lend'
-    const activeAccount = useActiveAccount()
-    const walletAddress = activeAccount?.address
-    const isAutoConnecting = useIsAutoConnecting()
-    const switchChain = useSwitchActiveWalletChain()
+    // const activeAccount = useActiveAccount()
+    // const walletAddress = activeAccount?.address
+    const { address: walletAddress } = useAccount()
+    // const isAutoConnecting = useIsAutoConnecting()
+    // const switchChain = useSwitchActiveWalletChain()
     const {
         fetchAaveV3Data,
         getMaxBorrowAmount,
@@ -156,14 +157,14 @@ export default function LendAndBorrowAssets() {
 
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData
 
-    const customChain = defineChain(Number(chain_id))
+    // const customChain = defineChain(Number(chain_id))
 
     // Switch chain
-    useEffect(() => {
-        if (!!walletAddress) {
-            switchChain(customChain)
-        }
-    }, [walletAddress, isAutoConnecting, customChain])
+    // useEffect(() => {
+    //     if (!!walletAddress) {
+    //         switchChain(customChain)
+    //     }
+    // }, [walletAddress, isAutoConnecting, customChain])
 
     // Set position type, to select lend or borrow tab -
     // - when user navigates to this page with position type param

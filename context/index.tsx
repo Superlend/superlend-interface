@@ -5,10 +5,11 @@ import React, { type ReactNode } from 'react'
 import { queryClient } from './query-client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import AssetsDataProvider from './data-provider'
-import { ThirdwebProvider } from 'thirdweb/react'
+// import { ThirdwebProvider } from 'thirdweb/react'
 import { WagmiProvider } from 'wagmi'
 import { Config, cookieToInitialState } from 'wagmi'
 import UserTokenBalancesProvider from './user-token-balances-provider'
+import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 
 function ContextProvider({
     children,
@@ -17,20 +18,18 @@ function ContextProvider({
     children: ReactNode
     cookies: string | null
 }) {
-    const initialState = cookieToInitialState(config as Config, cookies)
+    // const initialState = cookieToInitialState(config as Config, cookies)
 
     return (
-        <ThirdwebProvider>
-            <WagmiProvider config={config} initialState={initialState}>
-                <QueryClientProvider client={queryClient}>
-                    <AssetsDataProvider>
-                        <UserTokenBalancesProvider>
-                            {children}
-                        </UserTokenBalancesProvider>
-                    </AssetsDataProvider>
-                </QueryClientProvider>
-            </WagmiProvider>
-        </ThirdwebProvider>
+        <WagmiProvider config={config}>
+            <QueryClientProvider client={queryClient}>
+                <AssetsDataProvider>
+                    <UserTokenBalancesProvider>
+                        <ConnectKitProvider theme="soft">{children}</ConnectKitProvider>
+                    </UserTokenBalancesProvider>
+                </AssetsDataProvider>
+            </QueryClientProvider>
+        </WagmiProvider>
     )
 }
 

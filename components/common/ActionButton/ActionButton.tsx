@@ -47,9 +47,7 @@ const ActionButton = ({
             <SupplyAaveButton
                 disabled={disabled}
                 handleCloseModal={handleCloseModal}
-                poolContractAddress={
-                    POOL_AAVE_MAP[asset.platform_name as PlatformValue]
-                }
+                poolContractAddress={asset.core_contract}
                 underlyingAssetAdress={asset.asset.token.address}
                 amount={amount}
                 decimals={asset.asset.token.decimals}

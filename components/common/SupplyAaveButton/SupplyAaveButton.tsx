@@ -23,8 +23,8 @@ import {
 } from '@/constants'
 // import { getErrorText } from '@/lib/getErrorText'
 import { Button } from '@/components/ui/button'
-import { prepareContractCall } from 'thirdweb'
-import { defineChain } from 'thirdweb'
+// import { prepareContractCall } from 'thirdweb'
+// import { defineChain } from 'thirdweb'
 import { useSearchParams } from 'next/navigation'
 import {
     TLendTx,

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from './ui/button'
 import useIsClient from '@/hooks/useIsClient'
-import { client } from '@/app/client'
+// import { client } from '@/app/client'
 
 import {
     Dialog,
@@ -28,30 +28,30 @@ import {
 import { Check, Copy, LogOut, X } from 'lucide-react'
 import { BodyText, HeadingText } from './ui/typography'
 import { copyToClipboard } from '@/lib/utils'
-import {
-    arbitrum,
-    base,
-    mainnet,
-    polygon,
-    scroll,
-    optimism,
-    gnosis,
-} from 'thirdweb/chains'
+// import {
+//     arbitrum,
+//     base,
+//     mainnet,
+//     polygon,
+//     scroll,
+//     optimism,
+//     gnosis,
+// } from 'thirdweb/chains'
 
-import { createThirdwebClient, defineChain, getContract } from 'thirdweb'
-import { viemAdapter } from 'thirdweb/adapters/viem'
-import {
-    useSetActiveWallet,
-    PayEmbed,
-    ConnectButton,
-    TransactionButton,
-    useActiveWallet,
-    MediaRenderer,
-    useReadContract,
-    lightTheme,
-} from 'thirdweb/react'
-import { createWallet, createWalletAdapter } from 'thirdweb/wallets'
-import { claimTo, getNFT } from 'thirdweb/extensions/erc1155'
+// import { createThirdwebClient, defineChain, getContract } from 'thirdweb'
+// import { viemAdapter } from 'thirdweb/adapters/viem'
+// import {
+//     useSetActiveWallet,
+//     PayEmbed,
+//     ConnectButton,
+//     TransactionButton,
+//     useActiveWallet,
+//     MediaRenderer,
+//     useReadContract,
+//     lightTheme,
+// } from 'thirdweb/react'
+// import { createWallet, createWalletAdapter } from 'thirdweb/wallets'
+// import { claimTo, getNFT } from 'thirdweb/extensions/erc1155'
 import {
     useAccount,
     useConnect,
@@ -59,17 +59,18 @@ import {
     useSwitchChain,
     useWalletClient,
 } from 'wagmi'
+import { ConnectKitButton } from 'connectkit'
 
 export default function ConnectWalletButton() {
     const { isClient } = useIsClient()
 
-    const wagmiAccount = useAccount()
+    const { address: walletAddress } = useAccount()
     const { connectors, connect, status, error } = useConnect()
     const { disconnectAsync } = useDisconnect()
     // This is how to set a wagmi account in the thirdweb context to use with all the thirdweb components including Pay
-    const { data: walletClient } = useWalletClient()
-    const { switchChainAsync } = useSwitchChain()
-    const setActiveWallet = useSetActiveWallet()
+    // const { data: walletClient } = useWalletClient()
+    // const { switchChainAsync } = useSwitchChain()
+    // const setActiveWallet = useSetActiveWallet()
 
     // useEffect(() => {
     //     const setActive = async () => {
@@ -128,16 +129,16 @@ export default function ConnectWalletButton() {
     //     ? `${walletAddress?.slice(0, 5)}...${walletAddress?.slice(-5)}`
     //     : "Connect Wallet";
 
-    const wallets = [
-        createWallet('io.metamask'),
-        createWallet('com.okex.wallet'),
-        createWallet('com.coinbase.wallet'),
-        createWallet('me.rainbow'),
-    ]
+    // const wallets = [
+    //     createWallet('io.metamask'),
+    //     createWallet('com.okex.wallet'),
+    //     createWallet('com.coinbase.wallet'),
+    //     createWallet('me.rainbow'),
+    // ]
 
-    const metis = defineChain(1088)
-    const bsc = defineChain(56)
-    const avalanche = defineChain(43114)
+    // const metis = defineChain(1088)
+    // const bsc = defineChain(56)
+    // const avalanche = defineChain(43114)
 
     return (
         <>
@@ -177,7 +178,7 @@ export default function ConnectWalletButton() {
             /> */}
             {/* md:max-w-[165px] */}
             <div className="rounded-4 overflow-hidden max-h-[40px] w-full">
-                <ConnectButton
+                {/* <ConnectButton
                     client={client}
                     chains={[
                         mainnet,
@@ -208,8 +209,9 @@ export default function ConnectWalletButton() {
                         size: 'compact',
                     }}
                     wallets={wallets}
-                />
+                /> */}
             </div>
+            <ConnectKitButton theme="soft" />
         </>
     )
 }

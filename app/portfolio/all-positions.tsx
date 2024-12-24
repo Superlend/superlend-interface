@@ -17,15 +17,17 @@ import { TPositionType } from '@/types'
 import { SortingState } from '@tanstack/react-table'
 import { useRouter } from 'next/navigation'
 import React, { useContext, useEffect, useState } from 'react'
-import { useActiveAccount } from 'thirdweb/react'
+// import { useActiveAccount } from 'thirdweb/react'
+import { useAccount } from 'wagmi'
 
 export default function AllPositions() {
     const router = useRouter()
     const { width: screenWidth } = useDimensions()
     const { filters, positionType, setPositionType } =
         useContext(PositionsContext)
-    const activeAccount = useActiveAccount()
-    const walletAddress = activeAccount?.address
+    // const activeAccount = useActiveAccount()
+    // const walletAddress = activeAccount?.address
+    const { address: walletAddress } = useAccount()
     const [searchKeywords, setSearchKeywords] = useState<string>('')
     const [sorting, setSorting] = useState<SortingState>([
         { id: 'apy', desc: positionType === 'lend' },

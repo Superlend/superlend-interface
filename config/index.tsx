@@ -3,7 +3,7 @@
 // import { mainnet, arbitrum } from '@reown/appkit/networks'
 
 // // Get projectId from https://cloud.reown.com
-// export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
+// export const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID;
 
 // if (!projectId) {
 //     throw new Error('Project ID is not defined')
@@ -37,16 +37,16 @@ import {
 import { coinbaseWallet, injected } from 'wagmi/connectors'
 
 export const config = createConfig({
-    chains: [mainnet, sepolia, polygon, base, baseSepolia, arbitrum],
-    connectors: [injected(), coinbaseWallet({ appName: 'Superlend' })],
+    chains: [polygon],
+    // connectors: [injected(), coinbaseWallet({ appName: 'Superlend' })],
     ssr: true,
     transports: {
-        [mainnet.id]: http(),
-        [sepolia.id]: http(),
+        // [mainnet.id]: http(),
+        // [sepolia.id]: http(),
         [polygon.id]: http(),
-        [base.id]: http(),
-        [baseSepolia.id]: http(),
-        [arbitrum.id]: http(),
+        // [base.id]: http(),
+        // [baseSepolia.id]: http(),
+        // [arbitrum.id]: http(),
     },
 })
 

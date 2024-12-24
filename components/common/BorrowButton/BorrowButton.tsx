@@ -2,6 +2,7 @@ import {
     useWriteContract,
     useWaitForTransactionReceipt,
     type BaseError,
+    useAccount,
 } from 'wagmi'
 // import { Action } from '../../../types/assetsTable'
 // import { getActionName } from '@utils/getActionName'
@@ -25,7 +26,7 @@ import { parseUnits } from 'ethers/lib/utils'
 import { countCompoundDecimals } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { PlatformType, PlatformValue } from '@/types/platform'
-import { useActiveAccount } from 'thirdweb/react'
+// import { useActiveAccount } from 'thirdweb/react'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import {
     TBorrowTx,
@@ -62,8 +63,9 @@ const BorrowButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    const activeAccount = useActiveAccount()
-    const walletAddress = activeAccount?.address
+    // const activeAccount = useActiveAccount()
+    // const walletAddress = activeAccount?.address
+    const { address: walletAddress } = useAccount()
     const { borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
 

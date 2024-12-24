@@ -5,7 +5,8 @@ import useGetChainsData from '@/hooks/useGetChainsData'
 import useGetTokensData from '@/hooks/useGetTokensData'
 import { TChain } from '@/types/chain'
 import { createContext, useContext, useEffect, useState } from 'react'
-import { useActiveAccount } from 'thirdweb/react'
+// import { useActiveAccount } from 'thirdweb/react'
+import { useAccount } from 'wagmi'
 
 type TUserTokenBalancesProps = {
     erc20TokensBalanceData: any
@@ -26,8 +27,9 @@ export default function UserTokenBalancesProvider({
 }: {
     children: React.ReactNode
 }) {
-    const activeAccount = useActiveAccount()
-    const walletAddress = activeAccount?.address
+    // const activeAccount = useActiveAccount()
+    // const walletAddress = activeAccount?.address
+    const { address: walletAddress } = useAccount()
 
     const {
         data: erc20TokensBalanceData,

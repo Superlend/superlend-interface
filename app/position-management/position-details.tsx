@@ -24,7 +24,7 @@ import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import { Skeleton } from '@/components/ui/skeleton'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import Image from 'next/image'
-import { useActiveAccount, useIsAutoConnecting } from 'thirdweb/react'
+// import { useActiveAccount, useIsAutoConnecting } from 'thirdweb/react'
 import TooltipText from '@/components/tooltips/TooltipText'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { EstimatedReturns } from './estimated-returns'
@@ -33,15 +33,17 @@ import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData'
 import { Button } from '@/components/ui/button'
 import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { useAccount } from 'wagmi'
 
 export default function PositionDetails() {
     const searchParams = useSearchParams()
     const { allChainsData } = useContext(AssetsDataContext)
     const chain_id = searchParams.get('chain_id') || 0
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
-    const activeAccount = useActiveAccount()
-    const walletAddress = activeAccount?.address
-    const isAutoConnecting = useIsAutoConnecting()
+    // const activeAccount = useActiveAccount()
+    // const walletAddress = activeAccount?.address
+    const { address: walletAddress } = useAccount()
+    // const isAutoConnecting = useIsAutoConnecting()
     const { lendTx, borrowTx } = useLendBorrowTxContext()
     const [refresh, setRefresh] = useState(false)
 

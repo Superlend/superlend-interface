@@ -1,4 +1,4 @@
-import { useActiveAccount } from 'thirdweb/react'
+// import { useActiveAccount } from 'thirdweb/react'
 import {
     ReservesDataHumanized,
     UiPoolDataProvider,
@@ -13,10 +13,12 @@ import { hasExponent } from '@/lib/utils'
 import { erc20Abi } from 'viem'
 import { Contract } from 'ethers'
 import { BigNumber } from 'ethers'
+import { useAccount } from 'wagmi'
 
 export const useAaveV3Data = () => {
-    const activeAccount = useActiveAccount()
-    const walletAddress = activeAccount?.address
+    // const activeAccount = useActiveAccount()
+    // const walletAddress = activeAccount?.address
+    const { address: walletAddress } = useAccount()
     const { providers } = useEthersMulticall(walletAddress)
     const [providerStatus, setProviderStatus] = useState({
         isReady: false,

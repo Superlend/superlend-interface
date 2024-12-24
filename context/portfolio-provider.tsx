@@ -3,7 +3,8 @@
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { TPortfolio } from '@/types/queries/portfolio'
 import { createContext, useContext, useEffect } from 'react'
-import { useActiveAccount } from 'thirdweb/react'
+// import { useActiveAccount } from 'thirdweb/react'
+import { useAccount } from 'wagmi'
 
 export type TPortfolioContext = {
     portfolioData: TPortfolio
@@ -28,8 +29,9 @@ export default function PortfolioProvider({
 }: {
     children: React.ReactNode
 }) {
-    const activeAccount = useActiveAccount()
-    const walletAddress = activeAccount?.address
+    // const activeAccount = useActiveAccount()
+    // const walletAddress = activeAccount?.address
+    const { address: walletAddress } = useAccount()
 
     const {
         data: portfolioData,

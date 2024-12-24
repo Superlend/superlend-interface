@@ -11,22 +11,24 @@ import AllPositions from './all-positions'
 import { LoaderCircle } from 'lucide-react'
 import useIsClient from '@/hooks/useIsClient'
 import PortfolioProvider from '@/context/portfolio-provider'
-import { useActiveAccount, useIsAutoConnecting } from 'thirdweb/react'
+// import { useActiveAccount, useIsAutoConnecting } from 'thirdweb/react'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import PositionsProvider from '@/context/positions-provider'
+import { useAccount } from 'wagmi'
 
 export default function Portfolio() {
-    const activeAccount = useActiveAccount()
-    const walletAddress = activeAccount?.address
-    const isAutoConnecting = useIsAutoConnecting()
+    // const activeAccount = useActiveAccount()
+    // const walletAddress = activeAccount?.address
+    const { address: walletAddress } = useAccount()
+    // const isAutoConnecting = useIsAutoConnecting()
 
     const { isClient } = useIsClient()
 
-    if (isClient && isAutoConnecting) {
+    if (isClient) {
         return <PortfolioPageLoading />
     }
 
-    if (!walletAddress && !isAutoConnecting && isClient) {
+    if (!walletAddress && isClient) {
         return (
             <div className="py-16">
                 <InfoBannerWithCta
@@ -43,7 +45,7 @@ export default function Portfolio() {
         )
     }
 
-    if (walletAddress && isClient && !isAutoConnecting) {
+    if (walletAddress && isClient) {
         // const queryClient = new QueryClient()
 
         // await queryClient.prefetchQuery({
