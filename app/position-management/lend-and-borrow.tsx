@@ -25,12 +25,7 @@ import {
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useMemo, useState, useEffect } from 'react'
-// import {
-//     useIsAutoConnecting,
-//     useActiveAccount,
-//     useSwitchActiveWalletChain,
-// } from 'thirdweb/react'
-import { switchChain } from '@wagmi/core'
+import { useSwitchChain } from 'wagmi'
 import {
     abbreviateNumber,
     checkDecimalPlaces,
@@ -70,7 +65,6 @@ import {
     TX_EXPLORER_LINKS,
 } from '@/constants'
 import ActionButton from '@/components/common/ActionButton'
-// import { defineChain } from 'thirdweb'
 import {
     TLendTx,
     TLendBorrowTxContext,
@@ -87,7 +81,6 @@ import { calculateHealthFactorFromBalancesBigUnits } from '@aave/math-utils'
 import { valueToBigNumber } from '@aave/math-utils'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { Checkbox } from '@/components/ui/checkbox'
-import { config } from '@/config'
 
 export default function LendAndBorrowAssets() {
     const {
@@ -123,11 +116,8 @@ export default function LendAndBorrowAssets() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType =
         (searchParams.get('position_type') as TPositionType) || 'lend'
-    // const activeAccount = useActiveAccount()
-    // const walletAddress = activeAccount?.address
     const { address: walletAddress } = useAccount()
-    // const isAutoConnecting = useIsAutoConnecting()
-    // const switchChain = useSwitchActiveWalletChain()
+    const { switchChainAsync } = useSwitchChain()
     const {
         fetchAaveV3Data,
         getMaxBorrowAmount,
@@ -164,7 +154,7 @@ export default function LendAndBorrowAssets() {
     // Switch chain
     useEffect(() => {
         if (!!walletAddress) {
-            switchChain(config as Config, { chainId: Number(chain_id) })
+            switchChainAsync({ chainId: Number(chain_id) })
         }
     }, [walletAddress, Number(chain_id)])
 
@@ -719,7 +709,7 @@ export default function LendAndBorrowAssets() {
                         </Button>
                     </div>
                     {/* Net APY - ONLY FOR BORROW TAB */}
-                    {!isLendPositionType(positionType) &&
+                    {(!isLendPositionType(positionType) && walletAddress) &&
                         <div className="flex items-center justify-between w-full py-[12px] px-[24px] rounded-b-5 bg-white border-y border-gray-200 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]">
                             <BodyText
                                 level="body3"
@@ -881,9 +871,12 @@ function ConfirmationDialog({
         useLendBorrowTxContext() as TLendBorrowTxContext
     const [open, setOpen] = useState(false)
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
+    const { switchChainAsync } = useSwitchChain()
+    const searchParams = useSearchParams()
+    const chain_id = searchParams.get('chain_id') || 1
 
-    // Reset the tx status when the dialog is closed
     useEffect(() => {
+        // Reset the tx status when the dialog is closed
         return () => {
             resetLendBorrowTx()
         }
@@ -891,6 +884,11 @@ function ConfirmationDialog({
 
     useEffect(() => {
         setHasAcknowledgedRisk(false)
+
+        if (open) {
+            // Switch chain when the dialog is opened
+            switchChainAsync({ chainId: Number(chain_id) })
+        }
     }, [open])
 
     function resetLendBorrowTx() {
@@ -967,11 +965,11 @@ function ConfirmationDialog({
         const HF = Number(healthFactorValues.healthFactor.toString())
 
         if (newHF < HF) {
-            return 'text-red'
+            return 'text-danger-500'
         } else if (newHF > HF) {
-            return 'text-green'
+            return 'text-success-500'
         } else {
-            return 'text-yellow'
+            return 'text-warning-500'
         }
     }
 
@@ -1297,11 +1295,11 @@ function ConfirmationDialog({
                                     </BodyText>
                                     <div className="flex flex-col items-end justify-end gap-2">
                                         <div className="flex items-center gap-2">
-                                            <BodyText level="body2" weight="normal" className={`'text-gray-800'`}>
+                                            <BodyText level="body2" weight="normal" className={`text-gray-800`}>
                                                 {(healthFactorValues.healthFactor).toFixed(2)}
                                             </BodyText>
                                             <ArrowRightIcon width={16} height={16} className="stroke-gray-800" strokeWidth={2.5} />
-                                            <BodyText level="body2" weight="normal" className={`${getNewHfColor()}`}>
+                                            <BodyText level="body2" weight="normal" className={getNewHfColor()}>
                                                 {(healthFactorValues.newHealthFactor).toFixed(2)}
                                             </BodyText>
                                         </div>

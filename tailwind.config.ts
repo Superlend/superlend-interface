@@ -30,9 +30,6 @@ const config = {
                 '2xl': '1400px',
             },
             colors: {
-                red: '#FF0000',
-                green: '#00AD31',
-                yellow: '#D19900',
                 border: 'hsl(var(--border))',
                 input: 'hsl(var(--input))',
                 ring: 'hsl(var(--ring))',
@@ -71,10 +68,16 @@ const config = {
                     border: 'hsl(var(--destructive-border))',
                     background: 'hsl(var(--destructive-background))',
                 },
+                danger: {
+                    500: '#FF0000',
+                },
                 success: {
                     DEFAULT: 'hsl(var(--success-background))',
                     foreground: 'hsl(var(--success-foreground))',
-                    text: '#0EA739',
+                    500: '#0EA739',
+                },
+                warning: {
+                    500: '#D19900',
                 },
                 muted: {
                     DEFAULT: 'hsl(var(--muted))',
