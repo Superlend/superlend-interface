@@ -30,6 +30,9 @@ const config = {
                 '2xl': '1400px',
             },
             colors: {
+                red: '#FF0000',
+                green: '#00AD31',
+                yellow: '#D19900',
                 border: 'hsl(var(--border))',
                 input: 'hsl(var(--input))',
                 ring: 'hsl(var(--ring))',

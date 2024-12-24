@@ -958,6 +958,19 @@ function ConfirmationDialog({
         ? (lendTx.hash.length > 0) && (lendTx.isConfirming || lendTx.isPending)
         : (borrowTx.hash.length > 0) && (borrowTx.isConfirming || borrowTx.isPending)
 
+    function getNewHfColor() {
+        const newHF = Number(healthFactorValues.newHealthFactor.toString())
+        const HF = Number(healthFactorValues.healthFactor.toString())
+
+        if (newHF < HF) {
+            return 'text-red'
+        } else if (newHF > HF) {
+            return 'text-green'
+        } else {
+            return 'text-yellow'
+        }
+    }
+
     function isHfLow() {
         return (Number(healthFactorValues.newHealthFactor.toString())) < Number(1.5)
     }
@@ -1284,7 +1297,7 @@ function ConfirmationDialog({
                                                 {(healthFactorValues.healthFactor).toFixed(2)}
                                             </BodyText>
                                             <ArrowRightIcon width={16} height={16} className="stroke-gray-800" strokeWidth={2.5} />
-                                            <BodyText level="body2" weight="normal" className={`${isHfLow() ? 'text-red-500' : 'text-gray-800'}`}>
+                                            <BodyText level="body2" weight="normal" className={`${getNewHfColor()}`}>
                                                 {(healthFactorValues.newHealthFactor).toFixed(2)}
                                             </BodyText>
                                         </div>
