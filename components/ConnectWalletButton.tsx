@@ -125,9 +125,9 @@ export default function ConnectWalletButton() {
     //     }
     // }
 
-    // const displayText = walletAddress
-    //     ? `${walletAddress?.slice(0, 5)}...${walletAddress?.slice(-5)}`
-    //     : "Connect Wallet";
+    const displayText = walletAddress
+        ? `${walletAddress?.slice(0, 5)}...${walletAddress?.slice(-5)}`
+        : "Connect Wallet";
 
     // const wallets = [
     //     createWallet('io.metamask'),
@@ -211,7 +211,21 @@ export default function ConnectWalletButton() {
                     wallets={wallets}
                 />
             </div> */}
-            <ConnectKitButton theme="soft" />
+            {/* <ConnectKitButton theme="soft" /> */}
+            <ConnectKitButton.Custom>
+                {({ isConnected, isConnecting, show, hide, address, ensName, chain }) => {
+                    return (
+                        <Button
+                            onClick={show}
+                            variant={walletAddress ? "default" : "primary"}
+                            size="lg"
+                            className={`rounded-[12px] py-2 capitalize font-medium ${isConnected ? "bg-white text-black" : "bg-primary text-white"}`}
+                        >
+                            {displayText}
+                        </Button>
+                    );
+                }}
+            </ConnectKitButton.Custom>
         </>
     )
 }

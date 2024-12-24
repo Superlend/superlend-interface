@@ -11,6 +11,11 @@ import { Config, cookieToInitialState } from 'wagmi'
 import UserTokenBalancesProvider from './user-token-balances-provider'
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 
+const customTheme = {
+    "--ck-overlay-background": "#fd5a00",
+    "--ck-text-color": "#fff",
+};
+
 function ContextProvider({
     children,
     cookies,
@@ -25,7 +30,11 @@ function ContextProvider({
             <QueryClientProvider client={queryClient}>
                 <AssetsDataProvider>
                     <UserTokenBalancesProvider>
-                        <ConnectKitProvider theme="soft">{children}</ConnectKitProvider>
+                        <ConnectKitProvider
+                            theme="soft"
+                        >
+                            {children}
+                        </ConnectKitProvider>
                     </UserTokenBalancesProvider>
                 </AssetsDataProvider>
             </QueryClientProvider>
