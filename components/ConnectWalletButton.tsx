@@ -212,7 +212,7 @@ export default function ConnectWalletButton() {
                 />
             </div> */}
             {/* <ConnectKitButton theme="soft" /> */}
-            <ConnectKitButton.Custom>
+            {/* <ConnectKitButton.Custom>
                 {({ isConnected, isConnecting, show, hide, address, ensName, chain }) => {
                     return (
                         <Button
@@ -225,7 +225,8 @@ export default function ConnectWalletButton() {
                         </Button>
                     );
                 }}
-            </ConnectKitButton.Custom>
+            </ConnectKitButton.Custom> */}
+            <appkit-button />
         </>
     )
 }
