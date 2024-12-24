@@ -177,8 +177,8 @@ export default function ConnectWalletButton() {
                 handleCopy={handleCopy}
             /> */}
             {/* md:max-w-[165px] */}
-            <div className="rounded-4 overflow-hidden max-h-[40px] w-full">
-                {/* <ConnectButton
+            {/* <div className="rounded-4 overflow-hidden max-h-[40px] w-full">
+                <ConnectButton
                     client={client}
                     chains={[
                         mainnet,
@@ -209,8 +209,8 @@ export default function ConnectWalletButton() {
                         size: 'compact',
                     }}
                     wallets={wallets}
-                /> */}
-            </div>
+                />
+            </div> */}
             <ConnectKitButton theme="soft" />
         </>
     )
