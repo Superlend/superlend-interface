@@ -548,16 +548,20 @@ export default function LendAndBorrowAssets() {
         ]
     )
 
-    const isDisabledMaxBtn =
-        Number(amount) ===
-        (isLendPositionType(positionType)
-            ? Number(balance)
-            : Number(maxBorrowAmount)) ||
-        !walletAddress ||
-        isLoadingMaxBorrowingAmount ||
-        isLoadingErc20TokensBalanceData ||
-        Number(balance) <= 0 ||
-        Number(maxBorrowAmount) <= 0
+    const isDisabledMaxBtn = () => {
+        if (isLendPositionType(positionType)) {
+            return (Number(amount) === Number(balance)) ||
+                !walletAddress ||
+                isLoadingErc20TokensBalanceData ||
+                (Number(balance) <= 0)
+        }
+
+        return (Number(amount) === Number(maxBorrowAmount)) ||
+            !walletAddress ||
+            isLoadingMaxBorrowingAmount ||
+            isLoadingErc20TokensBalanceData ||
+            (Number(maxBorrowAmount) <= 0)
+    }
 
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
     const isPolygonChain = Number(chain_id) === 137
@@ -709,7 +713,7 @@ export default function LendAndBorrowAssets() {
                                         : (maxBorrowAmount ?? '0')
                                 )
                             }
-                            disabled={isDisabledMaxBtn}
+                            disabled={isDisabledMaxBtn()}
                         >
                             max
                         </Button>
