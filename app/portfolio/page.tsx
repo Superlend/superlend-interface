@@ -19,12 +19,12 @@ import { useAccount } from 'wagmi'
 export default function Portfolio() {
     // const activeAccount = useActiveAccount()
     // const walletAddress = activeAccount?.address
-    const { address: walletAddress } = useAccount()
+    const { address: walletAddress, isConnecting } = useAccount()
     // const isAutoConnecting = useIsAutoConnecting()
 
     const { isClient } = useIsClient()
 
-    if (isClient) {
+    if (isClient && isConnecting) {
         return <PortfolioPageLoading />
     }
 
