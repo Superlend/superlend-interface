@@ -27,7 +27,8 @@ export const modal = createAppKit({
     defaultNetwork: mainnet,
     metadata: metadata,
     features: {
-        analytics: true // Optional - defaults to your Cloud configuration
+        analytics: true,
+        connectMethodsOrder: ['wallet']
     },
     themeMode: 'light'
 })

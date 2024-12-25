@@ -446,3 +446,63 @@ export function countCompoundDecimals(
     }
     return underlyingDecimals
 }
+
+export function scientificToDecimal(scientificNum: number): number {
+    // Convert the input to a string if it isn't already
+    const numStr = scientificNum.toString()
+
+    // If the number isn't in scientific notation, return it as is
+    if (!numStr.includes('e')) {
+        return Number(numStr)
+    }
+
+    // Split into coefficient and exponent
+    let [coefficient, exponent]: any = numStr.split('e')
+    exponent = parseInt(exponent)
+
+    // If exponent is 0, return the coefficient
+    if (exponent === 0) {
+        return coefficient
+    }
+
+    // Remove decimal point from coefficient and get its position
+    const decimalIndex = coefficient.includes('.')
+        ? coefficient.indexOf('.')
+        : coefficient.length
+    coefficient = coefficient.replace('.', '')
+
+    // Handle negative signs
+    const isNegative = coefficient.startsWith('-')
+    coefficient = isNegative ? coefficient.slice(1) : coefficient
+
+    // Calculate new decimal position
+    let newDecimalPosition = decimalIndex + exponent
+
+    // Add leading/trailing zeros as needed
+    if (newDecimalPosition <= 0) {
+        // Need to add leading zeros
+        coefficient = '0'.repeat(Math.abs(newDecimalPosition)) + coefficient
+        newDecimalPosition = 0
+    } else if (newDecimalPosition > coefficient.length) {
+        // Need to add trailing zeros
+        coefficient =
+            coefficient + '0'.repeat(newDecimalPosition - coefficient.length)
+    }
+
+    // Insert decimal point at the new position
+    let result =
+        coefficient.slice(0, newDecimalPosition) +
+        '.' +
+        coefficient.slice(newDecimalPosition)
+
+    // Remove trailing zeros after decimal and trailing decimal if needed
+    result = result.replace(/\.?0+$/, '')
+
+    // Add leading zero if needed
+    if (result.startsWith('.')) {
+        result = '0' + result
+    }
+
+    // Add negative sign back if needed
+    return isNegative ? Number('-' + result) : Number(result)
+}

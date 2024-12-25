@@ -13,6 +13,7 @@ import {
     capitalizeText,
     convertScientificToNormal,
     getLiquidationRisk,
+    getLowestDisplayValue,
     getRiskFactor,
     hasLowestDisplayValuePrefix,
     isLowestValue,
@@ -430,12 +431,15 @@ export default function PositionDetails() {
                                             )
                                         )}{' '}
                                         $
-                                        {abbreviateNumber(
-                                            Number(
-                                                formattedUserPositions
-                                                    ?.lendAsset.amount ?? 0
+                                        {isLowestValue(Number(formattedUserPositions?.lendAsset.amount ?? 0)) ?
+                                            getLowestDisplayValue(Number(formattedUserPositions?.lendAsset.amount ?? 0)) :
+                                            abbreviateNumber(
+                                                Number(
+                                                    formattedUserPositions
+                                                        ?.lendAsset.amount ?? 0
+                                                )
                                             )
-                                        )}
+                                        }
                                     </HeadingText>
                                 </div>
                                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
@@ -477,12 +481,16 @@ export default function PositionDetails() {
                                             )
                                         )}{' '}
                                         $
-                                        {abbreviateNumber(
-                                            Number(
-                                                formattedUserPositions
-                                                    ?.borrowAsset.amount ?? 0
-                                            )
-                                        )}
+                                        {
+                                            isLowestValue(Number(formattedUserPositions?.borrowAsset.amount ?? 0)) ?
+                                                getLowestDisplayValue(Number(formattedUserPositions?.borrowAsset.amount ?? 0)) :
+                                                abbreviateNumber(
+                                                    Number(
+                                                        formattedUserPositions
+                                                            ?.borrowAsset.amount ?? 0
+                                                    )
+                                                )
+                                        }
                                     </HeadingText>
                                 </div>
                                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
