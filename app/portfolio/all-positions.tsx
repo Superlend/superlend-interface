@@ -22,7 +22,7 @@ import { useAccount } from 'wagmi'
 
 export default function AllPositions() {
     const router = useRouter()
-    const { width: screenWidth } = useDimensions()
+    // const { width: screenWidth } = useDimensions()
     const { filters, positionType, setPositionType } =
         useContext(PositionsContext)
     // const activeAccount = useActiveAccount()
@@ -130,7 +130,7 @@ export default function AllPositions() {
     const tableData = filteredTableData
 
     function handleRowClick(rowData: any) {
-        if (screenWidth < 768) return
+        // if (screenWidth < 768) return
 
         const { tokenAddress, protocol_identifier, chain_id } = rowData
         const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`
