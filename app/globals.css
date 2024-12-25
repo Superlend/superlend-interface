@@ -64,6 +64,8 @@
         --chart-compound: 162 99% 38%;
         --chart-morpho: 238 73% 40%;
         --chart-fluid: 223 98% 62%;
+        --pulse-color: 21, 100%, 50%;
+        --duration: 1.3s;
     }
 
     .dark {
@@ -95,6 +97,8 @@
         --chart-compound: 162 99% 38%;
         --chart-morpho: 238 73% 40%;
         --chart-fluid: 223 98% 62%;
+        --pulse-color: 21, 100%, 50%;
+        --duration: 1.3s;
     }
 }
 

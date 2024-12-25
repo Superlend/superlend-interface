@@ -235,7 +235,7 @@ export function UserPositionsByPlatform({
         <Card className="flex flex-col h-full">
             <CardContent className="flex-1 p-0">
                 {isLoading && (
-                    <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full my-8" />
+                    <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full my-8 bg-gray-400" />
                 )}
                 {!isLoading && chartData.length === 0 && (
                     <div className="flex flex-col items-center justify-center w-full h-[200px] lg:h-full gap-3">
