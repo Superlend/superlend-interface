@@ -361,10 +361,14 @@ export default function LendAndBorrowAssets() {
         }
     }
 
-    const getAssetDetails = (tokenAddress: string) => {
+    const getFormattedAssetDetails = (tokenAddress: string) => {
         if (!!selectedPlatformDetails && hasPosition) {
             return getAssetDetailsFromPortfolio(tokenAddress)
         }
+        return getAssetDetails(tokenAddress)
+    }
+
+    function getAssetDetails(tokenAddress: string) {
         return {
             asset: {
                 ...platformData?.assets?.find(
@@ -392,7 +396,8 @@ export default function LendAndBorrowAssets() {
         }
     }
 
-    const assetDetails: any = getAssetDetails(tokenAddress)
+    const assetDetails: any = getFormattedAssetDetails(tokenAddress)
+    const assetDetailsForLendBorrowTx = getAssetDetails(tokenAddress)
     const selectedBorrowTokenDetailsFormatted =
         formatSelectedBorrowTokenDetails(
             selectedBorrowTokenDetails?.token?.address ?? ''
@@ -517,10 +522,10 @@ export default function LendAndBorrowAssets() {
             return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
         }
         if (!hasCollateral) {
-            return 'You do not have any collateral'
+            return 'You do not have sufficient collateral to borrow'
         }
         if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
-            return 'You do not have any borrow limit'
+            return 'You do not have enough borrow capacity'
         }
         return null
     }, [hasCollateral, canBorrow, amount, balance, toManyDecimals])
@@ -774,7 +779,7 @@ export default function LendAndBorrowAssets() {
                                 positionType={positionType}
                                 assetDetails={
                                     isLendPositionType(positionType)
-                                        ? assetDetails
+                                        ? assetDetailsForLendBorrowTx
                                         : selectedBorrowTokenDetailsFormatted
                                 }
                                 amount={amount}
