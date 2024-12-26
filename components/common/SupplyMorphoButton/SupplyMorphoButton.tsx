@@ -2,18 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
     BaseError,
     useAccount,
-    useConnect,
     useWaitForTransactionReceipt,
     useWriteContract,
 } from 'wagmi'
-import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
-import AAVE_POOL_ABI from '@/data/abi/aavePoolABI.json'
-// import CustomButton from '@/components/ui/CustomButton'
-// import { getActionName } from '@/lib/getActionName'
-// import { Action } from '@/types/assetsTable'
-// import { AddressType } from '@/types/address'
 import { parseUnits } from 'ethers/lib/utils'
-// import toast from 'react-hot-toast'
 import {
     APPROVE_MESSAGE,
     CONFIRM_ACTION_IN_WALLET_TEXT,
@@ -21,40 +13,37 @@ import {
     SOMETHING_WENT_WRONG_MESSAGE,
     SUCCESS_MESSAGE,
 } from '@/constants'
-// import { getErrorText } from '@/lib/getErrorText'
 import { Button } from '@/components/ui/button'
-// import { prepareContractCall } from 'thirdweb'
-// import { defineChain } from 'thirdweb'
-import { useSearchParams } from 'next/navigation'
+import { ArrowRightIcon } from 'lucide-react'
+import CustomAlert from '@/components/alerts/CustomAlert'
 import {
+    TLendBorrowTxContext,
     TLendTx,
     useLendBorrowTxContext,
 } from '@/context/lend-borrow-tx-provider'
-import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
-import CustomAlert from '@/components/alerts/CustomAlert'
-import { ArrowRightIcon } from 'lucide-react'
 import { BigNumber } from 'ethers'
 import { getErrorText } from '@/lib/getErrorText'
 import { BodyText } from '@/components/ui/typography'
-// import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
+import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
+import { Market } from '@morpho-org/blue-sdk'
+import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
 
-interface ISupplyAaveButtonProps {
+interface ISupplyMorphoButtonProps {
     disabled: boolean
-    poolContractAddress: `0x${string}`
-    underlyingAssetAdress: `0x${string}`
+    asset: any // Replace with proper type
     amount: string
-    decimals: number
     handleCloseModal: (isVisible: boolean) => void
 }
 
-const SupplyAaveButton = ({
-    poolContractAddress,
-    underlyingAssetAdress,
-    amount,
-    decimals,
+const SupplyMorphoButton = ({
     disabled,
+    asset,
+    amount,
     handleCloseModal,
-}: ISupplyAaveButtonProps) => {
+}: ISupplyMorphoButtonProps) => {
+    const assetDetails = asset.asset
+    const platform = asset.platform
+    const morphoMarketData: Market = asset.morphoMarketData
     const {
         writeContractAsync,
         isPending,
@@ -67,15 +56,14 @@ const SupplyAaveButton = ({
             hash,
         })
     const { address: walletAddress } = useAccount()
-    // const { createToast } = useCreatePendingToast()
-    const { isConnected } = useAccount()
-    const { connect, connectors } = useConnect()
     const { lendTx, setLendTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
 
     const amountBN = useMemo(() => {
-        return amount ? parseUnits(amount, decimals) : BigNumber.from(0)
-    }, [amount, decimals])
+        return amount
+            ? parseUnits(amount, assetDetails?.token?.decimals || 18)
+            : BigNumber.from(0)
+    }, [amount, assetDetails?.token?.decimals])
 
     const txBtnStatus: Record<string, string> = {
         pending:
@@ -109,53 +97,119 @@ const SupplyAaveButton = ({
 
     const supply = useCallback(async () => {
         try {
-            setLendTx((prev: TLendTx) => ({
+            setLendTx((prev: any) => ({
                 ...prev,
                 status: 'lend',
                 hash: '',
                 errorMessage: '',
             }))
 
-            writeContractAsync({
-                address: poolContractAddress,
-                abi: AAVE_POOL_ABI,
-                functionName: 'supply',
-                args: [
-                    underlyingAssetAdress,
-                    parseUnits(amount, decimals),
-                    walletAddress,
-                    0,
-                ],
-            })
-                .then((data) => {
-                    setLendTx((prev: TLendTx) => ({
-                        ...prev,
-                        status: 'view',
-                        errorMessage: '',
-                    }))
+            //  check if asset is collateral or borrow
+            // If collateral, supplyCollateral if borrowSupply supply
+            const isCollateral = !assetDetails.borrow_enabled
+
+            if (isCollateral) {
+                // call morpho market supplyCollateral
+                writeContractAsync({
+                    address: platform.core_contract,
+                    abi: MORPHO_MARKET_ABI,
+                    functionName: 'supplyCollateral',
+
+                    // marketParams
+                    // assets
+                    // onBehalf
+                    // data
+                    args: [
+                        {
+                            loanToken: morphoMarketData.params.loanToken,
+                            collateralToken:
+                                morphoMarketData.params.collateralToken,
+                            oracle: morphoMarketData.params.oracle,
+                            irm: morphoMarketData.params.irm,
+                            lltv: morphoMarketData.params.lltv,
+                        },
+                        parseUnits(amount, assetDetails.token.decimals),
+                        walletAddress,
+                        '0x',
+                    ],
                 })
-                .catch((error) => {
-                    setLendTx((prev: TLendTx) => ({
-                        ...prev,
-                        isPending: false,
-                        isConfirming: false,
-                    }))
-                })
+                    .then((data) => {
+                        setLendTx((prev: TLendTx) => ({
+                            ...prev,
+                            status: 'view',
+                            errorMessage: '',
+                        }))
+                    })
+                    .catch((error) => {
+                        setLendTx((prev: TLendTx) => ({
+                            ...prev,
+                            isPending: false,
+                            isConfirming: false,
+                        }))
+                    })
+            } else {
+                // call morpho market supply
+                writeContractAsync({
+                    address: platform.core_contract,
+                    abi: MORPHO_MARKET_ABI,
+                    functionName: 'supply',
+                    args: [
+                        {
+                            loanToken: morphoMarketData.params.loanToken,
+                            collateralToken:
+                                morphoMarketData.params.collateralToken,
+                            oracle: morphoMarketData.params.oracle,
+                            irm: morphoMarketData.params.irm,
+                            lltv: morphoMarketData.params.lltv,
+                        },
+                        parseUnits(amount, assetDetails.token.decimals),
+                        0,
+                        walletAddress,
+                        '0x',
+                    ],
+                }).then((data) => {
+                        setLendTx((prev: TLendTx) => ({
+                            ...prev,
+                            status: 'view',
+                            errorMessage: '',
+                        }))
+                    })
+                    .catch((error) => {
+                        setLendTx((prev: TLendTx) => ({
+                            ...prev,
+                            isPending: false,
+                            isConfirming: false,
+                        }))
+                    })
+            }
+
+            // TODO: Implement Morpho supply logic here
+            // Example structure:
+            // writeContractAsync({
+            //     address: asset.core_contract,
+            //     abi: MORPHO_POOL_ABI,
+            //     functionName: 'supply',
+            //     args: [
+            //         asset.asset.token.address,
+            //         parseUnits(amount, asset.asset.token.decimals),
+            //         walletAddress,
+            //         0,
+            //     ],
+            // })
         } catch (error) {
             error
         }
     }, [
         amount,
-        poolContractAddress,
-        underlyingAssetAdress,
+        assetDetails,
+        platform,
         walletAddress,
         handleCloseModal,
         writeContractAsync,
-        decimals,
     ])
 
     useEffect(() => {
-        setLendTx((prev: TLendTx) => ({
+        setLendTx((prev: any) => ({
             ...prev,
             isPending: isPending,
             isConfirming: isConfirming,
@@ -169,14 +223,14 @@ const SupplyAaveButton = ({
 
         if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
             if (lendTx.allowanceBN.gte(amountBN)) {
-                setLendTx((prev: TLendTx) => ({
+                setLendTx((prev: any) => ({
                     ...prev,
                     status: 'lend',
                     hash: '',
                     errorMessage: '',
                 }))
             } else {
-                setLendTx((prev: TLendTx) => ({
+                setLendTx((prev: any) => ({
                     ...prev,
                     status: 'approve',
                     hash: '',
@@ -188,13 +242,13 @@ const SupplyAaveButton = ({
 
     useEffect(() => {
         if ((lendTx.status === 'approve' || lendTx.status === 'lend') && hash) {
-            setLendTx((prev: TLendTx) => ({
+            setLendTx((prev: any) => ({
                 ...prev,
                 hash: hash || '',
             }))
         }
         if (lendTx.status === 'view' && hash) {
-            setLendTx((prev: TLendTx) => ({
+            setLendTx((prev: any) => ({
                 ...prev,
                 hash: hash || '',
             }))
@@ -202,37 +256,24 @@ const SupplyAaveButton = ({
     }, [hash, lendTx.status])
 
     const onApproveSupply = async () => {
-        // if (!isConnected) {
-        //     // If not connected, prompt connection first
-        //     try {
-        //         const connector = connectors[0] // Usually metamask/injected connector
-        //         await connect({ connector })
-        //         return
-        //     } catch (error) {
-        //         console.error('Connection failed:', error)
-        //         return
-        //     }
-        // }
-
         try {
-            setLendTx((prev: TLendTx) => ({
+            setLendTx((prev: any) => ({
                 ...prev,
                 status: 'approve',
                 hash: '',
                 errorMessage: '',
             }))
 
+            // TODO: Implement Morpho approve logic here
+            // Example structure:
             writeContractAsync({
-                address: underlyingAssetAdress,
+                address: asset.asset.token.address,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [poolContractAddress, parseUnits(amount, decimals)],
-            }).catch((error) => {
-                setLendTx((prev: TLendTx) => ({
-                    ...prev,
-                    isPending: false,
-                    isConfirming: false,
-                }))
+                args: [
+                    platform.core_contract,
+                    parseUnits(amount, asset.asset.token.decimals),
+                ],
             })
         } catch (error) {
             error
@@ -306,4 +347,4 @@ const SupplyAaveButton = ({
     )
 }
 
-export default SupplyAaveButton
+export default SupplyMorphoButton

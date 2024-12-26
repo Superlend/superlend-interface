@@ -104,11 +104,11 @@ const BorrowButton = ({
 
     const txBtnText =
         txBtnStatus[
-        isConfirming
-            ? 'confirming'
-            : isConfirmed
-                ? 'success'
-                : isPending
+            isConfirming
+                ? 'confirming'
+                : isConfirmed
+                  ? 'success'
+                  : isPending
                     ? 'pending'
                     : 'default'
         ]
@@ -120,12 +120,7 @@ const BorrowButton = ({
                     address: cTokenAddress as `0x${string}`,
                     abi: COMPOUND_ABI,
                     functionName: 'borrow',
-                    args: [
-                        parseUnits(
-                            amount,
-                            asset.decimals
-                        ),
-                    ],
+                    args: [parseUnits(amount, asset.decimals)],
                 })
             } catch (error) {
                 error
@@ -188,7 +183,10 @@ const BorrowButton = ({
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={(isPending || isConfirming || disabled) && borrowTx.status !== 'view'}
+                disabled={
+                    (isPending || isConfirming || disabled) &&
+                    borrowTx.status !== 'view'
+                }
                 onClick={
                     borrowTx.status === 'borrow'
                         ? onBorrow

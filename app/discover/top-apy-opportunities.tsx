@@ -4,7 +4,6 @@ import React, {
     useContext,
     useEffect,
     useState,
-    useMemo,
     useCallback,
     useRef,
 } from 'react'
@@ -20,9 +19,7 @@ import { TChain } from '@/types/chain'
 import { DataTable } from '@/components/ui/data-table'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
-import { OpportunitiesContext } from '@/context/opportunities-provider'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import useDimensions from '@/hooks/useDimensions'
+import { useRouter, useSearchParams } from 'next/navigation'
 import DiscoverFiltersDropdown from '@/components/dropdowns/DiscoverFiltersDropdown'
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { motion } from 'framer-motion'
