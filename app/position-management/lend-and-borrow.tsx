@@ -525,7 +525,7 @@ export default function LendAndBorrowAssets() {
             return 'You do not have sufficient collateral to borrow'
         }
         if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
-            return 'You do not have enough borrow capacity'
+            return 'Amount exceeds available borrow limit'
         }
         return null
     }, [hasCollateral, canBorrow, amount, balance, toManyDecimals])
