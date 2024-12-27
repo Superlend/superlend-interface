@@ -6,7 +6,6 @@ import {
     CarouselContent,
     CarouselItem,
 } from '@/components/ui/carousel'
-import { POSITIONS_AT_RISK_DATA } from '@/data/portfolio-page'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
