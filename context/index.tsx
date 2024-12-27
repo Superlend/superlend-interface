@@ -33,7 +33,6 @@ export const modal = createAppKit({
     themeMode: 'light'
 })
 
-
 function ContextProvider({
     children,
     cookies,

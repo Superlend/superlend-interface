@@ -12,7 +12,6 @@ import {
     useEffect,
     useState,
 } from 'react'
-// import { useActiveAccount } from 'thirdweb/react'
 import { AssetsDataContext } from './data-provider'
 import { useAccount } from 'wagmi'
 
@@ -73,8 +72,6 @@ export default function PositionsProvider({
     const [portfolioData, setPortfolioData] =
         useState<TPortfolio>(PortfolioDataInit)
     const { allChainsData } = useContext(AssetsDataContext)
-    // const activeAccount = useActiveAccount()
-    // const walletAddress = activeAccount?.address
     const { address: walletAddress } = useAccount()
     const chainsIds = allChainsData.map((chain: TChain) => chain.chain_id)
 

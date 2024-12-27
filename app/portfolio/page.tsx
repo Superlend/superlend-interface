@@ -11,17 +11,12 @@ import AllPositions from './all-positions'
 import { LoaderCircle } from 'lucide-react'
 import useIsClient from '@/hooks/useIsClient'
 import PortfolioProvider from '@/context/portfolio-provider'
-// import { useActiveAccount, useIsAutoConnecting } from 'thirdweb/react'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import PositionsProvider from '@/context/positions-provider'
 import { useAccount } from 'wagmi'
 
 export default function Portfolio() {
-    // const activeAccount = useActiveAccount()
-    // const walletAddress = activeAccount?.address
     const { address: walletAddress, isConnecting } = useAccount()
-    // const isAutoConnecting = useIsAutoConnecting()
-
     const { isClient } = useIsClient()
 
     if (isClient && isConnecting) {
@@ -46,15 +41,7 @@ export default function Portfolio() {
     }
 
     if (walletAddress && isClient) {
-        // const queryClient = new QueryClient()
-
-        // await queryClient.prefetchQuery({
-        //     queryKey: ['opportunities'],
-        //     queryFn: () => useGetOpportunitiesData({ type: "lend" }),
-        // })
-
         return (
-            // <HydrationBoundary state={dehydrate(queryClient)}>
             <PortfolioProvider>
                 <MainContainer className="px-0">
                     <section
@@ -95,7 +82,6 @@ export default function Portfolio() {
                     </section>
                 </MainContainer>
             </PortfolioProvider>
-            // </HydrationBoundary>
         )
     }
 

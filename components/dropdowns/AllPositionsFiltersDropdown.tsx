@@ -87,13 +87,25 @@ export default function AllPositionsFiltersDropdown() {
         },
         {
             logo: PlatformLogo.MORPHO,
-            name: 'MORPHO',
-            platform_id: 'MORPHO',
+            name: 'MORPHO VAULTS',
+            platform_id: 'MORPHO_VAULTS',
+            isVault: true,
+        },
+        {
+            logo: PlatformLogo.MORPHO,
+            name: 'MORPHO MARKETS',
+            platform_id: 'MORPHO_MARKETS',
+            isVault: false,
         },
         {
             logo: PlatformLogo.FLUID,
             name: 'FLUID',
             platform_id: 'FLUID',
+        },
+        {
+            logo: PlatformLogo.SUPERLEND,
+            name: 'SUPERLEND',
+            protocol_id: 'SUPERLEND',
         },
     ]
 
@@ -443,14 +455,14 @@ function FilterOptions({
                     All {type.charAt(0).toUpperCase() + type.slice(1)}s
                 </Button>
                 {filterOptionsByKeyword(searchKeyword, options).map(
-                    (option: any) => (
+                    (option: any, index: number) => (
                         <Button
                             onClick={() =>
                                 handleSelection(option[`${type}_id`], type)
                             }
                             variant="outline"
                             size="sm"
-                            key={option[`${type}_id`]}
+                            key={`${option[`${type}_id`]}-${index}`}
                             className={`flex items-center gap-1 ${isSelected(option[`${type}_id`], type) ? 'selected' : ''}`}
                         >
                             <ImageWithDefault

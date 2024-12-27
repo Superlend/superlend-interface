@@ -35,16 +35,14 @@ import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData'
 import { Button } from '@/components/ui/button'
 import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import { useAccount } from 'wagmi'
+import { PlatformType } from '@/types/platform'
 
 export default function PositionDetails() {
     const searchParams = useSearchParams()
     const { allChainsData } = useContext(AssetsDataContext)
     const chain_id = searchParams.get('chain_id') || 0
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
-    // const activeAccount = useActiveAccount()
-    // const walletAddress = activeAccount?.address
     const { address: walletAddress } = useAccount()
-    // const isAutoConnecting = useIsAutoConnecting()
     const { lendTx, borrowTx } = useLendBorrowTxContext()
     const [refresh, setRefresh] = useState(false)
 
@@ -268,6 +266,13 @@ export default function PositionDetails() {
         assetDetails,
     }
 
+    const morphoVaultsLiquidationPriceTooltipText = 'Liquidation is not applicable, as Morpho vaults are designed to only earn & not borrow.'
+    const morphoVaultsYourBorrowingTooltipText = 'Borrowing is not applicable, as Morpho vaults are designed to only earn & not borrow.'
+    const liquidationPriceValueGeneralTooltipText = 'You do not have any borrows'
+    const isMorpho = platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() === PlatformType.MORPHO
+    const isVault = platformData?.platform?.isVault
+    const liquidationPriceValueTooltipText = (isMorpho && isVault) ? morphoVaultsLiquidationPriceTooltipText : liquidationPriceValueGeneralTooltipText
+
     // Loading state
     if (isLoading) {
         return <LoadingSectionSkeleton className="h-[250px]" />
@@ -292,8 +297,6 @@ export default function PositionDetails() {
     if (!isLoading && userPositions.length === 0) {
         return <EstimatedReturns platformDetails={platformData} />
     }
-
-    // console.log(formattedUserPositions?.borrowAsset.amount);
 
     // If user is connected, and has positions, show position details
     return (
@@ -373,7 +376,7 @@ export default function PositionDetails() {
                                                         N/A
                                                     </TooltipText>
                                                 }
-                                                content="You do not have any borrows in this vault"
+                                                content={liquidationPriceValueTooltipText}
                                             />
                                         </BodyText>
                                     )}
@@ -396,8 +399,8 @@ export default function PositionDetails() {
             <div className="bg-white rounded-4 py-[32px] px-[22px] md:px-[44px]">
                 {isLoading && <Skeleton className="w-full h-[100px]" />}
                 {!isLoading && userPositions.length > 0 && (
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-                        <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-5">
+                        <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full h-full">
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -424,22 +427,13 @@ export default function PositionDetails() {
                                         weight="medium"
                                         className="text-gray-800"
                                     >
-                                        {hasLowestDisplayValuePrefix(
+                                        $
+                                        {abbreviateNumber(
                                             Number(
                                                 formattedUserPositions
                                                     ?.lendAsset.amount ?? 0
                                             )
-                                        )}{' '}
-                                        $
-                                        {isLowestValue(Number(formattedUserPositions?.lendAsset.amount ?? 0)) ?
-                                            getLowestDisplayValue(Number(formattedUserPositions?.lendAsset.amount ?? 0)) :
-                                            abbreviateNumber(
-                                                Number(
-                                                    formattedUserPositions
-                                                        ?.lendAsset.amount ?? 0
-                                                )
-                                            )
-                                        }
+                                        )}
                                     </HeadingText>
                                 </div>
                                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
@@ -447,7 +441,7 @@ export default function PositionDetails() {
                 </Button> */}
                             </div>
                         </div>
-                        <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full">
+                        <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full h-full">
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -469,29 +463,36 @@ export default function PositionDetails() {
                                             })
                                         )}
                                     />
-                                    <HeadingText
-                                        level="h3"
-                                        weight="medium"
-                                        className="text-gray-800"
-                                    >
-                                        {hasLowestDisplayValuePrefix(
-                                            Number(
-                                                formattedUserPositions
-                                                    ?.borrowAsset.amount ?? 0
-                                            )
-                                        )}{' '}
-                                        $
-                                        {
-                                            isLowestValue(Number(formattedUserPositions?.borrowAsset.amount ?? 0)) ?
-                                                getLowestDisplayValue(Number(formattedUserPositions?.borrowAsset.amount ?? 0)) :
-                                                abbreviateNumber(
+                                    {/* Your borrowed amount */}
+                                    {!(isMorpho && isVault) &&
+                                        <HeadingText
+                                            level="h3"
+                                            weight="medium"
+                                            className="text-gray-800"
+                                        >
+                                            <span>
+                                                $
+                                                {abbreviateNumber(
                                                     Number(
                                                         formattedUserPositions
                                                             ?.borrowAsset.amount ?? 0
                                                     )
-                                                )
-                                        }
-                                    </HeadingText>
+                                                )}
+                                            </span>
+                                        </HeadingText>}
+                                    {/* Borrowed amount for Morpho vaults */}
+                                    {(isMorpho && isVault) && (
+                                        <InfoTooltip
+                                            label={
+                                                <BodyText level="body1" weight="normal" className="text-gray-600">
+                                                    <TooltipText className="text-gray-600">
+                                                        N/A
+                                                    </TooltipText>
+                                                </BodyText>
+                                            }
+                                            content={morphoVaultsYourBorrowingTooltipText}
+                                        />
+                                    )}
                                 </div>
                                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
                   repay

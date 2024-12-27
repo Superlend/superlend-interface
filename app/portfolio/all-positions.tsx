@@ -14,6 +14,7 @@ import useDimensions from '@/hooks/useDimensions'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { calculateScientificNotation } from '@/lib/utils'
 import { TPositionType } from '@/types'
+import { PlatformType } from '@/types/platform'
 import { SortingState } from '@tanstack/react-table'
 import { useRouter } from 'next/navigation'
 import React, { useContext, useEffect, useState } from 'react'
@@ -109,16 +110,23 @@ export default function AllPositions() {
             ).toFixed(10),
             earnings:
                 (item.amount - item.initial_amount) * item.token.price_usd,
+            isVault: item.platform.isVault || false,
         }
     })
 
     const filteredTableData = rawTableData.filter((position) => {
+        const isVault = position.isVault
+        const isMorpho = position.platformName.toLowerCase() === PlatformType.MORPHO
+        const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
+
+        const formattedPlatformName = `${position.platformName}${isMorpho ? `_${morphoSuffix}` : ''}`
+
         const matchesTokenFilter =
             filters.token_ids.length === 0 ||
             filters.token_ids.includes(position.tokenSymbol)
         const matchesPlatformFilter =
             filters.platform_ids.length === 0 ||
-            filters.platform_ids.includes(position.platformName)
+            filters.platform_ids.includes(formattedPlatformName)
         const matchesChainFilter =
             filters.chain_ids.length === 0 ||
             filters.chain_ids

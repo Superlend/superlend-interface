@@ -95,13 +95,25 @@ export default function DiscoverFiltersDropdown() {
         },
         {
             logo: PlatformLogo.MORPHO,
-            name: 'MORPHO',
-            protocol_id: 'MORPHO',
+            name: 'MORPHO VAULTS',
+            protocol_id: 'MORPHO_VAULTS',
+            isVault: true,
+        },
+        {
+            logo: PlatformLogo.MORPHO,
+            name: 'MORPHO MARKETS',
+            protocol_id: 'MORPHO_MARKETS',
+            isVault: false,
         },
         {
             logo: PlatformLogo.FLUID,
             name: 'FLUID',
             protocol_id: 'FLUID',
+        },
+        {
+            logo: PlatformLogo.SUPERLEND,
+            name: 'SUPERLEND',
+            protocol_id: 'SUPERLEND',
         },
     ]
 

@@ -92,9 +92,8 @@ export default function PageHeader() {
         platformData: platformData as TPlatform,
     })
 
-    const isMorpho = platformData?.platform?.platform_name
-        ?.toLowerCase()
-        ?.includes('morpho')
+    const isMorpho = platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() === PlatformType.MORPHO
+    const isVault = platformData?.platform?.isVault
     const tokenSymbol = tokenDetails?.symbol
     const tokenLogo = tokenDetails?.logo || ''
     const tokenName = tokenDetails?.name || ''
@@ -107,8 +106,12 @@ export default function PageHeader() {
     const vaultId = platformData?.platform?.vaultId
     const morpho_market_id = platformData?.platform?.morpho_market_id
     const network_name = chainName
+    const core_contract = platformData?.platform?.core_contract
     const isFluidVault =
         platformData?.platform?.protocol_type === PlatformType.FLUID &&
+        platformData?.platform?.isVault
+    const isMorphoVault =
+        platformData?.platform?.protocol_type === PlatformType.MORPHO &&
         platformData?.platform?.isVault
     const platformWebsiteLink = getPlatformWebsiteLink({
         platformId,
@@ -117,9 +120,13 @@ export default function PageHeader() {
         chainId: chain_id,
         vaultId,
         isFluidVault,
+        isMorphoVault,
+        core_contract,
         morpho_market_id,
         network_name,
     })
+
+    const formattedBorrowRate = isMorphoVault ? "N/A" : `${pageHeaderStats?.borrow_rate}%`;
 
     const checkForPairBasedTokens = (
         platformTypes: string[],
@@ -172,10 +179,11 @@ export default function PageHeader() {
         ?.flatMap((asset: TPlatformAsset) => asset.token.warnings)
 
     const isDisplayOneToken =
-        hasPoolBasedTokens || (isFluidPlatform && !isFluidVault)
+        hasPoolBasedTokens || (isFluidPlatform && !isFluidVault) || (isMorpho && isMorphoVault)
     const isDisplayTwoTokens = !(
         hasPoolBasedTokens ||
-        (isFluidPlatform && !isFluidVault)
+        (isFluidPlatform && !isFluidVault) ||
+        (isMorpho && isMorphoVault)
     )
 
     const tokensToDisplayOnTooltip = isDisplayOneToken
@@ -191,20 +199,20 @@ export default function PageHeader() {
                             key={index}
                             description={
                                 WarningMessages[
-                                    message.type as keyof typeof WarningMessages
+                                message.type as keyof typeof WarningMessages
                                 ]
                             }
                         />
                     ))}
                 </div>
             )}
-            {isMorpho && <MorphoMarketAlert />}
+            {(isMorpho && !isVault) && <MorphoMarketAlert />}
             <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
                 <motion.div
                     className="will-change-transform"
-                    // initial={{ opacity: 0.7, y: 30 }}
-                    // animate={{ opacity: 1, y: 0 }}
-                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                // initial={{ opacity: 0.7, y: 30 }}
+                // animate={{ opacity: 1, y: 0 }}
+                // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                 >
                     <Button
                         className="py-[8px] px-[12px] rounded-3"
@@ -355,52 +363,41 @@ export default function PageHeader() {
                     {/* Page Header Stats */}
                     <motion.div
                         className="header-right flex flex-wrap items-center shrink-0 gap-[24px]"
-                        // initial={{ opacity: 0.7, y: 30 }}
-                        // animate={{ opacity: 1, y: 0 }}
-                        // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                    // initial={{ opacity: 0.7, y: 30 }}
+                    // animate={{ opacity: 1, y: 0 }}
+                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                     >
                         {/* Loading Skeleton */}
                         {isLoadingPlatformData && (
                             <Skeleton className="w-[80%] sm:w-[300px] h-[35px]" />
                         )}
-                        {/* Supply APY */}
-                        {!!Number(pageHeaderStats?.supply_apy) && (
-                            <div className="flex items-center max-md:justify-between gap-[4px]">
-                                <BodyText
-                                    level="body1"
-                                    className="text-gray-700 shrink-0"
-                                >
-                                    Supply APY
-                                </BodyText>
-                                <Badge variant="green">
-                                    <BodyText level="body1" weight="medium">
-                                        {pageHeaderStats?.supply_apy}%
+                        {!isLoadingPlatformData &&
+                            <>
+                                {/* Supply APY */}
+                                <div className="flex items-center max-md:justify-between gap-[4px]">
+                                    <BodyText level='body1' className='text-gray-700 shrink-0'>
+                                        Supply APY
                                     </BodyText>
-                                </Badge>
-                            </div>
-                        )}
-                        {!!Number(pageHeaderStats?.borrow_rate) &&
-                            !!Number(pageHeaderStats?.supply_apy) && (
-                                <span className="hidden xs:inline-block text-gray">
-                                    |
-                                </span>
-                            )}
-                        {/* Borrow Rate */}
-                        {!!Number(pageHeaderStats?.borrow_rate) && (
-                            <div className="flex items-center max-md:justify-between gap-[4px]">
-                                <BodyText
-                                    level="body1"
-                                    className="text-gray-700 shrink-0"
-                                >
-                                    Borrow Rate
-                                </BodyText>
-                                <Badge variant="yellow">
-                                    <BodyText level="body1" weight="medium">
-                                        {pageHeaderStats?.borrow_rate}%
+                                    <Badge variant="green">
+                                        <BodyText level='body1' weight='medium'>
+                                            {pageHeaderStats?.supply_apy}%
+                                        </BodyText>
+                                    </Badge>
+                                </div>
+                                <span className="hidden xs:inline-block text-gray">|</span>
+                                {/* Borrow Rate */}
+                                <div className="flex items-center max-md:justify-between gap-[4px]">
+                                    <BodyText level='body1' className='text-gray-700 shrink-0'>
+                                        Borrow Rate
                                     </BodyText>
-                                </Badge>
-                            </div>
-                        )}
+                                    <Badge variant="yellow">
+                                        <BodyText level='body1' weight='medium'>
+                                            {formattedBorrowRate}
+                                        </BodyText>
+                                    </Badge>
+                                </div>
+                            </>
+                        }
                     </motion.div>
                 </div>
             </section>

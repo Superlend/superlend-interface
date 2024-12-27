@@ -63,8 +63,6 @@ const BorrowButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    // const activeAccount = useActiveAccount()
-    // const walletAddress = activeAccount?.address
     const { address: walletAddress } = useAccount()
     const { borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext

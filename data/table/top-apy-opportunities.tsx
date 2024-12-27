@@ -3,6 +3,7 @@
 import ImageWithBadge from '@/components/ImageWithBadge'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
+import { Badge } from '@/components/ui/badge'
 import { BodyText, Label } from '@/components/ui/typography'
 import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import {
@@ -11,6 +12,7 @@ import {
     convertNegativeToPositive,
 } from '@/lib/utils'
 import { TOpportunityTable, TReward } from '@/types'
+import { PlatformType } from '@/types/platform'
 import { ColumnDef } from '@tanstack/react-table'
 import { ChartNoAxesColumnIncreasing, ShieldAlertIcon } from 'lucide-react'
 import Link from 'next/link'
@@ -114,9 +116,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const platformName: string = row.getValue('platformName')
             const platformLogo = row.original.platformLogo
-            const isMorpho = row.original.platformId
-                .toLowerCase()
-                .includes('morpho')
+            const isMorpho = row.original.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
+            const isVault = row.original.isVault
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -133,7 +134,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     >
                         {platformName}
                     </BodyText>
-                    {isMorpho && (
+                    {(isMorpho && !isVault) && (
                         <InfoTooltip
                             // label={
                             //     <ShieldAlertIcon width={18} height={18} className="text-[#D19900] shrink-0" />
@@ -208,7 +209,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         : getFormattedBaseRate(baseRate)
             }
 
-            if (apyCurrentFormatted === '0.00' && !isPairBasedProtocol) {
+            if (apyCurrentFormatted === "0.00" && !isPairBasedProtocol && !isLend) {
                 return (
                     <InfoTooltip
                         label={
@@ -265,6 +266,22 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             />
         ),
         cell: ({ row }) => {
+            const isMorpho = row.original.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO;
+            const isVault = row.original.isVault
+
+            if (isMorpho && isVault) {
+                return (
+                    <InfoTooltip
+                        label={
+                            <Badge>
+                                N/A
+                            </Badge>
+                        }
+                        content="This does not apply to Morpho vaults, as the curator maintains this."
+                    />
+                )
+            }
+
             return (
                 <span className="flex items-center gap-2">
                     {Number(row.getValue('max_ltv')) > 0 && (
@@ -365,6 +382,22 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             />
         ),
         cell: ({ row }) => {
+            const isMorpho = row.original.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO;
+            const isVault = row.original.isVault
+
+            if (isMorpho && isVault) {
+                return (
+                    <InfoTooltip
+                        label={
+                            <Badge>
+                                N/A
+                            </Badge>
+                        }
+                        content="This does not apply to Morpho vaults, as the curator maintains this."
+                    />
+                )
+            }
+
             if (`${Number(row.getValue('utilization')).toFixed(1)}` === '0.0') {
                 return (
                     <InfoTooltip
