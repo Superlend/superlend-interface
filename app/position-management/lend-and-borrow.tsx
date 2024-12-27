@@ -662,7 +662,7 @@ export default function LendAndBorrowAssets() {
                     )}
                 </div>
                 <CardContent className="p-0 bg-white rounded-5">
-                    <div className={cn(isLendPositionType(positionType) ? 'border rounded-5 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]' : 'border-t rounded-t-5', "border-gray-200 py-[12px] px-[16px] flex items-center gap-[12px]")}>
+                    <div className={cn(isLendPositionType(positionType) ? 'border rounded-5 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]' : 'border-t rounded-t-5', "border-gray-200 py-[12px] px-[20px] flex items-center gap-[12px]")}>
                         {isLoading && (
                             <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
                         )}
@@ -703,7 +703,7 @@ export default function LendAndBorrowAssets() {
                         >
                             |
                         </BodyText>
-                        <div className="flex flex-col gap-[4px]">
+                        <div className="flex flex-col flex-1 gap-[4px]">
                             <CustomNumberInput
                                 key={positionType}
                                 amount={amount}
@@ -712,7 +712,7 @@ export default function LendAndBorrowAssets() {
                         </div>
                         <Button
                             variant="link"
-                            className="uppercase text-[14px] font-medium ml-auto"
+                            className="uppercase text-[14px] font-medium w-fit"
                             onClick={() =>
                                 setAmount(
                                     isLendPositionType(positionType)
@@ -816,7 +816,7 @@ function SelectTokensDropdown({
                 <Button
                     size="md"
                     variant="ghost"
-                    className="group flex items-center gap-1 text-gray-800"
+                    className="group flex items-center gap-1 text-gray-800 px-0"
                 >
                     <ImageWithDefault
                         src={selectedItemDetails?.token?.logo}
