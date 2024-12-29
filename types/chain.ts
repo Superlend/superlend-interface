@@ -3,3 +3,15 @@ export type TChain = {
     logo: string | null
     name: string
 }
+
+export enum ChainId {
+    Polygon = 137,
+    Base = 8453,
+    Ethereum = 1,
+    Avalanche = 43114,
+    Bsc = 56,
+    Gnosis = 100,
+    Optimism = 10,
+    Scroll = 534351,
+    Arbitrum = 42161,
+}

@@ -60,6 +60,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import {
+    CHAIN_ID_MAPPER,
     POOL_BASED_PROTOCOLS,
     TOO_MANY_DECIMALS_VALIDATIONS_TEXT,
     TX_EXPLORER_LINKS,
@@ -92,6 +93,9 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer"
+import { modal } from '@/context'
+import { polygon } from '@reown/appkit/networks'
+import { ChainId } from '@/types/chain'
 
 
 export default function LendAndBorrowAssets() {
@@ -166,7 +170,7 @@ export default function LendAndBorrowAssets() {
     // Switch chain
     useEffect(() => {
         if (!!walletAddress) {
-            switchChainAsync({ chainId: Number(chain_id) })
+            modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
         }
     }, [walletAddress, Number(chain_id)])
 
@@ -884,6 +888,7 @@ function ConfirmationDialog({
         newHealthFactor: any
     }
 }) {
+
     const { lendTx, setLendTx, borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
     const [open, setOpen] = useState(false)
@@ -906,7 +911,7 @@ function ConfirmationDialog({
 
         if (open) {
             // Switch chain when the dialog is opened
-            switchChainAsync({ chainId: Number(chain_id) })
+            modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
         }
     }, [open])
 
