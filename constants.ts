@@ -1,3 +1,4 @@
+import { customMetisNetwork } from './config'
 import { ChainId } from './types/chain'
 import { Period, PeriodDisplay } from './types/periodButtons'
 import {
@@ -16,6 +17,7 @@ import {
     avalanche,
     scroll,
     AppKitNetwork,
+    etherlink,
 } from '@reown/appkit/networks'
 
 export type TPlatformWebsiteLinks = {
@@ -278,4 +280,6 @@ export const CHAIN_ID_MAPPER: { [key in ChainId]: AppKitNetwork } = {
     [ChainId.Gnosis]: gnosis,
     [ChainId.Optimism]: optimism,
     [ChainId.Scroll]: scroll,
+    [ChainId.Metis]: customMetisNetwork,
+    [ChainId.Etherlink]: etherlink,
 }

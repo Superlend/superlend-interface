@@ -14,4 +14,6 @@ export enum ChainId {
     Optimism = 10,
     Scroll = 534351,
     Arbitrum = 42161,
+    Metis = 1088,
+    Etherlink = 42793,
 }
