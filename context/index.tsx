@@ -1,44 +1,37 @@
 'use client'
 
-import { config } from '@/config'
-// import { wagmiAdapter, projectId } from '@/config'
-// import { createAppKit } from '@reown/appkit/react'
-// import { mainnet, arbitrum, avalanche, base, optimism, polygon } from '@reown/appkit/networks'
-// import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
+import { customMetisNetwork, projectId, wagmiAdapter } from '@/config'
 import React, { type ReactNode } from 'react'
 import { queryClient } from './query-client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import AssetsDataProvider from './data-provider'
-import { ThirdwebProvider } from 'thirdweb/react'
 import { WagmiProvider } from 'wagmi'
 import { Config, cookieToInitialState } from 'wagmi'
-
-// if (!projectId) {
-//     throw new Error('Project ID is not defined')
-// }
+import UserTokenBalancesProvider from './user-token-balances-provider'
+import { mainnet, arbitrum, polygon, bsc, gnosis, base, optimism, avalanche, scroll } from '@reown/appkit/networks'
+import { createAppKit } from '@reown/appkit/react'
 
 // Set up metadata
-// const metadata = {
-//     name: "appkit-example-scroll",
-//     description: "AppKit Example - Scroll",
-//     url: "https://scrollapp.com", // origin must match your domain & subdomain
-//     icons: ["https://avatars.githubusercontent.com/u/179229932"]
-// }
+const metadata = {
+    name: 'superlend',
+    description: 'superlend',
+    url: 'https://beta.superlend.xyz.com', // origin must match your domain & subdomain
+    icons: ['https://avatars.githubusercontent.com/u/179229932']
+}
 
 // Create the modal
-// const modal = createAppKit({
-//     adapters: [wagmiAdapter],
-//     projectId,
-//     networks: [mainnet, arbitrum, avalanche, base, optimism, polygon],
-//     defaultNetwork: mainnet,
-//     metadata: metadata,
-//     features: {
-//         analytics: false,
-//         email: false,
-//         socials: [],
-//     },
-//     themeMode: 'light',
-// })
+export const modal = createAppKit({
+    adapters: [wagmiAdapter],
+    projectId,
+    networks: [mainnet, customMetisNetwork, scroll, avalanche, optimism, base, bsc, gnosis, arbitrum, polygon],
+    defaultNetwork: mainnet,
+    metadata: metadata,
+    features: {
+        analytics: true,
+        connectMethodsOrder: ['wallet']
+    },
+    themeMode: 'light'
+})
 
 function ContextProvider({
     children,
@@ -47,16 +40,18 @@ function ContextProvider({
     children: ReactNode
     cookies: string | null
 }) {
-    const initialState = cookieToInitialState(config as Config, cookies)
+    const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
 
     return (
-        <ThirdwebProvider>
-            <WagmiProvider config={config} initialState={initialState}>
-                <QueryClientProvider client={queryClient}>
-                    <AssetsDataProvider>{children}</AssetsDataProvider>
-                </QueryClientProvider>
-            </WagmiProvider>
-        </ThirdwebProvider>
+        <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
+            <QueryClientProvider client={queryClient}>
+                <AssetsDataProvider>
+                    <UserTokenBalancesProvider>
+                        {children}
+                    </UserTokenBalancesProvider>
+                </AssetsDataProvider>
+            </QueryClientProvider>
+        </WagmiProvider>
     )
 }
 

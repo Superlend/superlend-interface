@@ -2,8 +2,8 @@
 
 import useGetChainsData from '@/hooks/useGetChainsData'
 import useGetTokensData from '@/hooks/useGetTokensData'
-import { TChain, TToken } from '@/types'
-import { createContext } from 'react'
+import { TChain } from '@/types/chain'
+import { createContext, useContext } from 'react'
 
 type TAssetsDataProps = {
     allTokensData: any
@@ -24,8 +24,22 @@ export default function AssetsDataProvider({
     const { data: allChainsData } = useGetChainsData()
 
     return (
-        <AssetsDataContext.Provider value={{ allChainsData, allTokensData }}>
+        <AssetsDataContext.Provider
+            value={{
+                allChainsData,
+                allTokensData,
+            }}
+        >
             {children}
         </AssetsDataContext.Provider>
     )
+}
+
+export const useAssetsDataContext = () => {
+    const context = useContext(AssetsDataContext)
+    if (!context)
+        throw new Error(
+            'useAssetsDataContext must be used within an AssetsDataProvider'
+        )
+    return context
 }

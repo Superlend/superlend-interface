@@ -1,5 +1,6 @@
-import { TGetPlatformHistoryParams, TPlatform, TPlatformHistory } from '@/types'
+import { TPlatformHistory } from '@/types/platform'
 import { request } from './request'
+import { TGetPlatformHistoryParams } from '@/types/queries/platform'
 
 export async function getPlatformHistoryData({
     protocol_identifier,

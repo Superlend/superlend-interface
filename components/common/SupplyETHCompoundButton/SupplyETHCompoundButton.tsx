@@ -13,6 +13,7 @@ import {
     SUCCESS_MESSAGE,
 } from '@/constants'
 import { Button } from '@/components/ui/button'
+import { ArrowRightIcon } from 'lucide-react'
 // import { getErrorText } from '@utils/getErrorText'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
@@ -37,7 +38,7 @@ const SupplyETHCompoundButton = ({
     const onSupply = async () => {
         try {
             // createToast()
-            handleCloseModal(false)
+            // handleCloseModal(false)
             // await toast.promise(
             //   writeContractAsync({
             //     address: cTokenAddress,
@@ -60,13 +61,17 @@ const SupplyETHCompoundButton = ({
             // )
             // toast.remove()
 
+            // console.log("cTokenAddress", cTokenAddress);
+            // console.log("amount", amount);
+            // console.log("decimals", decimals);
+            // console.log("parseUnits", parseUnits(amount, decimals));
+
             writeContractAsync({
-                address: cTokenAddress,
+                address: cTokenAddress as `0x${string}`,
                 abi: COMPOUND_ABI,
                 functionName: 'mint',
                 args: [],
-                //@ts-ignore
-                value: parseUnits(amount, decimals),
+                value: parseUnits(amount, decimals) as unknown as bigint,
             })
         } catch (error) {
             // toast.remove()
@@ -74,9 +79,18 @@ const SupplyETHCompoundButton = ({
         }
     }
     return (
-        <Button disabled={isPending || disabled} onClick={() => onSupply()}>
-            {/* {getActionName(Action.LEND)} */}
+        <Button
+            variant="primary"
+            className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
+            disabled={isPending || disabled}
+            onClick={onSupply}
+        >
             Lend
+            <ArrowRightIcon
+                width={16}
+                height={16}
+                className="stroke-white group-[:disabled]:opacity-50"
+            />
         </Button>
     )
 }

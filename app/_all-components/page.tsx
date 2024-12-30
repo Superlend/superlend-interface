@@ -118,9 +118,9 @@ export default async function ComponentsPage() {
             {/* <ComponentCard>
                 <GraphDropdown />
             </ComponentCard> */}
-            <ComponentCard>
+            {/* <ComponentCard>
                 <ChainSelectorDropdown />
-            </ComponentCard>
+            </ComponentCard> */}
             {/* <ComponentCard>
                 <DiscoverFilterDropdown />
             </ComponentCard> */}

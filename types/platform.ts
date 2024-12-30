@@ -1,3 +1,83 @@
+import { Period } from './periodButtons'
+
+// Platform
+export type TPlatformAsset = {
+    token: {
+        name: string
+        symbol: string
+        logo: string
+        address: string
+        decimals: number
+        price_usd: number
+        warnings: any[]
+    }
+    supply_apy: number
+    variable_borrow_apy: number
+    stable_borrow_apy: number
+    borrow_enabled: boolean
+    remaining_supply_cap: number
+    remaining_borrow_cap: number
+}
+
+export type TPlatform = {
+    platform: {
+        name: string
+        platform_name: string
+        protocol_identifier: string
+        protocol_type: 'aaveV3' | 'compoundV2' | 'morpho' | 'fluid'
+        logo: string
+        chain_id: number
+        vaultId: string
+        isVault: boolean
+        morpho_market_id: string
+        core_contract: string
+        uiPoolDataProvider: string
+        poolAddressesProvider: string
+    }
+    assets: TPlatformAsset[]
+}
+
+export type TPlatformHistoryProcessMap = {
+    timestamp: number
+    data: {
+        size: number
+        tokenID: string
+        symbol: string
+        liquidationPenalty: number
+        blockNumber: number
+        depositRate: number
+        depositRateReward: number
+        variableBorrowRate: number
+        variableBorrowRateReward: number
+        ltv: number
+        liquidationThreshold: number
+        stableBorrowRate: number
+        tokenName: string
+        utilizationRate: number
+        decimals: number
+        platformMarketId: string
+        underlyingAsset: string
+        reserveFactor: number
+    }
+}
+
+export type TPlatformHistoryStats = {
+    depositRateAverage: number
+    depositRateRewardAverage: number
+    variableBorrowRateAverage: number
+    variableBorrowRateRewardAverage: number
+    utilizationRateAverage: number
+    prediction: {
+        depositRatePredict: number
+        variableBorrowRatePredict: number
+    }
+}
+
+export type TPlatformHistory = {
+    processMap: TPlatformHistoryProcessMap[]
+    stats: TPlatformHistoryStats
+}
+
 export enum PlatformValue {
     AaveV3Arbitrum = 'AAVE-V3-ARBITRUM',
     AaveV3Avalanche = 'AAVE-V3-AVALANCHE',

@@ -13,13 +13,18 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '../ui/button'
-import { allChains } from '@/data/all-chains'
 import { CheckIcon, ChevronDownIcon } from 'lucide-react'
-import Image from 'next/image'
-import { IChain } from '@/types/chain'
+import { TChain } from '@/types/chain'
 
-export default function ChainSelectorDropdown() {
-    const [selectedChain, setSelectedChain] = React.useState(allChains[0])
+export default function ChainSelectorDropdown({
+    allChains,
+    selectedChain,
+    setSelectedChain,
+}: {
+    allChains: TChain[]
+    selectedChain: TChain
+    setSelectedChain: (chain: TChain) => void
+}) {
     const [isOpen, setIsOpen] = React.useState(false)
 
     return (
@@ -35,10 +40,10 @@ export default function ChainSelectorDropdown() {
                             .filter(
                                 (_, index: number) => index < 4 && index > 0
                             )
-                            .map((chain: IChain) => (
+                            .map((chain: TChain) => (
                                 <img
-                                    key={chain.chainId}
-                                    src={chain.image}
+                                    key={chain.chain_id}
+                                    src={chain.logo ?? ''}
                                     alt={chain.name}
                                     width={20}
                                     height={20}
@@ -58,23 +63,23 @@ export default function ChainSelectorDropdown() {
                 <DropdownMenuGroup>
                     {allChains.map((chain) => (
                         <DropdownMenuItem
-                            key={chain.id}
+                            key={chain.chain_id}
                             className="cursor-pointer hover:bg-gray-200 focus:bg-gray-200 flex items-between gap-3"
                             onClick={() => setSelectedChain(chain)}
                         >
                             <div
-                                key={chain.id}
+                                key={chain.chain_id}
                                 className="flex items-center gap-2"
                             >
                                 <img
-                                    src={chain.image}
+                                    src={chain.logo ?? ''}
                                     alt={chain.name}
                                     className="w-4 h-4"
                                 />
                                 {chain.name}
                             </div>
                             <CheckIcon
-                                className={`w-[15px] h-[15px] ml-auto bg-secondary-500 text-white rounded-full p-[2px] ${selectedChain.id === chain.id ? 'opacity-100' : 'opacity-0'}`}
+                                className={`w-[15px] h-[15px] ml-auto bg-secondary-500 text-white rounded-full p-[2px] ${selectedChain.chain_id === chain.chain_id ? 'opacity-100' : 'opacity-0'}`}
                             />
                         </DropdownMenuItem>
                     ))}

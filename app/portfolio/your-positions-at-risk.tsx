@@ -6,7 +6,6 @@ import {
     CarouselContent,
     CarouselItem,
 } from '@/components/ui/carousel'
-import { POSITIONS_AT_RISK_DATA } from '@/data/portfolio-page'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -442,8 +441,16 @@ export default function YourPositionsAtRiskCarousel() {
             {
                 // loading
                 isLoadingPortfolioData && (
-                    <div className="relative h-[225px] w-[100%] md:w-[364px] overflow-hidden rounded-6 md:ml-5">
-                        <Skeleton className="h-full w-full" />
+                    <div className="max-w-full w-full overflow-hidden">
+                        <Carousel>
+                            <CarouselContent className="ml-4 md:ml-1.5 space-x-4">
+                                {[...Array(3)].map((_, index) => (
+                                    <CarouselItem key={index} className="basis-[80%] min-[450px]:basis-[364px] md:basis-[364px] rounded-6 overflow-auto md:ml-5 pl-0">
+                                        <Skeleton className="h-[225px] w-full bg-gray-300" />
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                        </Carousel>
                     </div>
                 )
             }

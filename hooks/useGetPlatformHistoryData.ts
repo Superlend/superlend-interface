@@ -1,7 +1,8 @@
 'use client'
 
 import { getPlatformHistoryData } from '@/queries/platform-history-api'
-import { TGetPlatformHistoryParams, TPlatform, TPlatformHistory } from '@/types'
+import { TPlatformHistory } from '@/types/platform'
+import { TGetPlatformHistoryParams } from '@/types/queries/platform'
 import { useQuery } from '@tanstack/react-query'
 
 export default function useGetPlatformHistoryData(

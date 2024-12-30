@@ -199,25 +199,41 @@ export function parseScientific(num: number | string) {
     return [coefficient, exponent]
 }
 
+export function hasExponent(value: string) {
+    const regex = /([+-]?\d*\.?\d+)(e[+-]?\d+)?/i
+    const match = value.match(regex)
+    return match ? true : false
+}
+
 export function normalizeResult(coefficient: number, exponent: number) {
     // Normalize to standard decimal format
     return coefficient * Math.pow(10, exponent)
 }
 
-export function isLowestValue(value: number) {
-    return value > 0 && value < 0.01
+export function isLowestValue(value: number, maxDecimalsToDisplay: number = 2) {
+    return value > 0 && value < (maxDecimalsToDisplay === 2 ? 0.01 : 0.0001)
 }
 
 export function isLowestNegativeValue(value: number) {
     return value < -0.01
 }
 
-export function hasLowestDisplayValuePrefix(value: number) {
-    return isLowestValue(Number(value)) ? '<' : ''
+export function hasLowestDisplayValuePrefix(
+    value: number,
+    maxDecimalsToDisplay: number = 2
+) {
+    return isLowestValue(Number(value), maxDecimalsToDisplay) ? '<' : ''
 }
 
-export function getLowestDisplayValue(value: number) {
-    return isLowestValue(Number(value)) ? 0.01 : abbreviateNumber(value)
+export function getLowestDisplayValue(
+    value: number,
+    maxDecimalsToDisplay: number = 2
+): string {
+    return isLowestValue(Number(value), maxDecimalsToDisplay)
+        ? maxDecimalsToDisplay === 2
+            ? '0.01'
+            : '0.0001'
+        : abbreviateNumber(value, maxDecimalsToDisplay)
 }
 
 export function getTokenLogo(tokenSymbol: string): string {
@@ -419,6 +435,15 @@ export function checkDecimalPlaces(value: string, decimals: number) {
     return false
 }
 
+export function decimalPlacesCount(value: string) {
+    if (value.includes('.')) {
+        const decimalPart = value.split('.')[1]
+        return decimalPart.length
+    }
+
+    return 0
+}
+
 export function countCompoundDecimals(
     decimals: number,
     underlyingDecimals: number
@@ -427,4 +452,64 @@ export function countCompoundDecimals(
         return 18 - decimals
     }
     return underlyingDecimals
+}
+
+export function scientificToDecimal(scientificNum: number): number {
+    // Convert the input to a string if it isn't already
+    const numStr = scientificNum.toString()
+
+    // If the number isn't in scientific notation, return it as is
+    if (!numStr.includes('e')) {
+        return Number(numStr)
+    }
+
+    // Split into coefficient and exponent
+    let [coefficient, exponent]: any = numStr.split('e')
+    exponent = parseInt(exponent)
+
+    // If exponent is 0, return the coefficient
+    if (exponent === 0) {
+        return coefficient
+    }
+
+    // Remove decimal point from coefficient and get its position
+    const decimalIndex = coefficient.includes('.')
+        ? coefficient.indexOf('.')
+        : coefficient.length
+    coefficient = coefficient.replace('.', '')
+
+    // Handle negative signs
+    const isNegative = coefficient.startsWith('-')
+    coefficient = isNegative ? coefficient.slice(1) : coefficient
+
+    // Calculate new decimal position
+    let newDecimalPosition = decimalIndex + exponent
+
+    // Add leading/trailing zeros as needed
+    if (newDecimalPosition <= 0) {
+        // Need to add leading zeros
+        coefficient = '0'.repeat(Math.abs(newDecimalPosition)) + coefficient
+        newDecimalPosition = 0
+    } else if (newDecimalPosition > coefficient.length) {
+        // Need to add trailing zeros
+        coefficient =
+            coefficient + '0'.repeat(newDecimalPosition - coefficient.length)
+    }
+
+    // Insert decimal point at the new position
+    let result =
+        coefficient.slice(0, newDecimalPosition) +
+        '.' +
+        coefficient.slice(newDecimalPosition)
+
+    // Remove trailing zeros after decimal and trailing decimal if needed
+    result = result.replace(/\.?0+$/, '')
+
+    // Add leading zero if needed
+    if (result.startsWith('.')) {
+        result = '0' + result
+    }
+
+    // Add negative sign back if needed
+    return isNegative ? Number('-' + result) : Number(result)
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
     BaseError,
     useAccount,
@@ -23,13 +23,19 @@ import {
 } from '@/constants'
 // import { getErrorText } from '@/lib/getErrorText'
 import { Button } from '@/components/ui/button'
-import { prepareContractCall } from 'thirdweb'
-import { defineChain } from 'thirdweb'
+// import { prepareContractCall } from 'thirdweb'
+// import { defineChain } from 'thirdweb'
 import { useSearchParams } from 'next/navigation'
-import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import {
+    TLendTx,
+    useLendBorrowTxContext,
+} from '@/context/lend-borrow-tx-provider'
 import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { ArrowRightIcon } from 'lucide-react'
+import { BigNumber } from 'ethers'
+import { getErrorText } from '@/lib/getErrorText'
+import { BodyText } from '@/components/ui/typography'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 
 interface ISupplyAaveButtonProps {
@@ -55,8 +61,11 @@ const SupplyAaveButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    const [lastTx, setLastTx] = useState<'mint' | 'approve'>('mint')
-    // const { isSuccess, isLoading } = useWaitForTransactionReceipt({ hash })
+    const { isLoading: isConfirming, isSuccess: isConfirmed } =
+        useWaitForTransactionReceipt({
+            confirmations: 2,
+            hash,
+        })
     const { address: walletAddress } = useAccount()
     // const { createToast } = useCreatePendingToast()
     const { isConnected } = useAccount()
@@ -64,16 +73,18 @@ const SupplyAaveButton = ({
     const { lendTx, setLendTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
 
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            hash,
-        })
+    const amountBN = useMemo(() => {
+        return amount ? parseUnits(amount, decimals) : BigNumber.from(0)
+    }, [amount, decimals])
 
     const txBtnStatus: Record<string, string> = {
-        pending: lastTx === 'mint' ? 'Approving token...' : 'Lending token...',
+        pending:
+            lendTx.status === 'approve'
+                ? 'Approving token...'
+                : 'Lending token...',
         confirming: 'Confirming...',
-        success: 'View position',
-        default: lastTx === 'mint' ? 'Approve token' : 'Lend token',
+        success: 'Close',
+        default: lendTx.status === 'approve' ? 'Approve token' : 'Lend token',
     }
 
     const getTxButtonText = (
@@ -85,12 +96,12 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? lastTx === 'approve'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? lendTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
@@ -98,33 +109,12 @@ const SupplyAaveButton = ({
 
     const supply = useCallback(async () => {
         try {
-            setLastTx('approve')
-            // handleCloseModal(false)
-            // await toast.promise(
-            //   writeContractAsync({
-            //     // address: poolContractAddress,
-            //     abi: AAVE_POOL_ABI,
-            //     functionName: 'supply',
-            //     args: [
-            //       underlyingAssetAdress,
-            //       parseUnits(amount, decimals),
-            //       walletAddress,
-            //       0,
-            //     ],
-            //   }),
-            //   {
-            //     loading: CONFIRM_ACTION_IN_WALLET_TEXT,
-            //     success: SUCCESS_MESSAGE,
-            //     error: (error: { message: string }) => {
-            //       if (error && error.message) {
-            //         return getErrorText(error)
-            //       }
-            //       return SOMETHING_WENT_WRONG_MESSAGE
-            //     },
-            //   },
-            //   ERROR_TOAST_ICON_STYLES
-            // )
-            // toast.remove()
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                status: 'lend',
+                hash: '',
+                errorMessage: '',
+            }))
 
             writeContractAsync({
                 address: poolContractAddress,
@@ -137,8 +127,21 @@ const SupplyAaveButton = ({
                     0,
                 ],
             })
+                .then((data) => {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        status: 'view',
+                        errorMessage: '',
+                    }))
+                })
+                .catch((error) => {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                    }))
+                })
         } catch (error) {
-            // toast.remove()
             error
         }
     }, [
@@ -152,57 +155,72 @@ const SupplyAaveButton = ({
     ])
 
     useEffect(() => {
-        if (isConfirmed && lastTx === 'mint') {
-            setLendTx({ status: 'lend', hash: hash || '' })
-            supply()
-        }
+        setLendTx((prev: TLendTx) => ({
+            ...prev,
+            isPending: isPending,
+            isConfirming: isConfirming,
+            isConfirmed: isConfirmed,
+            isRefreshingAllowance: isConfirmed,
+        }))
+    }, [isPending, isConfirming, isConfirmed])
 
-        if (isConfirmed && lastTx === 'approve') {
-            setLendTx({ status: 'view', hash: hash || '' })
-        }
+    useEffect(() => {
+        if (lendTx.status === 'view') return
 
-        // if (isConfirmed && lastTx === 'mint') {
-        //   void supply()
-        // }
-    }, [isConfirmed, lastTx])
-
-    const onApproveSupply = async () => {
-        if (!isConnected) {
-            // If not connected, prompt connection first
-            try {
-                const connector = connectors[0] // Usually metamask/injected connector
-                await connect({ connector })
-                return
-            } catch (error) {
-                console.error('Connection failed:', error)
-                return
+        if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
+            if (lendTx.allowanceBN.gte(amountBN)) {
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    status: 'lend',
+                    hash: '',
+                    errorMessage: '',
+                }))
+            } else {
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    status: 'approve',
+                    hash: '',
+                    errorMessage: '',
+                }))
             }
         }
+    }, [lendTx.allowanceBN])
+
+    useEffect(() => {
+        if ((lendTx.status === 'approve' || lendTx.status === 'lend') && hash) {
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                hash: hash || '',
+            }))
+        }
+        if (lendTx.status === 'view' && hash) {
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                hash: hash || '',
+            }))
+        }
+    }, [hash, lendTx.status])
+
+    const onApproveSupply = async () => {
+        // if (!isConnected) {
+        //     // If not connected, prompt connection first
+        //     try {
+        //         const connector = connectors[0] // Usually metamask/injected connector
+        //         await connect({ connector })
+        //         return
+        //     } catch (error) {
+        //         console.error('Connection failed:', error)
+        //         return
+        //     }
+        // }
 
         try {
-            // createToast()
-            setLastTx('mint')
-            // await toast.promise(
-            //   writeContractAsync({
-            //     address: underlyingAssetAdress,
-            //     abi: AAVE_APPROVE_ABI,
-            //     functionName: 'approve',
-            //     args: [
-            //       // poolContractAddress,
-            //       parseUnits(amount, decimals)],
-            //   }),
-            //   {
-            //     loading: CONFIRM_ACTION_IN_WALLET_TEXT,
-            //     success: APPROVE_MESSAGE,
-            //     error: (error: { message: string }) => {
-            //       if (error && error.message) {
-            //         return getErrorText(error)
-            //       }
-            //       return SOMETHING_WENT_WRONG_MESSAGE
-            //     },
-            //   },
-            //   ERROR_TOAST_ICON_STYLES
-            // )
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                status: 'approve',
+                hash: '',
+                errorMessage: '',
+            }))
 
             writeContractAsync({
                 address: underlyingAssetAdress,
@@ -210,24 +228,56 @@ const SupplyAaveButton = ({
                 functionName: 'approve',
                 args: [poolContractAddress, parseUnits(amount, decimals)],
             })
-
-            // console.log("underlyingAssetAdress", underlyingAssetAdress)
-            // console.log("poolContractAddress", poolContractAddress)
-            // console.log("amount", amount)
-            // console.log("decimals", decimals)
+                .catch((error) => {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                    }))
+                })
         } catch (error) {
-            // toast.remove()
             error
         }
     }
+
     return (
-        <>
+        <div className="flex flex-col gap-2">
+            {lendTx.status === 'approve' && (
+                <CustomAlert
+                    variant="info"
+                    hasPrefixIcon={false}
+                    description={
+                        <BodyText
+                            level="body2"
+                            weight="normal"
+                            className="text-secondary-500"
+                        >
+                            Note: You need to complete an &apos;approval transaction&apos;
+                            granting Superlend smart contracts permission to
+                            move funds from your wallet as the first step before
+                            supplying the asset.
+                            <a
+                                href="https://eips.ethereum.org/EIPS/eip-2612"
+                                target="_blank"
+                                className="text-secondary-500 pb-[0.5px] border-b border-secondary-500 hover:border-secondary-200 ml-1"
+                            >
+                                Learn more
+                            </a>.
+                        </BodyText>
+                    }
+                />
+            )}
             {error && (
                 <CustomAlert
                     description={
-                        (error as BaseError).shortMessage || error.message
+                        error && error.message
+                            ? getErrorText(error)
+                            : SOMETHING_WENT_WRONG_MESSAGE
                     }
                 />
+            )}
+            {lendTx.errorMessage.length > 0 && (
+                <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button
                 disabled={isPending || isConfirming || disabled}
@@ -244,13 +294,15 @@ const SupplyAaveButton = ({
                 variant="primary"
             >
                 {txBtnText}
-                <ArrowRightIcon
-                    width={16}
-                    height={16}
-                    className="stroke-white group-[:disabled]:opacity-50"
-                />
+                {lendTx.status !== 'view' && !isPending && !isConfirming && (
+                    <ArrowRightIcon
+                        width={16}
+                        height={16}
+                        className="stroke-white group-[:disabled]:opacity-50"
+                    />
+                )}
             </Button>
-        </>
+        </div>
     )
 }
 

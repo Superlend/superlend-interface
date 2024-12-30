@@ -13,20 +13,22 @@ import { columns, TPositionsTable } from '@/data/table/all-positions'
 import useDimensions from '@/hooks/useDimensions'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { calculateScientificNotation } from '@/lib/utils'
-import { TChain, TPositionType } from '@/types'
+import { TPositionType } from '@/types'
 import { PlatformType } from '@/types/platform'
 import { SortingState } from '@tanstack/react-table'
 import { useRouter } from 'next/navigation'
 import React, { useContext, useEffect, useState } from 'react'
-import { useActiveAccount } from 'thirdweb/react'
+// import { useActiveAccount } from 'thirdweb/react'
+import { useAccount } from 'wagmi'
 
 export default function AllPositions() {
     const router = useRouter()
-    const { width: screenWidth } = useDimensions()
+    // const { width: screenWidth } = useDimensions()
     const { filters, positionType, setPositionType } =
         useContext(PositionsContext)
-    const activeAccount = useActiveAccount()
-    const walletAddress = activeAccount?.address
+    // const activeAccount = useActiveAccount()
+    // const walletAddress = activeAccount?.address
+    const { address: walletAddress } = useAccount()
     const [searchKeywords, setSearchKeywords] = useState<string>('')
     const [sorting, setSorting] = useState<SortingState>([
         { id: 'apy', desc: positionType === 'lend' },
@@ -136,7 +138,7 @@ export default function AllPositions() {
     const tableData = filteredTableData
 
     function handleRowClick(rowData: any) {
-        if (screenWidth < 768) return
+        // if (screenWidth < 768) return
 
         const { tokenAddress, protocol_identifier, chain_id } = rowData
         const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`

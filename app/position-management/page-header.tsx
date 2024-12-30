@@ -18,7 +18,7 @@ import { useSearchParams } from 'next/navigation'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import { AssetsDataContext } from '@/context/data-provider'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
-import { TPlatform, TPlatformAsset, TToken } from '@/types'
+import { TPlatform, TPlatformAsset } from '@/types/platform'
 import ArrowRightIcon from '@/components/icons/arrow-right-icon'
 import {
     chainNamesBasedOnAaveMarkets,
@@ -228,9 +228,9 @@ export default function PageHeader() {
                 <div className="flex flex-col xl:flex-row items-start justify-between gap-[24px] w-full">
                     <motion.div
                         className="flex flex-wrap items-center gap-[16px] will-change-transform"
-                    // initial={{ opacity: 0.7, y: 30 }}
-                    // animate={{ opacity: 1, y: 0 }}
-                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                        // initial={{ opacity: 0.7, y: 30 }}
+                        // animate={{ opacity: 1, y: 0 }}
+                        // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                     >
                         {/* Loading Skeleton */}
                         {isLoadingPlatformData && <LoadingSkeleton />}

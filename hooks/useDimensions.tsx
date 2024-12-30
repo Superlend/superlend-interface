@@ -15,16 +15,16 @@ const dimensionsInit = {
 export default function useDimensions() {
     const [dimensions, setDimensions] = useState<DimensionsType>(dimensionsInit)
 
-    const updateDimensions = () => {
-        const { innerWidth, innerHeight } = window
-
-        setDimensions({
-            width: innerWidth,
-            height: innerHeight,
-        })
-    }
-
     useLayoutEffect(() => {
+        const updateDimensions = function () {
+            const { innerWidth, innerHeight } = window
+
+            setDimensions({
+                width: innerWidth,
+                height: innerHeight,
+            })
+        }
+
         updateDimensions()
 
         window.addEventListener('resize', updateDimensions)

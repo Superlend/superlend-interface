@@ -1,7 +1,8 @@
 'use client'
 
 import { getPlatformData } from '@/queries/platform-api'
-import { TGetPlatformParams, TOpportunity, TPlatform } from '@/types'
+import { TPlatform } from '@/types/platform'
+import { TGetPlatformParams } from '@/types/queries/platform'
 import { useQuery } from '@tanstack/react-query'
 
 export default function useGetPlatformData(params: TGetPlatformParams) {
@@ -27,7 +28,6 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
         data: data || {
             platform: {
                 platform_name: '',
-                // protocol_type: "aaveV3",
                 protocol_type: 'aaveV3',
                 protocol_identifier: '',
                 name: '',
@@ -37,6 +37,8 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
                 isVault: false,
                 morpho_market_id: '',
                 core_contract: '',
+                uiPoolDataProvider: '',
+                poolAddressesProvider: '',
             },
             assets: [],
         },

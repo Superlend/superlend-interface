@@ -1,7 +1,17 @@
-export interface IChain {
-    id: number
+export type TChain = {
+    chain_id: number
+    logo: string | null
     name: string
-    chainId: number
-    chainName: string
-    image: string
+}
+
+export enum ChainId {
+    Polygon = 137,
+    Base = 8453,
+    Ethereum = 1,
+    Avalanche = 43114,
+    Bsc = 56,
+    Gnosis = 100,
+    Optimism = 10,
+    Scroll = 534351,
+    Arbitrum = 42161,
 }

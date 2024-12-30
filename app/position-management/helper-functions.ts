@@ -1,5 +1,6 @@
 import { getLowestDisplayValue, hasLowestDisplayValuePrefix } from '@/lib/utils'
-import { TPlatform, TPlatformAsset, TChain } from '@/types'
+import { TPlatform, TPlatformAsset } from '@/types/platform'
+import { TChain } from '@/types/chain'
 
 export function getTokenDetails({
     tokenAddress,

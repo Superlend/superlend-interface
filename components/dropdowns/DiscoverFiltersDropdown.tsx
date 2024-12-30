@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -48,7 +48,7 @@ export default function DiscoverFiltersDropdown() {
         ) || false
     )
     const { width: screenWidth } = useDimensions()
-    const isDesktop = screenWidth > 768
+    const isDesktop = useMemo(() => screenWidth > 768, [screenWidth])
 
     const hasActiveFilters =
         !!filters.token_ids.length ||
@@ -346,16 +346,16 @@ function FilterCardContent({
                             {!!getActiveFiltersCountByCategory(
                                 `${item.value.toLowerCase()}_ids`
                             ) && (
-                                    <Label
-                                        size="small"
-                                        weight="medium"
-                                        className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer"
-                                    >
-                                        {getActiveFiltersCountByCategory(
-                                            `${item.value.toLowerCase()}_ids`
-                                        )}
-                                    </Label>
-                                )}
+                                <Label
+                                    size="small"
+                                    weight="medium"
+                                    className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer"
+                                >
+                                    {getActiveFiltersCountByCategory(
+                                        `${item.value.toLowerCase()}_ids`
+                                    )}
+                                </Label>
+                            )}
                         </Button>
                     </motion.div>
                 ))}

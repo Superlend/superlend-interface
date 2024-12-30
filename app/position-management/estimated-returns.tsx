@@ -2,7 +2,7 @@ import { getEstimatedEarnings } from './helper-functions'
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Slider } from '@/components/ui/slider'
-import { TPlatform } from '@/types'
+import { TPlatform } from '@/types/platform'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import {
     abbreviateNumber,
@@ -222,8 +222,8 @@ export function EstimatedReturns({
                     ? 25000
                     : isUSDAmount
                         ? maxBorrowAmountInUsd
-                        : (maxBorrowAmountInUsd /
-                            (borrowTokenDetails?.token.price_usd ?? 0)),
+                        : maxBorrowAmountInUsd /
+                        (borrowTokenDetails?.token.price_usd ?? 0),
             step: isUSDAmount
                 ? 50
                 : Math.min(0.01, 50 / borrowTokenDetails?.token.price_usd),

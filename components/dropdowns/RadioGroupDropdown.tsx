@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -33,7 +33,7 @@ export default function RadioGroupDropdown({
 }: any) {
     const [isOpen, setIsOpen] = React.useState(false)
     const { width: screenWidth } = useDimensions()
-    const isDesktop = screenWidth > 768
+    const isDesktop = useMemo(() => screenWidth > 768, [screenWidth])
 
     useEffect(() => {
         if (disableFilterOptions.includes(value.value) && listData.length > 0) {

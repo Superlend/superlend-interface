@@ -1,4 +1,5 @@
-import { TGetPlatformParams, TPlatform } from '@/types'
+import { TPlatform } from '@/types/platform'
+import { TGetPlatformParams } from '@/types/queries/platform'
 import { request } from './request'
 
 export async function getPlatformData({

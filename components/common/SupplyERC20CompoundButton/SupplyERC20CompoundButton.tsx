@@ -1,7 +1,11 @@
 // import CustomButton from '@components/ui/CustomButton'
 // import { getActionName } from '@utils/getActionName'
 // import { Action } from '../../../types/assetsTable'
-import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import {
+    BaseError,
+    useWaitForTransactionReceipt,
+    useWriteContract,
+} from 'wagmi'
 import { useEffect, useState } from 'react'
 // import { AddressType } from '../../../types/address'
 import COMPOUND_ABI from '@/data/abi/compoundABIerc20.json'
@@ -15,6 +19,10 @@ import {
     SUCCESS_MESSAGE,
 } from '@/constants'
 import { Button } from '@/components/ui/button'
+import { ArrowRightIcon } from 'lucide-react'
+import CustomAlert from '@/components/alerts/CustomAlert'
+import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 // import { getErrorText } from '@utils/getErrorText'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
@@ -35,10 +43,48 @@ const SupplyERC20CompoundButton = ({
     disabled,
     handleCloseModal,
 }: ISupplyERC20CompoundButtonProps) => {
-    const { writeContractAsync, data: hash, isPending } = useWriteContract()
+    const {
+        writeContractAsync,
+        data: hash,
+        isPending,
+        error,
+    } = useWriteContract()
     const [lastTx, setLastTx] = useState<'mint' | 'approve'>('mint')
-    const { isSuccess, isLoading } = useWaitForTransactionReceipt({ hash })
     // const { createToast } = useCreatePendingToast()
+    const { lendTx, setLendTx } =
+        useLendBorrowTxContext() as TLendBorrowTxContext
+
+    const { isLoading: isConfirming, isSuccess: isConfirmed } =
+        useWaitForTransactionReceipt({
+            hash,
+        })
+
+    const txBtnStatus: Record<string, string> = {
+        pending: lastTx === 'mint' ? 'Approving token...' : 'Lending token...',
+        confirming: 'Confirming...',
+        success: 'View position',
+        default: lastTx === 'mint' ? 'Approve token' : 'Lend token',
+    }
+
+    const getTxButtonText = (
+        isPending: boolean,
+        isConfirming: boolean,
+        isConfirmed: boolean
+    ) => {
+        return txBtnStatus[
+            isConfirming
+                ? 'confirming'
+                : isConfirmed
+                  ? lastTx === 'approve'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
+        ]
+    }
+
+    const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
     useEffect(() => {
         const supply = async () => {
@@ -66,7 +112,7 @@ const SupplyERC20CompoundButton = ({
                 // )
                 // toast.remove()
                 writeContractAsync({
-                    address: cTokenAddress,
+                    address: cTokenAddress as `0x${string}`,
                     abi: COMPOUND_ABI,
                     functionName: 'mint',
                     args: [parseUnits(amount, decimals)],
@@ -76,11 +122,17 @@ const SupplyERC20CompoundButton = ({
                 error
             }
         }
-        if (isSuccess && lastTx === 'mint') {
+
+        if (isConfirmed && lastTx === 'mint') {
+            setLendTx({ status: 'lend', hash: hash || '' })
             void supply()
         }
+
+        if (isConfirmed && lastTx === 'approve') {
+            setLendTx({ status: 'view', hash: hash || '' })
+        }
     }, [
-        isSuccess,
+        isConfirmed,
         amount,
         cTokenAddress,
         writeContractAsync,
@@ -113,8 +165,14 @@ const SupplyERC20CompoundButton = ({
             //   ERROR_TOAST_ICON_STYLES
             // )
 
+            // console.log("address", underlyingToken);
+            // console.log("cTokenAddress", cTokenAddress);
+            // console.log("amount", amount);
+            // console.log("decimals", decimals);
+            // console.log("parseUnits", parseUnits(amount, decimals));
+
             writeContractAsync({
-                address: underlyingToken,
+                address: underlyingToken as `0x${string}`,
                 abi: COMPOUND_ABI,
                 functionName: 'approve',
                 args: [cTokenAddress, parseUnits(amount, decimals)],
@@ -125,13 +183,28 @@ const SupplyERC20CompoundButton = ({
         }
     }
     return (
-        <Button
-            disabled={isPending || isLoading || disabled}
-            onClick={() => onApproveSupply()}
-        >
-            {/* {getActionName(Action.LEND)} */}
-            Lend
-        </Button>
+        <>
+            {error && (
+                <CustomAlert
+                    description={
+                        (error as BaseError).shortMessage || error.message
+                    }
+                />
+            )}
+            <Button
+                variant="primary"
+                className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
+                disabled={isPending || isConfirming || disabled}
+                onClick={onApproveSupply}
+            >
+                {txBtnText}
+                <ArrowRightIcon
+                    width={16}
+                    height={16}
+                    className="stroke-white group-[:disabled]:opacity-50"
+                />
+            </Button>
+        </>
     )
 }
 

@@ -6,13 +6,14 @@ import { Progress } from '@/components/ui/progress'
 import { BodyText, HeadingText } from '@/components/ui/typography'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { useSearchParams } from 'next/navigation'
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
     abbreviateNumber,
     capitalizeText,
     convertScientificToNormal,
     getLiquidationRisk,
+    getLowestDisplayValue,
     getRiskFactor,
     hasLowestDisplayValuePrefix,
     isLowestValue,
@@ -24,13 +25,16 @@ import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import { Skeleton } from '@/components/ui/skeleton'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import Image from 'next/image'
-import { useActiveAccount, useIsAutoConnecting } from 'thirdweb/react'
+// import { useActiveAccount, useIsAutoConnecting } from 'thirdweb/react'
 import TooltipText from '@/components/tooltips/TooltipText'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { EstimatedReturns } from './estimated-returns'
 import { getStatDisplayValue } from './helper-functions'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData'
+import { Button } from '@/components/ui/button'
+import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { useAccount } from 'wagmi'
 import { PlatformType } from '@/types/platform'
 
 export default function PositionDetails() {
@@ -38,9 +42,15 @@ export default function PositionDetails() {
     const { allChainsData } = useContext(AssetsDataContext)
     const chain_id = searchParams.get('chain_id') || 0
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
-    const activeAccount = useActiveAccount()
-    const walletAddress = activeAccount?.address
-    const isAutoConnecting = useIsAutoConnecting()
+    const { address: walletAddress } = useAccount()
+    const { lendTx, borrowTx } = useLendBorrowTxContext()
+    const [refresh, setRefresh] = useState(false)
+
+    useEffect(() => {
+        const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
+        setRefresh(isRefresh)
+    }, [lendTx.status, lendTx.isConfirmed, borrowTx.status, borrowTx.isConfirmed])
+
 
     const {
         data: portfolioData,
@@ -50,6 +60,7 @@ export default function PositionDetails() {
         user_address: walletAddress as `0x${string}`,
         platform_id: [protocol_identifier],
         chain_id: [String(chain_id)],
+        is_refresh: refresh,
     })
 
     // [API_CALL: GET] - Get Platform data
@@ -63,7 +74,7 @@ export default function PositionDetails() {
     })
 
     const isLoading =
-        isLoadingPortfolioData || isLoadingPlatformData || isAutoConnecting
+        isLoadingPortfolioData || isLoadingPlatformData
 
     const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
         platformData?.platform?.protocol_type
@@ -71,14 +82,14 @@ export default function PositionDetails() {
     const isAaveV3 = platformData?.platform?.protocol_type === 'aaveV3'
 
     // Get user positions from portfolio data using protocol identifier
-    const userPositions = portfolioData?.platforms.filter(
+    const userPositions = useMemo(() => portfolioData?.platforms.filter(
         (platform) =>
             platform?.protocol_identifier?.toLowerCase() ===
             (platformData?.platform as any)?.protocol_identifier?.toLowerCase()
-    )
+    ), [portfolioData, platformData, isLoadingPortfolioData])
 
     // Format user positions
-    const [formattedUserPositions] = userPositions?.map(
+    const [formattedUserPositions] = useMemo(() => userPositions?.map(
         (platform, index: number) => {
             const lendPositions = platform.positions.filter(
                 (position) => position.type === 'lend'
@@ -141,7 +152,7 @@ export default function PositionDetails() {
                 riskFactor: getRiskFactor(platform.health_factor),
             }
         }
-    )
+    ), [userPositions, isLoadingPortfolioData])
 
     // Calculate borrow power and borrow power used for pool based assets
     function getLiquidationDetailsForPoolBasedAssets() {
@@ -416,18 +427,27 @@ export default function PositionDetails() {
                                         weight="medium"
                                         className="text-gray-800"
                                     >
-                                        $
-                                        {abbreviateNumber(
+                                        {hasLowestDisplayValuePrefix(
                                             Number(
                                                 formattedUserPositions
                                                     ?.lendAsset.amount ?? 0
                                             )
-                                        )}
+                                        )}{' '}
+                                        $
+                                        {isLowestValue(Number(formattedUserPositions?.lendAsset.amount ?? 0)) ?
+                                            getLowestDisplayValue(Number(formattedUserPositions?.lendAsset.amount ?? 0)) :
+                                            abbreviateNumber(
+                                                Number(
+                                                    formattedUserPositions
+                                                        ?.lendAsset.amount ?? 0
+                                                )
+                                            )
+                                        }
                                     </HeadingText>
                                 </div>
                                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
-                                withdraw
-                            </Button> */}
+                  withdraw
+                </Button> */}
                             </div>
                         </div>
                         <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full h-full">
@@ -459,15 +479,23 @@ export default function PositionDetails() {
                                             weight="medium"
                                             className="text-gray-800"
                                         >
-                                            <span>
-                                                $
-                                                {abbreviateNumber(
-                                                    Number(
-                                                        formattedUserPositions
-                                                            ?.borrowAsset.amount ?? 0
+                                            {hasLowestDisplayValuePrefix(
+                                                Number(
+                                                    formattedUserPositions
+                                                        ?.borrowAsset.amount ?? 0
+                                                )
+                                            )}{' '}
+                                            $
+                                            {
+                                                isLowestValue(Number(formattedUserPositions?.borrowAsset.amount ?? 0)) ?
+                                                    getLowestDisplayValue(Number(formattedUserPositions?.borrowAsset.amount ?? 0)) :
+                                                    abbreviateNumber(
+                                                        Number(
+                                                            formattedUserPositions
+                                                                ?.borrowAsset.amount ?? 0
+                                                        )
                                                     )
-                                                )}
-                                            </span>
+                                            }
                                         </HeadingText>}
                                     {/* Borrowed amount for Morpho vaults */}
                                     {(isMorpho && isVault) && (
@@ -484,8 +512,8 @@ export default function PositionDetails() {
                                     )}
                                 </div>
                                 {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
-                                repay
-                            </Button> */}
+                  repay
+                </Button> */}
                             </div>
                         </div>
                     </div>

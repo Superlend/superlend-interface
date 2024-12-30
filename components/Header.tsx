@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet'
 import { Menu, X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ConnectWalletButton from './ConnectWalletButton'
+import Link from 'next/link'
 
 type TTab = {
     id: number
@@ -47,7 +48,7 @@ const Header: React.FC = () => {
     }
 
     const BUTTON_DEFAULT_DESKTOP_STYLES =
-        'group self-stretch px-6 max-lg:px-5 rounded-[14px] uppercase hover:text-primary'
+        'group self-stretch p-0 rounded-[14px] uppercase hover:text-primary'
     const BUTTON_INACTIVE_DESKTOP_STYLES = `${BUTTON_DEFAULT_DESKTOP_STYLES} opacity-50 hover:opacity-100`
     const BUTTON_ACTIVE_DESKTOP_STYLES = `${BUTTON_DEFAULT_DESKTOP_STYLES}`
 
@@ -55,6 +56,9 @@ const Header: React.FC = () => {
         'group self-stretch border-0 p-0 mx-4 my-2'
     const BUTTON_INACTIVE_MOBILE_STYLES = `${BUTTON_DEFAULT_MOBILE_STYLES} opacity-50`
     const BUTTON_ACTIVE_MOBILE_STYLES = `${BUTTON_DEFAULT_MOBILE_STYLES} text-primary hover:text-primary active`
+
+    const LINK_DEFAULT_STYLES =
+        'flex items-center justify-center gap-2 px-1 py-2'
 
     function isSelected(tab: TTab) {
         return tab.id === activeTab?.id
@@ -108,14 +112,18 @@ const Header: React.FC = () => {
                                 variant={isSelected(tab) ? 'default' : 'ghost'}
                                 size="lg"
                                 className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`}
-                                onClick={() => handleTabClick(tab)}
+                                // onClick={() => handleTabClick(tab)}
                             >
-                                <div className="flex items-center justify-center gap-2">
+                                <Link
+                                    onClick={() => handleTabClick(tab)}
+                                    href={tab.href}
+                                    className={`${LINK_DEFAULT_STYLES}`}
+                                >
                                     <tab.icon />
                                     <span className="leading-[0]">
                                         {tab.name}
                                     </span>
-                                </div>
+                                </Link>
                             </Button>
                         ))}
                     </nav>
@@ -137,14 +145,18 @@ const Header: React.FC = () => {
                             variant={'ghost'}
                             size="lg"
                             className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`}
-                            onClick={() => handleTabClick(tab)}
+                            // onClick={() => handleTabClick(tab)}
                         >
-                            <div className="flex flex-col items-center justify-center gap-3">
+                            <Link
+                                onClick={() => handleTabClick(tab)}
+                                href={tab.href}
+                                className={`${LINK_DEFAULT_STYLES}`}
+                            >
                                 <tab.icon className="max-sm:w-5 max-sm:h-5" />
                                 <span className="hidden max-md:inline-block leading-[0] text-inherit">
                                     {tab.name}
                                 </span>
-                            </div>
+                            </Link>
                         </Button>
                     ))}
                 </nav>

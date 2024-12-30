@@ -2,7 +2,7 @@
 
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData'
-import { TPlatform } from '@/types'
+import { TPlatform } from '@/types/platform'
 import { Period } from '@/types/periodButtons'
 import { useSearchParams } from 'next/navigation'
 import { createContext, useContext } from 'react'
@@ -21,7 +21,6 @@ const PlatformDataInit: TPlatform = {
         name: '',
         platform_name: '',
         protocol_identifier: '',
-        // protocol_type: "aaveV3",
         protocol_type: 'aaveV3',
         logo: '',
         chain_id: 0,
@@ -29,6 +28,8 @@ const PlatformDataInit: TPlatform = {
         isVault: false,
         morpho_market_id: '',
         core_contract: '',
+        uiPoolDataProvider: '',
+        poolAddressesProvider: '',
     },
     assets: [],
 }
