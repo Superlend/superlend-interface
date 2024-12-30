@@ -32,7 +32,6 @@ const EasterEgg = () => {
 
 	const pathname = usePathname();
 	const { address: walletAddress } = useAccount()
-	const { disconnect } = useDisconnect()
 	const formattedAddress = walletAddress?.slice(0, 6) + "..." + walletAddress?.slice(-4);
 
 	const [email, setEmail] = useState("");
@@ -213,11 +212,11 @@ const EasterEgg = () => {
 														disabled
 														className="bg-slate-200"
 													/>
-													<Button
+													{/* <Button
 														variant="outline"
 														className="w-fit absolute right-[0.4rem] top-[0.4rem] z-10 shadow-md"
 														onClick={disconnect}
-													>Disconnect</Button>
+													>Disconnect</Button> */}
 												</div>
 											</div>
 											<div className="grid grid-cols-4 items-center gap-4">
