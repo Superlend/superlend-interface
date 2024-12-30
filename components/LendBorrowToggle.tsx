@@ -6,6 +6,7 @@ import { TPositionType } from '@/types'
 type TProps = {
     type: TPositionType
     handleToggle: (positionType: TPositionType) => void
+    addCollateral?: boolean
 }
 
 const LendBorrowToggle = ({ type, handleToggle }: TProps) => {

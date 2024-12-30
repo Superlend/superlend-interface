@@ -18,15 +18,17 @@ import { LoaderCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount, useSwitchChain } from 'wagmi'
-import { ConfirmationDialog, SelectTokensDropdown } from './lend-and-borrow'
+import { ConfirmationDialog, handleSmallestValue, SelectTokensDropdown } from './lend-and-borrow'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import { Button } from '@/components/ui/button'
 import { TOO_MANY_DECIMALS_VALIDATIONS_TEXT } from '@/constants'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 
-import { MarketId } from '@morpho-org/blue-sdk'
-import { useMarket } from '@morpho-org/blue-sdk-wagmi'
+import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
+import { useMarket, usePosition } from '@morpho-org/blue-sdk-wagmi'
+import { formatUnits } from 'viem'
+import { BigNumber } from 'ethers'
 
 export default function LendAndBorrowAssetsMorpho() {
     const searchParams = useSearchParams()
@@ -51,6 +53,14 @@ export default function LendAndBorrowAssetsMorpho() {
     useEffect(() => {
         setPositionType(positionTypeParam)
     }, [positionTypeParam])
+
+    // Switch chain
+    useEffect(() => {
+        if (!!walletAddress) {
+            switchChainAsync({ chainId: Number(chain_id) })
+        }
+    }, [walletAddress, Number(chain_id)])
+
     // [API_CALL: GET] - Get Platform data
     const {
         data: platformData,
@@ -65,11 +75,65 @@ export default function LendAndBorrowAssetsMorpho() {
         marketId: platformData?.platform?.morpho_market_id as MarketId,
     })
 
-    const isLoading = isLoadingPlatformData
+    const { data: position } = usePosition({
+        marketId: platformData?.platform?.morpho_market_id as MarketId,
+        user: walletAddress,
+    })
+
+    const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
+    const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] = useState(true)
+
+    const [hasCollateral, setHasCollateral] = useState(false)
+    const [canBorrow, setCanBorrow] = useState(false)
+
+    const [doesMarketHasLiquidity, setDoesMarketHasLiquidity] = useState(true)
+
+    // health factor
+    const [healthFactor, setHealthFactor] = useState(0)
+    const [newHealthFactor, setNewHealthFactor] = useState(0)
+
+    useEffect(() => {
+
+        if (position && morphoMarketData) {
+            let accrualPosition: AccrualPosition = new AccrualPosition(position, morphoMarketData)
+            let borrowAssets = ((accrualPosition.maxBorrowableAssets ?? BigInt(0)) * BigInt(999)) / BigInt(1000)
+            let maxBorrowAmount = formatUnits(borrowAssets, morphoBorrowTokenDetails?.token?.decimals ?? 0)
+
+            setMaxBorrowAmount(maxBorrowAmount)
+            setIsLoadingMaxBorrowingAmount(false)
+            setHasCollateral(accrualPosition.collateralValue ? accrualPosition.collateralValue > 0 : false)
+            setCanBorrow(borrowAssets ? borrowAssets > 0 : false)
+
+            // let collUsdValue = (accrualPosition.collateralValue ? Number(formatUnits(accrualPosition.collateralValue, 18)) : 0) * (selectedAssetTokenDetails?.token?.price_usd ?? 0)
+            // let borrowUsdValue = (borrowAssets ? Number(formatUnits(borrowAssets, morphoBorrowTokenDetails?.token?.decimals ?? 0)) : 0) * (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
+            // let healthFactor = (collUsdValue / borrowUsdValue)
+
+            // if both are same then reallocation is needed
+            if (morphoMarketData.totalBorrowAssets === morphoMarketData.totalSupplyAssets) {
+                setDoesMarketHasLiquidity(false)
+            } else {
+                setDoesMarketHasLiquidity(true)
+            }
+
+            // TODO: Get health factor values
+
+        } else {
+            setMaxBorrowAmount('0')
+            setIsLoadingMaxBorrowingAmount(false)
+            setHasCollateral(false)
+            setCanBorrow(false)
+            // setHealthFactor(0)
+            // setNewHealthFactor(0)
+        }
+    }, [position, morphoMarketData, maxBorrowAmount, setMaxBorrowAmount, isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount, hasCollateral, setHasCollateral, canBorrow, setCanBorrow, doesMarketHasLiquidity, setDoesMarketHasLiquidity])
+
+    const isLoading = isLoadingPlatformData || isLoadingMaxBorrowingAmount
 
     const isMorphoMarketsProtocol =
         platformData?.platform?.protocol_type === 'morpho' &&
         !platformData?.platform?.isVault
+
+
 
     const {
         erc20TokensBalanceData,
@@ -78,11 +142,17 @@ export default function LendAndBorrowAssetsMorpho() {
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
     } = useUserTokenBalancesContext()
 
-    const morphoLendTokenDetails = platformData?.assets
+    const morphoLendTokenDetails = platformData?.assets.find(
+        (asset) => asset.borrow_enabled === false
+    )
 
     const morphoBorrowTokenDetails = platformData?.assets?.find(
         (asset) => asset.borrow_enabled === true
     )
+
+    useEffect(() => {
+        setSelectedAssetTokenDetails(morphoLendTokenDetails || null)
+    }, [morphoLendTokenDetails, setSelectedAssetTokenDetails])
 
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[
@@ -90,27 +160,11 @@ export default function LendAndBorrowAssetsMorpho() {
         ]?.balanceFormatted ?? 0
     ).toString()
 
-    useEffect(() => {
-        if (morphoLendTokenDetails?.length > 0) {
-            setSelectedAssetTokenDetails(morphoLendTokenDetails[0])
-        }
-    }, [morphoLendTokenDetails])
+
 
     // useEffect(() => {
-    //     if (providerStatus.isReady) {
-    //         fetchMorphoMarketData(Number(chain_id), platformData?.platform?.morpho_market_id)
-    //             .then((data) => {
-    //                 console.log("================")
-    //                 console.log(morphoMarketData)
-    //                 console.log("================")
-    //             })
-    //     } else {
-    //         console.log("================")
-    //         console.log("Provider not ready")
-
-    //         console.log("================")
-    //     }
-    // }, [providerStatus.isReady, Number(chain_id), platformData?.platform?.morpho_market_id])
+    //     setSelectedAssetTokenDetails(morphoLendTokenDetails)
+    // }, [morphoLendTokenDetails])
 
     // TODO: Loading helper text add support for borrow
     const isLoadingHelperText = isLendPositionType(positionType)
@@ -139,9 +193,24 @@ export default function LendAndBorrowAssetsMorpho() {
         }
     }, [amount, balance, toManyDecimals])
 
+    const borrowErrorMessage = useMemo(() => {
+        if (toManyDecimals) {
+            return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
+        }
+        if (!hasCollateral) {
+            return 'You do not have any collateral'
+        }
+        if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
+            return 'You do not have any borrow limit'
+        }
+        return null
+    }, [hasCollateral, canBorrow, amount, maxBorrowAmount, toManyDecimals])
+
     const errorMessage = useMemo(() => {
-        return isLendPositionType(positionType) ? lendErrorMessage : null
-    }, [positionType, lendErrorMessage])
+        return isLendPositionType(positionType)
+            ? lendErrorMessage
+            : borrowErrorMessage
+    }, [positionType, lendErrorMessage, borrowErrorMessage])
 
     function getLoadingHelperText() {
         return isLendPositionType(positionType)
@@ -152,55 +221,49 @@ export default function LendAndBorrowAssetsMorpho() {
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-                Number(
-                    // TODO: Get max borrow amount
-                    isLendPositionType(positionType) ? balance : '0'
-                ) ||
-            // TODO: Check add if has collateral
-            (isLendPositionType(positionType) ? false : false) ||
+            Number(
+                isLendPositionType(positionType) ? balance : maxBorrowAmount
+            ) ||
+            (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
-            toManyDecimals,
+            toManyDecimals || (!isLendPositionType(positionType) && !doesMarketHasLiquidity),
         [
             amount,
             balance,
-            // TODO: Get max borrow amount
-            '0',
+            maxBorrowAmount,
             toManyDecimals,
-            // TODO: Check add if has collateral
-            false,
+            hasCollateral,
             positionType,
+            doesMarketHasLiquidity
         ]
     )
 
-    if (!isMorphoMarketsProtocol) {
+
+
+    if (!isMorphoMarketsProtocol || searchParams.get('position_type') === 'lend') {
         return null
     }
 
-    // Switch chain
-    // useEffect(() => {
-    //     if (!!walletAddress) {
-    //         switchChainAsync({ chainId: Number(chain_id) })
-    //     }
-    // }, [walletAddress, Number(chain_id)])
+
 
     function getMaxDecimalsToDisplay(): number {
         return isLendPositionType(positionType)
-            ? morphoLendTokenDetails[0]?.token?.symbol
-                  .toLowerCase()
-                  .includes('btc') ||
-              morphoLendTokenDetails[0]?.token?.symbol
-                  .toLowerCase()
-                  .includes('eth')
-                ? 4
+            ? morphoLendTokenDetails?.token?.symbol
+                .toLowerCase()
+                .includes('btc') ||
+                morphoLendTokenDetails?.token?.symbol
+                    .toLowerCase()
+                    .includes('eth')
+                ? 6
                 : 2
             : morphoBorrowTokenDetails?.token?.symbol
-                    .toLowerCase()
-                    .includes('btc') ||
+                .toLowerCase()
+                .includes('btc') ||
                 morphoBorrowTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
-              ? 4
-              : 2
+                ? 6
+                : 2
     }
 
     const isDisabledMaxBtn = () => {
@@ -214,34 +277,22 @@ export default function LendAndBorrowAssetsMorpho() {
         }
 
         // TODO: Get max borrow amount
-        return false
-        // return (Number(amount) === Number(maxBorrowAmount)) ||
-        //     !walletAddress ||
-        //     isLoadingMaxBorrowingAmount ||
-        //     isLoadingErc20TokensBalanceData ||
-        //     (Number(maxBorrowAmount) <= 0)
+        return (Number(amount) === Number(maxBorrowAmount)) ||
+            !walletAddress ||
+            isLoadingMaxBorrowingAmount ||
+            isLoadingErc20TokensBalanceData ||
+            (Number(maxBorrowAmount) <= 0) ||
+            !doesMarketHasLiquidity
     }
-
-    // const borrowErrorMessage = useMemo(() => {
-    //     if (toManyDecimals) {
-    //         return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
-    //     }
-    //     if (!hasCollateral) {
-    //         return 'You do not have any collateral'
-    //     }
-    //     if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
-    //         return 'You do not have any borrow limit'
-    //     }
-    //     return null
-    // }, [hasCollateral, canBorrow, amount, balance, toManyDecimals])
 
     return (
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
             <LendBorrowToggle
                 type={positionType}
-                handleToggle={(positionType: TPositionType) =>
+                handleToggle={(positionType: TPositionType) => {
+                    setAmount('')
                     setPositionType(positionType)
-                }
+                }}
             />
             <Card className="flex flex-col gap-[12px] p-[16px]">
                 <div className="flex items-center justify-between px-[14px]">
@@ -251,7 +302,7 @@ export default function LendAndBorrowAssetsMorpho() {
                         className="capitalize text-gray-600"
                     >
                         {isLendPositionType(positionType)
-                            ? 'lend collateral'
+                            ? 'add collateral'
                             : `borrow ${morphoBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
 
@@ -283,7 +334,7 @@ export default function LendAndBorrowAssetsMorpho() {
                         </BodyText>
                     )}
                     {/* TODO: Borrow limit */}
-                    {/* {walletAddress && !isLendPositionType(positionType) && (
+                    {walletAddress && !isLendPositionType(positionType) && (
                         <BodyText
                             level="body2"
                             weight="normal"
@@ -296,7 +347,7 @@ export default function LendAndBorrowAssetsMorpho() {
                                 handleSmallestValue(maxBorrowAmount, getMaxDecimalsToDisplay())
                             )}
                         </BodyText>
-                    )} */}
+                    )}
                 </div>
                 <CardContent className="p-0 bg-white rounded-5">
                     <div
@@ -307,30 +358,42 @@ export default function LendAndBorrowAssetsMorpho() {
                             'border-gray-200 py-[12px] px-[16px] flex items-center gap-[12px]'
                         )}
                     >
-                        {isLoading && (
+                        {(isLoading || isLoadingMaxBorrowingAmount) && (
                             <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
                         )}
                         {/* Lend position type - Selected token image */}
-                        {(isLoading ||
+                        {/* {(isLoading ||
                             !selectedAssetTokenDetails?.token?.address) &&
                             isLendPositionType(positionType) && (
                                 <LoaderCircle className="text-primary w-[60px] h-[34px] animate-spin" />
-                            )}
-                        {!isLoading &&
+                            )} */}
+                        {(!isLoading && !isLoadingMaxBorrowingAmount) &&
                             !!selectedAssetTokenDetails?.token?.address &&
                             isLendPositionType(positionType) && (
-                                <SelectTokensDropdown
-                                    key={positionType}
-                                    options={morphoLendTokenDetails}
-                                    selectedItemDetails={
-                                        selectedAssetTokenDetails
+                                <ImageWithDefault
+                                    src={
+                                        selectedAssetTokenDetails?.token?.logo || ''
                                     }
-                                    setSelectedItemDetails={
-                                        setSelectedAssetTokenDetails
+                                    alt={
+                                        selectedAssetTokenDetails?.token?.symbol ||
+                                        ''
                                     }
+                                    className="shrink-0 w-[24px] h-[24px] rounded-full"
+                                    width={24}
+                                    height={24}
                                 />
+                                // <SelectTokensDropdown
+                                //     key={positionType}
+                                //     options={morphoLendTokenDetails}
+                                //     selectedItemDetails={
+                                //         selectedAssetTokenDetails
+                                //     }
+                                //     setSelectedItemDetails={
+                                //         setSelectedAssetTokenDetails
+                                //     }
+                                // />
                             )}
-                        {isLendPositionType(positionType) && (
+                        {/* {isLendPositionType(positionType) && (
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -338,7 +401,7 @@ export default function LendAndBorrowAssetsMorpho() {
                             >
                                 |
                             </BodyText>
-                        )}
+                        )} */}
                         {/* Borrow position type - Select token dropdown */}
                         {!isLoading && !isLendPositionType(positionType) && (
                             <ImageWithDefault
@@ -368,7 +431,7 @@ export default function LendAndBorrowAssetsMorpho() {
                                 setAmount(
                                     isLendPositionType(positionType)
                                         ? (balance ?? '0')
-                                        : '0' // TODO: Get max borrow amount
+                                        : maxBorrowAmount
                                 )
                             }
                             disabled={isDisabledMaxBtn()}
@@ -411,7 +474,11 @@ export default function LendAndBorrowAssetsMorpho() {
                                 !isLoadingHelperText &&
                                 (isLendPositionType(positionType)
                                     ? 'Enter amount to proceed with supplying collateral for this position'
-                                    : 'Enter the amount you want to borrow from this position')}
+                                    :
+                                    doesMarketHasLiquidity
+                                        ? 'Enter the amount you want to borrow from this position'
+                                        : 'Market does not have enough liquidity to borrow from this position'
+                                )}
                             {errorMessage && !isLoadingHelperText && (
                                 <span className="text-xs text-destructive-foreground">
                                     {errorMessage}
@@ -447,16 +514,17 @@ export default function LendAndBorrowAssetsMorpho() {
                                     protocol_type:
                                         platformData?.platform?.protocol_type,
                                     morphoMarketData: morphoMarketData,
+                                    chainId: Number(chain_id)
                                 }}
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount
-                                maxBorrowAmount={'0'}
+                                maxBorrowAmount={maxBorrowAmount}
                                 setAmount={setAmount}
                                 // TODO: Get health factor values
                                 healthFactorValues={{
-                                    healthFactor: 0,
-                                    newHealthFactor: 0,
+                                    healthFactor: 0.0,
+                                    newHealthFactor: 0.0,
                                 }}
                             />
                         </div>

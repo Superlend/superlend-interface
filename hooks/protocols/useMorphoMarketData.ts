@@ -1,1 +1,1 @@
-export const useMorphoMarketData = () => {}
+export const useMorphoMarketData = () => { }

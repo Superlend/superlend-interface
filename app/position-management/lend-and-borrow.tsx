@@ -1619,7 +1619,7 @@ function getTxInProgressText({
     return textByStatus[txStatus.status]
 }
 
-function handleSmallestValue(amount: string, maxDecimalsToDisplay: number = 2) {
+export function handleSmallestValue(amount: string, maxDecimalsToDisplay: number = 2) {
     const amountFormatted = hasExponent(amount)
         ? Math.abs(Number(amount)).toFixed(10)
         : amount.toString()
