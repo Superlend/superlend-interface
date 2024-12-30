@@ -191,9 +191,9 @@ const BorrowButton = ({
                     }
                 />
             )}
-            {borrowTx.errorMessage.length > 0 && (
+            {/* {borrowTx.errorMessage.length > 0 && (
                 <CustomAlert description={borrowTx.errorMessage} />
-            )}
+            )} */}
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
