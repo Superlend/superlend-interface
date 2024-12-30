@@ -33,9 +33,10 @@ import { getStatDisplayValue } from './helper-functions'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData'
 import { Button } from '@/components/ui/button'
-import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { useTxContext } from '@/context/lend-borrow-tx-provider'
 import { useAccount } from 'wagmi'
 import { PlatformType } from '@/types/platform'
+import WithdrawAndRepayActionButton from './withdraw-and-repay'
 
 export default function PositionDetails() {
     const searchParams = useSearchParams()
@@ -43,7 +44,7 @@ export default function PositionDetails() {
     const chain_id = searchParams.get('chain_id') || 0
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const { address: walletAddress } = useAccount()
-    const { lendTx, borrowTx } = useLendBorrowTxContext()
+    const { lendTx, borrowTx } = useTxContext()
     const [refresh, setRefresh] = useState(false)
 
     useEffect(() => {
@@ -445,9 +446,7 @@ export default function PositionDetails() {
                                         }
                                     </HeadingText>
                                 </div>
-                                {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
-                  withdraw
-                </Button> */}
+                                <WithdrawAndRepayActionButton actionType='withdraw' />
                             </div>
                         </div>
                         <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full h-full">
@@ -511,9 +510,7 @@ export default function PositionDetails() {
                                         />
                                     )}
                                 </div>
-                                {/* <Button disabled variant={'secondaryOutline'} className='uppercase max-w-[100px] w-full'>
-                  repay
-                </Button> */}
+                                <WithdrawAndRepayActionButton actionType='repay' />
                             </div>
                         </div>
                     </div>

@@ -9,7 +9,6 @@ import { PlatformType, PlatformValue } from '../../../types/platform'
 import SupplyETHCompoundButton from '../SupplyETHCompoundButton'
 import SupplyERC20CompoundButton from '../SupplyERC20CompoundButton'
 import { countCompoundDecimals } from '@/lib/utils'
-import { POOL_AAVE_MAP } from '@/constants'
 import { BigNumber } from 'ethers'
 
 interface IActionButtonSelectComponent {
@@ -17,7 +16,7 @@ interface IActionButtonSelectComponent {
     asset: any
     amount: string
     handleCloseModal: (isVisible: boolean) => void
-    positionType: 'lend' | 'borrow'
+    actionType: 'lend' | 'borrow' | 'repay' | 'withdraw'
 }
 
 const ActionButton = ({
@@ -25,9 +24,9 @@ const ActionButton = ({
     asset,
     amount,
     handleCloseModal,
-    positionType,
+    actionType,
 }: IActionButtonSelectComponent) => {
-    if (positionType === 'borrow') {
+    if (actionType === 'borrow') {
         return (
             <BorrowButton
                 disabled={disabled}
@@ -37,22 +36,19 @@ const ActionButton = ({
             />
         )
     }
-    if (asset.protocol_type === PlatformType.AAVE && positionType === 'lend') {
-        // console.log('platform_name', asset.platform_name);
-        // console.log('tokenAddress', asset.asset.token.address);
-        // console.log('amount', amount);
-        // console.log('decimals', asset.asset.token.decimals);
-
-        return (
-            <SupplyAaveButton
-                disabled={disabled}
-                handleCloseModal={handleCloseModal}
-                poolContractAddress={asset.core_contract}
-                underlyingAssetAdress={asset.asset.token.address}
-                amount={amount}
-                decimals={asset.asset.token.decimals}
-            />
-        )
+    if (asset.protocol_type === PlatformType.AAVE) {
+        if (actionType === 'lend') {
+            return (
+                <SupplyAaveButton
+                    disabled={disabled}
+                    handleCloseModal={handleCloseModal}
+                    poolContractAddress={asset.core_contract}
+                    underlyingAssetAdress={asset.asset.token.address}
+                    amount={amount}
+                    decimals={asset.asset.token.decimals}
+                />
+            )
+        }
     }
     if (
         asset.protocol_type === PlatformType.COMPOUND &&

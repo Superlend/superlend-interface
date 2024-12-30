@@ -23,14 +23,12 @@ import {
 } from '@/constants'
 // import { getErrorText } from '@/lib/getErrorText'
 import { Button } from '@/components/ui/button'
-// import { prepareContractCall } from 'thirdweb'
-// import { defineChain } from 'thirdweb'
 import { useSearchParams } from 'next/navigation'
 import {
     TLendTx,
-    useLendBorrowTxContext,
+    TTxContext,
+    useTxContext,
 } from '@/context/lend-borrow-tx-provider'
-import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { ArrowRightIcon } from 'lucide-react'
 import { BigNumber } from 'ethers'
@@ -70,8 +68,7 @@ const SupplyAaveButton = ({
     // const { createToast } = useCreatePendingToast()
     const { isConnected } = useAccount()
     const { connect, connectors } = useConnect()
-    const { lendTx, setLendTx } =
-        useLendBorrowTxContext() as TLendBorrowTxContext
+    const { lendTx, setLendTx } = useTxContext() as TTxContext
 
     const amountBN = useMemo(() => {
         return amount ? parseUnits(amount, decimals) : BigNumber.from(0)

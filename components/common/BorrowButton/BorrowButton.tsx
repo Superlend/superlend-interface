@@ -30,8 +30,8 @@ import { PlatformType, PlatformValue } from '@/types/platform'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import {
     TBorrowTx,
-    TLendBorrowTxContext,
-    useLendBorrowTxContext,
+    TTxContext,
+    useTxContext,
 } from '@/context/lend-borrow-tx-provider'
 import { ArrowRightIcon } from 'lucide-react'
 import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow'
@@ -65,7 +65,7 @@ const BorrowButton = ({
     } = useWriteContract()
     const { address: walletAddress } = useAccount()
     const { borrowTx, setBorrowTx } =
-        useLendBorrowTxContext() as TLendBorrowTxContext
+        useTxContext() as TTxContext
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({

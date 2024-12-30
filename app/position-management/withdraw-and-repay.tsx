@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
-import { TPositionType } from '@/types'
+import { TActionType, TPositionType } from '@/types'
 import { TPlatformAsset } from '@/types/platform'
 import {
     ArrowRightIcon,
@@ -68,10 +68,10 @@ import {
 } from '@/constants'
 import ActionButton from '@/components/common/ActionButton'
 import {
-    TLendTx,
+    TRepayTx,
     TTxContext,
     useTxContext,
-    TBorrowTx,
+    TWithdrawTx,
 } from '@/context/lend-borrow-tx-provider'
 import { PlatformValue } from '@/types/platform'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
@@ -95,11 +95,14 @@ import {
     DrawerTrigger,
 } from "@/components/ui/drawer"
 import { modal } from '@/context'
-import { polygon } from '@reown/appkit/networks'
 import { ChainId } from '@/types/chain'
 
 
-export default function LendAndBorrowAssets() {
+export default function WithdrawAndRepayActionButton({
+    actionType
+}: {
+    actionType: 'withdraw' | 'repay'
+}) {
     const {
         erc20TokensBalanceData,
         isLoading: isLoadingErc20TokensBalanceData,
@@ -134,15 +137,15 @@ export default function LendAndBorrowAssets() {
     const positionTypeParam: TPositionType =
         (searchParams.get('position_type') as TPositionType) || 'lend'
     const { address: walletAddress } = useAccount()
-    const { switchChainAsync } = useSwitchChain()
     const {
         fetchAaveV3Data,
         getMaxBorrowAmount,
         getAllowance,
         providerStatus,
     } = useAaveV3Data()
-    const { lendTx, setLendTx, borrowTx, setBorrowTx } =
+    const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
         useTxContext() as TTxContext
+    const isWithdrawAction = actionType === 'withdraw'
 
     const {
         data: portfolioData,
@@ -241,10 +244,10 @@ export default function LendAndBorrowAssets() {
         walletAddress,
         Object.keys(platformData.platform).length,
         providerStatus.isReady,
-        borrowTx.status,
-        lendTx.status,
-        lendTx.isConfirmed,
-        borrowTx.isConfirmed,
+        withdrawTx.status,
+        repayTx.status,
+        withdrawTx.isConfirmed,
+        repayTx.isConfirmed,
     ])
 
     useEffect(() => {
@@ -273,8 +276,8 @@ export default function LendAndBorrowAssets() {
             !!tokenAddress
         ) {
             // Set isConfirming to true when the status is 'approve' and isRefreshingAllowance is true
-            if (lendTx.status === 'approve' && lendTx.isRefreshingAllowance) {
-                setLendTx((prev: TLendTx) => ({
+            if (repayTx.status === 'approve' && repayTx.isRefreshingAllowance) {
+                setRepayTx((prev: TRepayTx) => ({
                     ...prev,
                     isConfirming: true,
                 }))
@@ -286,17 +289,17 @@ export default function LendAndBorrowAssets() {
                 tokenAddress
             ).then((r: BigNumber) => {
                 // Update allowanceBN and set isRefreshingAllowance to false
-                setLendTx((prev: TLendTx) => ({
+                setRepayTx((prev: TRepayTx) => ({
                     ...prev,
                     allowanceBN: r,
                     isRefreshingAllowance: false,
                 }))
                 // Check if the allowance is greater than or equal to the amount
-                const positionTypeBasedAssetDetails = isLendPositionType(positionType) ? (assetDetails?.asset?.token?.decimals ?? 0) : (selectedBorrowTokenDetails?.token?.decimals ?? 0)
+                const positionTypeBasedAssetDetails = isWithdrawAction ? (assetDetails?.asset?.token?.decimals ?? 0) : (selectedBorrowTokenDetails?.token?.decimals ?? 0)
                 const amountBN = parseUnits(Boolean(amount) ? amount : '0', positionTypeBasedAssetDetails);
-                // Update the status of the lendTx based on the allowance and the confirmation state
-                if (lendTx.status === 'approve' && lendTx.isConfirmed) {
-                    setLendTx((prev: TLendTx) => ({
+                // Update the status of the repayTx based on the allowance and the confirmation state
+                if (repayTx.status === 'approve' && repayTx.isConfirmed) {
+                    setRepayTx((prev: TRepayTx) => ({
                         ...prev,
                         status: r.gte(amountBN) ? 'lend' : 'approve',
                         errorMessage: r.gte(amountBN) ? '' : 'Insufficient allowance',
@@ -308,21 +311,21 @@ export default function LendAndBorrowAssets() {
     }, [
         walletAddress,
         platformData,
-        lendTx.status,
-        lendTx.isRefreshingAllowance,
+        repayTx.status,
+        repayTx.isRefreshingAllowance,
         providerStatus.isReady,
     ])
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
-        if (lendTx.status === 'view' && lendTx.isConfirmed) {
+        if (withdrawTx.status === 'view' && withdrawTx.isConfirmed) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
 
-        if (borrowTx.status === 'view' && borrowTx.isConfirmed) {
+        if (withdrawTx.status === 'view' && withdrawTx.isConfirmed) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [lendTx.status, borrowTx.status, lendTx.isConfirmed, borrowTx.isConfirmed])
+    }, [repayTx.status, withdrawTx.status, repayTx.isConfirmed, withdrawTx.isConfirmed])
 
     // Refresh balance when wallet address changes
     useEffect(() => {
@@ -402,7 +405,7 @@ export default function LendAndBorrowAssets() {
     }
 
     const assetDetails: any = getFormattedAssetDetails(tokenAddress)
-    const assetDetailsForLendBorrowTx = getAssetDetails(tokenAddress)
+    const assetDetailsForLendwithdrawTx = getAssetDetails(tokenAddress)
     const selectedBorrowTokenDetailsFormatted =
         formatSelectedBorrowTokenDetails(
             selectedBorrowTokenDetails?.token?.address ?? ''
@@ -419,7 +422,7 @@ export default function LendAndBorrowAssets() {
         if (assetDetails || selectedBorrowTokenDetails) {
             return checkDecimalPlaces(
                 amount,
-                isLendPositionType(positionType)
+                isWithdrawAction
                     ? (assetDetails?.asset?.token?.decimals ?? 0)
                     : (selectedBorrowTokenDetails?.token?.decimals ?? 0)
             )
@@ -536,7 +539,7 @@ export default function LendAndBorrowAssets() {
     }, [hasCollateral, canBorrow, amount, balance, toManyDecimals])
 
     const errorMessage = useMemo(() => {
-        return isLendPositionType(positionType)
+        return isWithdrawAction
             ? lendErrorMessage
             : borrowErrorMessage
     }, [positionType, lendErrorMessage, borrowErrorMessage])
@@ -545,9 +548,9 @@ export default function LendAndBorrowAssets() {
         () =>
             Number(amount) >
             Number(
-                isLendPositionType(positionType) ? balance : maxBorrowAmount
+                isWithdrawAction ? balance : maxBorrowAmount
             ) ||
-            (isLendPositionType(positionType) ? false : !hasCollateral) ||
+            (isWithdrawAction ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
             toManyDecimals,
         [
@@ -561,7 +564,7 @@ export default function LendAndBorrowAssets() {
     )
 
     const isDisabledMaxBtn = () => {
-        if (isLendPositionType(positionType)) {
+        if (isWithdrawAction) {
             return (Number(amount) === Number(balance)) ||
                 !walletAddress ||
                 isLoadingErc20TokensBalanceData ||
@@ -578,16 +581,16 @@ export default function LendAndBorrowAssets() {
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
     const isPolygonChain = Number(chain_id) === 137
 
-    const isLoadingHelperText = isLendPositionType(positionType) ? isLoadingErc20TokensBalanceData : isLoadingMaxBorrowingAmount;
+    const isLoadingHelperText = isWithdrawAction ? isLoadingErc20TokensBalanceData : isLoadingMaxBorrowingAmount;
 
     function getLoadingHelperText() {
-        return isLendPositionType(positionType) ?
+        return isWithdrawAction ?
             'Loading balance...'
             : 'Loading borrow limit...'
     }
 
     function getMaxDecimalsToDisplay(): number {
-        return isLendPositionType(positionType) ?
+        return isWithdrawAction ?
             (assetDetails?.asset?.token?.symbol.toLowerCase().includes('btc') || assetDetails?.asset?.token?.symbol.toLowerCase().includes('eth')) ? 4 : 2
             : (selectedBorrowTokenDetails?.token?.symbol.toLowerCase().includes('btc') || selectedBorrowTokenDetails?.token?.symbol.toLowerCase().includes('eth')) ? 4 : 2
     }
@@ -604,307 +607,54 @@ export default function LendAndBorrowAssets() {
 
     // Render component
     return (
-        <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
-            <LendBorrowToggle
-                type={positionType}
-                handleToggle={(positionType: TPositionType) =>
-                    setPositionType(positionType)
-                }
+        <section className="withdraw-and-repay-section-wrapper flex flex-col gap-[12px]">
+            <ConfirmationDialog
+                disabled={disabledButton}
+                actionType={actionType}
+                assetDetails={assetDetails}
+                balance={balance}
+                maxBorrowAmount={maxBorrowAmount}
+                healthFactorValues={healthFactorValues}
             />
-            <Card className="flex flex-col gap-[12px] p-[16px]">
-                <div className="flex items-center justify-between px-[14px]">
-                    <BodyText
-                        level="body2"
-                        weight="normal"
-                        className="capitalize text-gray-600"
-                    >
-                        {isLendPositionType(positionType)
-                            ? 'lend collateral'
-                            : `borrow ${selectedBorrowTokenDetails?.token?.symbol || ''}`}
-                    </BodyText>
-                    {walletAddress && isLendPositionType(positionType) && (
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="capitalize text-gray-600 flex items-center gap-[4px]"
-                        >
-                            Bal:{' '}
-                            {isLoadingErc20TokensBalanceData ? (
-                                <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
-                            ) : (
-                                abbreviateNumber(
-                                    Number(
-                                        getLowestDisplayValue(
-                                            Number(balance ?? 0),
-                                            getMaxDecimalsToDisplay()
-                                        )
-                                    ),
-                                    getMaxDecimalsToDisplay()
-                                )
-                            )}
-                            <span className="inline-block truncate max-w-[70px]">
-                                {
-                                    isLendPositionType(positionType) ?
-                                        assetDetails?.asset?.token?.symbol
-                                        : selectedBorrowTokenDetails?.token?.symbol
-                                }
-                            </span>
-                        </BodyText>
-                    )}
-                    {walletAddress && !isLendPositionType(positionType) && (
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="capitalize text-gray-600 flex items-center gap-[4px]"
-                        >
-                            limit:{' '}
-                            {isLoadingMaxBorrowingAmount ? (
-                                <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
-                            ) : (
-                                handleSmallestValue(maxBorrowAmount, getMaxDecimalsToDisplay())
-                            )}
-                        </BodyText>
-                    )}
-                </div>
-                <CardContent className="p-0 bg-white rounded-5">
-                    <div className={cn(isLendPositionType(positionType) ? 'border rounded-5 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]' : 'border-t rounded-t-5', "border-gray-200 py-[12px] px-[20px] flex items-center gap-[12px]")}>
-                        {isLoading && (
-                            <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
-                        )}
-                        {/* Lend position type - Selected token image */}
-                        {!isLoading && isLendPositionType(positionType) && (
-                            <ImageWithDefault
-                                src={assetDetails?.asset?.token?.logo || ''}
-                                alt={assetDetails?.asset?.token?.symbol || ''}
-                                className="shrink-0 w-[24px] h-[24px] rounded-full"
-                                width={24}
-                                height={24}
-                            />
-                        )}
-                        {/* Borrow position type - Select token dropdown */}
-                        {(isLoading ||
-                            !selectedBorrowTokenDetails?.token?.address) &&
-                            !isLendPositionType(positionType) && (
-                                <LoaderCircle className="text-primary w-[60px] h-[34px] animate-spin" />
-                            )}
-                        {!isLoading &&
-                            !!selectedBorrowTokenDetails?.token?.address &&
-                            !isLendPositionType(positionType) && (
-                                <SelectTokensDropdown
-                                    key={positionType}
-                                    options={borrowTokensDetails}
-                                    selectedItemDetails={
-                                        selectedBorrowTokenDetails
-                                    }
-                                    setSelectedItemDetails={
-                                        setSelectedBorrowTokenDetails
-                                    }
-                                />
-                            )}
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="capitalize text-gray-500"
-                        >
-                            |
-                        </BodyText>
-                        <div className="flex flex-col flex-1 gap-[4px]">
-                            <CustomNumberInput
-                                key={positionType}
-                                amount={amount}
-                                setAmount={(amount) => setAmount(amount)}
-                            />
-                        </div>
-                        <Button
-                            variant="link"
-                            className="uppercase text-[14px] font-medium w-fit"
-                            onClick={() =>
-                                setAmount(
-                                    isLendPositionType(positionType)
-                                        ? (balance ?? '0')
-                                        : (maxBorrowAmount ?? '0')
-                                )
-                            }
-                            disabled={isDisabledMaxBtn()}
-                        >
-                            max
-                        </Button>
-                    </div>
-                    {/* Net APY - ONLY FOR BORROW TAB */}
-                    {(!isLendPositionType(positionType) && walletAddress) &&
-                        <div className="flex items-center justify-between w-full py-[12px] px-[24px] rounded-b-5 bg-white border-y border-gray-200 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]">
-                            <BodyText
-                                level="body3"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                Net APY
-                            </BodyText>
-                            {isLoadingMaxBorrowingAmount && <Skeleton className="w-[50px] h-[20px]" />}
-                            {!isLoadingMaxBorrowingAmount && <Badge variant="green">
-                                {abbreviateNumber(
-                                    isLendPositionType(positionType)
-                                        ? Number(
-                                            assetDetails?.asset?.apy ?? 0
-                                        )
-                                        : Number(
-                                            selectedBorrowTokenDetails?.variable_borrow_apy ?? 0
-                                        )
-                                )}
-                                %
-                            </Badge>}
-                        </div>}
-                    {walletAddress && (
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="mx-auto w-full text-gray-500 py-[16px] text-center max-w-[250px]"
-                        >
-                            {
-                                isLoadingHelperText && getLoadingHelperText()
-                            }
-                            {(!errorMessage && !isLoadingHelperText) &&
-                                (isLendPositionType(positionType)
-                                    ? 'Enter amount to proceed with supplying collateral for this position'
-                                    : 'Enter the amount you want to borrow from this position')}
-                            {(errorMessage && !isLoadingHelperText) && (
-                                <span className="text-xs text-destructive-foreground">
-                                    {errorMessage}
-                                </span>
-                            )}
-                        </BodyText>
-                    )}
-                </CardContent>
-                <CardFooter className="p-0 justify-center">
-                    {!walletAddress && <ConnectWalletButton />}
-                    {walletAddress && (
-                        <div className="flex flex-col gap-[12px] w-full">
-                            <ConfirmationDialog
-                                disabled={disabledButton}
-                                positionType={positionType}
-                                assetDetails={
-                                    isLendPositionType(positionType)
-                                        ? assetDetailsForLendBorrowTx
-                                        : selectedBorrowTokenDetailsFormatted
-                                }
-                                amount={amount}
-                                balance={balance}
-                                maxBorrowAmount={maxBorrowAmount}
-                                setAmount={setAmount}
-                                healthFactorValues={healthFactorValues}
-                            />
-                        </div>
-                    )}
-                </CardFooter>
-            </Card>
         </section>
-    )
-}
-
-// Child components
-function SelectTokensDropdown({
-    options,
-    selectedItemDetails,
-    setSelectedItemDetails,
-}: {
-    options: TPlatformAsset[]
-    selectedItemDetails: TPlatformAsset | null
-    setSelectedItemDetails: (token: TPlatformAsset) => void
-}) {
-    useEffect(() => {
-        setSelectedItemDetails(options[0])
-    }, [])
-
-    return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button
-                    size="md"
-                    variant="ghost"
-                    className="group flex items-center gap-1 text-gray-800 px-0"
-                >
-                    <ImageWithDefault
-                        src={selectedItemDetails?.token?.logo}
-                        alt={selectedItemDetails?.token?.symbol}
-                        width={24}
-                        height={24}
-                        className="rounded-full max-w-[24px] max-h-[24px]"
-                    />
-                    <ChevronDownIcon className="w-4 h-4 text-gray-600 transition-all duration-300 group-data-[state=open]:rotate-180" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden">
-                <ScrollArea className="h-[200px]">
-                    {options?.map((asset: any) => (
-                        <DropdownMenuItem
-                            key={asset?.token?.address}
-                            onClick={() => setSelectedItemDetails(asset)}
-                            className={cn(
-                                'flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4',
-                                selectedItemDetails?.token?.address ===
-                                asset?.token?.address && 'bg-gray-400'
-                            )}
-                        >
-                            <ImageWithDefault
-                                src={asset?.token?.logo || ''}
-                                alt={asset?.token?.symbol || ''}
-                                width={24}
-                                height={24}
-                                className="rounded-full max-w-[24px] max-h-[24px]"
-                            />
-                            <BodyText
-                                level="body2"
-                                weight="medium"
-                                className="text-gray-800"
-                            >
-                                {asset?.token?.symbol || ''}
-                            </BodyText>
-                        </DropdownMenuItem>
-                    ))}
-                </ScrollArea>
-            </DropdownMenuContent>
-        </DropdownMenu>
     )
 }
 
 function ConfirmationDialog({
     disabled,
-    positionType,
+    actionType,
     assetDetails,
-    amount,
-    setAmount,
     balance,
     maxBorrowAmount,
     healthFactorValues,
 }: {
     disabled: boolean
-    positionType: TPositionType
+    actionType: TActionType
     assetDetails: any
-    amount: string
     balance: string
     maxBorrowAmount: string
-    setAmount: (amount: string) => void
     healthFactorValues: {
         healthFactor: any,
         newHealthFactor: any
     }
 }) {
 
-    const { lendTx, setLendTx, borrowTx, setBorrowTx } =
+    const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
         useTxContext() as TTxContext
     const [open, setOpen] = useState(false)
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
-    const { switchChainAsync } = useSwitchChain()
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
     const { width: screenWidth } = useDimensions()
+    const [amount, setAmount] = useState('')
     const isDesktop = screenWidth > 768
-    const isTxFailed = isLendPositionType(positionType) ? lendTx.errorMessage.length > 0 : borrowTx.errorMessage.length > 0
+    const isWithdrawAction = actionType === 'withdraw'
+    const isTxFailed = isWithdrawAction ? withdrawTx.errorMessage.length > 0 : repayTx.errorMessage.length > 0
 
     useEffect(() => {
         // Reset the tx status when the dialog is closed
         return () => {
-            resetLendBorrowTx()
+            resetLendwithdrawTx()
         }
     }, [])
 
@@ -917,8 +667,8 @@ function ConfirmationDialog({
         }
     }, [open])
 
-    function resetLendBorrowTx() {
-        setLendTx((prev: TLendTx) => ({
+    function resetLendwithdrawTx() {
+        setRepayTx((prev: TRepayTx) => ({
             ...prev,
             status: 'approve',
             hash: '',
@@ -929,9 +679,9 @@ function ConfirmationDialog({
             isConfirming: false,
             isConfirmed: false,
         }))
-        setBorrowTx((prev: TLendTx) => ({
+        setWithdrawTx((prev: TWithdrawTx) => ({
             ...prev,
-            status: 'borrow',
+            status: 'withdraw',
             hash: '',
             isPending: false,
             isConfirming: false,
@@ -946,12 +696,12 @@ function ConfirmationDialog({
         // When closing the dialog, reset the amount and the tx status
         if (!open) {
             setAmount('')
-            resetLendBorrowTx()
+            resetLendwithdrawTx()
         }
     }
 
     function isShowBlock(status: { lend: boolean; borrow: boolean }) {
-        return isLendPositionType(positionType) ? status.lend : status.borrow
+        return isWithdrawAction ? status.lend : status.borrow
     }
 
     const inputUsdAmount =
@@ -967,24 +717,24 @@ function ConfirmationDialog({
         return `~${hasLowestDisplayValuePrefix(Number(amountFormatted))}$${amountFormattedForLowestValue}`
     }
 
-    const isLendTxInProgress = lendTx.isPending || lendTx.isConfirming
-    const isBorrowTxInProgress = borrowTx.isPending || borrowTx.isConfirming
+    const isRepayTxInProgress = repayTx.isPending || repayTx.isConfirming
+    const isWithdrawTxInProgress = withdrawTx.isPending || withdrawTx.isConfirming
 
-    const isTxInProgress = isLendTxInProgress || isBorrowTxInProgress
+    const isTxInProgress = isRepayTxInProgress || isWithdrawTxInProgress
 
-    const lendTxSpinnerColor = lendTx.isPending
+    const repayTxSpinnerColor = repayTx.isPending
         ? 'text-secondary-500'
         : 'text-primary'
-    const borrowTxSpinnerColor = borrowTx.isPending
+    const withdrawTxSpinnerColor = withdrawTx.isPending
         ? 'text-secondary-500'
         : 'text-primary'
-    const txSpinnerColor = isLendPositionType(positionType)
-        ? lendTxSpinnerColor
-        : borrowTxSpinnerColor
+    const txSpinnerColor = isWithdrawAction
+        ? repayTxSpinnerColor
+        : withdrawTxSpinnerColor
 
-    const canDisplayExplorerLinkWhileLoading = isLendPositionType(positionType)
-        ? (lendTx.hash.length > 0) && (lendTx.isConfirming || lendTx.isPending)
-        : (borrowTx.hash.length > 0) && (borrowTx.isConfirming || borrowTx.isPending)
+    const canDisplayExplorerLinkWhileLoading = isWithdrawAction
+        ? (repayTx.hash.length > 0) && (repayTx.isConfirming || repayTx.isPending)
+        : (withdrawTx.hash.length > 0) && (withdrawTx.isConfirming || withdrawTx.isPending)
 
     function getNewHfColor() {
         const newHF = Number(healthFactorValues.newHealthFactor.toString())
@@ -1003,26 +753,20 @@ function ConfirmationDialog({
         return (Number(healthFactorValues.newHealthFactor.toString())) < Number(1.5)
     }
 
-    const disableActionButton = disabled || (!hasAcknowledgedRisk && !isLendPositionType(positionType) && isHfLow())
+    const disableActionButton = disabled || (!hasAcknowledgedRisk && !isWithdrawAction && isHfLow())
 
     // SUB_COMPONENT: Trigger button to open the dialog
     const triggerButton = (
         <Button
             onClick={() => handleOpenChange(true)}
-            disabled={disabled}
-            variant="primary"
-            className="group flex items-center gap-[4px] py-[13px] w-full rounded-5"
+            variant={'secondaryOutline'}
+            className='uppercase max-w-[100px] w-full py-3 px-4'
         >
             <span className="uppercase leading-[0]">
-                {isLendPositionType(positionType)
-                    ? 'Lend collateral'
-                    : 'Review & Borrow'}
+                {isWithdrawAction
+                    ? 'Withdraw'
+                    : 'Repay'}
             </span>
-            <ArrowRightIcon
-                width={16}
-                height={16}
-                className="stroke-white group-[:disabled]:opacity-50"
-            />
         </Button>
     )
 
@@ -1053,10 +797,10 @@ function ConfirmationDialog({
                 {getTxInProgressText({
                     amount,
                     tokenName: assetDetails?.asset?.token?.symbol,
-                    txStatus: isLendPositionType(positionType)
-                        ? lendTx
-                        : borrowTx,
-                    positionType,
+                    txStatus: isWithdrawAction
+                        ? repayTx
+                        : withdrawTx,
+                    actionType,
                 })}
             </BodyText>
             {canDisplayExplorerLinkWhileLoading &&
@@ -1076,9 +820,9 @@ function ConfirmationDialog({
                         >
                             <a
                                 href={getExplorerLink(
-                                    isLendPositionType(positionType)
-                                        ? lendTx.hash
-                                        : borrowTx.hash,
+                                    isWithdrawAction
+                                        ? repayTx.hash
+                                        : withdrawTx.hash,
                                     assetDetails?.platform_name
                                 )}
                                 target="_blank"
@@ -1086,9 +830,9 @@ function ConfirmationDialog({
                                 className="text-secondary-500"
                             >
                                 {getTruncatedTxHash(
-                                    isLendPositionType(positionType)
-                                        ? lendTx.hash
-                                        : borrowTx.hash
+                                    isWithdrawAction
+                                        ? repayTx.hash
+                                        : withdrawTx.hash
                                 )}
                             </a>
                             <ArrowUpRightIcon
@@ -1107,9 +851,9 @@ function ConfirmationDialog({
     const contentHeader = (
         <>
             {isShowBlock({
-                lend: lendTx.status === 'approve' && !isLendTxInProgress,
+                lend: repayTx.status === 'approve' && !isRepayTxInProgress,
                 borrow:
-                    borrowTx.status === 'borrow' && !isBorrowTxInProgress,
+                    withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress,
             }) && (
                     // <DialogTitle asChild>
                     <HeadingText
@@ -1117,20 +861,20 @@ function ConfirmationDialog({
                         weight="medium"
                         className="text-gray-800 text-center capitalize"
                     >
-                        {isLendPositionType(positionType)
-                            ? 'Lend collateral'
-                            : `Borrow ${assetDetails?.asset?.token?.symbol}`}
+                        {isWithdrawAction
+                            ? 'Withdraw Token'
+                            : `Repay Borrowing`}
                     </HeadingText>
                     // </DialogTitle>
                 )}
             {/* Confirmation details UI */}
             {isShowBlock({
                 lend:
-                    (lendTx.status === 'lend' && !isLendTxInProgress) ||
-                    (lendTx.status === 'view' && !isLendTxInProgress),
+                    (repayTx.status === 'repay' && !isRepayTxInProgress) ||
+                    (repayTx.status === 'view' && !isRepayTxInProgress),
                 borrow:
-                    // (borrowTx.status === 'borrow' && !isBorrowTxInProgress) ||
-                    (borrowTx.status === 'view' && !isBorrowTxInProgress),
+                    // (withdrawTx.status === 'borrow' && !isWithdrawTxInProgress) ||
+                    (withdrawTx.status === 'view' && !isWithdrawTxInProgress),
             }) && (
                     <div className="flex flex-col items-center justify-center gap-[6px]">
                         <ImageWithDefault
@@ -1148,17 +892,17 @@ function ConfirmationDialog({
                             {amount} {assetDetails?.asset?.token?.symbol}
                         </HeadingText>
                         {isShowBlock({
-                            lend: lendTx.status === 'view',
-                            borrow: borrowTx.status === 'view',
+                            lend: repayTx.status === 'view',
+                            borrow: withdrawTx.status === 'view',
                         }) && (
                                 <Badge
                                     variant={isTxFailed ? "destructive" : "green"}
                                     className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
                                 >
-                                    {isLendPositionType(positionType) &&
-                                        lendTx.status === 'view'
-                                        ? 'Lend'
-                                        : 'Borrow'}{' '}
+                                    {isWithdrawAction &&
+                                        repayTx.status === 'view'
+                                        ? 'Withdraw'
+                                        : 'Repay'}{' '}
                                     {isTxFailed ? "Failed" : "Successful"}
                                     {!isTxFailed &&
                                         <CircleCheckIcon
@@ -1176,8 +920,8 @@ function ConfirmationDialog({
                             )}
                         {isShowBlock({
                             lend:
-                                lendTx.status === 'lend' &&
-                                !isLendTxInProgress,
+                                repayTx.status === 'repay' &&
+                                !isRepayTxInProgress,
                             borrow: false,
                         }) && (
                                 <Badge
@@ -1203,9 +947,9 @@ function ConfirmationDialog({
             <div className="flex flex-col gap-[12px]">
                 {/* Block 1 */}
                 {isShowBlock({
-                    lend: lendTx.status === 'approve' && !isLendTxInProgress,
+                    lend: repayTx.status === 'approve' && !isRepayTxInProgress,
                     borrow:
-                        borrowTx.status === 'borrow' && !isBorrowTxInProgress,
+                        withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress,
                 }) && (
                         <div className="flex items-center gap-[8px] px-[24px] py-[18.5px] bg-gray-200 lg:bg-white rounded-5 w-full">
                             <ImageWithDefault
@@ -1216,15 +960,13 @@ function ConfirmationDialog({
                                 className="rounded-full max-w-[24px] max-h-[24px]"
                             />
                             <div className="flex flex-wrap items-center justify-between gap-1 w-full">
-                                <HeadingText
-                                    level="h3"
-                                    weight="normal"
-                                    className="text-gray-800"
-                                >
-                                    {Number(amount).toFixed(
-                                        decimalPlacesCount(amount)
-                                    )}
-                                </HeadingText>
+                                <div className="flex-1">
+                                    <CustomNumberInput
+                                        key={actionType}
+                                        amount={amount}
+                                        setAmount={(amount) => setAmount(amount)}
+                                    />
+                                </div>
                                 <BodyText
                                     level="body2"
                                     weight="normal"
@@ -1239,20 +981,20 @@ function ConfirmationDialog({
                     )}
                 {/* Block 2 */}
                 {isShowBlock({
-                    lend: lendTx.status === 'approve' && !isLendTxInProgress,
+                    lend: repayTx.status === 'approve' && !isRepayTxInProgress,
                     borrow: false,
                 }) && (
                         <div
-                            className={`flex items-center ${isLendPositionType(positionType) ? 'justify-end' : 'justify-between'} px-[24px] mb-[4px] gap-1`}>
+                            className={`flex items-center ${isWithdrawAction ? 'justify-end' : 'justify-between'} px-[24px] mb-[4px] gap-1`}>
                             <BodyText
                                 level="body2"
                                 weight="normal"
                                 className="text-gray-600"
                             >
-                                Bal:
+                                Withdraw limit:
                             </BodyText>
                             <BodyText level="body2" weight="normal" className="text-gray-600">
-                                {handleSmallestValue((Number(balance) - Number(amount)).toString())}
+                                {handleSmallestValue(maxBorrowAmount.toString())}
                                 {" "}
                                 {assetDetails?.asset?.token?.symbol}
                             </BodyText>
@@ -1261,8 +1003,8 @@ function ConfirmationDialog({
                 {/* Block 3 */}
                 <div className="flex flex-col items-center justify-between px-[24px] bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
                     {isShowBlock({
-                        lend: !isLendTxInProgress,
-                        borrow: !isBorrowTxInProgress,
+                        lend: !isRepayTxInProgress,
+                        borrow: !isWithdrawTxInProgress,
                     }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText
@@ -1274,7 +1016,7 @@ function ConfirmationDialog({
                                 </BodyText>
                                 <Badge variant="green">
                                     {abbreviateNumber(
-                                        isLendPositionType(positionType)
+                                        isWithdrawAction
                                             ? Number(
                                                 ((assetDetails?.asset?.apy || assetDetails?.asset?.supply_apy || assetDetails?.supply_apy || assetDetails?.apy) ?? 0)
                                             )
@@ -1288,7 +1030,7 @@ function ConfirmationDialog({
                         )}
                     {isShowBlock({
                         lend: false,
-                        borrow: (borrowTx.status === 'borrow' && !isBorrowTxInProgress),
+                        borrow: (withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress),
                     }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText
@@ -1306,7 +1048,7 @@ function ConfirmationDialog({
                                     >
                                         {
                                             abbreviateNumber(
-                                                (isLendPositionType(positionType)
+                                                (isWithdrawAction
                                                     ? (Number(balance) -
                                                         Number(amount))
                                                     : (Number(maxBorrowAmount)) -
@@ -1327,7 +1069,7 @@ function ConfirmationDialog({
                     {
                         isShowBlock({
                             lend: false,
-                            borrow: (borrowTx.status === 'borrow' && !isBorrowTxInProgress),
+                            borrow: (withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress),
                         }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText level="body2" weight="normal" className="text-gray-600">
@@ -1351,8 +1093,8 @@ function ConfirmationDialog({
                         )
                     }
                     {isShowBlock({
-                        lend: (lendTx.status === 'lend' || lendTx.status === 'view') && (lendTx.hash.length > 0) && !isLendTxInProgress,
-                        borrow: borrowTx.status === 'view' && (borrowTx.hash.length > 0) && !isBorrowTxInProgress,
+                        lend: (repayTx.status === 'repay' || repayTx.status === 'view') && (repayTx.hash.length > 0) && !isRepayTxInProgress,
+                        borrow: withdrawTx.status === 'view' && (withdrawTx.hash.length > 0) && !isWithdrawTxInProgress,
                     }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText
@@ -1370,9 +1112,9 @@ function ConfirmationDialog({
                                     >
                                         <a
                                             href={getExplorerLink(
-                                                isLendPositionType(positionType)
-                                                    ? lendTx.hash
-                                                    : borrowTx.hash,
+                                                isWithdrawAction
+                                                    ? repayTx.hash
+                                                    : withdrawTx.hash,
                                                 assetDetails?.platform_name
                                             )}
                                             target="_blank"
@@ -1380,9 +1122,9 @@ function ConfirmationDialog({
                                             className="text-secondary-500"
                                         >
                                             {getTruncatedTxHash(
-                                                isLendPositionType(positionType)
-                                                    ? lendTx.hash
-                                                    : borrowTx.hash
+                                                isWithdrawAction
+                                                    ? repayTx.hash
+                                                    : withdrawTx.hash
                                             )}
                                         </a>
                                         <ArrowUpRightIcon
@@ -1409,7 +1151,7 @@ function ConfirmationDialog({
                 {
                     isShowBlock({
                         lend: false,
-                        borrow: (borrowTx.status === 'borrow' && !isBorrowTxInProgress && isHfLow()),
+                        borrow: (withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress && isHfLow()),
                     }) && (
                         <div className="flex flex-col items-center justify-center">
                             <CustomAlert
@@ -1431,7 +1173,7 @@ function ConfirmationDialog({
                         handleCloseModal={handleOpenChange}
                         asset={assetDetails}
                         amount={amount}
-                        actionType={positionType}
+                        actionType={actionType}
                     />
                 </div>
             </div>
@@ -1504,12 +1246,12 @@ function getTxInProgressText({
     amount,
     tokenName,
     txStatus,
-    positionType,
+    actionType,
 }: {
     amount: string
     tokenName: string
-    txStatus: TLendTx | TBorrowTx
-    positionType: TPositionType
+    txStatus: TRepayTx | TWithdrawTx
+    actionType: TActionType
 }) {
     const formattedText = `${amount} ${tokenName}`
     const isPending = txStatus.isPending
@@ -1527,7 +1269,7 @@ function getTxInProgressText({
             approve: `Confirming transaction for spending ${formattedText} from your wallet`,
             lend: `Confirming transaction for lending ${formattedText} from your wallet`,
             borrow: `Confirming transaction for borrowing ${formattedText} from your wallet`,
-            view: `Confirming transaction for ${isLendPositionType(positionType) ? 'lending' : 'borrowing'} ${formattedText} from your wallet`,
+            view: `Confirming transaction for ${actionType === 'withdraw' ? 'withdrawing' : 'repaying'} ${formattedText} from your wallet`,
         }
     }
     return textByStatus[txStatus.status]
