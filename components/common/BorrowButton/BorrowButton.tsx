@@ -152,6 +152,14 @@ const BorrowButton = ({
                         addressOfWallet,
                     ],
                 })
+                    .catch((error) => {
+                        setBorrowTx((prev: TBorrowTx) => ({
+                            ...prev,
+                            isPending: false,
+                            isConfirming: false,
+                            errorMessage: error.message || 'Something went wrong',
+                        }))
+                    })
             } catch (error) {
                 error
             }
@@ -182,6 +190,9 @@ const BorrowButton = ({
                         (error as BaseError).shortMessage || error.message
                     }
                 />
+            )}
+            {borrowTx.errorMessage.length > 0 && (
+                <CustomAlert description={borrowTx.errorMessage} />
             )}
             <Button
                 variant="primary"

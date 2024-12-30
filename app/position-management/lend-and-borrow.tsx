@@ -20,6 +20,7 @@ import {
     ArrowUpRightIcon,
     CircleCheck,
     CircleCheckIcon,
+    CircleXIcon,
     LoaderCircle,
     X,
 } from 'lucide-react'
@@ -898,6 +899,7 @@ function ConfirmationDialog({
     const chain_id = searchParams.get('chain_id') || 1
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
+    const isTxFailed = isLendPositionType(positionType) ? lendTx.errorMessage.length > 0 : borrowTx.errorMessage.length > 0
 
     useEffect(() => {
         // Reset the tx status when the dialog is closed
@@ -1150,19 +1152,26 @@ function ConfirmationDialog({
                             borrow: borrowTx.status === 'view',
                         }) && (
                                 <Badge
-                                    variant="green"
+                                    variant={isTxFailed ? "destructive" : "green"}
                                     className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
                                 >
                                     {isLendPositionType(positionType) &&
                                         lendTx.status === 'view'
                                         ? 'Lend'
                                         : 'Borrow'}{' '}
-                                    Successful
-                                    <CircleCheckIcon
-                                        width={16}
-                                        height={16}
-                                        className="stroke-[#00AD31]"
-                                    />
+                                    {isTxFailed ? "Failed" : "Successful"}
+                                    {!isTxFailed &&
+                                        <CircleCheckIcon
+                                            width={16}
+                                            height={16}
+                                            className="stroke-[#00AD31]"
+                                        />}
+                                    {isTxFailed &&
+                                        <CircleXIcon
+                                            width={16}
+                                            height={16}
+                                            className="stroke-danger-500"
+                                        />}
                                 </Badge>
                             )}
                         {isShowBlock({
