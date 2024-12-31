@@ -142,6 +142,7 @@ export type TPlatformAsset = {
         price_usd: number
         warnings: any[]
     }
+    ltv: number
     supply_apy: number
     variable_borrow_apy: number
     stable_borrow_apy: number

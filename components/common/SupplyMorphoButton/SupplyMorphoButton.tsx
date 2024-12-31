@@ -25,8 +25,12 @@ import { BigNumber } from 'ethers'
 import { getErrorText } from '@/lib/getErrorText'
 import { BodyText } from '@/components/ui/typography'
 import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
-import { Market } from '@morpho-org/blue-sdk'
+import { Market, Vault } from '@morpho-org/blue-sdk'
 import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
+import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
+import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
+
+import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
 
 interface ISupplyMorphoButtonProps {
     disabled: boolean
@@ -43,7 +47,7 @@ const SupplyMorphoButton = ({
 }: ISupplyMorphoButtonProps) => {
     const assetDetails = asset.asset
     const platform = asset.platform
-    const morphoMarketData: Market = asset.morphoMarketData
+    const morphoMarketData = asset.morphoMarketData
     const {
         writeContractAsync,
         isPending,
@@ -84,12 +88,12 @@ const SupplyMorphoButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? lendTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? lendTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
@@ -104,76 +108,49 @@ const SupplyMorphoButton = ({
                 errorMessage: '',
             }))
 
-            //  check if asset is collateral or borrow
-            // If collateral, supplyCollateral if borrowSupply supply
-            const isCollateral = !assetDetails.borrow_enabled
+            if (!walletAddress) {
+                throw new Error("Wallet address is required")
+            }
 
-            if (isCollateral) {
-                // call morpho market supplyCollateral
-                writeContractAsync({
-                    address: platform.core_contract,
-                    abi: MORPHO_MARKET_ABI,
-                    functionName: 'supplyCollateral',
+            const isVault = asset.isVault
 
-                    // marketParams
-                    // assets
-                    // onBehalf
-                    // data
-                    args: [
-                        {
-                            loanToken: morphoMarketData.params.loanToken,
-                            collateralToken:
-                                morphoMarketData.params.collateralToken,
-                            oracle: morphoMarketData.params.oracle,
-                            irm: morphoMarketData.params.irm,
-                            lltv: morphoMarketData.params.lltv,
-                        },
-                        parseUnits(amount, assetDetails.token.decimals),
-                        walletAddress,
-                        '0x',
-                    ],
-                })
-                    .then((data) => {
-                        setLendTx((prev: TLendTx) => ({
-                            ...prev,
-                            status: 'view',
-                            errorMessage: '',
-                        }))
-                    })
-                    .catch((error) => {
-                        setLendTx((prev: TLendTx) => ({
-                            ...prev,
-                            isPending: false,
-                            isConfirming: false,
-                        }))
-                    })
-            } else {
-                // call morpho market supply
+            if (isVault) {
+                const vault = morphoMarketData as Vault
+                const newAmount = parseUnits(amount, assetDetails.token.decimals)
+                const shares = vault.toShares(newAmount.toBigInt())
+
+                // minAmount of share will be 0.99% of the shares
+                const minAmount = BigNumber.from(shares).mul(99).div(100).toBigInt()
+
+                console.log("newAmount", newAmount.toBigInt())
+                console.log("shares", shares)
+                console.log("minAmount", minAmount)
+
+                const calls = [
+                    BundlerAction.erc20TransferFrom(
+                        vault.asset,
+                        newAmount.toBigInt(),
+                    ),
+                    BundlerAction.erc4626Deposit(
+                        vault.address,
+                        newAmount.toBigInt(),
+                        minAmount,
+                        walletAddress
+                    )
+                ];
+
                 writeContractAsync({
-                    address: platform.core_contract,
-                    abi: MORPHO_MARKET_ABI,
-                    functionName: 'supply',
-                    args: [
-                        {
-                            loanToken: morphoMarketData.params.loanToken,
-                            collateralToken:
-                                morphoMarketData.params.collateralToken,
-                            oracle: morphoMarketData.params.oracle,
-                            irm: morphoMarketData.params.irm,
-                            lltv: morphoMarketData.params.lltv,
-                        },
-                        parseUnits(amount, assetDetails.token.decimals),
-                        0,
-                        walletAddress,
-                        '0x',
-                    ],
+                    address: BUNDLER_ADDRESS_MORPHO[asset.chainId] as `0x${string}`,
+                    abi: MORPHO_BUNDLER_ABI,
+                    functionName: 'multicall',
+                    args: [calls]
                 }).then((data) => {
-                        setLendTx((prev: TLendTx) => ({
-                            ...prev,
-                            status: 'view',
-                            errorMessage: '',
-                        }))
-                    })
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        status: 'view',
+                        errorMessage: '',
+                    }))
+                })
                     .catch((error) => {
                         setLendTx((prev: TLendTx) => ({
                             ...prev,
@@ -181,6 +158,88 @@ const SupplyMorphoButton = ({
                             isConfirming: false,
                         }))
                     })
+
+            }
+            else {
+
+                //  check if asset is collateral or borrow
+                // If collateral, supplyCollateral if borrowSupply supply
+                const isCollateral = !assetDetails.borrow_enabled
+
+                if (isCollateral) {
+                    // call morpho market supplyCollateral
+                    writeContractAsync({
+                        address: platform.core_contract,
+                        abi: MORPHO_MARKET_ABI,
+                        functionName: 'supplyCollateral',
+
+                        // marketParams
+                        // assets
+                        // onBehalf
+                        // data
+                        args: [
+                            {
+                                loanToken: morphoMarketData.params.loanToken,
+                                collateralToken:
+                                    morphoMarketData.params.collateralToken,
+                                oracle: morphoMarketData.params.oracle,
+                                irm: morphoMarketData.params.irm,
+                                lltv: morphoMarketData.params.lltv,
+                            },
+                            parseUnits(amount, assetDetails.token.decimals),
+                            walletAddress,
+                            '0x',
+                        ],
+                    })
+                        .then((data) => {
+                            setLendTx((prev: TLendTx) => ({
+                                ...prev,
+                                status: 'view',
+                                errorMessage: '',
+                            }))
+                        })
+                        .catch((error) => {
+                            setLendTx((prev: TLendTx) => ({
+                                ...prev,
+                                isPending: false,
+                                isConfirming: false,
+                            }))
+                        })
+                } else {
+                    // call morpho market supply
+                    writeContractAsync({
+                        address: platform.core_contract,
+                        abi: MORPHO_MARKET_ABI,
+                        functionName: 'supply',
+                        args: [
+                            {
+                                loanToken: morphoMarketData.params.loanToken,
+                                collateralToken:
+                                    morphoMarketData.params.collateralToken,
+                                oracle: morphoMarketData.params.oracle,
+                                irm: morphoMarketData.params.irm,
+                                lltv: morphoMarketData.params.lltv,
+                            },
+                            parseUnits(amount, assetDetails.token.decimals),
+                            0,
+                            walletAddress,
+                            '0x',
+                        ],
+                    }).then((data) => {
+                        setLendTx((prev: TLendTx) => ({
+                            ...prev,
+                            status: 'view',
+                            errorMessage: '',
+                        }))
+                    })
+                        .catch((error) => {
+                            setLendTx((prev: TLendTx) => ({
+                                ...prev,
+                                isPending: false,
+                                isConfirming: false,
+                            }))
+                        })
+                }
             }
 
             // TODO: Implement Morpho supply logic here
@@ -271,7 +330,7 @@ const SupplyMorphoButton = ({
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
                 args: [
-                    platform.core_contract,
+                    asset.isVault ? BUNDLER_ADDRESS_MORPHO[asset.chainId] : platform.core_contract,
                     parseUnits(amount, asset.asset.token.decimals),
                 ],
             })

@@ -41,8 +41,6 @@ import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
 import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
 
 import type { Market } from "@morpho-org/blue-sdk";
-import { BLUE_API } from '@/lib/constants'
-import { MetaMorphoAPIData } from '@/types/morpho/morpho'
 
 
 

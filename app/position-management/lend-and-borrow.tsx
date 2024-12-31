@@ -876,6 +876,7 @@ export function ConfirmationDialog({
     balance,
     maxBorrowAmount,
     healthFactorValues,
+    isVault
 }: {
     disabled: boolean
     positionType: TPositionType
@@ -888,6 +889,7 @@ export function ConfirmationDialog({
         healthFactor: any,
         newHealthFactor: any
     }
+    isVault?: boolean
 }) {
 
     const { lendTx, setLendTx, borrowTx, setBorrowTx } =
@@ -1015,7 +1017,7 @@ export function ConfirmationDialog({
         >
             <span className="uppercase leading-[0]">
                 {isLendPositionType(positionType)
-                    ? 'Lend collateral'
+                    ? isVault ? 'Supply to vault' : 'Lend collateral'
                     : 'Review & Borrow'}
             </span>
             <ArrowRightIcon
