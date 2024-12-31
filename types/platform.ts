@@ -118,6 +118,7 @@ export enum PlatformWebsiteLink {
     COMPOUND = 'https://app.compound.finance/markets/v2',
     FLUID = 'https://fluid.instadapp.io',
     MORPHO = 'https://app.morpho.org',
+    SUPERLEND = 'https://markets.superlend.xyz',
 }
 
 export enum ProtocolIdentifier {
@@ -132,6 +133,7 @@ export enum PlatformLogo {
     COMPOUND = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/compound.svg',
     FLUID = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/fluid_logo.png',
     MORPHO = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/morpho-logo.svg',
+    SUPERLEND = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend.svg',
 }
 
 export enum PlatformType {

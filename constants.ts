@@ -1,15 +1,31 @@
+import { customMetisNetwork } from './config'
+import { ChainId } from './types/chain'
 import { Period, PeriodDisplay } from './types/periodButtons'
 import {
     PlatformDisplayValue,
     PlatformValue,
     PlatformWebsiteLink,
 } from './types/platform'
+import {
+    mainnet,
+    arbitrum,
+    polygon,
+    bsc,
+    gnosis,
+    base,
+    optimism,
+    avalanche,
+    scroll,
+    AppKitNetwork,
+    etherlink,
+} from '@reown/appkit/networks'
 
 export type TPlatformWebsiteLinks = {
     aave: PlatformWebsiteLink.AAVE
     compound: PlatformWebsiteLink.COMPOUND
     fluid: PlatformWebsiteLink.FLUID
     morpho: PlatformWebsiteLink.MORPHO
+    superlend: PlatformWebsiteLink.SUPERLEND
 }
 
 export type TChainNamesBasedOnAaveMarkets = {
@@ -109,6 +125,7 @@ export const platformWebsiteLinks: TPlatformWebsiteLinks = {
     compound: PlatformWebsiteLink.COMPOUND,
     fluid: PlatformWebsiteLink.FLUID,
     morpho: PlatformWebsiteLink.MORPHO,
+    superlend: PlatformWebsiteLink.SUPERLEND,
 }
 
 export const SHEET_FORM_URL =
@@ -252,3 +269,17 @@ export const APPROXIMATE_ESTIMATE_OF_RETURNS_TOOLTIP_CONTENT =
 
 export const MORPHO_ETHERSCAN_TUTORIAL_LINK =
     'https://docs.morpho.org/morpho/tutorials/etherscan-use/'
+
+export const CHAIN_ID_MAPPER: { [key in ChainId]: AppKitNetwork } = {
+    [ChainId.Polygon]: polygon,
+    [ChainId.Arbitrum]: arbitrum,
+    [ChainId.Base]: base,
+    [ChainId.Ethereum]: mainnet,
+    [ChainId.Avalanche]: avalanche,
+    [ChainId.Bsc]: bsc,
+    [ChainId.Gnosis]: gnosis,
+    [ChainId.Optimism]: optimism,
+    [ChainId.Scroll]: scroll,
+    [ChainId.Metis]: customMetisNetwork,
+    [ChainId.Etherlink]: etherlink,
+}

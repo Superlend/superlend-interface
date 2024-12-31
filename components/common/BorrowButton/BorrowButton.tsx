@@ -72,8 +72,6 @@ const BorrowButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    // const activeAccount = useActiveAccount()
-    // const walletAddress = activeAccount?.address
     const { address: walletAddress } = useAccount()
     const { borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
@@ -158,6 +156,14 @@ const BorrowButton = ({
                         addressOfWallet,
                     ],
                 })
+                    .catch((error) => {
+                        setBorrowTx((prev: TBorrowTx) => ({
+                            ...prev,
+                            isPending: false,
+                            isConfirming: false,
+                            errorMessage: error.message || 'Something went wrong',
+                        }))
+                    })
             } catch (error) {
                 error
             }
@@ -226,6 +232,9 @@ const BorrowButton = ({
                     }
                 />
             )}
+            {/* {borrowTx.errorMessage.length > 0 && (
+                <CustomAlert description={borrowTx.errorMessage} />
+            )} */}
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"

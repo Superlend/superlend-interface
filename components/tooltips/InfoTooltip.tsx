@@ -97,45 +97,6 @@ export default function InfoTooltip({
         )
     }
 
-    if (isDesktop) {
-        return (
-            <TooltipProvider delayDuration={200}>
-                <Tooltip open={open}>
-                    <TooltipTrigger asChild>
-                        <motion.span
-                            // Tool tip triggers
-                            onClick={handleTooltipToggle(true)}
-                            onHoverStart={handleTooltipToggle(true)}
-                            onHoverEnd={handleTooltipToggle(false)}
-                            onMouseEnter={handleTooltipToggle(true)}
-                            onMouseLeave={handleTooltipToggle(false)}
-                            className="w-fit inline-block shrink-0 cursor-help"
-                        >
-                            {!label && (
-                                <InfoCircleIcon
-                                    width={iconWidth}
-                                    height={iconHeight}
-                                    weight="1.5"
-                                />
-                            )}
-                            {label && label}
-                        </motion.span>
-                    </TooltipTrigger>
-                    <TooltipContent
-                        side={side}
-                        sideOffset={5}
-                        className={`${className?.includes('max-w') ? '' : 'max-w-[280px]'} ${sizes[size]}`}
-                    >
-                        {typeof content === 'string' && (
-                            <Label className="w-fit">{content}</Label>
-                        )}
-                        {typeof content !== 'string' && content}
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        )
-    }
-
     return (
         <Drawer open={open}>
             <DrawerTrigger asChild>

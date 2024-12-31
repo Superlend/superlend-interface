@@ -342,8 +342,10 @@ export function getPlatformWebsiteLink({
     platformId,
     vaultId,
     isFluidVault,
+    isMorphoVault,
     morpho_market_id,
     network_name,
+    core_contract,
 }: {
     platformId: string
     tokenAddress?: string
@@ -351,8 +353,10 @@ export function getPlatformWebsiteLink({
     chainId?: string
     vaultId?: string
     isFluidVault?: boolean
+    isMorphoVault?: boolean
     morpho_market_id?: string
     network_name?: string
+    core_contract?: string
 }) {
     const platformNameId = platformId?.split('-')[0].toLowerCase()
     const baseUrl =
@@ -373,7 +377,10 @@ export function getPlatformWebsiteLink({
         fluid: isFluidVault
             ? `/stats/${chainId}/vaults#${vaultId}`
             : `/lending/${chainId}`,
-        morpho: `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
+        morpho: isMorphoVault
+            ? `/vault?vault=${core_contract}&network=${formattedNetworkName}`
+            : `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
+        superlend: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=etherlink`,
     }
 
     const path = paths[platformNameId]

@@ -29,8 +29,6 @@ export default function PortfolioProvider({
 }: {
     children: React.ReactNode
 }) {
-    // const activeAccount = useActiveAccount()
-    // const walletAddress = activeAccount?.address
     const { address: walletAddress } = useAccount()
 
     const {

@@ -41,6 +41,7 @@ import { useAccount } from 'wagmi'
 import TooltipText from '@/components/tooltips/TooltipText'
 import { platformWebsiteLinks } from '@/constants'
 import { PortfolioContext } from '@/context/portfolio-provider'
+import { PlatformType } from '@/types/platform'
 
 const scrollToPosInit = {
     next: false,
@@ -90,6 +91,11 @@ export default function YourPositionsAtRiskCarousel() {
             const lendAmount = getSanitizedValue(platform?.total_liquidity)
             const borrowAmount = getSanitizedValue(platform?.total_borrow)
 
+            const isMorpho = platform?.platform_name?.split('-')[0]?.toLowerCase() === PlatformType.MORPHO;
+            const isVault = platform?.isVault
+            const morphoLabel = (isMorpho && isVault) ? 'Morpho Vaults' : 'Morpho Markets'
+            const formattedPlatformName = isMorpho ? morphoLabel : platform?.platform_name
+
             return {
                 lendAsset: {
                     tokenImages: lendPositions.map(
@@ -119,9 +125,7 @@ export default function YourPositionsAtRiskCarousel() {
                     amount: borrowAmount,
                 },
                 positionOn: {
-                    platformName: capitalizeText(
-                        platform?.platform_name.split('-')[0]
-                    ),
+                    platformName: capitalizeText(formattedPlatformName),
                     platformImage: platform?.logo || '',
                     chainName: chainDetails?.name || '',
                     chainId: chainDetails?.chain_id || '',
@@ -310,7 +314,7 @@ export default function YourPositionsAtRiskCarousel() {
                                                 </div>
                                             </div>
                                             <div className="flex items-center justify-between pt-[17px]">
-                                                <div className="position-on-block flex items-center gap-[8px]">
+                                                <div className="position-on-block flex flex-1 items-center gap-[8px]">
                                                     <ImageWithBadge
                                                         mainImg={
                                                             position.positionOn
@@ -329,14 +333,14 @@ export default function YourPositionsAtRiskCarousel() {
                                                                 .chainName
                                                         }
                                                     />
-                                                    <div className="flex flex-col">
+                                                    <div className="flex flex-col flex-1">
                                                         <Label className="capitalize text-gray-600">
                                                             Position on
                                                         </Label>
                                                         <BodyText
                                                             level={'body2'}
                                                             weight="medium"
-                                                            className="capitalize text-wrap break-words max-w-[10ch]"
+                                                            className="capitalize text-wrap break-words max-w-[30ch]"
                                                         >
                                                             {
                                                                 position

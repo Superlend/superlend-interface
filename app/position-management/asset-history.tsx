@@ -21,6 +21,8 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { Skeleton } from '@/components/ui/skeleton'
 import { motion } from 'framer-motion'
 import ImageWithDefault from '@/components/ImageWithDefault'
+import { PlatformType } from '@/types/platform'
+import { usePositionManagementContext } from '@/context/position-management-provider'
 
 export default function AssetHistory() {
     const searchParams = useSearchParams()
@@ -34,6 +36,10 @@ export default function AssetHistory() {
             ? HISTORY_CHART_SELECT_OPTIONS[3]
             : HISTORY_CHART_SELECT_OPTIONS[0]
     )
+    const { platformData } = usePositionManagementContext()
+
+    const isMorpho = platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() === PlatformType.MORPHO
+    const isVault = platformData?.platform?.isVault
 
     // [API_CALL: GET] - Get Platform history data
     const {
@@ -152,7 +158,7 @@ export default function AssetHistory() {
             key: 'borrow',
             label: `Avg Borrow`,
             value: getFormattedAverageValue(borrowRateAverage),
-            show: true,
+            show: !(isMorpho && isVault),
         },
         {
             key: 'variableBorrowRateReward',
@@ -167,7 +173,7 @@ export default function AssetHistory() {
             key: 'utilization',
             label: `Avg Utilization`,
             value: getFormattedAverageValue(utilizationRateAverage),
-            show: true,
+            show: !(isMorpho && isVault),
         },
     ]
 
