@@ -122,10 +122,6 @@ const SupplyMorphoButton = ({
                 // minAmount of share will be 0.99% of the shares
                 const minAmount = BigNumber.from(shares).mul(99).div(100).toBigInt()
 
-                console.log("newAmount", newAmount.toBigInt())
-                console.log("shares", shares)
-                console.log("minAmount", minAmount)
-
                 const calls = [
                     BundlerAction.erc20TransferFrom(
                         vault.asset,
