@@ -28,7 +28,7 @@ import {
     TLendTx,
     TTxContext,
     useTxContext,
-} from '@/context/lend-borrow-tx-provider'
+} from '@/context/tx-provider'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { ArrowRightIcon } from 'lucide-react'
 import { BigNumber } from 'ethers'

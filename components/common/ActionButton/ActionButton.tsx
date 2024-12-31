@@ -10,6 +10,7 @@ import SupplyETHCompoundButton from '../SupplyETHCompoundButton'
 import SupplyERC20CompoundButton from '../SupplyERC20CompoundButton'
 import { countCompoundDecimals } from '@/lib/utils'
 import { BigNumber } from 'ethers'
+import WithdrawButton from '../WithdrawButton'
 
 interface IActionButtonSelectComponent {
     disabled?: boolean
@@ -29,6 +30,16 @@ const ActionButton = ({
     if (actionType === 'borrow') {
         return (
             <BorrowButton
+                disabled={disabled}
+                handleCloseModal={handleCloseModal}
+                asset={asset}
+                amount={amount}
+            />
+        )
+    }
+    if (actionType === 'withdraw') {
+        return (
+            <WithdrawButton
                 disabled={disabled}
                 handleCloseModal={handleCloseModal}
                 asset={asset}

@@ -72,7 +72,7 @@ import {
     TTxContext,
     useTxContext,
     TWithdrawTx,
-} from '@/context/lend-borrow-tx-provider'
+} from '@/context/tx-provider'
 import { PlatformValue } from '@/types/platform'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import { useAaveV3Data } from '../../hooks/protocols/useAaveV3Data'
@@ -96,12 +96,25 @@ import {
 } from "@/components/ui/drawer"
 import { modal } from '@/context'
 import { ChainId } from '@/types/chain'
+import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
 
+interface ITokenDetails {
+    address: string
+    logo: string
+    symbol: string
+    amount: string | number
+    liquidation_threshold?: number // optional for repay
+    tokenAmount: string | number
+    apy: number
+    price_usd: number
+}
 
 export default function WithdrawAndRepayActionButton({
-    actionType
+    actionType,
+    tokenDetails
 }: {
     actionType: 'withdraw' | 'repay'
+    tokenDetails: ITokenDetails[]
 }) {
     const {
         erc20TokensBalanceData,
@@ -146,6 +159,9 @@ export default function WithdrawAndRepayActionButton({
     const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
         useTxContext() as TTxContext
     const isWithdrawAction = actionType === 'withdraw'
+    const [isSelectTokenDialogOpen, setIsSelectTokenDialogOpen] = useState(false)
+    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false)
+    const [selectedTokenDetails, setSelectedTokenDetails] = useState<ITokenDetails | null>(null)
 
     const {
         data: portfolioData,
@@ -295,7 +311,7 @@ export default function WithdrawAndRepayActionButton({
                     isRefreshingAllowance: false,
                 }))
                 // Check if the allowance is greater than or equal to the amount
-                const positionTypeBasedAssetDetails = isWithdrawAction ? (assetDetails?.asset?.token?.decimals ?? 0) : (selectedBorrowTokenDetails?.token?.decimals ?? 0)
+                const positionTypeBasedAssetDetails = isWithdrawAction ? (assetDetailsForTx?.asset?.token?.decimals ?? 0) : (selectedBorrowTokenDetails?.token?.decimals ?? 0)
                 const amountBN = parseUnits(Boolean(amount) ? amount : '0', positionTypeBasedAssetDetails);
                 // Update the status of the repayTx based on the allowance and the confirmation state
                 if (repayTx.status === 'approve' && repayTx.isConfirmed) {
@@ -404,8 +420,8 @@ export default function WithdrawAndRepayActionButton({
         }
     }
 
-    const assetDetails: any = getFormattedAssetDetails(tokenAddress)
-    const assetDetailsForLendwithdrawTx = getAssetDetails(tokenAddress)
+    // const assetDetails: any = getFormattedAssetDetails(tokenAddress)
+    const assetDetailsForTx = getAssetDetails(selectedTokenDetails?.address ?? tokenAddress)
     const selectedBorrowTokenDetailsFormatted =
         formatSelectedBorrowTokenDetails(
             selectedBorrowTokenDetails?.token?.address ?? ''
@@ -413,22 +429,22 @@ export default function WithdrawAndRepayActionButton({
 
     // Get balance
     const balance = (
-        erc20TokensBalanceData[Number(chain_id)]?.[tokenAddress.toLowerCase()]
+        erc20TokensBalanceData[Number(chain_id)]?.[selectedTokenDetails?.address.toLowerCase() ?? tokenAddress.toLowerCase()]
             ?.balanceFormatted ?? 0
     ).toString()
 
     // Check if amount has too many decimals
     const toManyDecimals = useMemo(() => {
-        if (assetDetails || selectedBorrowTokenDetails) {
+        if (assetDetailsForTx || selectedBorrowTokenDetails) {
             return checkDecimalPlaces(
                 amount,
                 isWithdrawAction
-                    ? (assetDetails?.asset?.token?.decimals ?? 0)
+                    ? (assetDetailsForTx?.asset?.token?.decimals ?? 0)
                     : (selectedBorrowTokenDetails?.token?.decimals ?? 0)
             )
         }
         return false
-    }, [assetDetails, amount])
+    }, [assetDetailsForTx, amount])
 
     // Get user account data
     const userAccountData = useReadContract({
@@ -591,43 +607,97 @@ export default function WithdrawAndRepayActionButton({
 
     function getMaxDecimalsToDisplay(): number {
         return isWithdrawAction ?
-            (assetDetails?.asset?.token?.symbol.toLowerCase().includes('btc') || assetDetails?.asset?.token?.symbol.toLowerCase().includes('eth')) ? 4 : 2
+            (assetDetailsForTx?.asset?.token?.symbol.toLowerCase().includes('btc') || assetDetailsForTx?.asset?.token?.symbol.toLowerCase().includes('eth')) ? 4 : 2
             : (selectedBorrowTokenDetails?.token?.symbol.toLowerCase().includes('btc') || selectedBorrowTokenDetails?.token?.symbol.toLowerCase().includes('eth')) ? 4 : 2
     }
 
-    // Loading skeleton
-    if (isLoading && isAaveV3Protocol && isPolygonChain) {
-        return <LoadingSectionSkeleton className="h-[300px] w-full" />
+    function handleSelectToken(token: any) {
+        // Set selected token details
+        setSelectedTokenDetails(token)
+        // Close select token dialog
+        setIsSelectTokenDialogOpen(false)
+        // Open confirmation dialog
+        setIsConfirmationDialogOpen(true)
     }
 
+    // Loading skeleton
+    // if (isLoading && isAaveV3Protocol && isPolygonChain) {
+    //     return <LoadingSectionSkeleton className="h-[300px] w-full" />
+    // }
+
     // Check if platform is aaveV3 or compoundV2, else return null
-    if (!(isAaveV3Protocol && isPolygonChain)) {
-        return null
-    }
+    // if (!(isAaveV3Protocol && isPolygonChain)) {
+    //     return null
+    // }
 
     // Render component
     return (
         <section className="withdraw-and-repay-section-wrapper flex flex-col gap-[12px]">
-            <ConfirmationDialog
-                disabled={disabledButton}
-                actionType={actionType}
-                assetDetails={assetDetails}
-                balance={balance}
-                maxBorrowAmount={maxBorrowAmount}
-                healthFactorValues={healthFactorValues}
-            />
+            {/* More than 1 token - Select token dialog */}
+            {tokenDetails.length > 1 && (
+                <>
+                    <Button
+                        onClick={() => setIsSelectTokenDialogOpen(true)}
+                        variant={'secondaryOutline'}
+                        className='uppercase max-w-[100px] w-full py-3 px-4'
+                    >
+                        <span className="uppercase leading-[0]">
+                            {isWithdrawAction
+                                ? 'Withdraw'
+                                : 'Repay'}
+                        </span>
+                    </Button>
+                    <SelectTokenByChain
+                        open={isSelectTokenDialogOpen}
+                        setOpen={setIsSelectTokenDialogOpen}
+                        networks={[]}
+                        tokens={tokenDetails.map((token) => ({
+                            address: token.address,
+                            positionAmount: String(token.tokenAmount),
+                            positionAmountInUsd: String(token.amount),
+                            logo: token.logo,
+                            symbol: token.symbol,
+                            apy: token.apy,
+                            price_usd: token.price_usd,
+                        }))}
+                        onSelectToken={handleSelectToken}
+                    />
+                </>
+            )}
+            {/* Single token - Confirmation dialog */}
+            {(tokenDetails.length === 1 || isConfirmationDialogOpen) && (
+                <ConfirmationDialog
+                    isOpen={isConfirmationDialogOpen}
+                    setIsOpen={setIsConfirmationDialogOpen}
+                    disabled={disabledButton}
+                    actionType={actionType}
+                    assetDetails={assetDetailsForTx}
+                    balance={balance}
+                    maxBorrowAmount={maxBorrowAmount}
+                    healthFactorValues={healthFactorValues}
+                    amount={amount}
+                    setAmount={setAmount}
+                />
+            )
+            }
         </section>
     )
 }
 
 function ConfirmationDialog({
+    isOpen,
+    setIsOpen,
     disabled,
     actionType,
     assetDetails,
     balance,
     maxBorrowAmount,
     healthFactorValues,
+    amount,
+    setAmount
 }: {
+    isOpen: boolean
+    setIsOpen: (open: boolean) => void
     disabled: boolean
     actionType: TActionType
     assetDetails: any
@@ -637,16 +707,17 @@ function ConfirmationDialog({
         healthFactor: any,
         newHealthFactor: any
     }
+    amount: string
+    setAmount: (amount: string) => void
 }) {
 
     const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
         useTxContext() as TTxContext
-    const [open, setOpen] = useState(false)
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
     const { width: screenWidth } = useDimensions()
-    const [amount, setAmount] = useState('')
+    // const [amount, setAmount] = useState('')
     const isDesktop = screenWidth > 768
     const isWithdrawAction = actionType === 'withdraw'
     const isTxFailed = isWithdrawAction ? withdrawTx.errorMessage.length > 0 : repayTx.errorMessage.length > 0
@@ -661,11 +732,11 @@ function ConfirmationDialog({
     useEffect(() => {
         setHasAcknowledgedRisk(false)
 
-        if (open) {
+        if (isOpen) {
             // Switch chain when the dialog is opened
             modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
         }
-    }, [open])
+    }, [isOpen])
 
     function resetLendwithdrawTx() {
         setRepayTx((prev: TRepayTx) => ({
@@ -692,7 +763,7 @@ function ConfirmationDialog({
 
     function handleOpenChange(open: boolean) {
         // When opening the dialog, reset the amount and the tx status
-        setOpen(open)
+        setIsOpen(open)
         // When closing the dialog, reset the amount and the tx status
         if (!open) {
             setAmount('')
@@ -700,8 +771,8 @@ function ConfirmationDialog({
         }
     }
 
-    function isShowBlock(status: { lend: boolean; borrow: boolean }) {
-        return isWithdrawAction ? status.lend : status.borrow
+    function isShowBlock(status: { repay: boolean; withdraw: boolean }) {
+        return isWithdrawAction ? status.withdraw : status.repay
     }
 
     const inputUsdAmount =
@@ -798,8 +869,8 @@ function ConfirmationDialog({
                     amount,
                     tokenName: assetDetails?.asset?.token?.symbol,
                     txStatus: isWithdrawAction
-                        ? repayTx
-                        : withdrawTx,
+                        ? withdrawTx
+                        : repayTx,
                     actionType,
                 })}
             </BodyText>
@@ -821,8 +892,8 @@ function ConfirmationDialog({
                             <a
                                 href={getExplorerLink(
                                     isWithdrawAction
-                                        ? repayTx.hash
-                                        : withdrawTx.hash,
+                                        ? withdrawTx.hash
+                                        : repayTx.hash,
                                     assetDetails?.platform_name
                                 )}
                                 target="_blank"
@@ -831,8 +902,8 @@ function ConfirmationDialog({
                             >
                                 {getTruncatedTxHash(
                                     isWithdrawAction
-                                        ? repayTx.hash
-                                        : withdrawTx.hash
+                                        ? withdrawTx.hash
+                                        : repayTx.hash
                                 )}
                             </a>
                             <ArrowUpRightIcon
@@ -851,8 +922,8 @@ function ConfirmationDialog({
     const contentHeader = (
         <>
             {isShowBlock({
-                lend: repayTx.status === 'approve' && !isRepayTxInProgress,
-                borrow:
+                repay: repayTx.status === 'approve' && !isRepayTxInProgress,
+                withdraw:
                     withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress,
             }) && (
                     // <DialogTitle asChild>
@@ -869,10 +940,10 @@ function ConfirmationDialog({
                 )}
             {/* Confirmation details UI */}
             {isShowBlock({
-                lend:
+                repay:
                     (repayTx.status === 'repay' && !isRepayTxInProgress) ||
                     (repayTx.status === 'view' && !isRepayTxInProgress),
-                borrow:
+                withdraw:
                     // (withdrawTx.status === 'borrow' && !isWithdrawTxInProgress) ||
                     (withdrawTx.status === 'view' && !isWithdrawTxInProgress),
             }) && (
@@ -892,8 +963,8 @@ function ConfirmationDialog({
                             {amount} {assetDetails?.asset?.token?.symbol}
                         </HeadingText>
                         {isShowBlock({
-                            lend: repayTx.status === 'view',
-                            borrow: withdrawTx.status === 'view',
+                            repay: repayTx.status === 'view',
+                            withdraw: withdrawTx.status === 'view',
                         }) && (
                                 <Badge
                                     variant={isTxFailed ? "destructive" : "green"}
@@ -919,10 +990,10 @@ function ConfirmationDialog({
                                 </Badge>
                             )}
                         {isShowBlock({
-                            lend:
+                            repay:
                                 repayTx.status === 'repay' &&
                                 !isRepayTxInProgress,
-                            borrow: false,
+                            withdraw: false,
                         }) && (
                                 <Badge
                                     variant="green"
@@ -947,8 +1018,8 @@ function ConfirmationDialog({
             <div className="flex flex-col gap-[12px]">
                 {/* Block 1 */}
                 {isShowBlock({
-                    lend: repayTx.status === 'approve' && !isRepayTxInProgress,
-                    borrow:
+                    repay: repayTx.status === 'approve' && !isRepayTxInProgress,
+                    withdraw:
                         withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress,
                 }) && (
                         <div className="flex items-center gap-[8px] px-[24px] py-[18.5px] bg-gray-200 lg:bg-white rounded-5 w-full">
@@ -981,8 +1052,8 @@ function ConfirmationDialog({
                     )}
                 {/* Block 2 */}
                 {isShowBlock({
-                    lend: repayTx.status === 'approve' && !isRepayTxInProgress,
-                    borrow: false,
+                    repay: repayTx.status === 'approve' && !isRepayTxInProgress,
+                    withdraw: false,
                 }) && (
                         <div
                             className={`flex items-center ${isWithdrawAction ? 'justify-end' : 'justify-between'} px-[24px] mb-[4px] gap-1`}>
@@ -991,10 +1062,10 @@ function ConfirmationDialog({
                                 weight="normal"
                                 className="text-gray-600"
                             >
-                                Withdraw limit:
+                                Balance:
                             </BodyText>
                             <BodyText level="body2" weight="normal" className="text-gray-600">
-                                {handleSmallestValue(maxBorrowAmount.toString())}
+                                {handleSmallestValue(balance.toString())}
                                 {" "}
                                 {assetDetails?.asset?.token?.symbol}
                             </BodyText>
@@ -1003,8 +1074,8 @@ function ConfirmationDialog({
                 {/* Block 3 */}
                 <div className="flex flex-col items-center justify-between px-[24px] bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
                     {isShowBlock({
-                        lend: !isRepayTxInProgress,
-                        borrow: !isWithdrawTxInProgress,
+                        repay: !isRepayTxInProgress,
+                        withdraw: !isWithdrawTxInProgress,
                     }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText
@@ -1029,8 +1100,8 @@ function ConfirmationDialog({
                             </div>
                         )}
                     {isShowBlock({
-                        lend: false,
-                        borrow: (withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress),
+                        repay: false,
+                        withdraw: (withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress),
                     }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText
@@ -1068,8 +1139,8 @@ function ConfirmationDialog({
                         )}
                     {
                         isShowBlock({
-                            lend: false,
-                            borrow: (withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress),
+                            repay: false,
+                            withdraw: (withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress),
                         }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText level="body2" weight="normal" className="text-gray-600">
@@ -1093,8 +1164,8 @@ function ConfirmationDialog({
                         )
                     }
                     {isShowBlock({
-                        lend: (repayTx.status === 'repay' || repayTx.status === 'view') && (repayTx.hash.length > 0) && !isRepayTxInProgress,
-                        borrow: withdrawTx.status === 'view' && (withdrawTx.hash.length > 0) && !isWithdrawTxInProgress,
+                        repay: (repayTx.status === 'repay' || repayTx.status === 'view') && (repayTx.hash.length > 0) && !isRepayTxInProgress,
+                        withdraw: (withdrawTx.status === 'view') && (withdrawTx.hash.length > 0) && !isWithdrawTxInProgress,
                     }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText
@@ -1150,8 +1221,8 @@ function ConfirmationDialog({
                 </div>
                 {
                     isShowBlock({
-                        lend: false,
-                        borrow: (withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress && isHfLow()),
+                        repay: false,
+                        withdraw: (withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress && isHfLow()),
                     }) && (
                         <div className="flex flex-col items-center justify-center">
                             <CustomAlert
@@ -1183,11 +1254,11 @@ function ConfirmationDialog({
     // Desktop UI
     if (isDesktop) {
         return (
-            <Dialog open={open}>
+            <Dialog open={isOpen}>
                 <DialogTrigger asChild>
                     {triggerButton}
                 </DialogTrigger>
-                <DialogContent aria-describedby={undefined} className="pt-[25px]">
+                <DialogContent aria-describedby={undefined} className="pt-[25px]" showCloseButton={false}>
                     {/* X Icon to close the dialog */}
                     {closeContentButton}
                     {/* Tx in progress - Loading state UI */}
@@ -1205,7 +1276,7 @@ function ConfirmationDialog({
 
     // Mobile UI
     return (
-        <Drawer open={open} dismissible={false}>
+        <Drawer open={isOpen} dismissible={false}>
             <DrawerTrigger asChild>
                 {triggerButton}
             </DrawerTrigger>
@@ -1230,8 +1301,8 @@ function ConfirmationDialog({
     )
 }
 
-function isLendPositionType(positionType: TPositionType) {
-    return positionType === 'lend'
+function isRepayPositionType(actionType: TActionType) {
+    return actionType === 'repay'
 }
 
 function getExplorerLink(hash: string, platform_name: PlatformValue) {
@@ -1261,14 +1332,14 @@ function getTxInProgressText({
     if (isPending) {
         textByStatus = {
             approve: `Approve spending ${formattedText} from your wallet`,
-            lend: `Approve transaction for lending ${formattedText} from your wallet`,
-            borrow: `Approve transaction for borrowing ${formattedText} from your wallet`,
+            repay: `Approve transaction for repaying ${formattedText} from your wallet`,
+            withdraw: `Approve transaction for withdrawing ${formattedText} from your wallet`,
         }
     } else if (isConfirming) {
         textByStatus = {
             approve: `Confirming transaction for spending ${formattedText} from your wallet`,
-            lend: `Confirming transaction for lending ${formattedText} from your wallet`,
-            borrow: `Confirming transaction for borrowing ${formattedText} from your wallet`,
+            repay: `Confirming transaction for repaying ${formattedText} from your wallet`,
+            withdraw: `Confirming transaction for withdrawing ${formattedText} from your wallet`,
             view: `Confirming transaction for ${actionType === 'withdraw' ? 'withdrawing' : 'repaying'} ${formattedText} from your wallet`,
         }
     }

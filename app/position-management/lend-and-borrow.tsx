@@ -72,7 +72,7 @@ import {
     TTxContext,
     useTxContext,
     TBorrowTx,
-} from '@/context/lend-borrow-tx-provider'
+} from '@/context/tx-provider'
 import { PlatformValue } from '@/types/platform'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import { useAaveV3Data } from '../../hooks/protocols/useAaveV3Data'
@@ -1445,7 +1445,7 @@ function ConfirmationDialog({
                 <DialogTrigger asChild>
                     {triggerButton}
                 </DialogTrigger>
-                <DialogContent aria-describedby={undefined} className="pt-[25px]">
+                <DialogContent aria-describedby={undefined} className="pt-[25px]" showCloseButton={false}>
                     {/* X Icon to close the dialog */}
                     {closeContentButton}
                     {/* Tx in progress - Loading state UI */}

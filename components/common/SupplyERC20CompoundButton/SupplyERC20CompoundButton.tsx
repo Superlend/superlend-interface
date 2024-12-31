@@ -21,7 +21,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { ArrowRightIcon } from 'lucide-react'
 import CustomAlert from '@/components/alerts/CustomAlert'
-import { TTxContext, useTxContext } from '@/context/lend-borrow-tx-provider'
+import { TTxContext, useTxContext } from '@/context/tx-provider'
 // import { getErrorText } from '@utils/getErrorText'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
@@ -182,7 +182,7 @@ const SupplyERC20CompoundButton = ({
         }
     }
     return (
-        <>
+        <div className="flex flex-col gap-2">
             {error && (
                 <CustomAlert
                     description={
@@ -203,7 +203,7 @@ const SupplyERC20CompoundButton = ({
                     className="stroke-white group-[:disabled]:opacity-50"
                 />
             </Button>
-        </>
+        </div>
     )
 }
 

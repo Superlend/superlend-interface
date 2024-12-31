@@ -100,7 +100,7 @@ export type TTxContext = {
     setWithdrawTx: any
 }
 
-export default function LendBorrowTxProvider({
+export default function TxProvider({
     children,
 }: {
     children: React.ReactNode

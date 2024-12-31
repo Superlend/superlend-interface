@@ -33,7 +33,7 @@ import { getStatDisplayValue } from './helper-functions'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData'
 import { Button } from '@/components/ui/button'
-import { useTxContext } from '@/context/lend-borrow-tx-provider'
+import { useTxContext } from '@/context/tx-provider'
 import { useAccount } from 'wagmi'
 import { PlatformType } from '@/types/platform'
 import WithdrawAndRepayActionButton from './withdraw-and-repay'
@@ -118,6 +118,7 @@ export default function PositionDetails() {
                         (position) => position.token.logo
                     ),
                     tokenDetails: lendPositions.map((position) => ({
+                        address: position.token.address,
                         logo: position.token.logo,
                         symbol: position.token.symbol,
                         amount: getSanitizedValue(
@@ -125,6 +126,8 @@ export default function PositionDetails() {
                         ),
                         liquidation_threshold: position.liquidation_threshold,
                         tokenAmount: position.amount,
+                        price_usd: position.token.price_usd,
+                        apy: position.apy,
                     })),
                     amount: lendAmount,
                 },
@@ -133,12 +136,15 @@ export default function PositionDetails() {
                         (position) => position.token.logo
                     ),
                     tokenDetails: borrowPositions.map((position) => ({
+                        address: position.token.address,
                         logo: position.token.logo,
                         symbol: position.token.symbol,
                         amount: getSanitizedValue(
                             position.amount * position.token.price_usd
                         ),
                         tokenAmount: position.amount,
+                        price_usd: position.token.price_usd,
+                        apy: position.apy,
                     })),
                     amount: borrowAmount,
                 },
@@ -409,7 +415,7 @@ export default function PositionDetails() {
                             >
                                 Your Collateral
                             </BodyText>
-                            <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
+                            <div className="flex flex-col xs:flex-row gap-[12px] xs:items-center">
                                 <div className="flex items-center gap-[6px]">
                                     <AvatarCircles
                                         avatarUrls={
@@ -446,7 +452,10 @@ export default function PositionDetails() {
                                         }
                                     </HeadingText>
                                 </div>
-                                <WithdrawAndRepayActionButton actionType='withdraw' />
+                                <WithdrawAndRepayActionButton
+                                    actionType='withdraw'
+                                    tokenDetails={formattedUserPositions?.lendAsset?.tokenDetails}
+                                />
                             </div>
                         </div>
                         <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full h-full">
@@ -457,7 +466,7 @@ export default function PositionDetails() {
                             >
                                 Your Borrowing
                             </BodyText>
-                            <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
+                            <div className="flex flex-col xs:flex-row gap-[12px] xs:items-center">
                                 <div className="flex items-center gap-[6px]">
                                     <AvatarCircles
                                         avatarUrls={
@@ -510,7 +519,10 @@ export default function PositionDetails() {
                                         />
                                     )}
                                 </div>
-                                <WithdrawAndRepayActionButton actionType='repay' />
+                                <WithdrawAndRepayActionButton
+                                    actionType='repay'
+                                    tokenDetails={formattedUserPositions?.borrowAsset?.tokenDetails}
+                                />
                             </div>
                         </div>
                     </div>

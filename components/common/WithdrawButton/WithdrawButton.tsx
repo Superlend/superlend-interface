@@ -29,7 +29,7 @@ import { PlatformType, PlatformValue } from '@/types/platform'
 // import { useActiveAccount } from 'thirdweb/react'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import {
-    TBorrowTx,
+    TWithdrawTx,
     TTxContext,
     useTxContext,
 } from '@/context/tx-provider'
@@ -37,7 +37,7 @@ import { ArrowRightIcon } from 'lucide-react'
 import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
-interface IBorrowButtonProps {
+interface IWithdrawButtonProps {
     disabled: boolean
     asset: any
     amount: string
@@ -45,18 +45,18 @@ interface IBorrowButtonProps {
 }
 
 const txBtnStatus: Record<string, string> = {
-    pending: 'Borrowing...',
+    pending: 'Withdrawing...',
     confirming: 'Confirming...',
     success: 'Close',
-    default: 'Borrow',
+    default: 'Withdraw',
 }
 
-const BorrowButton = ({
+const WithdrawButton = ({
     disabled,
     asset,
     amount,
     handleCloseModal,
-}: IBorrowButtonProps) => {
+}: IWithdrawButtonProps) => {
     const {
         writeContractAsync,
         isPending,
@@ -64,7 +64,7 @@ const BorrowButton = ({
         error,
     } = useWriteContract()
     const { address: walletAddress } = useAccount()
-    const { borrowTx, setBorrowTx } =
+    const { withdrawTx, setWithdrawTx } =
         useTxContext() as TTxContext
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
@@ -74,7 +74,7 @@ const BorrowButton = ({
 
     useEffect(() => {
         if (hash) {
-            setBorrowTx((prev: TBorrowTx) => ({
+            setWithdrawTx((prev: TWithdrawTx) => ({
                 ...prev,
                 status: 'view',
                 hash,
@@ -82,7 +82,7 @@ const BorrowButton = ({
         }
 
         if (hash && isConfirmed) {
-            setBorrowTx((prev: TBorrowTx) => ({
+            setWithdrawTx((prev: TWithdrawTx) => ({
                 ...prev,
                 status: 'view',
                 isConfirmed: isConfirmed,
@@ -92,7 +92,7 @@ const BorrowButton = ({
 
     // Update the status(Loading states) of the lendTx based on the isPending and isConfirming states
     useEffect(() => {
-        setBorrowTx((prev: TBorrowTx) => ({
+        setWithdrawTx((prev: TWithdrawTx) => ({
             ...prev,
             isPending: isPending,
             isConfirming: isConfirming,
@@ -111,13 +111,13 @@ const BorrowButton = ({
                     : 'default'
         ]
 
-    const borrowCompound = useCallback(
+    const withdrawCompound = useCallback(
         async (cTokenAddress: string, amount: string) => {
             try {
                 writeContractAsync({
                     address: cTokenAddress as `0x${string}`,
                     abi: COMPOUND_ABI,
-                    functionName: 'borrow',
+                    functionName: 'withdraw',
                     args: [
                         parseUnits(
                             amount,
@@ -132,7 +132,7 @@ const BorrowButton = ({
         [writeContractAsync, asset]
     )
 
-    const borrowAave = useCallback(
+    const withdrawAave = useCallback(
         async (
             poolContractAddress: string,
             underlyingAssetAdress: string,
@@ -143,17 +143,17 @@ const BorrowButton = ({
                 writeContractAsync({
                     address: poolContractAddress as `0x${string}`,
                     abi: AAVE_POOL_ABI,
-                    functionName: 'borrow',
+                    functionName: 'withdraw',
                     args: [
                         underlyingAssetAdress,
                         parseUnits(amount, asset.asset.token.decimals),
-                        2,
-                        0,
+                        // 2,
+                        // 0,
                         addressOfWallet,
                     ],
                 })
                     .catch((error) => {
-                        setBorrowTx((prev: TBorrowTx) => ({
+                        setWithdrawTx((prev: TWithdrawTx) => ({
                             ...prev,
                             isPending: false,
                             isConfirming: false,
@@ -167,13 +167,13 @@ const BorrowButton = ({
         [writeContractAsync, asset, handleCloseModal]
     )
 
-    const onBorrow = async () => {
+    const onWithdraw = async () => {
         if (asset?.protocol_type === PlatformType.COMPOUND) {
-            await borrowCompound(asset?.asset?.token?.address, amount)
+            await withdrawCompound(asset?.asset?.token?.address, amount)
             return
         }
         if (asset?.protocol_type === PlatformType.AAVE) {
-            await borrowAave(
+            await withdrawAave(
                 POOL_AAVE_MAP[asset?.platform_name as PlatformValue],
                 asset?.asset?.token?.address,
                 amount,
@@ -197,15 +197,15 @@ const BorrowButton = ({
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={(isPending || isConfirming || disabled) && borrowTx.status !== 'view'}
+                disabled={(isPending || isConfirming || disabled) && withdrawTx.status !== 'view'}
                 onClick={
-                    borrowTx.status === 'borrow'
-                        ? onBorrow
+                    withdrawTx.status === 'withdraw'
+                        ? onWithdraw
                         : () => handleCloseModal(false)
                 }
             >
                 {txBtnText}
-                {borrowTx.status !== 'view' && !isPending && !isConfirming && (
+                {withdrawTx.status !== 'view' && !isPending && !isConfirming && (
                     <ArrowRightIcon
                         width={16}
                         height={16}
@@ -217,4 +217,4 @@ const BorrowButton = ({
     )
 }
 
-export default BorrowButton
+export default WithdrawButton
