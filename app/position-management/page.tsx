@@ -14,12 +14,12 @@ import { BodyText } from '@/components/ui/typography'
 import PositionDetails from './position-details'
 import LendAndBorrowAssets from './lend-and-borrow'
 import PositionManagementProvider from '@/context/position-management-provider'
-import LendBorrowTxProvider from '@/context/lend-borrow-tx-provider'
+import TxProvider from '@/context/tx-provider'
 
 export default function PositionManagementPage() {
     return (
         <PositionManagementProvider>
-            <LendBorrowTxProvider>
+            <TxProvider>
                 <MainContainer className="flex flex-col gap-[40px]">
                     <PageHeader />
                     <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-[16px]">
@@ -31,7 +31,7 @@ export default function PositionManagementPage() {
                         {/* <BlogCard /> */}
                     </div>
                 </MainContainer>
-            </LendBorrowTxProvider>
+            </TxProvider>
         </PositionManagementProvider>
     )
 }
