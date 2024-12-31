@@ -891,7 +891,6 @@ export function ConfirmationDialog({
     }
     isVault?: boolean
 }) {
-
     const { lendTx, setLendTx, borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
     const [open, setOpen] = useState(false)
@@ -1081,7 +1080,7 @@ export function ConfirmationDialog({
                                     isLendPositionType(positionType)
                                         ? lendTx.hash
                                         : borrowTx.hash,
-                                    assetDetails?.platform_name
+                                    assetDetails?.chain_id || assetDetails?.platform?.chain_id
                                 )}
                                 target="_blank"
                                 rel="noreferrer"
@@ -1375,7 +1374,7 @@ export function ConfirmationDialog({
                                                 isLendPositionType(positionType)
                                                     ? lendTx.hash
                                                     : borrowTx.hash,
-                                                assetDetails?.platform_name
+                                                assetDetails?.chain_id || assetDetails?.platform?.chain_id
                                             )}
                                             target="_blank"
                                             rel="noreferrer"
@@ -1494,8 +1493,8 @@ function isLendPositionType(positionType: TPositionType) {
     return positionType === 'lend'
 }
 
-function getExplorerLink(hash: string, platform_name: PlatformValue) {
-    return `${TX_EXPLORER_LINKS[platform_name]}/tx/${hash}`
+function getExplorerLink(hash: string, chainId: ChainId) {
+    return `${TX_EXPLORER_LINKS[chainId]}/tx/${hash}`
 }
 
 function getTruncatedTxHash(hash: string) {
