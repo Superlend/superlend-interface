@@ -347,6 +347,21 @@ const SupplyMorphoButton = ({
                             weight="normal"
                             className="text-secondary-500"
                         >
+                            Note: Adding collateral to morpho markets does not yield returns.
+                        </BodyText>
+                    }
+                />
+            )}
+            {lendTx.status === 'approve' && (
+                <CustomAlert
+                    variant="info"
+                    hasPrefixIcon={false}
+                    description={
+                        <BodyText
+                            level="body2"
+                            weight="normal"
+                            className="text-secondary-500"
+                        >
                             Note: You need to complete an &apos;approval
                             transaction&apos; granting Superlend smart contracts
                             permission to move funds from your wallet as the

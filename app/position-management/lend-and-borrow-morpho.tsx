@@ -35,8 +35,7 @@ export default function LendAndBorrowAssetsMorpho() {
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
-    const positionTypeParam: TPositionType = 'borrow'
-    // (searchParams.get('position_type') as TPositionType) || 'lend'
+    const positionTypeParam: TPositionType = (searchParams.get('position_type') as TPositionType) || 'lend'
     const { address: walletAddress } = useAccount()
     const { switchChainAsync } = useSwitchChain()
 
@@ -75,7 +74,7 @@ export default function LendAndBorrowAssetsMorpho() {
         platformData?.platform?.protocol_type === 'morpho' &&
         platformData?.platform?.isVault
 
-    if (!isMorphoMarketsProtocol && !isMorphoVaultsProtocol) {
+    if ((!isMorphoMarketsProtocol && !isMorphoVaultsProtocol) || (isMorphoMarketsProtocol && positionTypeParam === 'lend')) {
         return null
     } else if (isMorphoMarketsProtocol && walletAddress) {
         return <LendAndBorrowAssetsMorphoMarkets platformData={platformData} walletAddress={walletAddress as `0x${string}`} isLoadingPlatformData={isLoadingPlatformData} />
@@ -125,6 +124,8 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
 
     // health factor
     const [healthFactor, setHealthFactor] = useState(0)
+
+    const isMorphoProtocol = platformData?.platform?.protocol_type === 'morpho'
 
     useEffect(() => {
 
@@ -337,6 +338,9 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                 handleToggle={(positionType: TPositionType) => {
                     setAmount('')
                     setPositionType(positionType)
+                }}
+                title={{
+                    lend: isMorphoProtocol ? 'Add Collateral' : 'Lend',
                 }}
             />
             <Card className="flex flex-col gap-[12px] p-[16px]">
@@ -638,6 +642,20 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
 
     return (
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
+            <LendBorrowToggle
+                type={positionType}
+                handleToggle={(positionType: TPositionType) => {
+                    setAmount('')
+                    setPositionType(positionType)
+                }}
+                title={{
+                    lend: 'Supply',
+                }}
+                showTab={{
+                    lend: true,
+                    borrow: false,
+                }}
+            />
             <Card className="flex flex-col gap-[12px] p-[16px]">
                 <div className="flex items-center justify-between px-[14px]">
                     <BodyText level="body2" weight="normal" className="capitalize text-gray-600">

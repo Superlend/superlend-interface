@@ -80,6 +80,7 @@ export default function PositionDetails() {
         platformData?.platform?.protocol_type
     )
     const isAaveV3 = platformData?.platform?.protocol_type === 'aaveV3'
+    const isMorphoProtocol = platformData?.platform?.protocol_type === 'morpho'
 
     // Get user positions from portfolio data using protocol identifier
     const userPositions = useMemo(() => portfolioData?.platforms.filter(
@@ -406,7 +407,7 @@ export default function PositionDetails() {
                                 weight="normal"
                                 className="text-gray-600"
                             >
-                                Your Collateral
+                                Your {isMorphoProtocol ? "Supply" : "Collateral"}
                             </BodyText>
                             <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
                                 <div className="flex items-center gap-[6px]">
