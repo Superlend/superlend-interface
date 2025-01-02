@@ -337,7 +337,7 @@ const SupplyMorphoButton = ({
 
     return (
         <div className="flex flex-col gap-2">
-            {lendTx.status === 'approve' && (
+            {lendTx.status === 'approve' && !asset.isVault && (
                 <CustomAlert
                     variant="info"
                     hasPrefixIcon={false}

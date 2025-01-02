@@ -576,6 +576,7 @@ export default function LendAndBorrowAssets() {
     }
 
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
+    const isMorphoProtocol = platformData?.platform?.protocol_type === 'morpho'
     const isPolygonChain = Number(chain_id) === 137
 
     const isLoadingHelperText = isLendPositionType(positionType) ? isLoadingErc20TokensBalanceData : isLoadingMaxBorrowingAmount;

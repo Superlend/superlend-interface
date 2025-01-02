@@ -29,6 +29,8 @@ import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
 import { useHolding, useMarket, usePosition, useUser, useVault, useVaultUser } from '@morpho-org/blue-sdk-wagmi'
 import { formatUnits } from 'viem'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
+import CustomAlert from '@/components/alerts/CustomAlert'
+import ExternalLink from '@/components/ExternalLink'
 
 export default function LendAndBorrowAssetsMorpho() {
     const searchParams = useSearchParams()
@@ -401,7 +403,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                 <CardContent className="p-0 bg-white rounded-5">
                     <div
                         className={cn(
-                            isLendPositionType(positionType)
+                            (isLendPositionType(positionType) || isMorphoProtocol)
                                 ? 'border rounded-5 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]'
                                 : 'border-t rounded-t-5',
                             'border-gray-200 py-[12px] px-[16px] flex items-center gap-[12px]'
@@ -469,29 +471,57 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                             max
                         </Button>
                     </div>
-                    {walletAddress && (
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="mx-auto w-full text-gray-500 py-[16px] text-center max-w-[250px]"
-                        >
-                            {isLoadingHelperText && getLoadingHelperText()}
-                            {!errorMessage &&
-                                !isLoadingHelperText &&
-                                (isLendPositionType(positionType)
-                                    ? 'Enter amount to proceed with supplying collateral for this position'
-                                    :
-                                    doesMarketHasLiquidity
-                                        ? 'Enter the amount you want to borrow from this position'
-                                        : 'Market does not have enough liquidity to borrow from this position'
-                                )}
-                            {errorMessage && !isLoadingHelperText && (
-                                <span className="text-xs text-destructive-foreground">
-                                    {errorMessage}
-                                </span>
-                            )}
-                        </BodyText>
-                    )}
+                    <div className="card-content-bottom px-5 py-3">
+                        {(walletAddress) && (
+                            <BodyText
+                                level="body2"
+                                weight="normal"
+                                className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
+                            >
+                                {isLoadingHelperText && getLoadingHelperText()}
+                                {isLendPositionType(positionType) && 'Enter amount to proceed with supplying collateral for this position'}
+                                {(!isLendPositionType(positionType) && doesMarketHasLiquidity) && 'Enter the amount you want to borrow from this position'}
+                            </BodyText>
+                        )}
+                        {(!errorMessage && !isLoadingHelperText && walletAddress) &&
+                            ((!isLendPositionType(positionType) && !doesMarketHasLiquidity) &&
+                                <CustomAlert
+                                    variant="info"
+                                    hasPrefixIcon={false}
+                                    description={
+                                        <BodyText
+                                            level="body3"
+                                            weight="normal"
+                                            className="text-secondary-500 flex-inline"
+                                        >
+                                            {(
+                                                <span className='flex-inline'>
+                                                    Superlend doesn&apos;t support borrowing from this market, as there&apos;s not enough liquidity. Try <span className='mr-1'>using</span>
+                                                    <ExternalLink href="https://morpho.org">
+                                                        morpho website
+                                                    </ExternalLink>
+                                                    <span className='ml-1'>for</span> the same
+                                                </span>
+                                            )}
+                                        </BodyText>
+                                    }
+                                />)
+                        }
+                        {(errorMessage && !isLoadingHelperText && walletAddress) && (
+                            <CustomAlert
+                                variant="destructive"
+                                description={
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="text-destructive-foreground"
+                                    >
+                                        {errorMessage}
+                                    </BodyText>
+                                }
+                            />
+                        )}
+                    </div>
                 </CardContent>
                 <CardFooter className="p-0 justify-center">
                     {!walletAddress && <ConnectWalletButton />}
