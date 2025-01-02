@@ -472,7 +472,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                         </Button>
                     </div>
                     <div className="card-content-bottom px-5 py-3">
-                        {(walletAddress) && (
+                        {(walletAddress && !errorMessage) && (
                             <BodyText
                                 level="body2"
                                 weight="normal"
