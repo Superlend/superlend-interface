@@ -250,6 +250,9 @@ export default function WithdrawAndRepayActionButton({
                                 maxToBorrowFormatted: '0',
                                 user: {},
                             }
+
+                        // TODO: use this hook to fetch the max amount to withdraw
+                        // Rest of the setup is untouched. You would have to update it as per your need
                         const maxWithdraw = getMaxWithdrawAmount(
                             borrowTokenAddress,
                             r as any
