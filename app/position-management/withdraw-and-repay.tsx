@@ -153,6 +153,7 @@ export default function WithdrawAndRepayActionButton({
     const {
         fetchAaveV3Data,
         getMaxBorrowAmount,
+        getMaxWithdrawAmount,
         getAllowance,
         providerStatus,
     } = useAaveV3Data()
@@ -246,6 +247,10 @@ export default function WithdrawAndRepayActionButton({
                                 maxToBorrowFormatted: '0',
                                 user: {}
                             }
+                            const maxWithdraw = 
+                            getMaxWithdrawAmount(borrowTokenAddress,
+                                r as any)
+                            console.log(borrowToken, maxWithdraw)
                     }
 
                     setMaxBorrowTokensAmount(maxBorrowAmounts)
