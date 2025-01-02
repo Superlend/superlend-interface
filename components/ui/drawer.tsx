@@ -51,7 +51,9 @@ const DrawerContent = React.forwardRef<
             )}
             {...props}
         >
-            <div className={`mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted ${className?.includes('dismissible-false') ? 'hidden' : ''}`} />
+            <div
+                className={`mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted ${className?.includes('dismissible-false') ? 'hidden' : ''}`}
+            />
             {children}
         </DrawerPrimitive.Content>
     </DrawerPortal>

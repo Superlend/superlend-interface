@@ -14,7 +14,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setLendTx: () => { },
+    setLendTx: () => {},
     borrowTx: {
         status: 'borrow',
         hash: '',
@@ -23,7 +23,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setBorrowTx: () => { },
+    setBorrowTx: () => {},
     repayTx: {
         status: 'approve',
         hash: '',
@@ -34,7 +34,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setRepayTx: () => { },
+    setRepayTx: () => {},
     withdrawTx: {
         status: 'withdraw',
         hash: '',
@@ -43,12 +43,10 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setWithdrawTx: () => { },
+    setWithdrawTx: () => {},
 }
 
-export const TxContext = createContext<TTxContext>(
-    TxInitialState
-)
+export const TxContext = createContext<TTxContext>(TxInitialState)
 
 export type TLendTx = {
     status: 'approve' | 'lend' | 'view'
@@ -166,8 +164,6 @@ export default function TxProvider({
 export const useTxContext = () => {
     const context = useContext(TxContext)
     if (!context)
-        throw new Error(
-            'useTxContext must be used within an TxProvider'
-        )
+        throw new Error('useTxContext must be used within an TxProvider')
     return context
 }

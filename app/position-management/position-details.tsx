@@ -48,10 +48,16 @@ export default function PositionDetails() {
     const [refresh, setRefresh] = useState(false)
 
     useEffect(() => {
-        const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
+        const isRefresh =
+            (lendTx.status === 'view' && lendTx.isConfirmed) ||
+            (borrowTx.status === 'view' && borrowTx.isConfirmed)
         setRefresh(isRefresh)
-    }, [lendTx.status, lendTx.isConfirmed, borrowTx.status, borrowTx.isConfirmed])
-
+    }, [
+        lendTx.status,
+        lendTx.isConfirmed,
+        borrowTx.status,
+        borrowTx.isConfirmed,
+    ])
 
     const {
         data: portfolioData,
@@ -74,8 +80,7 @@ export default function PositionDetails() {
         chain_id: Number(chain_id),
     })
 
-    const isLoading =
-        isLoadingPortfolioData || isLoadingPlatformData
+    const isLoading = isLoadingPortfolioData || isLoadingPlatformData
 
     const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
         platformData?.platform?.protocol_type
@@ -83,83 +88,92 @@ export default function PositionDetails() {
     const isAaveV3 = platformData?.platform?.protocol_type === 'aaveV3'
 
     // Get user positions from portfolio data using protocol identifier
-    const userPositions = useMemo(() => portfolioData?.platforms.filter(
-        (platform) =>
-            platform?.protocol_identifier?.toLowerCase() ===
-            (platformData?.platform as any)?.protocol_identifier?.toLowerCase()
-    ), [portfolioData, platformData, isLoadingPortfolioData])
+    const userPositions = useMemo(
+        () =>
+            portfolioData?.platforms.filter(
+                (platform) =>
+                    platform?.protocol_identifier?.toLowerCase() ===
+                    (
+                        platformData?.platform as any
+                    )?.protocol_identifier?.toLowerCase()
+            ),
+        [portfolioData, platformData, isLoadingPortfolioData]
+    )
 
     // Format user positions
-    const [formattedUserPositions] = useMemo(() => userPositions?.map(
-        (platform, index: number) => {
-            const lendPositions = platform.positions.filter(
-                (position) => position.type === 'lend'
-            )
-            const borrowPositions = platform.positions.filter(
-                (position) => position.type === 'borrow'
-            )
-            const chainDetails = allChainsData.find(
-                (chain) => chain.chain_id === platform.chain_id
-            )
+    const [formattedUserPositions] = useMemo(
+        () =>
+            userPositions?.map((platform, index: number) => {
+                const lendPositions = platform.positions.filter(
+                    (position) => position.type === 'lend'
+                )
+                const borrowPositions = platform.positions.filter(
+                    (position) => position.type === 'borrow'
+                )
+                const chainDetails = allChainsData.find(
+                    (chain) => chain.chain_id === platform.chain_id
+                )
 
-            function getSanitizedValue(value: number) {
-                const normalValue = Number(convertScientificToNormal(value))
-                return isLowestValue(normalValue)
-                    ? normalValue?.toFixed(20)
-                    : normalValue
-            }
+                function getSanitizedValue(value: number) {
+                    const normalValue = Number(convertScientificToNormal(value))
+                    return isLowestValue(normalValue)
+                        ? normalValue?.toFixed(20)
+                        : normalValue
+                }
 
-            const lendAmount = getSanitizedValue(platform?.total_liquidity)
-            const borrowAmount = getSanitizedValue(platform?.total_borrow)
+                const lendAmount = getSanitizedValue(platform?.total_liquidity)
+                const borrowAmount = getSanitizedValue(platform?.total_borrow)
 
-            return {
-                lendAsset: {
-                    tokenImages: lendPositions.map(
-                        (position) => position.token.logo
-                    ),
-                    tokenDetails: lendPositions.map((position) => ({
-                        address: position.token.address,
-                        logo: position.token.logo,
-                        symbol: position.token.symbol,
-                        amount: getSanitizedValue(
-                            position.amount * position.token.price_usd
+                return {
+                    lendAsset: {
+                        tokenImages: lendPositions.map(
+                            (position) => position.token.logo
                         ),
-                        liquidation_threshold: position.liquidation_threshold,
-                        tokenAmount: position.amount,
-                        price_usd: position.token.price_usd,
-                        apy: position.apy,
-                    })),
-                    amount: lendAmount,
-                },
-                borrowAsset: {
-                    tokenImages: borrowPositions.map(
-                        (position) => position.token.logo
-                    ),
-                    tokenDetails: borrowPositions.map((position) => ({
-                        address: position.token.address,
-                        logo: position.token.logo,
-                        symbol: position.token.symbol,
-                        amount: getSanitizedValue(
-                            position.amount * position.token.price_usd
+                        tokenDetails: lendPositions.map((position) => ({
+                            address: position.token.address,
+                            logo: position.token.logo,
+                            symbol: position.token.symbol,
+                            amount: getSanitizedValue(
+                                position.amount * position.token.price_usd
+                            ),
+                            liquidation_threshold:
+                                position.liquidation_threshold,
+                            tokenAmount: position.amount,
+                            price_usd: position.token.price_usd,
+                            apy: position.apy,
+                        })),
+                        amount: lendAmount,
+                    },
+                    borrowAsset: {
+                        tokenImages: borrowPositions.map(
+                            (position) => position.token.logo
                         ),
-                        tokenAmount: position.amount,
-                        price_usd: position.token.price_usd,
-                        apy: position.apy,
-                    })),
-                    amount: borrowAmount,
-                },
-                positionOn: {
-                    platformName: capitalizeText(
-                        platform?.platform_name.split('-').join(' ')
-                    ),
-                    platformImage: platform?.logo ?? '',
-                    chainName: chainDetails?.name ?? '',
-                    chainImage: chainDetails?.logo ?? '',
-                },
-                riskFactor: getRiskFactor(platform.health_factor),
-            }
-        }
-    ), [userPositions, isLoadingPortfolioData])
+                        tokenDetails: borrowPositions.map((position) => ({
+                            address: position.token.address,
+                            logo: position.token.logo,
+                            symbol: position.token.symbol,
+                            amount: getSanitizedValue(
+                                position.amount * position.token.price_usd
+                            ),
+                            tokenAmount: position.amount,
+                            price_usd: position.token.price_usd,
+                            apy: position.apy,
+                        })),
+                        amount: borrowAmount,
+                    },
+                    positionOn: {
+                        platformName: capitalizeText(
+                            platform?.platform_name.split('-').join(' ')
+                        ),
+                        platformImage: platform?.logo ?? '',
+                        chainName: chainDetails?.name ?? '',
+                        chainImage: chainDetails?.logo ?? '',
+                    },
+                    riskFactor: getRiskFactor(platform.health_factor),
+                }
+            }),
+        [userPositions, isLoadingPortfolioData]
+    )
 
     // Calculate borrow power and borrow power used for pool based assets
     function getLiquidationDetailsForPoolBasedAssets() {
@@ -259,8 +273,8 @@ export default function PositionDetails() {
         assetSymbols,
         assetDetails,
     } = isAaveV3
-            ? getLiquidationDetailsForPoolBasedAssets()
-            : getLiquidationDetailsForPairBasedAssets()
+        ? getLiquidationDetailsForPoolBasedAssets()
+        : getLiquidationDetailsForPairBasedAssets()
 
     // Liquidation details
     const liquidationDetails = {
@@ -273,12 +287,20 @@ export default function PositionDetails() {
         assetDetails,
     }
 
-    const morphoVaultsLiquidationPriceTooltipText = 'Liquidation is not applicable, as Morpho vaults are designed to only earn & not borrow.'
-    const morphoVaultsYourBorrowingTooltipText = 'Borrowing is not applicable, as Morpho vaults are designed to only earn & not borrow.'
-    const liquidationPriceValueGeneralTooltipText = 'You do not have any borrows'
-    const isMorpho = platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() === PlatformType.MORPHO
+    const morphoVaultsLiquidationPriceTooltipText =
+        'Liquidation is not applicable, as Morpho vaults are designed to only earn & not borrow.'
+    const morphoVaultsYourBorrowingTooltipText =
+        'Borrowing is not applicable, as Morpho vaults are designed to only earn & not borrow.'
+    const liquidationPriceValueGeneralTooltipText =
+        'You do not have any borrows'
+    const isMorpho =
+        platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() ===
+        PlatformType.MORPHO
     const isVault = platformData?.platform?.isVault
-    const liquidationPriceValueTooltipText = (isMorpho && isVault) ? morphoVaultsLiquidationPriceTooltipText : liquidationPriceValueGeneralTooltipText
+    const liquidationPriceValueTooltipText =
+        isMorpho && isVault
+            ? morphoVaultsLiquidationPriceTooltipText
+            : liquidationPriceValueGeneralTooltipText
 
     // Loading state
     if (isLoading) {
@@ -325,9 +347,9 @@ export default function PositionDetails() {
                                 <Badge
                                     variant={
                                         liquidationDetails.riskFactor.theme as
-                                        | 'destructive'
-                                        | 'yellow'
-                                        | 'green'
+                                            | 'destructive'
+                                            | 'yellow'
+                                            | 'green'
                                     }
                                 >
                                     {liquidationDetails.riskFactor.label} risk
@@ -357,15 +379,15 @@ export default function PositionDetails() {
                                         avatarUrls={
                                             liquidationDetails.assetLogos
                                         }
-                                    // avatarDetails={liquidationDetails.assetDetails.map(asset => ({
-                                    //     content: `${hasLowestDisplayValuePrefix(Number(asset.amount))} $${getStatDisplayValue(asset.amount, false)}`,
-                                    //     title: asset.symbol
-                                    // }))}
+                                        // avatarDetails={liquidationDetails.assetDetails.map(asset => ({
+                                        //     content: `${hasLowestDisplayValuePrefix(Number(asset.amount))} $${getStatDisplayValue(asset.amount, false)}`,
+                                        //     title: asset.symbol
+                                        // }))}
                                     />
                                 )}
                                 {liquidationDetails.hasBorrowed &&
                                     liquidationDetails.liquidationPrice !==
-                                    0 && (
+                                        0 && (
                                         <BodyText level="body1" weight="medium">
                                             $
                                             {abbreviateNumber(
@@ -375,18 +397,20 @@ export default function PositionDetails() {
                                     )}
                                 {(!liquidationDetails.hasBorrowed ||
                                     liquidationDetails.liquidationPrice ===
-                                    0) && (
-                                        <BodyText level="body1" weight="normal">
-                                            <InfoTooltip
-                                                label={
-                                                    <TooltipText className="text-gray-600">
-                                                        N/A
-                                                    </TooltipText>
-                                                }
-                                                content={liquidationPriceValueTooltipText}
-                                            />
-                                        </BodyText>
-                                    )}
+                                        0) && (
+                                    <BodyText level="body1" weight="normal">
+                                        <InfoTooltip
+                                            label={
+                                                <TooltipText className="text-gray-600">
+                                                    N/A
+                                                </TooltipText>
+                                            }
+                                            content={
+                                                liquidationPriceValueTooltipText
+                                            }
+                                        />
+                                    </BodyText>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -395,9 +419,9 @@ export default function PositionDetails() {
                             value={liquidationDetails.percentage}
                             variant={
                                 liquidationDetails.riskFactor.theme as
-                                | 'destructive'
-                                | 'yellow'
-                                | 'green'
+                                    | 'destructive'
+                                    | 'yellow'
+                                    | 'green'
                             }
                         />
                     </div>
@@ -441,20 +465,34 @@ export default function PositionDetails() {
                                             )
                                         )}{' '}
                                         $
-                                        {isLowestValue(Number(formattedUserPositions?.lendAsset.amount ?? 0)) ?
-                                            getLowestDisplayValue(Number(formattedUserPositions?.lendAsset.amount ?? 0)) :
-                                            abbreviateNumber(
-                                                Number(
-                                                    formattedUserPositions
-                                                        ?.lendAsset.amount ?? 0
-                                                )
+                                        {isLowestValue(
+                                            Number(
+                                                formattedUserPositions
+                                                    ?.lendAsset.amount ?? 0
                                             )
-                                        }
+                                        )
+                                            ? getLowestDisplayValue(
+                                                  Number(
+                                                      formattedUserPositions
+                                                          ?.lendAsset.amount ??
+                                                          0
+                                                  )
+                                              )
+                                            : abbreviateNumber(
+                                                  Number(
+                                                      formattedUserPositions
+                                                          ?.lendAsset.amount ??
+                                                          0
+                                                  )
+                                              )}
                                     </HeadingText>
                                 </div>
                                 <WithdrawAndRepayActionButton
-                                    actionType='withdraw'
-                                    tokenDetails={formattedUserPositions?.lendAsset?.tokenDetails}
+                                    actionType="withdraw"
+                                    tokenDetails={
+                                        formattedUserPositions?.lendAsset
+                                            ?.tokenDetails
+                                    }
                                 />
                             </div>
                         </div>
@@ -481,7 +519,7 @@ export default function PositionDetails() {
                                         )}
                                     />
                                     {/* Your borrowed amount */}
-                                    {!(isMorpho && isVault) &&
+                                    {!(isMorpho && isVault) && (
                                         <HeadingText
                                             level="h3"
                                             weight="medium"
@@ -490,38 +528,60 @@ export default function PositionDetails() {
                                             {hasLowestDisplayValuePrefix(
                                                 Number(
                                                     formattedUserPositions
-                                                        ?.borrowAsset.amount ?? 0
+                                                        ?.borrowAsset.amount ??
+                                                        0
                                                 )
                                             )}{' '}
                                             $
-                                            {
-                                                isLowestValue(Number(formattedUserPositions?.borrowAsset.amount ?? 0)) ?
-                                                    getLowestDisplayValue(Number(formattedUserPositions?.borrowAsset.amount ?? 0)) :
-                                                    abbreviateNumber(
-                                                        Number(
-                                                            formattedUserPositions
-                                                                ?.borrowAsset.amount ?? 0
-                                                        )
-                                                    )
-                                            }
-                                        </HeadingText>}
+                                            {isLowestValue(
+                                                Number(
+                                                    formattedUserPositions
+                                                        ?.borrowAsset.amount ??
+                                                        0
+                                                )
+                                            )
+                                                ? getLowestDisplayValue(
+                                                      Number(
+                                                          formattedUserPositions
+                                                              ?.borrowAsset
+                                                              .amount ?? 0
+                                                      )
+                                                  )
+                                                : abbreviateNumber(
+                                                      Number(
+                                                          formattedUserPositions
+                                                              ?.borrowAsset
+                                                              .amount ?? 0
+                                                      )
+                                                  )}
+                                        </HeadingText>
+                                    )}
                                     {/* Borrowed amount for Morpho vaults */}
-                                    {(isMorpho && isVault) && (
+                                    {isMorpho && isVault && (
                                         <InfoTooltip
                                             label={
-                                                <BodyText level="body1" weight="normal" className="text-gray-600">
+                                                <BodyText
+                                                    level="body1"
+                                                    weight="normal"
+                                                    className="text-gray-600"
+                                                >
                                                     <TooltipText className="text-gray-600">
                                                         N/A
                                                     </TooltipText>
                                                 </BodyText>
                                             }
-                                            content={morphoVaultsYourBorrowingTooltipText}
+                                            content={
+                                                morphoVaultsYourBorrowingTooltipText
+                                            }
                                         />
                                     )}
                                 </div>
                                 <WithdrawAndRepayActionButton
-                                    actionType='repay'
-                                    tokenDetails={formattedUserPositions?.borrowAsset?.tokenDetails}
+                                    actionType="repay"
+                                    tokenDetails={
+                                        formattedUserPositions?.borrowAsset
+                                            ?.tokenDetails
+                                    }
                                 />
                             </div>
                         </div>

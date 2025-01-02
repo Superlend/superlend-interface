@@ -38,7 +38,9 @@ export default function AssetHistory() {
     )
     const { platformData } = usePositionManagementContext()
 
-    const isMorpho = platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() === PlatformType.MORPHO
+    const isMorpho =
+        platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() ===
+        PlatformType.MORPHO
     const isVault = platformData?.platform?.isVault
 
     // [API_CALL: GET] - Get Platform history data

@@ -28,11 +28,7 @@ import { Button } from '@/components/ui/button'
 import { PlatformType, PlatformValue } from '@/types/platform'
 // import { useActiveAccount } from 'thirdweb/react'
 import CustomAlert from '@/components/alerts/CustomAlert'
-import {
-    TBorrowTx,
-    TTxContext,
-    useTxContext,
-} from '@/context/tx-provider'
+import { TBorrowTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import { ArrowRightIcon } from 'lucide-react'
 import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
@@ -64,8 +60,7 @@ const BorrowButton = ({
         error,
     } = useWriteContract()
     const { address: walletAddress } = useAccount()
-    const { borrowTx, setBorrowTx } =
-        useTxContext() as TTxContext
+    const { borrowTx, setBorrowTx } = useTxContext() as TTxContext
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
@@ -102,11 +97,11 @@ const BorrowButton = ({
 
     const txBtnText =
         txBtnStatus[
-        isConfirming
-            ? 'confirming'
-            : isConfirmed
-                ? 'success'
-                : isPending
+            isConfirming
+                ? 'confirming'
+                : isConfirmed
+                  ? 'success'
+                  : isPending
                     ? 'pending'
                     : 'default'
         ]
@@ -118,12 +113,7 @@ const BorrowButton = ({
                     address: cTokenAddress as `0x${string}`,
                     abi: COMPOUND_ABI,
                     functionName: 'borrow',
-                    args: [
-                        parseUnits(
-                            amount,
-                            asset.decimals
-                        ),
-                    ],
+                    args: [parseUnits(amount, asset.decimals)],
                 })
             } catch (error) {
                 error
@@ -151,15 +141,14 @@ const BorrowButton = ({
                         0,
                         addressOfWallet,
                     ],
+                }).catch((error) => {
+                    setBorrowTx((prev: TBorrowTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                        errorMessage: error.message || 'Something went wrong',
+                    }))
                 })
-                    .catch((error) => {
-                        setBorrowTx((prev: TBorrowTx) => ({
-                            ...prev,
-                            isPending: false,
-                            isConfirming: false,
-                            errorMessage: error.message || 'Something went wrong',
-                        }))
-                    })
             } catch (error) {
                 error
             }
@@ -197,7 +186,10 @@ const BorrowButton = ({
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={(isPending || isConfirming || disabled) && borrowTx.status !== 'view'}
+                disabled={
+                    (isPending || isConfirming || disabled) &&
+                    borrowTx.status !== 'view'
+                }
                 onClick={
                     borrowTx.status === 'borrow'
                         ? onBorrow

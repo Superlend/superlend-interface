@@ -28,11 +28,7 @@ import { Button } from '@/components/ui/button'
 import { PlatformType, PlatformValue } from '@/types/platform'
 // import { useActiveAccount } from 'thirdweb/react'
 import CustomAlert from '@/components/alerts/CustomAlert'
-import {
-    TWithdrawTx,
-    TTxContext,
-    useTxContext,
-} from '@/context/tx-provider'
+import { TWithdrawTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import { ArrowRightIcon } from 'lucide-react'
 import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
@@ -64,8 +60,7 @@ const WithdrawButton = ({
         error,
     } = useWriteContract()
     const { address: walletAddress } = useAccount()
-    const { withdrawTx, setWithdrawTx } =
-        useTxContext() as TTxContext
+    const { withdrawTx, setWithdrawTx } = useTxContext() as TTxContext
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
@@ -102,11 +97,11 @@ const WithdrawButton = ({
 
     const txBtnText =
         txBtnStatus[
-        isConfirming
-            ? 'confirming'
-            : isConfirmed
-                ? 'success'
-                : isPending
+            isConfirming
+                ? 'confirming'
+                : isConfirmed
+                  ? 'success'
+                  : isPending
                     ? 'pending'
                     : 'default'
         ]
@@ -118,12 +113,7 @@ const WithdrawButton = ({
                     address: cTokenAddress as `0x${string}`,
                     abi: COMPOUND_ABI,
                     functionName: 'withdraw',
-                    args: [
-                        parseUnits(
-                            amount,
-                            asset.decimals
-                        ),
-                    ],
+                    args: [parseUnits(amount, asset.decimals)],
                 })
             } catch (error) {
                 error
@@ -151,15 +141,14 @@ const WithdrawButton = ({
                         // 0,
                         addressOfWallet,
                     ],
+                }).catch((error) => {
+                    setWithdrawTx((prev: TWithdrawTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                        errorMessage: error.message || 'Something went wrong',
+                    }))
                 })
-                    .catch((error) => {
-                        setWithdrawTx((prev: TWithdrawTx) => ({
-                            ...prev,
-                            isPending: false,
-                            isConfirming: false,
-                            errorMessage: error.message || 'Something went wrong',
-                        }))
-                    })
             } catch (error) {
                 error
             }
@@ -197,7 +186,10 @@ const WithdrawButton = ({
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={(isPending || isConfirming || disabled) && withdrawTx.status !== 'view'}
+                disabled={
+                    (isPending || isConfirming || disabled) &&
+                    withdrawTx.status !== 'view'
+                }
                 onClick={
                     withdrawTx.status === 'withdraw'
                         ? onWithdraw
@@ -205,13 +197,15 @@ const WithdrawButton = ({
                 }
             >
                 {txBtnText}
-                {withdrawTx.status !== 'view' && !isPending && !isConfirming && (
-                    <ArrowRightIcon
-                        width={16}
-                        height={16}
-                        className="stroke-white group-[:disabled]:opacity-50"
-                    />
-                )}
+                {withdrawTx.status !== 'view' &&
+                    !isPending &&
+                    !isConfirming && (
+                        <ArrowRightIcon
+                            width={16}
+                            height={16}
+                            className="stroke-white group-[:disabled]:opacity-50"
+                        />
+                    )}
             </Button>
         </div>
     )

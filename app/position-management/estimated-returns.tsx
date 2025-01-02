@@ -70,12 +70,15 @@ export function EstimatedReturns({
         []
     )
     const [isUSDAmount, setIsUSDAmount] = useState(false)
-    const isAaveV3 = platformDetails?.platform.protocol_type === PlatformType.AAVE
+    const isAaveV3 =
+        platformDetails?.platform.protocol_type === PlatformType.AAVE
     const isCompoundV2 =
         platformDetails?.platform.protocol_type === PlatformType.COMPOUND
-    const isMorpho = platformDetails?.platform.protocol_type === PlatformType.MORPHO
+    const isMorpho =
+        platformDetails?.platform.protocol_type === PlatformType.MORPHO
     const isMorphoVault = isMorpho && platformDetails?.platform.isVault
-    const isFluid = platformDetails?.platform.protocol_type === PlatformType.FLUID
+    const isFluid =
+        platformDetails?.platform.protocol_type === PlatformType.FLUID
     const isFluidVault = isFluid && platformDetails?.platform.isVault
 
     useEffect(() => {
@@ -155,13 +158,13 @@ export function EstimatedReturns({
     const supplyAPY = isMorpho
         ? 0
         : isAaveV3 && positionType === 'borrow'
-            ? selectedStableTokenDetails?.supply_apy || 0
-            : lendAssetDetails?.supply_apy || 0
+          ? selectedStableTokenDetails?.supply_apy || 0
+          : lendAssetDetails?.supply_apy || 0
     const borrowAPY = isMorpho
         ? -borrowAssetDetails?.supply_apy
         : isAaveV3 && positionType === 'lend'
-            ? selectedStableTokenDetails?.variable_borrow_apy || 0
-            : borrowAssetDetails?.variable_borrow_apy || 0
+          ? selectedStableTokenDetails?.variable_borrow_apy || 0
+          : borrowAssetDetails?.variable_borrow_apy || 0
     const duration = selectedValue?.duration || 0
 
     const assetLTV = lendAssetDetails?.ltv
@@ -218,11 +221,11 @@ export function EstimatedReturns({
             hasSelectedValue: !(stableBorrowAssetsList.length > 0),
             totalValue:
                 (isMorpho && positionType === 'lend') ||
-                    (!lendAssetDetails && isCompoundV2)
+                (!lendAssetDetails && isCompoundV2)
                     ? 25000
                     : isUSDAmount
-                        ? maxBorrowAmountInUsd
-                        : maxBorrowAmountInUsd /
+                      ? maxBorrowAmountInUsd
+                      : maxBorrowAmountInUsd /
                         (borrowTokenDetails?.token.price_usd ?? 0),
             step: isUSDAmount
                 ? 50
@@ -256,13 +259,13 @@ export function EstimatedReturns({
             ? (lendAssetDetails?.token?.price_usd ?? 0)
             : (selectedStableTokenDetails?.token?.price_usd ?? 0)
     const borrowTokenPrice =
-        (positionType === 'borrow' || isMorpho)
+        positionType === 'borrow' || isMorpho
             ? (borrowAssetDetails?.token?.price_usd ?? 0)
             : (selectedStableTokenDetails?.token?.price_usd ?? 0)
 
     const netEstimatedEarningFinal = isUSDAmount
         ? netEstimatedEarnings
-        : (interestGain * lendTokenPrice) - (interestLoss * borrowTokenPrice)
+        : interestGain * lendTokenPrice - interestLoss * borrowTokenPrice
 
     function getDisplayedValuePrefix(key: 'lend' | 'borrow' | 'duration') {
         return key === 'lend' || key === 'borrow'
@@ -575,7 +578,7 @@ export function EstimatedReturns({
                                                             <StableTokensDropdown
                                                                 options={
                                                                     row.key ===
-                                                                        'lend'
+                                                                    'lend'
                                                                         ? stableLendAssetsList
                                                                         : stableBorrowAssetsList
                                                                 }
@@ -614,7 +617,7 @@ export function EstimatedReturns({
                                                     {abbreviateNumber(
                                                         row.key === 'duration'
                                                             ? row.totalValue /
-                                                            12
+                                                                  12
                                                             : row.totalValue,
                                                         row.key === 'duration'
                                                             ? 0
@@ -731,7 +734,7 @@ function StableTokensDropdown({
                             className={cn(
                                 'flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4',
                                 selectedStableTokenDetails?.token?.address ===
-                                asset?.token?.address && 'bg-gray-400'
+                                    asset?.token?.address && 'bg-gray-400'
                             )}
                         >
                             <ImageWithDefault

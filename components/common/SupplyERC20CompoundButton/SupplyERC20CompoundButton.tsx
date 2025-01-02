@@ -50,8 +50,7 @@ const SupplyERC20CompoundButton = ({
     } = useWriteContract()
     const [lastTx, setLastTx] = useState<'mint' | 'approve'>('mint')
     // const { createToast } = useCreatePendingToast()
-    const { lendTx, setLendTx } =
-        useTxContext() as TTxContext
+    const { lendTx, setLendTx } = useTxContext() as TTxContext
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({

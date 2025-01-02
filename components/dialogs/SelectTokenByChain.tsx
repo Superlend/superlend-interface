@@ -1,4 +1,4 @@
-import { FC } from "react"
+import { FC } from 'react'
 import {
     Dialog,
     DialogContent,
@@ -6,7 +6,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
     Drawer,
     DrawerClose,
@@ -16,17 +16,17 @@ import {
     DrawerHeader,
     DrawerTitle,
     DrawerTrigger,
-} from "@/components/ui/drawer"
-import { Card } from "../ui/card"
-import Image from "next/image"
-import useDimensions from "@/hooks/useDimensions"
-import { BodyText, HeadingText, Label } from "../ui/typography"
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area"
-import { hasLowestDisplayValuePrefix } from "@/lib/utils"
-import { getLowestDisplayValue } from "@/lib/utils"
-import { isLowestValue } from "@/lib/utils"
-import { abbreviateNumber } from "@/lib/utils"
+} from '@/components/ui/drawer'
+import { Card } from '../ui/card'
+import Image from 'next/image'
+import useDimensions from '@/hooks/useDimensions'
+import { BodyText, HeadingText, Label } from '../ui/typography'
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden'
+import { ScrollArea, ScrollBar } from '../ui/scroll-area'
+import { hasLowestDisplayValuePrefix } from '@/lib/utils'
+import { getLowestDisplayValue } from '@/lib/utils'
+import { isLowestValue } from '@/lib/utils'
+import { abbreviateNumber } from '@/lib/utils'
 
 interface TokenDetails {
     symbol: string
@@ -57,7 +57,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     setOpen,
     networks,
     tokens,
-    onSelectToken
+    onSelectToken,
 }: SelectTokenByChainProps) => {
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
@@ -102,7 +102,9 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                             onClick={() => onSelectToken(token)}
                         >
                             <div className="flex items-center gap-3 select-none">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center`}>
+                                <div
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center`}
+                                >
                                     <Image
                                         src={token.logo}
                                         alt={token.symbol}
@@ -112,19 +114,24 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                     />
                                 </div>
                                 <div>
-                                    <BodyText level="body2" weight="medium">{token.symbol}</BodyText>
+                                    <BodyText level="body2" weight="medium">
+                                        {token.symbol}
+                                    </BodyText>
                                     <Label className="text-gray-700">{`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}</Label>
                                 </div>
                             </div>
                             <div className="text-right select-none">
-                                <BodyText level="body2" weight="medium">{`${hasLowestDisplayValuePrefix(Number(token.positionAmount))} ${formatAmountToDisplay(token.positionAmount)}`}</BodyText>
+                                <BodyText
+                                    level="body2"
+                                    weight="medium"
+                                >{`${hasLowestDisplayValuePrefix(Number(token.positionAmount))} ${formatAmountToDisplay(token.positionAmount)}`}</BodyText>
                                 <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.positionAmountInUsd))} $${formatAmountToDisplay(token.positionAmountInUsd)}`}</Label>
                             </div>
                         </div>
                     ))}
                 </div>
             </ScrollArea>
-        </Card >
+        </Card>
     )
 
     if (isDesktop) {
@@ -144,7 +151,6 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                     {content}
                 </DialogContent>
             </Dialog>
-
         )
     }
 
@@ -162,7 +168,6 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                 {content}
             </DrawerContent>
         </Drawer>
-
     )
 }
 
@@ -170,8 +175,6 @@ function formatAmountToDisplay(amount: string) {
     if (isLowestValue(Number(amount ?? 0))) {
         return getLowestDisplayValue(Number(amount ?? 0))
     } else {
-        return abbreviateNumber(
-            Number(amount ?? 0)
-        )
+        return abbreviateNumber(Number(amount ?? 0))
     }
 }

@@ -194,14 +194,14 @@ export default function TopApyOpportunities() {
     const filteredTableDataByPlatformIds = rawTableData.filter(
         (opportunity) => {
             const isVault = opportunity.isVault
-            const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
+            const isMorpho =
+                opportunity.platformId.split('-')[0].toLowerCase() ===
+                PlatformType.MORPHO
             const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
 
             const compareWith = `${opportunity.platformId.split('-')[0]}${isMorpho ? `_${morphoSuffix}` : ''}`
-            
-            return platformIdsParam.includes(
-                compareWith.trim()
-            )
+
+            return platformIdsParam.includes(compareWith.trim())
         }
     )
 

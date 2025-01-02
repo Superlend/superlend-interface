@@ -116,7 +116,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const platformName: string = row.getValue('platformName')
             const platformLogo = row.original.platformLogo
-            const isMorpho = row.original.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
+            const isMorpho =
+                row.original.platformId.split('-')[0].toLowerCase() ===
+                PlatformType.MORPHO
             const isVault = row.original.isVault
 
             return (
@@ -134,7 +136,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     >
                         {platformName}
                     </BodyText>
-                    {(isMorpho && !isVault) && (
+                    {isMorpho && !isVault && (
                         <InfoTooltip
                             // label={
                             //     <ShieldAlertIcon width={18} height={18} className="text-[#D19900] shrink-0" />
@@ -209,7 +211,11 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         : getFormattedBaseRate(baseRate)
             }
 
-            if (apyCurrentFormatted === "0.00" && !isPairBasedProtocol && !isLend) {
+            if (
+                apyCurrentFormatted === '0.00' &&
+                !isPairBasedProtocol &&
+                !isLend
+            ) {
                 return (
                     <InfoTooltip
                         label={
@@ -266,17 +272,15 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             />
         ),
         cell: ({ row }) => {
-            const isMorpho = row.original.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO;
+            const isMorpho =
+                row.original.platformId.split('-')[0].toLowerCase() ===
+                PlatformType.MORPHO
             const isVault = row.original.isVault
 
             if (isMorpho && isVault) {
                 return (
                     <InfoTooltip
-                        label={
-                            <Badge>
-                                N/A
-                            </Badge>
-                        }
+                        label={<Badge>N/A</Badge>}
                         content="This does not apply to Morpho vaults, as the curator maintains this."
                     />
                 )
@@ -382,17 +386,15 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             />
         ),
         cell: ({ row }) => {
-            const isMorpho = row.original.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO;
+            const isMorpho =
+                row.original.platformId.split('-')[0].toLowerCase() ===
+                PlatformType.MORPHO
             const isVault = row.original.isVault
 
             if (isMorpho && isVault) {
                 return (
                     <InfoTooltip
-                        label={
-                            <Badge>
-                                N/A
-                            </Badge>
-                        }
+                        label={<Badge>N/A</Badge>}
                         content="This does not apply to Morpho vaults, as the curator maintains this."
                     />
                 )
