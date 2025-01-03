@@ -31,6 +31,7 @@ import { formatUnits } from 'viem'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import ExternalLink from '@/components/ExternalLink'
+import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 
 export default function LendAndBorrowAssetsMorpho() {
     const searchParams = useSearchParams()
@@ -98,6 +99,8 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
     const [positionType, setPositionType] = useState<TPositionType>('borrow')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
+    const { lendTx, borrowTx } = useLendBorrowTxContext()
+    const [refresh, setRefresh] = useState(false)
 
     const [amount, setAmount] = useState('')
 
@@ -107,13 +110,34 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
         setPositionType(positionTypeParam)
     }, [positionTypeParam])
 
+    useEffect(() => {
+        const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
+        if (isRefresh) {
+            setRefresh(true)
+        }
+    }, [lendTx.status, lendTx.isConfirmed, borrowTx.status, borrowTx.isConfirmed])
+
+    useEffect(() => {
+        if (refresh) {
+            setTimeout(() => {
+                setRefresh(false)
+            }, 30000)
+        }
+    }, [refresh])
+
     const { data: morphoMarketData } = useMarket({
         marketId: platformData?.platform?.morpho_market_id as MarketId,
+        chainId: Number(chain_id)
     })
 
     const { data: position } = usePosition({
         marketId: platformData?.platform?.morpho_market_id as MarketId,
         user: walletAddress,
+        chainId: Number(chain_id),
+        query: {
+            refetchIntervalInBackground: refresh,
+            refetchInterval: refresh ? 2000 : false,
+        },
     })
 
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
@@ -142,7 +166,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
             setCanBorrow(borrowAssets ? borrowAssets > 0 : false)
 
             const currentBorrowAssets = (accrualPosition.borrowAssets ?? BigInt(0))
-            const collUsdValue = (accrualPosition.collateralValue ? Number(formatUnits(accrualPosition.collateralValue, 18)) : 0) * (selectedAssetTokenDetails?.token?.price_usd ?? 0)
+            const collUsdValue = (accrualPosition.collateral ? Number(formatUnits(accrualPosition.collateral, selectedAssetTokenDetails?.token?.decimals ?? 0)) : 0) * (selectedAssetTokenDetails?.token?.price_usd ?? 0)
             const borrowUsdValue = (borrowAssets ? Number(formatUnits(currentBorrowAssets, morphoBorrowTokenDetails?.token?.decimals ?? 0)) : 0) * (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
 
             if (morphoBorrowTokenDetails?.ltv) {
@@ -168,7 +192,22 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
             setCanBorrow(false)
             setHealthFactor(0)
         }
-    }, [position, morphoMarketData, maxBorrowAmount, setMaxBorrowAmount, isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount, hasCollateral, setHasCollateral, canBorrow, setCanBorrow, doesMarketHasLiquidity, setDoesMarketHasLiquidity, healthFactor, setHealthFactor])
+    }, [
+        position,
+        morphoMarketData,
+        maxBorrowAmount,
+        setMaxBorrowAmount,
+        isLoadingMaxBorrowingAmount,
+        setIsLoadingMaxBorrowingAmount,
+        hasCollateral,
+        setHasCollateral,
+        canBorrow,
+        setCanBorrow,
+        doesMarketHasLiquidity,
+        setDoesMarketHasLiquidity,
+        healthFactor,
+        setHealthFactor
+    ])
 
     const getUpdatedHealthFactor = (position: any, morphoMarketData: any, selectedAssetTokenDetails: any, morphoBorrowTokenDetails: any, amount: string) => {
         if (!position || !morphoMarketData || !selectedAssetTokenDetails || !morphoBorrowTokenDetails) {
@@ -177,8 +216,13 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
 
         const accrualPosition: AccrualPosition = new AccrualPosition(position, morphoMarketData)
         const currentBorrowAssets = (accrualPosition.borrowAssets ?? BigInt(0))
-        const collUsdValue = (accrualPosition.collateralValue ? Number(formatUnits(accrualPosition.collateralValue, 18)) : 0) * (selectedAssetTokenDetails?.token?.price_usd ?? 0)
-        const borrowUsdValue = ((currentBorrowAssets ? Number(formatUnits(currentBorrowAssets, morphoBorrowTokenDetails?.token?.decimals ?? 0)) : 0) + Number(amount)) * (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
+
+        const collNormalizeValue = Number(formatUnits(accrualPosition.collateral ?? BigInt(0), selectedAssetTokenDetails?.token?.decimals ?? 0))
+        const borrowNormalizeValue = currentBorrowAssets == BigInt(0) ? 0 : Number(formatUnits(currentBorrowAssets, morphoBorrowTokenDetails?.token?.decimals ?? 0))
+        const borrowNormalizeValueWithAmount = borrowNormalizeValue + Number(amount)
+
+        const collUsdValue = collNormalizeValue * (selectedAssetTokenDetails?.token?.price_usd ?? 0)
+        const borrowUsdValue = borrowNormalizeValueWithAmount * (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
 
         if (morphoBorrowTokenDetails?.ltv) {
             const lltv = (morphoBorrowTokenDetails?.ltv ?? 1) / 100;
