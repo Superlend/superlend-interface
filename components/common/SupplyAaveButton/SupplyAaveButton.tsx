@@ -96,12 +96,12 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? lendTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? lendTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 
@@ -227,14 +227,13 @@ const SupplyAaveButton = ({
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
                 args: [poolContractAddress, parseUnits(amount, decimals)],
+            }).catch((error) => {
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                }))
             })
-                .catch((error) => {
-                    setLendTx((prev: TLendTx) => ({
-                        ...prev,
-                        isPending: false,
-                        isConfirming: false,
-                    }))
-                })
         } catch (error) {
             error
         }
@@ -252,17 +251,18 @@ const SupplyAaveButton = ({
                             weight="normal"
                             className="text-secondary-500"
                         >
-                            Note: You need to complete an &apos;approval transaction&apos;
-                            granting Superlend smart contracts permission to
-                            move funds from your wallet as the first step before
-                            supplying the asset.
+                            Note: You need to complete an &apos;approval
+                            transaction&apos; granting Superlend smart contracts
+                            permission to move funds from your wallet as the
+                            first step before supplying the asset.
                             <a
                                 href="https://eips.ethereum.org/EIPS/eip-2612"
                                 target="_blank"
                                 className="text-secondary-500 pb-[0.5px] border-b border-secondary-500 hover:border-secondary-200 ml-1"
                             >
                                 Learn more
-                            </a>.
+                            </a>
+                            .
                         </BodyText>
                     }
                 />
