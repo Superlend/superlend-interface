@@ -46,16 +46,11 @@ export default function PositionDetails() {
     const { lendTx, borrowTx } = useLendBorrowTxContext()
     const [refresh, setRefresh] = useState(false)
 
-    useEffect(() => {
-        const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
-        setRefresh(isRefresh)
-    }, [lendTx.status, lendTx.isConfirmed, borrowTx.status, borrowTx.isConfirmed])
-
-
     const {
         data: portfolioData,
         isLoading: isLoadingPortfolioData,
         isError: isErrorPortfolioData,
+        refetch: refetchPortfolioData,
     } = useGetPortfolioData({
         user_address: walletAddress as `0x${string}`,
         platform_id: [protocol_identifier],
@@ -72,6 +67,21 @@ export default function PositionDetails() {
         protocol_identifier,
         chain_id: Number(chain_id),
     })
+
+    useEffect(() => {
+        const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
+        if (isRefresh) {
+            setRefresh(true)
+        }
+    }, [lendTx.status, lendTx.isConfirmed, borrowTx.status, borrowTx.isConfirmed])
+
+    useEffect(() => {
+        if (refresh) {
+            setTimeout(() => {
+                setRefresh(false)
+            }, 30000)
+        }
+    }, [refresh])
 
     const isLoading =
         isLoadingPortfolioData || isLoadingPlatformData

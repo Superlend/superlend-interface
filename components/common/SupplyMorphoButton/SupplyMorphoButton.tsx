@@ -56,7 +56,7 @@ const SupplyMorphoButton = ({
     } = useWriteContract()
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
-            confirmations: 2,
+            confirmations: 1,
             hash,
         })
     const { address: walletAddress } = useAccount()
