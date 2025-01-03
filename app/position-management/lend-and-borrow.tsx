@@ -134,7 +134,6 @@ export default function LendAndBorrowAssets() {
     const positionTypeParam: TPositionType =
         (searchParams.get('position_type') as TPositionType) || 'lend'
     const { address: walletAddress } = useAccount()
-    const { switchChainAsync } = useSwitchChain()
     const {
         fetchAaveV3Data,
         getMaxBorrowAmount,
@@ -907,7 +906,6 @@ export function ConfirmationDialog({
         useLendBorrowTxContext() as TLendBorrowTxContext
     const [open, setOpen] = useState(false)
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
-    const { switchChainAsync } = useSwitchChain()
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
     const { width: screenWidth } = useDimensions()

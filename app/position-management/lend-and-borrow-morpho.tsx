@@ -17,12 +17,12 @@ import { TPlatformAsset } from '@/types/platform'
 import { LoaderCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
-import { useAccount, useSwitchChain } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { ConfirmationDialog, handleSmallestValue } from './lend-and-borrow'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import { Button } from '@/components/ui/button'
-import { TOO_MANY_DECIMALS_VALIDATIONS_TEXT } from '@/constants'
+import { CHAIN_ID_MAPPER, TOO_MANY_DECIMALS_VALIDATIONS_TEXT } from '@/constants'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 
 import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
@@ -32,6 +32,8 @@ import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import ExternalLink from '@/components/ExternalLink'
 import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { ChainId } from '@/types/chain'
+import { modal } from '@/context'
 
 export default function LendAndBorrowAssetsMorpho() {
     const searchParams = useSearchParams()
@@ -40,8 +42,6 @@ export default function LendAndBorrowAssetsMorpho() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType = (searchParams.get('position_type') as TPositionType) || 'lend'
     const { address: walletAddress } = useAccount()
-    const { switchChainAsync } = useSwitchChain()
-
 
     const [positionType, setPositionType] = useState<TPositionType>('borrow')
 
@@ -54,7 +54,7 @@ export default function LendAndBorrowAssetsMorpho() {
     // Switch chain
     useEffect(() => {
         if (!!walletAddress) {
-            switchChainAsync({ chainId: Number(chain_id) })
+            modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
         }
     }, [walletAddress, Number(chain_id)])
 
