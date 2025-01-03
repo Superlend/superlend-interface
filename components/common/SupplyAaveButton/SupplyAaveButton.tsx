@@ -96,12 +96,12 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? lendTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? lendTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
@@ -252,8 +252,7 @@ const SupplyAaveButton = ({
                             className="text-secondary-500"
                         >
                             Note: You need to complete an &apos;approval
-                            transaction&apos; granting Superlend smart contracts
-                            permission to move funds from your wallet as the
+                            transaction&apos; granting permission to move funds from your wallet as the
                             first step before supplying the asset.
                             <a
                                 href="https://eips.ethereum.org/EIPS/eip-2612"

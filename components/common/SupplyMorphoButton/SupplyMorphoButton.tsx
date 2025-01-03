@@ -9,7 +9,9 @@ import { parseUnits } from 'ethers/lib/utils'
 import {
     APPROVE_MESSAGE,
     CONFIRM_ACTION_IN_WALLET_TEXT,
+    EIP_20_SIGNED_APPROVALS_LINK,
     ERROR_TOAST_ICON_STYLES,
+    MORPHO_ETHERSCAN_TUTORIAL_LINK,
     SOMETHING_WENT_WRONG_MESSAGE,
     SUCCESS_MESSAGE,
 } from '@/constants'
@@ -31,6 +33,7 @@ import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
 import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
 
 import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
+import ExternalLink from '@/components/ExternalLink'
 
 interface ISupplyMorphoButtonProps {
     disabled: boolean
@@ -347,7 +350,10 @@ const SupplyMorphoButton = ({
                             weight="normal"
                             className="text-secondary-500"
                         >
-                            Note: Adding collateral to morpho markets does not yield returns.
+                            Note: Adding collateral to Morpho Markets does not yield. To supply & earn from morpho markets, follow the process <span className="mr-1">outlined</span>
+                            <ExternalLink href={MORPHO_ETHERSCAN_TUTORIAL_LINK}>
+                                here
+                            </ExternalLink>
                         </BodyText>
                     }
                 />
@@ -363,16 +369,11 @@ const SupplyMorphoButton = ({
                             className="text-secondary-500"
                         >
                             Note: You need to complete an &apos;approval
-                            transaction&apos; granting Superlend smart contracts
-                            permission to move funds from your wallet as the
-                            first step before supplying the asset.
-                            <a
-                                href="https://eips.ethereum.org/EIPS/eip-2612"
-                                target="_blank"
-                                className="text-secondary-500 pb-[0.5px] border-b border-secondary-500 hover:border-secondary-200 ml-1"
-                            >
+                            transaction&apos; granting permission to move funds from your wallet as the
+                            first step before supplying the <span className="mr-1">asset</span>
+                            <ExternalLink href={EIP_20_SIGNED_APPROVALS_LINK}>
                                 Learn more
-                            </a>
+                            </ExternalLink>
                             .
                         </BodyText>
                     }

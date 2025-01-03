@@ -754,37 +754,41 @@ export default function LendAndBorrowAssets() {
                                 %
                             </Badge>}
                         </div>}
-                    <div className="card-content-bottom px-5 py-3">
-                        {(walletAddress && !errorMessage) && (
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
-                            >
-                                {
-                                    isLoadingHelperText && getLoadingHelperText()
-                                }
-                                {(!errorMessage && !isLoadingHelperText) &&
-                                    (isLendPositionType(positionType)
-                                        ? 'Enter amount to proceed with supplying collateral for this position'
-                                        : 'Enter the amount you want to borrow from this position')}
-                            </BodyText>
-                        )}
-                        {(errorMessage && !isLoadingHelperText && walletAddress) && (
-                            <CustomAlert
-                                variant="destructive"
-                                description={
+                    {
+                        walletAddress && (
+                            <div className="card-content-bottom max-md:px-2 py-3 max-w-[250px] mx-auto">
+                                {(isLoadingHelperText) && (
                                     <BodyText
                                         level="body2"
                                         weight="normal"
-                                        className="text-destructive-foreground"
+                                        className="w-full text-gray-500 text-center"
+                                    >
+                                        {getLoadingHelperText()}
+                                    </BodyText>
+                                )}
+                                {(!errorMessage && !isLoadingHelperText) && (
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="w-full text-gray-500 text-center"
+                                    >
+                                        {(isLendPositionType(positionType)
+                                            ? 'Enter amount to proceed with supplying collateral for this position'
+                                            : 'Enter the amount you want to borrow from this position')}
+                                    </BodyText>
+                                )}
+                                {(errorMessage && !isLoadingHelperText && !isLoadingErc20TokensBalanceData && !isLoadingMaxBorrowingAmount) && (
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="text-center text-destructive-foreground"
                                     >
                                         {errorMessage}
                                     </BodyText>
-                                }
-                            />
-                        )}
-                    </div>
+                                )}
+                            </div>
+                        )
+                    }
                 </CardContent>
                 <CardFooter className="p-0 justify-center">
                     {!walletAddress && <ConnectWalletButton />}

@@ -268,7 +268,10 @@ export const APPROXIMATE_ESTIMATE_OF_RETURNS_TOOLTIP_CONTENT =
     'This is an approximate estimate of returns and not the actual returns as change in supply will affect the overall earnings with time'
 
 export const MORPHO_ETHERSCAN_TUTORIAL_LINK =
-    'https://docs.morpho.org/morpho/tutorials/etherscan-use/'
+    'https://docs.morpho.org/morpho/tutorials/etherscan-use'
+
+export const EIP_20_SIGNED_APPROVALS_LINK =
+    'https://eips.ethereum.org/EIPS/eip-2612'
 
 export const CHAIN_ID_MAPPER: { [key in ChainId]: AppKitNetwork } = {
     [ChainId.Polygon]: polygon,

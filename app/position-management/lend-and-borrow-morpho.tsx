@@ -22,7 +22,7 @@ import { ConfirmationDialog, handleSmallestValue } from './lend-and-borrow'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import { Button } from '@/components/ui/button'
-import { CHAIN_ID_MAPPER, TOO_MANY_DECIMALS_VALIDATIONS_TEXT } from '@/constants'
+import { CHAIN_ID_MAPPER, MORPHO_ETHERSCAN_TUTORIAL_LINK, TOO_MANY_DECIMALS_VALIDATIONS_TEXT } from '@/constants'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 
 import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
@@ -77,11 +77,11 @@ export default function LendAndBorrowAssetsMorpho() {
         platformData?.platform?.protocol_type === 'morpho' &&
         platformData?.platform?.isVault
 
-    if ((!isMorphoMarketsProtocol && !isMorphoVaultsProtocol) || (isMorphoMarketsProtocol && positionTypeParam === 'lend')) {
+    if ((!isMorphoMarketsProtocol && !isMorphoVaultsProtocol)) {
         return null
-    } else if (isMorphoMarketsProtocol && walletAddress) {
+    } else if (isMorphoMarketsProtocol) {
         return <LendAndBorrowAssetsMorphoMarkets platformData={platformData} walletAddress={walletAddress as `0x${string}`} isLoadingPlatformData={isLoadingPlatformData} />
-    } else if (isMorphoVaultsProtocol && walletAddress) {
+    } else if (isMorphoVaultsProtocol) {
         return <LendAndBorrowAssetsMorphoVaults platformData={platformData} walletAddress={walletAddress as `0x${string}`} isLoadingPlatformData={isLoadingPlatformData} />
     }
 
@@ -96,19 +96,14 @@ function isLendPositionType(positionType: TPositionType) {
 function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadingPlatformData }: { platformData: TPlatform, walletAddress: `0x${string}`, isLoadingPlatformData: boolean }) {
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || '1'
-    const [positionType, setPositionType] = useState<TPositionType>('borrow')
+    const positionTypeParam: TPositionType = (searchParams.get('position_type') as TPositionType) || 'lend'
+    const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
     const { lendTx, borrowTx } = useLendBorrowTxContext()
     const [refresh, setRefresh] = useState(false)
 
     const [amount, setAmount] = useState('')
-
-    const positionTypeParam: TPositionType = 'borrow'
-
-    useEffect(() => {
-        setPositionType(positionTypeParam)
-    }, [positionTypeParam])
 
     useEffect(() => {
         const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
@@ -515,57 +510,74 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                             max
                         </Button>
                     </div>
-                    <div className="card-content-bottom px-5 py-3">
-                        {(walletAddress && !errorMessage) && (
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
-                            >
-                                {isLoadingHelperText && getLoadingHelperText()}
-                                {isLendPositionType(positionType) && 'Enter amount to proceed with supplying collateral for this position'}
-                                {(!isLendPositionType(positionType) && doesMarketHasLiquidity) && 'Enter the amount you want to borrow from this position'}
-                            </BodyText>
-                        )}
-                        {(!errorMessage && !isLoadingHelperText && walletAddress) &&
-                            ((!isLendPositionType(positionType) && !doesMarketHasLiquidity) &&
-                                <CustomAlert
-                                    variant="info"
-                                    hasPrefixIcon={false}
-                                    description={
-                                        <BodyText
-                                            level="body3"
-                                            weight="normal"
-                                            className="text-secondary-500 flex-inline"
-                                        >
-                                            {(
-                                                <span className='flex-inline'>
-                                                    Superlend doesn&apos;t support borrowing from this market, as there&apos;s not enough liquidity. Try <span className='mr-1'>using</span>
-                                                    <ExternalLink href="https://morpho.org">
-                                                        morpho website
-                                                    </ExternalLink>
-                                                    <span className='ml-1'>for</span> the same
-                                                </span>
-                                            )}
-                                        </BodyText>
-                                    }
-                                />)
-                        }
-                        {(errorMessage && !isLoadingHelperText && walletAddress) && (
-                            <CustomAlert
-                                variant="destructive"
-                                description={
+                    {
+                        walletAddress && (
+                            <div className="card-content-bottom px-5 py-3">
+                                {(isLoadingHelperText) && (
                                     <BodyText
                                         level="body2"
                                         weight="normal"
-                                        className="text-destructive-foreground"
+                                        className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
+                                    >
+                                        {getLoadingHelperText()}
+                                    </BodyText>
+                                )}
+                                {(!errorMessage && !isLoadingHelperText) && (
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
+                                    >
+                                        {(isLendPositionType(positionType) && (positionTypeParam === 'lend')) && (
+                                            <>
+                                                Adding collateral to Morpho Markets does not yield. To supply & earn from morpho markets, <span className="mr-1">visit</span>
+                                                <ExternalLink href={MORPHO_ETHERSCAN_TUTORIAL_LINK}>
+                                                    here
+                                                </ExternalLink>
+                                            </>
+                                        )}
+                                        {(isLendPositionType(positionType) && (positionTypeParam === 'borrow')) && (
+                                            'Enter amount to proceed with supplying collateral for this position'
+                                        )}
+                                        {(!isLendPositionType(positionType) && doesMarketHasLiquidity) && 'Enter the amount you want to borrow from this position'}
+                                    </BodyText>
+                                )}
+                                {(!errorMessage && !isLoadingHelperText) &&
+                                    ((!isLendPositionType(positionType) && !doesMarketHasLiquidity) &&
+                                        <CustomAlert
+                                            variant="info"
+                                            hasPrefixIcon={false}
+                                            description={
+                                                <BodyText
+                                                    level="body3"
+                                                    weight="normal"
+                                                    className="text-secondary-500 flex-inline"
+                                                >
+                                                    {(
+                                                        <span className='flex-inline'>
+                                                            Superlend doesn&apos;t support borrowing from this market, as there&apos;s not enough liquidity. Try <span className='mr-1'>using</span>
+                                                            <ExternalLink href="https://morpho.org">
+                                                                morpho website
+                                                            </ExternalLink>
+                                                            <span className='ml-1'>for</span> the same
+                                                        </span>
+                                                    )}
+                                                </BodyText>
+                                            }
+                                        />)
+                                }
+                                {(errorMessage && !isLoadingHelperText && !isLoading) && (
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="text-center text-destructive-foreground"
                                     >
                                         {errorMessage}
                                     </BodyText>
-                                }
-                            />
-                        )}
-                    </div>
+                                )}
+                            </div>
+                        )
+                    }
                 </CardContent>
                 <CardFooter className="p-0 justify-center">
                     {!walletAddress && <ConnectWalletButton />}
@@ -716,23 +728,9 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
 
     return (
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
-            <LendBorrowToggle
-                type={positionType}
-                handleToggle={(positionType: TPositionType) => {
-                    setAmount('')
-                    setPositionType(positionType)
-                }}
-                title={{
-                    lend: 'Supply',
-                }}
-                showTab={{
-                    lend: true,
-                    borrow: false,
-                }}
-            />
             <Card className="flex flex-col gap-[12px] p-[16px]">
                 <div className="flex items-center justify-between px-[14px]">
-                    <BodyText level="body2" weight="normal" className="capitalize text-gray-600">
+                    <BodyText level="body2" weight="semibold" className="capitalize text-primary text-brightness-75">
                         Supply to vault
                     </BodyText>
                     {walletAddress && (
@@ -829,18 +827,13 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
                         )}
                         {
                             (lendErrorMessage && !isLoading && walletAddress) && (
-                                <CustomAlert
-                                    variant="destructive"
-                                    description={
-                                        <BodyText
-                                            level="body2"
-                                            weight="normal"
-                                            className="text-destructive-foreground"
-                                        >
-                                            {lendErrorMessage}
-                                        </BodyText>
-                                    }
-                                />
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-center text-destructive-foreground"
+                                >
+                                    {lendErrorMessage}
+                                </BodyText>
                             )
                         }
                     </div>
