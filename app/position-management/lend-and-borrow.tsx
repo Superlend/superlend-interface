@@ -134,7 +134,6 @@ export default function LendAndBorrowAssets() {
     const positionTypeParam: TPositionType =
         (searchParams.get('position_type') as TPositionType) || 'lend'
     const { address: walletAddress } = useAccount()
-    const { switchChainAsync } = useSwitchChain()
     const {
         fetchAaveV3Data,
         getMaxBorrowAmount,
@@ -530,7 +529,7 @@ export default function LendAndBorrowAssets() {
             return 'You do not have sufficient collateral to borrow'
         }
         if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
-            return 'Amount exceeds available borrow limit'
+            return 'Amount exceeds borrow limit'
         }
         return null
     }, [hasCollateral, canBorrow, amount, balance, toManyDecimals])
@@ -576,6 +575,7 @@ export default function LendAndBorrowAssets() {
     }
 
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
+    const isMorphoProtocol = platformData?.platform?.protocol_type === 'morpho'
     const isPolygonChain = Number(chain_id) === 137
 
     const isLoadingHelperText = isLendPositionType(positionType) ? isLoadingErc20TokensBalanceData : isLoadingMaxBorrowingAmount;
@@ -754,26 +754,37 @@ export default function LendAndBorrowAssets() {
                                 %
                             </Badge>}
                         </div>}
-                    {walletAddress && (
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="mx-auto w-full text-gray-500 py-[16px] text-center max-w-[250px]"
-                        >
-                            {
-                                isLoadingHelperText && getLoadingHelperText()
-                            }
-                            {(!errorMessage && !isLoadingHelperText) &&
-                                (isLendPositionType(positionType)
-                                    ? 'Enter amount to proceed with supplying collateral for this position'
-                                    : 'Enter the amount you want to borrow from this position')}
-                            {(errorMessage && !isLoadingHelperText) && (
-                                <span className="text-xs text-destructive-foreground">
-                                    {errorMessage}
-                                </span>
-                            )}
-                        </BodyText>
-                    )}
+                    <div className="card-content-bottom px-5 py-3">
+                        {(walletAddress && !errorMessage) && (
+                            <BodyText
+                                level="body2"
+                                weight="normal"
+                                className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
+                            >
+                                {
+                                    isLoadingHelperText && getLoadingHelperText()
+                                }
+                                {(!errorMessage && !isLoadingHelperText) &&
+                                    (isLendPositionType(positionType)
+                                        ? 'Enter amount to proceed with supplying collateral for this position'
+                                        : 'Enter the amount you want to borrow from this position')}
+                            </BodyText>
+                        )}
+                        {(errorMessage && !isLoadingHelperText && walletAddress) && (
+                            <CustomAlert
+                                variant="destructive"
+                                description={
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="text-destructive-foreground"
+                                    >
+                                        {errorMessage}
+                                    </BodyText>
+                                }
+                            />
+                        )}
+                    </div>
                 </CardContent>
                 <CardFooter className="p-0 justify-center">
                     {!walletAddress && <ConnectWalletButton />}
@@ -867,7 +878,7 @@ function SelectTokensDropdown({
     )
 }
 
-function ConfirmationDialog({
+export function ConfirmationDialog({
     disabled,
     positionType,
     assetDetails,
@@ -876,6 +887,7 @@ function ConfirmationDialog({
     balance,
     maxBorrowAmount,
     healthFactorValues,
+    isVault
 }: {
     disabled: boolean
     positionType: TPositionType
@@ -888,13 +900,12 @@ function ConfirmationDialog({
         healthFactor: any,
         newHealthFactor: any
     }
+    isVault?: boolean
 }) {
-
     const { lendTx, setLendTx, borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
     const [open, setOpen] = useState(false)
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
-    const { switchChainAsync } = useSwitchChain()
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
     const { width: screenWidth } = useDimensions()
@@ -1015,7 +1026,7 @@ function ConfirmationDialog({
         >
             <span className="uppercase leading-[0]">
                 {isLendPositionType(positionType)
-                    ? 'Lend collateral'
+                    ? isVault ? 'Supply to vault' : 'Lend collateral'
                     : 'Review & Borrow'}
             </span>
             <ArrowRightIcon
@@ -1079,7 +1090,7 @@ function ConfirmationDialog({
                                     isLendPositionType(positionType)
                                         ? lendTx.hash
                                         : borrowTx.hash,
-                                    assetDetails?.platform_name
+                                    assetDetails?.chain_id || assetDetails?.platform?.chain_id
                                 )}
                                 target="_blank"
                                 rel="noreferrer"
@@ -1373,7 +1384,7 @@ function ConfirmationDialog({
                                                 isLendPositionType(positionType)
                                                     ? lendTx.hash
                                                     : borrowTx.hash,
-                                                assetDetails?.platform_name
+                                                assetDetails?.chain_id || assetDetails?.platform?.chain_id
                                             )}
                                             target="_blank"
                                             rel="noreferrer"
@@ -1492,8 +1503,8 @@ function isLendPositionType(positionType: TPositionType) {
     return positionType === 'lend'
 }
 
-function getExplorerLink(hash: string, platform_name: PlatformValue) {
-    return `${TX_EXPLORER_LINKS[platform_name]}/tx/${hash}`
+function getExplorerLink(hash: string, chainId: ChainId) {
+    return `${TX_EXPLORER_LINKS[chainId]}/tx/${hash}`
 }
 
 function getTruncatedTxHash(hash: string) {
@@ -1533,7 +1544,7 @@ function getTxInProgressText({
     return textByStatus[txStatus.status]
 }
 
-function handleSmallestValue(amount: string, maxDecimalsToDisplay: number = 2) {
+export function handleSmallestValue(amount: string, maxDecimalsToDisplay: number = 2) {
     const amountFormatted = hasExponent(amount)
         ? Math.abs(Number(amount)).toFixed(10)
         : amount.toString()

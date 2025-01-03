@@ -281,7 +281,7 @@ export default function TopApyOpportunities() {
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
-                        <div className="w-full sm:max-w-[150px] lg:max-w-[250px]">
+                        <div className="w-full sm:max-w-[350px]">
                             <LendBorrowToggle
                                 type={positionTypeParam as TPositionType}
                                 handleToggle={toggleOpportunityType}

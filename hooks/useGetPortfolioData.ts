@@ -20,15 +20,15 @@ export default function useGetPortfolioData(params: TGetPortfolioParams) {
         is_refresh,
     } = params
 
-    const { data, isLoading, isError } = useQuery<TPortfolio>({
+    const { data, isLoading, isError, refetch } = useQuery<TPortfolio>({
         queryKey: [
             'portfolio',
+            is_refresh,
             user_address,
             chain_id,
             platform_id,
             position_type,
             protocol_identifier,
-            is_refresh,
         ],
         queryFn: async () => {
             try {
@@ -40,8 +40,10 @@ export default function useGetPortfolioData(params: TGetPortfolioParams) {
                 return PortfolioDataInit
             }
         },
-        staleTime: Infinity,
-        refetchInterval: 60000,
+        staleTime: 0,
+        refetchInterval: (query) => {
+            return query.queryKey[1] ? 2000 : 60000;
+        },
         enabled: !!user_address,
     })
 
@@ -64,5 +66,6 @@ export default function useGetPortfolioData(params: TGetPortfolioParams) {
         data: data || PortfolioDataInit,
         isLoading,
         isError,
+        refetch,
     }
 }
