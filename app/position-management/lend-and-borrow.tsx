@@ -530,7 +530,7 @@ export default function LendAndBorrowAssets() {
             return 'You do not have sufficient collateral to borrow'
         }
         if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
-            return 'Amount exceeds available borrow limit'
+            return 'Amount exceeds borrow limit'
         }
         return null
     }, [hasCollateral, canBorrow, amount, balance, toManyDecimals])
@@ -755,26 +755,37 @@ export default function LendAndBorrowAssets() {
                                 %
                             </Badge>}
                         </div>}
-                    {walletAddress && (
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="mx-auto w-full text-gray-500 py-[16px] text-center max-w-[250px]"
-                        >
-                            {
-                                isLoadingHelperText && getLoadingHelperText()
-                            }
-                            {(!errorMessage && !isLoadingHelperText) &&
-                                (isLendPositionType(positionType)
-                                    ? 'Enter amount to proceed with supplying collateral for this position'
-                                    : 'Enter the amount you want to borrow from this position')}
-                            {(errorMessage && !isLoadingHelperText) && (
-                                <span className="text-xs text-destructive-foreground">
-                                    {errorMessage}
-                                </span>
-                            )}
-                        </BodyText>
-                    )}
+                    <div className="card-content-bottom px-5 py-3">
+                        {(walletAddress && !errorMessage) && (
+                            <BodyText
+                                level="body2"
+                                weight="normal"
+                                className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
+                            >
+                                {
+                                    isLoadingHelperText && getLoadingHelperText()
+                                }
+                                {(!errorMessage && !isLoadingHelperText) &&
+                                    (isLendPositionType(positionType)
+                                        ? 'Enter amount to proceed with supplying collateral for this position'
+                                        : 'Enter the amount you want to borrow from this position')}
+                            </BodyText>
+                        )}
+                        {(errorMessage && !isLoadingHelperText && walletAddress) && (
+                            <CustomAlert
+                                variant="destructive"
+                                description={
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="text-destructive-foreground"
+                                    >
+                                        {errorMessage}
+                                    </BodyText>
+                                }
+                            />
+                        )}
+                    </div>
                 </CardContent>
                 <CardFooter className="p-0 justify-center">
                     {!walletAddress && <ConnectWalletButton />}
