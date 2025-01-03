@@ -6,7 +6,7 @@ import MainContainer from "@/components/MainContainer";
 import { cn } from "@/lib/utils";
 import EasterEggSolved from "@/components/EasterEggSolved";
 import EasterEggImage from "./easter-egg-image";
-import { Label } from "@/components/ui/typography";
+import { BodyText, HeadingText, Label } from "@/components/ui/typography";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
@@ -142,47 +142,11 @@ const EasterEgg = () => {
 			<div className="pt-6">
 				<Label size="large" weight="medium">
 					{isSolved && (
-						<div ref={afterDeatilsRef}>
-							At Superlend, we believe in blending innovation with fun. Today, we&apos;re excited to invite you
-							to join an adventure that will ignite your curiosity and immerse you in the dynamic world of
-							decentralized finance (DeFi). Introducing the SuperHunt—a thrilling quest designed for
-							explorers, problem solvers, and those eager to unlock hidden treasures! But here&apos;s the twist:
-							it&apos;s not just about rewards. SuperHunt is more than just a simple reward mechanism—it&apos;s an
-							experience that brings you closer to the Superlend community, lets you explore our ecosystem,
-							and discover secrets that will make you part of our exclusive circle. What&apos;s in the Hunt?
-							Hidden Easter Eggs: Scattered throughout the Superlend platform and beyond are Easter Eggs
-							waiting to be discovered. Each egg holds a piece of a larger mystery. The more eggs you find,
-							the more secrets you&apos;ll unlock. But the journey doesn&apos;t stop there—each discovery brings you
-							closer to unveiling something much bigger and getting more rewards. How to Get Involved:
-							Start Your Hunt: Dive into the Superlend platform, engage with our community, and explore the
-							world of DeFi like never before. The Easter Eggs are hidden in plain sight—within our
-							interface, our social media posts, and maybe even in conversations with the Superlend team.
-							Keep your eyes open! Complete Challenges: Some Easter Eggs are unlocked by completing
-							specific challenges. Whether it&apos;s interacting with the platform in new ways, solving riddles,
-							or sharing your experiences on social media, these quests will test your skills and reward
-							your efforts. Share Your Discoveries: The Superlend community is at the heart of this hunt.
-							Share your findings, insights, and theories with fellow participants on social media. Tag
-							Superlend and use the hashtag #SuperHunt to see what others have discovered and maybe pick up
-							a few clues along the way. Unlock Tiers of Rewards: Every Easter Egg reveals something
-							different—some might give you exclusive insights into upcoming features, early access to new
-							tools, rewards, or even badges that signify your expertise. There&apos;s more to be discovered as
-							you unlock higher levels, and for those who go the distance, a special surprise awaits. What
-							Can You Expect? The Easter Egg Hunt is designed to be more than just a game. It&apos;s a way to:
-							Deepen Your Knowledge: As you uncover each Easter Egg, you&apos;ll gain insights into DeFi and the
-							inner workings of Superlend that few others have. Earn Exclusive Access: Some eggs may lead
-							to access to private events, sneak peeks into upcoming products and features, or even direct
-							interactions with the Superlend team. Build Your Reputation: Stand out in the Superlend
-							community by collecting rare badges and earning a spot on our exclusive leaderboard. Why This
-							Hunt is Special We&apos;ve designed this campaign to reward curiosity and engagement. We want to
-							celebrate the pioneers in our community—the people who are excited about Superlend&apos;s vision
-							and are ready to immerse themselves in the adventure. While there&apos;s talk about rewards, this
-							hunt isn&apos;t about monetary gain alone. It&apos;s about discovering something much more valuable:
-							knowledge, community, and belonging. Of course, there may be a surprise or two along the way
-							for those who complete the journey, but the real value lies in what you&apos;ll learn and the
-							relationships you&apos;ll build along the way. Ready to Begin? The Superlend Easter Egg Hunt is
-							officially live! Head to the platform, check out our social media channels, and start hunting
-							for clues. Who knows? You might just be the first to uncover all the secrets we&apos;ve hidden for
-							you. Join us today in this exciting journey and let the hunt begin!
+						<div
+							className="flex flex-col gap-4"
+							ref={afterDeatilsRef}
+						>
+							<EasterEggDescription />
 						</div>
 					)}
 				</Label>
@@ -190,6 +154,71 @@ const EasterEgg = () => {
 
 			<EasterEggSolved isSolved={isSolved} handleScroll={handleScroll} walletAddress={walletAddress || ''} />
 		</MainContainer>
+	);
+};
+
+const EasterEggDescription = () => {
+	return (
+		<>
+			<HeadingText level={'h4'}>
+				Unveil the Secrets of Superlend: Embark on a Journey to Unlock Hidden Easter Eggs!
+			</HeadingText>
+			<BodyText level={'body1'}>
+				At Superlend, we blend innovation with fun.
+			</BodyText>
+			<BodyText level={'body1'}>
+				Join SuperHunt—a thrilling quest for explorers and problem solvers eager to uncover hidden treasures and connect with the Superlend community.
+			</BodyText>
+			<HeadingText level={'h4'}>
+				What&apos;s in the Hunt?
+			</HeadingText>
+			<ul className="list-disc pl-5 space-y-2">
+				<li>
+					<BodyText level={'body1'}>
+						Hidden Easter Eggs: Discover clues scattered across the Superlend platform, social media, and beyond. Each egg unlocks secrets, rewards, and insights.
+					</BodyText>
+				</li>
+				<li>
+					<BodyText level={'body1'}>
+						Challenges: Solve riddles, complete tasks, and interact with our platform to progress.
+					</BodyText>
+				</li>
+				<li>
+					<BodyText level={'body1'}>
+						Rewards: Gain exclusive insights, early access, badges, and surprises as you advance through tiers.
+					</BodyText>
+				</li>
+			</ul>
+			<HeadingText level={'h4'}>
+				How to Join:
+			</HeadingText>
+			<ol className="list-decimal pl-5 space-y-2">
+				<li>
+					<BodyText level={'body1'}>
+						Explore Superlend and hunt for Easter Eggs.
+					</BodyText>
+				</li>
+				<li>
+					<BodyText level={'body1'}>
+						Complete challenges and share your findings on social media, also making sure you tag @SuperlendHQ to your post.
+					</BodyText>
+				</li>
+				<li>
+					<BodyText level={'body1'}>
+						Unlock rewards, boost your knowledge of DeFi, and connect with like-minded explorers.
+					</BodyText>
+				</li>
+			</ol>
+			<BodyText level={'body1'}>
+				This hunt isn&apos;t just about rewards—it&apos;s about learning, community, and being part of something bigger.
+			</BodyText>
+			<BodyText level={'body1'}>
+				Ready to start? Dive in now and let the hunt begin! Follow us on Twitter, Discord, and other channels for hints and updates.
+			</BodyText>
+			<BodyText level={'body1'}>
+				Good luck, explorers! #SuperHunt
+			</BodyText>
+		</>
 	);
 };
 
