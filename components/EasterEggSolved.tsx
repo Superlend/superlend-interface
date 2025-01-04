@@ -15,6 +15,7 @@ import useDimensions from "@/hooks/useDimensions";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { LoaderCircle } from "lucide-react";
+import { BodyText } from "./ui/typography";
 
 type EasterEggSolvedProps = {
 	isSolved: boolean;
@@ -30,7 +31,7 @@ const EasterEggSolved = ({ isSolved, handleScroll, walletAddress }: EasterEggSol
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [rank, setRank] = useState<number | null>(null);
 
-	const referral = "Yeah! I have found a new Easter Egg at Superlend.xyz @SuperhuntHQ";
+	const referral = "Yeah! I have found a new Easter Egg at Superlend.xyz @SuperhuntHQ 🥚💎\nJoin the hunt, unlock rewards, and experience the thrill of SuperHunt.\nTry to find it at beta.superlend.xyz and start your adventure! 🚀";
 	const redirectUrl = "https://x.com/intent/post?text=" + encodeURIComponent(referral);
 
 	const fetchUserRank = useCallback(async () => {
@@ -69,6 +70,16 @@ const EasterEggSolved = ({ isSolved, handleScroll, walletAddress }: EasterEggSol
 		}, 300);
 	};
 
+	const getRankSuffix = (rank: number) => {
+		if ([11, 12, 13].includes(rank % 100)) return 'th';
+		switch (rank % 10) {
+			case 1: return 'st';
+			case 2: return 'nd';
+			case 3: return 'rd';
+			default: return 'th';
+		}
+	};
+
 	return (
 		<div>
 			<Dialog open={isModalOpen} onOpenChange={handleModalClose}>
@@ -91,9 +102,15 @@ const EasterEggSolved = ({ isSolved, handleScroll, walletAddress }: EasterEggSol
 							<DialogHeader>
 								<DialogTitle>Congratulations 🎉</DialogTitle>
 								<DialogDescription>
-									{rank !== null
-										? `You are ranked #${rank} in solving the quest!`
-										: "You have been successfully enrolled."}
+									{rank !== null &&
+										(<BodyText level="body2">
+											{rank !== null && (
+												<BodyText level="body2">
+													You&apos;re the {rank}{getRankSuffix(rank)} person to solve Easter Egg #1. You&apos;re now successfully enrolled in SuperHunt.
+												</BodyText>
+											)}
+										</BodyText>)
+									}
 								</DialogDescription>
 							</DialogHeader>
 							<DialogFooter>
