@@ -535,10 +535,13 @@ export default function LendAndBorrowAssets() {
     }, [hasCollateral, canBorrow, amount, balance, toManyDecimals])
 
     const errorMessage = useMemo(() => {
+        if (amount === '') {
+            return null
+        }
         return isLendPositionType(positionType)
             ? lendErrorMessage
             : borrowErrorMessage
-    }, [positionType, lendErrorMessage, borrowErrorMessage])
+    }, [positionType, lendErrorMessage, borrowErrorMessage, amount])
 
     const disabledButton: boolean = useMemo(
         () =>

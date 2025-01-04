@@ -302,10 +302,13 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
     }, [hasCollateral, canBorrow, amount, maxBorrowAmount, toManyDecimals])
 
     const errorMessage = useMemo(() => {
+        if (amount === '') {
+            return null
+        }
         return isLendPositionType(positionType)
             ? lendErrorMessage
             : borrowErrorMessage
-    }, [positionType, lendErrorMessage, borrowErrorMessage])
+    }, [positionType, lendErrorMessage, borrowErrorMessage, amount])
 
     function getLoadingHelperText() {
         return isLendPositionType(positionType)
@@ -701,6 +704,9 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
     }, [selectedAssetTokenDetails, amount])
 
     const lendErrorMessage = useMemo(() => {
+        if (amount === '') {
+            return null
+        }
         if (Number(amount) > Number(balance) || Number(balance) <= 0) {
             return 'You do not have enough balance'
         } else if (toManyDecimals) {
@@ -730,7 +736,7 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
             <Card className="flex flex-col gap-[12px] p-[16px]">
                 <div className="flex items-center justify-between px-[14px]">
-                    <BodyText level="body2" weight="semibold" className="capitalize text-primary text-brightness-75">
+                    <BodyText level="body2" weight="medium" className="capitalize text-black/90">
                         Supply to vault
                     </BodyText>
                     {walletAddress && (
