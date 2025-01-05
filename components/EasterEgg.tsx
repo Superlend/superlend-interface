@@ -70,7 +70,7 @@ const EasterEgg = () => {
 		if (pathname === "/easter-egg") return;
 		if (fakeCheatCodes.some((code) => inputSequence.includes(code))) {
 			setInputSequence("");
-			toast.success("Congratulations! You've unlocked a new adventure. Ready to dive into the hunt?", { duration: 2000 });
+			toast.success("Cheat Activated!", { duration: 2000 });
 			setTimeout(() => {
 				router.push("/easter-egg-not-found");
 			}, 2000);
@@ -80,11 +80,11 @@ const EasterEgg = () => {
 			if (isEasterEggSolved) {
 				setInputSequence("");
 				setModalOpen(false);
-				toast("You've cracked this egg already! 🥚✨\nBut the hunt isn't over - keep exploring to find more treasures!", {
+				toast("You've cracked this egg already! 🥚✨\n\nBut the hunt isn't over - keep exploring to find more treasures!", {
 					duration: 5000,
 				});
 			} else {
-				toast.success("Congratulations! You've unlocked a new adventure. Ready to dive into the hunt?", { duration: 2000 });
+				toast.success("Cheat Activated!", { duration: 2000 });
 				setInputSequence("");
 				setTimeout(() => {
 					setModalOpen(true);
