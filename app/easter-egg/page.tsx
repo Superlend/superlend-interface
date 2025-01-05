@@ -41,7 +41,7 @@ const EasterEgg = () => {
 	}, [walletAddress, router]);
 
 	useEffect(() => {
-		toast("Easter Egg Alert! 🥚\n\nWe&apos;ve hidden a surprise on this page. Can you find it? 👀", {
+		toast("Easter Egg Alert! 🥚\n\nWe've hidden a surprise on this page. Can you find it? 👀", {
 			duration: 10000,
 		});
 
