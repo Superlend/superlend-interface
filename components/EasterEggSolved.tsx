@@ -111,6 +111,13 @@ const EasterEggSolved = ({ isSolved, handleScroll, walletAddress }: EasterEggSol
 											)}
 										</BodyText>)
 									}
+									{
+										rank === null && (
+											<BodyText level="body2">
+												You have solved Easter Egg #1. You&apos;re now successfully enrolled in SuperHunt.
+											</BodyText>
+										)
+									}
 								</DialogDescription>
 							</DialogHeader>
 							<DialogFooter>
