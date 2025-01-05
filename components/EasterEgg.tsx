@@ -208,7 +208,7 @@ const EasterEgg = () => {
 							<>
 								<DialogHeader>
 									<DialogTitle>Congratulations!</DialogTitle>
-									<DialogDescription className="text-gray-700">You've unlocked a new adventure. Ready to dive into the hunt?</DialogDescription>
+									<DialogDescription className="text-gray-700">You&apos;ve unlocked a new adventure. Ready to dive into the hunt?</DialogDescription>
 								</DialogHeader>
 								{!walletAddress ? (
 									<div className="flex flex-col items-center gap-y-4">
