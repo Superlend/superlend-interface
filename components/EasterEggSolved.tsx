@@ -99,21 +99,22 @@ const EasterEggSolved = ({ isSolved, handleScroll, walletAddress }: EasterEggSol
 								tweenDuration={10000}
 								recycle={false}
 							/>
-							<DialogHeader>
+							<DialogHeader className="flex flex-col gap-y-2">
 								<DialogTitle>Congratulations 🎉</DialogTitle>
-								<DialogDescription>
-									{rank !== null &&
-										(<BodyText level="body2">
-											{rank !== null && (
-												<BodyText level="body2">
-													You&apos;re the {rank}{getRankSuffix(rank)} person to solve Easter Egg #1. You&apos;re now successfully enrolled in SuperHunt.
-												</BodyText>
-											)}
-										</BodyText>)
-									}
+								<DialogDescription className="text-gray-800">
+									{rank !== null && (
+										<div className="flex flex-col gap-y-2">
+											<BodyText level="body2" className="text-inherit">
+												You&apos;re the <strong>{rank}{getRankSuffix(rank)}</strong> person to solve Easter Egg #1.
+											</BodyText>
+											<BodyText level="body2" className="text-inherit">
+												You&apos;re now successfully enrolled in SuperHunt.
+											</BodyText>
+										</div>
+									)}
 									{
 										rank === null && (
-											<BodyText level="body2">
+											<BodyText level="body2" className="text-inherit">
 												You have solved Easter Egg #1. You&apos;re now successfully enrolled in SuperHunt.
 											</BodyText>
 										)
