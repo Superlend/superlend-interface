@@ -31,7 +31,13 @@ import CustomAlert from '@/components/alerts/CustomAlert'
 import { TWithdrawTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import { ArrowRightIcon } from 'lucide-react'
 import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow'
+import { Vault } from '@morpho-org/blue-sdk'
+import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
+import { walletActions } from 'viem'
+import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
+import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
+import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
 
 interface IWithdrawButtonProps {
     disabled: boolean
@@ -97,11 +103,11 @@ const WithdrawButton = ({
 
     const txBtnText =
         txBtnStatus[
-            isConfirming
-                ? 'confirming'
-                : isConfirmed
-                  ? 'success'
-                  : isPending
+        isConfirming
+            ? 'confirming'
+            : isConfirmed
+                ? 'success'
+                : isPending
                     ? 'pending'
                     : 'default'
         ]
@@ -156,6 +162,62 @@ const WithdrawButton = ({
         [writeContractAsync, asset, handleCloseModal]
     )
 
+    const withdrawMorphoVault = useCallback(
+        async (asset: any, amount: string) => {
+            let vault = asset?.vault as Vault
+
+            let amountToWithdraw = parseUnits(amount, asset.asset.token.decimals)
+
+            // //  convert asset to share
+            let shareAmount = await vault.toShares(amountToWithdraw.toBigInt())
+
+            // apprive the vault.address to bunder
+            let bunder_address = BUNDLER_ADDRESS_MORPHO[asset.chain_id]
+
+            let bunder_calls = [
+                BundlerAction.erc4626Withdraw(
+                    vault.address,
+                    amountToWithdraw.toString(),
+                    shareAmount.toString(),
+                    walletAddress as string,
+                    walletAddress as string
+                )
+            ]
+
+            writeContractAsync({
+                address: vault.address,
+                abi: AAVE_APPROVE_ABI,
+                functionName: 'approve',
+                args: [
+                    bunder_address as `0x${string}`,
+                    shareAmount.toString(),
+                ],
+            }).then(async () => {
+                writeContractAsync({
+                    address: bunder_address as `0x${string}`,
+                    abi: MORPHO_BUNDLER_ABI,
+                    functionName: 'multicall',
+                    args: [bunder_calls],
+                }).catch((error) => {
+                    setWithdrawTx((prev: TWithdrawTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                        errorMessage: error.message || 'Something went wrong',
+                    }))
+                })
+            }).catch((error) => {
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                    errorMessage: error.message || 'Something went wrong',
+                }))
+            })
+        },
+        []
+    )
+
     const onWithdraw = async () => {
         if (asset?.protocol_type === PlatformType.COMPOUND) {
             await withdrawCompound(asset?.asset?.token?.address, amount)
@@ -170,7 +232,12 @@ const WithdrawButton = ({
             )
             return
         }
+        if (asset?.protocol_type === PlatformType.MORPHO && asset?.vault) {
+            await withdrawMorphoVault(asset, amount)
+            return
+        }
     }
+
     return (
         <div className="flex flex-col gap-2">
             {error && (
