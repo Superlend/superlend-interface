@@ -82,7 +82,7 @@ export default function TopApyOpportunities() {
                 borrows: positionTypeParam === 'borrow',
             }
         })
-        // setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])
+        setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])
     }, [positionTypeParam])
 
     useEffect(() => {
@@ -160,6 +160,7 @@ export default function TopApyOpportunities() {
             const sortParam = `${sorting[0].id},${sorting[0].desc ? 'desc' : 'asc'}`
             updateSearchParams({ sort: sortParam })
         }
+        updateSearchParams({ exclude_morpho_markets: positionTypeParam === 'lend' ? 'true' : undefined })
     }, [sorting])
 
     useEffect(() => {
