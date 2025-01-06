@@ -22,10 +22,13 @@ export default function PortfolioOverview() {
     const BORROWINGS = getStatDisplayValue(portfolioData?.total_borrowed)
     const NET_WORTH = getStatDisplayValue(
         Number(portfolioData?.total_supplied ?? 0) -
-        Number(portfolioData?.total_borrowed ?? 0)
+            Number(portfolioData?.total_borrowed ?? 0)
     )
     const EARNINGS = getStatDisplayValue(
-        portfolioData?.platforms.reduce((acc, curr) => acc + scientificToDecimal(curr.pnl), 0)
+        portfolioData?.platforms.reduce(
+            (acc, curr) => acc + scientificToDecimal(curr.pnl),
+            0
+        )
     )
 
     const POSITIONS_BREAKDOWN_DATA = [
@@ -158,8 +161,10 @@ export default function PortfolioOverview() {
 
 function getStatDisplayValue(value: number) {
     const normalValue = scientificToDecimal(value)
-    const VALUE = isLowestValue(Math.abs(normalValue)) ? ((normalValue < 0 ? '-' : '') + 0.01) : abbreviateNumber(normalValue)
-    const hasLowestValue = isLowestValue(Math.abs(normalValue));
+    const VALUE = isLowestValue(Math.abs(normalValue))
+        ? (normalValue < 0 ? '-' : '') + 0.01
+        : abbreviateNumber(normalValue)
+    const hasLowestValue = isLowestValue(Math.abs(normalValue))
 
     if (containsNegativeInteger(VALUE)) {
         return `${hasLowestValue ? '<' : ''} -$${abbreviateNumber(Number(convertNegativeToPositive(VALUE)))}`

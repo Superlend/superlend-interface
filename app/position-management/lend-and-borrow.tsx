@@ -576,6 +576,7 @@ export default function LendAndBorrowAssets() {
     }
 
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
+    const isMorphoProtocol = platformData?.platform?.protocol_type === 'morpho'
     const isPolygonChain = Number(chain_id) === 137
 
     const isLoadingHelperText = isLendPositionType(positionType) ? isLoadingErc20TokensBalanceData : isLoadingMaxBorrowingAmount;
@@ -867,7 +868,7 @@ function SelectTokensDropdown({
     )
 }
 
-function ConfirmationDialog({
+export function ConfirmationDialog({
     disabled,
     positionType,
     assetDetails,
@@ -876,6 +877,7 @@ function ConfirmationDialog({
     balance,
     maxBorrowAmount,
     healthFactorValues,
+    isVault
 }: {
     disabled: boolean
     positionType: TPositionType
@@ -888,8 +890,8 @@ function ConfirmationDialog({
         healthFactor: any,
         newHealthFactor: any
     }
+    isVault?: boolean
 }) {
-
     const { lendTx, setLendTx, borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
     const [open, setOpen] = useState(false)
@@ -1015,7 +1017,7 @@ function ConfirmationDialog({
         >
             <span className="uppercase leading-[0]">
                 {isLendPositionType(positionType)
-                    ? 'Lend collateral'
+                    ? isVault ? 'Supply to vault' : 'Lend collateral'
                     : 'Review & Borrow'}
             </span>
             <ArrowRightIcon
@@ -1079,7 +1081,7 @@ function ConfirmationDialog({
                                     isLendPositionType(positionType)
                                         ? lendTx.hash
                                         : borrowTx.hash,
-                                    assetDetails?.platform_name
+                                    assetDetails?.chain_id || assetDetails?.platform?.chain_id
                                 )}
                                 target="_blank"
                                 rel="noreferrer"
@@ -1373,7 +1375,7 @@ function ConfirmationDialog({
                                                 isLendPositionType(positionType)
                                                     ? lendTx.hash
                                                     : borrowTx.hash,
-                                                assetDetails?.platform_name
+                                                assetDetails?.chain_id || assetDetails?.platform?.chain_id
                                             )}
                                             target="_blank"
                                             rel="noreferrer"
@@ -1492,8 +1494,8 @@ function isLendPositionType(positionType: TPositionType) {
     return positionType === 'lend'
 }
 
-function getExplorerLink(hash: string, platform_name: PlatformValue) {
-    return `${TX_EXPLORER_LINKS[platform_name]}/tx/${hash}`
+function getExplorerLink(hash: string, chainId: ChainId) {
+    return `${TX_EXPLORER_LINKS[chainId]}/tx/${hash}`
 }
 
 function getTruncatedTxHash(hash: string) {
@@ -1533,7 +1535,7 @@ function getTxInProgressText({
     return textByStatus[txStatus.status]
 }
 
-function handleSmallestValue(amount: string, maxDecimalsToDisplay: number = 2) {
+export function handleSmallestValue(amount: string, maxDecimalsToDisplay: number = 2) {
     const amountFormatted = hasExponent(amount)
         ? Math.abs(Number(amount)).toFixed(10)
         : amount.toString()
