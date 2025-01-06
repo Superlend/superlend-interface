@@ -70,7 +70,7 @@ const EasterEgg = () => {
 		if (pathname === "/easter-egg") return;
 		if (fakeCheatCodes.some((code) => inputSequence.includes(code))) {
 			setInputSequence("");
-			toast.success("Congratulations! You've unlocked a new adventure. Ready to dive into the hunt?", { duration: 2000 });
+			toast.success("Cheat Activated!", { duration: 2000 });
 			setTimeout(() => {
 				router.push("/easter-egg-not-found");
 			}, 2000);
@@ -80,11 +80,11 @@ const EasterEgg = () => {
 			if (isEasterEggSolved) {
 				setInputSequence("");
 				setModalOpen(false);
-				toast("You've cracked this egg already! 🥚✨\nBut the hunt isn't over - keep exploring to find more treasures!", {
+				toast("You've cracked this egg already! 🥚✨\n\nBut the hunt isn't over - keep exploring to find more treasures!", {
 					duration: 5000,
 				});
 			} else {
-				toast.success("Congratulations! You've unlocked a new adventure. Ready to dive into the hunt?", { duration: 2000 });
+				toast.success("Cheat Activated!", { duration: 2000 });
 				setInputSequence("");
 				setTimeout(() => {
 					setModalOpen(true);
@@ -207,8 +207,8 @@ const EasterEgg = () => {
 							/>
 							<>
 								<DialogHeader>
-									<DialogTitle>Easter Egg Alert! 🥚</DialogTitle>
-									<DialogDescription>We&apos;ve hidden a surprise on this page. Can you find it? 👀</DialogDescription>
+									<DialogTitle>Congratulations!</DialogTitle>
+									<DialogDescription className="text-gray-700">You&apos;ve unlocked a new adventure. Ready to dive into the hunt?</DialogDescription>
 								</DialogHeader>
 								{!walletAddress ? (
 									<div className="flex flex-col items-center gap-y-4">
