@@ -19,10 +19,10 @@ import { Button } from '@/components/ui/button'
 import { ArrowRightIcon } from 'lucide-react'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import {
-    TLendBorrowTxContext,
+    TTxContext,
     TLendTx,
-    useLendBorrowTxContext,
-} from '@/context/lend-borrow-tx-provider'
+    useTxContext,
+} from '@/context/tx-provider'
 import { BigNumber } from 'ethers'
 import { getErrorText } from '@/lib/getErrorText'
 import { BodyText } from '@/components/ui/typography'
@@ -64,7 +64,7 @@ const SupplyMorphoButton = ({
         })
     const { address: walletAddress } = useAccount()
     const { lendTx, setLendTx } =
-        useLendBorrowTxContext() as TLendBorrowTxContext
+        useTxContext() as TTxContext
 
     const amountBN = useMemo(() => {
         return amount

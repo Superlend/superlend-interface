@@ -31,7 +31,7 @@ import { formatUnits } from 'viem'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import ExternalLink from '@/components/ExternalLink'
-import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { TTxContext, useTxContext } from '@/context/tx-provider'
 import { ChainId } from '@/types/chain'
 import { modal } from '@/context'
 
@@ -100,7 +100,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx } = useLendBorrowTxContext()
+    const { lendTx, borrowTx } = useTxContext() as TTxContext
     const [refresh, setRefresh] = useState(false)
 
     const [amount, setAmount] = useState('')

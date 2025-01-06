@@ -1405,8 +1405,8 @@ function isRepayPositionType(actionType: TActionType) {
     return actionType === 'repay'
 }
 
-function getExplorerLink(hash: string, platform_name: PlatformValue) {
-    return `${TX_EXPLORER_LINKS[platform_name]}/tx/${hash}`
+function getExplorerLink(hash: string, chainId: ChainId) {
+    return `${TX_EXPLORER_LINKS[chainId]}/tx/${hash}`
 }
 
 function getTruncatedTxHash(hash: string) {
