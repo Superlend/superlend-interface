@@ -30,6 +30,9 @@ import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { useSearchParams } from 'next/navigation'
 import { PlatformLogo, ProtocolIdentifier } from '@/types/platform'
 import { motion } from 'framer-motion'
+import { Switch } from '../ui/switch'
+import InfoTooltip from '../tooltips/InfoTooltip'
+import TooltipText from '../tooltips/TooltipText'
 
 export default function DiscoverFiltersDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false)
@@ -346,16 +349,16 @@ function FilterCardContent({
                             {!!getActiveFiltersCountByCategory(
                                 `${item.value.toLowerCase()}_ids`
                             ) && (
-                                <Label
-                                    size="small"
-                                    weight="medium"
-                                    className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer"
-                                >
-                                    {getActiveFiltersCountByCategory(
-                                        `${item.value.toLowerCase()}_ids`
-                                    )}
-                                </Label>
-                            )}
+                                    <Label
+                                        size="small"
+                                        weight="medium"
+                                        className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer"
+                                    >
+                                        {getActiveFiltersCountByCategory(
+                                            `${item.value.toLowerCase()}_ids`
+                                        )}
+                                    </Label>
+                                )}
                         </Button>
                     </motion.div>
                 ))}
@@ -382,10 +385,32 @@ function FilterOptions({
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
     const [searchKeyword, setSearchKeyword] = useState<string>('')
+    const [isExcluded, setIsExcluded] = useState(true)
+    const positionTypeParam = searchParams.get('position_type')
+    const isMorphoMarketsRisky = useMemo(() => (type === 'protocol' && positionTypeParam === 'lend'), [type, positionTypeParam])
 
     useEffect(() => {
         setSearchKeyword('')
     }, [type])
+
+    useEffect(() => {
+        if (isExcluded) {
+            const currentProtocolIds = searchParams.get('protocol_ids')?.split(',') || []
+            const filteredIds = currentProtocolIds.filter(id => id !== 'MORPHO_MARKETS')
+
+            if (currentProtocolIds.length !== filteredIds.length) {
+                updateSearchParams({
+                    protocol_ids: filteredIds.length ? filteredIds.join(',') : undefined,
+                    exclude_morpho_markets: positionTypeParam === 'lend' ? isExcluded : undefined
+                })
+                return;
+            }
+        }
+
+        updateSearchParams({
+            exclude_morpho_markets: positionTypeParam === 'lend' ? isExcluded : undefined
+        })
+    }, [isExcluded, positionTypeParam])
 
     const getFiltersFromURL = () => ({
         token_ids: searchParams.get('token_ids')?.split(',') || [],
@@ -466,29 +491,46 @@ function FilterOptions({
                 >
                     All {type.charAt(0).toUpperCase() + type.slice(1)}s
                 </Button>
-                {filterOptionsByKeyword(searchKeyword, options).map(
-                    (option: any) => (
-                        <Button
-                            onClick={() =>
-                                handleSelection(option[`${type}_id`], type)
-                            }
-                            variant="outline"
-                            size="sm"
-                            key={option[`${type}_id`]}
-                            className={`flex items-center gap-1 ${isSelected(option[`${type}_id`], type) ? 'selected' : ''}`}
-                        >
-                            <ImageWithDefault
-                                src={option.logo}
-                                alt={option.name}
-                                width={18}
-                                height={18}
-                                className="max-w-[18px] max-h-[18px]"
-                            />
-                            {option.name}
-                        </Button>
-                    )
-                )}
+                {filterOptionsByKeyword(searchKeyword, options)
+                    .map(
+                        (option: any) => (
+                            <Button
+                                onClick={() =>
+                                    handleSelection(option[`${type}_id`], type)
+                                }
+                                variant="outline"
+                                size="sm"
+                                key={option[`${type}_id`]}
+                                disabled={isMorphoMarketsRisky && option.protocol_id === 'MORPHO_MARKETS' && isExcluded}
+                                className={`flex items-center gap-1 ${isSelected(option[`${type}_id`], type) ? 'selected' : ''}`}
+                            >
+                                <ImageWithDefault
+                                    src={option.logo}
+                                    alt={option.name}
+                                    width={18}
+                                    height={18}
+                                    className="max-w-[18px] max-h-[18px]"
+                                />
+                                {option.name}
+                            </Button>
+                        )
+                    )}
             </div>
+            {isMorphoMarketsRisky && (
+                <div className="group flex items-center space-x-2 pb-6 pl-5 cursor-pointer w-fit">
+                    <Switch id="exclude-morpho-markets" checked={isExcluded} onCheckedChange={setIsExcluded} />
+                    <InfoTooltip
+                        label={
+                            <Label htmlFor="exclude-morpho-markets">
+                                <TooltipText>
+                                    Exclude Morpho Markets
+                                </TooltipText>
+                            </Label>
+                        }
+                        content="Exclude Morpho Markets from the list of protocols as they are risky"
+                    />
+                </div>
+            )}
         </ScrollArea>
     )
 }

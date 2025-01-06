@@ -45,6 +45,7 @@ export default function TopApyOpportunities() {
     const keywordsParam = searchParams.get('keywords') || ''
     const pageParam = searchParams.get('page')
     const sortingParam = searchParams.get('sort')?.split(',') || []
+    const excludeMorphoMarketsParam = searchParams.get('exclude_morpho_markets')
     const [keywords, setKeywords] = useState<string>(keywordsParam)
     const debouncedKeywords = useDebounce(keywords, 300)
     const [pagination, setPagination] = useState<PaginationState>({
@@ -81,7 +82,7 @@ export default function TopApyOpportunities() {
                 borrows: positionTypeParam === 'borrow',
             }
         })
-        setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])
+        // setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])
     }, [positionTypeParam])
 
     useEffect(() => {
@@ -161,6 +162,12 @@ export default function TopApyOpportunities() {
         }
     }, [sorting])
 
+    useEffect(() => {
+        if (positionTypeParam === 'lend' && excludeMorphoMarketsParam !== 'true') {
+            updateSearchParams({ exclude_morpho_markets: true })
+        }
+    }, [positionTypeParam])
+
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         return {
             tokenAddress: item.token.address,
@@ -198,17 +205,24 @@ export default function TopApyOpportunities() {
             const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
 
             const compareWith = `${opportunity.platformId.split('-')[0]}${isMorpho ? `_${morphoSuffix}` : ''}`
-            
+
             return platformIdsParam.includes(
                 compareWith.trim()
-            )
+            ) && (excludeMorphoMarketsParam === 'true' ? !(isMorpho && !isVault) : true)
         }
     )
 
     const tableData =
         platformIdsParam.length > 0
             ? filteredTableDataByPlatformIds
-            : rawTableData
+            : rawTableData.filter(
+                (opportunity) => {
+                    const isVault = opportunity.isVault
+                    const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
+
+                    return excludeMorphoMarketsParam === 'true' ? !(isMorpho && !isVault) : true;
+                }
+            )
 
     // Calculate total number of pages
     const totalPages = Math.ceil(tableData.length / 10)
@@ -240,7 +254,10 @@ export default function TopApyOpportunities() {
     }
 
     const toggleOpportunityType = (positionType: TPositionType): void => {
-        const params = { position_type: positionType }
+        const params = {
+            position_type: positionType,
+            exclude_morpho_markets: positionType === 'lend' ? 'true' : undefined
+        }
         updateSearchParams(params)
     }
 
