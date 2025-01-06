@@ -250,25 +250,28 @@ export const POOL_AAVE_MAP: { [key in PlatformValue]: `0x${string}` } = {
     [PlatformValue.CompoundV2Ethereum]: '0x', // not used
 }
 
-export const TX_EXPLORER_LINKS: { [key in PlatformValue]: string } = {
-    [PlatformValue.AaveV3Arbitrum]: 'https://arbiscan.io',
-    [PlatformValue.AaveV3Avalanche]: 'https://snowtrace.io',
-    [PlatformValue.AaveV3Bsc]: 'https://bscscan.com',
-    [PlatformValue.AaveV3Base]: 'https://basescan.org',
-    [PlatformValue.AaveV3Ethereum]: 'https://etherscan.io',
-    [PlatformValue.AaveV3Gnosis]: 'https://gnosisscan.io',
-    [PlatformValue.AaveV3Metis]: 'https://metis.blockscout.com',
-    [PlatformValue.AaveV3Optimism]: 'https://optimistic.etherscan.io',
-    [PlatformValue.AaveV3Polygon]: 'https://polygonscan.com',
-    [PlatformValue.AaveV3Scoll]: 'https://scrollscan.io',
-    [PlatformValue.CompoundV2Ethereum]: 'https://etherscan.io',
+export const TX_EXPLORER_LINKS: { [key in ChainId]: string } = {
+    [ChainId.Arbitrum]: 'https://arbiscan.io',
+    [ChainId.Avalanche]: 'https://snowtrace.io',
+    [ChainId.Bsc]: 'https://bscscan.com',
+    [ChainId.Base]: 'https://basescan.org',
+    [ChainId.Ethereum]: 'https://etherscan.io',
+    [ChainId.Gnosis]: 'https://gnosisscan.io',
+    [ChainId.Metis]: 'https://metis.blockscout.com',
+    [ChainId.Optimism]: 'https://optimistic.etherscan.io',
+    [ChainId.Polygon]: 'https://polygonscan.com',
+    [ChainId.Scroll]: 'https://scrollscan.io',
+    [ChainId.Etherlink]: 'https://etherscan.io',
 }
 
 export const APPROXIMATE_ESTIMATE_OF_RETURNS_TOOLTIP_CONTENT =
     'This is an approximate estimate of returns and not the actual returns as change in supply will affect the overall earnings with time'
 
 export const MORPHO_ETHERSCAN_TUTORIAL_LINK =
-    'https://docs.morpho.org/morpho/tutorials/etherscan-use/'
+    'https://docs.morpho.org/morpho/tutorials/etherscan-use'
+
+export const EIP_20_SIGNED_APPROVALS_LINK =
+    'https://eips.ethereum.org/EIPS/eip-2612'
 
 export const CHAIN_ID_MAPPER: { [key in ChainId]: AppKitNetwork } = {
     [ChainId.Polygon]: polygon,

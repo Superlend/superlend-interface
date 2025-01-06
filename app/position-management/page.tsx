@@ -15,6 +15,7 @@ import PositionDetails from './position-details'
 import LendAndBorrowAssets from './lend-and-borrow'
 import PositionManagementProvider from '@/context/position-management-provider'
 import TxProvider from '@/context/tx-provider'
+import LendAndBorrowAssetsMorpho from './lend-and-borrow-morpho'
 
 export default function PositionManagementPage() {
     return (
@@ -28,6 +29,7 @@ export default function PositionManagementPage() {
                             <AssetHistory />
                         </div>
                         <LendAndBorrowAssets />
+                        <LendAndBorrowAssetsMorpho />
                         {/* <BlogCard /> */}
                     </div>
                 </MainContainer>

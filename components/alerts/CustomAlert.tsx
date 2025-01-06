@@ -13,26 +13,26 @@ export default function CustomAlert({
 }) {
     return (
         <Alert variant={variant}>
-            <AlertDescription className="flex items-center justify-center gap-2">
-                {hasPrefixIcon && variant === 'destructive' && (
+            <AlertDescription className="flex items-start justify-center gap-2">
+                {/* {hasPrefixIcon && variant === 'destructive' && (
                     <DangerSquare
                         width={18}
                         height={18}
                         className="stroke-destructive-foreground shrink-0"
                     />
-                )}
+                )} */}
                 {hasPrefixIcon && variant === 'warning' && (
                     <TriangleAlert
                         width={18}
                         height={18}
-                        className="stroke-warning-foreground shrink-0"
+                        className="stroke-warning-foreground shrink-0 pt-[3px]"
                     />
                 )}
-                {hasPrefixIcon && variant === 'info' && (
+                {hasPrefixIcon && (variant === 'info' || variant === 'destructive') && (
                     <InfoIcon
                         width={18}
                         height={18}
-                        className="stroke-info-foreground shrink-0"
+                        className="stroke-info-foreground shrink-0 pt-[3px]"
                     />
                 )}
                 {typeof description === 'string' && (

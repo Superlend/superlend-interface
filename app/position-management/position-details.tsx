@@ -47,22 +47,11 @@ export default function PositionDetails() {
     const { lendTx, borrowTx } = useTxContext()
     const [refresh, setRefresh] = useState(false)
 
-    useEffect(() => {
-        const isRefresh =
-            (lendTx.status === 'view' && lendTx.isConfirmed) ||
-            (borrowTx.status === 'view' && borrowTx.isConfirmed)
-        setRefresh(isRefresh)
-    }, [
-        lendTx.status,
-        lendTx.isConfirmed,
-        borrowTx.status,
-        borrowTx.isConfirmed,
-    ])
-
     const {
         data: portfolioData,
         isLoading: isLoadingPortfolioData,
         isError: isErrorPortfolioData,
+        refetch: refetchPortfolioData,
     } = useGetPortfolioData({
         user_address: walletAddress as `0x${string}`,
         platform_id: [protocol_identifier],
@@ -80,12 +69,29 @@ export default function PositionDetails() {
         chain_id: Number(chain_id),
     })
 
-    const isLoading = isLoadingPortfolioData || isLoadingPlatformData
+    useEffect(() => {
+        const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
+        if (isRefresh) {
+            setRefresh(true)
+        }
+    }, [lendTx.status, lendTx.isConfirmed, borrowTx.status, borrowTx.isConfirmed])
+
+    useEffect(() => {
+        if (refresh) {
+            setTimeout(() => {
+                setRefresh(false)
+            }, 30000)
+        }
+    }, [refresh])
+
+    const isLoading =
+        isLoadingPortfolioData || isLoadingPlatformData
 
     const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
         platformData?.platform?.protocol_type
     )
     const isAaveV3 = platformData?.platform?.protocol_type === 'aaveV3'
+    const isMorphoProtocol = platformData?.platform?.protocol_type === 'morpho'
 
     // Get user positions from portfolio data using protocol identifier
     const userPositions = useMemo(
@@ -437,7 +443,7 @@ export default function PositionDetails() {
                                 weight="normal"
                                 className="text-gray-600"
                             >
-                                Your Collateral
+                                Your {isMorphoProtocol ? "Supply" : "Collateral"}
                             </BodyText>
                             <div className="flex flex-col xs:flex-row gap-[12px] xs:items-center">
                                 <div className="flex items-center gap-[6px]">
