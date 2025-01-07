@@ -1032,7 +1032,7 @@ export function ConfirmationDialog({
         >
             <span className="uppercase leading-[0]">
                 {isLendPositionType(positionType)
-                    ? isVault ? 'Supply to vault' : 'Lend collateral'
+                    ? isMorphoMarkets ? 'Add Collateral' : isMorphoVault ? 'Supply to vault' : 'Lend collateral'
                     : 'Review & Borrow'}
             </span>
             <ArrowRightIcon
@@ -1074,6 +1074,9 @@ export function ConfirmationDialog({
                         ? lendTx
                         : borrowTx,
                     positionType,
+                    actionTitle: isLendPositionType(positionType) ?
+                        ((isMorphoMarkets || isMorphoVault) ? 'supply' : 'lend')
+                        : 'borrow'
                 })}
             </BodyText>
             {canDisplayExplorerLinkWhileLoading &&
@@ -1523,11 +1526,13 @@ function getTxInProgressText({
     tokenName,
     txStatus,
     positionType,
+    actionTitle
 }: {
     amount: string
     tokenName: string
     txStatus: TLendTx | TBorrowTx
     positionType: TPositionType
+    actionTitle: string
 }) {
     const formattedText = `${amount} ${tokenName}`
     const isPending = txStatus.isPending
@@ -1537,15 +1542,15 @@ function getTxInProgressText({
     if (isPending) {
         textByStatus = {
             approve: `Approve spending ${formattedText} from your wallet`,
-            lend: `Approve transaction for lending ${formattedText} from your wallet`,
-            borrow: `Approve transaction for borrowing ${formattedText} from your wallet`,
+            lend: `Approve transaction for ${actionTitle}ing ${formattedText} from your wallet`,
+            borrow: `Approve transaction for ${actionTitle}ing ${formattedText} from your wallet`,
         }
     } else if (isConfirming) {
         textByStatus = {
             approve: `Confirming transaction for spending ${formattedText} from your wallet`,
-            lend: `Confirming transaction for lending ${formattedText} from your wallet`,
-            borrow: `Confirming transaction for borrowing ${formattedText} from your wallet`,
-            view: `Confirming transaction for ${isLendPositionType(positionType) ? 'lending' : 'borrowing'} ${formattedText} from your wallet`,
+            lend: `Confirming transaction for ${actionTitle}ing ${formattedText} from your wallet`,
+            borrow: `Confirming transaction for ${actionTitle}ing ${formattedText} from your wallet`,
+            view: `Confirming transaction for ${actionTitle}ing ${formattedText} from your wallet`,
         }
     }
     return textByStatus[txStatus.status]

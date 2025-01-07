@@ -267,7 +267,6 @@ const SupplyMorphoButton = ({
         assetDetails,
         platform,
         walletAddress,
-        handleCloseModal,
         writeContractAsync,
     ])
 
@@ -404,7 +403,7 @@ const SupplyMorphoButton = ({
                     } else if (lendTx.status === 'lend') {
                         supply()
                     } else {
-                        handleCloseModal(true)
+                        handleCloseModal(false)
                     }
                 }}
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
