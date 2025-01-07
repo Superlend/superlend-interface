@@ -14,7 +14,7 @@ import {
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { TPositionType } from '@/types'
-import { TPlatformAsset } from '@/types/platform'
+import { PlatformType, TPlatformAsset } from '@/types/platform'
 import {
     ArrowRightIcon,
     ArrowUpRightIcon,
@@ -918,6 +918,9 @@ export function ConfirmationDialog({
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
     const isTxFailed = isLendPositionType(positionType) ? lendTx.errorMessage.length > 0 : borrowTx.errorMessage.length > 0
+    const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
+    const isMorphoMarkets = isMorpho && !assetDetails?.isVault
+    const isMorphoVault = isMorpho && assetDetails?.isVault
 
     useEffect(() => {
         // Reset the tx status when the dialog is closed
@@ -1136,7 +1139,7 @@ export function ConfirmationDialog({
                         className="text-gray-800 text-center capitalize"
                     >
                         {isLendPositionType(positionType)
-                            ? 'Lend collateral'
+                            ? isMorphoMarkets ? 'Add Collateral' : isMorphoVault ? 'Supply to vault' : 'Lend Collateral'
                             : `Borrow ${assetDetails?.asset?.token?.symbol}`}
                     </HeadingText>
                     // </DialogTitle>
@@ -1175,7 +1178,7 @@ export function ConfirmationDialog({
                                 >
                                     {isLendPositionType(positionType) &&
                                         lendTx.status === 'view'
-                                        ? 'Lend'
+                                        ? isMorphoMarkets ? 'Add Collateral' : isMorphoVault ? 'Supply to vault' : 'Lend'
                                         : 'Borrow'}{' '}
                                     {isTxFailed ? "Failed" : "Successful"}
                                     {!isTxFailed &&

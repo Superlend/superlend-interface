@@ -34,6 +34,7 @@ import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
 
 import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
 import ExternalLink from '@/components/ExternalLink'
+import { PlatformType } from '@/types/platform'
 
 interface ISupplyMorphoButtonProps {
     disabled: boolean
@@ -51,6 +52,10 @@ const SupplyMorphoButton = ({
     const assetDetails = asset.asset
     const platform = asset.platform
     const morphoMarketData = asset.morphoMarketData
+    const isMorpho = asset.protocol_type === PlatformType.MORPHO
+    const isMorphoMarkets = isMorpho && !asset?.isVault
+    const isMorphoVault = isMorpho && asset?.isVault
+
     const {
         writeContractAsync,
         isPending,
@@ -78,8 +83,8 @@ const SupplyMorphoButton = ({
                 ? 'Approving token...'
                 : 'Lending token...',
         confirming: 'Confirming...',
-        success: 'Close',
-        default: lendTx.status === 'approve' ? 'Approve token' : 'Lend token',
+        success: isMorphoMarkets ? 'Go To Borrow' : 'Close',
+        default: lendTx.status === 'approve' ? 'Approve token' : (isMorphoMarkets ? 'Add Collateral' : isMorphoVault ? 'Supply to vault' : 'Lend Collateral'),
     }
 
     const getTxButtonText = (
@@ -392,14 +397,14 @@ const SupplyMorphoButton = ({
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button
-                disabled={isPending || isConfirming || disabled}
+                disabled={(isPending || isConfirming || disabled) && lendTx.status !== 'view'}
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()
                     } else if (lendTx.status === 'lend') {
                         supply()
                     } else {
-                        handleCloseModal(false)
+                        handleCloseModal(true)
                     }
                 }}
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"

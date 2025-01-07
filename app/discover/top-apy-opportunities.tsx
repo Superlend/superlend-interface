@@ -199,31 +199,22 @@ export default function TopApyOpportunities() {
         }
     })
 
-    const filteredTableDataByPlatformIds = rawTableData.filter(
-        (opportunity) => {
-            const isVault = opportunity.isVault
-            const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
-            const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
+    function handleFilterTableRowsByPlatformIds(opportunity: TOpportunityTable) {
+        const isVault = opportunity.isVault
+        const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
+        const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
 
-            const compareWith = `${opportunity.platformId.split('-')[0]}${isMorpho ? `_${morphoSuffix}` : ''}`
+        const compareWith = `${opportunity.platformId.split('-')[0]}${isMorpho ? `_${morphoSuffix}` : ''}`
 
+        if (platformIdsParam.length > 0) {
             return platformIdsParam.includes(
                 compareWith.trim()
-            ) && (excludeMorphoMarketsParam === 'true' ? !(isMorpho && !isVault) : true)
-        }
-    )
-
-    const tableData =
-        platformIdsParam.length > 0
-            ? filteredTableDataByPlatformIds
-            : rawTableData.filter(
-                (opportunity) => {
-                    const isVault = opportunity.isVault
-                    const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
-
-                    return excludeMorphoMarketsParam === 'true' ? !(isMorpho && !isVault) : true;
-                }
             )
+        }
+        return true
+    }
+
+    const tableData = rawTableData.filter(handleFilterTableRows)
 
     // Calculate total number of pages
     const totalPages = Math.ceil(tableData.length / 10)
@@ -247,6 +238,27 @@ export default function TopApyOpportunities() {
         },
         [updateSearchParams, searchParams, totalPages]
     )
+
+    // Handle exclude morpho markets by URL param flag
+    function handleExcludeMorphoMarketsByParamFlag(opportunity: TOpportunityTable) {
+        const isVault = opportunity.isVault
+        const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
+
+        return excludeMorphoMarketsParam === 'true' ? !(isMorpho && !isVault) : true;
+    }
+
+    function handleExcludeMorphoVaultsByPositionType(opportunity: TOpportunityTable) {
+        const isVault = opportunity.isVault
+        const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
+
+        return positionTypeParam === 'borrow' ? !(isMorpho && isVault) : true;
+    }
+
+    function handleFilterTableRows(opportunity: TOpportunityTable) {
+        return positionTypeParam === 'borrow' ?
+            handleExcludeMorphoVaultsByPositionType(opportunity) && handleFilterTableRowsByPlatformIds(opportunity) :
+            handleExcludeMorphoMarketsByParamFlag(opportunity) && handleFilterTableRowsByPlatformIds(opportunity);
+    }
 
     function handleRowClick(rowData: any) {
         const { tokenAddress, protocol_identifier, chain_id } = rowData

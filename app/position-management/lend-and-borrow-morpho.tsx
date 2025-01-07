@@ -403,7 +403,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                         <BodyText
                             level="body2"
                             weight="normal"
-                            className="capitalize text-gray-600 flex items-center gap-[4px]"
+                            className="text-gray-600 flex items-center gap-[4px]"
                         >
                             Bal:{' '}
                             {isLoadingErc20TokensBalanceData ? (
@@ -743,7 +743,7 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
                         <BodyText
                             level="body2"
                             weight="normal"
-                            className="capitalize text-gray-600 flex items-center gap-[4px]"
+                            className="text-gray-600 flex items-center gap-[4px]"
                         >
                             Bal:{' '}
                             {isLoadingErc20TokensBalanceData ? (
