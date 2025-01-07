@@ -18,6 +18,7 @@ import {
     optimism,
     avalanche,
     scroll,
+    etherlink,
 } from '@reown/appkit/networks'
 import { createAppKit } from '@reown/appkit/react'
 
@@ -44,6 +45,7 @@ export const modal = createAppKit({
         gnosis,
         arbitrum,
         polygon,
+        etherlink,
     ],
     defaultNetwork: mainnet,
     metadata: metadata,

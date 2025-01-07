@@ -10,6 +10,7 @@ import {
     optimism,
     avalanche,
     scroll,
+    etherlink,
 } from '@reown/appkit/networks'
 import { defineChain } from '@reown/appkit/networks'
 
@@ -59,6 +60,7 @@ export const networks = [
     gnosis,
     arbitrum,
     polygon,
+    etherlink,
 ]
 
 //Set up the Wagmi Adapter (Config)
