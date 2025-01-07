@@ -386,7 +386,7 @@ function FilterOptions({
     const searchParams = useSearchParams()
     const [searchKeyword, setSearchKeyword] = useState<string>('')
     const [isExcluded, setIsExcluded] = useState(true)
-    const positionTypeParam = searchParams.get('position_type')
+    const positionTypeParam = (searchParams.get('position_type') || 'lend')
     const isMorphoMarketsRisky = useMemo(() => (type === 'protocol' && positionTypeParam === 'lend'), [type, positionTypeParam])
 
     useEffect(() => {
