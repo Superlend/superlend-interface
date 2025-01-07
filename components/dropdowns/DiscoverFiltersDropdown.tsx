@@ -385,7 +385,7 @@ function FilterOptions({
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
     const [searchKeyword, setSearchKeyword] = useState<string>('')
-    const [isExcluded, setIsExcluded] = useState(true)
+    const [isExcluded, setIsExcluded] = useState(searchParams.get('exclude_morpho_markets') === 'true')
     const positionTypeParam = (searchParams.get('position_type') || 'lend')
     const isMorphoMarketsRisky = useMemo(() => (type === 'protocol' && positionTypeParam === 'lend'), [type, positionTypeParam])
 
@@ -398,10 +398,10 @@ function FilterOptions({
             const currentProtocolIds = searchParams.get('protocol_ids')?.split(',') || []
             const filteredIds = currentProtocolIds.filter(id => id !== 'MORPHO_MARKETS')
 
-            if (currentProtocolIds.length !== filteredIds.length) {
+            if (currentProtocolIds.length !== filteredIds.length && positionTypeParam === 'lend') {
                 updateSearchParams({
                     protocol_ids: filteredIds.length ? filteredIds.join(',') : undefined,
-                    exclude_morpho_markets: positionTypeParam === 'lend' ? isExcluded : undefined
+                    exclude_morpho_markets: isExcluded
                 })
                 return;
             }

@@ -589,11 +589,7 @@ export default function LendAndBorrowAssets() {
             : 'Loading borrow limit...'
     }
 
-    function getMaxDecimalsToDisplay(): number {
-        return isLendPositionType(positionType) ?
-            (assetDetails?.asset?.token?.symbol.toLowerCase().includes('btc') || assetDetails?.asset?.token?.symbol.toLowerCase().includes('eth')) ? 4 : 2
-            : (selectedBorrowTokenDetails?.token?.symbol.toLowerCase().includes('btc') || selectedBorrowTokenDetails?.token?.symbol.toLowerCase().includes('eth')) ? 4 : 2
-    }
+    const tokenSymbol = isLendPositionType(positionType) ? assetDetails?.asset?.token?.symbol : selectedBorrowTokenDetails?.token?.symbol
 
     // Loading skeleton
     if (isLoading && isAaveV3Protocol && isPolygonChain) {
@@ -639,10 +635,10 @@ export default function LendAndBorrowAssets() {
                                     Number(
                                         getLowestDisplayValue(
                                             Number(balance ?? 0),
-                                            getMaxDecimalsToDisplay()
+                                            getMaxDecimalsToDisplay(tokenSymbol)
                                         )
                                     ),
-                                    getMaxDecimalsToDisplay()
+                                    getMaxDecimalsToDisplay(tokenSymbol)
                                 )
                             )}
                             <span className="inline-block truncate max-w-[70px]">
@@ -664,7 +660,7 @@ export default function LendAndBorrowAssets() {
                             {isLoadingMaxBorrowingAmount ? (
                                 <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
                             ) : (
-                                handleSmallestValue(maxBorrowAmount, getMaxDecimalsToDisplay())
+                                handleSmallestValue(maxBorrowAmount, getMaxDecimalsToDisplay(tokenSymbol))
                             )}
                         </BodyText>
                     )}
@@ -1331,7 +1327,8 @@ export function ConfirmationDialog({
                                                     ? (Number(balance) -
                                                         Number(amount))
                                                     : (Number(maxBorrowAmount)) -
-                                                    Number(amount))
+                                                    Number(amount)),
+                                                getMaxDecimalsToDisplay(assetDetails?.asset?.token?.symbol || assetDetails?.token?.symbol)
                                             )
                                         }
                                     </BodyText>
@@ -1559,4 +1556,8 @@ export function handleSmallestValue(amount: string, maxDecimalsToDisplay: number
         ? Math.abs(Number(amount)).toFixed(10)
         : amount.toString()
     return `${hasLowestDisplayValuePrefix(Number(amountFormatted), maxDecimalsToDisplay)} ${getLowestDisplayValue(Number(amountFormatted), maxDecimalsToDisplay)}`
+}
+
+function getMaxDecimalsToDisplay(tokenSymbol: string): number {
+    return (tokenSymbol.toLowerCase().includes('btc') || tokenSymbol.toLowerCase().includes('eth')) ? 4 : 2
 }

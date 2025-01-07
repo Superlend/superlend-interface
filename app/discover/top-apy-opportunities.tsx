@@ -156,11 +156,17 @@ export default function TopApyOpportunities() {
     ])
 
     useEffect(() => {
+        const filteredIds = !!platformIdsParam.filter(id => id !== 'MORPHO_MARKETS').length ? platformIdsParam.filter(id => id !== 'MORPHO_MARKETS') : undefined
+        const unfilteredIds = !!platformIdsParam.length ? platformIdsParam : undefined
+
         if (sorting.length > 0) {
             const sortParam = `${sorting[0].id},${sorting[0].desc ? 'desc' : 'asc'}`
             updateSearchParams({ sort: sortParam })
         }
-        updateSearchParams({ exclude_morpho_markets: positionTypeParam === 'lend' ? 'true' : undefined })
+        updateSearchParams({
+            exclude_morpho_markets: positionTypeParam === 'lend' ? 'true' : undefined,
+            protocol_ids: positionTypeParam === 'lend' ? filteredIds : unfilteredIds
+        })
     }, [sorting])
 
     useEffect(() => {
@@ -267,9 +273,13 @@ export default function TopApyOpportunities() {
     }
 
     const toggleOpportunityType = (positionType: TPositionType): void => {
+        const filteredIds = !!platformIdsParam.filter(id => id !== 'MORPHO_MARKETS').length ? platformIdsParam.filter(id => id !== 'MORPHO_MARKETS') : undefined
+        const unfilteredIds = !!platformIdsParam.length ? platformIdsParam : undefined
+
         const params = {
             position_type: positionType,
-            exclude_morpho_markets: positionType === 'lend' ? 'true' : undefined
+            exclude_morpho_markets: positionType === 'lend' ? 'true' : undefined,
+            protocol_ids: positionType === 'lend' ? filteredIds : unfilteredIds
         }
         updateSearchParams(params)
     }
