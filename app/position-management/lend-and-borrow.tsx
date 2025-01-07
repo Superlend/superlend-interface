@@ -1325,12 +1325,9 @@ export function ConfirmationDialog({
                                         className="text-gray-800"
                                     >
                                         {
-                                            abbreviateNumber(
-                                                (isLendPositionType(positionType)
-                                                    ? (Number(balance) -
-                                                        Number(amount))
-                                                    : (Number(maxBorrowAmount)) -
-                                                    Number(amount)),
+                                            handleSmallestValue(
+                                                (Number(maxBorrowAmount) -
+                                                    Number(amount)).toString(),
                                                 getMaxDecimalsToDisplay(assetDetails?.asset?.token?.symbol || assetDetails?.token?.symbol)
                                             )
                                         }
