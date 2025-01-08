@@ -1561,5 +1561,5 @@ export function handleSmallestValue(amount: string, maxDecimalsToDisplay: number
 }
 
 function getMaxDecimalsToDisplay(tokenSymbol: string): number {
-    return (tokenSymbol.toLowerCase().includes('btc') || tokenSymbol.toLowerCase().includes('eth')) ? 4 : 2
+    return (tokenSymbol?.toLowerCase().includes('btc') || tokenSymbol?.toLowerCase().includes('eth')) ? 4 : 2
 }
