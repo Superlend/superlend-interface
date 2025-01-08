@@ -94,9 +94,11 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer"
-import { modal } from '@/context'
+// import { modal } from '@/context'
 import { polygon } from '@reown/appkit/networks'
 import { ChainId } from '@/types/chain'
+import { useSetActiveWallet } from '@privy-io/wagmi'
+import { usePrivy, useWallets } from '@privy-io/react-auth'
 
 
 export default function LendAndBorrowAssets() {
@@ -134,6 +136,10 @@ export default function LendAndBorrowAssets() {
     const positionTypeParam: TPositionType =
         (searchParams.get('position_type') as TPositionType) || 'lend'
     const { address: walletAddress } = useAccount()
+    const { wallets } = useWallets();
+    const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
+    const { user } = usePrivy();
+    const isWalletConnected = !!user;
     const {
         fetchAaveV3Data,
         getMaxBorrowAmount,
@@ -169,8 +175,12 @@ export default function LendAndBorrowAssets() {
 
     // Switch chain
     useEffect(() => {
+        async function handleSwitchChain() {
+            await wallet?.switchChain(Number(chain_id))
+        }
         if (!!walletAddress) {
-            modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
+            // modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
+            handleSwitchChain()
         }
     }, [walletAddress, Number(chain_id)])
 
@@ -185,7 +195,8 @@ export default function LendAndBorrowAssets() {
         setIsLoadingMaxBorrowingAmount(true)
         if (
             walletAddress &&
-            walletAddress.length > 0 &&
+            // walletAddress.length > 0 &&
+            isWalletConnected &&
             platformData.assets.length > 0 &&
             platformData.platform.protocol_type === 'aaveV3' &&
             providerStatus.isReady
@@ -238,6 +249,7 @@ export default function LendAndBorrowAssets() {
         }
     }, [
         walletAddress,
+        isWalletConnected,
         Object.keys(platformData.platform).length,
         providerStatus.isReady,
         borrowTx.status,
@@ -268,6 +280,7 @@ export default function LendAndBorrowAssets() {
         if (
             providerStatus.isReady &&
             !!walletAddress &&
+            isWalletConnected &&
             !!platformData.platform?.core_contract &&
             !!tokenAddress
         ) {
@@ -306,6 +319,7 @@ export default function LendAndBorrowAssets() {
         }
     }, [
         walletAddress,
+        isWalletConnected,
         platformData,
         lendTx.status,
         lendTx.isRefreshingAllowance,
@@ -326,7 +340,7 @@ export default function LendAndBorrowAssets() {
     // Refresh balance when wallet address changes
     useEffect(() => {
         setIsRefreshingErc20TokensBalanceData(true)
-    }, [walletAddress])
+    }, [walletAddress, isWalletConnected])
 
     // Set selected borrow token details
     useEffect(() => {
@@ -565,13 +579,13 @@ export default function LendAndBorrowAssets() {
     const isDisabledMaxBtn = () => {
         if (isLendPositionType(positionType)) {
             return (Number(amount) === Number(balance)) ||
-                !walletAddress ||
+                !isWalletConnected ||
                 isLoadingErc20TokensBalanceData ||
                 (Number(balance) <= 0)
         }
 
         return (Number(amount) === Number(maxBorrowAmount)) ||
-            !walletAddress ||
+            !isWalletConnected ||
             isLoadingMaxBorrowingAmount ||
             isLoadingErc20TokensBalanceData ||
             (Number(maxBorrowAmount) <= 0)
@@ -621,7 +635,7 @@ export default function LendAndBorrowAssets() {
                             ? 'lend collateral'
                             : `borrow ${selectedBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
-                    {walletAddress && isLendPositionType(positionType) && (
+                    {isWalletConnected && isLendPositionType(positionType) && (
                         <BodyText
                             level="body2"
                             weight="normal"
@@ -650,7 +664,7 @@ export default function LendAndBorrowAssets() {
                             </span>
                         </BodyText>
                     )}
-                    {walletAddress && !isLendPositionType(positionType) && (
+                    {isWalletConnected && !isLendPositionType(positionType) && (
                         <BodyText
                             level="body2"
                             weight="normal"
@@ -730,7 +744,7 @@ export default function LendAndBorrowAssets() {
                         </Button>
                     </div>
                     {/* Net APY - ONLY FOR BORROW TAB */}
-                    {(!isLendPositionType(positionType) && walletAddress) &&
+                    {(!isLendPositionType(positionType) && isWalletConnected) &&
                         <div className="flex items-center justify-between w-full py-[12px] px-[24px] rounded-b-5 bg-white border-y border-gray-200 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]">
                             <BodyText
                                 level="body3"
@@ -754,7 +768,7 @@ export default function LendAndBorrowAssets() {
                             </Badge>}
                         </div>}
                     {
-                        walletAddress && (
+                        isWalletConnected && (
                             <div className="card-content-bottom max-md:px-2 py-3 max-w-[250px] mx-auto">
                                 {(isLoadingHelperText) && (
                                     <BodyText
@@ -790,8 +804,8 @@ export default function LendAndBorrowAssets() {
                     }
                 </CardContent>
                 <CardFooter className="p-0 justify-center">
-                    {!walletAddress && <ConnectWalletButton />}
-                    {walletAddress && (
+                    {!isWalletConnected && <ConnectWalletButton />}
+                    {(isWalletConnected && !isLoading) && (
                         <div className="flex flex-col gap-[12px] w-full">
                             <ConfirmationDialog
                                 disabled={disabledButton}
@@ -917,6 +931,10 @@ export function ConfirmationDialog({
     const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
     const isMorphoMarkets = isMorpho && !assetDetails?.isVault
     const isMorphoVault = isMorpho && assetDetails?.isVault
+    const { address: walletAddress } = useAccount()
+    const { wallets } = useWallets();
+    const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
+
 
     useEffect(() => {
         // Reset the tx status when the dialog is closed
@@ -928,9 +946,15 @@ export function ConfirmationDialog({
     useEffect(() => {
         setHasAcknowledgedRisk(false)
 
+        async function handleSwitchChain() {
+            // console.log('wallet', wallet)
+            await wallet?.switchChain(Number(chain_id))
+        }
+
         if (open) {
             // Switch chain when the dialog is opened
-            modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
+            // modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
+            handleSwitchChain()
         }
     }, [open])
 
@@ -961,7 +985,7 @@ export function ConfirmationDialog({
         // When opening the dialog, reset the amount and the tx status
         setOpen(open)
         // When closing the dialog, reset the amount and the tx status
-        if (!open) {
+        if (!open && (lendTx.status !== 'approve' || borrowTx.status !== 'borrow')) {
             setAmount('')
             resetLendBorrowTx()
         }

@@ -33,7 +33,8 @@ import CustomAlert from '@/components/alerts/CustomAlert'
 import ExternalLink from '@/components/ExternalLink'
 import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import { ChainId } from '@/types/chain'
-import { modal } from '@/context'
+import { usePrivy, useWallets } from '@privy-io/react-auth'
+// import { modal } from '@/context'
 
 export default function LendAndBorrowAssetsMorpho() {
     const searchParams = useSearchParams()
@@ -42,6 +43,10 @@ export default function LendAndBorrowAssetsMorpho() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType = (searchParams.get('position_type') as TPositionType) || 'lend'
     const { address: walletAddress } = useAccount()
+    const { wallets } = useWallets();
+    const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
+    const { user } = usePrivy();
+    const isWalletConnected = !!user;
 
     const [positionType, setPositionType] = useState<TPositionType>('borrow')
 
@@ -53,8 +58,13 @@ export default function LendAndBorrowAssetsMorpho() {
 
     // Switch chain
     useEffect(() => {
+        async function handleSwitchChain() {
+            await wallet?.switchChain(Number(chain_id))
+        }
+
         if (!!walletAddress) {
-            modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
+            // modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
+            handleSwitchChain()
         }
     }, [walletAddress, Number(chain_id)])
 
@@ -102,6 +112,10 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
         useState<TPlatformAsset | null>(null)
     const { lendTx, borrowTx } = useLendBorrowTxContext()
     const [refresh, setRefresh] = useState(false)
+    const { wallets } = useWallets();
+    const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
+    const { user } = usePrivy();
+    const isWalletConnected = !!user;
 
     const [amount, setAmount] = useState('')
 
@@ -360,7 +374,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
         if (isLendPositionType(positionType)) {
             return (
                 Number(amount) === Number(balance) ||
-                !walletAddress ||
+                !isWalletConnected ||
                 isLoadingErc20TokensBalanceData ||
                 Number(balance) <= 0
             )
@@ -368,7 +382,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
 
         // TODO: Get max borrow amount
         return (Number(amount) === Number(maxBorrowAmount)) ||
-            !walletAddress ||
+            !isWalletConnected ||
             isLoadingMaxBorrowingAmount ||
             isLoadingErc20TokensBalanceData ||
             (Number(maxBorrowAmount) <= 0) ||
@@ -399,7 +413,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                             : `borrow ${morphoBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
 
-                    {walletAddress && isLendPositionType(positionType) && (
+                    {isWalletConnected && isLendPositionType(positionType) && (
                         <BodyText
                             level="body2"
                             weight="normal"
@@ -427,7 +441,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                         </BodyText>
                     )}
                     {/* TODO: Borrow limit */}
-                    {walletAddress && !isLendPositionType(positionType) && (
+                    {isWalletConnected && !isLendPositionType(positionType) && (
                         <BodyText
                             level="body2"
                             weight="normal"
@@ -514,7 +528,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                         </Button>
                     </div>
                     {
-                        walletAddress && (
+                        isWalletConnected && (
                             <div className="card-content-bottom px-5 py-3">
                                 {(isLoadingHelperText) && (
                                     <BodyText
@@ -583,8 +597,8 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                     }
                 </CardContent>
                 <CardFooter className="p-0 justify-center">
-                    {!walletAddress && <ConnectWalletButton />}
-                    {walletAddress && (
+                    {!isWalletConnected && <ConnectWalletButton />}
+                    {(isWalletConnected && !isLoading) && (
                         <div className="flex flex-col gap-[12px] w-full">
                             <ConfirmationDialog
                                 disabled={disabledButton}
@@ -630,6 +644,10 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
+    const { wallets } = useWallets();
+    const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
+    const { user } = usePrivy();
+    const isWalletConnected = !!user;
 
     const [amount, setAmount] = useState('')
 
@@ -687,7 +705,7 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
     const isDisabledMaxBtn = () => {
         return (
             Number(amount) === Number(balance) ||
-            !walletAddress ||
+            !isWalletConnected ||
             isLoadingErc20TokensBalanceData ||
             Number(balance) <= 0
         )
@@ -739,7 +757,7 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
                     <BodyText level="body2" weight="medium" className="capitalize text-black/90">
                         Supply to vault
                     </BodyText>
-                    {walletAddress && (
+                    {isWalletConnected && (
                         <BodyText
                             level="body2"
                             weight="normal"
@@ -818,35 +836,39 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
                             max
                         </Button>
                     </div>
-                    <div className="card-content-bottom px-5 py-3">
-                        {(walletAddress && (isLoading || !lendErrorMessage)) && (
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
-                            >
-                                {isLoading && 'Loading balance...'}
-                                {(!lendErrorMessage && !isLoading) &&
-                                    'Enter amount to proceed with supplying to vault'
+                    {
+                        (isWalletConnected) && (
+                            <div className="card-content-bottom px-5 py-3">
+                                {((isLoading || !lendErrorMessage)) && (
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
+                                    >
+                                        {isLoading && 'Loading balance...'}
+                                        {(!lendErrorMessage && !isLoading) &&
+                                            'Enter amount to proceed with supplying to vault'
+                                        }
+                                    </BodyText>
+                                )}
+                                {
+                                    (lendErrorMessage && !isLoading) && (
+                                        <BodyText
+                                            level="body2"
+                                            weight="normal"
+                                            className="text-center text-destructive-foreground"
+                                        >
+                                            {lendErrorMessage}
+                                        </BodyText>
+                                    )
                                 }
-                            </BodyText>
-                        )}
-                        {
-                            (lendErrorMessage && !isLoading && walletAddress) && (
-                                <BodyText
-                                    level="body2"
-                                    weight="normal"
-                                    className="text-center text-destructive-foreground"
-                                >
-                                    {lendErrorMessage}
-                                </BodyText>
-                            )
-                        }
-                    </div>
+                            </div>
+                        )
+                    }
                 </CardContent>
                 <CardFooter className="p-0 justify-center">
-                    {!walletAddress && <ConnectWalletButton />}
-                    {walletAddress && (
+                    {!isWalletConnected && <ConnectWalletButton />}
+                    {(isWalletConnected && !isLoading) && (
                         <div className="flex flex-col gap-[12px] w-full">
                             <ConfirmationDialog
                                 disabled={disabledButton}

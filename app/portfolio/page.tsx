@@ -14,16 +14,21 @@ import PortfolioProvider from '@/context/portfolio-provider'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import PositionsProvider from '@/context/positions-provider'
 import { useAccount } from 'wagmi'
+import { usePrivy, useWallets } from '@privy-io/react-auth'
 
 export default function Portfolio() {
     const { address: walletAddress, isConnecting } = useAccount()
+    const { wallets } = useWallets();
+    const { user } = usePrivy();
+    const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
+    const isWalletConnected = !!user;
     const { isClient } = useIsClient()
 
     if (isClient && isConnecting) {
         return <PortfolioPageLoading />
     }
 
-    if (!walletAddress && isClient) {
+    if (!isWalletConnected && isClient) {
         return (
             <div className="py-16">
                 <InfoBannerWithCta
@@ -40,7 +45,7 @@ export default function Portfolio() {
         )
     }
 
-    if (walletAddress && isClient) {
+    if (isWalletConnected && isClient) {
         return (
             <PortfolioProvider>
                 <MainContainer className="px-0">

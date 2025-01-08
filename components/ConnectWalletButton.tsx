@@ -9,31 +9,40 @@ import {
     useAppKitAccount,
     useAppKitState,
 } from '@reown/appkit/react'
+import { usePrivy } from '@privy-io/react-auth'
 
 export default function ConnectWalletButton() {
     const { isClient } = useIsClient()
-    const {
-        address: walletAddress,
-        isConnected,
-        caipAddress,
-        status,
-    } = useAppKitAccount()
-    const { open, close } = useAppKit()
-    const { open: isOpen, selectedNetworkId } = useAppKitState()
+    const { ready, authenticated, login, logout, user } = usePrivy();
+    // const {
+    //     address: walletAddress,
+    //     isConnected,
+    //     caipAddress,
+    //     status,
+    // } = useAppKitAccount()
+    // const { open, close } = useAppKit()
+    // const { open: isOpen, selectedNetworkId } = useAppKitState()
 
+    // const displayText = walletAddress
+    //     ? `${walletAddress?.slice(0, 5)}...${walletAddress?.slice(-5)}`
+    //     : 'Connect Wallet'
+
+    // const isConnecting = status === 'connecting'
+
+    // function handleConnect() {
+    //     if (isOpen) {
+    //         close()
+    //     } else {
+    //         open()
+    //     }
+    // }
+    const walletAddress = user?.wallet?.address
+    const disableLogin = !ready || (ready && authenticated);
+    const disableLogout = !ready || (ready && !authenticated);
+    const isDisabled = walletAddress ? disableLogout : disableLogin
     const displayText = walletAddress
         ? `${walletAddress?.slice(0, 5)}...${walletAddress?.slice(-5)}`
         : 'Connect Wallet'
-
-    const isConnecting = status === 'connecting'
-
-    function handleConnect() {
-        if (isOpen) {
-            close()
-        } else {
-            open()
-        }
-    }
 
     return (
         <>
@@ -49,10 +58,10 @@ export default function ConnectWalletButton() {
                     variant={walletAddress ? 'default' : 'primary'}
                     size="lg"
                     className="rounded-4 py-2 capitalize w-full"
-                    onClick={handleConnect}
-                    disabled={isConnecting}
+                    onClick={walletAddress ? logout : login}
+                    disabled={isDisabled}
                 >
-                    {isConnecting ? 'Connecting...' : displayText}
+                    {isDisabled ? 'Connecting...' : displayText}
                 </Button>
             )}
         </>
