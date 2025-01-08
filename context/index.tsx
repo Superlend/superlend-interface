@@ -6,7 +6,7 @@ import React, { type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AssetsDataProvider from './data-provider'
 import { WagmiProvider } from 'wagmi'
-import { Config, cookieToInitialState } from 'wagmi'
+import { type Config, cookieToInitialState } from 'wagmi'
 import UserTokenBalancesProvider from './user-token-balances-provider'
 import {
     mainnet,
