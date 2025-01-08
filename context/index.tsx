@@ -23,16 +23,18 @@ import UserTokenBalancesProvider from './user-token-balances-provider'
 // import { createAppKit } from '@reown/appkit/react'
 import { PrivyProvider } from '@privy-io/react-auth';
 import { createConfig, WagmiProvider } from '@privy-io/wagmi';
-import { mainnet, sepolia, polygon } from 'viem/chains';
+import { base, mainnet, sepolia, polygon } from 'viem/chains';
 import { http } from 'wagmi';
 
 
 // Set up queryClient
 const queryClient = new QueryClient()
 
-if (!projectId) {
-    throw new Error('Project ID is not defined')
-}
+const appId = "cm5o77rga039b99tzkjakb6ji"
+
+// if (!projectId) {
+//     throw new Error('Project ID is not defined')
+// }
 
 // Set up metadata
 const metadata = {
@@ -74,8 +76,7 @@ export const config = createConfig({
         [mainnet.id]: http(),
         [sepolia.id]: http(),
         [polygon.id]: http(),
-        // For each of your required chains, add an entry to `transports` with
-        // a key of the chain's `id` and a value of `http()`
+        [base.id]: http(),
     },
 });
 
@@ -93,23 +94,18 @@ function ContextProvider({
 
     return (
         <PrivyProvider
-            appId="cm5nmdlr704fvqepkbrdpm6l9"
+            appId={appId}
             config={{
-                // Configures email, wallet, Google, Apple, and Farcaster login
-                loginMethods: ['wallet']
+                loginMethods: ['wallet'],
+                appearance: {
+                    theme: 'light',
+                    accentColor: '#676FFF',
+                    logo: 'https://beta.superlend.xyz/images/logos/superlend-logo.webp',
+                    landingHeader: "Connect Wallet",
+                    loginMessage: "Select wallet to continue",
+                    showWalletLoginFirst: true
+                },
             }}
-        // config={{
-        //     // Customize Privy's appearance in your app
-        //     appearance: {
-        //         theme: 'light',
-        //         accentColor: '#676FFF',
-        //         logo: 'https://your-logo-url',
-        //     },
-        //     // Create embedded wallets for users who don't have a wallet
-        //     embeddedWallets: {
-        //         createOnLogin: 'users-without-wallets',
-        //     },
-        // }}
         >
             <QueryClientProvider client={queryClient}>
                 <WagmiProvider config={config}>
