@@ -1305,7 +1305,7 @@ export function ConfirmationDialog({
                 {/* Block 3 */}
                 <div className="flex flex-col items-center justify-between px-[24px] bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
                     {isShowBlock({
-                        lend: !isLendTxInProgress,
+                        lend: !isLendTxInProgress && !isMorphoMarkets,
                         borrow: !isBorrowTxInProgress,
                     }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
