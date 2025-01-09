@@ -71,7 +71,7 @@ const metadata = {
 // })
 
 export const config = createConfig({
-    chains: [mainnet, sepolia, polygon], // Pass your required chains as an array
+    chains: [mainnet, sepolia, polygon, base], // Pass your required chains as an array
     transports: {
         [mainnet.id]: http(),
         [sepolia.id]: http(),
