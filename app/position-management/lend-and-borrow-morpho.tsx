@@ -31,7 +31,7 @@ import { formatUnits } from 'viem'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import ExternalLink from '@/components/ExternalLink'
-import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { TLendBorrowTxContext, useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
 import { ChainId } from '@/types/chain'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 // import { modal } from '@/context'
@@ -108,6 +108,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
     const chain_id = searchParams.get('chain_id') || '1'
     const positionTypeParam: TPositionType = (searchParams.get('position_type') as TPositionType) || 'lend'
     const [positionType, setPositionType] = useState<TPositionType>('lend')
+    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false)
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
     const { lendTx, borrowTx } = useLendBorrowTxContext()
@@ -133,6 +134,17 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
             }, 30000)
         }
     }, [refresh])
+
+    // Refresh balance when view(success) UI after supplying/borrowing an asset
+    useEffect(() => {
+        if (lendTx.status === 'approve' && !isConfirmationDialogOpen) {
+            setIsRefreshingErc20TokensBalanceData(true)
+        }
+
+        if (borrowTx.status === 'borrow' && !isConfirmationDialogOpen) {
+            setIsRefreshingErc20TokensBalanceData(true)
+        }
+    }, [lendTx.status, borrowTx.status, lendTx.isConfirmed, borrowTx.isConfirmed, isConfirmationDialogOpen])
 
     const { data: morphoMarketData } = useMarket({
         marketId: platformData?.platform?.morpho_market_id as MarketId,
@@ -602,6 +614,8 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                         <div className="flex flex-col gap-[12px] w-full">
                             <ConfirmationDialog
                                 disabled={disabledButton}
+                                open={isConfirmationDialogOpen}
+                                setOpen={setIsConfirmationDialogOpen}
                                 positionType={positionType}
                                 assetDetails={{
                                     asset: isLendPositionType(positionType)
@@ -648,6 +662,8 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
     const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
     const { user } = usePrivy();
     const isWalletConnected = !!user;
+    const { lendTx, borrowTx } = useLendBorrowTxContext() as TLendBorrowTxContext
+    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false)
 
     const [amount, setAmount] = useState('')
 
@@ -662,6 +678,17 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
             setSelectedAssetTokenDetails(platformData?.assets[0])
         }
     }, [platformData, setSelectedAssetTokenDetails])
+
+    // Refresh balance when view(success) UI after supplying/borrowing an asset
+    useEffect(() => {
+        if (lendTx.status === 'approve' && !isConfirmationDialogOpen) {
+            setIsRefreshingErc20TokensBalanceData(true)
+        }
+
+        if (borrowTx.status === 'borrow' && !isConfirmationDialogOpen) {
+            setIsRefreshingErc20TokensBalanceData(true)
+        }
+    }, [lendTx.status, borrowTx.status, lendTx.isConfirmed, borrowTx.isConfirmed, isConfirmationDialogOpen])
 
     // fetch vault data
     const { data: vaultData } = useVault({
@@ -893,6 +920,8 @@ function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadin
                                     newHealthFactor: 0.0,
                                 }}
                                 isVault={true}
+                                open={isConfirmationDialogOpen}
+                                setOpen={setIsConfirmationDialogOpen}
                             />
                         </div>
                     )}

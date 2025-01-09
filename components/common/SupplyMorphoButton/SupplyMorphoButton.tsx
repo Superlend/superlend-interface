@@ -277,6 +277,7 @@ const SupplyMorphoButton = ({
             isConfirming: isConfirming,
             isConfirmed: isConfirmed,
             isRefreshingAllowance: isConfirmed,
+            // status: (isConfirmed && prev.status === 'lend' && hash) ? 'view' : prev.status,
         }))
     }, [isPending, isConfirming, isConfirmed])
 

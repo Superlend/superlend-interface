@@ -113,6 +113,7 @@ export default function LendAndBorrowAssets() {
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
     const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] =
         useState(false)
+    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false)
     const [borrowTokensDetails, setBorrowTokensDetails] = useState<
         TPlatformAsset[]
     >([])
@@ -170,6 +171,7 @@ export default function LendAndBorrowAssets() {
     })
 
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData
+    const isMorphoVaults = platformData?.platform?.protocol_type === PlatformType.MORPHO && platformData?.platform?.isVault;
 
     // const customChain = defineChain(Number(chain_id))
 
@@ -328,14 +330,14 @@ export default function LendAndBorrowAssets() {
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
-        if (lendTx.status === 'view' && lendTx.isConfirmed) {
+        if (lendTx.status === 'view' && lendTx.isConfirmed && !isMorphoVaults) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
 
-        if (borrowTx.status === 'view' && borrowTx.isConfirmed) {
+        if (borrowTx.status === 'view' && borrowTx.isConfirmed && !isMorphoVaults) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [lendTx.status, borrowTx.status, lendTx.isConfirmed, borrowTx.isConfirmed])
+    }, [lendTx.status, borrowTx.status, lendTx.isConfirmed, borrowTx.isConfirmed, isMorphoVaults])
 
     // Refresh balance when wallet address changes
     useEffect(() => {
@@ -820,6 +822,8 @@ export default function LendAndBorrowAssets() {
                                 maxBorrowAmount={maxBorrowAmount}
                                 setAmount={setAmount}
                                 healthFactorValues={healthFactorValues}
+                                open={isConfirmationDialogOpen}
+                                setOpen={setIsConfirmationDialogOpen}
                             />
                         </div>
                     )}
@@ -904,7 +908,9 @@ export function ConfirmationDialog({
     balance,
     maxBorrowAmount,
     healthFactorValues,
-    isVault
+    isVault,
+    open,
+    setOpen
 }: {
     disabled: boolean
     positionType: TPositionType
@@ -918,10 +924,11 @@ export function ConfirmationDialog({
         newHealthFactor: any
     }
     isVault?: boolean
+    open: boolean
+    setOpen: (open: boolean) => void
 }) {
     const { lendTx, setLendTx, borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
-    const [open, setOpen] = useState(false)
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
