@@ -174,11 +174,12 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
     const content = (
         <div className='flex flex-col gap-8 md:gap-4'>
             <div className="flex items-center justify-center">
+                <div className="rounded-full w-6 h-6 bg-gradient-to-r from-[#f9b16e] to-[#f68080] mr-2"></div>
                 <BodyText level={isDesktop ? "body2" : "body1"} weight="bold">
                     {displayText}
                 </BodyText>
                 <Button variant="ghost" size="icon" onClick={handleAddressCopy} className={`p-0 ${addressIsCopied ? 'select-none' : ''}`}>
-                    {addressIsCopied ? <Check className="w-4 h-4 stroke-green-500" /> : <Copy className="w-4 h-4" />}
+                    {addressIsCopied ? <Check className="w-4 h-4 stroke-green-700" /> : <Copy className="w-4 h-4" />}
                 </Button>
             </div>
             <Button
