@@ -12,6 +12,7 @@ import {
     EIP_20_SIGNED_APPROVALS_LINK,
     ERROR_TOAST_ICON_STYLES,
     MORPHO_ETHERSCAN_TUTORIAL_LINK,
+    MORPHO_WEBSITE_LINK,
     SOMETHING_WENT_WRONG_MESSAGE,
     SUCCESS_MESSAGE,
 } from '@/constants'
@@ -360,7 +361,7 @@ const SupplyMorphoButton = ({
                         >
                             Note: Adding collateral to Morpho Markets does not yield<span className="mr-1">.</span>
                             <ExternalLink href={MORPHO_ETHERSCAN_TUTORIAL_LINK}>
-                                learn more
+                                Learn more
                             </ExternalLink>
                         </BodyText>
                     }
@@ -399,8 +400,25 @@ const SupplyMorphoButton = ({
             {lendTx.errorMessage.length > 0 && (
                 <CustomAlert description={lendTx.errorMessage} />
             )}
+            {!morphoMarketData && (
+                <CustomAlert
+                    description={
+                        <div className="flex flex-col items-start gap-2">
+                            <BodyText level="body2" weight="medium">
+                                Error: Service Unavailable
+                            </BodyText>
+                            <BodyText level="body2" weight="normal">
+                                The Morpho API is temporarily down. Please try again later.
+                            </BodyText>
+                            <ExternalLink href={MORPHO_WEBSITE_LINK} className="text-xs md:text-sm">
+                                Morpho Website
+                            </ExternalLink>
+                        </div>
+                    }
+                />
+            )}
             <Button
-                disabled={(isPending || isConfirming || disabled) && lendTx.status !== 'view'}
+                disabled={(isPending || isConfirming || disabled || !morphoMarketData) && lendTx.status !== 'view'}
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()
