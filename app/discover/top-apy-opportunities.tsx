@@ -45,7 +45,7 @@ export default function TopApyOpportunities() {
     const keywordsParam = searchParams.get('keywords') || ''
     const pageParam = searchParams.get('page')
     const sortingParam = searchParams.get('sort')?.split(',') || []
-    const excludeMorphoMarketsParam = searchParams.get('exclude_morpho_markets')
+    const excludeRiskyMarketsParam = searchParams.get('exclude_risky_markets')
     const [keywords, setKeywords] = useState<string>(keywordsParam)
     const debouncedKeywords = useDebounce(keywords, 300)
     const [pagination, setPagination] = useState<PaginationState>({
@@ -164,14 +164,14 @@ export default function TopApyOpportunities() {
             updateSearchParams({ sort: sortParam })
         }
         updateSearchParams({
-            exclude_morpho_markets: positionTypeParam === 'lend' ? 'true' : undefined,
+            exclude_risky_markets: positionTypeParam === 'lend' ? 'true' : undefined,
             protocol_ids: positionTypeParam === 'lend' ? filteredIds : unfilteredIds
         })
     }, [sorting])
 
     useEffect(() => {
-        if (positionTypeParam === 'lend' && excludeMorphoMarketsParam !== 'true') {
-            updateSearchParams({ exclude_morpho_markets: true })
+        if (positionTypeParam === 'lend' && excludeRiskyMarketsParam !== 'true') {
+            updateSearchParams({ exclude_risky_markets: true })
         }
     }, [positionTypeParam])
 
@@ -250,7 +250,7 @@ export default function TopApyOpportunities() {
         const isVault = opportunity.isVault
         const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
 
-        return excludeMorphoMarketsParam === 'true' ? !(isMorpho && !isVault) : true;
+        return excludeRiskyMarketsParam === 'true' ? !(isMorpho && !isVault) : true;
     }
 
     function handleExcludeMorphoVaultsByPositionType(opportunity: TOpportunityTable) {
@@ -278,7 +278,7 @@ export default function TopApyOpportunities() {
 
         const params = {
             position_type: positionType,
-            exclude_morpho_markets: positionType === 'lend' ? 'true' : undefined,
+            exclude_risky_markets: positionType === 'lend' ? 'true' : undefined,
             protocol_ids: positionType === 'lend' ? filteredIds : unfilteredIds
         }
         updateSearchParams(params)
