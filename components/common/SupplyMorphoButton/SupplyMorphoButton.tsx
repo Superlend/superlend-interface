@@ -35,12 +35,14 @@ import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
 import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
 import ExternalLink from '@/components/ExternalLink'
 import { PlatformType } from '@/types/platform'
+import { TPositionType } from '@/types'
 
 interface ISupplyMorphoButtonProps {
     disabled: boolean
     asset: any // Replace with proper type
     amount: string
     handleCloseModal: (isVisible: boolean) => void
+    setActionType?: (actionType: TPositionType) => void
 }
 
 const SupplyMorphoButton = ({
@@ -48,6 +50,7 @@ const SupplyMorphoButton = ({
     asset,
     amount,
     handleCloseModal,
+    setActionType
 }: ISupplyMorphoButtonProps) => {
     const assetDetails = asset.asset
     const platform = asset.platform
@@ -355,9 +358,9 @@ const SupplyMorphoButton = ({
                             weight="normal"
                             className="text-secondary-500"
                         >
-                            Note: Adding collateral to Morpho Markets does not yield. To supply & earn from morpho markets, follow the process <span className="mr-1">outlined</span>
+                            Note: Adding collateral to Morpho Markets does not yield<span className="mr-1">.</span>
                             <ExternalLink href={MORPHO_ETHERSCAN_TUTORIAL_LINK}>
-                                here
+                                learn more
                             </ExternalLink>
                         </BodyText>
                     }
@@ -375,7 +378,7 @@ const SupplyMorphoButton = ({
                         >
                             Note: You need to complete an &apos;approval
                             transaction&apos; granting permission to move funds from your wallet as the
-                            first step before supplying the <span className="mr-1">asset</span>
+                            first step before supplying the <span className="mr-1">asset.</span>
                             <ExternalLink href={EIP_20_SIGNED_APPROVALS_LINK}>
                                 Learn more
                             </ExternalLink>
@@ -405,6 +408,7 @@ const SupplyMorphoButton = ({
                         supply()
                     } else {
                         handleCloseModal(false)
+                        setActionType?.('borrow')
                     }
                 }}
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"

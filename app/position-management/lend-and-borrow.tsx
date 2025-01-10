@@ -910,7 +910,8 @@ export function ConfirmationDialog({
     healthFactorValues,
     isVault,
     open,
-    setOpen
+    setOpen,
+    setActionType
 }: {
     disabled: boolean
     positionType: TPositionType
@@ -926,6 +927,7 @@ export function ConfirmationDialog({
     isVault?: boolean
     open: boolean
     setOpen: (open: boolean) => void
+    setActionType?: (actionType: TPositionType) => void
 }) {
     const { lendTx, setLendTx, borrowTx, setBorrowTx } =
         useLendBorrowTxContext() as TLendBorrowTxContext
@@ -1481,6 +1483,7 @@ export function ConfirmationDialog({
                         asset={assetDetails}
                         amount={amount}
                         positionType={positionType}
+                        setActionType={setActionType}
                     />
                 </div>
             </div>

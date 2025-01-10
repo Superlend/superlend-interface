@@ -13,6 +13,7 @@ import { countCompoundDecimals } from '@/lib/utils'
 import { BigNumber } from 'ethers'
 import SupplyMorphoButton from '../SupplyMorphoButton'
 import { CodeSquare } from 'lucide-react'
+import { TPositionType } from '@/types'
 
 interface IActionButtonSelectComponent {
     disabled?: boolean
@@ -20,6 +21,7 @@ interface IActionButtonSelectComponent {
     amount: string
     handleCloseModal: (isVisible: boolean) => void
     positionType: 'lend' | 'borrow'
+    setActionType?: (actionType: TPositionType) => void
 }
 
 const ActionButton = ({
@@ -28,6 +30,7 @@ const ActionButton = ({
     amount,
     handleCloseModal,
     positionType,
+    setActionType
 }: IActionButtonSelectComponent) => {
 
     if (positionType === 'borrow') {
@@ -85,6 +88,7 @@ const ActionButton = ({
                 handleCloseModal={handleCloseModal}
                 asset={asset}
                 amount={amount}
+                setActionType={setActionType}
             />
         )
     }

@@ -30,7 +30,7 @@ const buttonVariants = cva(
                 xl: 'px-2.5 md:px-3 py-2 text-[16px] sm:text-[18px]',
                 '2xl': 'px-2.5 md:px-3 py-2 text-[20px] sm:text-[22px]',
                 '3xl': 'px-2.5 md:px-3 py-2 text-[24px] sm:text-[26px]',
-                icon: 'h-10 w-10',
+                // icon: 'h-10 w-10',
             },
         },
         defaultVariants: {

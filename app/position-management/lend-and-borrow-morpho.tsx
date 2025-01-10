@@ -13,7 +13,7 @@ import {
     getLowestDisplayValue,
 } from '@/lib/utils'
 import { TPlatform, TPositionType } from '@/types'
-import { TPlatformAsset } from '@/types/platform'
+import { PlatformType, TPlatformAsset } from '@/types/platform'
 import { LoaderCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -47,14 +47,6 @@ export default function LendAndBorrowAssetsMorpho() {
     const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
     const { user } = usePrivy();
     const isWalletConnected = !!user;
-
-    const [positionType, setPositionType] = useState<TPositionType>('borrow')
-
-    // Set position type, to select lend or borrow tab -
-    // - when user navigates to this page with position type param
-    useEffect(() => {
-        setPositionType(positionTypeParam)
-    }, [positionTypeParam])
 
     // Switch chain
     useEffect(() => {
@@ -103,7 +95,15 @@ function isLendPositionType(positionType: TPositionType) {
 }
 
 
-function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadingPlatformData }: { platformData: TPlatform, walletAddress: `0x${string}`, isLoadingPlatformData: boolean }) {
+function LendAndBorrowAssetsMorphoMarkets({
+    platformData,
+    walletAddress,
+    isLoadingPlatformData
+}: {
+    platformData: TPlatform,
+    walletAddress: `0x${string}`,
+    isLoadingPlatformData: boolean
+}) {
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || '1'
     const positionTypeParam: TPositionType = (searchParams.get('position_type') as TPositionType) || 'lend'
@@ -172,7 +172,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
     // health factor
     const [healthFactor, setHealthFactor] = useState(0)
 
-    const isMorphoProtocol = platformData?.platform?.protocol_type === 'morpho'
+    const isMorphoProtocol = platformData?.platform?.protocol_type === PlatformType.MORPHO
 
     useEffect(() => {
 
@@ -559,9 +559,9 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                                     >
                                         {(isLendPositionType(positionType) && (positionTypeParam === 'lend')) && (
                                             <>
-                                                Adding collateral to Morpho Markets does not yield. To supply & earn from morpho markets, <span className="mr-1">visit</span>
+                                                Adding collateral to Morpho Markets does not yield<span className="mr-1">.</span>
                                                 <ExternalLink href={MORPHO_ETHERSCAN_TUTORIAL_LINK}>
-                                                    here
+                                                    Learn more
                                                 </ExternalLink>
                                             </>
                                         )}
@@ -643,6 +643,7 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
                                         amount
                                     ),
                                 }}
+                                setActionType={setPositionType}
                             />
                         </div>
                     )}
@@ -652,7 +653,15 @@ function LendAndBorrowAssetsMorphoMarkets({ platformData, walletAddress, isLoadi
     )
 }
 
-function LendAndBorrowAssetsMorphoVaults({ platformData, walletAddress, isLoadingPlatformData }: { platformData: TPlatform, walletAddress: `0x${string}`, isLoadingPlatformData: boolean }) {
+function LendAndBorrowAssetsMorphoVaults({
+    platformData,
+    walletAddress,
+    isLoadingPlatformData
+}: {
+    platformData: TPlatform,
+    walletAddress: `0x${string}`,
+    isLoadingPlatformData: boolean
+}) {
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || '1'
     const [positionType, setPositionType] = useState<TPositionType>('lend')
