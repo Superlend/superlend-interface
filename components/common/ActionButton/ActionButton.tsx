@@ -9,8 +9,11 @@ import { PlatformType, PlatformValue } from '../../../types/platform'
 import SupplyETHCompoundButton from '../SupplyETHCompoundButton'
 import SupplyERC20CompoundButton from '../SupplyERC20CompoundButton'
 import { countCompoundDecimals } from '@/lib/utils'
-import { POOL_AAVE_MAP } from '@/constants'
+// import { POOL_AAVE_MAP } from '@/constants'
 import { BigNumber } from 'ethers'
+import SupplyMorphoButton from '../SupplyMorphoButton'
+import { CodeSquare } from 'lucide-react'
+import { TPositionType } from '@/types'
 
 interface IActionButtonSelectComponent {
     disabled?: boolean
@@ -18,6 +21,7 @@ interface IActionButtonSelectComponent {
     amount: string
     handleCloseModal: (isVisible: boolean) => void
     positionType: 'lend' | 'borrow'
+    setActionType?: (actionType: TPositionType) => void
 }
 
 const ActionButton = ({
@@ -26,7 +30,9 @@ const ActionButton = ({
     amount,
     handleCloseModal,
     positionType,
+    setActionType
 }: IActionButtonSelectComponent) => {
+
     if (positionType === 'borrow') {
         return (
             <BorrowButton
@@ -71,6 +77,22 @@ const ActionButton = ({
             />
         )
     }
+
+    if (
+        asset.protocol_type === PlatformType.MORPHO &&
+        positionType === 'lend'
+    ) {
+        return (
+            <SupplyMorphoButton
+                disabled={disabled}
+                handleCloseModal={handleCloseModal}
+                asset={asset}
+                amount={amount}
+                setActionType={setActionType}
+            />
+        )
+    }
+
     return (
         <SupplyERC20CompoundButton
             disabled={disabled}

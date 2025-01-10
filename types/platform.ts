@@ -17,6 +17,7 @@ export type TPlatformAsset = {
     borrow_enabled: boolean
     remaining_supply_cap: number
     remaining_borrow_cap: number
+    ltv: number
 }
 
 export type TPlatform = {

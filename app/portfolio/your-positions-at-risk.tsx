@@ -221,11 +221,11 @@ export default function YourPositionsAtRiskCarousel() {
                 !isLoadingPortfolioData && POSITIONS_AT_RISK.length > 0 && (
                     <Carousel
                         setApi={setApi}
-                    // className={
-                    //     current === count
-                    //         ? BLUR_ON_LEFT_END_STYLES
-                    //         : BLUR_ON_RIGHT_END_STYLES
-                    // }
+                        // className={
+                        //     current === count
+                        //         ? BLUR_ON_LEFT_END_STYLES
+                        //         : BLUR_ON_RIGHT_END_STYLES
+                        // }
                     >
                         <CarouselContent className="pl-5 cursor-grabbing">
                             {POSITIONS_AT_RISK.map((position, index) => (
@@ -382,9 +382,9 @@ export default function YourPositionsAtRiskCarousel() {
                                                         variant={
                                                             position.riskFactor
                                                                 .theme as
-                                                            | 'destructive'
-                                                            | 'green'
-                                                            | 'yellow'
+                                                                | 'destructive'
+                                                                | 'green'
+                                                                | 'yellow'
                                                         }
                                                     >
                                                         {
@@ -411,9 +411,9 @@ export default function YourPositionsAtRiskCarousel() {
                                                 <a
                                                     href={
                                                         platformWebsiteLinks[
-                                                        position.positionOn.platformName
-                                                            .split('-')[0]
-                                                            .toLowerCase() as keyof typeof platformWebsiteLinks
+                                                            position.positionOn.platformName
+                                                                .split('-')[0]
+                                                                .toLowerCase() as keyof typeof platformWebsiteLinks
                                                         ]
                                                     }
                                                     target="_blank"
@@ -445,7 +445,10 @@ export default function YourPositionsAtRiskCarousel() {
                         <Carousel>
                             <CarouselContent className="ml-4 md:ml-1.5 space-x-4">
                                 {[...Array(3)].map((_, index) => (
-                                    <CarouselItem key={index} className="basis-[80%] min-[450px]:basis-[364px] md:basis-[364px] rounded-6 overflow-auto md:ml-5 pl-0">
+                                    <CarouselItem
+                                        key={index}
+                                        className="basis-[80%] min-[450px]:basis-[364px] md:basis-[364px] rounded-6 overflow-auto md:ml-5 pl-0"
+                                    >
                                         <Skeleton className="h-[225px] w-full bg-gray-300" />
                                     </CarouselItem>
                                 ))}
@@ -464,18 +467,18 @@ export default function YourPositionsAtRiskCarousel() {
                             {
                                 // positions at risk
                                 POSITIONS_AT_RISK.length === 0 &&
-                                portfolioData?.platforms?.length > 0 && (
-                                    <>
-                                        <ShieldCheck className="w-5 h-5 text-secondary-800" />
-                                        <BodyText
-                                            level="body1"
-                                            weight="normal"
-                                            className="text-secondary-800"
-                                        >
-                                            You have no positions at risk
-                                        </BodyText>
-                                    </>
-                                )
+                                    portfolioData?.platforms?.length > 0 && (
+                                        <>
+                                            <ShieldCheck className="w-5 h-5 text-secondary-800" />
+                                            <BodyText
+                                                level="body1"
+                                                weight="normal"
+                                                className="text-secondary-800"
+                                            >
+                                                You have no positions at risk
+                                            </BodyText>
+                                        </>
+                                    )
                             }
                             {
                                 // no positions

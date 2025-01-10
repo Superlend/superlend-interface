@@ -46,16 +46,11 @@ export default function PositionDetails() {
     const { lendTx, borrowTx } = useLendBorrowTxContext()
     const [refresh, setRefresh] = useState(false)
 
-    useEffect(() => {
-        const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
-        setRefresh(isRefresh)
-    }, [lendTx.status, lendTx.isConfirmed, borrowTx.status, borrowTx.isConfirmed])
-
-
     const {
         data: portfolioData,
         isLoading: isLoadingPortfolioData,
         isError: isErrorPortfolioData,
+        refetch: refetchPortfolioData,
     } = useGetPortfolioData({
         user_address: walletAddress as `0x${string}`,
         platform_id: [protocol_identifier],
@@ -73,6 +68,21 @@ export default function PositionDetails() {
         chain_id: Number(chain_id),
     })
 
+    useEffect(() => {
+        const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
+        if (isRefresh) {
+            setRefresh(true)
+        }
+    }, [lendTx.status, lendTx.isConfirmed, borrowTx.status, borrowTx.isConfirmed])
+
+    useEffect(() => {
+        if (refresh) {
+            setTimeout(() => {
+                setRefresh(false)
+            }, 30000)
+        }
+    }, [refresh])
+
     const isLoading =
         isLoadingPortfolioData || isLoadingPlatformData
 
@@ -80,6 +90,7 @@ export default function PositionDetails() {
         platformData?.platform?.protocol_type
     )
     const isAaveV3 = platformData?.platform?.protocol_type === 'aaveV3'
+    const isMorphoProtocol = platformData?.platform?.protocol_type === 'morpho'
 
     // Get user positions from portfolio data using protocol identifier
     const userPositions = useMemo(() => portfolioData?.platforms.filter(
@@ -272,6 +283,7 @@ export default function PositionDetails() {
     const isMorpho = platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() === PlatformType.MORPHO
     const isVault = platformData?.platform?.isVault
     const liquidationPriceValueTooltipText = (isMorpho && isVault) ? morphoVaultsLiquidationPriceTooltipText : liquidationPriceValueGeneralTooltipText
+    const liquidationPriceLabelTooltipText = "The price at which your collateral value is no longer enough to support your current borrow amount"
 
     // Loading state
     if (isLoading) {
@@ -332,9 +344,21 @@ export default function PositionDetails() {
                             )}
                         </div>
                         <div className="flex items-center gap-[16px]">
-                            <BodyText level="body2" className="capitalize">
-                                Liquidation price
-                            </BodyText>
+                            {isAaveV3 &&
+                                <InfoTooltip
+                                    label={
+                                        <BodyText level="body2" className="capitalize">
+                                            <TooltipText>
+                                                Liquidation price
+                                            </TooltipText>
+                                        </BodyText>
+                                    }
+                                    content={liquidationPriceLabelTooltipText}
+                                />}
+                            {!isAaveV3 &&
+                                <BodyText level="body2" className="capitalize">
+                                    Liquidation price
+                                </BodyText>}
                             <div className="flex items-center gap-[6px]">
                                 {isPairBasedProtocol && (
                                     <ImageWithDefault
@@ -406,7 +430,7 @@ export default function PositionDetails() {
                                 weight="normal"
                                 className="text-gray-600"
                             >
-                                Your Collateral
+                                Your {isMorphoProtocol ? "Supply" : "Collateral"}
                             </BodyText>
                             <div className="flex flex-col md:flex-row gap-[12px] md:items-center justify-between">
                                 <div className="flex items-center gap-[6px]">
