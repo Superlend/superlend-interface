@@ -385,7 +385,7 @@ function FilterOptions({
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
     const [searchKeyword, setSearchKeyword] = useState<string>('')
-    const [isExcluded, setIsExcluded] = useState(searchParams.get('exclude_morpho_markets') === 'true')
+    const [isExcluded, setIsExcluded] = useState(searchParams.get('exclude_risky_markets') === 'true')
     const positionTypeParam = (searchParams.get('position_type') || 'lend')
     const isMorphoMarketsRisky = useMemo(() => (type === 'protocol' && positionTypeParam === 'lend'), [type, positionTypeParam])
 
@@ -401,14 +401,14 @@ function FilterOptions({
             if (currentProtocolIds.length !== filteredIds.length && positionTypeParam === 'lend') {
                 updateSearchParams({
                     protocol_ids: filteredIds.length ? filteredIds.join(',') : undefined,
-                    exclude_morpho_markets: isExcluded
+                    exclude_risky_markets: isExcluded
                 })
                 return;
             }
         }
 
         updateSearchParams({
-            exclude_morpho_markets: positionTypeParam === 'lend' ? isExcluded : undefined
+            exclude_risky_markets: positionTypeParam === 'lend' ? isExcluded : undefined
         })
     }, [isExcluded, positionTypeParam])
 
@@ -523,11 +523,11 @@ function FilterOptions({
                         label={
                             <Label htmlFor="exclude-morpho-markets">
                                 <TooltipText>
-                                    Exclude Morpho Markets
+                                    Exclude Risky Markets
                                 </TooltipText>
                             </Label>
                         }
-                        content="Exclude Morpho Markets from the list of protocols as they are risky"
+                        content="Supplying to Morpho markets are risky. Excluding them."
                     />
                 </div>
             )}
