@@ -208,7 +208,7 @@ export default function PageHeader() {
                     ))}
                 </div>
             )}
-            {((isMorpho && !isVault) && positionTypeParam === 'lend') && <MorphoMarketAlert />}
+            {/* {((isMorpho && !isVault) && positionTypeParam === 'lend') && <MorphoMarketAlert />} */}
             <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
                 <motion.div
                     className="will-change-transform"
