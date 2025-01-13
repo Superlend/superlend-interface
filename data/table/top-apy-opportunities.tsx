@@ -120,6 +120,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 row.original.platformId.split('-')[0].toLowerCase() ===
                 PlatformType.MORPHO
             const isVault = row.original.isVault
+            const searchParams = useSearchParams()
+            const positionTypeParam = searchParams.get('position_type') || 'lend'
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -136,7 +138,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     >
                         {platformName}
                     </BodyText>
-                    {isMorpho && !isVault && (
+                    {((isMorpho && !isVault) && positionTypeParam === 'lend') && (
                         <InfoTooltip
                             // label={
                             //     <ShieldAlertIcon width={18} height={18} className="text-[#D19900] shrink-0" />

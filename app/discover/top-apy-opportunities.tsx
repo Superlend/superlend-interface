@@ -45,6 +45,7 @@ export default function TopApyOpportunities() {
     const keywordsParam = searchParams.get('keywords') || ''
     const pageParam = searchParams.get('page')
     const sortingParam = searchParams.get('sort')?.split(',') || []
+    const excludeRiskyMarketsParam = searchParams.get('exclude_risky_markets')
     const [keywords, setKeywords] = useState<string>(keywordsParam)
     const debouncedKeywords = useDebounce(keywords, 300)
     const [pagination, setPagination] = useState<PaginationState>({
@@ -155,11 +156,24 @@ export default function TopApyOpportunities() {
     ])
 
     useEffect(() => {
+        const filteredIds = !!platformIdsParam.filter(id => id !== 'MORPHO_MARKETS').length ? platformIdsParam.filter(id => id !== 'MORPHO_MARKETS') : undefined
+        const unfilteredIds = !!platformIdsParam.length ? platformIdsParam : undefined
+
         if (sorting.length > 0) {
             const sortParam = `${sorting[0].id},${sorting[0].desc ? 'desc' : 'asc'}`
             updateSearchParams({ sort: sortParam })
         }
+        updateSearchParams({
+            exclude_risky_markets: positionTypeParam === 'lend' ? 'true' : undefined,
+            protocol_ids: positionTypeParam === 'lend' ? filteredIds : unfilteredIds
+        })
     }, [sorting])
+
+    useEffect(() => {
+        if (positionTypeParam === 'lend' && excludeRiskyMarketsParam !== 'true') {
+            updateSearchParams({ exclude_risky_markets: true })
+        }
+    }, [positionTypeParam])
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         return {
@@ -191,24 +205,22 @@ export default function TopApyOpportunities() {
         }
     })
 
-    const filteredTableDataByPlatformIds = rawTableData.filter(
-        (opportunity) => {
-            const isVault = opportunity.isVault
-            const isMorpho =
-                opportunity.platformId.split('-')[0].toLowerCase() ===
-                PlatformType.MORPHO
-            const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
+    function handleFilterTableRowsByPlatformIds(opportunity: TOpportunityTable) {
+        const isVault = opportunity.isVault
+        const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
+        const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
 
-            const compareWith = `${opportunity.platformId.split('-')[0]}${isMorpho ? `_${morphoSuffix}` : ''}`
+        const compareWith = `${opportunity.platformId.split('-')[0]}${isMorpho ? `_${morphoSuffix}` : ''}`
 
-            return platformIdsParam.includes(compareWith.trim())
+        if (platformIdsParam.length > 0) {
+            return platformIdsParam.includes(
+                compareWith.trim()
+            )
         }
-    )
+        return true
+    }
 
-    const tableData =
-        platformIdsParam.length > 0
-            ? filteredTableDataByPlatformIds
-            : rawTableData
+    const tableData = rawTableData.filter(handleFilterTableRows)
 
     // Calculate total number of pages
     const totalPages = Math.ceil(tableData.length / 10)
@@ -233,6 +245,27 @@ export default function TopApyOpportunities() {
         [updateSearchParams, searchParams, totalPages]
     )
 
+    // Handle exclude morpho markets by URL param flag
+    function handleExcludeMorphoMarketsByParamFlag(opportunity: TOpportunityTable) {
+        const isVault = opportunity.isVault
+        const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
+
+        return excludeRiskyMarketsParam === 'true' ? !(isMorpho && !isVault) : true;
+    }
+
+    function handleExcludeMorphoVaultsByPositionType(opportunity: TOpportunityTable) {
+        const isVault = opportunity.isVault
+        const isMorpho = opportunity.platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
+
+        return positionTypeParam === 'borrow' ? !(isMorpho && isVault) : true;
+    }
+
+    function handleFilterTableRows(opportunity: TOpportunityTable) {
+        return positionTypeParam === 'borrow' ?
+            handleExcludeMorphoVaultsByPositionType(opportunity) && handleFilterTableRowsByPlatformIds(opportunity) :
+            handleExcludeMorphoMarketsByParamFlag(opportunity) && handleFilterTableRowsByPlatformIds(opportunity);
+    }
+
     function handleRowClick(rowData: any) {
         const { tokenAddress, protocol_identifier, chain_id } = rowData
         const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
@@ -240,7 +273,14 @@ export default function TopApyOpportunities() {
     }
 
     const toggleOpportunityType = (positionType: TPositionType): void => {
-        const params = { position_type: positionType }
+        const filteredIds = !!platformIdsParam.filter(id => id !== 'MORPHO_MARKETS').length ? platformIdsParam.filter(id => id !== 'MORPHO_MARKETS') : undefined
+        const unfilteredIds = !!platformIdsParam.length ? platformIdsParam : undefined
+
+        const params = {
+            position_type: positionType,
+            exclude_risky_markets: positionType === 'lend' ? 'true' : undefined,
+            protocol_ids: positionType === 'lend' ? filteredIds : unfilteredIds
+        }
         updateSearchParams(params)
     }
 

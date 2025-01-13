@@ -49,6 +49,7 @@ export default function PageHeader() {
     const tokenAddress = searchParams.get('token') || ''
     const chain_id: string = searchParams.get('chain_id') || '0'
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
+    const positionTypeParam = searchParams.get('position_type') || 'lend'
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
 
     // [API_CALL: GET] - Get Platform data
@@ -96,6 +97,7 @@ export default function PageHeader() {
         platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() ===
         PlatformType.MORPHO
     const isVault = platformData?.platform?.isVault
+    const isMorphoMarkets = isMorpho && !isVault
     const tokenSymbol = tokenDetails?.symbol
     const tokenLogo = tokenDetails?.logo || ''
     const tokenName = tokenDetails?.name || ''
@@ -212,7 +214,7 @@ export default function PageHeader() {
                     ))}
                 </div>
             )}
-            {isMorpho && !isVault && <MorphoMarketAlert />}
+            {/* {((isMorpho && !isVault) && positionTypeParam === 'lend') && <MorphoMarketAlert />} */}
             <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
                 <motion.div
                     className="will-change-transform"
@@ -234,9 +236,9 @@ export default function PageHeader() {
                 <div className="flex flex-col xl:flex-row items-start justify-between gap-[24px] w-full">
                     <motion.div
                         className="flex flex-wrap items-center gap-[16px] will-change-transform"
-                        // initial={{ opacity: 0.7, y: 30 }}
-                        // animate={{ opacity: 1, y: 0 }}
-                        // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                    // initial={{ opacity: 0.7, y: 30 }}
+                    // animate={{ opacity: 1, y: 0 }}
+                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                     >
                         {/* Loading Skeleton */}
                         {isLoadingPlatformData && <LoadingSkeleton />}
@@ -380,22 +382,21 @@ export default function PageHeader() {
                         {!isLoadingPlatformData && (
                             <>
                                 {/* Supply APY */}
-                                <div className="flex items-center max-md:justify-between gap-[4px]">
-                                    <BodyText
-                                        level="body1"
-                                        className="text-gray-700 shrink-0"
-                                    >
-                                        Supply APY
-                                    </BodyText>
-                                    <Badge variant="green">
-                                        <BodyText level="body1" weight="medium">
-                                            {pageHeaderStats?.supply_apy}%
-                                        </BodyText>
-                                    </Badge>
-                                </div>
-                                <span className="hidden xs:inline-block text-gray">
-                                    |
-                                </span>
+                                {!(isMorphoMarkets && positionTypeParam === 'borrow') &&
+                                    <>
+                                        <div className="flex items-center max-md:justify-between gap-[4px]">
+                                            <BodyText level='body1' className='text-gray-700 shrink-0'>
+                                                Supply APY
+                                            </BodyText>
+                                            <Badge variant="green">
+                                                <BodyText level='body1' weight='medium'>
+                                                    {pageHeaderStats?.supply_apy}%
+                                                </BodyText>
+                                            </Badge>
+                                        </div>
+                                        <span className="hidden xs:inline-block text-gray">|</span>
+                                    </>
+                                }
                                 {/* Borrow Rate */}
                                 <div className="flex items-center max-md:justify-between gap-[4px]">
                                     <BodyText

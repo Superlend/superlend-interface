@@ -2,24 +2,39 @@
 
 import { customMetisNetwork, projectId, wagmiAdapter } from '@/config'
 import React, { type ReactNode } from 'react'
-import { queryClient } from './query-client'
-import { QueryClientProvider } from '@tanstack/react-query'
+// import { queryClient } from './query-client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AssetsDataProvider from './data-provider'
-import { WagmiProvider } from 'wagmi'
-import { Config, cookieToInitialState } from 'wagmi'
+// import { WagmiProvider } from 'wagmi'
+import { type Config, cookieToInitialState } from 'wagmi'
 import UserTokenBalancesProvider from './user-token-balances-provider'
-import {
-    mainnet,
-    arbitrum,
-    polygon,
-    bsc,
-    gnosis,
-    base,
-    optimism,
-    avalanche,
-    scroll,
-} from '@reown/appkit/networks'
-import { createAppKit } from '@reown/appkit/react'
+// import {
+//     mainnet,
+//     arbitrum,
+//     polygon,
+//     bsc,
+//     gnosis,
+//     base,
+//     optimism,
+//     avalanche,
+//     scroll,
+//     etherlink,
+// } from '@reown/appkit/networks'
+// import { createAppKit } from '@reown/appkit/react'
+import { PrivyProvider } from '@privy-io/react-auth';
+import { createConfig, WagmiProvider } from '@privy-io/wagmi';
+import { base, mainnet, sepolia, polygon } from 'viem/chains';
+import { http } from 'wagmi';
+
+
+// Set up queryClient
+const queryClient = new QueryClient()
+
+const appId = "cm5o77rga039b99tzkjakb6ji"
+
+// if (!projectId) {
+//     throw new Error('Project ID is not defined')
+// }
 
 // Set up metadata
 const metadata = {
@@ -30,29 +45,40 @@ const metadata = {
 }
 
 // Create the modal
-export const modal = createAppKit({
-    adapters: [wagmiAdapter],
-    projectId,
-    networks: [
-        mainnet,
-        customMetisNetwork,
-        scroll,
-        avalanche,
-        optimism,
-        base,
-        bsc,
-        gnosis,
-        arbitrum,
-        polygon,
-    ],
-    defaultNetwork: mainnet,
-    metadata: metadata,
-    features: {
-        analytics: true,
-        connectMethodsOrder: ['wallet'],
+// export const modal = createAppKit({
+//     adapters: [wagmiAdapter],
+//     projectId,
+//     networks: [
+//         mainnet,
+//         customMetisNetwork,
+//         scroll,
+//         avalanche,
+//         optimism,
+//         base,
+//         bsc,
+//         gnosis,
+//         arbitrum,
+//         polygon,
+//         etherlink,
+//     ],
+//     defaultNetwork: mainnet,
+//     metadata: metadata,
+//     features: {
+//         analytics: true,
+//         connectMethodsOrder: ['wallet'],
+//     },
+//     themeMode: 'light',
+// })
+
+export const config = createConfig({
+    chains: [mainnet, sepolia, polygon, base], // Pass your required chains as an array
+    transports: {
+        [mainnet.id]: http(),
+        [sepolia.id]: http(),
+        [polygon.id]: http(),
+        [base.id]: http(),
     },
-    themeMode: 'light',
-})
+});
 
 function ContextProvider({
     children,
@@ -67,18 +93,30 @@ function ContextProvider({
     )
 
     return (
-        <WagmiProvider
-            config={wagmiAdapter.wagmiConfig as Config}
-            initialState={initialState}
+        <PrivyProvider
+            appId={appId}
+            config={{
+                loginMethods: ['wallet'],
+                appearance: {
+                    theme: 'light',
+                    accentColor: '#676FFF',
+                    logo: 'https://beta.superlend.xyz/images/logos/superlend-logo.webp',
+                    landingHeader: "Connect Wallet",
+                    loginMessage: "Select wallet to continue",
+                    showWalletLoginFirst: true
+                },
+            }}
         >
             <QueryClientProvider client={queryClient}>
-                <AssetsDataProvider>
-                    <UserTokenBalancesProvider>
-                        {children}
-                    </UserTokenBalancesProvider>
-                </AssetsDataProvider>
+                <WagmiProvider config={config}>
+                    <AssetsDataProvider>
+                        <UserTokenBalancesProvider>
+                            {children}
+                        </UserTokenBalancesProvider>
+                    </AssetsDataProvider>
+                </WagmiProvider>
             </QueryClientProvider>
-        </WagmiProvider>
+        </PrivyProvider>
     )
 }
 

@@ -270,6 +270,10 @@ export const APPROXIMATE_ESTIMATE_OF_RETURNS_TOOLTIP_CONTENT =
 export const MORPHO_ETHERSCAN_TUTORIAL_LINK =
     'https://docs.morpho.org/morpho/tutorials/etherscan-use'
 
+export const MORPHO_DOCS_LINK = 'https://docs.morpho.org/'
+
+export const MORPHO_WEBSITE_LINK = 'https://morpho.org/'
+
 export const EIP_20_SIGNED_APPROVALS_LINK =
     'https://eips.ethereum.org/EIPS/eip-2612'
 

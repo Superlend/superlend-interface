@@ -303,10 +303,8 @@ export default function PositionDetails() {
         platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() ===
         PlatformType.MORPHO
     const isVault = platformData?.platform?.isVault
-    const liquidationPriceValueTooltipText =
-        isMorpho && isVault
-            ? morphoVaultsLiquidationPriceTooltipText
-            : liquidationPriceValueGeneralTooltipText
+    const liquidationPriceValueTooltipText = (isMorpho && isVault) ? morphoVaultsLiquidationPriceTooltipText : liquidationPriceValueGeneralTooltipText
+    const liquidationPriceLabelTooltipText = "The price at which your collateral value is no longer enough to support your current borrow amount"
 
     // Loading state
     if (isLoading) {
@@ -367,9 +365,21 @@ export default function PositionDetails() {
                             )}
                         </div>
                         <div className="flex items-center gap-[16px]">
-                            <BodyText level="body2" className="capitalize">
-                                Liquidation price
-                            </BodyText>
+                            {isAaveV3 &&
+                                <InfoTooltip
+                                    label={
+                                        <BodyText level="body2" className="capitalize">
+                                            <TooltipText>
+                                                Liquidation price
+                                            </TooltipText>
+                                        </BodyText>
+                                    }
+                                    content={liquidationPriceLabelTooltipText}
+                                />}
+                            {!isAaveV3 &&
+                                <BodyText level="body2" className="capitalize">
+                                    Liquidation price
+                                </BodyText>}
                             <div className="flex items-center gap-[6px]">
                                 {isPairBasedProtocol && (
                                     <ImageWithDefault

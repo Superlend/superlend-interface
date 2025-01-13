@@ -12,6 +12,7 @@ import {
     EIP_20_SIGNED_APPROVALS_LINK,
     ERROR_TOAST_ICON_STYLES,
     MORPHO_ETHERSCAN_TUTORIAL_LINK,
+    MORPHO_WEBSITE_LINK,
     SOMETHING_WENT_WRONG_MESSAGE,
     SUCCESS_MESSAGE,
 } from '@/constants'
@@ -34,12 +35,15 @@ import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
 
 import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
 import ExternalLink from '@/components/ExternalLink'
+import { PlatformType } from '@/types/platform'
+import { TPositionType } from '@/types'
 
 interface ISupplyMorphoButtonProps {
     disabled: boolean
     asset: any // Replace with proper type
     amount: string
     handleCloseModal: (isVisible: boolean) => void
+    setActionType?: (actionType: TPositionType) => void
 }
 
 const SupplyMorphoButton = ({
@@ -47,10 +51,15 @@ const SupplyMorphoButton = ({
     asset,
     amount,
     handleCloseModal,
+    setActionType
 }: ISupplyMorphoButtonProps) => {
     const assetDetails = asset.asset
     const platform = asset.platform
     const morphoMarketData = asset.morphoMarketData
+    const isMorpho = asset.protocol_type === PlatformType.MORPHO
+    const isMorphoMarkets = isMorpho && !asset?.isVault
+    const isMorphoVault = isMorpho && asset?.isVault
+
     const {
         writeContractAsync,
         isPending,
@@ -78,8 +87,8 @@ const SupplyMorphoButton = ({
                 ? 'Approving token...'
                 : 'Lending token...',
         confirming: 'Confirming...',
-        success: 'Close',
-        default: lendTx.status === 'approve' ? 'Approve token' : 'Lend token',
+        success: isMorphoMarkets ? 'Go To Borrow' : 'Close',
+        default: lendTx.status === 'approve' ? 'Approve token' : (isMorphoMarkets ? 'Add Collateral' : isMorphoVault ? 'Supply to vault' : 'Lend Collateral'),
     }
 
     const getTxButtonText = (
@@ -262,7 +271,6 @@ const SupplyMorphoButton = ({
         assetDetails,
         platform,
         walletAddress,
-        handleCloseModal,
         writeContractAsync,
     ])
 
@@ -273,6 +281,7 @@ const SupplyMorphoButton = ({
             isConfirming: isConfirming,
             isConfirmed: isConfirmed,
             isRefreshingAllowance: isConfirmed,
+            // status: (isConfirmed && prev.status === 'lend' && hash) ? 'view' : prev.status,
         }))
     }, [isPending, isConfirming, isConfirmed])
 
@@ -350,9 +359,9 @@ const SupplyMorphoButton = ({
                             weight="normal"
                             className="text-secondary-500"
                         >
-                            Note: Adding collateral to Morpho Markets does not yield. To supply & earn from morpho markets, follow the process <span className="mr-1">outlined</span>
+                            Note: Adding collateral to Morpho Markets does not yield<span className="mr-1">.</span>
                             <ExternalLink href={MORPHO_ETHERSCAN_TUTORIAL_LINK}>
-                                here
+                                Learn more
                             </ExternalLink>
                         </BodyText>
                     }
@@ -370,7 +379,7 @@ const SupplyMorphoButton = ({
                         >
                             Note: You need to complete an &apos;approval
                             transaction&apos; granting permission to move funds from your wallet as the
-                            first step before supplying the <span className="mr-1">asset</span>
+                            first step before supplying the <span className="mr-1">asset.</span>
                             <ExternalLink href={EIP_20_SIGNED_APPROVALS_LINK}>
                                 Learn more
                             </ExternalLink>
@@ -391,8 +400,25 @@ const SupplyMorphoButton = ({
             {lendTx.errorMessage.length > 0 && (
                 <CustomAlert description={lendTx.errorMessage} />
             )}
+            {!morphoMarketData && (
+                <CustomAlert
+                    description={
+                        <div className="flex flex-col items-start gap-2">
+                            <BodyText level="body2" weight="medium">
+                                Error: Service Unavailable
+                            </BodyText>
+                            <BodyText level="body2" weight="normal">
+                                The Morpho API is temporarily down. Please try again later.
+                            </BodyText>
+                            <ExternalLink href={MORPHO_WEBSITE_LINK} className="text-xs md:text-sm">
+                                Morpho Website
+                            </ExternalLink>
+                        </div>
+                    }
+                />
+            )}
             <Button
-                disabled={isPending || isConfirming || disabled}
+                disabled={(isPending || isConfirming || disabled || !morphoMarketData) && lendTx.status !== 'view'}
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()
@@ -400,6 +426,7 @@ const SupplyMorphoButton = ({
                         supply()
                     } else {
                         handleCloseModal(false)
+                        setActionType?.('borrow')
                     }
                 }}
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
