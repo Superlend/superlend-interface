@@ -618,6 +618,8 @@ export default function WithdrawAndRepayActionButton({
 
     const maxWithdrawAmountForTx = maxWithdrawTokensAmount[selectedTokenDetails?.address ?? '']?.maxToWithdrawFormatted ?? '0'
 
+    const amountBorrowed = selectedTokenDetails?.positionAmount ?? 0
+
     const lendErrorMessage = useMemo(() => {
         if (Number(amount) > Number(maxWithdrawAmountForTx)) {
             return 'You do not have enough withdraw limit'
@@ -635,9 +637,9 @@ export default function WithdrawAndRepayActionButton({
         if (!hasCollateral) {
             return 'You do not have sufficient collateral to borrow'
         }
-        // if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
-        //     return 'Amount exceeds available borrow limit'
-        // }
+        if (Number(amount) > Number(amountBorrowed)) {
+            return 'Amount exceeds available repay limit'
+        }
         return null
     }, [hasCollateral, canBorrow, amount, balance, toManyDecimals])
 
@@ -648,7 +650,7 @@ export default function WithdrawAndRepayActionButton({
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-            Number(isWithdrawAction ? maxWithdrawAmountForTx : 10) ||
+            Number(isWithdrawAction ? maxWithdrawAmountForTx : amountBorrowed) ||
             Number(amount) <= 0 ||
             toManyDecimals,
         [
@@ -658,25 +660,6 @@ export default function WithdrawAndRepayActionButton({
             isWithdrawAction
         ]
     )
-
-    const isDisabledMaxBtn = () => {
-        if (isWithdrawAction) {
-            return (
-                Number(amount) === Number(balance) ||
-                !walletAddress ||
-                isLoadingErc20TokensBalanceData ||
-                Number(balance) <= 0
-            )
-        }
-
-        return (
-            Number(amount) === Number(maxBorrowAmount) ||
-            !walletAddress ||
-            isLoadingMaxBorrowingAmount ||
-            isLoadingErc20TokensBalanceData ||
-            Number(maxBorrowAmount) <= 0
-        )
-    }
 
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
     const isPolygonChain = Number(chain_id) === 137
@@ -782,7 +765,7 @@ export default function WithdrawAndRepayActionButton({
                     healthFactorValues={healthFactorValues}
                     amount={amount}
                     setAmount={setAmount}
-                    amountBorrowed={selectedTokenDetails?.positionAmount ?? 0}
+                    amountBorrowed={amountBorrowed}
                     errorMessage={errorMessage}
                 />
             )}
@@ -830,7 +813,7 @@ function ConfirmationDialog({
     const isTxFailed = isWithdrawAction
         ? withdrawTx.errorMessage.length > 0
         : repayTx.errorMessage.length > 0
-    const { handleSwitchChain, walletAddress } = useWalletConnection()
+    const { handleSwitchChain, isWalletConnected, walletAddress } = useWalletConnection()
 
     const isMorphoVaultsProtocol = assetDetails?.vault ? true : false
 
@@ -945,6 +928,20 @@ function ConfirmationDialog({
     const disableActionButton =
         disabled
     // || (!hasAcknowledgedRisk && !isWithdrawAction && isHfLow())
+
+    const isDisabledMaxBtn = () => {
+        if (isWithdrawAction) {
+            return (
+                !isWalletConnected ||
+                Number(amount) === Number(maxWithdrawAmount)
+            )
+        }
+
+        return (
+            !isWalletConnected ||
+            Number(amount) === Number(amountBorrowed)
+        )
+    }
 
     // SUB_COMPONENT: Trigger button to open the dialog
     const triggerButton = (
@@ -1163,6 +1160,20 @@ function ConfirmationDialog({
                                     )}
                                 </BodyText>
                             </div>
+                            <Button
+                                variant="link"
+                                className="uppercase text-[14px] font-medium w-fit p-0 ml-1"
+                                onClick={() =>
+                                    setAmount(
+                                        isWithdrawAction
+                                            ? (maxWithdrawAmount.toString() ?? '0')
+                                            : (amountBorrowed?.toString() ?? '0')
+                                    )
+                                }
+                                disabled={isDisabledMaxBtn()}
+                            >
+                                max
+                            </Button>
                         </div>
                     )}
                 {/* Block 2 */}
