@@ -92,8 +92,10 @@ export default function PositionDetails() {
     const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
         platformData?.platform?.protocol_type
     )
-    const isAaveV3 = platformData?.platform?.protocol_type === 'aaveV3'
-    const isMorphoProtocol = platformData?.platform?.protocol_type === 'morpho'
+    const isAaveV3Protocol = platformData?.platform?.protocol_type === PlatformType.AAVE
+    const isMorphoProtocol = platformData?.platform?.protocol_type === PlatformType.MORPHO
+
+    const isPolygonChain = Number(chain_id) === 137;
 
     // Get user positions from portfolio data using protocol identifier
     const userPositions = useMemo(
@@ -282,7 +284,7 @@ export default function PositionDetails() {
         assetLogos,
         assetSymbols,
         assetDetails,
-    } = isAaveV3
+    } = isAaveV3Protocol
             ? getLiquidationDetailsForPoolBasedAssets()
             : getLiquidationDetailsForPairBasedAssets()
 
@@ -343,7 +345,7 @@ export default function PositionDetails() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.6, ease: 'easeOut' }}
         >
-            {(isAaveV3 || isPairBasedProtocol) && userPositions.length > 0 && (
+            {(isAaveV3Protocol || isPairBasedProtocol) && userPositions.length > 0 && (
                 <div className="px-[16px]">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-[12px]">
                         <div className="flex items-center gap-[8px]">
@@ -369,7 +371,7 @@ export default function PositionDetails() {
                             )}
                         </div>
                         <div className="flex items-center gap-[16px]">
-                            {isAaveV3 &&
+                            {isAaveV3Protocol &&
                                 <InfoTooltip
                                     label={
                                         <BodyText level="body2" className="capitalize">
@@ -380,7 +382,7 @@ export default function PositionDetails() {
                                     }
                                     content={liquidationPriceLabelTooltipText}
                                 />}
-                            {!isAaveV3 &&
+                            {!isAaveV3Protocol &&
                                 <BodyText level="body2" className="capitalize">
                                     Liquidation price
                                 </BodyText>}
@@ -507,13 +509,14 @@ export default function PositionDetails() {
                                             )}
                                     </HeadingText>
                                 </div>
-                                <WithdrawAndRepayActionButton
-                                    actionType="withdraw"
-                                    tokenDetails={
-                                        formattedUserPositions?.lendAsset
-                                            ?.tokenDetails
-                                    }
-                                />
+                                {(isAaveV3Protocol && isPolygonChain) &&
+                                    <WithdrawAndRepayActionButton
+                                        actionType="withdraw"
+                                        tokenDetails={
+                                            formattedUserPositions?.lendAsset
+                                                ?.tokenDetails
+                                        }
+                                    />}
                             </div>
                         </div>
                         <div className="flex flex-col gap-[12px] md:max-w-[230px] w-full h-full">
@@ -596,13 +599,14 @@ export default function PositionDetails() {
                                         />
                                     )}
                                 </div>
-                                <WithdrawAndRepayActionButton
-                                    actionType="repay"
-                                    tokenDetails={
-                                        formattedUserPositions?.borrowAsset
-                                            ?.tokenDetails
-                                    }
-                                />
+                                {(isAaveV3Protocol && isPolygonChain) &&
+                                    <WithdrawAndRepayActionButton
+                                        actionType="repay"
+                                        tokenDetails={
+                                            formattedUserPositions?.borrowAsset
+                                                ?.tokenDetails
+                                        }
+                                    />}
                             </div>
                         </div>
                     </div>
