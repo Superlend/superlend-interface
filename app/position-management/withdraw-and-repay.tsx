@@ -94,13 +94,15 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from '@/components/ui/drawer'
-import { modal } from '@/context'
 import { ChainId } from '@/types/chain'
 import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
-import { useVault } from '@morpho-org/blue-sdk-wagmi'
+import { useMorphoVaultData } from '@/hooks/protocols/useMorphoVaultData'
+import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 
 interface ITokenDetails {
     address: string
+    decimals: number
     logo: string
     symbol: string
     amount: string | number
@@ -108,6 +110,7 @@ interface ITokenDetails {
     tokenAmount: string | number
     apy: number
     price_usd: number
+    positionAmount?: string | number
 }
 
 export default function WithdrawAndRepayActionButton({
@@ -123,10 +126,10 @@ export default function WithdrawAndRepayActionButton({
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
     } = useUserTokenBalancesContext()
+    const { getVaultData } = useMorphoVaultData()
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [amount, setAmount] = useState('')
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
-
     // Morpho vault when the user is withdrawing from morpho vaults
     const [maxWithdrawAmountMorphoVaults, setMaxWithdrawAmountMorphoVaults] =
         useState('0')
@@ -150,6 +153,16 @@ export default function WithdrawAndRepayActionButton({
             }
         >
     >({})
+    const [maxWithdrawTokensAmount, setMaxWithdrawTokensAmount] = useState<
+        Record<
+            string,
+            {
+                maxToWithdraw: string
+                maxToWithdrawFormatted: string
+                user: any
+            }
+        >
+    >({})
 
     const searchParams = useSearchParams()
     const tokenAddress = searchParams.get('token') || ''
@@ -157,7 +170,6 @@ export default function WithdrawAndRepayActionButton({
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType =
         (searchParams.get('position_type') as TPositionType) || 'lend'
-    const { address: walletAddress } = useAccount()
     const {
         fetchAaveV3Data,
         getMaxBorrowAmount,
@@ -174,6 +186,7 @@ export default function WithdrawAndRepayActionButton({
         useState(false)
     const [selectedTokenDetails, setSelectedTokenDetails] =
         useState<ITokenDetails | null>(null)
+    const { handleSwitchChain, walletAddress } = useWalletConnection()
 
     const {
         data: portfolioData,
@@ -197,8 +210,6 @@ export default function WithdrawAndRepayActionButton({
 
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData
 
-    // const customChain = defineChain(Number(chain_id))
-
     // const isMorphoMarketsProtocol =
     //     platformData?.platform?.protocol_type === 'morpho' &&
     //     !platformData?.platform?.isVault
@@ -207,13 +218,10 @@ export default function WithdrawAndRepayActionButton({
         platformData?.platform?.protocol_type === 'morpho' &&
         platformData?.platform?.isVault
 
-
-    const { data: vaultData } = useVault({
-        vault: platformData?.platform?.core_contract as `0x${string}`,
+    const vaultData = getVaultData({
+        vaultId: platformData?.platform?.core_contract as `0x${string}`,
         chainId: Number(chain_id),
-        query: {
-            enabled: isMorphoVaultsProtocol
-        }
+        enabled: isMorphoVaultsProtocol
     })
 
     useEffect(() => {
@@ -229,7 +237,7 @@ export default function WithdrawAndRepayActionButton({
     // Switch chain
     useEffect(() => {
         if (!!walletAddress) {
-            modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
+            handleSwitchChain(Number(chain_id))
         }
     }, [walletAddress, Number(chain_id)])
 
@@ -239,7 +247,7 @@ export default function WithdrawAndRepayActionButton({
         setPositionType(positionTypeParam)
     }, [positionTypeParam])
 
-    // Get max borrow amount
+    // Get max withdraw amount
     useEffect(() => {
         setIsLoadingMaxBorrowingAmount(true)
         if (
@@ -249,9 +257,9 @@ export default function WithdrawAndRepayActionButton({
             platformData.platform.protocol_type === 'aaveV3' &&
             providerStatus.isReady
         ) {
-            const _borrowableTokens = platformData.assets.filter(
-                (a) => a.borrow_enabled
-            )
+            // const _borrowableTokens = platformData.assets.filter(
+            //     (a) => a.borrow_enabled
+            // )
             fetchAaveV3Data(
                 Number(chain_id),
                 platformData.platform.uiPoolDataProvider!,
@@ -261,41 +269,34 @@ export default function WithdrawAndRepayActionButton({
                     if (!r || !r[0]) {
                         // Add null check
                         setMaxBorrowAmount('0')
+
                         setIsLoadingMaxBorrowingAmount(false)
                         return
                     }
-                    const maxBorrowAmounts: Record<
+                    // Initialize maxWithdrawAmounts
+                    const maxWithdrawAmounts: Record<
                         string,
                         {
-                            maxToBorrow: string
-                            maxToBorrowFormatted: string
+                            maxToWithdraw: string
+                            maxToWithdrawFormatted: string
                             user: any
                         }
                     > = {}
-                    setBorrowTokensDetails(_borrowableTokens)
-                    for (const borrowToken of _borrowableTokens) {
-                        const borrowTokenAddress =
-                            borrowToken?.token?.address.toLowerCase()
-                        maxBorrowAmounts[borrowTokenAddress] =
-                            getMaxBorrowAmount(
-                                borrowTokenAddress,
+                    for (const withdrawToken of tokenDetails) {
+                        const withdrawTokenAddress =
+                            withdrawToken?.address.toLowerCase()
+                        maxWithdrawAmounts[withdrawTokenAddress] =
+                            getMaxWithdrawAmount(
+                                withdrawTokenAddress,
                                 r as any
                             ) ?? {
-                                maxToBorrow: '0',
-                                maxToBorrowFormatted: '0',
+                                maxToWithdraw: '0',
+                                maxToWithdrawFormatted: '0',
                                 user: {},
                             }
-
-                        // TODO: use this hook to fetch the max amount to withdraw
-                        // Rest of the setup is untouched. You would have to update it as per your need
-                        const maxWithdraw = getMaxWithdrawAmount(
-                            borrowTokenAddress,
-                            r as any
-                        )
-                        console.log(borrowToken, maxWithdraw)
                     }
 
-                    setMaxBorrowTokensAmount(maxBorrowAmounts)
+                    setMaxWithdrawTokensAmount(maxWithdrawAmounts)
                 })
                 .catch((error) => {
                     console.log('error fetching max borrow amount', error)
@@ -309,27 +310,29 @@ export default function WithdrawAndRepayActionButton({
         providerStatus.isReady,
         withdrawTx.status,
         repayTx.status,
+        selectedTokenDetails?.address,
         withdrawTx.isConfirmed,
         repayTx.isConfirmed,
+        isSelectTokenDialogOpen
     ])
 
-    useEffect(() => {
-        if (!Object.keys(maxBorrowTokensAmount).length) return
+    // useEffect(() => {
+    //     if (!Object.keys(maxBorrowTokensAmount).length) return
 
-        const currentTokenDetails = selectedBorrowTokenDetails?.token
-        const decimals = currentTokenDetails?.decimals ?? 0
-        const maxAmountToBorrow = Math.abs(
-            Number(
-                maxBorrowTokensAmount[
-                    currentTokenDetails?.address.toLowerCase() ?? ''
-                ]?.maxToBorrowFormatted
-            )
-        )?.toFixed(decimals)
-        const hasZeroLimit = !Math.abs(Number(maxAmountToBorrow))
+    //     const currentTokenDetails = selectedTokenDetails
+    //     const decimals = currentTokenDetails?.decimals ?? 0
+    //     const maxAmountToWithdraw = Math.abs(
+    //         Number(
+    //             withdrawTokensAmount[
+    //                 currentTokenDetails?.address.toLowerCase() ?? ''
+    //             ]?.maxToWithdrawFormatted
+    //         )
+    //     )?.toFixed(decimals)
+    //     const hasZeroLimit = !Math.abs(Number(maxAmountToWithdraw))
 
-        setMaxBorrowAmount(hasZeroLimit ? '0' : maxAmountToBorrow)
-        setIsLoadingMaxBorrowingAmount(false)
-    }, [selectedBorrowTokenDetails?.token?.address, maxBorrowTokensAmount])
+    //     setMaxWithdrawAmount(hasZeroLimit ? '0' : maxAmountToWithdraw)
+    //     setIsLoadingMaxBorrowingAmount(false)
+    // }, [selectedTokenDetails?.address, withdrawTokensAmount])
 
     useEffect(() => {
         if (
@@ -358,18 +361,20 @@ export default function WithdrawAndRepayActionButton({
                     isRefreshingAllowance: false,
                 }))
                 // Check if the allowance is greater than or equal to the amount
-                const positionTypeBasedAssetDetails = isWithdrawAction
-                    ? (assetDetailsForTx?.asset?.token?.decimals ?? 0)
-                    : (selectedBorrowTokenDetails?.token?.decimals ?? 0)
+                const positionTypeBasedAssetDetails = (assetDetailsForTx?.asset?.token?.decimals ?? 0)
                 const amountBN = parseUnits(
-                    Boolean(amount) ? amount : '0',
+                    // Boolean(amount) ? amount : '0',
+                    '0',
                     positionTypeBasedAssetDetails
                 )
                 // Update the status of the repayTx based on the allowance and the confirmation state
                 if (repayTx.status === 'approve' && repayTx.isConfirmed) {
+                    // console.log('r', r)
+                    // console.log('amountBN', amountBN)
+                    // console.log('amount', amount)
                     setRepayTx((prev: TRepayTx) => ({
                         ...prev,
-                        status: r.gte(amountBN) ? 'lend' : 'approve',
+                        status: r.gte(amountBN) ? 'repay' : 'approve',
                         errorMessage: r.gte(amountBN)
                             ? ''
                             : 'Insufficient allowance',
@@ -378,13 +383,19 @@ export default function WithdrawAndRepayActionButton({
                 }
             })
         }
+        // console.log('walletAddress', walletAddress)
+        // console.log('platformData.platform?.core_contract', platformData.platform?.core_contract)
+        // console.log('repayTx.status', repayTx.status)
+        // console.log('repayTx.isRefreshingAllowance', repayTx.isRefreshingAllowance)
+        // console.log('providerStatus.isReady', providerStatus.isReady)
     }, [
         walletAddress,
-        platformData,
+        !!platformData.platform?.core_contract,
         repayTx.status,
         repayTx.isRefreshingAllowance,
         providerStatus.isReady,
     ])
+    // console.log('repayTx', repayTx)
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
@@ -392,7 +403,7 @@ export default function WithdrawAndRepayActionButton({
             setIsRefreshingErc20TokensBalanceData(true)
         }
 
-        if (withdrawTx.status === 'view' && withdrawTx.isConfirmed) {
+        if (repayTx.status === 'view' && repayTx.isConfirmed) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
     }, [
@@ -413,9 +424,9 @@ export default function WithdrawAndRepayActionButton({
     }, [!!borrowTokensDetails.length])
 
     // Reset Amount
-    useEffect(() => {
-        setAmount('')
-    }, [positionType, selectedBorrowTokenDetails?.token?.address])
+    // useEffect(() => {
+    //     setAmount('')
+    // }, [positionType, selectedBorrowTokenDetails?.token?.address])
 
     // Filter user positions
     const [selectedPlatformDetails] = portfolioData?.platforms.filter(
@@ -501,9 +512,7 @@ export default function WithdrawAndRepayActionButton({
         if (assetDetailsForTx || selectedBorrowTokenDetails) {
             return checkDecimalPlaces(
                 amount,
-                isWithdrawAction
-                    ? (assetDetailsForTx?.asset?.token?.decimals ?? 0)
-                    : (selectedBorrowTokenDetails?.token?.decimals ?? 0)
+                (assetDetailsForTx?.asset?.token?.decimals ?? 0)
             )
         }
         return false
@@ -607,9 +616,11 @@ export default function WithdrawAndRepayActionButton({
 
     const healthFactorValues = getHealthFactorValues(maxBorrowTokensAmount)
 
+    const maxWithdrawAmountForTx = maxWithdrawTokensAmount[selectedTokenDetails?.address ?? '']?.maxToWithdrawFormatted ?? '0'
+
     const lendErrorMessage = useMemo(() => {
-        if (Number(amount) > Number(balance) || Number(balance) <= 0) {
-            return 'You do not have enough balance'
+        if (Number(amount) > Number(maxWithdrawAmountForTx)) {
+            return 'You do not have enough withdraw limit'
         } else if (toManyDecimals) {
             return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
         } else {
@@ -624,9 +635,9 @@ export default function WithdrawAndRepayActionButton({
         if (!hasCollateral) {
             return 'You do not have sufficient collateral to borrow'
         }
-        if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
-            return 'Amount exceeds available borrow limit'
-        }
+        // if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
+        //     return 'Amount exceeds available borrow limit'
+        // }
         return null
     }, [hasCollateral, canBorrow, amount, balance, toManyDecimals])
 
@@ -637,17 +648,14 @@ export default function WithdrawAndRepayActionButton({
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-            Number(isWithdrawAction ? balance : maxBorrowAmount) ||
-            (isWithdrawAction ? false : !hasCollateral) ||
+            Number(isWithdrawAction ? maxWithdrawAmountForTx : 10) ||
             Number(amount) <= 0 ||
             toManyDecimals,
         [
             amount,
-            balance,
-            maxBorrowAmount,
+            maxWithdrawAmountForTx,
             toManyDecimals,
-            hasCollateral,
-            positionType,
+            isWithdrawAction
         ]
     )
 
@@ -768,13 +776,14 @@ export default function WithdrawAndRepayActionButton({
                         }
                             : assetDetailsForTx
                     }
-                    balance={balance}
-                    maxBorrowAmount={
-                        isMorphoVaultsProtocol ? maxWithdrawAmountMorphoVaults : maxBorrowAmount
+                    maxWithdrawAmount={
+                        isMorphoVaultsProtocol ? maxWithdrawAmountMorphoVaults : maxWithdrawAmountForTx
                     }
                     healthFactorValues={healthFactorValues}
                     amount={amount}
                     setAmount={setAmount}
+                    amountBorrowed={selectedTokenDetails?.positionAmount ?? 0}
+                    errorMessage={errorMessage}
                 />
             )}
         </section>
@@ -787,25 +796,27 @@ function ConfirmationDialog({
     disabled,
     actionType,
     assetDetails,
-    balance,
-    maxBorrowAmount,
+    maxWithdrawAmount,
     healthFactorValues,
     amount,
     setAmount,
+    amountBorrowed,
+    errorMessage,
 }: {
     isOpen: boolean
     setIsOpen: (open: boolean) => void
     disabled: boolean
     actionType: TActionType
     assetDetails: any
-    balance: string
-    maxBorrowAmount: string
+    maxWithdrawAmount: string
     healthFactorValues: {
         healthFactor: any
         newHealthFactor: any
     }
     amount: string
     setAmount: (amount: string) => void
+    amountBorrowed: string | number | undefined
+    errorMessage: string | null
 }) {
     const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
         useTxContext() as TTxContext
@@ -819,6 +830,7 @@ function ConfirmationDialog({
     const isTxFailed = isWithdrawAction
         ? withdrawTx.errorMessage.length > 0
         : repayTx.errorMessage.length > 0
+    const { handleSwitchChain, walletAddress } = useWalletConnection()
 
     const isMorphoVaultsProtocol = assetDetails?.vault ? true : false
 
@@ -834,9 +846,12 @@ function ConfirmationDialog({
 
         if (isOpen) {
             // Switch chain when the dialog is opened
-            modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
+            if (!!walletAddress) {
+                // modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
+                handleSwitchChain(Number(chain_id))
+            }
         }
-    }, [isOpen])
+    }, [isOpen, chain_id])
 
     function resetLendwithdrawTx() {
         setRepayTx((prev: TRepayTx) => ({
@@ -905,9 +920,8 @@ function ConfirmationDialog({
         : withdrawTxSpinnerColor
 
     const canDisplayExplorerLinkWhileLoading = isWithdrawAction
-        ? repayTx.hash.length > 0 && (repayTx.isConfirming || repayTx.isPending)
-        : withdrawTx.hash.length > 0 &&
-        (withdrawTx.isConfirming || withdrawTx.isPending)
+        ? withdrawTx.hash.length > 0 && (withdrawTx.isConfirming || withdrawTx.isPending)
+        : repayTx.hash.length > 0 && (repayTx.isConfirming || repayTx.isPending)
 
     function getNewHfColor() {
         const newHF = Number(healthFactorValues.newHealthFactor.toString())
@@ -929,7 +943,8 @@ function ConfirmationDialog({
     }
 
     const disableActionButton =
-        disabled || (!hasAcknowledgedRisk && !isWithdrawAction && isHfLow())
+        disabled
+    // || (!hasAcknowledgedRisk && !isWithdrawAction && isHfLow())
 
     // SUB_COMPONENT: Trigger button to open the dialog
     const triggerButton = (
@@ -995,7 +1010,7 @@ function ConfirmationDialog({
                                     isWithdrawAction
                                         ? withdrawTx.hash
                                         : repayTx.hash,
-                                    assetDetails?.platform_name
+                                    assetDetails?.chain_id || assetDetails?.platform?.chain_id
                                 )}
                                 target="_blank"
                                 rel="noreferrer"
@@ -1069,7 +1084,7 @@ function ConfirmationDialog({
                                     variant={isTxFailed ? 'destructive' : 'green'}
                                     className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
                                 >
-                                    {isWithdrawAction && repayTx.status === 'view'
+                                    {isWithdrawAction && withdrawTx.status === 'view'
                                         ? 'Withdraw'
                                         : 'Repay'}{' '}
                                     {isTxFailed ? 'Failed' : 'Successful'}
@@ -1153,25 +1168,29 @@ function ConfirmationDialog({
                 {/* Block 2 */}
                 {isShowBlock({
                     repay: repayTx.status === 'approve' && !isRepayTxInProgress,
-                    withdraw: false,
+                    withdraw: withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress,
                 }) && (
                         <div
-                            className={`flex items-center ${isWithdrawAction ? 'justify-end' : 'justify-between'} px-[24px] mb-[4px] gap-1`}
+                            className={`flex items-center justify-end px-[24px] mb-[4px] gap-1`}
                         >
                             <BodyText
                                 level="body2"
                                 weight="normal"
                                 className="text-gray-600"
                             >
-                                Balance:
+                                {isWithdrawAction ? 'Withdraw limit:' : 'Borrowed:'}
                             </BodyText>
                             <BodyText
                                 level="body2"
                                 weight="normal"
                                 className="text-gray-600"
                             >
-                                {handleSmallestValue(balance.toString())}{' '}
-                                {assetDetails?.asset?.token?.symbol}
+                                {handleSmallestValue(
+                                    isWithdrawAction ?
+                                        maxWithdrawAmount.toString() :
+                                        (amountBorrowed ?? 0).toString()
+                                )}{' '}
+                                {assetDetails?.asset?.token?.symbol ?? assetDetails?.token?.symbol}
                             </BodyText>
                         </div>
                     )}
@@ -1215,44 +1234,8 @@ function ConfirmationDialog({
                         repay: false,
                         withdraw:
                             withdrawTx.status === 'withdraw' &&
-                            !isWithdrawTxInProgress,
-                    }) && (
-                            <div className="flex items-center justify-between w-full py-[16px]">
-                                <BodyText
-                                    level="body2"
-                                    weight="normal"
-                                    className="text-gray-600"
-                                >
-                                    New limit
-                                </BodyText>
-                                <div className="flex items-center gap-[4px]">
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className="text-gray-800"
-                                    >
-                                        {abbreviateNumber(
-                                            isWithdrawAction
-                                                ? Number(balance) - Number(amount)
-                                                : Number(maxBorrowAmount) -
-                                                Number(amount)
-                                        )}
-                                    </BodyText>
-                                    <ImageWithDefault
-                                        src={assetDetails?.asset?.token?.logo}
-                                        alt={assetDetails?.asset?.token?.symbol}
-                                        width={16}
-                                        height={16}
-                                        className="rounded-full max-w-[16px] max-h-[16px]"
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    {isShowBlock({
-                        repay: false,
-                        withdraw:
-                            withdrawTx.status === 'withdraw' &&
-                            !isWithdrawTxInProgress,
+                            !isWithdrawTxInProgress &&
+                            !!Number(healthFactorValues.newHealthFactor),
                     }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText
@@ -1323,9 +1306,9 @@ function ConfirmationDialog({
                                         <a
                                             href={getExplorerLink(
                                                 isWithdrawAction
-                                                    ? repayTx.hash
-                                                    : withdrawTx.hash,
-                                                assetDetails?.platform_name
+                                                    ? withdrawTx.hash
+                                                    : repayTx.hash,
+                                                assetDetails?.chain_id || assetDetails?.platform?.chain_id
                                             )}
                                             target="_blank"
                                             rel="noreferrer"
@@ -1333,8 +1316,8 @@ function ConfirmationDialog({
                                         >
                                             {getTruncatedTxHash(
                                                 isWithdrawAction
-                                                    ? repayTx.hash
-                                                    : withdrawTx.hash
+                                                    ? withdrawTx.hash
+                                                    : repayTx.hash
                                             )}
                                         </a>
                                         <ArrowUpRightIcon
@@ -1360,10 +1343,10 @@ function ConfirmationDialog({
                 </div>
                 {isShowBlock({
                     repay: false,
-                    withdraw:
-                        withdrawTx.status === 'withdraw' &&
-                        !isWithdrawTxInProgress &&
-                        isHfLow(),
+                    withdraw: false
+                    // withdrawTx.status === 'withdraw' &&
+                    // !isWithdrawTxInProgress &&
+                    // isHfLow(),
                 }) && (
                         <div className="flex flex-col items-center justify-center">
                             <CustomAlert description="Borrowing this amount is not advisable, as the heath factor is close to 1, posing a risk of liquidation." />
@@ -1387,6 +1370,8 @@ function ConfirmationDialog({
                             </div>
                         </div>
                     )}
+                {/* Error Message */}
+                {errorMessage && <CustomAlert description={errorMessage} />}
                 {/* Block 4 */}
                 <div className={`${isTxInProgress ? 'invisible h-0' : ''}`}>
                     <ActionButton

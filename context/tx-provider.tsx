@@ -124,7 +124,7 @@ export default function TxProvider({
     })
 
     const [repayTx, setRepayTx] = useState<TRepayTx>({
-        status: 'repay',
+        status: 'approve',
         hash: '',
         allowanceBN: BigNumber.from(0),
         isRefreshingAllowance: false,

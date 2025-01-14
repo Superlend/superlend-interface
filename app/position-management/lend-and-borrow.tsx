@@ -1590,7 +1590,6 @@ export function ConfirmationDialog({
                         handleCloseModal={handleOpenChange}
                         asset={assetDetails}
                         amount={amount}
-                        positionType={positionType}
                         setActionType={setActionType}
                         actionType={positionType}
                     />

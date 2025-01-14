@@ -15,6 +15,7 @@ import { BigNumber } from 'ethers'
 import SupplyMorphoButton from '../SupplyMorphoButton'
 import { CodeSquare } from 'lucide-react'
 import { TPositionType } from '@/types'
+import RepayButton from '../RepayButton'
 
 interface IActionButtonSelectComponent {
     disabled?: boolean
@@ -22,7 +23,6 @@ interface IActionButtonSelectComponent {
     amount: string
     handleCloseModal: (isVisible: boolean) => void
     actionType: 'lend' | 'borrow' | 'repay' | 'withdraw'
-    positionType: 'lend' | 'borrow'
     setActionType?: (actionType: TPositionType) => void
 }
 
@@ -32,7 +32,6 @@ const ActionButton = ({
     amount,
     handleCloseModal,
     actionType,
-    positionType,
     setActionType
 }: IActionButtonSelectComponent) => {
     if (actionType === 'borrow') {
@@ -42,6 +41,18 @@ const ActionButton = ({
                 handleCloseModal={handleCloseModal}
                 asset={asset}
                 amount={amount}
+            />
+        )
+    }
+    if (actionType === 'repay') {
+        return (
+            <RepayButton
+                disabled={disabled}
+                handleCloseModal={handleCloseModal}
+                poolContractAddress={asset.core_contract}
+                underlyingAssetAdress={asset.asset.token.address}
+                amount={amount}
+                decimals={asset.asset.token.decimals}
             />
         )
     }

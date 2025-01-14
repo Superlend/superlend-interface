@@ -63,7 +63,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     const isDesktop = screenWidth > 768
 
     const content = (
-        <Card className="w-full pt-6 pb-1.5 border-0 shadow-none bg-white bg-opacity-100 divide-y divide-gray-200">
+        <Card className="w-full py-2 border-0 shadow-none bg-white bg-opacity-100 divide-y divide-gray-200">
             {/* <div className="flex items-center gap-2 mb-6 px-6">
                 <Button
                     variant={'outline'}
@@ -93,7 +93,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                     </div>
                 </ScrollArea>
             </div> */}
-            <ScrollArea className="max-h-[60vh] h-[60vh] w-full pb-0">
+            <ScrollArea className="max-h-[60vh] w-full">
                 <div className="space-y-2 px-4">
                     {tokens.map((token: any, index: number) => (
                         <div

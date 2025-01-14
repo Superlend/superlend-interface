@@ -86,6 +86,7 @@ const WithdrawButton = ({
             setWithdrawTx((prev: TWithdrawTx) => ({
                 ...prev,
                 status: 'view',
+                hash,
                 isConfirmed: isConfirmed,
             }))
         }
@@ -152,11 +153,18 @@ const WithdrawButton = ({
                         ...prev,
                         isPending: false,
                         isConfirming: false,
+                        isConfirmed: false,
                         errorMessage: error.message || 'Something went wrong',
                     }))
                 })
-            } catch (error) {
-                error
+            } catch (error: any) {
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    errorMessage: error.message || 'Something went wrong',
+                }))
             }
         },
         [writeContractAsync, asset, handleCloseModal]
