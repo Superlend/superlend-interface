@@ -1461,28 +1461,9 @@ export function ConfirmationDialog({
                                             weight="normal"
                                             className={getNewHfColor()}
                                         >
-                                            <a
-                                                href={getExplorerLink(
-                                                    isLendPositionType(positionType)
-                                                        ? lendTx.hash
-                                                        : borrowTx.hash,
-                                                    assetDetails?.chain_id || assetDetails?.platform?.chain_id
-                                                )}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-secondary-500"
-                                            >
-                                                {getTruncatedTxHash(
-                                                    isLendPositionType(positionType)
-                                                        ? lendTx.hash
-                                                        : borrowTx.hash
-                                                )}
-                                            </a>
-                                            <ArrowUpRightIcon
-                                                width={16}
-                                                height={16}
-                                                className="stroke-secondary-500"
-                                            />
+                                            {healthFactorValues.newHealthFactor.toFixed(
+                                                2
+                                            )}
                                         </BodyText>
                                     </div>
                                     <Label size="small" className="text-gray-600">
@@ -1521,7 +1502,7 @@ export function ConfirmationDialog({
                                                 isLendPositionType(positionType)
                                                     ? lendTx.hash
                                                     : borrowTx.hash,
-                                                    assetDetails?.chain_id || assetDetails?.platform?.chain_id
+                                                assetDetails?.chain_id || assetDetails?.platform?.chain_id
                                             )}
                                             target="_blank"
                                             rel="noreferrer"
