@@ -338,7 +338,7 @@ export const useAaveV3Data = () => {
                             baseCurrencyData.marketReferenceCurrencyDecimals
                         )
                     )
-                    .div(parseUnits(reserveLiquidationThreshold, 4))
+                    .div(parseUnits(reserveLiquidationThreshold === '0' ? '1' : reserveLiquidationThreshold, 4))
             }
 
             const newMaxToWithdraw = BigNumber.from(
@@ -517,10 +517,10 @@ export const useAaveV3Data = () => {
         )
 
         const maxRepayAmount = debtAmount.lte(
-            BigNumber.from(userToken.balanceRaw)
+            BigNumber.from(userToken?.balanceRaw ?? '0')
         )
             ? debtAmount
-            : BigNumber.from(userToken.balanceRaw)
+            : BigNumber.from(userToken?.balanceRaw ?? '0')
 
         const maxRepayAmountFormatted = formatUnits(
             maxRepayAmount,

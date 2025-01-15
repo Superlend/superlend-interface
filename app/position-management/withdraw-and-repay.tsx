@@ -332,7 +332,7 @@ export default function WithdrawAndRepayActionButton({
                     setMaxWithdrawTokensAmount(maxWithdrawAmounts)
                 })
                 .catch((error) => {
-                    console.log('error fetching max borrow amount', error)
+                    console.log('error fetching max withdraw/repay amount', error)
                     setMaxBorrowAmount('0')
                     setIsLoadingMaxBorrowingAmount(false)
                 })
