@@ -50,6 +50,7 @@ const txBtnStatus: Record<string, string> = {
     pending: 'Withdrawing...',
     confirming: 'Confirming...',
     success: 'Close',
+    error: 'Close',
     default: 'Withdraw',
 }
 
@@ -67,6 +68,7 @@ const WithdrawButton = ({
     } = useWriteContract()
     const { address: walletAddress } = useAccount()
     const { withdrawTx, setWithdrawTx } = useTxContext() as TTxContext
+    // console.log('error from useWriteContract', error)
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
@@ -110,7 +112,9 @@ const WithdrawButton = ({
                 ? 'success'
                 : isPending
                     ? 'pending'
-                    : 'default'
+                    : (!isPending && !isConfirming && !isConfirmed && withdrawTx.status === 'view')
+                        ? 'error'
+                        : 'default'
         ]
 
     const withdrawCompound = useCallback(
@@ -149,21 +153,23 @@ const WithdrawButton = ({
                         addressOfWallet,
                     ],
                 }).catch((error) => {
+                    // console.log('error', error)
                     setWithdrawTx((prev: TWithdrawTx) => ({
                         ...prev,
                         isPending: false,
                         isConfirming: false,
                         isConfirmed: false,
-                        errorMessage: error.message || 'Something went wrong',
+                        errorMessage: error.message || 'Something went wrong, please try again',
                     }))
                 })
             } catch (error: any) {
+                // console.log('error outer catch', error)
                 setWithdrawTx((prev: TWithdrawTx) => ({
                     ...prev,
                     isPending: false,
                     isConfirming: false,
                     isConfirmed: false,
-                    errorMessage: error.message || 'Something went wrong',
+                    errorMessage: error.message || 'Something went wrong, please try again',
                 }))
             }
         },
@@ -211,7 +217,8 @@ const WithdrawButton = ({
                         ...prev,
                         isPending: false,
                         isConfirming: false,
-                        errorMessage: error.message || 'Something went wrong',
+                        isConfirmed: false,
+                        // errorMessage: error.message || 'Something went wrong',
                     }))
                 })
             }).catch((error) => {
@@ -219,7 +226,8 @@ const WithdrawButton = ({
                     ...prev,
                     isPending: false,
                     isConfirming: false,
-                    errorMessage: error.message || 'Something went wrong',
+                    isConfirmed: false,
+                    // errorMessage: error.message || 'Something went wrong',
                 }))
             })
         },

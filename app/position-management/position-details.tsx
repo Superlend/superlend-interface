@@ -299,16 +299,18 @@ export default function PositionDetails() {
         assetDetails,
     }
 
+    const isMorpho = platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() === PlatformType.MORPHO
+    const isVault = platformData?.platform?.isVault
+
+    const isShowWithdrawButton = ((isAaveV3Protocol && isPolygonChain) || (isMorphoProtocol && isVault));
+    const isShowRepayButton = isAaveV3Protocol && isPolygonChain
+
     const morphoVaultsLiquidationPriceTooltipText =
         'Liquidation is not applicable, as Morpho vaults are designed to only earn & not borrow.'
     const morphoVaultsYourBorrowingTooltipText =
         'Borrowing is not applicable, as Morpho vaults are designed to only earn & not borrow.'
     const liquidationPriceValueGeneralTooltipText =
         'You do not have any borrows'
-    const isMorpho =
-        platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() ===
-        PlatformType.MORPHO
-    const isVault = platformData?.platform?.isVault
     const liquidationPriceValueTooltipText = (isMorpho && isVault) ? morphoVaultsLiquidationPriceTooltipText : liquidationPriceValueGeneralTooltipText
     const liquidationPriceLabelTooltipText = "The price at which your collateral value is no longer enough to support your current borrow amount"
 
@@ -509,7 +511,7 @@ export default function PositionDetails() {
                                             )}
                                     </HeadingText>
                                 </div>
-                                {(isAaveV3Protocol && isPolygonChain) &&
+                                {isShowWithdrawButton &&
                                     <WithdrawAndRepayActionButton
                                         actionType="withdraw"
                                         tokenDetails={
@@ -599,7 +601,7 @@ export default function PositionDetails() {
                                         />
                                     )}
                                 </div>
-                                {(isAaveV3Protocol && isPolygonChain) &&
+                                {isShowRepayButton &&
                                     <WithdrawAndRepayActionButton
                                         actionType="repay"
                                         tokenDetails={

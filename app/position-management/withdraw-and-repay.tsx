@@ -14,7 +14,7 @@ import {
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { TActionType, TPositionType } from '@/types'
-import { TPlatformAsset } from '@/types/platform'
+import { PlatformType, TPlatformAsset } from '@/types/platform'
 import {
     ArrowRightIcon,
     ArrowUpRightIcon,
@@ -224,6 +224,8 @@ export default function WithdrawAndRepayActionButton({
         enabled: isMorphoVaultsProtocol
     })
 
+    const hasSingleToken = tokenDetails.length === 1;
+
     useEffect(() => {
         if (vaultData) {
             setMorphoVault(vaultData)
@@ -295,7 +297,6 @@ export default function WithdrawAndRepayActionButton({
                                 user: {},
                             }
                     }
-
                     setMaxWithdrawTokensAmount(maxWithdrawAmounts)
                 })
                 .catch((error) => {
@@ -492,8 +493,9 @@ export default function WithdrawAndRepayActionButton({
 
     // const assetDetails: any = getFormattedAssetDetails(tokenAddress)
     const assetDetailsForTx = getAssetDetails(
-        selectedTokenDetails?.address ?? tokenAddress
+        hasSingleToken ? tokenDetails[0].address : selectedTokenDetails?.address ?? ''
     )
+
     const selectedBorrowTokenDetailsFormatted =
         formatSelectedBorrowTokenDetails(
             selectedBorrowTokenDetails?.token?.address ?? ''
@@ -509,7 +511,7 @@ export default function WithdrawAndRepayActionButton({
 
     // Check if amount has too many decimals
     const toManyDecimals = useMemo(() => {
-        if (assetDetailsForTx || selectedBorrowTokenDetails) {
+        if (assetDetailsForTx) {
             return checkDecimalPlaces(
                 amount,
                 (assetDetailsForTx?.asset?.token?.decimals ?? 0)
@@ -616,7 +618,18 @@ export default function WithdrawAndRepayActionButton({
 
     const healthFactorValues = getHealthFactorValues(maxBorrowTokensAmount)
 
-    const maxWithdrawAmountForTx = maxWithdrawTokensAmount[selectedTokenDetails?.address ?? '']?.maxToWithdrawFormatted ?? '0'
+
+    function getMaxWithdrawAmountForTx() {
+        const isMorphoVaultsProtocol = assetDetailsForTx.protocol_type === PlatformType.MORPHO && assetDetailsForTx.isVault;
+
+        if (hasSingleToken || isMorphoVaultsProtocol) {
+            return Number(tokenDetails[0].amount).toFixed(tokenDetails[0].decimals).toString() ?? '0';
+        }
+
+        return maxWithdrawTokensAmount[selectedTokenDetails?.address ?? '']?.maxToWithdrawFormatted ?? '0'
+    }
+
+    const maxWithdrawAmountForTx = getMaxWithdrawAmountForTx()
 
     const amountBorrowed = selectedTokenDetails?.positionAmount ?? 0
 
@@ -760,7 +773,8 @@ export default function WithdrawAndRepayActionButton({
                             : assetDetailsForTx
                     }
                     maxWithdrawAmount={
-                        isMorphoVaultsProtocol ? maxWithdrawAmountMorphoVaults : maxWithdrawAmountForTx
+                        // isMorphoVaultsProtocol ? maxWithdrawAmountMorphoVaults : maxWithdrawAmountForTx
+                        maxWithdrawAmountForTx
                     }
                     healthFactorValues={healthFactorValues}
                     amount={amount}
