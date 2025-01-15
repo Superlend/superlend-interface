@@ -652,12 +652,12 @@ export default function LendAndBorrowAssets() {
         : selectedBorrowTokenDetails?.token?.symbol
 
     // Loading skeleton
-    if (isLoading && isAaveV3Protocol && isPolygonChain) {
+    if (isLoading && isAaveV3Protocol) {
         return <LoadingSectionSkeleton className="h-[300px] w-full" />
     }
 
-    // Check if platform is aaveV3 or compoundV2, else return null
-    if (!(isAaveV3Protocol && isPolygonChain)) {
+    // Check if platform is aaveV3, else return null
+    if (!(isAaveV3Protocol)) {
         return null
     }
 
