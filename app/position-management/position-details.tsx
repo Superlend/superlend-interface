@@ -75,7 +75,7 @@ export default function PositionDetails() {
         const isRefresh =
             (lendTx.status === 'view' && lendTx.isConfirmed) ||
             (borrowTx.status === 'view' && borrowTx.isConfirmed) ||
-            (withdrawTx.status === 'view' && withdrawTx.isConfirmed) ||
+            // (withdrawTx.status === 'view' && withdrawTx.isConfirmed) ||
             (repayTx.status === 'view' && repayTx.isConfirmed)
         if (isRefresh) {
             setRefresh(true)
@@ -85,8 +85,8 @@ export default function PositionDetails() {
         lendTx.isConfirmed,
         borrowTx.status,
         borrowTx.isConfirmed,
-        withdrawTx.status,
-        withdrawTx.isConfirmed,
+        // withdrawTx.status,
+        // withdrawTx.isConfirmed,
         repayTx.status,
         repayTx.isConfirmed,
     ])
