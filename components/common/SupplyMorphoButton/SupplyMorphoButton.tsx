@@ -87,10 +87,10 @@ const SupplyMorphoButton = ({
             lendTx.status === 'approve'
                 ? 'Approve token'
                 : isMorphoMarkets
-                  ? 'Add Collateral'
-                  : isMorphoVault
-                    ? 'Supply to vault'
-                    : 'Lend Collateral',
+                    ? 'Add Collateral'
+                    : isMorphoVault
+                        ? 'Supply to vault'
+                        : 'Lend Collateral',
     }
 
     const getTxButtonText = (
@@ -102,12 +102,12 @@ const SupplyMorphoButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? lendTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? lendTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
@@ -364,11 +364,7 @@ const SupplyMorphoButton = ({
                             weight="normal"
                             className="text-secondary-500"
                         >
-                            Note: Adding collateral to Morpho Markets does not
-                            yield<span className="mr-1">.</span>
-                            <ExternalLink href={MORPHO_ETHERSCAN_TUTORIAL_LINK}>
-                                Learn more
-                            </ExternalLink>
+                            Note: Adding collateral to Morpho Markets does not yield.
                         </BodyText>
                     }
                 />

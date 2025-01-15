@@ -671,15 +671,7 @@ function LendAndBorrowAssetsMorphoMarkets({
                                         positionTypeParam === 'lend' && (
                                             <>
                                                 Adding collateral to Morpho
-                                                Markets does not yield
-                                                <span className="mr-1">.</span>
-                                                <ExternalLink
-                                                    href={
-                                                        MORPHO_ETHERSCAN_TUTORIAL_LINK
-                                                    }
-                                                >
-                                                    Learn more
-                                                </ExternalLink>
+                                                Markets does not yield.
                                             </>
                                         )}
                                     {isLendPositionType(positionType) &&
