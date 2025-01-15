@@ -696,7 +696,7 @@ export default function WithdrawAndRepayActionButton({
 
     const maxRepayAmountForTx = getMaxRepayAmountForTx()
 
-    const positionAmount = selectedTokenDetails?.positionAmount ?? 0
+    const positionAmount = hasSingleToken ? tokenDetails[0].amount : selectedTokenDetails?.positionAmount ?? 0
 
     const lendErrorMessage = useMemo(() => {
         if (Number(amount) > Number(maxWithdrawAmountForTx)) {
