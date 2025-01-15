@@ -795,7 +795,8 @@ export default function WithdrawAndRepayActionButton({
                     <Button
                         onClick={() => setIsSelectTokenDialogOpen(true)}
                         variant={'secondaryOutline'}
-                        className="uppercase max-w-[100px] w-full py-3 px-4"
+                        size="sm"
+                        className="uppercase w-[100px] py-3"
                     >
                         <span className="uppercase leading-[0]">
                             {isWithdrawAction ? 'Withdraw' : 'Repay'}
