@@ -135,7 +135,7 @@ function LendAndBorrowAssetsMorphoMarkets({
         useState(false)
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx } = useTxContext() as TTxContext
+    const { lendTx, borrowTx, withdrawTx, repayTx } = useTxContext() as TTxContext
     const [refresh, setRefresh] = useState(false)
     const { wallets } = useWallets()
     const wallet = wallets.find(
@@ -149,7 +149,9 @@ function LendAndBorrowAssetsMorphoMarkets({
     useEffect(() => {
         const isRefresh =
             (lendTx.status === 'view' && lendTx.isConfirmed) ||
-            (borrowTx.status === 'view' && borrowTx.isConfirmed)
+            (borrowTx.status === 'view' && borrowTx.isConfirmed) ||
+            (withdrawTx.status === 'view' && withdrawTx.isConfirmed) ||
+            (repayTx.status === 'view' && repayTx.isConfirmed)
         if (isRefresh) {
             setRefresh(true)
         }
@@ -158,6 +160,10 @@ function LendAndBorrowAssetsMorphoMarkets({
         lendTx.isConfirmed,
         borrowTx.status,
         borrowTx.isConfirmed,
+        withdrawTx.status,
+        withdrawTx.isConfirmed,
+        repayTx.status,
+        repayTx.isConfirmed,
     ])
 
     useEffect(() => {

@@ -46,7 +46,7 @@ export default function PositionDetails() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     // const { address: walletAddress } = useAccount()
     const { isWalletConnected, walletAddress } = useWalletConnection()
-    const { lendTx, borrowTx } = useTxContext()
+    const { lendTx, borrowTx, withdrawTx, repayTx } = useTxContext()
     const [refresh, setRefresh] = useState(false)
 
     const {
@@ -74,7 +74,9 @@ export default function PositionDetails() {
     useEffect(() => {
         const isRefresh =
             (lendTx.status === 'view' && lendTx.isConfirmed) ||
-            (borrowTx.status === 'view' && borrowTx.isConfirmed)
+            (borrowTx.status === 'view' && borrowTx.isConfirmed) ||
+            (withdrawTx.status === 'view' && withdrawTx.isConfirmed) ||
+            (repayTx.status === 'view' && repayTx.isConfirmed)
         if (isRefresh) {
             setRefresh(true)
         }
@@ -83,6 +85,10 @@ export default function PositionDetails() {
         lendTx.isConfirmed,
         borrowTx.status,
         borrowTx.isConfirmed,
+        withdrawTx.status,
+        withdrawTx.isConfirmed,
+        repayTx.status,
+        repayTx.isConfirmed,
     ])
 
     useEffect(() => {

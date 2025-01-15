@@ -149,7 +149,7 @@ export default function LendAndBorrowAssets() {
         getAllowance,
         providerStatus,
     } = useAaveV3Data()
-    const { lendTx, setLendTx, borrowTx, setBorrowTx } =
+    const { lendTx, setLendTx, borrowTx, withdrawTx, repayTx } =
         useTxContext() as TTxContext
 
     const {
@@ -343,13 +343,11 @@ export default function LendAndBorrowAssets() {
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
-        if (lendTx.status === 'view' && lendTx.isConfirmed && !isMorphoVaults) {
-            setIsRefreshingErc20TokensBalanceData(true)
-        }
-
         if (
-            borrowTx.status === 'view' &&
-            borrowTx.isConfirmed &&
+            ((lendTx.status === 'view' && lendTx.isConfirmed) ||
+            (borrowTx.status === 'view' && borrowTx.isConfirmed) ||
+            (withdrawTx.status === 'view' && withdrawTx.isConfirmed) ||
+            (repayTx.status === 'view' && repayTx.isConfirmed)) &&
             !isMorphoVaults
         ) {
             setIsRefreshingErc20TokensBalanceData(true)
@@ -359,6 +357,10 @@ export default function LendAndBorrowAssets() {
         borrowTx.status,
         lendTx.isConfirmed,
         borrowTx.isConfirmed,
+        withdrawTx.status,
+        withdrawTx.isConfirmed,
+        repayTx.status,
+        repayTx.isConfirmed,
         isMorphoVaults,
     ])
 
