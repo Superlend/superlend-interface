@@ -245,8 +245,9 @@ const SupplyAaveButton = ({
                             className="text-secondary-500"
                         >
                             Note: You need to complete an &apos;approval
-                            transaction&apos; granting permission to move funds from your wallet as the
-                            first step before supplying the asset.
+                            transaction&apos; granting permission to move funds
+                            from your wallet as the first step before supplying
+                            the asset.
                             <a
                                 href="https://eips.ethereum.org/EIPS/eip-2612"
                                 target="_blank"
@@ -272,7 +273,10 @@ const SupplyAaveButton = ({
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button
-                disabled={(isPending || isConfirming || disabled) && lendTx.status !== 'view'}
+                disabled={
+                    (isPending || isConfirming || disabled) &&
+                    lendTx.status !== 'view'
+                }
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()

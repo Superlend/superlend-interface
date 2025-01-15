@@ -106,15 +106,18 @@ const WithdrawButton = ({
 
     const txBtnText =
         txBtnStatus[
-        isConfirming
-            ? 'confirming'
-            : isConfirmed
-                ? 'success'
-                : isPending
+            isConfirming
+                ? 'confirming'
+                : isConfirmed
+                  ? 'success'
+                  : isPending
                     ? 'pending'
-                    : (!isPending && !isConfirming && !isConfirmed && withdrawTx.status === 'view')
-                        ? 'error'
-                        : 'default'
+                    : !isPending &&
+                        !isConfirming &&
+                        !isConfirmed &&
+                        withdrawTx.status === 'view'
+                      ? 'error'
+                      : 'default'
         ]
 
     const withdrawCompound = useCallback(
@@ -159,7 +162,9 @@ const WithdrawButton = ({
                         isPending: false,
                         isConfirming: false,
                         isConfirmed: false,
-                        errorMessage: error.message || 'Something went wrong, please try again',
+                        errorMessage:
+                            error.message ||
+                            'Something went wrong, please try again',
                     }))
                 })
             } catch (error: any) {
@@ -169,7 +174,9 @@ const WithdrawButton = ({
                     isPending: false,
                     isConfirming: false,
                     isConfirmed: false,
-                    errorMessage: error.message || 'Something went wrong, please try again',
+                    errorMessage:
+                        error.message ||
+                        'Something went wrong, please try again',
                 }))
             }
         },
@@ -180,7 +187,10 @@ const WithdrawButton = ({
         async (asset: any, amount: string) => {
             let vault = asset?.vault as Vault
 
-            let amountToWithdraw = parseUnits(amount, asset.asset.token.decimals)
+            let amountToWithdraw = parseUnits(
+                amount,
+                asset.asset.token.decimals
+            )
 
             // //  convert asset to share
             let shareAmount = await vault.toShares(amountToWithdraw.toBigInt())
@@ -195,24 +205,32 @@ const WithdrawButton = ({
                     shareAmount.toString(),
                     walletAddress as string,
                     walletAddress as string
-                )
+                ),
             ]
 
             writeContractAsync({
                 address: vault.address,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [
-                    bunder_address as `0x${string}`,
-                    shareAmount.toString(),
-                ],
-            }).then(async () => {
-                writeContractAsync({
-                    address: bunder_address as `0x${string}`,
-                    abi: MORPHO_BUNDLER_ABI,
-                    functionName: 'multicall',
-                    args: [bunder_calls],
-                }).catch((error) => {
+                args: [bunder_address as `0x${string}`, shareAmount.toString()],
+            })
+                .then(async () => {
+                    writeContractAsync({
+                        address: bunder_address as `0x${string}`,
+                        abi: MORPHO_BUNDLER_ABI,
+                        functionName: 'multicall',
+                        args: [bunder_calls],
+                    }).catch((error) => {
+                        setWithdrawTx((prev: TWithdrawTx) => ({
+                            ...prev,
+                            isPending: false,
+                            isConfirming: false,
+                            isConfirmed: false,
+                            // errorMessage: error.message || 'Something went wrong',
+                        }))
+                    })
+                })
+                .catch((error) => {
                     setWithdrawTx((prev: TWithdrawTx) => ({
                         ...prev,
                         isPending: false,
@@ -221,15 +239,6 @@ const WithdrawButton = ({
                         // errorMessage: error.message || 'Something went wrong',
                     }))
                 })
-            }).catch((error) => {
-                setWithdrawTx((prev: TWithdrawTx) => ({
-                    ...prev,
-                    isPending: false,
-                    isConfirming: false,
-                    isConfirmed: false,
-                    // errorMessage: error.message || 'Something went wrong',
-                }))
-            })
         },
         []
     )

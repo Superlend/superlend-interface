@@ -10,7 +10,7 @@ export const useWalletConnection = () => {
     const wallet = wallets.find(
         (wallet: any) => wallet.address === walletAddress
     )
-    
+
     async function handleSwitchChain(chain_id: number) {
         await wallet?.switchChain(Number(chain_id))
     }

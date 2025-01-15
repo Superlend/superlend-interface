@@ -22,11 +22,22 @@ import { ConfirmationDialog, handleSmallestValue } from './lend-and-borrow'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import { Button } from '@/components/ui/button'
-import { CHAIN_ID_MAPPER, MORPHO_ETHERSCAN_TUTORIAL_LINK, TOO_MANY_DECIMALS_VALIDATIONS_TEXT } from '@/constants'
+import {
+    CHAIN_ID_MAPPER,
+    MORPHO_ETHERSCAN_TUTORIAL_LINK,
+    TOO_MANY_DECIMALS_VALIDATIONS_TEXT,
+} from '@/constants'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 
 import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
-import { useHolding, useMarket, usePosition, useUser, useVault, useVaultUser } from '@morpho-org/blue-sdk-wagmi'
+import {
+    useHolding,
+    useMarket,
+    usePosition,
+    useUser,
+    useVault,
+    useVaultUser,
+} from '@morpho-org/blue-sdk-wagmi'
 import { formatUnits } from 'viem'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import CustomAlert from '@/components/alerts/CustomAlert'
@@ -41,12 +52,15 @@ export default function LendAndBorrowAssetsMorpho() {
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
-    const positionTypeParam: TPositionType = (searchParams.get('position_type') as TPositionType) || 'lend'
+    const positionTypeParam: TPositionType =
+        (searchParams.get('position_type') as TPositionType) || 'lend'
     const { address: walletAddress } = useAccount()
-    const { wallets } = useWallets();
-    const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
-    const { user } = usePrivy();
-    const isWalletConnected = !!user;
+    const { wallets } = useWallets()
+    const wallet = wallets.find(
+        (wallet: any) => wallet.address === walletAddress
+    )
+    const { user } = usePrivy()
+    const isWalletConnected = !!user
 
     // Switch chain
     useEffect(() => {
@@ -70,7 +84,6 @@ export default function LendAndBorrowAssetsMorpho() {
         chain_id: Number(chain_id),
     })
 
-
     const isMorphoMarketsProtocol =
         platformData?.platform?.protocol_type === 'morpho' &&
         !platformData?.platform?.isVault
@@ -79,53 +92,73 @@ export default function LendAndBorrowAssetsMorpho() {
         platformData?.platform?.protocol_type === 'morpho' &&
         platformData?.platform?.isVault
 
-    if ((!isMorphoMarketsProtocol && !isMorphoVaultsProtocol)) {
+    if (!isMorphoMarketsProtocol && !isMorphoVaultsProtocol) {
         return null
     } else if (isMorphoMarketsProtocol) {
-        return <LendAndBorrowAssetsMorphoMarkets platformData={platformData} walletAddress={walletAddress as `0x${string}`} isLoadingPlatformData={isLoadingPlatformData} />
+        return (
+            <LendAndBorrowAssetsMorphoMarkets
+                platformData={platformData}
+                walletAddress={walletAddress as `0x${string}`}
+                isLoadingPlatformData={isLoadingPlatformData}
+            />
+        )
     } else if (isMorphoVaultsProtocol) {
-        return <LendAndBorrowAssetsMorphoVaults platformData={platformData} walletAddress={walletAddress as `0x${string}`} isLoadingPlatformData={isLoadingPlatformData} />
+        return (
+            <LendAndBorrowAssetsMorphoVaults
+                platformData={platformData}
+                walletAddress={walletAddress as `0x${string}`}
+                isLoadingPlatformData={isLoadingPlatformData}
+            />
+        )
     }
-
-
 }
 
 function isLendPositionType(positionType: TPositionType) {
     return positionType === 'lend'
 }
 
-
 function LendAndBorrowAssetsMorphoMarkets({
     platformData,
     walletAddress,
-    isLoadingPlatformData
+    isLoadingPlatformData,
 }: {
-    platformData: TPlatform,
-    walletAddress: `0x${string}`,
+    platformData: TPlatform
+    walletAddress: `0x${string}`
     isLoadingPlatformData: boolean
 }) {
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || '1'
-    const positionTypeParam: TPositionType = (searchParams.get('position_type') as TPositionType) || 'lend'
+    const positionTypeParam: TPositionType =
+        (searchParams.get('position_type') as TPositionType) || 'lend'
     const [positionType, setPositionType] = useState<TPositionType>('lend')
-    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false)
+    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
+        useState(false)
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
     const { lendTx, borrowTx } = useTxContext() as TTxContext
     const [refresh, setRefresh] = useState(false)
-    const { wallets } = useWallets();
-    const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
-    const { user } = usePrivy();
-    const isWalletConnected = !!user;
+    const { wallets } = useWallets()
+    const wallet = wallets.find(
+        (wallet: any) => wallet.address === walletAddress
+    )
+    const { user } = usePrivy()
+    const isWalletConnected = !!user
 
     const [amount, setAmount] = useState('')
 
     useEffect(() => {
-        const isRefresh = (lendTx.status === 'view' && lendTx.isConfirmed) || (borrowTx.status === 'view' && borrowTx.isConfirmed)
+        const isRefresh =
+            (lendTx.status === 'view' && lendTx.isConfirmed) ||
+            (borrowTx.status === 'view' && borrowTx.isConfirmed)
         if (isRefresh) {
             setRefresh(true)
         }
-    }, [lendTx.status, lendTx.isConfirmed, borrowTx.status, borrowTx.isConfirmed])
+    }, [
+        lendTx.status,
+        lendTx.isConfirmed,
+        borrowTx.status,
+        borrowTx.isConfirmed,
+    ])
 
     useEffect(() => {
         if (refresh) {
@@ -144,11 +177,17 @@ function LendAndBorrowAssetsMorphoMarkets({
         if (borrowTx.status === 'borrow' && !isConfirmationDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [lendTx.status, borrowTx.status, lendTx.isConfirmed, borrowTx.isConfirmed, isConfirmationDialogOpen])
+    }, [
+        lendTx.status,
+        borrowTx.status,
+        lendTx.isConfirmed,
+        borrowTx.isConfirmed,
+        isConfirmationDialogOpen,
+    ])
 
     const { data: morphoMarketData } = useMarket({
         marketId: platformData?.platform?.morpho_market_id as MarketId,
-        chainId: Number(chain_id)
+        chainId: Number(chain_id),
     })
 
     const { data: position } = usePosition({
@@ -162,7 +201,8 @@ function LendAndBorrowAssetsMorphoMarkets({
     })
 
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
-    const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] = useState(true)
+    const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] =
+        useState(true)
 
     const [hasCollateral, setHasCollateral] = useState(false)
     const [canBorrow, setCanBorrow] = useState(false)
@@ -172,40 +212,72 @@ function LendAndBorrowAssetsMorphoMarkets({
     // health factor
     const [healthFactor, setHealthFactor] = useState(0)
 
-    const isMorphoProtocol = platformData?.platform?.protocol_type === PlatformType.MORPHO
+    const isMorphoProtocol =
+        platformData?.platform?.protocol_type === PlatformType.MORPHO
 
     useEffect(() => {
-
         if (position && morphoMarketData) {
-            const accrualPosition: AccrualPosition = new AccrualPosition(position, morphoMarketData)
-            const borrowAssets = ((accrualPosition.maxBorrowableAssets ?? BigInt(0)) * BigInt(999)) / BigInt(1000)
-            const maxBorrowAmount = formatUnits(borrowAssets, morphoBorrowTokenDetails?.token?.decimals ?? 0)
+            const accrualPosition: AccrualPosition = new AccrualPosition(
+                position,
+                morphoMarketData
+            )
+            const borrowAssets =
+                ((accrualPosition.maxBorrowableAssets ?? BigInt(0)) *
+                    BigInt(999)) /
+                BigInt(1000)
+            const maxBorrowAmount = formatUnits(
+                borrowAssets,
+                morphoBorrowTokenDetails?.token?.decimals ?? 0
+            )
 
             setMaxBorrowAmount(maxBorrowAmount)
             setIsLoadingMaxBorrowingAmount(false)
-            setHasCollateral(accrualPosition.collateralValue ? accrualPosition.collateralValue > 0 : false)
+            setHasCollateral(
+                accrualPosition.collateralValue
+                    ? accrualPosition.collateralValue > 0
+                    : false
+            )
             setCanBorrow(borrowAssets ? borrowAssets > 0 : false)
 
-            const currentBorrowAssets = (accrualPosition.borrowAssets ?? BigInt(0))
-            const collUsdValue = (accrualPosition.collateral ? Number(formatUnits(accrualPosition.collateral, selectedAssetTokenDetails?.token?.decimals ?? 0)) : 0) * (selectedAssetTokenDetails?.token?.price_usd ?? 0)
-            const borrowUsdValue = (borrowAssets ? Number(formatUnits(currentBorrowAssets, morphoBorrowTokenDetails?.token?.decimals ?? 0)) : 0) * (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
+            const currentBorrowAssets =
+                accrualPosition.borrowAssets ?? BigInt(0)
+            const collUsdValue =
+                (accrualPosition.collateral
+                    ? Number(
+                          formatUnits(
+                              accrualPosition.collateral,
+                              selectedAssetTokenDetails?.token?.decimals ?? 0
+                          )
+                      )
+                    : 0) * (selectedAssetTokenDetails?.token?.price_usd ?? 0)
+            const borrowUsdValue =
+                (borrowAssets
+                    ? Number(
+                          formatUnits(
+                              currentBorrowAssets,
+                              morphoBorrowTokenDetails?.token?.decimals ?? 0
+                          )
+                      )
+                    : 0) * (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
 
             if (morphoBorrowTokenDetails?.ltv) {
-                const lltv = (morphoBorrowTokenDetails?.ltv ?? 1) / 100;
+                const lltv = (morphoBorrowTokenDetails?.ltv ?? 1) / 100
 
                 const healthFactor = (collUsdValue * lltv) / borrowUsdValue
                 setHealthFactor(healthFactor)
             }
 
             // if both are same then reallocation is needed
-            if (morphoMarketData.totalBorrowAssets === morphoMarketData.totalSupplyAssets) {
+            if (
+                morphoMarketData.totalBorrowAssets ===
+                morphoMarketData.totalSupplyAssets
+            ) {
                 setDoesMarketHasLiquidity(false)
             } else {
                 setDoesMarketHasLiquidity(true)
             }
 
             // TODO: Get health factor values
-
         } else {
             setMaxBorrowAmount('0')
             setIsLoadingMaxBorrowingAmount(false)
@@ -227,26 +299,58 @@ function LendAndBorrowAssetsMorphoMarkets({
         doesMarketHasLiquidity,
         setDoesMarketHasLiquidity,
         healthFactor,
-        setHealthFactor
+        setHealthFactor,
     ])
 
-    const getUpdatedHealthFactor = (position: any, morphoMarketData: any, selectedAssetTokenDetails: any, morphoBorrowTokenDetails: any, amount: string) => {
-        if (!position || !morphoMarketData || !selectedAssetTokenDetails || !morphoBorrowTokenDetails) {
+    const getUpdatedHealthFactor = (
+        position: any,
+        morphoMarketData: any,
+        selectedAssetTokenDetails: any,
+        morphoBorrowTokenDetails: any,
+        amount: string
+    ) => {
+        if (
+            !position ||
+            !morphoMarketData ||
+            !selectedAssetTokenDetails ||
+            !morphoBorrowTokenDetails
+        ) {
             return 0.0
         }
 
-        const accrualPosition: AccrualPosition = new AccrualPosition(position, morphoMarketData)
-        const currentBorrowAssets = (accrualPosition.borrowAssets ?? BigInt(0))
+        const accrualPosition: AccrualPosition = new AccrualPosition(
+            position,
+            morphoMarketData
+        )
+        const currentBorrowAssets = accrualPosition.borrowAssets ?? BigInt(0)
 
-        const collNormalizeValue = Number(formatUnits(accrualPosition.collateral ?? BigInt(0), selectedAssetTokenDetails?.token?.decimals ?? 0))
-        const borrowNormalizeValue = currentBorrowAssets == BigInt(0) ? 0 : Number(formatUnits(currentBorrowAssets, morphoBorrowTokenDetails?.token?.decimals ?? 0))
-        const borrowNormalizeValueWithAmount = borrowNormalizeValue + Number(amount)
+        const collNormalizeValue = Number(
+            formatUnits(
+                accrualPosition.collateral ?? BigInt(0),
+                selectedAssetTokenDetails?.token?.decimals ?? 0
+            )
+        )
+        const borrowNormalizeValue =
+            currentBorrowAssets == BigInt(0)
+                ? 0
+                : Number(
+                      formatUnits(
+                          currentBorrowAssets,
+                          morphoBorrowTokenDetails?.token?.decimals ?? 0
+                      )
+                  )
+        const borrowNormalizeValueWithAmount =
+            borrowNormalizeValue + Number(amount)
 
-        const collUsdValue = collNormalizeValue * (selectedAssetTokenDetails?.token?.price_usd ?? 0)
-        const borrowUsdValue = borrowNormalizeValueWithAmount * (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
+        const collUsdValue =
+            collNormalizeValue *
+            (selectedAssetTokenDetails?.token?.price_usd ?? 0)
+        const borrowUsdValue =
+            borrowNormalizeValueWithAmount *
+            (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
 
         if (morphoBorrowTokenDetails?.ltv) {
-            const lltv = (morphoBorrowTokenDetails?.ltv ?? 1) / 100;
+            const lltv = (morphoBorrowTokenDetails?.ltv ?? 1) / 100
             const healthFactor = (collUsdValue * lltv) / borrowUsdValue
             return healthFactor
         }
@@ -258,7 +362,6 @@ function LendAndBorrowAssetsMorphoMarkets({
     // const isMorphoVaultsProtocol =
     //     platformData?.platform?.protocol_type === 'morpho' &&
     //     platformData?.platform?.isVault
-
 
     const {
         erc20TokensBalanceData,
@@ -345,12 +448,13 @@ function LendAndBorrowAssetsMorphoMarkets({
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-            Number(
-                isLendPositionType(positionType) ? balance : maxBorrowAmount
-            ) ||
+                Number(
+                    isLendPositionType(positionType) ? balance : maxBorrowAmount
+                ) ||
             (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
-            toManyDecimals || (!isLendPositionType(positionType) && !doesMarketHasLiquidity),
+            toManyDecimals ||
+            (!isLendPositionType(positionType) && !doesMarketHasLiquidity),
         [
             amount,
             balance,
@@ -358,28 +462,28 @@ function LendAndBorrowAssetsMorphoMarkets({
             toManyDecimals,
             hasCollateral,
             positionType,
-            doesMarketHasLiquidity
+            doesMarketHasLiquidity,
         ]
     )
 
     function getMaxDecimalsToDisplay(): number {
         return isLendPositionType(positionType)
             ? morphoLendTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
-                morphoLendTokenDetails?.token?.symbol
-                    .toLowerCase()
-                    .includes('eth')
+                  .toLowerCase()
+                  .includes('btc') ||
+              morphoLendTokenDetails?.token?.symbol
+                  .toLowerCase()
+                  .includes('eth')
                 ? 6
                 : 2
             : morphoBorrowTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
+                    .toLowerCase()
+                    .includes('btc') ||
                 morphoBorrowTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
-                ? 6
-                : 2
+              ? 6
+              : 2
     }
 
     const isDisabledMaxBtn = () => {
@@ -393,12 +497,14 @@ function LendAndBorrowAssetsMorphoMarkets({
         }
 
         // TODO: Get max borrow amount
-        return (Number(amount) === Number(maxBorrowAmount)) ||
+        return (
+            Number(amount) === Number(maxBorrowAmount) ||
             !isWalletConnected ||
             isLoadingMaxBorrowingAmount ||
             isLoadingErc20TokensBalanceData ||
-            (Number(maxBorrowAmount) <= 0) ||
+            Number(maxBorrowAmount) <= 0 ||
             !doesMarketHasLiquidity
+        )
     }
 
     return (
@@ -463,7 +569,10 @@ function LendAndBorrowAssetsMorphoMarkets({
                             {isLoadingMaxBorrowingAmount ? (
                                 <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
                             ) : (
-                                handleSmallestValue(maxBorrowAmount, getMaxDecimalsToDisplay())
+                                handleSmallestValue(
+                                    maxBorrowAmount,
+                                    getMaxDecimalsToDisplay()
+                                )
                             )}
                         </BodyText>
                     )}
@@ -471,7 +580,7 @@ function LendAndBorrowAssetsMorphoMarkets({
                 <CardContent className="p-0 bg-white rounded-5">
                     <div
                         className={cn(
-                            (isLendPositionType(positionType) || isMorphoProtocol)
+                            isLendPositionType(positionType) || isMorphoProtocol
                                 ? 'border rounded-5 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]'
                                 : 'border-t rounded-t-5',
                             'border-gray-200 py-[12px] px-[16px] flex items-center gap-[12px]'
@@ -486,16 +595,18 @@ function LendAndBorrowAssetsMorphoMarkets({
                             isLendPositionType(positionType) && (
                                 <LoaderCircle className="text-primary w-[60px] h-[34px] animate-spin" />
                             )} */}
-                        {(!isLoading && !isLoadingMaxBorrowingAmount) &&
+                        {!isLoading &&
+                            !isLoadingMaxBorrowingAmount &&
                             !!selectedAssetTokenDetails?.token?.address &&
                             isLendPositionType(positionType) && (
                                 <ImageWithDefault
                                     src={
-                                        selectedAssetTokenDetails?.token?.logo || ''
+                                        selectedAssetTokenDetails?.token
+                                            ?.logo || ''
                                     }
                                     alt={
-                                        selectedAssetTokenDetails?.token?.symbol ||
-                                        ''
+                                        selectedAssetTokenDetails?.token
+                                            ?.symbol || ''
                                     }
                                     className="shrink-0 w-[24px] h-[24px] rounded-full"
                                     width={24}
@@ -539,63 +650,85 @@ function LendAndBorrowAssetsMorphoMarkets({
                             max
                         </Button>
                     </div>
-                    {
-                        isWalletConnected && (
-                            <div className="card-content-bottom px-5 py-3">
-                                {(isLoadingHelperText) && (
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
-                                    >
-                                        {getLoadingHelperText()}
-                                    </BodyText>
-                                )}
-                                {(!errorMessage && !isLoadingHelperText) && (
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
-                                    >
-                                        {(isLendPositionType(positionType) && (positionTypeParam === 'lend')) && (
+                    {isWalletConnected && (
+                        <div className="card-content-bottom px-5 py-3">
+                            {isLoadingHelperText && (
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
+                                >
+                                    {getLoadingHelperText()}
+                                </BodyText>
+                            )}
+                            {!errorMessage && !isLoadingHelperText && (
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
+                                >
+                                    {isLendPositionType(positionType) &&
+                                        positionTypeParam === 'lend' && (
                                             <>
-                                                Adding collateral to Morpho Markets does not yield<span className="mr-1">.</span>
-                                                <ExternalLink href={MORPHO_ETHERSCAN_TUTORIAL_LINK}>
+                                                Adding collateral to Morpho
+                                                Markets does not yield
+                                                <span className="mr-1">.</span>
+                                                <ExternalLink
+                                                    href={
+                                                        MORPHO_ETHERSCAN_TUTORIAL_LINK
+                                                    }
+                                                >
                                                     Learn more
                                                 </ExternalLink>
                                             </>
                                         )}
-                                        {(isLendPositionType(positionType) && (positionTypeParam === 'borrow')) && (
-                                            'Enter amount to proceed with supplying collateral for this position'
-                                        )}
-                                        {(!isLendPositionType(positionType) && doesMarketHasLiquidity) && 'Enter the amount you want to borrow from this position'}
-                                    </BodyText>
-                                )}
-                                {(!errorMessage && !isLoadingHelperText) &&
-                                    ((!isLendPositionType(positionType) && !doesMarketHasLiquidity) &&
-                                        <CustomAlert
-                                            variant="info"
-                                            hasPrefixIcon={false}
-                                            description={
-                                                <BodyText
-                                                    level="body3"
-                                                    weight="normal"
-                                                    className="text-secondary-500 flex-inline"
-                                                >
-                                                    {(
-                                                        <span className='flex-inline'>
-                                                            Superlend doesn&apos;t support borrowing from this market, as there&apos;s not enough liquidity. Try <span className='mr-1'>using</span>
-                                                            <ExternalLink href="https://morpho.org">
-                                                                morpho website
-                                                            </ExternalLink>
-                                                            <span className='ml-1'>for</span> the same
+                                    {isLendPositionType(positionType) &&
+                                        positionTypeParam === 'borrow' &&
+                                        'Enter amount to proceed with supplying collateral for this position'}
+                                    {!isLendPositionType(positionType) &&
+                                        doesMarketHasLiquidity &&
+                                        'Enter the amount you want to borrow from this position'}
+                                </BodyText>
+                            )}
+                            {!errorMessage &&
+                                !isLoadingHelperText &&
+                                !isLendPositionType(positionType) &&
+                                !doesMarketHasLiquidity && (
+                                    <CustomAlert
+                                        variant="info"
+                                        hasPrefixIcon={false}
+                                        description={
+                                            <BodyText
+                                                level="body3"
+                                                weight="normal"
+                                                className="text-secondary-500 flex-inline"
+                                            >
+                                                {
+                                                    <span className="flex-inline">
+                                                        Superlend doesn&apos;t
+                                                        support borrowing from
+                                                        this market, as
+                                                        there&apos;s not enough
+                                                        liquidity. Try{' '}
+                                                        <span className="mr-1">
+                                                            using
                                                         </span>
-                                                    )}
-                                                </BodyText>
-                                            }
-                                        />)
-                                }
-                                {(errorMessage && !isLoadingHelperText && !isLoading) && (
+                                                        <ExternalLink href="https://morpho.org">
+                                                            morpho website
+                                                        </ExternalLink>
+                                                        <span className="ml-1">
+                                                            for
+                                                        </span>{' '}
+                                                        the same
+                                                    </span>
+                                                }
+                                            </BodyText>
+                                        }
+                                    />
+                                )}
+                            {errorMessage &&
+                                !isLoadingHelperText &&
+                                !isLoading && (
                                     <BodyText
                                         level="body2"
                                         weight="normal"
@@ -604,13 +737,12 @@ function LendAndBorrowAssetsMorphoMarkets({
                                         {errorMessage}
                                     </BodyText>
                                 )}
-                            </div>
-                        )
-                    }
+                        </div>
+                    )}
                 </CardContent>
                 <CardFooter className="p-0 justify-center">
                     {!isWalletConnected && <ConnectWalletButton />}
-                    {(isWalletConnected && !isLoading) && (
+                    {isWalletConnected && !isLoading && (
                         <div className="flex flex-col gap-[12px] w-full">
                             <ConfirmationDialog
                                 disabled={disabledButton}
@@ -625,7 +757,7 @@ function LendAndBorrowAssetsMorphoMarkets({
                                     protocol_type:
                                         platformData?.platform?.protocol_type,
                                     morphoMarketData: morphoMarketData,
-                                    chainId: Number(chain_id)
+                                    chainId: Number(chain_id),
                                 }}
                                 amount={amount}
                                 balance={balance}
@@ -656,10 +788,10 @@ function LendAndBorrowAssetsMorphoMarkets({
 function LendAndBorrowAssetsMorphoVaults({
     platformData,
     walletAddress,
-    isLoadingPlatformData
+    isLoadingPlatformData,
 }: {
-    platformData: TPlatform,
-    walletAddress: `0x${string}`,
+    platformData: TPlatform
+    walletAddress: `0x${string}`
     isLoadingPlatformData: boolean
 }) {
     const searchParams = useSearchParams()
@@ -667,12 +799,15 @@ function LendAndBorrowAssetsMorphoVaults({
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { wallets } = useWallets();
-    const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
-    const { user } = usePrivy();
-    const isWalletConnected = !!user;
+    const { wallets } = useWallets()
+    const wallet = wallets.find(
+        (wallet: any) => wallet.address === walletAddress
+    )
+    const { user } = usePrivy()
+    const isWalletConnected = !!user
     const { lendTx, borrowTx } = useTxContext() as TTxContext
-    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false)
+    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
+        useState(false)
 
     const [amount, setAmount] = useState('')
 
@@ -697,15 +832,21 @@ function LendAndBorrowAssetsMorphoVaults({
         if (borrowTx.status === 'borrow' && !isConfirmationDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [lendTx.status, borrowTx.status, lendTx.isConfirmed, borrowTx.isConfirmed, isConfirmationDialogOpen])
+    }, [
+        lendTx.status,
+        borrowTx.status,
+        lendTx.isConfirmed,
+        borrowTx.isConfirmed,
+        isConfirmationDialogOpen,
+    ])
 
     // fetch vault data
     const { data: vaultData } = useVault({
         vault: platformData?.platform?.core_contract as `0x${string}`,
-        chainId: Number(chain_id)
+        chainId: Number(chain_id),
     })
 
-    const vaultAssetAddress = vaultData?.asset;
+    const vaultAssetAddress = vaultData?.asset
 
     const {
         erc20TokensBalanceData,
@@ -713,7 +854,6 @@ function LendAndBorrowAssetsMorphoVaults({
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
     } = useUserTokenBalancesContext()
-
 
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[
@@ -751,7 +891,7 @@ function LendAndBorrowAssetsMorphoVaults({
         if (selectedAssetTokenDetails) {
             return checkDecimalPlaces(
                 amount,
-                (selectedAssetTokenDetails?.token?.decimals ?? 0)
+                selectedAssetTokenDetails?.token?.decimals ?? 0
             )
         }
         return false
@@ -772,25 +912,21 @@ function LendAndBorrowAssetsMorphoVaults({
 
     const disabledButton: boolean = useMemo(
         () =>
-            Number(amount) >
-            Number(
-                balance
-            ) ||
+            Number(amount) > Number(balance) ||
             Number(amount) <= 0 ||
             toManyDecimals,
-        [
-            amount,
-            balance,
-            toManyDecimals,
-        ]
+        [amount, balance, toManyDecimals]
     )
-
 
     return (
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
             <Card className="flex flex-col gap-[12px] p-[16px]">
                 <div className="flex items-center justify-between px-[14px]">
-                    <BodyText level="body2" weight="medium" className="capitalize text-black/90">
+                    <BodyText
+                        level="body2"
+                        weight="medium"
+                        className="capitalize text-black/90"
+                    >
                         Supply to vault
                     </BodyText>
                     {isWalletConnected && (
@@ -828,7 +964,7 @@ function LendAndBorrowAssetsMorphoVaults({
                             'border-gray-200 py-[12px] px-[16px] flex items-center gap-[12px]'
                         )}
                     >
-                        {(isLoading) && (
+                        {isLoading && (
                             <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
                         )}
                         {/* Lend position type - Selected token image */}
@@ -837,15 +973,16 @@ function LendAndBorrowAssetsMorphoVaults({
                             isLendPositionType(positionType) && (
                                 <LoaderCircle className="text-primary w-[60px] h-[34px] animate-spin" />
                             )} */}
-                        {(!isLoading) &&
+                        {!isLoading &&
                             !!selectedAssetTokenDetails?.token?.address && (
                                 <ImageWithDefault
                                     src={
-                                        selectedAssetTokenDetails?.token?.logo || ''
+                                        selectedAssetTokenDetails?.token
+                                            ?.logo || ''
                                     }
                                     alt={
-                                        selectedAssetTokenDetails?.token?.symbol ||
-                                        ''
+                                        selectedAssetTokenDetails?.token
+                                            ?.symbol || ''
                                     }
                                     className="shrink-0 w-[24px] h-[24px] rounded-full"
                                     width={24}
@@ -862,49 +999,41 @@ function LendAndBorrowAssetsMorphoVaults({
                         <Button
                             variant="link"
                             className="uppercase text-[14px] font-medium ml-auto"
-                            onClick={() =>
-                                setAmount(
-                                    (balance ?? '0')
-                                )
-                            }
+                            onClick={() => setAmount(balance ?? '0')}
                             disabled={isDisabledMaxBtn()}
                         >
                             max
                         </Button>
                     </div>
-                    {
-                        (isWalletConnected) && (
-                            <div className="card-content-bottom px-5 py-3">
-                                {((isLoading || !lendErrorMessage)) && (
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
-                                    >
-                                        {isLoading && 'Loading balance...'}
-                                        {(!lendErrorMessage && !isLoading) &&
-                                            'Enter amount to proceed with supplying to vault'
-                                        }
-                                    </BodyText>
-                                )}
-                                {
-                                    (lendErrorMessage && !isLoading) && (
-                                        <BodyText
-                                            level="body2"
-                                            weight="normal"
-                                            className="text-center text-destructive-foreground"
-                                        >
-                                            {lendErrorMessage}
-                                        </BodyText>
-                                    )
-                                }
-                            </div>
-                        )
-                    }
+                    {isWalletConnected && (
+                        <div className="card-content-bottom px-5 py-3">
+                            {(isLoading || !lendErrorMessage) && (
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
+                                >
+                                    {isLoading && 'Loading balance...'}
+                                    {!lendErrorMessage &&
+                                        !isLoading &&
+                                        'Enter amount to proceed with supplying to vault'}
+                                </BodyText>
+                            )}
+                            {lendErrorMessage && !isLoading && (
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-center text-destructive-foreground"
+                                >
+                                    {lendErrorMessage}
+                                </BodyText>
+                            )}
+                        </div>
+                    )}
                 </CardContent>
                 <CardFooter className="p-0 justify-center">
                     {!isWalletConnected && <ConnectWalletButton />}
-                    {(isWalletConnected && !isLoading) && (
+                    {isWalletConnected && !isLoading && (
                         <div className="flex flex-col gap-[12px] w-full">
                             <ConfirmationDialog
                                 disabled={disabledButton}
@@ -916,7 +1045,7 @@ function LendAndBorrowAssetsMorphoVaults({
                                         platformData?.platform?.protocol_type,
                                     morphoMarketData: vaultData,
                                     chainId: Number(chain_id),
-                                    isVault: true
+                                    isVault: true,
                                 }}
                                 amount={amount}
                                 balance={balance}

@@ -14,6 +14,8 @@ import { erc20Abi } from 'viem'
 import { Contract } from 'ethers'
 import { BigNumber } from 'ethers'
 import { useAccount } from 'wagmi'
+import { useERC20Balance } from '../useERC20Balance'
+import { useUserTokenBalancesContext } from '../../context/user-token-balances-provider'
 
 export const useAaveV3Data = () => {
     // const activeAccount = useActiveAccount()
@@ -25,6 +27,12 @@ export const useAaveV3Data = () => {
         isInitializing: true,
         error: null as string | null,
     })
+    const {
+        erc20TokensBalanceData,
+        isLoading: isLoadingErc20TokensBalanceData,
+        // isRefreshing: isRefreshingErc20TokensBalanceData,
+        setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
+    } = useUserTokenBalancesContext()
 
     // Enhanced provider readiness check
     useEffect(() => {
@@ -446,6 +454,86 @@ export const useAaveV3Data = () => {
         }
     }
 
+    const getMaxRepayAmount = (
+        token: string,
+        chainId: number,
+        allData?: [
+            ReservesDataHumanized,
+            {
+                userReserves: UserReserveDataHumanized[]
+                userEmodeCategoryId: number
+            },
+        ]
+    ) => {
+        const _reserveData = allData ? allData[0] : reserveData
+        const _userData = allData ? allData[1] : userData
+        if (!_reserveData || !_userData) return
+        const reserve = _reserveData.reservesData.find(
+            (r) => r.underlyingAsset.toLowerCase() === token.toLowerCase()
+        )
+        const baseCurrencyData = _reserveData.baseCurrencyData
+        const userReserve = _userData.userReserves.find(
+            (r) => r.underlyingAsset === token.toLowerCase()
+        )
+        if (!reserve || !userReserve) return
+
+        const currentTimestamp = Math.floor(Date.now() / 1000)
+
+        const formattedPoolReserves = formatReserves({
+            reserves: _reserveData.reservesData as any,
+            currentTimestamp,
+            marketReferenceCurrencyDecimals:
+                baseCurrencyData.marketReferenceCurrencyDecimals,
+            marketReferencePriceInUsd:
+                baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+        }).map((r) => ({
+            ...r,
+            isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+            isWrappedBaseAsset: false,
+        }))
+
+        const user = formatUserSummary({
+            currentTimestamp: currentTimestamp,
+            marketReferencePriceInUsd:
+                baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+            marketReferenceCurrencyDecimals:
+                baseCurrencyData.marketReferenceCurrencyDecimals,
+            userReserves: _userData.userReserves,
+            formattedReserves: formattedPoolReserves,
+            userEmodeCategoryId: _userData.userEmodeCategoryId,
+        })
+
+        const userToken = erc20TokensBalanceData[chainId]
+            ? erc20TokensBalanceData[chainId][token.toLowerCase()]
+            : undefined
+
+        const debtReserve = user.userReservesData.find(
+            (r) =>
+                r.reserve.underlyingAsset.toLowerCase() === token.toLowerCase()
+        )
+        const debtAmount = parseUnits(
+            debtReserve!.totalBorrows,
+            debtReserve?.reserve.decimals
+        )
+
+        const maxRepayAmount = debtAmount.lte(
+            BigNumber.from(userToken.balanceRaw)
+        )
+            ? debtAmount
+            : BigNumber.from(userToken.balanceRaw)
+
+        const maxRepayAmountFormatted = formatUnits(
+            maxRepayAmount,
+            debtReserve!.reserve.decimals
+        )
+
+        return {
+            maxToRepay: maxRepayAmount.toString(),
+            maxToRepayFormatted: maxRepayAmountFormatted,
+            user,
+        }
+    }
+
     return {
         reserveData,
         userData,
@@ -453,6 +541,7 @@ export const useAaveV3Data = () => {
         fetchAaveV3Data,
         getMaxBorrowAmount,
         getMaxWithdrawAmount,
+        getMaxRepayAmount,
         providerStatus,
     }
 }

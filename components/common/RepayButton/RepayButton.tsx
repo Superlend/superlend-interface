@@ -86,12 +86,12 @@ const RepayButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? repayTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? repayTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 
@@ -165,7 +165,12 @@ const RepayButton = ({
     useEffect(() => {
         if (repayTx.status === 'view') return
 
-        if (!repayTx.isConfirmed && !repayTx.isPending && !repayTx.isConfirming && amountBN.gt(0)) {
+        if (
+            !repayTx.isConfirmed &&
+            !repayTx.isPending &&
+            !repayTx.isConfirming &&
+            amountBN.gt(0)
+        ) {
             if (repayTx.allowanceBN.gte(amountBN)) {
                 setRepayTx((prev: TRepayTx) => ({
                     ...prev,
@@ -185,7 +190,10 @@ const RepayButton = ({
     }, [repayTx.allowanceBN])
 
     useEffect(() => {
-        if ((repayTx.status === 'approve' || repayTx.status === 'repay') && hash) {
+        if (
+            (repayTx.status === 'approve' || repayTx.status === 'repay') &&
+            hash
+        ) {
             setRepayTx((prev: TRepayTx) => ({
                 ...prev,
                 hash: hash || '',
@@ -285,7 +293,10 @@ const RepayButton = ({
                 <CustomAlert description={repayTx.errorMessage} />
             )}
             <Button
-                disabled={(isPending || isConfirming || disabled) && repayTx.status !== 'view'}
+                disabled={
+                    (isPending || isConfirming || disabled) &&
+                    repayTx.status !== 'view'
+                }
                 onClick={() => {
                     if (repayTx.status === 'approve') {
                         onApproveSupply()

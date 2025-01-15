@@ -32,7 +32,7 @@ const ActionButton = ({
     amount,
     handleCloseModal,
     actionType,
-    setActionType
+    setActionType,
 }: IActionButtonSelectComponent) => {
     if (actionType === 'borrow') {
         return (
@@ -98,10 +98,7 @@ const ActionButton = ({
         )
     }
 
-    if (
-        asset.protocol_type === PlatformType.MORPHO &&
-        actionType === 'lend'
-    ) {
+    if (asset.protocol_type === PlatformType.MORPHO && actionType === 'lend') {
         return (
             <SupplyMorphoButton
                 disabled={disabled}

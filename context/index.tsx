@@ -21,16 +21,15 @@ import UserTokenBalancesProvider from './user-token-balances-provider'
 //     etherlink,
 // } from '@reown/appkit/networks'
 // import { createAppKit } from '@reown/appkit/react'
-import { PrivyProvider } from '@privy-io/react-auth';
-import { createConfig, WagmiProvider } from '@privy-io/wagmi';
-import { base, mainnet, sepolia, polygon } from 'viem/chains';
-import { http } from 'wagmi';
-
+import { PrivyProvider } from '@privy-io/react-auth'
+import { createConfig, WagmiProvider } from '@privy-io/wagmi'
+import { base, mainnet, sepolia, polygon } from 'viem/chains'
+import { http } from 'wagmi'
 
 // Set up queryClient
 const queryClient = new QueryClient()
 
-const appId = "cm5o77rga039b99tzkjakb6ji"
+const appId = 'cm5o77rga039b99tzkjakb6ji'
 
 // if (!projectId) {
 //     throw new Error('Project ID is not defined')
@@ -78,7 +77,7 @@ export const config = createConfig({
         [polygon.id]: http(),
         [base.id]: http(),
     },
-});
+})
 
 function ContextProvider({
     children,
@@ -101,9 +100,9 @@ function ContextProvider({
                     theme: 'light',
                     accentColor: '#676FFF',
                     logo: 'https://beta.superlend.xyz/images/logos/superlend-logo.webp',
-                    landingHeader: "Connect Wallet",
-                    loginMessage: "Select wallet to continue",
-                    showWalletLoginFirst: true
+                    landingHeader: 'Connect Wallet',
+                    loginMessage: 'Select wallet to continue',
+                    showWalletLoginFirst: true,
                 },
             }}
         >

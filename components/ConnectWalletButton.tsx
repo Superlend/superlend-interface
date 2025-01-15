@@ -17,13 +17,13 @@ import { useAssetsDataContext } from '@/context/data-provider'
 
 export default function ConnectWalletButton() {
     const { isClient } = useIsClient()
-    const { ready, authenticated, login, logout, user } = usePrivy();
+    const { ready, authenticated, login, logout, user } = usePrivy()
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
     // const { erc20TokensBalanceData } = useUserTokenBalancesContext()
     const { allChainsData, allTokensData } = useAssetsDataContext()
     const walletAddress = user?.wallet?.address
-    const disableLogin = !ready || (ready && authenticated);
-    const disableLogout = !ready || (ready && !authenticated);
+    const disableLogin = !ready || (ready && authenticated)
+    const disableLogout = !ready || (ready && !authenticated)
     const isDisabled = walletAddress ? disableLogout : disableLogin
     const displayText = walletAddress
         ? `${walletAddress?.slice(0, 5)}...${walletAddress?.slice(-5)}`
@@ -40,7 +40,7 @@ export default function ConnectWalletButton() {
             {/* This is the actual button */}
             {isClient && (
                 <>
-                    {walletAddress &&
+                    {walletAddress && (
                         <ProfileMenuDropdown
                             open={isProfileMenuOpen}
                             setOpen={setIsProfileMenuOpen}
@@ -50,18 +50,18 @@ export default function ConnectWalletButton() {
                             walletAddress={walletAddress}
                             logout={logout}
                         />
-                    }
-                    {!walletAddress &&
-                        (<Button
+                    )}
+                    {!walletAddress && (
+                        <Button
                             variant="primary"
                             size="lg"
                             className="rounded-4 py-2 capitalize w-full"
                             onClick={login}
                             disabled={isDisabled}
                         >
-                            {isDisabled ? "Connecting..." : "Connect Wallet"}
-                        </Button>)
-                    }
+                            {isDisabled ? 'Connecting...' : 'Connect Wallet'}
+                        </Button>
+                    )}
                 </>
             )}
         </>
