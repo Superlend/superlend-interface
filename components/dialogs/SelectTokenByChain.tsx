@@ -36,6 +36,7 @@ interface TokenDetails {
     logo: string
     apy: number
     price_usd: number
+    decimals: number
 }
 
 interface NetworkDetails {
