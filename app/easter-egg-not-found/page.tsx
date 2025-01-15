@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import MainContainer from "@/components/MainContainer";
+import MainContainer from '@/components/MainContainer'
 const EasterEggNotFound = () => {
     return (
         <MainContainer>
@@ -11,6 +11,6 @@ const EasterEggNotFound = () => {
                 />
             </div>
         </MainContainer>
-    );
-};
-export default EasterEggNotFound;
+    )
+}
+export default EasterEggNotFound

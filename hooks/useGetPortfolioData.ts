@@ -42,7 +42,7 @@ export default function useGetPortfolioData(params: TGetPortfolioParams) {
         },
         staleTime: 0,
         refetchInterval: (query) => {
-            return query.queryKey[1] ? 2000 : 60000;
+            return query.queryKey[1] ? 2000 : 60000
         },
         enabled: !!user_address,
     })

@@ -9,18 +9,20 @@ import { PlatformType, PlatformValue } from '../../../types/platform'
 import SupplyETHCompoundButton from '../SupplyETHCompoundButton'
 import SupplyERC20CompoundButton from '../SupplyERC20CompoundButton'
 import { countCompoundDecimals } from '@/lib/utils'
+import WithdrawButton from '../WithdrawButton'
 // import { POOL_AAVE_MAP } from '@/constants'
 import { BigNumber } from 'ethers'
 import SupplyMorphoButton from '../SupplyMorphoButton'
 import { CodeSquare } from 'lucide-react'
 import { TPositionType } from '@/types'
+import RepayButton from '../RepayButton'
 
 interface IActionButtonSelectComponent {
     disabled?: boolean
     asset: any
     amount: string
     handleCloseModal: (isVisible: boolean) => void
-    positionType: 'lend' | 'borrow'
+    actionType: 'lend' | 'borrow' | 'repay' | 'withdraw'
     setActionType?: (actionType: TPositionType) => void
 }
 
@@ -29,11 +31,10 @@ const ActionButton = ({
     asset,
     amount,
     handleCloseModal,
-    positionType,
-    setActionType
+    actionType,
+    setActionType,
 }: IActionButtonSelectComponent) => {
-
-    if (positionType === 'borrow') {
+    if (actionType === 'borrow') {
         return (
             <BorrowButton
                 disabled={disabled}
@@ -43,14 +44,9 @@ const ActionButton = ({
             />
         )
     }
-    if (asset.protocol_type === PlatformType.AAVE && positionType === 'lend') {
-        // console.log('platform_name', asset.platform_name);
-        // console.log('tokenAddress', asset.asset.token.address);
-        // console.log('amount', amount);
-        // console.log('decimals', asset.asset.token.decimals);
-
+    if (actionType === 'repay') {
         return (
-            <SupplyAaveButton
+            <RepayButton
                 disabled={disabled}
                 handleCloseModal={handleCloseModal}
                 poolContractAddress={asset.core_contract}
@@ -59,6 +55,30 @@ const ActionButton = ({
                 decimals={asset.asset.token.decimals}
             />
         )
+    }
+    if (actionType === 'withdraw') {
+        return (
+            <WithdrawButton
+                disabled={disabled}
+                handleCloseModal={handleCloseModal}
+                asset={asset}
+                amount={amount}
+            />
+        )
+    }
+    if (asset.protocol_type === PlatformType.AAVE) {
+        if (actionType === 'lend') {
+            return (
+                <SupplyAaveButton
+                    disabled={disabled}
+                    handleCloseModal={handleCloseModal}
+                    poolContractAddress={asset.core_contract}
+                    underlyingAssetAdress={asset.asset.token.address}
+                    amount={amount}
+                    decimals={asset.asset.token.decimals}
+                />
+            )
+        }
     }
     if (
         asset.protocol_type === PlatformType.COMPOUND &&
@@ -78,10 +98,7 @@ const ActionButton = ({
         )
     }
 
-    if (
-        asset.protocol_type === PlatformType.MORPHO &&
-        positionType === 'lend'
-    ) {
+    if (asset.protocol_type === PlatformType.MORPHO && actionType === 'lend') {
         return (
             <SupplyMorphoButton
                 disabled={disabled}

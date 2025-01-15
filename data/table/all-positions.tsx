@@ -158,9 +158,11 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         cell: ({ row }) => {
             const platformName: string = row.getValue('platformName')
             const platformId: string = row.original.platform_id
-            const isMorpho = platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO;
+            const isMorpho =
+                platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
             const isVault = row.original.isVault
-            const morphoLabel = (isMorpho && isVault) ? 'Morpho Vaults' : 'Morpho Markets'
+            const morphoLabel =
+                isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
             const formattedPlatformName = isMorpho ? morphoLabel : platformName
 
             return (
@@ -315,16 +317,16 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                 Math.abs(Number(value)) === 0
                     ? '$0.00'
                     : Math.abs(Number(value)) < 0.01
-                        ? '< $0.01'
-                        : getSanitizedValue(value)
+                      ? '< $0.01'
+                      : getSanitizedValue(value)
 
             const getPrefixSign = () => {
                 if (positionType === 'lend') {
                     return Number(value) < 0
                         ? '-'
                         : Number(value) > 0
-                            ? '+'
-                            : ''
+                          ? '+'
+                          : ''
                 }
                 return Number(value) === 0 ? '' : '-'
             }
@@ -342,8 +344,8 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                     return Number(value) < 0
                         ? 'destructive'
                         : Number(value) > 0
-                            ? 'green'
-                            : 'default'
+                          ? 'green'
+                          : 'default'
                 }
                 return Number(value) === 0 ? 'default' : 'destructive'
             }

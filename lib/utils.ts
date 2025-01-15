@@ -514,6 +514,6 @@ export function scientificToDecimal(scientificNum: number): number {
     return isNegative ? Number('-' + result) : Number(result)
 }
 export const validEmail = (email: string) => {
-	const patt = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-	return patt.test(email);
-};
+    const patt = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    return patt.test(email)
+}

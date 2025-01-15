@@ -28,13 +28,14 @@ export default function CustomAlert({
                         className="stroke-warning-foreground shrink-0 pt-[3px]"
                     />
                 )}
-                {hasPrefixIcon && (variant === 'info' || variant === 'destructive') && (
-                    <InfoIcon
-                        width={18}
-                        height={18}
-                        className="stroke-info-foreground shrink-0 pt-[3px]"
-                    />
-                )}
+                {hasPrefixIcon &&
+                    (variant === 'info' || variant === 'destructive') && (
+                        <InfoIcon
+                            width={18}
+                            height={18}
+                            className="stroke-info-foreground shrink-0 pt-[3px]"
+                        />
+                    )}
                 {typeof description === 'string' && (
                     <span className="leading-0 font-medium">{description}</span>
                 )}

@@ -15,7 +15,7 @@ export default function ExternalLink({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className={`w-fit shrink-0 inline-flex items-center gap-[2px] text-secondary-500 border-b border-secondary-500 hover:border-secondary-500/40 leading-[0.5] ${className || ""}`}
+            className={`w-fit shrink-0 inline-flex items-center gap-[2px] text-secondary-500 border-b border-secondary-500 hover:border-secondary-500/40 leading-[0.5] ${className || ''}`}
         >
             {children}
             <ArrowRightIcon

@@ -21,8 +21,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { ArrowRightIcon } from 'lucide-react'
 import CustomAlert from '@/components/alerts/CustomAlert'
-import { useLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
-import { TLendBorrowTxContext } from '@/context/lend-borrow-tx-provider'
+import { TTxContext, useTxContext } from '@/context/tx-provider'
 // import { getErrorText } from '@utils/getErrorText'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
@@ -51,8 +50,7 @@ const SupplyERC20CompoundButton = ({
     } = useWriteContract()
     const [lastTx, setLastTx] = useState<'mint' | 'approve'>('mint')
     // const { createToast } = useCreatePendingToast()
-    const { lendTx, setLendTx } =
-        useLendBorrowTxContext() as TLendBorrowTxContext
+    const { lendTx, setLendTx } = useTxContext() as TTxContext
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
@@ -183,7 +181,7 @@ const SupplyERC20CompoundButton = ({
         }
     }
     return (
-        <>
+        <div className="flex flex-col gap-2">
             {error && (
                 <CustomAlert
                     description={
@@ -204,7 +202,7 @@ const SupplyERC20CompoundButton = ({
                     className="stroke-white group-[:disabled]:opacity-50"
                 />
             </Button>
-        </>
+        </div>
     )
 }
 

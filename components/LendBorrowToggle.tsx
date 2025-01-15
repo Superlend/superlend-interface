@@ -44,24 +44,26 @@ const LendBorrowToggle = ({ type, handleToggle, title, showTab }: TProps) => {
 
     return (
         <div className="flex gap-1 items-center w-full p-[4px] tracking-normal leading-tight uppercase whitespace-nowrap rounded-4 text-stone-800 bg-white bg-opacity-40 shadow-[0px_2px_2px_rgba(0,0,0,0.02)]">
-            {(showTab ? showTab?.lend : showTabInitial.lend) && <Button
-                variant={checkType('lend') ? 'primary' : 'ghost'}
-                size="sm"
-                onClick={() => handleToggle('lend')}
-                className={`${BUTTON_DEFAULT_STYLE} ${checkType('lend') ? BUTTON_ACTIVE_STYLE : ''}`}
-            >
-                {title?.lend || titleInitial.lend}
-            </Button>
-            }
-            {(showTab ? showTab?.borrow : showTabInitial.borrow) && <Button
-                variant={checkType('borrow') ? 'primary' : 'ghost'}
-                size="sm"
-                onClick={() => handleToggle('borrow')}
-                className={`${BUTTON_DEFAULT_STYLE} ${checkType('borrow') ? BUTTON_ACTIVE_STYLE : ''}`}
-            >
-                {title?.borrow || titleInitial.borrow}
-            </Button>
-            }
+            {(showTab ? showTab?.lend : showTabInitial.lend) && (
+                <Button
+                    variant={checkType('lend') ? 'primary' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleToggle('lend')}
+                    className={`${BUTTON_DEFAULT_STYLE} ${checkType('lend') ? BUTTON_ACTIVE_STYLE : ''}`}
+                >
+                    {title?.lend || titleInitial.lend}
+                </Button>
+            )}
+            {(showTab ? showTab?.borrow : showTabInitial.borrow) && (
+                <Button
+                    variant={checkType('borrow') ? 'primary' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleToggle('borrow')}
+                    className={`${BUTTON_DEFAULT_STYLE} ${checkType('borrow') ? BUTTON_ACTIVE_STYLE : ''}`}
+                >
+                    {title?.borrow || titleInitial.borrow}
+                </Button>
+            )}
         </div>
     )
 }

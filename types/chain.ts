@@ -12,7 +12,7 @@ export enum ChainId {
     Bsc = 56,
     Gnosis = 100,
     Optimism = 10,
-    Scroll = 534351,
+    Scroll = 534352,
     Arbitrum = 42161,
     Metis = 1088,
     Etherlink = 42793,

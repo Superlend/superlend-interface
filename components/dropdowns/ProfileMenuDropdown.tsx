@@ -6,7 +6,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu'
 import {
     Drawer,
     DrawerClose,
@@ -84,14 +84,15 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
         logout()
             .then(() => {
                 setOpen(false)
-            }).finally(() => {
+            })
+            .finally(() => {
                 setIsLoggingOut(false)
             })
     }
 
     const triggerButton = (
         <Button
-            variant='default'
+            variant="default"
             size="lg"
             className="rounded-4 py-2 capitalize w-full"
             onClick={() => setOpen(!open)}
@@ -172,14 +173,22 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
     // )
 
     const content = (
-        <div className='flex flex-col gap-8 md:gap-6 pt-2'>
+        <div className="flex flex-col gap-8 md:gap-6 pt-2">
             <div className="flex items-center justify-center gap-2">
                 <div className="rounded-full w-6 h-6 bg-gradient-to-r from-[#f9b16e] to-[#f68080]"></div>
-                <BodyText level={isDesktop ? "body2" : "body1"} weight="bold">
+                <BodyText level={isDesktop ? 'body2' : 'body1'} weight="bold">
                     {displayText}
                 </BodyText>
-                <Button variant="ghost" onClick={handleAddressCopy} className={`p-0 ${addressIsCopied ? 'select-none' : ''}`}>
-                    {addressIsCopied ? <Check className="w-4 h-4 stroke-green-700" /> : <Copy className="w-4 h-4" />}
+                <Button
+                    variant="ghost"
+                    onClick={handleAddressCopy}
+                    className={`p-0 ${addressIsCopied ? 'select-none' : ''}`}
+                >
+                    {addressIsCopied ? (
+                        <Check className="w-4 h-4 stroke-green-700" />
+                    ) : (
+                        <Copy className="w-4 h-4" />
+                    )}
                 </Button>
             </div>
             <Button
@@ -189,8 +198,12 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
                 onClick={handleLogout}
                 disabled={isLoggingOut}
             >
-                {isLoggingOut ? "Disconnecting..." : "Disconnect"}
-                {isLoggingOut ? <LoaderCircle className="text-primary w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                {isLoggingOut ? 'Disconnecting...' : 'Disconnect'}
+                {isLoggingOut ? (
+                    <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
+                ) : (
+                    <LogOut className="w-4 h-4" />
+                )}
             </Button>
         </div>
     )
@@ -201,19 +214,19 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
                 <DropdownMenuTrigger asChild>
                     {triggerButton}
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-full rounded-7 p-4 bg-opacity-40 min-w-[300px]">
+                <DropdownMenuContent
+                    align="end"
+                    className="w-full rounded-7 p-4 bg-opacity-40 min-w-[300px]"
+                >
                     {content}
                 </DropdownMenuContent>
             </DropdownMenu>
-
         )
     }
 
     return (
         <Drawer open={open} onOpenChange={setOpen}>
-            <DrawerTrigger asChild>
-                {triggerButton}
-            </DrawerTrigger>
+            <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
             <DrawerContent className="w-full p-4">
                 <DrawerHeader>
                     {/* <DrawerTitle>Token Balances</DrawerTitle> */}

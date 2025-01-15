@@ -24,7 +24,7 @@ import {
 // import { getErrorText } from '@/lib/getErrorText'
 import { Button } from '@/components/ui/button'
 import { useSearchParams } from 'next/navigation'
-import { TLendTx, TTxContext, useTxContext } from '@/context/tx-provider'
+import { TRepayTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { ArrowRightIcon } from 'lucide-react'
 import { BigNumber } from 'ethers'
@@ -32,7 +32,7 @@ import { getErrorText } from '@/lib/getErrorText'
 import { BodyText } from '@/components/ui/typography'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 
-interface ISupplyAaveButtonProps {
+interface IRepayButtonProps {
     disabled: boolean
     poolContractAddress: `0x${string}`
     underlyingAssetAdress: `0x${string}`
@@ -41,14 +41,14 @@ interface ISupplyAaveButtonProps {
     handleCloseModal: (isVisible: boolean) => void
 }
 
-const SupplyAaveButton = ({
+const RepayButton = ({
     poolContractAddress,
     underlyingAssetAdress,
     amount,
     decimals,
     disabled,
     handleCloseModal,
-}: ISupplyAaveButtonProps) => {
+}: IRepayButtonProps) => {
     const {
         writeContractAsync,
         isPending,
@@ -61,10 +61,7 @@ const SupplyAaveButton = ({
             hash,
         })
     const { address: walletAddress } = useAccount()
-    // const { createToast } = useCreatePendingToast()
-    const { isConnected } = useAccount()
-    const { connect, connectors } = useConnect()
-    const { lendTx, setLendTx } = useTxContext() as TTxContext
+    const { repayTx, setRepayTx } = useTxContext() as TTxContext
 
     const amountBN = useMemo(() => {
         return amount ? parseUnits(amount, decimals) : BigNumber.from(0)
@@ -72,12 +69,12 @@ const SupplyAaveButton = ({
 
     const txBtnStatus: Record<string, string> = {
         pending:
-            lendTx.status === 'approve'
+            repayTx.status === 'approve'
                 ? 'Approving token...'
-                : 'Lending token...',
+                : 'Repaying token...',
         confirming: 'Confirming...',
         success: 'Close',
-        default: lendTx.status === 'approve' ? 'Approve token' : 'Lend token',
+        default: repayTx.status === 'approve' ? 'Approve token' : 'Repay token',
     }
 
     const getTxButtonText = (
@@ -89,7 +86,7 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? lendTx.status === 'view'
+                  ? repayTx.status === 'view'
                       ? 'success'
                       : 'default'
                   : isPending
@@ -100,11 +97,11 @@ const SupplyAaveButton = ({
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
-    const supply = useCallback(async () => {
+    const repay = useCallback(async () => {
         try {
-            setLendTx((prev: TLendTx) => ({
+            setRepayTx((prev: TRepayTx) => ({
                 ...prev,
-                status: 'lend',
+                status: 'repay',
                 hash: '',
                 errorMessage: '',
             }))
@@ -112,30 +109,38 @@ const SupplyAaveButton = ({
             writeContractAsync({
                 address: poolContractAddress,
                 abi: AAVE_POOL_ABI,
-                functionName: 'supply',
+                functionName: 'repay',
                 args: [
                     underlyingAssetAdress,
                     parseUnits(amount, decimals),
+                    2,
                     walletAddress,
-                    0,
                 ],
             })
                 .then((data) => {
-                    setLendTx((prev: TLendTx) => ({
+                    setRepayTx((prev: TRepayTx) => ({
                         ...prev,
                         status: 'view',
                         errorMessage: '',
                     }))
                 })
                 .catch((error) => {
-                    setLendTx((prev: TLendTx) => ({
+                    setRepayTx((prev: TRepayTx) => ({
                         ...prev,
                         isPending: false,
                         isConfirming: false,
+                        isConfirmed: false,
+                        // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
                     }))
                 })
-        } catch (error) {
-            error
+        } catch (error: any) {
+            setRepayTx((prev: TRepayTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+            }))
         }
     }, [
         amount,
@@ -148,7 +153,7 @@ const SupplyAaveButton = ({
     ])
 
     useEffect(() => {
-        setLendTx((prev: TLendTx) => ({
+        setRepayTx((prev: TRepayTx) => ({
             ...prev,
             isPending: isPending,
             isConfirming: isConfirming,
@@ -158,18 +163,23 @@ const SupplyAaveButton = ({
     }, [isPending, isConfirming, isConfirmed])
 
     useEffect(() => {
-        if (lendTx.status === 'view') return
+        if (repayTx.status === 'view') return
 
-        if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amountBN)) {
-                setLendTx((prev: TLendTx) => ({
+        if (
+            !repayTx.isConfirmed &&
+            !repayTx.isPending &&
+            !repayTx.isConfirming &&
+            amountBN.gt(0)
+        ) {
+            if (repayTx.allowanceBN.gte(amountBN)) {
+                setRepayTx((prev: TRepayTx) => ({
                     ...prev,
-                    status: 'lend',
+                    status: 'repay',
                     hash: '',
                     errorMessage: '',
                 }))
             } else {
-                setLendTx((prev: TLendTx) => ({
+                setRepayTx((prev: TRepayTx) => ({
                     ...prev,
                     status: 'approve',
                     hash: '',
@@ -177,22 +187,25 @@ const SupplyAaveButton = ({
                 }))
             }
         }
-    }, [lendTx.allowanceBN])
+    }, [repayTx.allowanceBN])
 
     useEffect(() => {
-        if ((lendTx.status === 'approve' || lendTx.status === 'lend') && hash) {
-            setLendTx((prev: TLendTx) => ({
+        if (
+            (repayTx.status === 'approve' || repayTx.status === 'repay') &&
+            hash
+        ) {
+            setRepayTx((prev: TRepayTx) => ({
                 ...prev,
                 hash: hash || '',
             }))
         }
-        if (lendTx.status === 'view' && hash) {
-            setLendTx((prev: TLendTx) => ({
+        if (repayTx.status === 'view' && hash) {
+            setRepayTx((prev: TRepayTx) => ({
                 ...prev,
                 hash: hash || '',
             }))
         }
-    }, [hash, lendTx.status])
+    }, [hash, repayTx.status])
 
     const onApproveSupply = async () => {
         // if (!isConnected) {
@@ -208,7 +221,7 @@ const SupplyAaveButton = ({
         // }
 
         try {
-            setLendTx((prev: TLendTx) => ({
+            setRepayTx((prev: TRepayTx) => ({
                 ...prev,
                 status: 'approve',
                 hash: '',
@@ -221,20 +234,28 @@ const SupplyAaveButton = ({
                 functionName: 'approve',
                 args: [poolContractAddress, parseUnits(amount, decimals)],
             }).catch((error) => {
-                setLendTx((prev: TLendTx) => ({
+                setRepayTx((prev: TRepayTx) => ({
                     ...prev,
                     isPending: false,
                     isConfirming: false,
+                    isConfirmed: false,
+                    // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
                 }))
             })
-        } catch (error) {
-            error
+        } catch (error: any) {
+            setRepayTx((prev: TRepayTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+            }))
         }
     }
 
     return (
         <div className="flex flex-col gap-2">
-            {lendTx.status === 'approve' && (
+            {/* {repayTx.status === 'approve' && (
                 <CustomAlert
                     variant="info"
                     hasPrefixIcon={false}
@@ -245,9 +266,8 @@ const SupplyAaveButton = ({
                             className="text-secondary-500"
                         >
                             Note: You need to complete an &apos;approval
-                            transaction&apos; granting permission to move funds
-                            from your wallet as the first step before supplying
-                            the asset.
+                            transaction&apos; granting permission to move funds from your wallet as the
+                            first step before supplying the asset.
                             <a
                                 href="https://eips.ethereum.org/EIPS/eip-2612"
                                 target="_blank"
@@ -259,7 +279,7 @@ const SupplyAaveButton = ({
                         </BodyText>
                     }
                 />
-            )}
+            )} */}
             {error && (
                 <CustomAlert
                     description={
@@ -269,19 +289,19 @@ const SupplyAaveButton = ({
                     }
                 />
             )}
-            {lendTx.errorMessage.length > 0 && (
-                <CustomAlert description={lendTx.errorMessage} />
+            {repayTx.errorMessage.length > 0 && (
+                <CustomAlert description={repayTx.errorMessage} />
             )}
             <Button
                 disabled={
                     (isPending || isConfirming || disabled) &&
-                    lendTx.status !== 'view'
+                    repayTx.status !== 'view'
                 }
                 onClick={() => {
-                    if (lendTx.status === 'approve') {
+                    if (repayTx.status === 'approve') {
                         onApproveSupply()
-                    } else if (lendTx.status === 'lend') {
-                        supply()
+                    } else if (repayTx.status === 'repay') {
+                        repay()
                     } else {
                         handleCloseModal(false)
                     }
@@ -290,7 +310,7 @@ const SupplyAaveButton = ({
                 variant="primary"
             >
                 {txBtnText}
-                {lendTx.status !== 'view' && !isPending && !isConfirming && (
+                {repayTx.status !== 'view' && !isPending && !isConfirming && (
                     <ArrowRightIcon
                         width={16}
                         height={16}
@@ -302,4 +322,4 @@ const SupplyAaveButton = ({
     )
 }
 
-export default SupplyAaveButton
+export default RepayButton

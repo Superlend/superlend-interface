@@ -18,10 +18,12 @@ import { usePrivy, useWallets } from '@privy-io/react-auth'
 
 export default function Portfolio() {
     const { address: walletAddress, isConnecting } = useAccount()
-    const { wallets } = useWallets();
-    const { user } = usePrivy();
-    const wallet = wallets.find((wallet: any) => wallet.address === walletAddress);
-    const isWalletConnected = !!user;
+    const { wallets } = useWallets()
+    const { user } = usePrivy()
+    const wallet = wallets.find(
+        (wallet: any) => wallet.address === walletAddress
+    )
+    const isWalletConnected = !!user
     const { isClient } = useIsClient()
 
     if (isClient && isConnecting) {

@@ -19,11 +19,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { ArrowRightIcon } from 'lucide-react'
 import CustomAlert from '@/components/alerts/CustomAlert'
-import {
-    TLendBorrowTxContext,
-    TLendTx,
-    useLendBorrowTxContext,
-} from '@/context/lend-borrow-tx-provider'
+import { TTxContext, TLendTx, useTxContext } from '@/context/tx-provider'
 import { BigNumber } from 'ethers'
 import { getErrorText } from '@/lib/getErrorText'
 import { BodyText } from '@/components/ui/typography'
@@ -51,7 +47,7 @@ const SupplyMorphoButton = ({
     asset,
     amount,
     handleCloseModal,
-    setActionType
+    setActionType,
 }: ISupplyMorphoButtonProps) => {
     const assetDetails = asset.asset
     const platform = asset.platform
@@ -72,8 +68,7 @@ const SupplyMorphoButton = ({
             hash,
         })
     const { address: walletAddress } = useAccount()
-    const { lendTx, setLendTx } =
-        useLendBorrowTxContext() as TLendBorrowTxContext
+    const { lendTx, setLendTx } = useTxContext() as TTxContext
 
     const amountBN = useMemo(() => {
         return amount
@@ -88,7 +83,14 @@ const SupplyMorphoButton = ({
                 : 'Lending token...',
         confirming: 'Confirming...',
         success: isMorphoMarkets ? 'Go To Borrow' : 'Close',
-        default: lendTx.status === 'approve' ? 'Approve token' : (isMorphoMarkets ? 'Add Collateral' : isMorphoVault ? 'Supply to vault' : 'Lend Collateral'),
+        default:
+            lendTx.status === 'approve'
+                ? 'Approve token'
+                : isMorphoMarkets
+                    ? 'Add Collateral'
+                    : isMorphoVault
+                        ? 'Supply to vault'
+                        : 'Lend Collateral',
     }
 
     const getTxButtonText = (
@@ -121,44 +123,53 @@ const SupplyMorphoButton = ({
             }))
 
             if (!walletAddress) {
-                throw new Error("Wallet address is required")
+                throw new Error('Wallet address is required')
             }
 
             const isVault = asset.isVault
 
             if (isVault) {
                 const vault = morphoMarketData as Vault
-                const newAmount = parseUnits(amount, assetDetails.token.decimals)
+                const newAmount = parseUnits(
+                    amount,
+                    assetDetails.token.decimals
+                )
                 const shares = vault.toShares(newAmount.toBigInt())
 
                 // minAmount of share will be 0.99% of the shares
-                const minAmount = BigNumber.from(shares).mul(99).div(100).toBigInt()
+                const minAmount = BigNumber.from(shares)
+                    .mul(99)
+                    .div(100)
+                    .toBigInt()
 
                 const calls = [
                     BundlerAction.erc20TransferFrom(
                         vault.asset,
-                        newAmount.toBigInt(),
+                        newAmount.toBigInt()
                     ),
                     BundlerAction.erc4626Deposit(
                         vault.address,
                         newAmount.toBigInt(),
                         minAmount,
                         walletAddress
-                    )
-                ];
+                    ),
+                ]
 
                 writeContractAsync({
-                    address: BUNDLER_ADDRESS_MORPHO[asset.chainId] as `0x${string}`,
+                    address: BUNDLER_ADDRESS_MORPHO[
+                        asset.chainId
+                    ] as `0x${string}`,
                     abi: MORPHO_BUNDLER_ABI,
                     functionName: 'multicall',
-                    args: [calls]
-                }).then((data) => {
-                    setLendTx((prev: TLendTx) => ({
-                        ...prev,
-                        status: 'view',
-                        errorMessage: '',
-                    }))
+                    args: [calls],
                 })
+                    .then((data) => {
+                        setLendTx((prev: TLendTx) => ({
+                            ...prev,
+                            status: 'view',
+                            errorMessage: '',
+                        }))
+                    })
                     .catch((error) => {
                         setLendTx((prev: TLendTx) => ({
                             ...prev,
@@ -166,10 +177,7 @@ const SupplyMorphoButton = ({
                             isConfirming: false,
                         }))
                     })
-
-            }
-            else {
-
+            } else {
                 //  check if asset is collateral or borrow
                 // If collateral, supplyCollateral if borrowSupply supply
                 const isCollateral = !assetDetails.borrow_enabled
@@ -233,13 +241,14 @@ const SupplyMorphoButton = ({
                             walletAddress,
                             '0x',
                         ],
-                    }).then((data) => {
-                        setLendTx((prev: TLendTx) => ({
-                            ...prev,
-                            status: 'view',
-                            errorMessage: '',
-                        }))
                     })
+                        .then((data) => {
+                            setLendTx((prev: TLendTx) => ({
+                                ...prev,
+                                status: 'view',
+                                errorMessage: '',
+                            }))
+                        })
                         .catch((error) => {
                             setLendTx((prev: TLendTx) => ({
                                 ...prev,
@@ -266,13 +275,7 @@ const SupplyMorphoButton = ({
         } catch (error) {
             error
         }
-    }, [
-        amount,
-        assetDetails,
-        platform,
-        walletAddress,
-        writeContractAsync,
-    ])
+    }, [amount, assetDetails, platform, walletAddress, writeContractAsync])
 
     useEffect(() => {
         setLendTx((prev: any) => ({
@@ -338,7 +341,9 @@ const SupplyMorphoButton = ({
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
                 args: [
-                    asset.isVault ? BUNDLER_ADDRESS_MORPHO[asset.chainId] : platform.core_contract,
+                    asset.isVault
+                        ? BUNDLER_ADDRESS_MORPHO[asset.chainId]
+                        : platform.core_contract,
                     parseUnits(amount, asset.asset.token.decimals),
                 ],
             })
@@ -359,10 +364,7 @@ const SupplyMorphoButton = ({
                             weight="normal"
                             className="text-secondary-500"
                         >
-                            Note: Adding collateral to Morpho Markets does not yield<span className="mr-1">.</span>
-                            <ExternalLink href={MORPHO_ETHERSCAN_TUTORIAL_LINK}>
-                                Learn more
-                            </ExternalLink>
+                            Note: Adding collateral to Morpho Markets does not yield.
                         </BodyText>
                     }
                 />
@@ -378,8 +380,9 @@ const SupplyMorphoButton = ({
                             className="text-secondary-500"
                         >
                             Note: You need to complete an &apos;approval
-                            transaction&apos; granting permission to move funds from your wallet as the
-                            first step before supplying the <span className="mr-1">asset.</span>
+                            transaction&apos; granting permission to move funds
+                            from your wallet as the first step before supplying
+                            the <span className="mr-1">asset.</span>
                             <ExternalLink href={EIP_20_SIGNED_APPROVALS_LINK}>
                                 Learn more
                             </ExternalLink>
@@ -408,9 +411,13 @@ const SupplyMorphoButton = ({
                                 Error: Service Unavailable
                             </BodyText>
                             <BodyText level="body2" weight="normal">
-                                The Morpho API is temporarily down. Please try again later.
+                                The Morpho API is temporarily down. Please try
+                                again later.
                             </BodyText>
-                            <ExternalLink href={MORPHO_WEBSITE_LINK} className="text-xs md:text-sm">
+                            <ExternalLink
+                                href={MORPHO_WEBSITE_LINK}
+                                className="text-xs md:text-sm"
+                            >
                                 Morpho Website
                             </ExternalLink>
                         </div>
@@ -418,7 +425,13 @@ const SupplyMorphoButton = ({
                 />
             )}
             <Button
-                disabled={(isPending || isConfirming || disabled || !morphoMarketData) && lendTx.status !== 'view'}
+                disabled={
+                    (isPending ||
+                        isConfirming ||
+                        disabled ||
+                        !morphoMarketData) &&
+                    lendTx.status !== 'view'
+                }
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()

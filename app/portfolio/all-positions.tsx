@@ -116,7 +116,8 @@ export default function AllPositions() {
 
     const filteredTableData = rawTableData.filter((position) => {
         const isVault = position.isVault
-        const isMorpho = position.platformName.toLowerCase() === PlatformType.MORPHO
+        const isMorpho =
+            position.platformName.toLowerCase() === PlatformType.MORPHO
         const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
 
         const formattedPlatformName = `${position.platformName}${isMorpho ? `_${morphoSuffix}` : ''}`

@@ -91,10 +91,15 @@ export default function YourPositionsAtRiskCarousel() {
             const lendAmount = getSanitizedValue(platform?.total_liquidity)
             const borrowAmount = getSanitizedValue(platform?.total_borrow)
 
-            const isMorpho = platform?.platform_name?.split('-')[0]?.toLowerCase() === PlatformType.MORPHO;
+            const isMorpho =
+                platform?.platform_name?.split('-')[0]?.toLowerCase() ===
+                PlatformType.MORPHO
             const isVault = platform?.isVault
-            const morphoLabel = (isMorpho && isVault) ? 'Morpho Vaults' : 'Morpho Markets'
-            const formattedPlatformName = isMorpho ? morphoLabel : platform?.platform_name
+            const morphoLabel =
+                isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
+            const formattedPlatformName = isMorpho
+                ? morphoLabel
+                : platform?.platform_name
 
             return {
                 lendAsset: {

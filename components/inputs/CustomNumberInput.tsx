@@ -43,7 +43,7 @@ const CustomNumberInput = ({
             type="text"
             value={amount}
             onChange={handleChange}
-            className="w-full focus:outline-none text-[24px] font-medium placeholder:text-gray-500 pl-0 truncate"
+            className="w-full focus:outline-none text-[24px] font-medium placeholder:text-gray-500 empty:bg-transparent p-0 truncate"
         />
     )
 }
