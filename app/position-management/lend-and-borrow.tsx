@@ -1521,7 +1521,7 @@ export function ConfirmationDialog({
                                                 isLendPositionType(positionType)
                                                     ? lendTx.hash
                                                     : borrowTx.hash,
-                                                assetDetails?.platform_name
+                                                    assetDetails?.chain_id || assetDetails?.platform?.chain_id
                                             )}
                                             target="_blank"
                                             rel="noreferrer"
