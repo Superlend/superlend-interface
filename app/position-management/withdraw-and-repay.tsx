@@ -203,7 +203,6 @@ export default function WithdrawAndRepayActionButton({
         platform_id: [protocol_identifier],
         chain_id: [String(chain_id)],
     })
-
     // [API_CALL: GET] - Get Platform data
     const {
         data: platformData,
@@ -653,7 +652,8 @@ export default function WithdrawAndRepayActionButton({
         }
     }
 
-    const healthFactorValues = getHealthFactorValues(maxBorrowTokensAmount)
+    const healthFactorValues = getHealthFactorValues(hasSingleToken ? tokenDetails[0] : selectedTokenDetails)
+    // console.log(healthFactorValues)
 
     function getMaxWithdrawAmountForTx() {
         const isMorphoVaultsProtocol =
@@ -676,7 +676,7 @@ export default function WithdrawAndRepayActionButton({
 
     const maxWithdrawAmountForTx = getMaxWithdrawAmountForTx()
 
-    const amountBorrowed = selectedTokenDetails?.positionAmount ?? 0
+    const positionAmount = selectedTokenDetails?.positionAmount ?? 0
 
     const lendErrorMessage = useMemo(() => {
         if (Number(amount) > Number(maxWithdrawAmountForTx)) {
@@ -695,7 +695,7 @@ export default function WithdrawAndRepayActionButton({
         if (!hasCollateral) {
             return 'You do not have sufficient collateral to borrow'
         }
-        if (Number(amount) > Number(amountBorrowed)) {
+        if (Number(amount) > Number(positionAmount)) {
             return 'Amount exceeds available repay limit'
         }
         return null
@@ -708,9 +708,7 @@ export default function WithdrawAndRepayActionButton({
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-                Number(
-                    isWithdrawAction ? maxWithdrawAmountForTx : amountBorrowed
-                ) ||
+            Number(isWithdrawAction ? maxWithdrawAmountForTx : positionAmount) ||
             Number(amount) <= 0 ||
             toManyDecimals,
         [amount, maxWithdrawAmountForTx, toManyDecimals, isWithdrawAction]
@@ -822,7 +820,7 @@ export default function WithdrawAndRepayActionButton({
                     healthFactorValues={healthFactorValues}
                     amount={amount}
                     setAmount={setAmount}
-                    amountBorrowed={amountBorrowed}
+                    positionAmount={positionAmount}
                     errorMessage={errorMessage}
                 />
             )}
@@ -840,7 +838,7 @@ function ConfirmationDialog({
     healthFactorValues,
     amount,
     setAmount,
-    amountBorrowed,
+    positionAmount,
     errorMessage,
 }: {
     isOpen: boolean
@@ -855,7 +853,7 @@ function ConfirmationDialog({
     }
     amount: string
     setAmount: (amount: string) => void
-    amountBorrowed: string | number | undefined
+    positionAmount: string | number | undefined
     errorMessage: string | null
 }) {
     const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
@@ -984,7 +982,11 @@ function ConfirmationDialog({
         )
     }
 
-    const disableActionButton = disabled
+    const currentPositionAmount = Number(positionAmount)
+    const newPositionAmount = Number(positionAmount) - Number(amount)
+
+    const disableActionButton =
+        disabled
     // || (!hasAcknowledgedRisk && !isWithdrawAction && isHfLow())
 
     const isDisabledMaxBtn = () => {
@@ -995,7 +997,10 @@ function ConfirmationDialog({
             )
         }
 
-        return !isWalletConnected || Number(amount) === Number(amountBorrowed)
+        return (
+            !isWalletConnected ||
+            Number(amount) === Number(positionAmount)
+        )
     }
 
     // SUB_COMPONENT: Trigger button to open the dialog
@@ -1223,7 +1228,7 @@ function ConfirmationDialog({
                                 setAmount(
                                     isWithdrawAction
                                         ? (maxWithdrawAmount.toString() ?? '0')
-                                        : (amountBorrowed?.toString() ?? '0')
+                                        : (positionAmount?.toString() ?? '0')
                                 )
                             }
                             disabled={isDisabledMaxBtn()}
@@ -1257,7 +1262,7 @@ function ConfirmationDialog({
                             {handleSmallestValue(
                                 isWithdrawAction
                                     ? maxWithdrawAmount.toString()
-                                    : (amountBorrowed ?? 0).toString()
+                                    : (positionAmount ?? 0).toString()
                             )}{' '}
                             {assetDetails?.asset?.token?.symbol ??
                                 assetDetails?.token?.symbol}
@@ -1267,41 +1272,51 @@ function ConfirmationDialog({
                 {/* Block 3 */}
                 <div className="flex flex-col items-center justify-between px-[24px] bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
                     {isShowBlock({
-                        repay: !isRepayTxInProgress,
-                        withdraw: !isWithdrawTxInProgress,
+                        repay: !isRepayTxInProgress && repayTx.status === 'approve',
+                        withdraw: !isWithdrawTxInProgress && withdrawTx.status === 'withdraw',
                     }) && (
-                        <div className="flex items-center justify-between w-full py-[16px]">
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                Net APY
-                            </BodyText>
-                            <Badge variant="green">
-                                {abbreviateNumber(
-                                    isWithdrawAction
-                                        ? Number(
-                                              (assetDetails?.asset?.apy ||
-                                                  assetDetails?.asset
-                                                      ?.supply_apy ||
-                                                  assetDetails?.supply_apy ||
-                                                  assetDetails?.apy) ??
-                                                  0
-                                          )
-                                        : Number(
-                                              (assetDetails?.asset
-                                                  ?.variable_borrow_apy ||
-                                                  assetDetails?.variable_borrow_apy) ??
-                                                  0
-                                          )
-                                )}
-                                %
-                            </Badge>
-                        </div>
-                    )}
+                            <div className="flex items-center justify-between w-full py-[16px]">
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-gray-600"
+                                >
+                                    Remaining {isWithdrawAction ? "supply" : "debt"}
+                                </BodyText>
+                                <div className="flex flex-col items-end justify-end gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <BodyText
+                                            level="body2"
+                                            weight="normal"
+                                            className={`text-gray-800`}
+                                        >
+                                            {handleSmallestValue(currentPositionAmount.toString())}
+                                        </BodyText>
+                                        {(currentPositionAmount !== newPositionAmount) &&
+                                            <>
+                                                <ArrowRightIcon
+                                                    width={16}
+                                                    height={16}
+                                                    className="stroke-gray-800"
+                                                    strokeWidth={2.5}
+                                                />
+                                                <BodyText
+                                                    level="body2"
+                                                    weight="normal"
+                                                    className={`text-gray-800`}
+                                                >
+                                                    {handleSmallestValue(newPositionAmount.toString())}
+                                                </BodyText>
+                                            </>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     {isShowBlock({
-                        repay: false,
+                        repay: repayTx.status === 'approve' &&
+                            !isRepayTxInProgress &&
+                            !!Number(healthFactorValues.newHealthFactor),
                         withdraw:
                             withdrawTx.status === 'withdraw' &&
                             !isWithdrawTxInProgress &&
