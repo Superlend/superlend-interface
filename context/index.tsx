@@ -23,7 +23,7 @@ import UserTokenBalancesProvider from './user-token-balances-provider'
 // import { createAppKit } from '@reown/appkit/react'
 import { PrivyProvider } from '@privy-io/react-auth'
 import { createConfig, WagmiProvider } from '@privy-io/wagmi'
-import { base, mainnet, sepolia, polygon } from 'viem/chains'
+import { base, mainnet, sepolia, polygon, avalanche, optimism, gnosis, arbitrum, etherlink, bsc, scroll, metis } from 'viem/chains'
 import { http } from 'wagmi'
 
 // Set up queryClient
@@ -70,12 +70,19 @@ const metadata = {
 // })
 
 export const config = createConfig({
-    chains: [mainnet, sepolia, polygon, base], // Pass your required chains as an array
+    chains: [mainnet, polygon, base, scroll, avalanche, optimism, bsc, gnosis, arbitrum, etherlink, metis], // Pass your required chains as an array
     transports: {
         [mainnet.id]: http(),
-        [sepolia.id]: http(),
         [polygon.id]: http(),
         [base.id]: http(),
+        [metis.id]: http(),
+        [scroll.id]: http(),
+        [avalanche.id]: http(),
+        [optimism.id]: http(),
+        [bsc.id]: http(),
+        [gnosis.id]: http(),
+        [arbitrum.id]: http(),
+        [etherlink.id]: http(),
     },
 })
 
@@ -104,6 +111,7 @@ function ContextProvider({
                     loginMessage: 'Select wallet to continue',
                     showWalletLoginFirst: true,
                 },
+                supportedChains: [mainnet, polygon, base, scroll, avalanche, optimism, bsc, gnosis, arbitrum, etherlink, metis],
             }}
         >
             <QueryClientProvider client={queryClient}>
