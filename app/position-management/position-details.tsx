@@ -74,9 +74,7 @@ export default function PositionDetails() {
     useEffect(() => {
         const isRefresh =
             (lendTx.status === 'view' && lendTx.isConfirmed) ||
-            (borrowTx.status === 'view' && borrowTx.isConfirmed) ||
-            // (withdrawTx.status === 'view' && withdrawTx.isConfirmed) ||
-            (repayTx.status === 'view' && repayTx.isConfirmed)
+            (borrowTx.status === 'view' && borrowTx.isConfirmed)
         if (isRefresh) {
             setRefresh(true)
         }
@@ -84,11 +82,7 @@ export default function PositionDetails() {
         lendTx.status,
         lendTx.isConfirmed,
         borrowTx.status,
-        borrowTx.isConfirmed,
-        // withdrawTx.status,
-        // withdrawTx.isConfirmed,
-        repayTx.status,
-        repayTx.isConfirmed,
+        borrowTx.isConfirmed
     ])
 
     useEffect(() => {
