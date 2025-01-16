@@ -381,6 +381,12 @@ export default function WithdrawAndRepayActionButton({
                     isConfirming: true,
                 }))
             }
+            if (withdrawTx.status === 'approve' && withdrawTx.isRefreshingAllowance) {
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    isConfirming: true,
+                }))
+            }
             // Get allowance
             getAllowance(
                 Number(chain_id),
@@ -388,11 +394,19 @@ export default function WithdrawAndRepayActionButton({
                 tokenAddress
             ).then((r: BigNumber) => {
                 // Update allowanceBN and set isRefreshingAllowance to false
-                setRepayTx((prev: TRepayTx) => ({
-                    ...prev,
-                    allowanceBN: r,
-                    isRefreshingAllowance: false,
-                }))
+                if (!isWithdrawAction) {
+                    setRepayTx((prev: TRepayTx) => ({
+                        ...prev,
+                        allowanceBN: r,
+                        isRefreshingAllowance: false,
+                    }))
+                } else {
+                    setWithdrawTx((prev: TWithdrawTx) => ({
+                        ...prev,
+                        allowanceBN: r,
+                        isRefreshingAllowance: false,
+                    }))
+                }
                 // Check if the allowance is greater than or equal to the amount
                 const positionTypeBasedAssetDetails =
                     assetDetailsForTx?.asset?.token?.decimals ?? 0
@@ -415,6 +429,16 @@ export default function WithdrawAndRepayActionButton({
                         isConfirming: false,
                     }))
                 }
+                if (withdrawTx.status === 'approve' && withdrawTx.isConfirmed) {
+                    setWithdrawTx((prev: TWithdrawTx) => ({
+                        ...prev,
+                        status: r.gte(amountBN) ? 'withdraw' : 'approve',
+                        errorMessage: r.gte(amountBN)
+                            ? ''
+                            : 'Insufficient allowance',
+                        isConfirming: false,
+                    }))
+                }
             })
         }
         // console.log('walletAddress', walletAddress)
@@ -427,6 +451,7 @@ export default function WithdrawAndRepayActionButton({
         !!platformData.platform?.core_contract,
         repayTx.status,
         repayTx.isRefreshingAllowance,
+        withdrawTx.isRefreshingAllowance,
         providerStatus.isReady,
     ])
     // console.log('repayTx', repayTx)
@@ -899,6 +924,13 @@ function ConfirmationDialog({
     const isMorphoVaultsProtocol = assetDetails?.vault ? true : false
 
     useEffect(() => {
+        if (isWithdrawAction && !isMorphoVaultsProtocol) {
+            setWithdrawTx((prev: TWithdrawTx) => ({
+                ...prev,
+                status: 'withdraw',
+            }))
+        }
+
         // Reset the tx status when the dialog is closed
         return () => {
             resetLendwithdrawTx()
@@ -931,7 +963,7 @@ function ConfirmationDialog({
         }))
         setWithdrawTx((prev: TWithdrawTx) => ({
             ...prev,
-            status: 'withdraw',
+            status: 'approve',
             hash: '',
             isPending: false,
             isConfirming: false,
@@ -941,7 +973,6 @@ function ConfirmationDialog({
     }
 
     function handleOpenChange(open: boolean) {
-        // When opening the dialog, reset the amount and the tx status
         setIsOpen(open)
         // When closing the dialog, reset the amount and the tx status
         if (!open) {
@@ -1123,7 +1154,7 @@ function ConfirmationDialog({
             {isShowBlock({
                 repay: repayTx.status === 'approve' && !isRepayTxInProgress,
                 withdraw:
-                    withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress,
+                    (withdrawTx.status === 'approve' || (withdrawTx.status === 'withdraw' && !isMorphoVaultsProtocol)) && !isWithdrawTxInProgress,
             }) && (
                     // <DialogTitle asChild>
                     <HeadingText
@@ -1142,7 +1173,7 @@ function ConfirmationDialog({
                     (repayTx.status === 'view' && !isRepayTxInProgress),
                 withdraw:
                     // (withdrawTx.status === 'borrow' && !isWithdrawTxInProgress) ||
-                    withdrawTx.status === 'view' && !isWithdrawTxInProgress,
+                    ((withdrawTx.status === 'withdraw' && isMorphoVaultsProtocol) || withdrawTx.status === 'view') && !isWithdrawTxInProgress,
             }) && (
                     <div className="flex flex-col items-center justify-center gap-[6px]">
                         <ImageWithDefault
@@ -1190,7 +1221,7 @@ function ConfirmationDialog({
                         {isShowBlock({
                             repay:
                                 repayTx.status === 'repay' && !isRepayTxInProgress,
-                            withdraw: false,
+                            withdraw: withdrawTx.status === 'withdraw' && isMorphoVaultsProtocol && !isWithdrawTxInProgress,
                         }) && (
                                 <Badge
                                     variant="green"
@@ -1217,7 +1248,7 @@ function ConfirmationDialog({
                 {isShowBlock({
                     repay: repayTx.status === 'approve' && !isRepayTxInProgress,
                     withdraw:
-                        withdrawTx.status === 'withdraw' &&
+                        (withdrawTx.status === 'approve' || (withdrawTx.status === 'withdraw' && !isMorphoVaultsProtocol)) &&
                         !isWithdrawTxInProgress,
                 }) && (
                         <div className="flex items-center gap-[8px] px-[24px] py-[18.5px] bg-gray-200 lg:bg-white rounded-5 w-full">
@@ -1266,7 +1297,7 @@ function ConfirmationDialog({
                 {isShowBlock({
                     repay: repayTx.status === 'approve' && !isRepayTxInProgress,
                     withdraw:
-                        withdrawTx.status === 'withdraw' &&
+                        (withdrawTx.status === 'approve' || (withdrawTx.status === 'withdraw' && !isMorphoVaultsProtocol)) &&
                         !isWithdrawTxInProgress,
                 }) && (
                         <div
@@ -1298,7 +1329,7 @@ function ConfirmationDialog({
                 <div className="flex flex-col items-center justify-between px-[24px] bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
                     {isShowBlock({
                         repay: !isRepayTxInProgress && repayTx.status === 'approve',
-                        withdraw: !isWithdrawTxInProgress && withdrawTx.status === 'withdraw',
+                        withdraw: !isWithdrawTxInProgress && (withdrawTx.status === 'approve' || (withdrawTx.status === 'withdraw' && !isMorphoVaultsProtocol)),
                     }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText

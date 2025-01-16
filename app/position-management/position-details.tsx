@@ -311,9 +311,9 @@ export default function PositionDetails() {
         platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() ===
         PlatformType.MORPHO
     const isVault = platformData?.platform?.isVault
+    const isMorphoVaults = isMorpho && isVault
 
-    const isShowWithdrawButton = (isAaveV3Protocol)
-    // || (isMorphoProtocol && isVault)
+    const isShowWithdrawButton = (isAaveV3Protocol || isMorphoVaults)
     const isShowRepayButton = (isAaveV3Protocol)
 
     const morphoVaultsLiquidationPriceTooltipText =
