@@ -106,14 +106,14 @@ export default function PositionDetails() {
 
     const isPolygonChain = Number(chain_id) === 137
 
-    useEffect(() => {
-        if (!isMorphoVaultsProtocol) {
-            setWithdrawTx((prev: TWithdrawTx) => ({
-                ...prev,
-                status: 'withdraw',
-            }))
-        }
-    }, [isMorphoVaultsProtocol])
+    // useEffect(() => {
+    //     if (!isMorphoVaultsProtocol) {
+    //         setWithdrawTx((prev: TWithdrawTx) => ({
+    //             ...prev,
+    //             status: 'withdraw',
+    //         }))
+    //     }
+    // }, [isMorphoVaultsProtocol])
 
     // Get user positions from portfolio data using protocol identifier
     const userPositions = useMemo(

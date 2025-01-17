@@ -921,7 +921,7 @@ function ConfirmationDialog({
     const { handleSwitchChain, isWalletConnected, walletAddress } =
         useWalletConnection()
 
-    const isMorphoVaultsProtocol = assetDetails?.vault ? true : false
+    const isMorphoVaultsProtocol = assetDetails?.isVault
 
     useEffect(() => {
         if (isWithdrawAction && !isMorphoVaultsProtocol) {
