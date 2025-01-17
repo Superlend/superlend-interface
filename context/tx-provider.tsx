@@ -137,7 +137,7 @@ export default function TxProvider({
     })
 
     const [withdrawTx, setWithdrawTx] = useState<TWithdrawTx>({
-        status: 'withdraw',
+        status: 'approve',
         hash: '',
         errorMessage: '',
         isPending: false,
