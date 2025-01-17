@@ -33,7 +33,7 @@ import { getStatDisplayValue } from './helper-functions'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData'
 import { Button } from '@/components/ui/button'
-import { useTxContext } from '@/context/tx-provider'
+import { TWithdrawTx, useTxContext } from '@/context/tx-provider'
 import { useAccount } from 'wagmi'
 import { PlatformType } from '@/types/platform'
 import WithdrawAndRepayActionButton from './withdraw-and-repay'
@@ -46,7 +46,7 @@ export default function PositionDetails() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     // const { address: walletAddress } = useAccount()
     const { isWalletConnected, walletAddress } = useWalletConnection()
-    const { lendTx, borrowTx, withdrawTx, repayTx } = useTxContext()
+    const { lendTx, borrowTx, setWithdrawTx } = useTxContext()
     const [refresh, setRefresh] = useState(false)
 
     const {
@@ -102,8 +102,18 @@ export default function PositionDetails() {
         platformData?.platform?.protocol_type === PlatformType.AAVE
     const isMorphoProtocol =
         platformData?.platform?.protocol_type === PlatformType.MORPHO
+    const isMorphoVaultsProtocol = isMorphoProtocol && platformData?.platform?.isVault
 
     const isPolygonChain = Number(chain_id) === 137
+
+    useEffect(() => {
+        if (!isMorphoVaultsProtocol) {
+            setWithdrawTx((prev: TWithdrawTx) => ({
+                ...prev,
+                status: 'withdraw',
+            }))
+        }
+    }, [isMorphoVaultsProtocol])
 
     // Get user positions from portfolio data using protocol identifier
     const userPositions = useMemo(
