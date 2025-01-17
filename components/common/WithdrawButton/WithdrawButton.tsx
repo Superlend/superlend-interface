@@ -203,6 +203,7 @@ const WithdrawButton = ({
         )
         // //  convert asset to share
         let shareAmount = await vault.toShares(amountToWithdraw.toBigInt())
+
         // apprive the vault.address to bunder
         let bunder_address = BUNDLER_ADDRESS_MORPHO[asset.chain_id]
 
@@ -226,12 +227,20 @@ const WithdrawButton = ({
             // //  convert asset to share
             let shareAmount = vault.toShares(amountToWithdraw.toBigInt())
 
+            // calculate 0.5% of the shareAmount
+            let onePercentOfShareAmount = shareAmount * BigInt(9900)/ BigInt(10000);
+
+            shareAmount = shareAmount + onePercentOfShareAmount
+
             // apprive the vault.address to bunder
             let bunder_address = BUNDLER_ADDRESS_MORPHO[asset.chain_id]
-            // console.log('bunder_address', bunder_address)
-            // console.log('asset.chain_id', asset.chain_id)
 
             let bunder_calls = [
+                // BundlerAction.erc20TransferFrom(
+                //     vault.address,
+                //     shareAmount.toString(),
+                // ),
+                
                 BundlerAction.erc4626Withdraw(
                     vault.address,
                     amountToWithdraw.toString(),
@@ -241,13 +250,6 @@ const WithdrawButton = ({
                 ),
             ]
 
-            // writeContractAsync({
-            //     address: vault.address,
-            //     abi: AAVE_APPROVE_ABI,
-            //     functionName: 'approve',
-            //     args: [bunder_address as `0x${string}`, shareAmount.toString()],
-            // })
-            //     .then(async () => {
             writeContractAsync({
                 address: bunder_address as `0x${string}`,
                 abi: MORPHO_BUNDLER_ABI,
@@ -262,16 +264,6 @@ const WithdrawButton = ({
                     // errorMessage: error.message || 'Something went wrong',
                 }))
             })
-            // })
-            // .catch((error) => {
-            //     setWithdrawTx((prev: TWithdrawTx) => ({
-            //         ...prev,
-            //         isPending: false,
-            //         isConfirming: false,
-            //         isConfirmed: false,
-            //         // errorMessage: error.message || 'Something went wrong',
-            //     }))
-            // })
         },
         []
     )
