@@ -924,7 +924,7 @@ function ConfirmationDialog({
     const isMorphoVaultsProtocol = assetDetails?.isVault
 
     useEffect(() => {
-        if (isWithdrawAction && !isMorphoVaultsProtocol) {
+        if (!isMorphoVaultsProtocol) {
             setWithdrawTx((prev: TWithdrawTx) => ({
                 ...prev,
                 status: 'withdraw',
@@ -935,7 +935,7 @@ function ConfirmationDialog({
         return () => {
             resetLendwithdrawTx()
         }
-    }, [])
+    }, [isMorphoVaultsProtocol])
 
     useEffect(() => {
         setHasAcknowledgedRisk(false)
