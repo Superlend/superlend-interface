@@ -1348,7 +1348,7 @@ function ConfirmationDialog({
                                         >
                                             {handleSmallestValue(currentPositionAmount.toString())}
                                         </BodyText>
-                                        {(currentPositionAmount !== newPositionAmount) &&
+                                        {((currentPositionAmount !== newPositionAmount) && !errorMessage) &&
                                             <>
                                                 <ArrowRightIcon
                                                     width={16}
