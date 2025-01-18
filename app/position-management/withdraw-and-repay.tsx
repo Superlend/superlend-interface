@@ -99,6 +99,7 @@ import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
 import { useMorphoVaultData } from '@/hooks/protocols/useMorphoVaultData'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
 
 interface ITokenDetails {
     address: string
@@ -126,7 +127,7 @@ export default function WithdrawAndRepayActionButton({
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
     } = useUserTokenBalancesContext()
-    const { getVaultData } = useMorphoVaultData()
+    const { getVaultData, getMarketData } = useMorphoVaultData()
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [amount, setAmount] = useState('')
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
@@ -223,10 +224,21 @@ export default function WithdrawAndRepayActionButton({
         platformData?.platform?.protocol_type === 'morpho' &&
         platformData?.platform?.isVault
 
+    const isMorphoMarketsProtocol =
+        platformData?.platform?.protocol_type === 'morpho' &&
+        !platformData?.platform?.isVault
+
     const vaultData = getVaultData({
         vaultId: platformData?.platform?.core_contract as `0x${string}`,
         chainId: Number(chain_id),
         enabled: isMorphoVaultsProtocol,
+    })
+
+    const morphoMarketData = getMarketData({
+        marketId: platformData?.platform?.morpho_market_id as MarketId,
+        chainId: Number(chain_id),
+        enabled: isMorphoMarketsProtocol,
+        walletAddress: walletAddress as `0x${string}`,
     })
 
     const hasSingleToken = tokenDetails.length === 1
@@ -242,7 +254,53 @@ export default function WithdrawAndRepayActionButton({
             let positionAmount = currentVaultPosition?.total_liquidity
             setMaxWithdrawAmountMorphoVaults(positionAmount?.toString() ?? '0')
         }
-    }, [isMorphoVaultsProtocol, vaultData, portfolioData])
+
+        if (morphoMarketData && morphoMarketData.marketData && morphoMarketData.position) {
+            let market = morphoMarketData.marketData;
+            let position = morphoMarketData.position;
+            const accrualPosition: AccrualPosition = new AccrualPosition(
+                position,
+                market
+            )
+
+
+            let withdrawAmount = accrualPosition?.withdrawableCollateral ? accrualPosition?.withdrawableCollateral : 0;
+
+            let repayAmount = accrualPosition?.borrowAssets ?? 0;
+
+            const decimal = tokenDetails.find(token => token.address === market?.params?.collateralToken.toString())?.decimals ?? 0;
+            const decimalRepay = tokenDetails.find(token => token.address === market?.params?.loanToken.toString())?.decimals ?? 0;
+
+            const token: string = market?.params?.collateralToken.toString() ?? '';
+            const loanToken: string = market?.params?.loanToken.toString() ?? '';
+
+            const formattedWithdrawAmount = formatUnits(BigNumber.from(withdrawAmount), decimal);
+            const formattedRepayAmount = formatUnits(BigNumber.from(repayAmount), decimalRepay);
+
+            let newformattedWithdrawAmount = (parseFloat(formattedWithdrawAmount) * 0.99).toFixed(decimal ?? 6);
+            let newformattedRepayAmount = (parseFloat(formattedRepayAmount) * 0.99).toFixed(decimalRepay ?? 6);
+
+
+            if (!maxWithdrawTokensAmount[token]) {
+                setMaxWithdrawTokensAmount({
+                    [token]: {
+                        maxToWithdraw: newformattedWithdrawAmount.toString(),
+                        maxToWithdrawFormatted: newformattedWithdrawAmount.toString(),
+                        user: {},
+                    },
+                })
+            }
+            if (!maxRepayTokensAmount[loanToken]) {
+                setMaxRepayTokensAmount({
+                    [loanToken]: {
+                        maxToRepay: newformattedRepayAmount.toString(),
+                        maxToRepayFormatted: newformattedRepayAmount.toString(),
+                        user: {},
+                    },
+                })
+            }
+        }
+    }, [isMorphoVaultsProtocol, vaultData, morphoMarketData, portfolioData])
 
     // Switch chain
     useEffect(() => {
@@ -853,10 +911,11 @@ export default function WithdrawAndRepayActionButton({
                     disabled={disabledButton}
                     actionType={actionType}
                     assetDetails={
-                        isMorphoVaultsProtocol
+                        isMorphoVaultsProtocol || isMorphoMarketsProtocol
                             ? {
                                 ...assetDetailsForTx,
-                                vault: vaultData,
+                                vault: !vaultData ? null : vaultData,
+                                market: !morphoMarketData ? null : morphoMarketData.marketData,
                             }
                             : assetDetailsForTx
                     }
@@ -923,8 +982,10 @@ function ConfirmationDialog({
 
     const isMorphoVaultsProtocol = assetDetails?.vault ? true : false
 
+
+    const isMorphoMarketProtocol = assetDetails?.market ? true : false
     useEffect(() => {
-        if (isWithdrawAction && !isMorphoVaultsProtocol) {
+        if (isWithdrawAction && (!isMorphoVaultsProtocol || !isMorphoMarketProtocol)) {
             setWithdrawTx((prev: TWithdrawTx) => ({
                 ...prev,
                 status: 'withdraw',
