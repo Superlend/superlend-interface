@@ -744,8 +744,8 @@ export default function WithdrawAndRepayActionButton({
 
         if (isMorphoVaultsProtocol) {
             return (
-                Number(tokenDetails[0].amount)
-                    .toFixed(tokenDetails[0].decimals)
+                Number(tokenDetails[0]?.amount)
+                    .toFixed(tokenDetails[0]?.decimals)
                     .toString() ?? '0'
             )
         }
@@ -763,8 +763,8 @@ export default function WithdrawAndRepayActionButton({
 
         if (isMorphoVaultsProtocol) {
             return (
-                Number(tokenDetails[0].amount)
-                    .toFixed(tokenDetails[0].decimals)
+                Number(tokenDetails[0]?.amount)
+                    .toFixed(tokenDetails[0]?.decimals)
                     .toString() ?? '0'
             )
         }
@@ -779,9 +779,9 @@ export default function WithdrawAndRepayActionButton({
 
     const maxRepayAmountForTx = getMaxRepayAmountForTx()
 
-    const positionAmount = hasSingleToken ? tokenDetails[0].amount : selectedTokenDetails?.positionAmount ?? 0
+    const positionAmount = hasSingleToken ? tokenDetails[0]?.amount : selectedTokenDetails?.positionAmount ?? 0
 
-    const lendErrorMessage = useMemo(() => {
+    const withdrawErrorMessage = useMemo(() => {
         if (Number(amount) > Number(maxWithdrawAmountForTx)) {
             return 'You do not have enough withdraw limit'
         } else if (toManyDecimals) {
@@ -791,12 +791,9 @@ export default function WithdrawAndRepayActionButton({
         }
     }, [amount, balance, toManyDecimals])
 
-    const borrowErrorMessage = useMemo(() => {
+    const repayErrorMessage = useMemo(() => {
         if (toManyDecimals) {
             return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
-        }
-        if (!hasCollateral) {
-            return 'You do not have sufficient collateral to borrow'
         }
         if (Number(amount) > Number(maxRepayAmountForTx)) {
             return 'Amount exceeds available repay limit'
@@ -805,8 +802,8 @@ export default function WithdrawAndRepayActionButton({
     }, [hasCollateral, canBorrow, amount, balance, toManyDecimals])
 
     const errorMessage = useMemo(() => {
-        return isWithdrawAction ? lendErrorMessage : borrowErrorMessage
-    }, [positionType, lendErrorMessage, borrowErrorMessage])
+        return isWithdrawAction ? withdrawErrorMessage : repayErrorMessage
+    }, [positionType, withdrawErrorMessage, repayErrorMessage])
 
     const disabledButton: boolean = useMemo(
         () =>
