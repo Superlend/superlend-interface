@@ -92,6 +92,7 @@ export enum PlatformValue {
     AaveV3Polygon = 'AAVE-V3-POLYGON',
     AaveV3Scoll = 'AAVE-V3-SCROLL',
     CompoundV2Ethereum = 'COMPOUND-V2-ETHEREUM',
+    SuperlendEtherlink = 'SUPERLEND-ETHERLINK'
     // SparkEthereum = "SPARK-ETHEREUM",
     // SparkGnosis = "SPARK-GNOSIS",
 }
