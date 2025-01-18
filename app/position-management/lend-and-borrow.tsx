@@ -21,6 +21,7 @@ import {
     CircleCheck,
     CircleCheckIcon,
     CircleXIcon,
+    InfinityIcon,
     LoaderCircle,
     X,
 } from 'lucide-react'
@@ -1502,8 +1503,13 @@ export function ConfirmationDialog({
                                         weight="normal"
                                         className={`text-gray-800`}
                                     >
-                                        {healthFactorValues.healthFactor.toFixed(
-                                            2
+                                        {Number(healthFactorValues.healthFactor) < 0 && (
+                                            <InfinityIcon className='w-4 h-4' />
+                                        )}
+                                        {Number(healthFactorValues.healthFactor) >= 0 && (
+                                            healthFactorValues.healthFactor.toFixed(
+                                                2
+                                            )
                                         )}
                                     </BodyText>
                                     <ArrowRightIcon
