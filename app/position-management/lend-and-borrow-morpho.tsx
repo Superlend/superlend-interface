@@ -227,12 +227,19 @@ function LendAndBorrowAssetsMorphoMarkets({
                 position,
                 morphoMarketData
             )
+
             const borrowAssets =
                 ((accrualPosition.maxBorrowableAssets ?? BigInt(0)) *
                     BigInt(999)) /
                 BigInt(1000)
+
             const maxBorrowAmount = formatUnits(
                 borrowAssets,
+                morphoBorrowTokenDetails?.token?.decimals ?? 0
+            )
+
+            const maxRepayAmount = formatUnits(
+                accrualPosition.borrowAssets,
                 morphoBorrowTokenDetails?.token?.decimals ?? 0
             )
 
@@ -250,20 +257,20 @@ function LendAndBorrowAssetsMorphoMarkets({
             const collUsdValue =
                 (accrualPosition.collateral
                     ? Number(
-                          formatUnits(
-                              accrualPosition.collateral,
-                              selectedAssetTokenDetails?.token?.decimals ?? 0
-                          )
-                      )
+                        formatUnits(
+                            accrualPosition.collateral,
+                            selectedAssetTokenDetails?.token?.decimals ?? 0
+                        )
+                    )
                     : 0) * (selectedAssetTokenDetails?.token?.price_usd ?? 0)
             const borrowUsdValue =
                 (borrowAssets
                     ? Number(
-                          formatUnits(
-                              currentBorrowAssets,
-                              morphoBorrowTokenDetails?.token?.decimals ?? 0
-                          )
-                      )
+                        formatUnits(
+                            currentBorrowAssets,
+                            morphoBorrowTokenDetails?.token?.decimals ?? 0
+                        )
+                    )
                     : 0) * (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
 
             if (morphoBorrowTokenDetails?.ltv) {
@@ -340,11 +347,11 @@ function LendAndBorrowAssetsMorphoMarkets({
             currentBorrowAssets == BigInt(0)
                 ? 0
                 : Number(
-                      formatUnits(
-                          currentBorrowAssets,
-                          morphoBorrowTokenDetails?.token?.decimals ?? 0
-                      )
-                  )
+                    formatUnits(
+                        currentBorrowAssets,
+                        morphoBorrowTokenDetails?.token?.decimals ?? 0
+                    )
+                )
         const borrowNormalizeValueWithAmount =
             borrowNormalizeValue + Number(amount)
 
@@ -454,9 +461,9 @@ function LendAndBorrowAssetsMorphoMarkets({
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-                Number(
-                    isLendPositionType(positionType) ? balance : maxBorrowAmount
-                ) ||
+            Number(
+                isLendPositionType(positionType) ? balance : maxBorrowAmount
+            ) ||
             (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
             toManyDecimals ||
@@ -475,21 +482,21 @@ function LendAndBorrowAssetsMorphoMarkets({
     function getMaxDecimalsToDisplay(): number {
         return isLendPositionType(positionType)
             ? morphoLendTokenDetails?.token?.symbol
-                  .toLowerCase()
-                  .includes('btc') ||
-              morphoLendTokenDetails?.token?.symbol
-                  .toLowerCase()
-                  .includes('eth')
+                .toLowerCase()
+                .includes('btc') ||
+                morphoLendTokenDetails?.token?.symbol
+                    .toLowerCase()
+                    .includes('eth')
                 ? 6
                 : 2
             : morphoBorrowTokenDetails?.token?.symbol
-                    .toLowerCase()
-                    .includes('btc') ||
+                .toLowerCase()
+                .includes('btc') ||
                 morphoBorrowTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
-              ? 6
-              : 2
+                ? 6
+                : 2
     }
 
     const isDisabledMaxBtn = () => {

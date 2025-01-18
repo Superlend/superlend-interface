@@ -31,13 +31,14 @@ import CustomAlert from '@/components/alerts/CustomAlert'
 import { TWithdrawTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import { ArrowRightIcon } from 'lucide-react'
 import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow'
-import { Vault } from '@morpho-org/blue-sdk'
+import { Market, Vault } from '@morpho-org/blue-sdk'
 import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
 import { walletActions } from 'viem'
 import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
 import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
+import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
 
 interface IWithdrawButtonProps {
     disabled: boolean
@@ -76,8 +77,8 @@ const WithdrawButton = ({
         })
 
     useEffect(() => {
-       if (withdrawTx.status === 'approve') return;
-        
+        if (withdrawTx.status === 'approve') return;
+
         if (hash) {
             setWithdrawTx((prev: TWithdrawTx) => ({
                 ...prev,
@@ -139,6 +140,52 @@ const WithdrawButton = ({
             }
         },
         [writeContractAsync, asset]
+    )
+
+    const withdrawMorphoMarket = useCallback(
+        async (asset: any, amount: string) => {
+            try {
+                const morphoMarketData = asset?.market as Market;
+                let decimals = asset.decimals;
+
+                let amountToWithdraw = parseUnits(amount, decimals);
+
+                console.log('morphoMarketData', morphoMarketData)
+
+                writeContractAsync({
+                    address: asset.core_contract as `0x${string}`,
+                    abi: MORPHO_MARKET_ABI,
+                    functionName: 'withdrawCollateral',
+                    args: [
+                        {
+                            loanToken: morphoMarketData.params.loanToken,
+                            collateralToken:
+                                morphoMarketData.params.collateralToken,
+                            oracle: morphoMarketData.params.oracle,
+                            irm: morphoMarketData.params.irm,
+                            lltv: morphoMarketData.params.lltv,
+                        },
+                        amountToWithdraw,
+                        walletAddress,
+                        walletAddress,
+                    ],
+                }).catch((error) => {
+                    console.log('error', error)
+                    setWithdrawTx((prev: TWithdrawTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                        isConfirmed: false,
+                        // errorMessage:
+                        //     error.message ||
+                        //     'Something went wrong, please try again',
+                    }))
+                })
+            } catch (error) {
+                error
+            }
+        },
+        []
     )
 
     const withdrawAave = useCallback(
@@ -228,7 +275,7 @@ const WithdrawButton = ({
             let shareAmount = vault.toShares(amountToWithdraw.toBigInt())
 
             // calculate 0.5% of the shareAmount
-            let onePercentOfShareAmount = shareAmount * BigInt(9900)/ BigInt(10000);
+            let onePercentOfShareAmount = shareAmount * BigInt(9900) / BigInt(10000);
 
             shareAmount = shareAmount + onePercentOfShareAmount
 
@@ -240,7 +287,7 @@ const WithdrawButton = ({
                 //     vault.address,
                 //     shareAmount.toString(),
                 // ),
-                
+
                 BundlerAction.erc4626Withdraw(
                     vault.address,
                     amountToWithdraw.toString(),
@@ -268,6 +315,8 @@ const WithdrawButton = ({
         []
     )
 
+
+
     const onWithdraw = async () => {
         if (asset?.protocol_type === PlatformType.COMPOUND) {
             await withdrawCompound(asset?.asset?.token?.address, amount)
@@ -284,6 +333,13 @@ const WithdrawButton = ({
         }
         if (asset?.protocol_type === PlatformType.MORPHO && asset?.vault) {
             await withdrawMorphoVault(asset, amount)
+            return
+        }
+
+        console.log('asset----------', asset.market)
+
+        if (asset?.protocol_type === PlatformType.MORPHO && asset?.market) {
+            await withdrawMorphoMarket(asset, amount)
             return
         }
     }

@@ -314,8 +314,8 @@ export default function PositionDetails() {
     const isVault = platformData?.platform?.isVault
     const isMorphoVaults = isMorpho && isVault
 
-    const isShowWithdrawButton = (isAaveV3Protocol || isMorphoVaults)
-    const isShowRepayButton = (isAaveV3Protocol)
+    const isShowWithdrawButton = (isAaveV3Protocol || isMorphoVaults || isMorpho)
+    const isShowRepayButton = (isAaveV3Protocol || isMorpho)
 
     const morphoVaultsLiquidationPriceTooltipText =
         'Liquidation is not applicable, as Morpho vaults are designed to only earn & not borrow.'
