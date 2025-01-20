@@ -43,6 +43,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
         isRefreshingAllowance: false,
+        allowanceBN: BigNumber.from(0),
     },
     setWithdrawTx: () => {},
 }
@@ -87,6 +88,7 @@ export type TWithdrawTx = {
     isConfirming: boolean
     isConfirmed: boolean
     isRefreshingAllowance: boolean
+    allowanceBN: BigNumber
 }
 
 export type TTxContext = {
@@ -144,6 +146,7 @@ export default function TxProvider({
         isConfirming: false,
         isConfirmed: false,
         isRefreshingAllowance: false,
+        allowanceBN: BigNumber.from(0),
     })
 
     return (

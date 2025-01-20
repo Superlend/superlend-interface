@@ -150,7 +150,7 @@ const WithdrawButton = ({
 
                 let amountToWithdraw = parseUnits(amount, decimals);
 
-                console.log('morphoMarketData', morphoMarketData)
+                // console.log('morphoMarketData', morphoMarketData)
 
                 writeContractAsync({
                     address: asset.core_contract as `0x${string}`,

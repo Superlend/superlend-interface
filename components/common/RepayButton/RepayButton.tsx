@@ -104,7 +104,7 @@ const RepayButton = ({
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
     const repay = useCallback(async () => {
-        console.log('asset', asset)
+        // console.log('asset', asset)
         if (asset?.protocol_type === PlatformType.AAVE) {
             await repayAave()
             return

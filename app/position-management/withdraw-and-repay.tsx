@@ -100,6 +100,7 @@ import { useMorphoVaultData } from '@/hooks/protocols/useMorphoVaultData'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
+import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
 
 interface ITokenDetails {
     address: string
@@ -448,9 +449,11 @@ export default function WithdrawAndRepayActionButton({
             // Get allowance
             getAllowance(
                 Number(chain_id),
-                platformData.platform.core_contract,
+                isMorphoVaultsProtocol ? BUNDLER_ADDRESS_MORPHO[Number(chain_id)] : platformData.platform.core_contract,
                 tokenAddress
             ).then((r: BigNumber) => {
+                // console.log('r', r)
+                // console.log('r.toString()', r.toString())
                 // Update allowanceBN and set isRefreshingAllowance to false
                 if (!isWithdrawAction) {
                     setRepayTx((prev: TRepayTx) => ({
@@ -469,8 +472,8 @@ export default function WithdrawAndRepayActionButton({
                 const positionTypeBasedAssetDetails =
                     assetDetailsForTx?.asset?.token?.decimals ?? 0
                 const amountBN = parseUnits(
-                    // Boolean(amount) ? amount : '0',
-                    '0',
+                    Boolean(amount) ? amount : '0',
+                    // '0',
                     positionTypeBasedAssetDetails
                 )
                 // Update the status of the repayTx based on the allowance and the confirmation state
@@ -507,6 +510,7 @@ export default function WithdrawAndRepayActionButton({
     }, [
         walletAddress,
         !!platformData.platform?.core_contract,
+        BUNDLER_ADDRESS_MORPHO[Number(chain_id)],
         repayTx.status,
         repayTx.isRefreshingAllowance,
         withdrawTx.isRefreshingAllowance,
@@ -977,23 +981,29 @@ function ConfirmationDialog({
     const { handleSwitchChain, isWalletConnected, walletAddress } =
         useWalletConnection()
 
-    const isMorphoVaultsProtocol = assetDetails?.isVault
-
-
-    const isMorphoMarketProtocol = assetDetails?.market ? true : false
+    const isMorphoVaultsProtocol = !!assetDetails?.vault
+    // const isMorphoMarketProtocol = !!assetDetails?.market
+    
     useEffect(() => {
-        if (isWithdrawAction && (!isMorphoVaultsProtocol || !isMorphoMarketProtocol)) {
+        if (isWithdrawAction && !isMorphoVaultsProtocol) {
             setWithdrawTx((prev: TWithdrawTx) => ({
                 ...prev,
                 status: 'withdraw',
             }))
+        } else {
+            setWithdrawTx((prev: TWithdrawTx) => ({
+                ...prev,
+                status: 'approve',
+            }))
         }
+    }, [isMorphoVaultsProtocol, isOpen])
 
+    useEffect(() => {
         // Reset the tx status when the dialog is closed
         return () => {
             resetLendwithdrawTx()
         }
-    }, [isMorphoVaultsProtocol])
+    }, [])
 
     useEffect(() => {
         setHasAcknowledgedRisk(false)
