@@ -13,7 +13,7 @@ export default function CustomAlert({
 }) {
     return (
         <Alert variant={variant}>
-            <AlertDescription className="flex items-start justify-center gap-2">
+            <AlertDescription className="flex items-start justify-start gap-2">
                 {/* {hasPrefixIcon && variant === 'destructive' && (
                     <DangerSquare
                         width={18}
