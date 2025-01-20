@@ -76,6 +76,16 @@ export default function TopApyOpportunities() {
     })
 
     useEffect(() => {
+        const hasExcludeRiskyMarketsFlag = localStorage.getItem('exclude_risky_markets')
+        if (!hasExcludeRiskyMarketsFlag) {
+            localStorage.setItem('exclude_risky_markets', 'true')
+            updateSearchParams({
+                exclude_risky_markets: 'true',
+            })
+        }
+    }, [])
+
+    useEffect(() => {
         setColumnVisibility(() => {
             return {
                 deposits: positionTypeParam === 'lend',
