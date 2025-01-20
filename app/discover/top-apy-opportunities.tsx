@@ -339,7 +339,7 @@ export default function TopApyOpportunities() {
     return (
         <section
             id="top-apy-opportunities"
-            className="top-apy-opportunities-container flex flex-col gap-[24px] px-5"
+            className="top-apy-opportunities-container relative z-[50] flex flex-col gap-[24px] px-5"
         >
             <div className="top-apy-opportunities-header flex items-end lg:items-center justify-between gap-[12px]">
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
@@ -384,7 +384,7 @@ export default function TopApyOpportunities() {
             </div>
             <motion.div
                 className="top-apy-opportunities-content will-change-transform"
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0.5, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
             >
