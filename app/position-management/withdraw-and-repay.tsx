@@ -472,8 +472,7 @@ export default function WithdrawAndRepayActionButton({
                 const positionTypeBasedAssetDetails =
                     assetDetailsForTx?.asset?.token?.decimals ?? 0
                 const amountBN = parseUnits(
-                    Boolean(amount) ? amount : '0',
-                    // '0',
+                    (Boolean(amount) && !isAaveV3Protocol) ? amount : '0',
                     positionTypeBasedAssetDetails
                 )
                 // Update the status of the repayTx based on the allowance and the confirmation state
