@@ -30,9 +30,14 @@ import { ArrowRightIcon } from 'lucide-react'
 import { BigNumber } from 'ethers'
 import { getErrorText } from '@/lib/getErrorText'
 import { BodyText } from '@/components/ui/typography'
+
+import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
+import { PlatformType } from '@/types/platform'
+import { Market } from '@morpho-org/blue-sdk'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 
 interface IRepayButtonProps {
+    asset: any
     disabled: boolean
     poolContractAddress: `0x${string}`
     underlyingAssetAdress: `0x${string}`
@@ -42,6 +47,7 @@ interface IRepayButtonProps {
 }
 
 const RepayButton = ({
+    asset,
     poolContractAddress,
     underlyingAssetAdress,
     amount,
@@ -86,18 +92,86 @@ const RepayButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? repayTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? repayTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
     const repay = useCallback(async () => {
+        // console.log('asset', asset)
+        if (asset?.protocol_type === PlatformType.AAVE) {
+            await repayAave()
+            return
+        }
+        if (asset?.protocol_type === PlatformType.MORPHO && asset?.market) {
+            await repayMorphoMarket(asset)
+            return
+        }
+    }, [amount])
+
+    const repayMorphoMarket = useCallback(async (asset: any) => {
+        try {
+
+            console.log('asset', asset)
+            console.log('amount', amount)
+            const morphoMarketData = asset?.market as Market;
+
+            console.log('amountBN', amountBN)
+            writeContractAsync({
+                address: asset.core_contract as `0x${string}`,
+                abi: MORPHO_MARKET_ABI,
+                functionName: 'repay',
+                args: [
+
+                    {
+                        loanToken: morphoMarketData.params.loanToken,
+                        collateralToken:
+                            morphoMarketData.params.collateralToken,
+                        oracle: morphoMarketData.params.oracle,
+                        irm: morphoMarketData.params.irm,
+                        lltv: morphoMarketData.params.lltv,
+                    },
+                    amountBN,
+                    0,
+                    walletAddress,
+                    '0x',
+                ],
+
+            }).then((data) => {
+                setRepayTx((prev: TRepayTx) => ({
+                    ...prev,
+                    status: 'view',
+                    errorMessage: '',
+                }))
+            }).catch((error) => {
+                setRepayTx((prev: TRepayTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+                }))
+            })
+        } catch (error) {
+            error
+        }
+    }, [
+        amount,
+        poolContractAddress,
+        underlyingAssetAdress,
+        walletAddress,
+        handleCloseModal,
+        writeContractAsync,
+        decimals,
+    ])
+
+    const repayAave = useCallback(async () => {
         try {
             setRepayTx((prev: TRepayTx) => ({
                 ...prev,

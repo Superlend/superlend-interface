@@ -33,7 +33,7 @@ import { getStatDisplayValue } from './helper-functions'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import useGetPlatformHistoryData from '@/hooks/useGetPlatformHistoryData'
 import { Button } from '@/components/ui/button'
-import { useTxContext } from '@/context/tx-provider'
+import { TWithdrawTx, useTxContext } from '@/context/tx-provider'
 import { useAccount } from 'wagmi'
 import { PlatformType } from '@/types/platform'
 import WithdrawAndRepayActionButton from './withdraw-and-repay'
@@ -46,7 +46,7 @@ export default function PositionDetails() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     // const { address: walletAddress } = useAccount()
     const { isWalletConnected, walletAddress } = useWalletConnection()
-    const { lendTx, borrowTx, withdrawTx, repayTx } = useTxContext()
+    const { lendTx, borrowTx, setWithdrawTx } = useTxContext()
     const [refresh, setRefresh] = useState(false)
 
     const {
@@ -74,9 +74,7 @@ export default function PositionDetails() {
     useEffect(() => {
         const isRefresh =
             (lendTx.status === 'view' && lendTx.isConfirmed) ||
-            (borrowTx.status === 'view' && borrowTx.isConfirmed) ||
-            // (withdrawTx.status === 'view' && withdrawTx.isConfirmed) ||
-            (repayTx.status === 'view' && repayTx.isConfirmed)
+            (borrowTx.status === 'view' && borrowTx.isConfirmed)
         if (isRefresh) {
             setRefresh(true)
         }
@@ -84,11 +82,7 @@ export default function PositionDetails() {
         lendTx.status,
         lendTx.isConfirmed,
         borrowTx.status,
-        borrowTx.isConfirmed,
-        // withdrawTx.status,
-        // withdrawTx.isConfirmed,
-        repayTx.status,
-        repayTx.isConfirmed,
+        borrowTx.isConfirmed
     ])
 
     useEffect(() => {
@@ -108,6 +102,7 @@ export default function PositionDetails() {
         platformData?.platform?.protocol_type === PlatformType.AAVE
     const isMorphoProtocol =
         platformData?.platform?.protocol_type === PlatformType.MORPHO
+    const isMorphoVaultsProtocol = isMorphoProtocol && platformData?.platform?.isVault
 
     const isPolygonChain = Number(chain_id) === 137
 
@@ -317,10 +312,10 @@ export default function PositionDetails() {
         platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() ===
         PlatformType.MORPHO
     const isVault = platformData?.platform?.isVault
+    const isMorphoVaults = isMorpho && isVault
 
-    const isShowWithdrawButton = (isAaveV3Protocol)
-    // || (isMorphoProtocol && isVault)
-    const isShowRepayButton = (isAaveV3Protocol)
+    const isShowWithdrawButton = (isAaveV3Protocol || isMorphoVaults || isMorpho)
+    const isShowRepayButton = (isAaveV3Protocol || isMorpho)
 
     const morphoVaultsLiquidationPriceTooltipText =
         'Liquidation is not applicable, as Morpho vaults are designed to only earn & not borrow.'

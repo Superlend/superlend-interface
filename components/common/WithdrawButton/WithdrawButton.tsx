@@ -31,27 +31,20 @@ import CustomAlert from '@/components/alerts/CustomAlert'
 import { TWithdrawTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import { ArrowRightIcon } from 'lucide-react'
 import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorrow'
-import { Vault } from '@morpho-org/blue-sdk'
+import { Market, Vault } from '@morpho-org/blue-sdk'
 import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
 import { walletActions } from 'viem'
 import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
 import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
+import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
 
 interface IWithdrawButtonProps {
     disabled: boolean
     asset: any
     amount: string
     handleCloseModal: (isVisible: boolean) => void
-}
-
-const txBtnStatus: Record<string, string> = {
-    pending: 'Withdrawing...',
-    confirming: 'Confirming...',
-    success: 'Close',
-    error: 'Close',
-    default: 'Withdraw',
 }
 
 const WithdrawButton = ({
@@ -70,12 +63,22 @@ const WithdrawButton = ({
     const { withdrawTx, setWithdrawTx } = useTxContext() as TTxContext
     // console.log('error from useWriteContract', error)
 
+    const txBtnStatus: Record<string, string> = {
+        pending: 'Withdrawing...',
+        confirming: 'Confirming...',
+        success: 'Close',
+        error: 'Close',
+        default: withdrawTx.status === 'approve' ? 'Approve token' : 'Withdraw',
+    }
+
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
             hash,
         })
 
     useEffect(() => {
+        if (withdrawTx.status === 'approve') return;
+
         if (hash) {
             setWithdrawTx((prev: TWithdrawTx) => ({
                 ...prev,
@@ -101,23 +104,26 @@ const WithdrawButton = ({
             isPending: isPending,
             isConfirming: isConfirming,
             isConfirmed: isConfirmed,
+            isRefreshingAllowance: isConfirmed
         }))
     }, [isPending, isConfirming, isConfirmed])
 
     const txBtnText =
         txBtnStatus[
-            isConfirming
-                ? 'confirming'
-                : isConfirmed
-                  ? 'success'
-                  : isPending
+        isConfirming
+            ? 'confirming'
+            : isConfirmed
+                ? withdrawTx.status === 'view'
+                    ? 'success'
+                    : 'default'
+                : isPending
                     ? 'pending'
                     : !isPending &&
                         !isConfirming &&
                         !isConfirmed &&
                         withdrawTx.status === 'view'
-                      ? 'error'
-                      : 'default'
+                        ? 'error'
+                        : 'default'
         ]
 
     const withdrawCompound = useCallback(
@@ -134,6 +140,52 @@ const WithdrawButton = ({
             }
         },
         [writeContractAsync, asset]
+    )
+
+    const withdrawMorphoMarket = useCallback(
+        async (asset: any, amount: string) => {
+            try {
+                const morphoMarketData = asset?.market as Market;
+                let decimals = asset.decimals;
+
+                let amountToWithdraw = parseUnits(amount, decimals);
+
+                // console.log('morphoMarketData', morphoMarketData)
+
+                writeContractAsync({
+                    address: asset.core_contract as `0x${string}`,
+                    abi: MORPHO_MARKET_ABI,
+                    functionName: 'withdrawCollateral',
+                    args: [
+                        {
+                            loanToken: morphoMarketData.params.loanToken,
+                            collateralToken:
+                                morphoMarketData.params.collateralToken,
+                            oracle: morphoMarketData.params.oracle,
+                            irm: morphoMarketData.params.irm,
+                            lltv: morphoMarketData.params.lltv,
+                        },
+                        amountToWithdraw,
+                        walletAddress,
+                        walletAddress,
+                    ],
+                }).catch((error) => {
+                    console.log('error', error)
+                    setWithdrawTx((prev: TWithdrawTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                        isConfirmed: false,
+                        // errorMessage:
+                        //     error.message ||
+                        //     'Something went wrong, please try again',
+                    }))
+                })
+            } catch (error) {
+                error
+            }
+        },
+        []
     )
 
     const withdrawAave = useCallback(
@@ -162,9 +214,9 @@ const WithdrawButton = ({
                         isPending: false,
                         isConfirming: false,
                         isConfirmed: false,
-                        errorMessage:
-                            error.message ||
-                            'Something went wrong, please try again',
+                        // errorMessage:
+                        //     error.message ||
+                        //     'Something went wrong, please try again',
                     }))
                 })
             } catch (error: any) {
@@ -174,14 +226,41 @@ const WithdrawButton = ({
                     isPending: false,
                     isConfirming: false,
                     isConfirmed: false,
-                    errorMessage:
-                        error.message ||
-                        'Something went wrong, please try again',
+                    // errorMessage:
+                    //     error.message ||
+                    //     'Something went wrong, please try again',
                 }))
             }
         },
         [writeContractAsync, asset, handleCloseModal]
     )
+
+    const onApproveWithdrawMorphoVault = async (asset: any, amount: string) => {
+        setWithdrawTx((prev: TWithdrawTx) => ({
+            ...prev,
+            status: 'approve',
+            hash: '',
+            errorMessage: '',
+        }))
+
+        let vault = asset?.vault as Vault
+        let amountToWithdraw = parseUnits(
+            amount,
+            asset.asset.token.decimals
+        )
+        // //  convert asset to share
+        let shareAmount = await vault.toShares(amountToWithdraw.toBigInt())
+
+        // apprive the vault.address to bunder
+        let bunder_address = BUNDLER_ADDRESS_MORPHO[asset.chain_id]
+
+        writeContractAsync({
+            address: vault.address,
+            abi: AAVE_APPROVE_ABI,
+            functionName: 'approve',
+            args: [bunder_address as `0x${string}`, shareAmount],
+        })
+    }
 
     const withdrawMorphoVault = useCallback(
         async (asset: any, amount: string) => {
@@ -193,12 +272,22 @@ const WithdrawButton = ({
             )
 
             // //  convert asset to share
-            let shareAmount = await vault.toShares(amountToWithdraw.toBigInt())
+            let shareAmount = vault.toShares(amountToWithdraw.toBigInt())
+
+            // calculate 0.5% of the shareAmount
+            let onePercentOfShareAmount = shareAmount * BigInt(9900) / BigInt(10000);
+
+            shareAmount = shareAmount + onePercentOfShareAmount
 
             // apprive the vault.address to bunder
             let bunder_address = BUNDLER_ADDRESS_MORPHO[asset.chain_id]
 
             let bunder_calls = [
+                // BundlerAction.erc20TransferFrom(
+                //     vault.address,
+                //     shareAmount.toString(),
+                // ),
+
                 BundlerAction.erc4626Withdraw(
                     vault.address,
                     amountToWithdraw.toString(),
@@ -209,39 +298,24 @@ const WithdrawButton = ({
             ]
 
             writeContractAsync({
-                address: vault.address,
-                abi: AAVE_APPROVE_ABI,
-                functionName: 'approve',
-                args: [bunder_address as `0x${string}`, shareAmount.toString()],
+                address: bunder_address as `0x${string}`,
+                abi: MORPHO_BUNDLER_ABI,
+                functionName: 'multicall',
+                args: [bunder_calls],
+            }).catch((error) => {
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    // errorMessage: error.message || 'Something went wrong',
+                }))
             })
-                .then(async () => {
-                    writeContractAsync({
-                        address: bunder_address as `0x${string}`,
-                        abi: MORPHO_BUNDLER_ABI,
-                        functionName: 'multicall',
-                        args: [bunder_calls],
-                    }).catch((error) => {
-                        setWithdrawTx((prev: TWithdrawTx) => ({
-                            ...prev,
-                            isPending: false,
-                            isConfirming: false,
-                            isConfirmed: false,
-                            // errorMessage: error.message || 'Something went wrong',
-                        }))
-                    })
-                })
-                .catch((error) => {
-                    setWithdrawTx((prev: TWithdrawTx) => ({
-                        ...prev,
-                        isPending: false,
-                        isConfirming: false,
-                        isConfirmed: false,
-                        // errorMessage: error.message || 'Something went wrong',
-                    }))
-                })
         },
         []
     )
+
+
 
     const onWithdraw = async () => {
         if (asset?.protocol_type === PlatformType.COMPOUND) {
@@ -259,6 +333,13 @@ const WithdrawButton = ({
         }
         if (asset?.protocol_type === PlatformType.MORPHO && asset?.vault) {
             await withdrawMorphoVault(asset, amount)
+            return
+        }
+
+        console.log('asset----------', asset.market)
+
+        if (asset?.protocol_type === PlatformType.MORPHO && asset?.market) {
+            await withdrawMorphoMarket(asset, amount)
             return
         }
     }
@@ -282,11 +363,15 @@ const WithdrawButton = ({
                     (isPending || isConfirming || disabled) &&
                     withdrawTx.status !== 'view'
                 }
-                onClick={
-                    withdrawTx.status === 'withdraw'
-                        ? onWithdraw
-                        : () => handleCloseModal(false)
-                }
+                onClick={() => {
+                    if (withdrawTx.status === 'approve') {
+                        onApproveWithdrawMorphoVault(asset, amount)
+                    } else if (withdrawTx.status === 'withdraw') {
+                        onWithdraw()
+                    } else {
+                        handleCloseModal(false)
+                    }
+                }}
             >
                 {txBtnText}
                 {withdrawTx.status !== 'view' &&

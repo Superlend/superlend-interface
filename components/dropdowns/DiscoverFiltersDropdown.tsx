@@ -386,7 +386,7 @@ function FilterOptions({
     const searchParams = useSearchParams()
     const [searchKeyword, setSearchKeyword] = useState<string>('')
     const [isExcluded, setIsExcluded] = useState(
-        searchParams.get('exclude_risky_markets') === 'true'
+        localStorage.getItem('exclude_risky_markets') === 'true'
     )
     const positionTypeParam = searchParams.get('position_type') || 'lend'
     const isMorphoMarketsRisky = useMemo(
@@ -424,6 +424,7 @@ function FilterOptions({
             exclude_risky_markets:
                 positionTypeParam === 'lend' ? isExcluded : undefined,
         })
+        localStorage.setItem('exclude_risky_markets', isExcluded ? 'true' : 'false')
     }, [isExcluded, positionTypeParam])
 
     const getFiltersFromURL = () => ({

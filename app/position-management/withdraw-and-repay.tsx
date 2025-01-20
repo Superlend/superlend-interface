@@ -99,6 +99,8 @@ import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
 import { useMorphoVaultData } from '@/hooks/protocols/useMorphoVaultData'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
+import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
 
 interface ITokenDetails {
     address: string
@@ -126,7 +128,7 @@ export default function WithdrawAndRepayActionButton({
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
     } = useUserTokenBalancesContext()
-    const { getVaultData } = useMorphoVaultData()
+    const { getVaultData, getMarketData } = useMorphoVaultData()
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [amount, setAmount] = useState('')
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
@@ -223,10 +225,21 @@ export default function WithdrawAndRepayActionButton({
         platformData?.platform?.protocol_type === 'morpho' &&
         platformData?.platform?.isVault
 
+    const isMorphoMarketsProtocol =
+        platformData?.platform?.protocol_type === 'morpho' &&
+        !platformData?.platform?.isVault
+
     const vaultData = getVaultData({
         vaultId: platformData?.platform?.core_contract as `0x${string}`,
         chainId: Number(chain_id),
         enabled: isMorphoVaultsProtocol,
+    })
+
+    const morphoMarketData = getMarketData({
+        marketId: platformData?.platform?.morpho_market_id as MarketId,
+        chainId: Number(chain_id),
+        enabled: isMorphoMarketsProtocol,
+        walletAddress: walletAddress as `0x${string}`,
     })
 
     const hasSingleToken = tokenDetails.length === 1
@@ -242,7 +255,53 @@ export default function WithdrawAndRepayActionButton({
             let positionAmount = currentVaultPosition?.total_liquidity
             setMaxWithdrawAmountMorphoVaults(positionAmount?.toString() ?? '0')
         }
-    }, [isMorphoVaultsProtocol, vaultData, portfolioData])
+
+        if (morphoMarketData && morphoMarketData.marketData && morphoMarketData.position) {
+            let market = morphoMarketData.marketData;
+            let position = morphoMarketData.position;
+            const accrualPosition: AccrualPosition = new AccrualPosition(
+                position,
+                market
+            )
+
+
+            let withdrawAmount = accrualPosition?.withdrawableCollateral ? accrualPosition?.withdrawableCollateral : 0;
+
+            let repayAmount = accrualPosition?.borrowAssets ?? 0;
+
+            const decimal = tokenDetails.find(token => token.address === market?.params?.collateralToken.toString())?.decimals ?? 0;
+            const decimalRepay = tokenDetails.find(token => token.address === market?.params?.loanToken.toString())?.decimals ?? 0;
+
+            const token: string = market?.params?.collateralToken.toString() ?? '';
+            const loanToken: string = market?.params?.loanToken.toString() ?? '';
+
+            const formattedWithdrawAmount = formatUnits(BigNumber.from(withdrawAmount), decimal);
+            const formattedRepayAmount = formatUnits(BigNumber.from(repayAmount), decimalRepay);
+
+            let newformattedWithdrawAmount = (parseFloat(formattedWithdrawAmount) * 0.99).toFixed(decimal ?? 6);
+            let newformattedRepayAmount = (parseFloat(formattedRepayAmount) * 0.99).toFixed(decimalRepay ?? 6);
+
+
+            if (!maxWithdrawTokensAmount[token]) {
+                setMaxWithdrawTokensAmount({
+                    [token]: {
+                        maxToWithdraw: newformattedWithdrawAmount.toString(),
+                        maxToWithdrawFormatted: newformattedWithdrawAmount.toString(),
+                        user: {},
+                    },
+                })
+            }
+            if (!maxRepayTokensAmount[loanToken]) {
+                setMaxRepayTokensAmount({
+                    [loanToken]: {
+                        maxToRepay: newformattedRepayAmount.toString(),
+                        maxToRepayFormatted: newformattedRepayAmount.toString(),
+                        user: {},
+                    },
+                })
+            }
+        }
+    }, [isMorphoVaultsProtocol, vaultData, morphoMarketData, portfolioData])
 
     // Switch chain
     useEffect(() => {
@@ -381,24 +440,39 @@ export default function WithdrawAndRepayActionButton({
                     isConfirming: true,
                 }))
             }
+            if (withdrawTx.status === 'approve' && withdrawTx.isRefreshingAllowance) {
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    isConfirming: true,
+                }))
+            }
             // Get allowance
             getAllowance(
                 Number(chain_id),
-                platformData.platform.core_contract,
+                isMorphoVaultsProtocol ? BUNDLER_ADDRESS_MORPHO[Number(chain_id)] : platformData.platform.core_contract,
                 tokenAddress
             ).then((r: BigNumber) => {
+                // console.log('r', r)
+                // console.log('r.toString()', r.toString())
                 // Update allowanceBN and set isRefreshingAllowance to false
-                setRepayTx((prev: TRepayTx) => ({
-                    ...prev,
-                    allowanceBN: r,
-                    isRefreshingAllowance: false,
-                }))
+                if (!isWithdrawAction) {
+                    setRepayTx((prev: TRepayTx) => ({
+                        ...prev,
+                        allowanceBN: r,
+                        isRefreshingAllowance: false,
+                    }))
+                } else {
+                    setWithdrawTx((prev: TWithdrawTx) => ({
+                        ...prev,
+                        allowanceBN: r,
+                        isRefreshingAllowance: false,
+                    }))
+                }
                 // Check if the allowance is greater than or equal to the amount
                 const positionTypeBasedAssetDetails =
                     assetDetailsForTx?.asset?.token?.decimals ?? 0
                 const amountBN = parseUnits(
-                    // Boolean(amount) ? amount : '0',
-                    '0',
+                    (Boolean(amount) && !isAaveV3Protocol) ? amount : '0',
                     positionTypeBasedAssetDetails
                 )
                 // Update the status of the repayTx based on the allowance and the confirmation state
@@ -415,6 +489,16 @@ export default function WithdrawAndRepayActionButton({
                         isConfirming: false,
                     }))
                 }
+                if (withdrawTx.status === 'approve' && withdrawTx.isConfirmed) {
+                    setWithdrawTx((prev: TWithdrawTx) => ({
+                        ...prev,
+                        status: r.gte(amountBN) ? 'withdraw' : 'approve',
+                        errorMessage: r.gte(amountBN)
+                            ? ''
+                            : 'Insufficient allowance',
+                        isConfirming: false,
+                    }))
+                }
             })
         }
         // console.log('walletAddress', walletAddress)
@@ -425,8 +509,10 @@ export default function WithdrawAndRepayActionButton({
     }, [
         walletAddress,
         !!platformData.platform?.core_contract,
+        BUNDLER_ADDRESS_MORPHO[Number(chain_id)],
         repayTx.status,
         repayTx.isRefreshingAllowance,
+        withdrawTx.isRefreshingAllowance,
         providerStatus.isReady,
     ])
     // console.log('repayTx', repayTx)
@@ -661,8 +747,8 @@ export default function WithdrawAndRepayActionButton({
 
         if (isMorphoVaultsProtocol) {
             return (
-                Number(tokenDetails[0].amount)
-                    .toFixed(tokenDetails[0].decimals)
+                Number(tokenDetails[0]?.amount)
+                    .toFixed(tokenDetails[0]?.decimals)
                     .toString() ?? '0'
             )
         }
@@ -680,8 +766,8 @@ export default function WithdrawAndRepayActionButton({
 
         if (isMorphoVaultsProtocol) {
             return (
-                Number(tokenDetails[0].amount)
-                    .toFixed(tokenDetails[0].decimals)
+                Number(tokenDetails[0]?.amount)
+                    .toFixed(tokenDetails[0]?.decimals)
                     .toString() ?? '0'
             )
         }
@@ -696,9 +782,9 @@ export default function WithdrawAndRepayActionButton({
 
     const maxRepayAmountForTx = getMaxRepayAmountForTx()
 
-    const positionAmount = hasSingleToken ? tokenDetails[0].amount : selectedTokenDetails?.positionAmount ?? 0
+    const positionAmount = hasSingleToken ? tokenDetails[0]?.amount : selectedTokenDetails?.positionAmount ?? 0
 
-    const lendErrorMessage = useMemo(() => {
+    const withdrawErrorMessage = useMemo(() => {
         if (Number(amount) > Number(maxWithdrawAmountForTx)) {
             return 'You do not have enough withdraw limit'
         } else if (toManyDecimals) {
@@ -708,12 +794,9 @@ export default function WithdrawAndRepayActionButton({
         }
     }, [amount, balance, toManyDecimals])
 
-    const borrowErrorMessage = useMemo(() => {
+    const repayErrorMessage = useMemo(() => {
         if (toManyDecimals) {
             return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
-        }
-        if (!hasCollateral) {
-            return 'You do not have sufficient collateral to borrow'
         }
         if (Number(amount) > Number(maxRepayAmountForTx)) {
             return 'Amount exceeds available repay limit'
@@ -722,8 +805,8 @@ export default function WithdrawAndRepayActionButton({
     }, [hasCollateral, canBorrow, amount, balance, toManyDecimals])
 
     const errorMessage = useMemo(() => {
-        return isWithdrawAction ? lendErrorMessage : borrowErrorMessage
-    }, [positionType, lendErrorMessage, borrowErrorMessage])
+        return isWithdrawAction ? withdrawErrorMessage : repayErrorMessage
+    }, [positionType, withdrawErrorMessage, repayErrorMessage])
 
     const disabledButton: boolean = useMemo(
         () =>
@@ -828,10 +911,11 @@ export default function WithdrawAndRepayActionButton({
                     disabled={disabledButton}
                     actionType={actionType}
                     assetDetails={
-                        isMorphoVaultsProtocol
+                        isMorphoVaultsProtocol || isMorphoMarketsProtocol
                             ? {
                                 ...assetDetailsForTx,
-                                vault: vaultData,
+                                vault: !vaultData ? null : vaultData,
+                                market: !morphoMarketData ? null : morphoMarketData.marketData,
                             }
                             : assetDetailsForTx
                     }
@@ -896,7 +980,22 @@ function ConfirmationDialog({
     const { handleSwitchChain, isWalletConnected, walletAddress } =
         useWalletConnection()
 
-    const isMorphoVaultsProtocol = assetDetails?.vault ? true : false
+    const isMorphoVaultsProtocol = !!assetDetails?.vault
+    // const isMorphoMarketProtocol = !!assetDetails?.market
+    
+    useEffect(() => {
+        if (isWithdrawAction && !isMorphoVaultsProtocol) {
+            setWithdrawTx((prev: TWithdrawTx) => ({
+                ...prev,
+                status: 'withdraw',
+            }))
+        } else {
+            setWithdrawTx((prev: TWithdrawTx) => ({
+                ...prev,
+                status: 'approve',
+            }))
+        }
+    }, [isMorphoVaultsProtocol, isOpen])
 
     useEffect(() => {
         // Reset the tx status when the dialog is closed
@@ -931,7 +1030,7 @@ function ConfirmationDialog({
         }))
         setWithdrawTx((prev: TWithdrawTx) => ({
             ...prev,
-            status: 'withdraw',
+            status: 'approve',
             hash: '',
             isPending: false,
             isConfirming: false,
@@ -941,7 +1040,6 @@ function ConfirmationDialog({
     }
 
     function handleOpenChange(open: boolean) {
-        // When opening the dialog, reset the amount and the tx status
         setIsOpen(open)
         // When closing the dialog, reset the amount and the tx status
         if (!open) {
@@ -1123,7 +1221,7 @@ function ConfirmationDialog({
             {isShowBlock({
                 repay: repayTx.status === 'approve' && !isRepayTxInProgress,
                 withdraw:
-                    withdrawTx.status === 'withdraw' && !isWithdrawTxInProgress,
+                    (withdrawTx.status === 'approve' || (withdrawTx.status === 'withdraw' && !isMorphoVaultsProtocol)) && !isWithdrawTxInProgress,
             }) && (
                     // <DialogTitle asChild>
                     <HeadingText
@@ -1142,7 +1240,7 @@ function ConfirmationDialog({
                     (repayTx.status === 'view' && !isRepayTxInProgress),
                 withdraw:
                     // (withdrawTx.status === 'borrow' && !isWithdrawTxInProgress) ||
-                    withdrawTx.status === 'view' && !isWithdrawTxInProgress,
+                    ((withdrawTx.status === 'withdraw' && isMorphoVaultsProtocol) || withdrawTx.status === 'view') && !isWithdrawTxInProgress,
             }) && (
                     <div className="flex flex-col items-center justify-center gap-[6px]">
                         <ImageWithDefault
@@ -1190,7 +1288,7 @@ function ConfirmationDialog({
                         {isShowBlock({
                             repay:
                                 repayTx.status === 'repay' && !isRepayTxInProgress,
-                            withdraw: false,
+                            withdraw: withdrawTx.status === 'withdraw' && isMorphoVaultsProtocol && !isWithdrawTxInProgress,
                         }) && (
                                 <Badge
                                     variant="green"
@@ -1217,7 +1315,7 @@ function ConfirmationDialog({
                 {isShowBlock({
                     repay: repayTx.status === 'approve' && !isRepayTxInProgress,
                     withdraw:
-                        withdrawTx.status === 'withdraw' &&
+                        (withdrawTx.status === 'approve' || (withdrawTx.status === 'withdraw' && !isMorphoVaultsProtocol)) &&
                         !isWithdrawTxInProgress,
                 }) && (
                         <div className="flex items-center gap-[8px] px-[24px] py-[18.5px] bg-gray-200 lg:bg-white rounded-5 w-full">
@@ -1266,7 +1364,7 @@ function ConfirmationDialog({
                 {isShowBlock({
                     repay: repayTx.status === 'approve' && !isRepayTxInProgress,
                     withdraw:
-                        withdrawTx.status === 'withdraw' &&
+                        (withdrawTx.status === 'approve' || (withdrawTx.status === 'withdraw' && !isMorphoVaultsProtocol)) &&
                         !isWithdrawTxInProgress,
                 }) && (
                         <div
@@ -1298,7 +1396,7 @@ function ConfirmationDialog({
                 <div className="flex flex-col items-center justify-between px-[24px] bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
                     {isShowBlock({
                         repay: !isRepayTxInProgress && repayTx.status === 'approve',
-                        withdraw: !isWithdrawTxInProgress && withdrawTx.status === 'withdraw',
+                        withdraw: !isWithdrawTxInProgress && (withdrawTx.status === 'approve' || (withdrawTx.status === 'withdraw' && !isMorphoVaultsProtocol)),
                     }) && (
                             <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText
@@ -1317,7 +1415,7 @@ function ConfirmationDialog({
                                         >
                                             {handleSmallestValue(currentPositionAmount.toString())}
                                         </BodyText>
-                                        {(currentPositionAmount !== newPositionAmount) &&
+                                        {((currentPositionAmount !== newPositionAmount) && !errorMessage) &&
                                             <>
                                                 <ArrowRightIcon
                                                     width={16}

@@ -51,6 +51,7 @@ const ActionButton = ({
                 handleCloseModal={handleCloseModal}
                 poolContractAddress={asset.core_contract}
                 underlyingAssetAdress={asset.asset.token.address}
+                asset={asset}
                 amount={amount}
                 decimals={asset.asset.token.decimals}
             />

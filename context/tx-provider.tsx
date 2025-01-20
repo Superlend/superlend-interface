@@ -36,12 +36,14 @@ const TxInitialState: TTxContext = {
     },
     setRepayTx: () => {},
     withdrawTx: {
-        status: 'withdraw',
+        status: 'approve',
         hash: '',
         errorMessage: '',
         isPending: false,
         isConfirming: false,
         isConfirmed: false,
+        isRefreshingAllowance: false,
+        allowanceBN: BigNumber.from(0),
     },
     setWithdrawTx: () => {},
 }
@@ -79,12 +81,14 @@ export type TRepayTx = {
 }
 
 export type TWithdrawTx = {
-    status: 'withdraw' | 'view'
+    status: 'approve' | 'withdraw' | 'view'
     hash: string
     errorMessage: string
     isPending: boolean
     isConfirming: boolean
     isConfirmed: boolean
+    isRefreshingAllowance: boolean
+    allowanceBN: BigNumber
 }
 
 export type TTxContext = {
@@ -135,12 +139,14 @@ export default function TxProvider({
     })
 
     const [withdrawTx, setWithdrawTx] = useState<TWithdrawTx>({
-        status: 'withdraw',
+        status: 'approve',
         hash: '',
         errorMessage: '',
         isPending: false,
         isConfirming: false,
         isConfirmed: false,
+        isRefreshingAllowance: false,
+        allowanceBN: BigNumber.from(0),
     })
 
     return (
