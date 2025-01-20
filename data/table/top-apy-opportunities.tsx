@@ -151,7 +151,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
         },
         enableSorting: false,
-        enableGlobalFilter: false,
+        // enableGlobalFilter: false,
     },
     {
         accessorKey: 'apy_current',

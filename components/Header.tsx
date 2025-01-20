@@ -87,24 +87,14 @@ const Header: React.FC = () => {
         <>
             <header className="z-50 sticky top-0 md:top-5 left-0 max-w-[1200px] w-full mx-auto md:px-5">
                 <div className="flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center py-0 pr-[8px] pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
-                    <Button
-                        variant="ghost"
-                        className="md:w-[24px] md:w-fit p-0"
-                        onClick={() => router.push('/')}
-                    >
-                        {/* <img
-            loading="lazy"
-            src={"/images/logos/favicon-32x32.png"}
-            alt="Superlend logo"
-            className="md:hidden object-contain shrink-0 my-auto w-[1.5rem] aspect-square cursor-pointer"
-          /> */}
+                    <Link href="/" className="md:w-[24px] md:w-fit p-0">
                         <img
                             loading="lazy"
                             src={'/images/logos/superlend-logo.webp'}
                             alt="Superlend logo"
                             className="object-contain shrink-0 my-auto aspect-[6.54] w-36 cursor-pointer"
                         />
-                    </Button>
+                    </Link>
                     <nav className="hidden md:flex gap-3 lg:gap-5 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">
                         {tabs.map((tab) => (
                             <Button
@@ -112,7 +102,7 @@ const Header: React.FC = () => {
                                 variant={isSelected(tab) ? 'default' : 'ghost'}
                                 size="lg"
                                 className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`}
-                                // onClick={() => handleTabClick(tab)}
+                            // onClick={() => handleTabClick(tab)}
                             >
                                 <Link
                                     onClick={() => handleTabClick(tab)}
@@ -145,7 +135,7 @@ const Header: React.FC = () => {
                             variant={'ghost'}
                             size="lg"
                             className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`}
-                            // onClick={() => handleTabClick(tab)}
+                        // onClick={() => handleTabClick(tab)}
                         >
                             <Link
                                 onClick={() => handleTabClick(tab)}

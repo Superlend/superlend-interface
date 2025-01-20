@@ -45,7 +45,7 @@ export default function TopApyOpportunities() {
     const keywordsParam = searchParams.get('keywords') || ''
     const pageParam = searchParams.get('page')
     const sortingParam = searchParams.get('sort')?.split(',') || []
-    const excludeRiskyMarketsParam = searchParams.get('exclude_risky_markets')
+    const excludeRiskyMarketsFlag = typeof window !== 'undefined' && localStorage.getItem('exclude_risky_markets') === 'true'
     const [keywords, setKeywords] = useState<string>(keywordsParam)
     const debouncedKeywords = useDebounce(keywords, 300)
     const [pagination, setPagination] = useState<PaginationState>({
@@ -170,21 +170,19 @@ export default function TopApyOpportunities() {
             updateSearchParams({ sort: sortParam })
         }
         updateSearchParams({
-            exclude_risky_markets:
-                positionTypeParam === 'lend' ? 'true' : undefined,
+            // exclude_risky_markets:
+            //     positionTypeParam === 'lend' ? 'true' : undefined,
             protocol_ids:
                 positionTypeParam === 'lend' ? filteredIds : unfilteredIds,
         })
     }, [sorting])
 
     useEffect(() => {
-        if (
-            positionTypeParam === 'lend' &&
-            excludeRiskyMarketsParam !== 'true'
-        ) {
-            updateSearchParams({ exclude_risky_markets: true })
-        }
-    }, [positionTypeParam])
+        updateSearchParams({
+            exclude_risky_markets:
+                positionTypeParam === 'lend' ? excludeRiskyMarketsFlag : undefined,
+        })
+    }, [excludeRiskyMarketsFlag])
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         return {
@@ -267,7 +265,7 @@ export default function TopApyOpportunities() {
             opportunity.platformId.split('-')[0].toLowerCase() ===
             PlatformType.MORPHO
 
-        return excludeRiskyMarketsParam === 'true'
+        return excludeRiskyMarketsFlag
             ? !(isMorpho && !isVault)
             : true
     }
@@ -309,7 +307,7 @@ export default function TopApyOpportunities() {
 
         const params = {
             position_type: positionType,
-            exclude_risky_markets: positionType === 'lend' ? 'true' : undefined,
+            exclude_risky_markets: positionType === 'lend' ? excludeRiskyMarketsFlag : undefined,
             protocol_ids: positionType === 'lend' ? filteredIds : unfilteredIds,
         }
         updateSearchParams(params)
@@ -363,7 +361,7 @@ export default function TopApyOpportunities() {
                                 onChange={handleKeywordChange}
                                 onClear={handleClearSearch}
                                 value={keywords}
-                                placeholder="Search token"
+                                placeholder="Search"
                             />
                         </div>
                     </div>
