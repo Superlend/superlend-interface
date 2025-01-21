@@ -49,7 +49,7 @@ export default function DiscoverOpportunities() {
     })
 
     // Borrow Rate
-    const asset1BorrowRate = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)?.stable_borrow_apy
+    const asset1BorrowRate = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)?.variable_borrow_apy
 
     // Description
     const description1 = `${asset1BorrowRate?.toFixed(2)}% Borrow Rate`
@@ -182,7 +182,7 @@ export default function DiscoverOpportunities() {
                                         alt={opportunity.platformName}
                                         width={124}
                                         height={136}
-                                        className="object-contain origin-center -rotate-45 opacity-15 group-hover:opacity-100 transition-all duration-300"
+                                        className="object-contain origin-center -rotate-45 opacity-15 lg:group-hover:opacity-100 transition-all duration-300"
                                     />
                                 </div>
                             </Link>
