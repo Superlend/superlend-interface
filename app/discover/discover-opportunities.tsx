@@ -39,10 +39,10 @@ export default function DiscoverOpportunities() {
         chain_id: opportunity1ChainId,
         protocol_identifier: opportunity1ProtocolIdentifier,
     })
-    // const { data: opportunity2PlatformData, isLoading: isLoading2 } = useGetPlatformData({
-    //     chain_id: opportunity2ChainId,
-    //     protocol_identifier: opportunity2ProtocolIdentifier,
-    // })
+    const { data: opportunity2PlatformData, isLoading: isLoading2 } = useGetPlatformData({
+        chain_id: opportunity2ChainId,
+        protocol_identifier: opportunity2ProtocolIdentifier,
+    })
     const { data: opportunity3PlatformData, isLoading: isLoading3 } = useGetPlatformData({
         chain_id: opportunity3ChainId,
         protocol_identifier: opportunity3ProtocolIdentifier,
@@ -50,10 +50,10 @@ export default function DiscoverOpportunities() {
 
     // Borrow Rate
     const asset1BorrowRate = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)?.variable_borrow_apy
-
+    const asset2APY = opportunity2PlatformData.assets.find((asset: any) => asset.token.address === opportunity2TokenAddress)?.supply_apy
     // Description
     const description1 = `${asset1BorrowRate?.toFixed(2)}% Borrow Rate`
-    // const description2 = opportunity2PlatformData?.apy
+    const description2 = `Upto ${asset2APY?.toFixed(2)}% APY`
     // const description3 = opportunity3PlatformData?.apy
 
     // Opportunities
@@ -75,14 +75,14 @@ export default function DiscoverOpportunities() {
             tokenSymbol: "wsuperOETHb",
             platformName: "Morpho",
             chainName: "Base",
-            description: "Coinshift wUSDL Vault",
+            description: description2,
             tokenImage: `${morphoImageBaseUrl}/wsuperoethb.svg`,
             platformImage: `${imageBaseUrl}/morpho-logo.svg`,
             link: "https://beta.superlend.xyz/position-management?token=0x4200000000000000000000000000000000000006&protocol_identifier=0x7241a58e43dff76b51b74cb4a2b5c6cad847f3f505fbe88618c122206e435ad8&chain_id=8453&position_type=lend"
         },
         {
             id: 3,
-            label: "Potential Airdrop",
+            label: "Assured Airdrop",
             tokenSymbol: "Coinshift Vault",
             platformName: "Morpho",
             chainName: "Ethereum",
@@ -95,7 +95,7 @@ export default function DiscoverOpportunities() {
 
     const isLoading: { [key: number]: boolean } = {
         1: isLoading1,
-        2: false,
+        2: isLoading2,
         3: isLoading3,
     }
 
@@ -159,7 +159,7 @@ export default function DiscoverOpportunities() {
                                                         weight="medium"
                                                         className="text-black tracking-wide"
                                                     >
-                                                        {opportunity.platformName}
+                                                        {opportunity.chainName}
                                                     </Label>
                                                 </Badge>
                                             </div>
