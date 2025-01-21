@@ -50,7 +50,7 @@ export default function DiscoverOpportunities() {
 
     // Borrow Rate
     const asset1BorrowRate = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)?.variable_borrow_apy
-    const asset2APY = opportunity2PlatformData.assets.find((asset: any) => asset.token.address === opportunity2TokenAddress)?.supply_apy
+    const asset2APY = opportunity2PlatformData.assets.find((asset: any) => asset.token.address === opportunity2TokenAddress)?.variable_borrow_apy
     // Description
     const description1 = `${asset1BorrowRate?.toFixed(2)}% Borrow Rate`
     const description2 = `Upto ${asset2APY?.toFixed(2)}% APY`
