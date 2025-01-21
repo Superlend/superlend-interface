@@ -16,6 +16,7 @@ import SupplyMorphoButton from '../SupplyMorphoButton'
 import { CodeSquare } from 'lucide-react'
 import { TPositionType } from '@/types'
 import RepayButton from '../RepayButton'
+import DepositButton from '../DepositButton'
 
 interface IActionButtonSelectComponent {
     disabled?: boolean
@@ -112,17 +113,16 @@ const ActionButton = ({
     }
 
     return (
-        <SupplyERC20CompoundButton
-            disabled={disabled}
-            handleCloseModal={handleCloseModal}
-            underlyingToken={asset.asset.token.address}
-            cTokenAddress={asset.core_contract}
-            amount={amount}
-            decimals={countCompoundDecimals(
-                asset.asset.token.decimals,
-                asset.asset.token.decimals
-            )}
-        />
+        <>
+            <DepositButton
+                disabled={disabled}
+                handleCloseModal={handleCloseModal}
+                poolContractAddress={asset?.core_contract || ''}
+                underlyingAssetAdress={asset?.asset?.token?.address || ''}
+                amount={amount || ''}
+                decimals={asset?.asset?.token?.decimals || 0}
+            />
+        </>
     )
 }
 
