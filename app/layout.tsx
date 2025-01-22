@@ -4,7 +4,7 @@ import './globals.css'
 import Header from '@/components/Header'
 import ContextProvider from '@/context'
 import Footer from '@/components/Footer'
-import { GoogleTagManager } from '@next/third-parties/google'
+import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
 import ScrollToTop from '@/components/ScrollToTop'
 import { Meta } from '@/components/Meta'
 import { Toaster } from 'react-hot-toast'
@@ -68,12 +68,14 @@ export default function RootLayout({
 }>) {
     const cookies = headers().get('cookie')
     const GTM_ID = process.env.NEXT_GTM_ID || ''
+    const GA_ID = process.env.NEXT_GA_ID || ''
 
     return (
         <html lang="en">
             <body className={`bg-[#B4E2FB] font-sans max-md:pb-[50px]`}>
                 <ScrollToTop />
                 <GoogleTagManager gtmId={GTM_ID} />
+                <GoogleAnalytics gaId={GA_ID} />
                 <ContextProvider cookies={cookies}>
                     <Toaster />
                     <EasterEgg />

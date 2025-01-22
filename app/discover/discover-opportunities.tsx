@@ -14,6 +14,7 @@ import ImageWithDefault from '@/components/ImageWithDefault'
 import Link from 'next/link'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import { Skeleton } from '@/components/ui/skeleton'
+import { sendGAEvent } from '@next/third-parties/google'
 
 const imageBaseUrl = "https://superlend-assets.s3.ap-south-1.amazonaws.com";
 const morphoImageBaseUrl = "https://cdn.morpho.org/assets/logos";
@@ -125,7 +126,12 @@ export default function DiscoverOpportunities() {
                         <CarouselItem
                             key={opportunity.id}
                             className="group overflow-hidden relative basis-[90%] md:basis-[380px] bg-white rounded-5 px-5 py-6 lg:hover:shadow-md lg:hover:shadow-gray-200/50 lg:hover:rounded-7 active:scale-95 transition-all duration-300 cursor-pointer">
-                            <Link href={opportunity.link} target="_blank" rel="noopener noreferrer">
+                            <Link
+                                href={opportunity.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => sendGAEvent('event', 'buttonClicked', { value: opportunity.tokenSymbol })}
+                            >
                                 <div className="flex flex-col gap-[53px] relative z-10">
                                     <Badge
                                         variant="green"
