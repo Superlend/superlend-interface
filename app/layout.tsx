@@ -56,6 +56,9 @@ export const metadata: Metadata = {
             'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .',
         images: 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png',
     },
+    verification: {
+        google: '0j8SKqrdLCo956fdCB-_rUdpg8wEPmuU3TTlvbei_ro',
+    }
 }
 
 export default function RootLayout({
