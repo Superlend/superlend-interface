@@ -472,7 +472,7 @@ export default function WithdrawAndRepayActionButton({
                 const positionTypeBasedAssetDetails =
                     assetDetailsForTx?.asset?.token?.decimals ?? 0
                 const amountBN = parseUnits(
-                    (Boolean(amount) && !isAaveV3Protocol) ? amount : '0',
+                    '0',
                     positionTypeBasedAssetDetails
                 )
                 // Update the status of the repayTx based on the allowance and the confirmation state
@@ -982,7 +982,7 @@ function ConfirmationDialog({
 
     const isMorphoVaultsProtocol = !!assetDetails?.vault
     // const isMorphoMarketProtocol = !!assetDetails?.market
-    
+
     useEffect(() => {
         if (isWithdrawAction && !isMorphoVaultsProtocol) {
             setWithdrawTx((prev: TWithdrawTx) => ({
