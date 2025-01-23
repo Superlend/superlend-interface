@@ -110,6 +110,7 @@ function ContextProvider({
                     landingHeader: 'Connect Wallet',
                     loginMessage: 'Select wallet to continue',
                     showWalletLoginFirst: true,
+                    walletList: ['metamask', 'coinbase_wallet', 'okx_wallet', 'rainbow', 'rabby_wallet', 'phantom', 'uniswap', 'detected_ethereum_wallets', 'wallet_connect']
                 },
                 supportedChains: [mainnet, polygon, base, scroll, avalanche, optimism, bsc, gnosis, arbitrum, etherlink, metis],
             }}
