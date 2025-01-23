@@ -519,24 +519,22 @@ export default function WithdrawAndRepayActionButton({
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
-        if (withdrawTx.status === 'view' && withdrawTx.isConfirmed) {
+        if (withdrawTx.status === 'view' && !isConfirmationDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
 
-        if (repayTx.status === 'view' && repayTx.isConfirmed) {
+        if (repayTx.status === 'view' && !isConfirmationDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
     }, [
         repayTx.status,
         withdrawTx.status,
-        repayTx.isConfirmed,
-        withdrawTx.isConfirmed,
     ])
 
     // Refresh balance when wallet address changes
-    useEffect(() => {
-        setIsRefreshingErc20TokensBalanceData(true)
-    }, [walletAddress])
+    // useEffect(() => {
+    //     setIsRefreshingErc20TokensBalanceData(true)
+    // }, [walletAddress])
 
     // Set selected borrow token details
     useEffect(() => {

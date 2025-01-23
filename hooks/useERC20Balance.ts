@@ -130,6 +130,7 @@ export const useERC20Balance = (address: string | undefined) => {
             isRefreshing
         ) {
             getERC20Balance(address)
+            setIsRefreshing(false)
         }
     }, [!!address, !!tokenList, chainList.length > 0, data, isRefreshing])
 
