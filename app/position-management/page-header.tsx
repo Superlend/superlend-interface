@@ -383,8 +383,7 @@ export default function PageHeader() {
                             <>
                                 {/* Supply APY */}
                                 {!(
-                                    isMorphoMarkets &&
-                                    positionTypeParam === 'borrow'
+                                    isMorphoMarkets
                                 ) && (
                                     <>
                                         <div className="flex items-center max-md:justify-between gap-[4px]">
