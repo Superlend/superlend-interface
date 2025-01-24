@@ -34,6 +34,8 @@ type TTopApyOpportunitiesProps = {
     columns: ColumnDef<TOpportunityTable>[]
 }
 
+const EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL = '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed'
+
 export default function TopApyOpportunities() {
     const router = useRouter()
     const updateSearchParams = useUpdateSearchParams()
@@ -296,7 +298,8 @@ export default function TopApyOpportunities() {
             ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
                   handleFilterTableRowsByPlatformIds(opportunity)
             : handleExcludeMorphoMarketsByParamFlag(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity)
+                  handleFilterTableRowsByPlatformIds(opportunity) && 
+                  opportunity.protocol_identifier !== EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
     }
 
     function handleRowClick(rowData: any) {
