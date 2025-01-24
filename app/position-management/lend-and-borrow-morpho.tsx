@@ -176,18 +176,16 @@ function LendAndBorrowAssetsMorphoMarkets({
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
-        if (lendTx.status === 'approve' && !isConfirmationDialogOpen) {
+        if (lendTx.status === 'view' && !isConfirmationDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
 
-        if (borrowTx.status === 'borrow' && !isConfirmationDialogOpen) {
+        if (borrowTx.status === 'view' && !isConfirmationDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
     }, [
         lendTx.status,
         borrowTx.status,
-        lendTx.isConfirmed,
-        borrowTx.isConfirmed,
         isConfirmationDialogOpen,
     ])
 
@@ -830,18 +828,16 @@ function LendAndBorrowAssetsMorphoVaults({
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
-        if (lendTx.status === 'approve' && !isConfirmationDialogOpen) {
+        if (lendTx.status === 'view' && !isConfirmationDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
 
-        if (borrowTx.status === 'borrow' && !isConfirmationDialogOpen) {
+        if (borrowTx.status === 'view' && !isConfirmationDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
     }, [
         lendTx.status,
         borrowTx.status,
-        lendTx.isConfirmed,
-        borrowTx.isConfirmed,
         isConfirmationDialogOpen,
     ])
 

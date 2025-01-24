@@ -19,7 +19,7 @@ export const UserTokenBalancesContext = createContext<TUserTokenBalancesProps>({
     erc20TokensBalanceData: {},
     isLoading: false,
     isRefreshing: false,
-    setIsRefreshing: () => {},
+    setIsRefreshing: () => { },
 })
 
 export default function UserTokenBalancesProvider({
@@ -35,6 +35,10 @@ export default function UserTokenBalancesProvider({
         isRefreshing,
         setIsRefreshing,
     } = useERC20Balance(walletAddress as `0x${string}`)
+
+    useEffect(() => {
+        setIsRefreshing(true)
+    }, [walletAddress])
 
     return (
         <UserTokenBalancesContext.Provider

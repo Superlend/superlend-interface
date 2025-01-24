@@ -18,6 +18,7 @@ const badgeVariants = cva(
                 green: 'border-transparent bg-[#00C939] bg-opacity-10 text-[#00AD31]',
                 blue: 'border-transparent bg-secondary-100/15 text-secondary-500',
                 yellow: 'border-transparent bg-[#FFA319]/15 text-[#D19900]',
+                gray: 'border-transparent bg-gray-200 text-black',
             },
             size: {
                 sm: 'px-[4px] rounded-2 uppercase',

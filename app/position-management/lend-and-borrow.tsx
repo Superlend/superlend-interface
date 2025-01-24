@@ -345,10 +345,10 @@ export default function LendAndBorrowAssets() {
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
         if (
-            ((lendTx.status === 'view' && lendTx.isConfirmed) ||
-            (borrowTx.status === 'view' && borrowTx.isConfirmed) ||
-            (withdrawTx.status === 'view' && withdrawTx.isConfirmed) ||
-            (repayTx.status === 'view' && repayTx.isConfirmed)) &&
+            ((lendTx.status === 'view' && !isConfirmationDialogOpen) ||
+            (borrowTx.status === 'view' && !isConfirmationDialogOpen) ||
+            (withdrawTx.status === 'view' && !isConfirmationDialogOpen) ||
+            (repayTx.status === 'view' && !isConfirmationDialogOpen)) &&
             !isMorphoVaults
         ) {
             setIsRefreshingErc20TokensBalanceData(true)
@@ -356,19 +356,15 @@ export default function LendAndBorrowAssets() {
     }, [
         lendTx.status,
         borrowTx.status,
-        lendTx.isConfirmed,
-        borrowTx.isConfirmed,
         withdrawTx.status,
-        withdrawTx.isConfirmed,
         repayTx.status,
-        repayTx.isConfirmed,
         isMorphoVaults,
     ])
 
     // Refresh balance when wallet address changes
-    useEffect(() => {
-        setIsRefreshingErc20TokensBalanceData(true)
-    }, [walletAddress, isWalletConnected])
+    // useEffect(() => {
+    //     setIsRefreshingErc20TokensBalanceData(true)
+    // }, [walletAddress, isWalletConnected])
 
     // Set selected borrow token details
     useEffect(() => {
@@ -1010,12 +1006,12 @@ export function ConfirmationDialog({
         (wallet: any) => wallet.address === walletAddress
     )
 
-    useEffect(() => {
-        // Reset the tx status when the dialog is closed
-        return () => {
-            resetLendBorrowTx()
-        }
-    }, [])
+    // useEffect(() => {
+    //     // Reset the tx status when the dialog is closed
+    //     return () => {
+    //         resetLendBorrowTx()
+    //     }
+    // }, [])
 
     useEffect(() => {
         setHasAcknowledgedRisk(false)
@@ -1059,12 +1055,11 @@ export function ConfirmationDialog({
         // When opening the dialog, reset the amount and the tx status
         setOpen(open)
         // When closing the dialog, reset the amount and the tx status
-        if (
-            !open &&
-            (lendTx.status !== 'approve' || borrowTx.status !== 'borrow')
-        ) {
-            setAmount('')
+        if (open) {
+            // setAmount('')
             resetLendBorrowTx()
+        } else if (!open && (lendTx.status !== 'approve' || borrowTx.status !== 'borrow')) {
+            setAmount('')
         }
     }
 
