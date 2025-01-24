@@ -25,6 +25,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: (item) => item.tokenSymbol,
         cell: ({ row }) => {
             const searchParams = useSearchParams()
+            const isMorphoShiftToken = row.original.tokenAddress === "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
             const tokenSymbol: string = row.getValue('tokenSymbol')
@@ -104,6 +105,19 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             {tokenSymbol}
                         </BodyText>
                     </Link>
+                    {(isMorphoShiftToken && positionTypeParam === 'lend') &&
+                        <InfoTooltip
+                            label={
+                                <ImageWithDefault
+                                    src="/icons/sparkles.svg"
+                                    alt="Rewards"
+                                    width={22}
+                                    height={22}
+                                    className="cursor-pointer hover:scale-110"
+                                />
+                            }
+                            content="Supplying to this vault earns up to 25% APY in SHIFT rewards"
+                        />}
                 </span>
             )
         },
