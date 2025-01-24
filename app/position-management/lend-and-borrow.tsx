@@ -747,9 +747,21 @@ export default function LendAndBorrowAssets() {
                             />
                         )}
                         {/* Borrow position type - Select token dropdown */}
+                        {
+                            (!isWalletConnected && !isLendPositionType(positionType)) && (
+                                <ImageWithDefault
+                                    src={assetDetails?.asset?.token?.logo || ''}
+                                    alt={assetDetails?.asset?.token?.symbol || ''}
+                                    className="shrink-0 w-[24px] h-[24px] rounded-full"
+                                    width={24}
+                                    height={24}
+                                />
+                            )
+                        }
                         {(isLoading ||
                             !selectedBorrowTokenDetails?.token?.address) &&
-                            !isLendPositionType(positionType) && (
+                            !isLendPositionType(positionType) && 
+                            isWalletConnected && (
                                 <LoaderCircle className="text-primary w-[60px] h-[34px] animate-spin" />
                             )}
                         {!isLoading &&
