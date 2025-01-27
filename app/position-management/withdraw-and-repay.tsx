@@ -1166,6 +1166,7 @@ function ConfirmationDialog({
                     tokenName: assetDetails?.asset?.token?.symbol,
                     txStatus: isWithdrawAction ? withdrawTx : repayTx,
                     actionType,
+                    isMorphoVaults: !!assetDetails?.vault
                 })}
             </BodyText>
             {canDisplayExplorerLinkWhileLoading && (
@@ -1655,11 +1656,13 @@ function getTxInProgressText({
     tokenName,
     txStatus,
     actionType,
+    isMorphoVaults
 }: {
     amount: string
     tokenName: string
     txStatus: TRepayTx | TWithdrawTx
     actionType: TActionType
+    isMorphoVaults: boolean
 }) {
     const formattedText = `${amount} ${tokenName}`
     const isPending = txStatus.isPending
@@ -1668,7 +1671,7 @@ function getTxInProgressText({
 
     if (isPending) {
         textByStatus = {
-            approve: `Approve spending ${formattedText} from your wallet`,
+            approve: `Approve ${(isMorphoVaults && actionType === 'withdraw') ? 'withdrawl of' : actionType === 'repay' ? 'repaying of' : 'spending'} ${formattedText} from your wallet`,
             repay: `Approve transaction for repaying ${formattedText} from your wallet`,
             withdraw: `Approve transaction for withdrawing ${formattedText} from your wallet`,
         }

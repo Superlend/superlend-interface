@@ -24,11 +24,13 @@ export default function PositionManagementPage() {
                 <MainContainer className="flex flex-col gap-[40px]">
                     <PageHeader />
                     <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-[16px]">
-                        <div className="flex flex-col gap-[16px]">
+                        <div className="flex flex-col gap-[16px] order-last xl:order-first">
                             <PositionDetails />
                             <AssetHistory />
                         </div>
-                        <LendAndBorrowAssets />
+                        <div className="order-first xl:order-last">
+                            <LendAndBorrowAssets />
+                        </div>
                         <LendAndBorrowAssetsMorpho />
                         {/* <BlogCard /> */}
                     </div>
