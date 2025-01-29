@@ -545,7 +545,7 @@ function FilterOptions({
                         <InfoTooltip
                             label={
                                 <Label htmlFor="exclude-morpho-markets">
-                                    <TooltipText>Exclude Risky Markets</TooltipText>
+                                    <TooltipText>Exclude Risky Platforms</TooltipText>
                                 </Label>
                             }
                             content="Supplying to Morpho markets are risky. Excluding them."

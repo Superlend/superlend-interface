@@ -13,7 +13,9 @@ export interface IBodyTextProps {
     weight?: TFontWeight
     className?: string
     as?: string
+    [key: string]: any
 }
+
 
 export interface ILabelProps {
     children: React.ReactNode
