@@ -92,6 +92,7 @@ export default function TopApyOpportunities() {
             return {
                 deposits: positionTypeParam === 'lend',
                 borrows: positionTypeParam === 'borrow',
+                max_ltv: positionTypeParam === 'borrow',
             }
         })
         setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])

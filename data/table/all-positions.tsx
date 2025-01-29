@@ -178,8 +178,9 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         level="body2"
                         weight="medium"
                         className="truncate"
+                        title={platformName}
                     >
-                        {`${capitalizeText(formattedPlatformName)} ${getPlatformVersion(platformId)}`}
+                        {platformName}
                     </BodyText>
                 </span>
             )
