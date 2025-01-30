@@ -7,6 +7,8 @@ import { ArrowRightIcon, ChevronDownIcon } from 'lucide-react'
 import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
 import ImageWithDefault from './ImageWithDefault'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
+import ConnectWalletButton from './ConnectWalletButton'
 
 interface ISelectTokeWidgetProps {
     setOpenSelectTokenDialog: (open: boolean) => void
@@ -29,6 +31,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
         isLoading,
     }: ISelectTokeWidgetProps) => {
     const isDisabled = !selectedToken || opportunitiesData.length === 0
+    const { walletAddress } = useWalletConnection()
 
     const handleOpenTokenSelectionDialog = () => {
         setOpenSelectTokenDialog(true)
@@ -60,24 +63,24 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                         </label>}
                     {selectedToken &&
                         <div className="flex gap-2 items-center">
-                            {!!selectedToken.chain_logo && 
-                            <ImageWithBadge
-                                mainImg={selectedToken.logo}
-                                badgeImg={selectedToken.chain_logo}
-                                mainImgAlt={selectedToken.symbol}
-                                badgeImgAlt={selectedToken.chain_id}
-                                mainImgWidth="32"
-                                badgeImgWidth="16"
-                                mainImgHeight="32"
-                                badgeImgHeight="16"
-                            />}
-                            {!selectedToken.chain_logo && 
-                            <ImageWithDefault
-                                src={selectedToken.logo}
-                                alt={selectedToken.symbol}
-                                width="32"
-                                height="32"
-                            />}
+                            {!!selectedToken.chain_logo &&
+                                <ImageWithBadge
+                                    mainImg={selectedToken.logo}
+                                    badgeImg={selectedToken.chain_logo}
+                                    mainImgAlt={selectedToken.symbol}
+                                    badgeImgAlt={selectedToken.chain_id}
+                                    mainImgWidth="32"
+                                    badgeImgWidth="16"
+                                    mainImgHeight="32"
+                                    badgeImgHeight="16"
+                                />}
+                            {!selectedToken.chain_logo &&
+                                <ImageWithDefault
+                                    src={selectedToken.logo}
+                                    alt={selectedToken.symbol}
+                                    width="32"
+                                    height="32"
+                                />}
                             <HeadingText level="h4" weight="medium">
                                 {selectedToken.symbol}
                             </HeadingText>
@@ -109,7 +112,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                     }
                 </div>
             }
-            {!showOpportunitiesTable &&
+            {(!showOpportunitiesTable && !!walletAddress) &&
                 <Button
                     type="button"
                     variant="primary"
@@ -122,7 +125,13 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                         View Opportunities
                     </span>
                     <ArrowRightIcon className="w-4 h-4 text-white group-disabled:opacity-[0.5]" />
-                </Button>}
+                </Button>
+            }
+            {!walletAddress && (
+                <div className="mt-4 flex items-center justify-center">
+                    <ConnectWalletButton />
+                </div>
+            )}
         </form>
     )
 }
