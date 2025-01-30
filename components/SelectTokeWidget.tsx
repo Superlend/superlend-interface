@@ -1,5 +1,5 @@
 import React from 'react'
-import { BodyText, HeadingText } from './ui/typography'
+import { BodyText, HeadingText, Label } from './ui/typography'
 import ImageWithBadge from './ImageWithBadge'
 import { Badge } from './ui/badge'
 import { abbreviateNumber } from '@/lib/utils'
@@ -31,7 +31,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
         isLoading,
     }: ISelectTokeWidgetProps) => {
     const isDisabled = !selectedToken || opportunitiesData.length === 0
-    const { walletAddress } = useWalletConnection()
+    const { walletAddress, isWalletConnected } = useWalletConnection()
 
     const handleOpenTokenSelectionDialog = () => {
         setOpenSelectTokenDialog(true)
@@ -49,18 +49,20 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
     return (
         <form className="flex flex-col w-full min-w-full min-w-[350px] min-[1060px]:min-w-[400px] max-w-[450px] p-3 rounded-3xl bg-white bg-opacity-40 shadow-[0px_2px_2px_rgba(0,0,0,0.02)] shrink-0">
             <div className="flex flex-col w-full bg-white rounded-2xl max-md:max-w-full">
-                <button
+                <Button
+                    variant="ghost"
                     onClick={handleOpenTokenSelectionDialog}
                     type="button"
-                    className="flex gap-10 justify-between items-center p-6 w-full bg-white rounded-2xl border border-gray-100 border-solid min-h-[80px] shadow-[0px_4px_16px_rgba(0,0,0,0.04)] max-md:px-5 max-md:max-w-full hover:border-gray-400 focus:border-gray-400"
+                    className="relative flex gap-10 justify-between items-center p-6 w-full bg-white rounded-2xl border border-gray-100 border-solid shadow-[0px_4px_16px_rgba(0,0,0,0.04)] max-md:px-5 max-md:max-w-full border-gray-200 hover:border-gray-400 focus:border-gray-400 rounded-5"
+                    disabled={!isWalletConnected}
                 >
                     {!selectedToken &&
-                        <label
+                        <Label
                             htmlFor="lendingToken"
-                            className="self-stretch my-auto text-sm sm:text-md font-medium leading-none text-stone-500"
+                            className="text-left max-[375px]:max-w-[18ch] max-[375px]:text-wrap my-auto text-sm sm:text-md font-medium leading-[1.2] text-gray-600"
                         >
                             Select {positionType === 'lend' ? 'lending' : 'collateral & borrow'} token
-                        </label>}
+                        </Label>}
                     {selectedToken &&
                         <div className="flex gap-2 items-center">
                             {!!selectedToken.chain_logo &&
@@ -88,7 +90,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                     <div className="flex gap-1 justify-center items-center self-stretch px-2 my-auto w-8 h-8 rounded-xl border border-gray-100 border-solid bg-neutral-100">
                         <ChevronDownIcon strokeWidth={2.5} className="w-8 h-8 text-stone-800" />
                     </div>
-                </button>
+                </Button>
                 {!selectedToken &&
                     <div className="w-full flex items-center justify-center">
                         <BodyText level="body2" weight="normal" className="text-center text-stone-500 py-4 px-3 sm:w-[35ch]">

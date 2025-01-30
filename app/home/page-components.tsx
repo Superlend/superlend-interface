@@ -16,7 +16,7 @@ import Opportunities from './opportunities'
 import { AnimatePresence, motion } from 'framer-motion'
 
 export default function HomePageComponents() {
-    const { isConnectingWallet } = useWalletConnection()
+    const { isConnectingWallet, walletAddress, isWalletConnected } = useWalletConnection()
     const [positionType, setPositionType] = useState<TPositionType>('lend');
     const { portfolioData, isLoadingPortfolioData } = usePortfolioDataContext()
     const { allChainsData } = useAssetsDataContext()
@@ -30,6 +30,13 @@ export default function HomePageComponents() {
             tokens: [selectedToken?.symbol],
             enabled: !!selectedToken,
         })
+
+    useEffect(() => {
+        if (!isWalletConnected) {
+            setShowOpportunitiesTable(false)
+            setSelectedToken(null)
+        }
+    }, [isWalletConnected])
 
     const handlePositionTypeToggle = (type: TPositionType) => {
         setPositionType(type)
@@ -79,7 +86,7 @@ export default function HomePageComponents() {
                         <SelectTokeWidget
                             setOpenSelectTokenDialog={setOpenSelectTokenDialog}
                             selectedToken={selectedToken}
-                            opportunitiesData={opportunitiesData}
+                            opportunitiesData={isWalletConnected ? opportunitiesData : []}
                             positionType={positionType}
                             showOpportunitiesTable={showOpportunitiesTable}
                             setShowOpportunitiesTable={setShowOpportunitiesTable}

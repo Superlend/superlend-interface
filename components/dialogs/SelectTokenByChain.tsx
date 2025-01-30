@@ -116,45 +116,56 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
             }
             <ScrollArea className="h-[60vh] lg:h-full w-full max-h-[60vh] max-lg:pb-16">
                 <div className="space-y-2 px-4">
+                    {/* UI when loading */}
                     {isLoading &&
                         Array.from({ length: 5 }).map((_, index) => (
                             <LoadingBalanceItemSkeleton key={index} />
                         ))
                     }
-                    {!isLoading && tokens.map((token: any, index: number) => (
-                        <div
-                            key={index}
-                            className="flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4"
-                            onClick={() => onSelectToken(token)}
-                        >
-                            <div className="flex items-center gap-1 select-none">
-                                <div
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center`}
-                                >
-                                    <ImageWithBadge
-                                        mainImg={token.logo}
-                                        badgeImg={token.chain_logo}
-                                        mainImgAlt={token.symbol}
-                                        badgeImgAlt={token.chain_id}
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-0">
-                                    <BodyText level="body2" weight="medium">
-                                        {token.symbol}
-                                    </BodyText>
-                                    <Label className="text-gray-700">{`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}</Label>
-                                </div>
-                            </div>
-                            <div className="text-right select-none flex flex-col gap-0">
-                                <BodyText
-                                    level="body2"
-                                    weight="medium"
-                                >{`${hasLowestDisplayValuePrefix(Number(token.amount))} ${formatAmountToDisplay(token.amount)}`}</BodyText>
-                                <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.amount) * Number(token.price_usd)).toString())}`}</Label>
-                            </div>
+                    {/* UI when does not have tokens */}
+                    {(!isLoading && tokens.length === 0) &&
+                        <div className="flex items-center justify-center h-full py-10">
+                            <BodyText level="body2" weight="medium" className="text-gray-500">
+                                No tokens found
+                            </BodyText>
                         </div>
+                    }
+                    {/* UI when has tokens */}
+                    {(!isLoading && tokens.length > 0) &&
+                        tokens.map((token: any, index: number) => (
+                            <div
+                                key={index}
+                                className="flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4"
+                                onClick={() => onSelectToken(token)}
+                            >
+                                <div className="flex items-center gap-1 select-none">
+                                    <div
+                                        className={`w-8 h-8 rounded-full flex items-center justify-center`}
+                                    >
+                                        <ImageWithBadge
+                                            mainImg={token.logo}
+                                            badgeImg={token.chain_logo}
+                                            mainImgAlt={token.symbol}
+                                            badgeImgAlt={token.chain_id}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-0">
+                                        <BodyText level="body2" weight="medium">
+                                            {token.symbol}
+                                        </BodyText>
+                                        <Label className="text-gray-700">{`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}</Label>
+                                    </div>
+                                </div>
+                                <div className="text-right select-none flex flex-col gap-0">
+                                    <BodyText
+                                        level="body2"
+                                        weight="medium"
+                                    >{`${hasLowestDisplayValuePrefix(Number(token.amount))} ${formatAmountToDisplay(token.amount)}`}</BodyText>
+                                    <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.amount) * Number(token.price_usd)).toString())}`}</Label>
+                                </div>
+                            </div>
 
-                    ))}
+                        ))}
                 </div>
             </ScrollArea>
         </Card>
