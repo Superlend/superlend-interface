@@ -27,17 +27,24 @@ import { hasLowestDisplayValuePrefix } from '@/lib/utils'
 import { getLowestDisplayValue } from '@/lib/utils'
 import { isLowestValue } from '@/lib/utils'
 import { abbreviateNumber } from '@/lib/utils'
+import { Button } from '../ui/button'
+import ImageWithBadge from '../ImageWithBadge'
+import { Skeleton } from '../ui/skeleton'
 
 interface TokenDetails {
     symbol: string
     address: string
-    positionAmount: string
-    positionAmountInUsd: string
+    amount: string
+    price_usd: string
     logo: string
     apy: number
-    price_usd: number
     decimals: number
+    chain_id: number
+    chain_logo: string
+    chain_name: string
 }
+
+
 
 interface NetworkDetails {
     name: string
@@ -45,12 +52,19 @@ interface NetworkDetails {
     chainId: number
 }
 
+interface ChainDetails {
+    chain_id: number
+    logo: string
+}
+
 interface SelectTokenByChainProps {
     open: boolean
     setOpen: (open: boolean) => void
-    networks: NetworkDetails[]
+    networks?: NetworkDetails[]
     tokens: TokenDetails[]
+    chains?: ChainDetails[]
     onSelectToken: (token: any) => void
+    isLoading: boolean
 }
 
 export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
@@ -58,77 +72,88 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     setOpen,
     networks,
     tokens,
+    chains,
     onSelectToken,
+    isLoading
 }: SelectTokenByChainProps) => {
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
+    const hasNetwork = networks && networks.length > 0
+    const hasChains = chains && chains.length > 0
 
     const content = (
         <Card className="w-full py-2 border-0 shadow-none bg-white bg-opacity-100 divide-y divide-gray-200">
-            {/* <div className="flex items-center gap-2 mb-6 px-6">
-                <Button
-                    variant={'outline'}
-                    className="capitalize rounded-4 py-2 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25"
-                    size={'lg'}
-                >
-                    All Networks
-                </Button>
-                <ScrollArea className="w-full h-fit whitespace-nowrap">
-                    <div className="flex gap-2">
-                        {networks.map((network: any) => (
-                            <Button
-                                key={network.name}
-                                variant={'outline'}
-                                className={`px-3 py-2 rounded-4 flex items-center justify-center border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25`}
-                            >
-                                <Image
-                                    src={network.logo}
-                                    alt={network.name}
-                                    width={28}
-                                    height={28}
-                                    className="rounded-full"
-                                />
-                            </Button>
-                        ))}
-                        <ScrollBar orientation="horizontal" />
-                    </div>
-                </ScrollArea>
-            </div> */}
-            <ScrollArea className="max-h-[60vh] w-full">
+            {hasNetwork &&
+                <div className="flex items-center gap-2 mb-6 px-6">
+                    <Button
+                        variant={'outline'}
+                        className="capitalize rounded-4 py-2 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25"
+                        size={'lg'}
+                    >
+                        All Networks
+                    </Button>
+                    <ScrollArea className="w-full h-fit whitespace-nowrap">
+                        <div className="flex gap-2">
+                            {networks?.map((network: any) => (
+                                <Button
+                                    key={network.name}
+                                    variant={'outline'}
+                                    className={`px-3 py-2 rounded-4 flex items-center justify-center border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25`}
+                                >
+                                    <Image
+                                        src={network.logo}
+                                        alt={network.name}
+                                        width={28}
+                                        height={28}
+                                        className="rounded-full"
+                                    />
+                                </Button>
+                            ))}
+                            <ScrollBar orientation="horizontal" />
+                        </div>
+                    </ScrollArea>
+                </div>
+            }
+            <ScrollArea className="max-h-[60vh] h-full w-full">
                 <div className="space-y-2 px-4">
-                    {tokens.map((token: any, index: number) => (
+                    {isLoading &&
+                        Array.from({ length: 5 }).map((_, index) => (
+                            <LoadingBalanceItemSkeleton key={index} />
+                        ))
+                    }
+                    {!isLoading && tokens.map((token: any, index: number) => (
                         <div
                             key={index}
                             className="flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4"
                             onClick={() => onSelectToken(token)}
                         >
-                            <div className="flex items-center gap-3 select-none">
+                            <div className="flex items-center gap-1 select-none">
                                 <div
                                     className={`w-8 h-8 rounded-full flex items-center justify-center`}
                                 >
-                                    <Image
-                                        src={token.logo}
-                                        alt={token.symbol}
-                                        width={28}
-                                        height={28}
-                                        className="rounded-full"
+                                    <ImageWithBadge
+                                        mainImg={token.logo}
+                                        badgeImg={token.chain_logo}
+                                        mainImgAlt={token.symbol}
+                                        badgeImgAlt={token.chain_id}
                                     />
                                 </div>
-                                <div>
+                                <div className="flex flex-col gap-0">
                                     <BodyText level="body2" weight="medium">
                                         {token.symbol}
                                     </BodyText>
                                     <Label className="text-gray-700">{`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}</Label>
                                 </div>
                             </div>
-                            <div className="text-right select-none">
+                            <div className="text-right select-none flex flex-col gap-0">
                                 <BodyText
                                     level="body2"
                                     weight="medium"
-                                >{`${hasLowestDisplayValuePrefix(Number(token.positionAmount))} ${formatAmountToDisplay(token.positionAmount)}`}</BodyText>
-                                <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.positionAmountInUsd))} $${formatAmountToDisplay(token.positionAmountInUsd)}`}</Label>
+                                >{`${hasLowestDisplayValuePrefix(Number(token.amount))} ${formatAmountToDisplay(token.amount)}`}</BodyText>
+                                <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.amount) * Number(token.price_usd)).toString())}`}</Label>
                             </div>
                         </div>
+
                     ))}
                 </div>
             </ScrollArea>
@@ -178,4 +203,22 @@ function formatAmountToDisplay(amount: string) {
     } else {
         return abbreviateNumber(Number(amount ?? 0))
     }
+}
+
+function LoadingBalanceItemSkeleton() {
+    return (
+        <div className="flex items-center justify-between py-2 pl-2 pr-6">
+            <div className="flex items-center gap-1 select-none">
+                <Skeleton className="w-8 h-8 rounded-full bg-stone-200" />
+                <div className="flex flex-col gap-1">
+                    <Skeleton className="w-24 h-4 rounded-2 bg-stone-200" />
+                    <Skeleton className="w-16 h-2 rounded-2 bg-stone-200" />
+                </div>
+            </div>
+            <div className="flex flex-col items-end gap-1">
+                <Skeleton className="w-24 h-4 rounded-2 bg-stone-200" />
+                <Skeleton className="w-16 h-2 rounded-2 bg-stone-200" />
+            </div>
+        </div>
+    )
 }

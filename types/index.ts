@@ -56,6 +56,7 @@ export type TGetOpportunitiesParams = {
     tokens?: string[]
     trend?: boolean
     limit?: number
+    enabled?: boolean
 }
 
 export type TReward = {
