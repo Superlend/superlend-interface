@@ -52,6 +52,7 @@ const TokenRates: React.FC = () => {
                 opts={{
                     align: 'center',
                     loop: true,
+                    dragFree: true,
                 }}
             >
                 <CarouselContent>

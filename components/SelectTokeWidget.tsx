@@ -6,6 +6,7 @@ import { abbreviateNumber } from '@/lib/utils'
 import { ArrowRightIcon, ChevronDownIcon } from 'lucide-react'
 import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
+import ImageWithDefault from './ImageWithDefault'
 
 interface ISelectTokeWidgetProps {
     setOpenSelectTokenDialog: (open: boolean) => void
@@ -43,7 +44,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
     const helperText = positionType === 'lend' ? lendHelperText : borrowHelperText
 
     return (
-        <form className="flex flex-col w-full min-w-full md:min-w-[400px] max-w-[450px] p-3 rounded-3xl bg-white bg-opacity-40 shadow-[0px_2px_2px_rgba(0,0,0,0.02)] shrink-0">
+        <form className="flex flex-col w-full min-w-full md:min-w-[350px] max-w-[450px] p-3 rounded-3xl bg-white bg-opacity-40 shadow-[0px_2px_2px_rgba(0,0,0,0.02)] shrink-0">
             <div className="flex flex-col w-full bg-white rounded-2xl max-md:max-w-full">
                 <button
                     onClick={handleOpenTokenSelectionDialog}
@@ -59,6 +60,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                         </label>}
                     {selectedToken &&
                         <div className="flex gap-2 items-center">
+                            {!!selectedToken.chain_logo && 
                             <ImageWithBadge
                                 mainImg={selectedToken.logo}
                                 badgeImg={selectedToken.chain_logo}
@@ -68,7 +70,14 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                                 badgeImgWidth="16"
                                 mainImgHeight="32"
                                 badgeImgHeight="16"
-                            />
+                            />}
+                            {!selectedToken.chain_logo && 
+                            <ImageWithDefault
+                                src={selectedToken.logo}
+                                alt={selectedToken.symbol}
+                                width="32"
+                                height="32"
+                            />}
                             <HeadingText level="h4" weight="medium">
                                 {selectedToken.symbol}
                             </HeadingText>

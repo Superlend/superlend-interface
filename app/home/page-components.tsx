@@ -70,7 +70,7 @@ export default function HomePageComponents() {
                     />
                 </div>
                 <TokenRates />
-                <div className="flex flex-col lg:flex-row xl:items-start justify-center gap-2 mt-8 transition-all duration-300 max-w-full w-full md:overflow-hidden">
+                <div className="flex flex-col lg:flex-row lg:items-start justify-center gap-2 mt-8 transition-all duration-300 max-w-full w-full md:overflow-hidden">
                     <motion.div
                         animate={{ x: showOpportunitiesTable ? 0 : 'auto' }}
                         transition={{ duration: 0.7, ease: 'easeInOut', delay: 0.2 }}
@@ -92,8 +92,8 @@ export default function HomePageComponents() {
                                 initial={{ x: 1400, opacity: 0, width: 0 }}
                                 animate={{ x: 0, opacity: 1, width: 'auto' }}
                                 exit={{ x: 1400, opacity: 0, width: 0 }}
-                                transition={{ duration: 0.8, ease: 'easeInOut', delay: 0.3 }}
-                                className="w-full lg:max-w-[500px] xl:max-w-[600px]"
+                                transition={{ duration: 1.5, ease: 'easeInOut', delay: 0.3 }}
+                                className="w-full lg:max-w-[600px] xl:max-w-[750px]"
                             >
                                 <Opportunities
                                     positionType={positionType}

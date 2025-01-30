@@ -39,9 +39,9 @@ interface TokenDetails {
     logo: string
     apy: number
     decimals: number
-    chain_id: number
-    chain_logo: string
-    chain_name: string
+    chain_id?: number
+    chain_logo?: string
+    chain_name?: string
 }
 
 
@@ -64,7 +64,7 @@ interface SelectTokenByChainProps {
     tokens: TokenDetails[]
     chains?: ChainDetails[]
     onSelectToken: (token: any) => void
-    isLoading: boolean
+    isLoading?: boolean
 }
 
 export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
@@ -114,7 +114,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                     </ScrollArea>
                 </div>
             }
-            <ScrollArea className="max-h-[60vh] h-full w-full">
+            <ScrollArea className="h-[60vh] lg:h-full w-full max-h-[60vh] max-lg:pb-16">
                 <div className="space-y-2 px-4">
                     {isLoading &&
                         Array.from({ length: 5 }).map((_, index) => (
