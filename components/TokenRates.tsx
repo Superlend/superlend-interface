@@ -33,95 +33,98 @@ const TokenRates: React.FC<{
             })
 
         return (
-            <Carousel
-                opts={{
-                    align: 'center',
-                    loop: true,
-                    dragFree: true,
-                }}
-                plugins={[
-                    Autoplay({
-                      delay: 2000,
-                    }),
-                  ]}
-                className="overflow-visible flex items-center justify-center max-w-full h-32 -my-3 max-w-3xl w-[817px] [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)] overflow-visible"
+            <div
+                className="overflow-hidden flex items-center justify-center max-w-full h-32 -my-3 [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]"
             >
-                <CarouselContent className="overflow-visible">
-                    {isLoadingOpportunitiesData &&
-                        Array.from({ length: 10 }).map((_, index) => (
-                            <CarouselItem key={index} className="basis-auto">
-                                <Skeleton className="h-8 w-[100px] rounded-4" />
-                            </CarouselItem>
-                        ))}
-                    {!isLoadingOpportunitiesData &&
-                        opportunitiesData.map((opportunity, index) => (
-                            <CarouselItem key={index} className="basis-auto">
-                                <InfoTooltip
-                                    side="left"
-                                    label={
-                                        <div className="flex gap-2 items-center py-1 pr-2 pl-1 bg-white rounded-4 select-none shadow-sm hover:shadow-none border border-transaprent hover:border-secondary-300 transition-all duration-300">
-                                            <ImageWithDefault
-                                                loading="lazy"
-                                                src={opportunity.token.logo}
-                                                alt={opportunity.token.name}
-                                                width={26}
-                                                height={26}
-                                                className="object-contain shrink-0 rounded-full h-[26px] w-[26px] max-w-[26px] max-h-[26px]"
-                                            />
-                                            <BodyText level="body2" weight="medium">
-                                                {abbreviateNumber(Number(opportunity.platform.apy.avg_7days))}%
-                                            </BodyText>
-                                        </div>
-                                    }
-                                    content={
-                                        <div className='flex flex-col select-none divide-y divide-gray-200'>
-                                            <div className="flex gap-2 items-center justify-start pb-2">
+                <Carousel
+                    opts={{
+                        align: 'center',
+                        loop: true,
+                        dragFree: true,
+                    }}
+                    plugins={[
+                        Autoplay({
+                            delay: 2000,
+                        }),
+                    ]}
+                >
+                    <CarouselContent>
+                        {isLoadingOpportunitiesData &&
+                            Array.from({ length: 10 }).map((_, index) => (
+                                <CarouselItem key={index} className="basis-auto">
+                                    <Skeleton className="h-8 w-[100px] rounded-4" />
+                                </CarouselItem>
+                            ))}
+                        {!isLoadingOpportunitiesData &&
+                            opportunitiesData.map((opportunity, index) => (
+                                <CarouselItem key={index} className="basis-auto">
+                                    <InfoTooltip
+                                        side="left"
+                                        label={
+                                            <div className="flex gap-2 items-center py-1 pr-2 pl-1 bg-white rounded-4 shadow-sm hover:shadow-none border border-transaprent hover:border-secondary-300 transition-all duration-300">
                                                 <ImageWithDefault
                                                     loading="lazy"
-                                                    src={'/icons/graph-up-in-box.svg'}
-                                                    alt={'Last 7D APY'}
-                                                    width={16}
-                                                    height={16}
-                                                    className="object-contain shrink-0 h-[16px] w-[16px] max-w-[16px] max-h-[16px]"
+                                                    src={opportunity.token.logo}
+                                                    alt={opportunity.token.name}
+                                                    width={26}
+                                                    height={26}
+                                                    className="object-contain shrink-0 rounded-full h-[26px] w-[26px] max-w-[26px] max-h-[26px] select-none"
                                                 />
-                                                <Label weight="normal" className='text-gray-700'>
-                                                    Last 7D APY
-                                                </Label>
+                                                <BodyText level="body2" weight="medium" className='select-none'>
+                                                    {abbreviateNumber(Number(opportunity.platform.apy.avg_7days))}%
+                                                </BodyText>
                                             </div>
-                                            <div className="flex gap-2 items-center justify-start py-1">
-                                                <ImageWithDefault
-                                                    loading="lazy"
-                                                    src={opportunity.platform.logo}
-                                                    alt={opportunity.platform.name}
-                                                    width={14}
-                                                    height={14}
-                                                    className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
-                                                />
-                                                <Label weight="normal" className='text-gray-700'>
-                                                    {opportunity.platform.name}
-                                                </Label>
+                                        }
+                                        content={
+                                            <div className='flex flex-col select-none divide-y divide-gray-200'>
+                                                <div className="flex gap-2 items-center justify-start pb-2">
+                                                    <ImageWithDefault
+                                                        loading="lazy"
+                                                        src={'/icons/graph-up-in-box.svg'}
+                                                        alt={'Last 7D APY'}
+                                                        width={16}
+                                                        height={16}
+                                                        className="object-contain shrink-0 h-[16px] w-[16px] max-w-[16px] max-h-[16px]"
+                                                    />
+                                                    <Label weight="normal" className='text-gray-700'>
+                                                        Last 7D APY
+                                                    </Label>
+                                                </div>
+                                                <div className="flex gap-2 items-center justify-start py-1">
+                                                    <ImageWithDefault
+                                                        loading="lazy"
+                                                        src={opportunity.platform.logo}
+                                                        alt={opportunity.platform.name}
+                                                        width={14}
+                                                        height={14}
+                                                        className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
+                                                    />
+                                                    <Label weight="normal" className='text-gray-700'>
+                                                        {opportunity.platform.name}
+                                                    </Label>
+                                                </div>
+                                                <div className="flex gap-2 items-center justify-start pt-2">
+                                                    <ImageWithDefault
+                                                        loading="lazy"
+                                                        src={allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.logo}
+                                                        alt={allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.name}
+                                                        width={14}
+                                                        height={14}
+                                                        className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
+                                                    />
+                                                    <Label weight="normal" className='text-gray-700'>
+                                                        {allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.name}
+                                                    </Label>
+                                                </div>
                                             </div>
-                                            <div className="flex gap-2 items-center justify-start pt-2">
-                                                <ImageWithDefault
-                                                    loading="lazy"
-                                                    src={allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.logo}
-                                                    alt={allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.name}
-                                                    width={14}
-                                                    height={14}
-                                                    className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
-                                                />
-                                                <Label weight="normal" className='text-gray-700'>
-                                                    {allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.name}
-                                                </Label>
-                                            </div>
-                                        </div>
-                                    }
-                                />
-                            </CarouselItem>
-                        ))
-                    }
-                </CarouselContent>
-            </Carousel>
+                                        }
+                                    />
+                                </CarouselItem>
+                            ))
+                        }
+                    </CarouselContent>
+                </Carousel>
+            </div>
         )
     }
 
