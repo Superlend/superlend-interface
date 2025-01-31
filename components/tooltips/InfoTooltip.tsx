@@ -70,7 +70,7 @@ export default function InfoTooltip({
                             onHoverEnd={handleTooltipToggle(false)}
                             onMouseEnter={handleTooltipToggle(true)}
                             onMouseLeave={handleTooltipToggle(false)}
-                            className="w-fit inline-block shrink-0 cursor-help"
+                            className="w-fit inline-block shrink-0"
                         >
                             {!label && (
                                 <InfoCircleIcon
@@ -98,7 +98,7 @@ export default function InfoTooltip({
     }
 
     return (
-        <Drawer open={open}>
+        <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
                 <span
                     onClick={handleTooltipToggle(true)}

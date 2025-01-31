@@ -279,18 +279,18 @@ export default function Opportunities({
     // )
 
     // Handle exclude morpho markets by URL param flag
-    // function handleExcludeMorphoMarketsByParamFlag(
-    //     opportunity: TOpportunityTable
-    // ) {
-    //     const isVault = opportunity.isVault
-    //     const isMorpho =
-    //         opportunity.platformId.split('-')[0].toLowerCase() ===
-    //         PlatformType.MORPHO
+    function handleExcludeMorphoMarkets(
+        opportunity: TOpportunityTable
+    ) {
+        const isVault = opportunity.isVault
+        const isMorpho =
+            opportunity.platformId.split('-')[0].toLowerCase() ===
+            PlatformType.MORPHO
 
-    //     return excludeRiskyMarketsFlag
-    //         ? !(isMorpho && !isVault)
-    //         : true
-    // }
+        return positionType === 'lend'
+            ? !(isMorpho && !isVault)
+            : true
+    }
 
     function handleExcludeMorphoVaultsByPositionType(
         opportunity: TOpportunityTable
@@ -307,8 +307,8 @@ export default function Opportunities({
         return positionType === 'borrow'
             ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
             handleFilterTableRowsByPlatformIds(opportunity)
-            // : handleExcludeMorphoMarketsByParamFlag(opportunity) &&
-            : handleFilterTableRowsByPlatformIds(opportunity) &&
+            : handleExcludeMorphoMarkets(opportunity) &&
+            handleFilterTableRowsByPlatformIds(opportunity) &&
             opportunity.protocol_identifier !== EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
     }
 
@@ -354,7 +354,7 @@ export default function Opportunities({
             id="opportunities-table"
             className="opportunities-table flex flex-col gap-[24px]"
         >
-            <div className="opportunities-table relative md:z-[50]">
+            <div className="opportunities-table">
                 {!isLoadingOpportunitiesData && !isTableLoading && (
                     <OpportunitiesDataTable
                         columns={columns}

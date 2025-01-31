@@ -15,19 +15,32 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 import Opportunities from './opportunities'
 import { AnimatePresence, motion } from 'framer-motion'
 
+interface ISelectedToken {
+    address: string
+    amount: number
+    chain_id: number
+    chain_logo: string
+    chain_name: string
+    decimals: number
+    logo: string
+    name: string
+    price_usd: number
+    symbol: string
+}
+
 export default function HomePageComponents() {
     const { isConnectingWallet, walletAddress, isWalletConnected } = useWalletConnection()
     const [positionType, setPositionType] = useState<TPositionType>('lend');
     const { portfolioData, isLoadingPortfolioData } = usePortfolioDataContext()
     const { allChainsData } = useAssetsDataContext()
     const [openSelectTokenDialog, setOpenSelectTokenDialog] = useState(false)
-    const [selectedToken, setSelectedToken] = useState<any>(null)
+    const [selectedToken, setSelectedToken] = useState<ISelectedToken | null>(null)
     const [showOpportunitiesTable, setShowOpportunitiesTable] = useState(false)
     const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData } =
         useGetOpportunitiesData({
             type: positionType as TPositionType,
             chain_ids: [Number(selectedToken?.chain_id)],
-            tokens: [selectedToken?.symbol],
+            tokens: [selectedToken?.symbol || ''],
             enabled: !!selectedToken,
         })
 
@@ -38,13 +51,19 @@ export default function HomePageComponents() {
         }
     }, [isWalletConnected])
 
+    // Set showOpportunitiesTable to true when token is selected
+    useEffect(() => {
+        if (!!selectedToken) {
+            setShowOpportunitiesTable(true)
+        }
+    }, [!!selectedToken, selectedToken?.address])
+
     const handlePositionTypeToggle = (type: TPositionType) => {
         setPositionType(type)
     }
 
     function handleSelectToken(token: any) {
         setSelectedToken(token)
-        setShowOpportunitiesTable(false)
         setOpenSelectTokenDialog(false)
     }
 
@@ -83,7 +102,6 @@ export default function HomePageComponents() {
                     <motion.div
                         animate={{ x: showOpportunitiesTable ? 0 : 'auto' }}
                         transition={{ duration: 0.7, ease: 'easeInOut', delay: 0.2 }}
-                        className="flex items-center justify-center"
                     >
                         <SelectTokeWidget
                             setOpenSelectTokenDialog={setOpenSelectTokenDialog}
@@ -99,7 +117,7 @@ export default function HomePageComponents() {
                         {showOpportunitiesTable ?
                             (<motion.div
                                 initial={{ x: 1400, opacity: 0, width: 0 }}
-                                animate={{ x: 0, opacity: 1, width: 'auto' }}
+                                animate={{ x: 0, opacity: 1, width: '100%' }}
                                 exit={{ x: 1400, opacity: 0, width: 0 }}
                                 transition={{ duration: 1.5, ease: 'easeInOut', delay: 0.3 }}
                                 className="w-full lg:max-w-[600px] xl:max-w-[750px]"
@@ -117,7 +135,6 @@ export default function HomePageComponents() {
                 <SelectTokenByChain
                     open={openSelectTokenDialog}
                     setOpen={setOpenSelectTokenDialog}
-                    // networks={networks}
                     tokens={tokensList}
                     onSelectToken={handleSelectToken}
                     isLoading={isLoadingPortfolioData || isConnectingWallet}

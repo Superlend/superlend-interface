@@ -2,7 +2,7 @@ import React from 'react'
 import { BodyText, HeadingText, Label } from './ui/typography'
 import ImageWithBadge from './ImageWithBadge'
 import { Badge } from './ui/badge'
-import { abbreviateNumber } from '@/lib/utils'
+import { abbreviateNumber, formatAmountToDisplay, hasLowestDisplayValuePrefix } from '@/lib/utils'
 import { ArrowRightIcon, ChevronDownIcon } from 'lucide-react'
 import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
@@ -31,7 +31,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
         isLoading,
     }: ISelectTokeWidgetProps) => {
     const isDisabled = !selectedToken || opportunitiesData.length === 0
-    const { walletAddress, isWalletConnected } = useWalletConnection()
+    const { walletAddress, isWalletConnected, isConnectingWallet } = useWalletConnection()
 
     const handleOpenTokenSelectionDialog = () => {
         setOpenSelectTokenDialog(true)
@@ -54,7 +54,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                     onClick={handleOpenTokenSelectionDialog}
                     type="button"
                     className="relative flex gap-10 justify-between items-center p-6 w-full bg-white rounded-2xl border border-gray-100 border-solid shadow-[0px_4px_16px_rgba(0,0,0,0.04)] max-md:px-5 max-md:max-w-full border-gray-200 hover:border-gray-400 focus:border-gray-400 rounded-5"
-                    disabled={!isWalletConnected}
+                    disabled={!isWalletConnected || isConnectingWallet || isLoading}
                 >
                     {!selectedToken &&
                         <Label
@@ -102,7 +102,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
             {selectedToken &&
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-6 pb-4 px-4">
                     <BodyText level="body2" weight="medium" className="text-gray-500">
-                        Balance: {abbreviateNumber(selectedToken.amount)}
+                        Balance: {`${hasLowestDisplayValuePrefix(Number(selectedToken.amount))} ${formatAmountToDisplay(selectedToken.amount)}`}
                     </BodyText>
                     {!isLoading &&
                         <Badge variant="blue" className="w-fit">
@@ -114,7 +114,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                     }
                 </div>
             }
-            {(!showOpportunitiesTable && !!walletAddress) &&
+            {/* {(!showOpportunitiesTable && !!walletAddress) &&
                 <Button
                     type="button"
                     variant="primary"
@@ -128,7 +128,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                     </span>
                     <ArrowRightIcon className="w-4 h-4 text-white group-disabled:opacity-[0.5]" />
                 </Button>
-            }
+            } */}
             {!walletAddress && (
                 <div className="mt-4 flex items-center justify-center">
                     <ConnectWalletButton />

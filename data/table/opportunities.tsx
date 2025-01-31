@@ -33,9 +33,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const chainId = row.original.chain_id
             const chainLogo = row.original.chainLogo
             const chainName = row.original.chainName
-            const searchParams = useSearchParams()
-            const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
 
             const tooltipContent = (
                 <span className="flex flex-col gap-[16px]">
@@ -94,14 +91,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     >
                         {platformName}
                     </BodyText>
-                    {isMorpho && !isVault && positionTypeParam === 'lend' && (
-                        <InfoTooltip
-                            // label={
-                            //     <ShieldAlertIcon width={18} height={18} className="text-[#D19900] shrink-0" />
-                            // }
-                            content="Supplying directly to Morpho markets is risky and not advised by the Morpho team"
-                        />
-                    )}
                 </span>
             )
         },

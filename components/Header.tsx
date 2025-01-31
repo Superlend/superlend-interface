@@ -127,7 +127,7 @@ const Header: React.FC = () => {
             </header>
 
             {/* Footer nav */}
-            <div className="z-[51] fixed bottom-0 left-0 md:hidden w-full flex justify-center">
+            <div className="z-50 fixed bottom-0 left-0 md:hidden w-full flex justify-center">
                 <nav className="flex gap-4 lg:gap-5 items-center justify-center self-stretch px-10 text-sm tracking-normal leading-none whitespace-nowrap text-stone-800 w-full bg-white bg-opacity-40 backdrop-blur">
                     {tabs.map((tab) => (
                         <Button

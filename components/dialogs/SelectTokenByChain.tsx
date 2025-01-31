@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import {
     Dialog,
     DialogContent,
@@ -30,6 +30,9 @@ import { abbreviateNumber } from '@/lib/utils'
 import { Button } from '../ui/button'
 import ImageWithBadge from '../ImageWithBadge'
 import { Skeleton } from '../ui/skeleton'
+import { useAssetsDataContext } from '@/context/data-provider'
+import ImageWithDefault from '../ImageWithDefault'
+import { X } from 'lucide-react'
 
 interface TokenDetails {
     symbol: string
@@ -60,9 +63,7 @@ interface ChainDetails {
 interface SelectTokenByChainProps {
     open: boolean
     setOpen: (open: boolean) => void
-    networks?: NetworkDetails[]
     tokens: TokenDetails[]
-    chains?: ChainDetails[]
     onSelectToken: (token: any) => void
     isLoading?: boolean
 }
@@ -70,51 +71,86 @@ interface SelectTokenByChainProps {
 export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     open,
     setOpen,
-    networks,
     tokens,
-    chains,
     onSelectToken,
     isLoading
 }: SelectTokenByChainProps) => {
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
-    const hasNetwork = networks && networks.length > 0
-    const hasChains = chains && chains.length > 0
+    const { allChainsData } = useAssetsDataContext()
+    const [selectedChains, setSelectedChains] = useState<string[]>([])
 
+    const chains = allChainsData.map((chain: any) => ({
+        name: chain.name,
+        logo: chain.logo,
+        chainId: chain.chain_id,
+    }))
+
+    const handleSelectChain = (chainId: number) => {
+        setSelectedChains((prev) => {
+            if (prev.includes(chainId.toString())) {
+                return prev.filter((id) => id !== chainId.toString())
+            } else {
+                return [...prev, chainId.toString()]
+            }
+        })
+    }
+
+    function isChainSelected(chainId: number) {
+        return selectedChains.includes(chainId.toString())
+    }
+
+    const filteredTokens = selectedChains.length > 0 ? tokens.filter((token: any) => selectedChains.includes(token.chain_id.toString())) : tokens;
+
+    // SUB_COMPONENT: Close button to close the dialog
+    const closeContentButton = (
+        <Button
+            variant="ghost"
+            onClick={() => setOpen(false)}
+            className="h-6 w-6 flex items-center justify-center absolute right-6 top-[1.3rem] rounded-full opacity-70 bg-white ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground p-0"
+        >
+            <X strokeWidth={2.5} className="h-4 w-4 text-black" />
+            <span className="sr-only">Close</span>
+        </Button>
+    )
+
+    // SUB_COMPONENT: Content
     const content = (
         <Card className="w-full py-2 border-0 shadow-none bg-white bg-opacity-100 divide-y divide-gray-200">
-            {hasNetwork &&
-                <div className="flex items-center gap-2 mb-6 px-6">
-                    <Button
-                        variant={'outline'}
-                        className="capitalize rounded-4 py-2 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25"
-                        size={'lg'}
-                    >
-                        All Networks
-                    </Button>
-                    <ScrollArea className="w-full h-fit whitespace-nowrap">
-                        <div className="flex gap-2">
-                            {networks?.map((network: any) => (
-                                <Button
-                                    key={network.name}
-                                    variant={'outline'}
-                                    className={`px-3 py-2 rounded-4 flex items-center justify-center border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25`}
-                                >
-                                    <Image
-                                        src={network.logo}
-                                        alt={network.name}
-                                        width={28}
-                                        height={28}
-                                        className="rounded-full"
-                                    />
-                                </Button>
-                            ))}
-                            <ScrollBar orientation="horizontal" />
-                        </div>
-                    </ScrollArea>
-                </div>
-            }
-            <ScrollArea className="h-[60vh] lg:h-full w-full max-h-[60vh] max-lg:pb-16">
+            {/* UI: Filter with chains */}
+            <div className="my-4 md:my-6 pl-6">
+                <ScrollArea type='scroll' className="w-full h-fit whitespace-nowrap hide-thumb pb-2">
+                    <div className="flex items-center gap-2 pr-4">
+                        <Button
+                            variant={'outline'}
+                            className={`capitalize rounded-4 py-2.5 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${selectedChains.length === 0 ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
+                            size={'lg'}
+                            onClick={() => setSelectedChains([])}
+                        >
+                            All Chains
+                        </Button>
+                        {chains?.map((chain: any) => (
+                            <Button
+                                key={chain.name}
+                                variant={'outline'}
+                                className={`px-3 py-2 rounded-4 flex items-center justify-center border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${isChainSelected(chain.chainId) ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
+                                onClick={() => handleSelectChain(chain.chainId)}
+                            >
+                                <ImageWithDefault
+                                    src={chain.logo}
+                                    alt={chain.name}
+                                    width={28}
+                                    height={28}
+                                    className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
+                                />
+                            </Button>
+                        ))}
+                    </div>
+                    <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+            </div>
+            {/* UI: List of tokens */}
+            <ScrollArea className="h-[60vh] lg:h-full w-full max-h-[60vh]">
                 <div className="space-y-2 px-4">
                     {/* UI when loading */}
                     {isLoading &&
@@ -123,7 +159,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                         ))
                     }
                     {/* UI when does not have tokens */}
-                    {(!isLoading && tokens.length === 0) &&
+                    {(!isLoading && (filteredTokens.length === 0 || tokens.length === 0)) &&
                         <div className="flex items-center justify-center h-full py-10">
                             <BodyText level="body2" weight="medium" className="text-gray-500">
                                 No tokens found
@@ -131,8 +167,8 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                         </div>
                     }
                     {/* UI when has tokens */}
-                    {(!isLoading && tokens.length > 0) &&
-                        tokens.map((token: any, index: number) => (
+                    {(!isLoading && filteredTokens.length > 0) &&
+                        filteredTokens.map((token: any, index: number) => (
                             <div
                                 key={index}
                                 className="flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4"
@@ -164,7 +200,6 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                     <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.amount) * Number(token.price_usd)).toString())}`}</Label>
                                 </div>
                             </div>
-
                         ))}
                 </div>
             </ScrollArea>
@@ -193,9 +228,15 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
 
     return (
         <Drawer open={open} onOpenChange={setOpen}>
-            <DrawerContent>
-                <DrawerHeader>
-                    <DrawerTitle>Select Token</DrawerTitle>
+            <DrawerContent className="dismissible-false">
+                {/* X Icon to close the dialog */}
+                {closeContentButton}
+                <DrawerHeader className="pt-6">
+                    <DrawerTitle asChild>
+                        <HeadingText level="h5" weight="medium">
+                            Select Token
+                        </HeadingText>
+                    </DrawerTitle>
                     <DrawerDescription>
                         <VisuallyHidden.Root asChild>
                             Select a token by chain
