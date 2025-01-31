@@ -7,12 +7,13 @@ import { useQuery } from '@tanstack/react-query'
 export default function useGetOpportunitiesData(
     params: TGetOpportunitiesParams
 ) {
-    const { data, isLoading, isError } = useQuery<TOpportunity[], Error>({
+    const { data, isLoading, isError, refetch } = useQuery<TOpportunity[], Error>({
         queryKey: [
             'opportunities',
             params.type,
             params.chain_ids,
             params.tokens,
+            params.limit,
         ],
         queryFn: async () => {
             try {
@@ -25,6 +26,7 @@ export default function useGetOpportunitiesData(
         },
         staleTime: Infinity,
         refetchInterval: false,
+        enabled: params.enabled,
     })
-    return { data: data || [], isLoading, isError }
+    return { data: data || [], isLoading, isError, refetch }
 }

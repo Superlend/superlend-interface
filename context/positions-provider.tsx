@@ -49,9 +49,9 @@ const PortfolioDataInit = {
 
 export const PositionsContext = createContext<TPositionsContext>({
     filters: filtersInit,
-    setFilters: () => {},
+    setFilters: () => { },
     positionType: positionTypeInit,
-    setPositionType: () => {},
+    setPositionType: () => { },
     portfolioData: PortfolioDataInit,
     isLoadingPortfolioData: false,
     isErrorPortfolioData: false,
@@ -109,8 +109,8 @@ export default function PositionsProvider({
     useEffect(() => {
         setIsLoadingPortfolioData(
             isLoadingPortfolioData1 &&
-                isLoadingPortfolioData2 &&
-                isLoadingPortfolioData3
+            isLoadingPortfolioData2 &&
+            isLoadingPortfolioData3
         )
     }, [
         isLoadingPortfolioData1,
@@ -122,19 +122,32 @@ export default function PositionsProvider({
     useEffect(() => {
         setIsErrorPortfolioData(
             isErrorPortfolioData1 ||
-                isErrorPortfolioData2 ||
-                isErrorPortfolioData3
+            isErrorPortfolioData2 ||
+            isErrorPortfolioData3
         )
     }, [isErrorPortfolioData1, isErrorPortfolioData2, isErrorPortfolioData3])
 
     // combine all portfolio data subsets
     useEffect(() => {
-        setPortfolioData({
+        setPortfolioData((prev: TPortfolio) => ({
+            ...prev,
             ...portfolioData1,
+        }))
+    }, [portfolioData1])
+
+    useEffect(() => {
+        setPortfolioData((prev: TPortfolio) => ({
+            ...prev,
             ...portfolioData2,
+        }))
+    }, [portfolioData2])
+
+    useEffect(() => {
+        setPortfolioData((prev: TPortfolio) => ({
+            ...prev,
             ...portfolioData3,
-        })
-    }, [portfolioData1, portfolioData2, portfolioData3])
+        }))
+    }, [portfolioData3])
 
     return (
         <PositionsContext.Provider
@@ -152,3 +165,5 @@ export default function PositionsProvider({
         </PositionsContext.Provider>
     )
 }
+
+export const usePositionsContext = () => useContext(PositionsContext);

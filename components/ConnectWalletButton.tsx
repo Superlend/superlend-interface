@@ -29,6 +29,11 @@ export default function ConnectWalletButton() {
         ? `${walletAddress?.slice(0, 5)}...${walletAddress?.slice(-5)}`
         : 'Connect Wallet'
 
+    function handleLogin(e: React.MouseEvent<HTMLButtonElement>) {
+        e.preventDefault()
+        login()
+    }
+
     return (
         <>
             {/* This is a workaround to show the skeleton on the first render */}
@@ -56,7 +61,7 @@ export default function ConnectWalletButton() {
                             variant="primary"
                             size="lg"
                             className="rounded-4 py-2 capitalize w-full"
-                            onClick={login}
+                            onClick={handleLogin}
                             disabled={isDisabled}
                         >
                             {isDisabled ? 'Connecting...' : 'Connect Wallet'}

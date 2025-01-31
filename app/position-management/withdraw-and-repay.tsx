@@ -889,12 +889,11 @@ export default function WithdrawAndRepayActionButton({
                         networks={[]}
                         tokens={tokenDetails.map((token) => ({
                             address: token.address,
-                            positionAmount: String(token.tokenAmount),
-                            positionAmountInUsd: String(token.amount),
+                            amount: String(token.tokenAmount),
                             logo: token.logo,
                             symbol: token.symbol,
                             apy: token.apy,
-                            price_usd: token.price_usd,
+                            price_usd: String(token.price_usd),
                             decimals: token.decimals,
                         }))}
                         onSelectToken={handleSelectToken}

@@ -1,6 +1,11 @@
 import React from 'react'
-import HomePageComponents from './_home/page-components'
+import HomePageComponents from './home/page-components'
+import PortfolioProvider from '@/context/portfolio-provider'
 
 export default async function HomePage() {
-    return <HomePageComponents />
+    return (
+        <PortfolioProvider>
+            <HomePageComponents />
+        </PortfolioProvider>
+    )
 }
