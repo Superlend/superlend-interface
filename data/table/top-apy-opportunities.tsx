@@ -6,6 +6,7 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { Badge } from '@/components/ui/badge'
 import { BodyText, Label } from '@/components/ui/typography'
 import { PAIR_BASED_PROTOCOLS } from '@/constants'
+import useDimensions from '@/hooks/useDimensions'
 import {
     abbreviateNumber,
     containsNegativeInteger,
@@ -100,7 +101,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         <BodyText
                             level={'body2'}
                             weight={'medium'}
-                            className="truncate block shrink-0 hover:text-secondary-500"
+                            className="truncate block shrink-0 hover:text-secondary-500 active:text-secondary-500 border-b border-dashed border-secondary-500"
                         >
                             {tokenSymbol}
                         </BodyText>
@@ -128,6 +129,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: 'Platform',
         accessorFn: (item) => item.platformName,
         cell: ({ row }) => {
+            const { width: screenWidth } = useDimensions()
             const platformName: string = row.getValue('platformName')
             const platformLogo = row.original.platformLogo
             const isMorpho =
@@ -156,9 +158,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     </BodyText>
                     {isMorpho && !isVault && positionTypeParam === 'lend' && (
                         <InfoTooltip
-                            // label={
-                            //     <ShieldAlertIcon width={18} height={18} className="text-[#D19900] shrink-0" />
-                            // }
                             content="Supplying directly to Morpho markets is risky and not advised by the Morpho team"
                         />
                     )}
