@@ -92,6 +92,7 @@ export default function TopApyOpportunities() {
             return {
                 deposits: positionTypeParam === 'lend',
                 borrows: positionTypeParam === 'borrow',
+                max_ltv: positionTypeParam === 'borrow',
             }
         })
         setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])
@@ -385,12 +386,7 @@ export default function TopApyOpportunities() {
                     <DiscoverFiltersDropdown />
                 </div>
             </div>
-            <motion.div
-                className="top-apy-opportunities-content relative z-[50] will-change-transform"
-                initial={{ opacity: 0.5, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-            >
+            <div className="top-apy-opportunities-content relative md:z-[50]">
                 {!isLoadingOpportunitiesData && !isTableLoading && (
                     <DataTable
                         columns={columns}
@@ -410,7 +406,7 @@ export default function TopApyOpportunities() {
                 {(isLoadingOpportunitiesData || isTableLoading) && (
                     <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
                 )}
-            </motion.div>
+            </div>
         </section>
     )
 }

@@ -377,7 +377,7 @@ export default function PageHeader() {
                     >
                         {/* Loading Skeleton */}
                         {isLoadingPlatformData && (
-                            <Skeleton className="w-[80%] sm:w-[300px] h-[35px]" />
+                            <Skeleton className="w-[80%] sm:w-[300px] h-[35px] rounded-4" />
                         )}
                         {!isLoadingPlatformData && (
                             <>

@@ -94,7 +94,7 @@ export default function AllPositions() {
             chain_id: item.chain.chain_id,
             chainName: item.chain.chain_name,
             platform_id: item.platform.platform_name,
-            platformName: `${item.platform.platform_name.split('-')[0]}`,
+            platformName: `${item.platform.name}`,
             protocol_identifier: item.platform.protocol_identifier,
             platformLogo: item.platform.logo,
             apy: item.apy,

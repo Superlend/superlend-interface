@@ -760,10 +760,10 @@ export default function LendAndBorrowAssets() {
                             )
                         }
                         {(isLoading ||
-                            !selectedBorrowTokenDetails?.token?.address) &&
+                            (!selectedBorrowTokenDetails?.token?.address) &&
                             !isLendPositionType(positionType) && 
-                            isWalletConnected && (
-                                <LoaderCircle className="text-primary w-[60px] h-[34px] animate-spin" />
+                            isWalletConnected) && (
+                                <Skeleton className="shrink-0 w-[34px] h-[34px] rounded-full" />
                             )}
                         {!isLoading &&
                             !!selectedBorrowTokenDetails?.token?.address &&

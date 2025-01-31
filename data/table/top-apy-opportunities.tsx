@@ -150,6 +150,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         level={'body2'}
                         weight={'medium'}
                         className="truncate"
+                        title={platformName}
                     >
                         {platformName}
                     </BodyText>

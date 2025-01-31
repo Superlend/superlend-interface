@@ -349,16 +349,16 @@ function FilterCardContent({
                             {!!getActiveFiltersCountByCategory(
                                 `${item.value.toLowerCase()}_ids`
                             ) && (
-                                <Label
-                                    size="small"
-                                    weight="medium"
-                                    className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer"
-                                >
-                                    {getActiveFiltersCountByCategory(
-                                        `${item.value.toLowerCase()}_ids`
-                                    )}
-                                </Label>
-                            )}
+                                    <Label
+                                        size="small"
+                                        weight="medium"
+                                        className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer"
+                                    >
+                                        {getActiveFiltersCountByCategory(
+                                            `${item.value.toLowerCase()}_ids`
+                                        )}
+                                    </Label>
+                                )}
                         </Button>
                     </motion.div>
                 ))}
@@ -465,10 +465,7 @@ function FilterOptions({
     }
 
     return (
-        <ScrollArea
-            id="filter-options-section"
-            className="h-[400px] sm:h-[250px] w-full pt-5"
-        >
+        <div className="md:pt-5">
             <div className="search-container w-[85%] max-w-[400px] ml-[14px] mt-1">
                 <SearchInput
                     placeholder={`Search ${type}`}
@@ -478,80 +475,85 @@ function FilterOptions({
                     onClear={() => setSearchKeyword('')}
                 />
             </div>
-            {type === 'token' && (
-                <Button
-                    variant={
-                        isStablecoinsSelected ? 'secondaryOutline' : 'outline'
-                    }
-                    className="m-4 mb-0 ml-3 flex items-center justify-center gap-1"
-                    onClick={selectStablecoins}
-                >
-                    {isStablecoinsSelected && (
-                        <Check className="w-4 h-4 text-secondary-500" />
-                    )}
-                    Select{isStablecoinsSelected ? 'ed' : ''} Stable Coins
-                    <span
-                        className={`${isStablecoinsSelected ? 'bg-secondary-300 text-white' : 'bg-gray-500 text-gray-100'} rounded-full px-1 ml-1`}
-                    >
-                        {STABLECOINS_NAMES_LIST.length}
-                    </span>
-                </Button>
-            )}
-            <div className="filter-options flex flex-wrap gap-4 md:gap-3 bg-white p-4 md:p-[24px_24px_24px_14px]">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className={`${filters[`${type}_ids` as keyof typeof filters]?.length === 0 ? 'selected' : ''}`}
-                    onClick={() => handleSelection(null, type)}
-                >
-                    All {type.charAt(0).toUpperCase() + type.slice(1)}s
-                </Button>
-                {filterOptionsByKeyword(searchKeyword, options).map(
-                    (option: any) => (
-                        <Button
-                            onClick={() =>
-                                handleSelection(option[`${type}_id`], type)
-                            }
-                            variant="outline"
-                            size="sm"
-                            key={option[`${type}_id`]}
-                            disabled={
-                                isMorphoMarketsRisky &&
-                                option.protocol_id === 'MORPHO_MARKETS' &&
-                                isExcluded
-                            }
-                            className={`flex items-center gap-1 ${isSelected(option[`${type}_id`], type) ? 'selected' : ''}`}
-                        >
-                            <ImageWithDefault
-                                src={option.logo}
-                                alt={option.name}
-                                width={18}
-                                height={18}
-                                className="max-w-[18px] max-h-[18px]"
-                            />
-                            {option.name}
-                        </Button>
-                    )
-                )}
-            </div>
-            {isMorphoMarketsRisky && (
-                <div className="group flex items-center space-x-2 pb-6 pl-5 cursor-pointer w-fit">
-                    <Switch
-                        id="exclude-morpho-markets"
-                        checked={isExcluded}
-                        onCheckedChange={setIsExcluded}
-                    />
-                    <InfoTooltip
-                        label={
-                            <Label htmlFor="exclude-morpho-markets">
-                                <TooltipText>Exclude Risky Markets</TooltipText>
-                            </Label>
+            <ScrollArea
+                id="filter-options-section"
+                className="h-[300px] sm:h-[200px] w-full pt-2"
+            >
+                {type === 'token' && (
+                    <Button
+                        variant={
+                            isStablecoinsSelected ? 'secondaryOutline' : 'outline'
                         }
-                        content="Supplying to Morpho markets are risky. Excluding them."
-                    />
+                        className="m-4 mb-0 ml-3 flex items-center justify-center gap-1"
+                        onClick={selectStablecoins}
+                    >
+                        {isStablecoinsSelected && (
+                            <Check className="w-4 h-4 text-secondary-500" />
+                        )}
+                        Select{isStablecoinsSelected ? 'ed' : ''} Stable Coins
+                        <span
+                            className={`${isStablecoinsSelected ? 'bg-secondary-300 text-white' : 'bg-gray-500 text-gray-100'} rounded-full px-1 ml-1`}
+                        >
+                            {STABLECOINS_NAMES_LIST.length}
+                        </span>
+                    </Button>
+                )}
+                <div className="filter-options flex flex-wrap gap-4 md:gap-3 bg-white p-4 md:p-[24px_24px_24px_14px]">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className={`${filters[`${type}_ids` as keyof typeof filters]?.length === 0 ? 'selected' : ''}`}
+                        onClick={() => handleSelection(null, type)}
+                    >
+                        All {type.charAt(0).toUpperCase() + type.slice(1)}s
+                    </Button>
+                    {filterOptionsByKeyword(searchKeyword, options).map(
+                        (option: any) => (
+                            <Button
+                                onClick={() =>
+                                    handleSelection(option[`${type}_id`], type)
+                                }
+                                variant="outline"
+                                size="sm"
+                                key={option[`${type}_id`]}
+                                disabled={
+                                    isMorphoMarketsRisky &&
+                                    option.protocol_id === 'MORPHO_MARKETS' &&
+                                    isExcluded
+                                }
+                                className={`flex items-center gap-1 ${isSelected(option[`${type}_id`], type) ? 'selected' : ''}`}
+                            >
+                                <ImageWithDefault
+                                    src={option.logo}
+                                    alt={option.name}
+                                    width={18}
+                                    height={18}
+                                    className="max-w-[18px] max-h-[18px]"
+                                />
+                                {option.name}
+                            </Button>
+                        )
+                    )}
                 </div>
-            )}
-        </ScrollArea>
+                {isMorphoMarketsRisky && (
+                    <div className="group flex items-center space-x-2 pb-6 pl-5 cursor-pointer w-fit">
+                        <Switch
+                            id="exclude-morpho-markets"
+                            checked={isExcluded}
+                            onCheckedChange={setIsExcluded}
+                        />
+                        <InfoTooltip
+                            label={
+                                <Label htmlFor="exclude-morpho-markets">
+                                    <TooltipText>Exclude Risky Platforms</TooltipText>
+                                </Label>
+                            }
+                            content="Supplying to Morpho markets are risky. Excluding them."
+                        />
+                    </div>
+                )}
+            </ScrollArea>
+        </div>
     )
 }
 
