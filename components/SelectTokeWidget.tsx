@@ -47,7 +47,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
     const helperText = positionType === 'lend' ? lendHelperText : borrowHelperText
 
     return (
-        <form className="flex flex-col w-full min-w-full min-w-[350px] min-[1060px]:min-w-[400px] max-w-[450px] p-3 rounded-3xl bg-white bg-opacity-40 shadow-[0px_2px_2px_rgba(0,0,0,0.02)] shrink-0">
+        <div className="flex flex-col w-full min-w-full min-w-[350px] min-[1060px]:min-w-[400px] max-w-[450px] p-3 rounded-3xl bg-white bg-opacity-40 shadow-[0px_2px_2px_rgba(0,0,0,0.02)] shrink-0">
             <div className="flex flex-col w-full bg-white rounded-2xl max-md:max-w-full">
                 <Button
                     variant="ghost"
@@ -134,7 +134,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                     <ConnectWalletButton />
                 </div>
             )}
-        </form>
+        </div>
     )
 }
 

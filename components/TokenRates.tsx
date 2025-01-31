@@ -1,4 +1,5 @@
 'use client'
+
 import React from 'react'
 import {
     Carousel,
@@ -8,74 +9,120 @@ import {
     CarouselPrevious,
 } from '@/components/ui/carousel'
 import Autoplay from 'embla-carousel-autoplay'
+import { TPositionType } from '@/types'
+import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
+import ImageWithDefault from './ImageWithDefault'
+import { abbreviateNumber } from '@/lib/utils'
+import InfoTooltip from './tooltips/InfoTooltip'
+import { BodyText, Label } from './ui/typography'
+import { useAssetsDataContext } from '@/context/data-provider'
+import { Skeleton } from './ui/skeleton'
 
-interface TokenRate {
-    image: string
-    rate: string
-}
+const TokenRates: React.FC<{
+    positionType: TPositionType
+}> = ({
+    positionType,
+}) => {
+        const { allChainsData } = useAssetsDataContext()
+        const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData } =
+            useGetOpportunitiesData({
+                type: positionType as TPositionType,
+                chain_ids: [],
+                tokens: [],
+                limit: 10,
+            })
 
-const tokenRates: TokenRate[] = [
-    {
-        image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/5fea263a5aea859fa1693accb8dab66a3c880004d4547bdd47ca1fa586abcadd?placeholderIfAbsent=true&apiKey=689e79da645a41c0a4332461eb09084b',
-        rate: '11.24%',
-    },
-    {
-        image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/ccf389de1dfcd60e0f75dabaaa9ef364e519a85bf06715d570c442346f7e79d3?placeholderIfAbsent=true&apiKey=689e79da645a41c0a4332461eb09084b',
-        rate: '11.24%',
-    },
-    {
-        image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/3efd819bdc0301d3e89e6d3256b47639aea9ddc69185c211c00bcf135f861d45?placeholderIfAbsent=true&apiKey=689e79da645a41c0a4332461eb09084b',
-        rate: '16.32%',
-    },
-    {
-        image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/5fea263a5aea859fa1693accb8dab66a3c880004d4547bdd47ca1fa586abcadd?placeholderIfAbsent=true&apiKey=689e79da645a41c0a4332461eb09084b',
-        rate: '16.32%',
-    },
-    {
-        image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/11bc6e56c2b450068a8734c472569dc37e1d5bb1aee4d5fe467062402678be87?placeholderIfAbsent=true&apiKey=689e79da645a41c0a4332461eb09084b',
-        rate: '10.48%',
-    },
-    {
-        image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/b67c3f362eafed7a9a868b82b9ab3c0841f57ecbedf58457074262554393c8ce?placeholderIfAbsent=true&apiKey=689e79da645a41c0a4332461eb09084b',
-        rate: '12.32%',
-    },
-    {
-        image: 'https://cdn.builder.io/api/v1/image/assets/TEMP/5fea263a5aea859fa1693accb8dab66a3c880004d4547bdd47ca1fa586abcadd?placeholderIfAbsent=true&apiKey=689e79da645a41c0a4332461eb09084b',
-        rate: '16.32%',
-    },
-]
-
-const TokenRates: React.FC = () => {
-    return (
-        <div className="flex flex-wrap gap-6 items-center justify-center max-w-full overflow-hidden mt-9 max-w-3xl text-sm font-medium leading-tight whitespace-nowrap text-stone-800 w-[817px] [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]">
+        return (
             <Carousel
                 opts={{
                     align: 'center',
                     loop: true,
                     dragFree: true,
                 }}
+                plugins={[
+                    Autoplay({
+                      delay: 2000,
+                    }),
+                  ]}
+                className="overflow-visible flex items-center justify-center max-w-full h-32 -my-3 max-w-3xl w-[817px] [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)] overflow-visible"
             >
-                <CarouselContent>
-                    {tokenRates.map((token, index) => (
-                        <CarouselItem key={index} className="basis-auto">
-                            <div className="flex gap-2 items-center self-stretch py-1 pr-2 pl-1 my-auto bg-white rounded-xl select-none">
-                                {/* shadow-[0px_2px_4px_rgba(0,0,0,0.44)] */}
-                                <img
-                                    loading="lazy"
-                                    src={token.image}
-                                    alt="Token icon"
-                                    className="object-contain shrink-0 self-stretch my-auto rounded-full aspect-square w-[26px]"
+                <CarouselContent className="overflow-visible">
+                    {isLoadingOpportunitiesData &&
+                        Array.from({ length: 10 }).map((_, index) => (
+                            <CarouselItem key={index} className="basis-auto">
+                                <Skeleton className="h-8 w-[100px] rounded-4" />
+                            </CarouselItem>
+                        ))}
+                    {!isLoadingOpportunitiesData &&
+                        opportunitiesData.map((opportunity, index) => (
+                            <CarouselItem key={index} className="basis-auto">
+                                <InfoTooltip
+                                    side="left"
+                                    label={
+                                        <div className="flex gap-2 items-center py-1 pr-2 pl-1 bg-white rounded-4 select-none shadow-sm hover:shadow-none border border-transaprent hover:border-secondary-300 transition-all duration-300">
+                                            <ImageWithDefault
+                                                loading="lazy"
+                                                src={opportunity.token.logo}
+                                                alt={opportunity.token.name}
+                                                width={26}
+                                                height={26}
+                                                className="object-contain shrink-0 rounded-full h-[26px] w-[26px] max-w-[26px] max-h-[26px]"
+                                            />
+                                            <BodyText level="body2" weight="medium">
+                                                {abbreviateNumber(Number(opportunity.platform.apy.avg_7days))}%
+                                            </BodyText>
+                                        </div>
+                                    }
+                                    content={
+                                        <div className='flex flex-col select-none divide-y divide-gray-200'>
+                                            <div className="flex gap-2 items-center justify-start pb-2">
+                                                <ImageWithDefault
+                                                    loading="lazy"
+                                                    src={'/icons/graph-up-in-box.svg'}
+                                                    alt={'Last 7D APY'}
+                                                    width={16}
+                                                    height={16}
+                                                    className="object-contain shrink-0 h-[16px] w-[16px] max-w-[16px] max-h-[16px]"
+                                                />
+                                                <Label weight="normal" className='text-gray-700'>
+                                                    Last 7D APY
+                                                </Label>
+                                            </div>
+                                            <div className="flex gap-2 items-center justify-start py-1">
+                                                <ImageWithDefault
+                                                    loading="lazy"
+                                                    src={opportunity.platform.logo}
+                                                    alt={opportunity.platform.name}
+                                                    width={14}
+                                                    height={14}
+                                                    className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
+                                                />
+                                                <Label weight="normal" className='text-gray-700'>
+                                                    {opportunity.platform.name}
+                                                </Label>
+                                            </div>
+                                            <div className="flex gap-2 items-center justify-start pt-2">
+                                                <ImageWithDefault
+                                                    loading="lazy"
+                                                    src={allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.logo}
+                                                    alt={allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.name}
+                                                    width={14}
+                                                    height={14}
+                                                    className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
+                                                />
+                                                <Label weight="normal" className='text-gray-700'>
+                                                    {allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.name}
+                                                </Label>
+                                            </div>
+                                        </div>
+                                    }
                                 />
-                                <div className="self-stretch my-auto">
-                                    {token.rate}
-                                </div>
-                            </div>
-                        </CarouselItem>
-                    ))}
+                            </CarouselItem>
+                        ))
+                    }
                 </CarouselContent>
             </Carousel>
-        </div>
-    )
-}
+        )
+    }
 
 export default TokenRates

@@ -13,6 +13,7 @@ export default function useGetOpportunitiesData(
             params.type,
             params.chain_ids,
             params.tokens,
+            params.limit,
         ],
         queryFn: async () => {
             try {

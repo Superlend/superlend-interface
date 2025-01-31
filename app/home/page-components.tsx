@@ -76,8 +76,10 @@ export default function HomePageComponents() {
                         handleToggle={handlePositionTypeToggle}
                     />
                 </div>
-                <TokenRates />
-                <div className="flex flex-col lg:flex-row lg:items-start justify-center gap-2 mt-8 transition-all duration-300 max-w-full w-full md:overflow-hidden">
+                <TokenRates
+                    positionType={positionType}
+                />
+                <div className="flex flex-col lg:flex-row lg:items-start justify-center gap-2 transition-all duration-300 max-w-full w-full md:overflow-hidden">
                     <motion.div
                         animate={{ x: showOpportunitiesTable ? 0 : 'auto' }}
                         transition={{ duration: 0.7, ease: 'easeInOut', delay: 0.2 }}

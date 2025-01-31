@@ -38,6 +38,7 @@ import { Button } from '../ui/button'
 import { ScrollArea, ScrollBar } from '../ui/scroll-area'
 import { TOpportunityTable } from '@/types'
 import useDimensions from '@/hooks/useDimensions'
+import Link from 'next/link'
 
 interface OpportunitiesDataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -236,10 +237,22 @@ export function OpportunitiesDataTable<TData, TValue>({
                                                     ),
                                                 }}
                                             >
+                                                {/* <Link
+                                                    href={{
+                                                        pathname: 'position-management',
+                                                        query: {
+                                                            token: row.original.token,
+                                                            chain_id: row.original.chain_id,
+                                                            protocol_identifier: row.original.protocol_identifier,
+                                                            position_type: row.original.position_type,
+                                                        },
+                                                    }}
+                                                > */}
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
                                                     cell.getContext()
                                                 )}
+                                                {/* </Link> */}
                                             </TableCell>
                                         )
                                     })}

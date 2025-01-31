@@ -20,36 +20,37 @@ import { useSearchParams } from 'next/navigation'
 
 export const columns: ColumnDef<TOpportunityTable>[] = [
     {
-        accessorKey: 'tokenSymbol',
-        header: 'Token',
-        accessorFn: (item) => item.tokenSymbol,
+        accessorKey: 'platformName',
+        header: 'Platform',
+        accessorFn: (item) => item.platformName,
         cell: ({ row }) => {
-            const searchParams = useSearchParams()
-            const isMorphoShiftToken = row.original.tokenAddress === "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
-            const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
-            const tokenSymbol: string = row.getValue('tokenSymbol')
-            const tokenLogo = row.original.tokenLogo
-            const tokenAddress = row.original.tokenAddress
-            const tokenName = row.original.tokenName
+            const platformName: string = row.getValue('platformName')
+            const platformLogo = row.original.platformLogo
+            const isMorpho =
+                row.original.platformId.split('-')[0].toLowerCase() ===
+                PlatformType.MORPHO
+            const isVault = row.original.isVault
             const chainId = row.original.chain_id
             const chainLogo = row.original.chainLogo
             const chainName = row.original.chainName
-            const protocolIdentifier = row.original.protocol_identifier
+            const searchParams = useSearchParams()
+            const positionTypeParam =
+                searchParams.get('position_type') || 'lend'
+
             const tooltipContent = (
                 <span className="flex flex-col gap-[16px]">
                     <span className="flex flex-col gap-[4px]">
-                        <Label>Token</Label>
+                        <Label>Platform</Label>
                         <span className="flex items-center gap-[8px]">
                             <ImageWithDefault
-                                alt={tokenSymbol}
-                                src={tokenLogo || ''}
+                                alt={platformName}
+                                src={platformLogo || ''}
                                 width={24}
                                 height={24}
                                 className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]"
                             />
                             <BodyText level="body2" weight="medium">
-                                {tokenName}
+                                {platformName}
                             </BodyText>
                         </span>
                     </span>
@@ -73,78 +74,17 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
 
             return (
-                <span className="flex items-center gap-[8px] w-fit max-w-full">
+                <span className="flex items-center gap-[8px]">
                     <InfoTooltip
                         label={
                             <ImageWithBadge
-                                mainImg={tokenLogo || ''}
+                                mainImg={platformLogo || ''}
                                 badgeImg={chainLogo || ''}
-                                mainImgAlt={tokenSymbol}
+                                mainImgAlt={platformName}
                                 badgeImgAlt={chainName}
                             />
                         }
                         content={tooltipContent}
-                    />
-                    <Link
-                        href={{
-                            pathname: 'position-management',
-                            query: {
-                                token: tokenAddress,
-                                chain_id: chainId,
-                                protocol_identifier: protocolIdentifier,
-                                position_type: positionTypeParam,
-                            },
-                        }}
-                        className="truncate"
-                    >
-                        <BodyText
-                            level={'body2'}
-                            weight={'medium'}
-                            className="truncate block shrink-0 hover:text-secondary-500"
-                        >
-                            {tokenSymbol}
-                        </BodyText>
-                    </Link>
-                    {(isMorphoShiftToken && positionTypeParam === 'lend') &&
-                        <InfoTooltip
-                            label={
-                                <ImageWithDefault
-                                    src="/icons/sparkles.svg"
-                                    alt="Rewards"
-                                    width={22}
-                                    height={22}
-                                    className="cursor-pointer hover:scale-110"
-                                />
-                            }
-                            content="Supplying to this vault earns up to 25% APY in SHIFT rewards"
-                        />}
-                </span>
-            )
-        },
-        enableSorting: false,
-    },
-    {
-        accessorKey: 'platformName',
-        header: 'Platform',
-        accessorFn: (item) => item.platformName,
-        cell: ({ row }) => {
-            const platformName: string = row.getValue('platformName')
-            const platformLogo = row.original.platformLogo
-            const isMorpho =
-                row.original.platformId.split('-')[0].toLowerCase() ===
-                PlatformType.MORPHO
-            const isVault = row.original.isVault
-            const searchParams = useSearchParams()
-            const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
-
-            return (
-                <span className="flex items-center gap-[8px]">
-                    <ImageWithDefault
-                        src={platformLogo || ''}
-                        alt={`${platformName} logo`}
-                        width={20}
-                        height={20}
                     />
                     <BodyText
                         level={'body2'}

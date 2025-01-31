@@ -312,7 +312,7 @@ export default function Opportunities({
             opportunity.protocol_identifier !== EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
     }
 
-    function handleRowClick(rowData: any) {
+    function handleRowClick(rowData: TOpportunityTable) {
         const { tokenAddress, protocol_identifier, chain_id } = rowData
         const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`
         router.push(url)
