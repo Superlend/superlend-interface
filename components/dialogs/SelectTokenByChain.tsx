@@ -66,17 +66,23 @@ interface SelectTokenByChainProps {
     tokens: TokenDetails[]
     onSelectToken: (token: any) => void
     isLoading?: boolean
+    filterByChain?: boolean
+    showChainBadge?: boolean
 }
+
 
 export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     open,
     setOpen,
     tokens,
     onSelectToken,
-    isLoading
+    isLoading,
+    filterByChain = true,
+    showChainBadge = true,
 }: SelectTokenByChainProps) => {
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
+
     const { allChainsData } = useAssetsDataContext()
     const [selectedChains, setSelectedChains] = useState<string[]>([])
 
@@ -100,7 +106,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
         return selectedChains.includes(chainId.toString())
     }
 
-    const filteredTokens = selectedChains.length > 0 ? tokens.filter((token: any) => selectedChains.includes(token.chain_id.toString())) : tokens;
+    const filteredTokens = (selectedChains.length > 0 && filterByChain) ? tokens.filter((token: any) => selectedChains.includes(token.chain_id.toString())) : tokens;
 
     // SUB_COMPONENT: Close button to close the dialog
     const closeContentButton = (
@@ -118,37 +124,39 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     const content = (
         <Card className="w-full py-2 border-0 shadow-none bg-white bg-opacity-100 divide-y divide-gray-200">
             {/* UI: Filter with chains */}
-            <div className="my-4 md:my-6 pl-6">
-                <ScrollArea type='scroll' className="w-full h-fit whitespace-nowrap hide-thumb pb-2">
-                    <div className="flex items-center gap-2 pr-4">
-                        <Button
-                            variant={'outline'}
-                            className={`capitalize rounded-4 py-2.5 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${selectedChains.length === 0 ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
-                            size={'lg'}
-                            onClick={() => setSelectedChains([])}
-                        >
-                            All Chains
-                        </Button>
-                        {chains?.map((chain: any) => (
+            {filterByChain &&
+                <div className="my-4 md:my-6 pl-6">
+                    <ScrollArea type='scroll' className="w-full h-fit whitespace-nowrap hide-thumb pb-2">
+                        <div className="flex items-center gap-2 pr-4">
                             <Button
-                                key={chain.name}
                                 variant={'outline'}
-                                className={`px-3 py-2 rounded-4 flex items-center justify-center border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${isChainSelected(chain.chainId) ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
-                                onClick={() => handleSelectChain(chain.chainId)}
+                                className={`capitalize rounded-4 py-2.5 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${selectedChains.length === 0 ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
+                                size={'lg'}
+                                onClick={() => setSelectedChains([])}
                             >
-                                <ImageWithDefault
-                                    src={chain.logo}
-                                    alt={chain.name}
-                                    width={28}
-                                    height={28}
-                                    className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
-                                />
+                                All Chains
                             </Button>
-                        ))}
-                    </div>
-                    <ScrollBar orientation="horizontal" />
-                </ScrollArea>
-            </div>
+                            {chains?.map((chain: any) => (
+                                <Button
+                                    key={chain.name}
+                                    variant={'outline'}
+                                    className={`px-3 py-2 rounded-4 flex items-center justify-center border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${isChainSelected(chain.chainId) ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
+                                    onClick={() => handleSelectChain(chain.chainId)}
+                                >
+                                    <ImageWithDefault
+                                        src={chain.logo}
+                                        alt={chain.name}
+                                        width={28}
+                                        height={28}
+                                        className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
+                                    />
+                                </Button>
+                            ))}
+                        </div>
+                        <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
+                </div>
+            }
             {/* UI: List of tokens */}
             <ScrollArea className="h-[60vh] lg:h-full w-full max-h-[60vh]">
                 <div className="space-y-2 px-4">
@@ -178,12 +186,23 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                     <div
                                         className={`w-8 h-8 rounded-full flex items-center justify-center`}
                                     >
-                                        <ImageWithBadge
-                                            mainImg={token.logo}
-                                            badgeImg={token.chain_logo}
-                                            mainImgAlt={token.symbol}
-                                            badgeImgAlt={token.chain_id}
-                                        />
+                                        {showChainBadge &&
+                                            <ImageWithBadge
+                                                mainImg={token.logo}
+                                                badgeImg={token.chain_logo}
+                                                mainImgAlt={token.symbol}
+                                                badgeImgAlt={token.chain_id}
+                                            />
+                                        }
+                                        {!showChainBadge &&
+                                            <Image
+                                                src={token.logo}
+                                                alt={token.symbol}
+                                                width={28}
+                                                height={28}
+                                                className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
+                                            />
+                                        }
                                     </div>
                                     <div className="flex flex-col gap-0">
                                         <BodyText level="body2" weight="medium">

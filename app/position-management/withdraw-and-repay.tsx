@@ -886,7 +886,6 @@ export default function WithdrawAndRepayActionButton({
                     <SelectTokenByChain
                         open={isSelectTokenDialogOpen}
                         setOpen={setIsSelectTokenDialogOpen}
-                        networks={[]}
                         tokens={tokenDetails.map((token) => ({
                             address: token.address,
                             amount: String(token.tokenAmount),
@@ -897,8 +896,11 @@ export default function WithdrawAndRepayActionButton({
                             decimals: token.decimals,
                         }))}
                         onSelectToken={handleSelectToken}
+                        filterByChain={false}
+                        showChainBadge={false}
                     />
                 </>
+
             )}
             {/* Single token - Confirmation dialog */}
             {(tokenDetails.length === 1 || isConfirmationDialogOpen) && (

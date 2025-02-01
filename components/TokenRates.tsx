@@ -12,7 +12,7 @@ import Autoplay from 'embla-carousel-autoplay'
 import { TOpportunityTable, TPositionType } from '@/types'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import ImageWithDefault from './ImageWithDefault'
-import { abbreviateNumber } from '@/lib/utils'
+import { abbreviateNumber, cn } from '@/lib/utils'
 import InfoTooltip from './tooltips/InfoTooltip'
 import { BodyText, Label } from './ui/typography'
 import { useAssetsDataContext } from '@/context/data-provider'
@@ -36,21 +36,27 @@ const TokenRates: React.FC<{
 
         return (
             <div
-                className="overflow-hidden flex items-center justify-center max-w-full lg:max-w-2xl h-32 -my-3 [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]"
+                className="scroller overflow-hidden flex items-center justify-center max-w-full lg:max-w-2xl h-32 -my-3 [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]"
             >
                 <Carousel
-                    opts={{
-                        align: 'center',
-                        loop: true,
-                        dragFree: true,
-                    }}
-                    plugins={[
-                        Autoplay({
-                            delay: 1000,
-                        }),
-                    ]}
+                    // opts={{
+                    //     align: 'center',
+                    //     loop: true,
+                    //     dragFree: true,
+                    // }}
+                    // plugins={[
+                    //     Autoplay({
+                    //         delay: 1000,
+                    //     }),
+                    // ]}
                 >
-                    <CarouselContent>
+                    <CarouselContent
+                        className={cn(
+                            'animate-scroll ',
+                            'hover:[animation-play-state:paused]'
+                        )}
+                    >
+
                         {isLoadingOpportunitiesData &&
                             Array.from({ length: 10 }).map((_, index) => (
                                 <CarouselItem key={index} className="basis-auto">
