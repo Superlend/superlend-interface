@@ -60,7 +60,7 @@ export default function ConnectWalletButton() {
                         <Button
                             variant="primary"
                             size="lg"
-                            className="rounded-4 py-2 capitalize w-full"
+                            className="rounded-5 py-2 px-4 capitalize w-full"
                             onClick={handleLogin}
                             disabled={isDisabled}
                         >

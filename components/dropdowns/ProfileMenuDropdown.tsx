@@ -94,7 +94,7 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
         <Button
             variant="default"
             size="lg"
-            className="rounded-4 py-2 capitalize w-full"
+            className="rounded-5 py-2.5 px-4 capitalize w-full"
             onClick={() => setOpen(!open)}
         >
             {displayText}
