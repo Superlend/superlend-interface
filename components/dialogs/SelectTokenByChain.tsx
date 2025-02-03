@@ -167,7 +167,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
         <Button
             variant="ghost"
             onClick={() => setShowAllChains(false)}
-            className="h-6 w-6 flex items-center justify-center absolute left-6 top-[1.6rem] rounded-full bg-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground p-0"
+            className="h-6 w-6 flex items-center justify-center absolute left-6 top-[1.5rem] rounded-full bg-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground p-0"
         >
             <ArrowLeft strokeWidth={2.5} className="h-4 w-4 text-black" />
             <span className="sr-only">Back</span>
