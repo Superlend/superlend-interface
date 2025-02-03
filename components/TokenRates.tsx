@@ -54,7 +54,7 @@ const TokenRates: React.FC<{
                 >
                     <CarouselContent
                         className={cn(
-                            'animate-scroll ',
+                            'animate-scroll [animation-direction:reverse]',
                             'hover:[animation-play-state:paused]'
                         )}
                     >
