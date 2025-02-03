@@ -4,16 +4,7 @@ import DiscoverPageComponents from './page-components'
 // import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 
 export default async function DiscoverPage() {
-    // const queryClient = new QueryClient()
-
-    // await queryClient.prefetchQuery({
-    //     queryKey: ['opportunities'],
-    //     queryFn: () => useGetOpportunitiesData({ type: "lend" }),
-    // })
-
     return (
-        // <HydrationBoundary state={dehydrate(queryClient)}>
         <DiscoverPageComponents />
-        //  </HydrationBoundary>
     )
 }
