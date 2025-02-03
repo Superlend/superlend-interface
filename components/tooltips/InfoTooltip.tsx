@@ -85,7 +85,7 @@ export default function InfoTooltip({
                     <TooltipContent
                         side={side}
                         sideOffset={5}
-                        className={`${className?.includes('max-w') ? '' : 'max-w-[280px]'} ${sizes[size]}`}
+                        className={`${className?.includes('max-w') ? '' : 'max-w-[280px] text-wrap'} ${sizes[size]}`}
                     >
                         {typeof content === 'string' && (
                             <Label className="w-fit">{content}</Label>

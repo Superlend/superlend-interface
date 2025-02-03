@@ -101,7 +101,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         <BodyText
                             level={'body2'}
                             weight={'medium'}
-                            className="truncate block shrink-0 hover:text-secondary-500 active:text-secondary-500 border-b border-dashed border-secondary-500"
+                            className="truncate block shrink-0 hover:text-secondary-500 active:text-secondary-500"
                         >
                             {tokenSymbol}
                         </BodyText>
