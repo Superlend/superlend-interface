@@ -72,9 +72,7 @@ export function OpportunitiesDataTable<TData, TValue>({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         state: {
             columnVisibility,
             // sorting,
@@ -88,7 +86,7 @@ export function OpportunitiesDataTable<TData, TValue>({
         onColumnVisibilityChange: setColumnVisibility,
         // onSortingChange: setSorting,
         enableSortingRemoval: false,
-        manualPagination: false,
+        manualPagination: true,
     })
 
     const rows = table.getRowModel().rows

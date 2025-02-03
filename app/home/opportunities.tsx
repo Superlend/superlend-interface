@@ -222,7 +222,8 @@ export default function Opportunities({
                         Number(chain.chain_id) === Number(item.chain_id)
                 )?.name || '',
             protocol_identifier: item.platform.protocol_identifier,
-            platformName: `${item.platform.name}`,
+            platformName: `${item.platform.platform_name.split('-')[0]}`,
+            platformWithMarketName: `${item.platform.name}`,
             platformId: `${item.platform.platform_name}`,
             platformLogo: item.platform.logo,
             apy_current: item.platform.apy.current,
@@ -236,27 +237,27 @@ export default function Opportunities({
         }
     })
 
-    function handleFilterTableRowsByPlatformIds(
-        opportunity: TOpportunityTable
-    ) {
-        const isVault = opportunity.isVault
-        const isMorpho =
-            opportunity.platformId.split('-')[0].toLowerCase() ===
-            PlatformType.MORPHO
-        const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
+    // function handleFilterTableRowsByPlatformIds(
+    //     opportunity: TOpportunityTable
+    // ) {
+    //     const isVault = opportunity.isVault
+    //     const isMorpho =
+    //         opportunity.platformId.split('-')[0].toLowerCase() ===
+    //         PlatformType.MORPHO
+    //     const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
 
-        const compareWith = `${opportunity.platformId.split('-')[0]}${isMorpho ? `_${morphoSuffix}` : ''}`
+    //     const compareWith = `${opportunity.platformId.split('-')[0]}${isMorpho ? `_${morphoSuffix}` : ''}`
 
-        // if (platformIdsParam.length > 0) {
-        //     return platformIdsParam.includes(compareWith.trim())
-        // }
-        return true
-    }
+    //     if (platformIdsParam.length > 0) {
+    //         return platformIdsParam.includes(compareWith.trim())
+    //     }
+    //     return true
+    // }
 
-    const tableData = rawTableData.filter(handleFilterTableRows)
+    const tableData = rawTableData
 
     // Calculate total number of pages
-    const totalPages = Math.ceil(tableData.length / 10)
+    // const totalPages = Math.ceil(tableData.length / 10)
 
     // Handle pagination changes
     // const handlePaginationChange = useCallback(
@@ -279,38 +280,36 @@ export default function Opportunities({
     // )
 
     // Handle exclude morpho markets by URL param flag
-    function handleExcludeMorphoMarkets(
-        opportunity: TOpportunityTable
-    ) {
-        const isVault = opportunity.isVault
-        const isMorpho =
-            opportunity.platformId.split('-')[0].toLowerCase() ===
-            PlatformType.MORPHO
+    // function handleExcludeMorphoMarketsForLendAssets(
+    //     opportunity: TOpportunityTable
+    // ) {
+    //     const isVault = opportunity.isVault
+    //     const isMorpho =
+    //         opportunity.platformId.split('-')[0].toLowerCase() ===
+    //         PlatformType.MORPHO
 
-        return positionType === 'lend'
-            ? !(isMorpho && !isVault)
-            : true
-    }
+    //     return positionType === 'lend'
+    //         ? !(isMorpho && !isVault)
+    //         : true
+    // }
 
-    function handleExcludeMorphoVaultsByPositionType(
-        opportunity: TOpportunityTable
-    ) {
-        const isVault = opportunity.isVault
-        const isMorpho =
-            opportunity.platformId.split('-')[0].toLowerCase() ===
-            PlatformType.MORPHO
+    // function handleExcludeMorphoVaultsForBorrowAssets(
+    //     opportunity: TOpportunityTable
+    // ) {
+    //     const isVault = opportunity.isVault
+    //     const isMorpho =
+    //         opportunity.platformId.split('-')[0].toLowerCase() ===
+    //         PlatformType.MORPHO
 
-        return positionType === 'borrow' ? !(isMorpho && isVault) : true
-    }
+    //     return positionType === 'borrow' ? !(isMorpho && isVault) : true
+    // }
 
-    function handleFilterTableRows(opportunity: TOpportunityTable) {
-        return positionType === 'borrow'
-            ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
-            handleFilterTableRowsByPlatformIds(opportunity)
-            : handleExcludeMorphoMarkets(opportunity) &&
-            handleFilterTableRowsByPlatformIds(opportunity) &&
-            opportunity.protocol_identifier !== EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
-    }
+    // function handleFilterTableRows(opportunity: TOpportunityTable) {
+    //     return positionType === 'borrow'
+    //         ? handleExcludeMorphoVaultsForBorrowAssets(opportunity)
+    //         : (handleExcludeMorphoMarketsForLendAssets(opportunity) &&
+    //         opportunity.protocol_identifier !== EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL)
+    // }
 
     function handleRowClick(rowData: TOpportunityTable) {
         const { tokenAddress, protocol_identifier, chain_id } = rowData

@@ -180,7 +180,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         className="truncate"
                         title={platformName}
                     >
-                        {platformName}
+                        {`${capitalizeText(formattedPlatformName)} ${getPlatformVersion(platformId)}`}
                     </BodyText>
                 </span>
             )

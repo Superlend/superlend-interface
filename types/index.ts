@@ -117,6 +117,7 @@ export type TOpportunityTable = {
     protocol_identifier: string
     platformName: string
     platformId: string
+    platformWithMarketName: string
     platformLogo: string
     apy_current: string
     additional_rewards: boolean

@@ -9,8 +9,10 @@ import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import useDimensions from '@/hooks/useDimensions'
 import {
     abbreviateNumber,
+    capitalizeText,
     containsNegativeInteger,
     convertNegativeToPositive,
+    getPlatformVersion,
 } from '@/lib/utils'
 import { TOpportunityTable, TReward } from '@/types'
 import { PlatformType } from '@/types/platform'
@@ -131,6 +133,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const { width: screenWidth } = useDimensions()
             const platformName: string = row.getValue('platformName')
+            const platformId: string = row.original.platformId
+            const platformWithMarketName: string = row.original.platformWithMarketName
             const platformLogo = row.original.platformLogo
             const isMorpho =
                 row.original.platformId.split('-')[0].toLowerCase() ===
@@ -139,6 +143,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
+            const morphoLabel =
+                isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
+            const formattedPlatformName = isMorpho ? morphoLabel : platformName
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -152,9 +159,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         level={'body2'}
                         weight={'medium'}
                         className="truncate"
-                        title={platformName}
+                        title={platformWithMarketName}
                     >
-                        {platformName}
+                        {`${capitalizeText(formattedPlatformName)} ${getPlatformVersion(platformId)}`}
                     </BodyText>
                     {isMorpho && !isVault && positionTypeParam === 'lend' && (
                         <InfoTooltip

@@ -8,8 +8,10 @@ import { BodyText, Label } from '@/components/ui/typography'
 import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import {
     abbreviateNumber,
+    capitalizeText,
     containsNegativeInteger,
     convertNegativeToPositive,
+    getPlatformVersion,
 } from '@/lib/utils'
 import { TOpportunityTable, TReward } from '@/types'
 import { PlatformType } from '@/types/platform'
@@ -26,6 +28,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const platformName: string = row.getValue('platformName')
             const platformLogo = row.original.platformLogo
+            const platformId: string = row.original.platformId
+            const platformWithMarketName: string = row.original.platformWithMarketName
             const isMorpho =
                 row.original.platformId.split('-')[0].toLowerCase() ===
                 PlatformType.MORPHO
@@ -33,6 +37,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const chainId = row.original.chain_id
             const chainLogo = row.original.chainLogo
             const chainName = row.original.chainName
+            const morphoLabel =
+                isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
+            const formattedPlatformName = isMorpho ? morphoLabel : platformName
 
             const tooltipContent = (
                 <span className="flex flex-col gap-[16px]">
@@ -40,14 +47,14 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         <Label>Platform</Label>
                         <span className="flex items-center gap-[8px]">
                             <ImageWithDefault
-                                alt={platformName}
+                                alt={platformWithMarketName}
                                 src={platformLogo || ''}
                                 width={24}
                                 height={24}
                                 className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]"
                             />
                             <BodyText level="body2" weight="medium">
-                                {platformName}
+                                {platformWithMarketName}
                             </BodyText>
                         </span>
                     </span>
@@ -86,10 +93,10 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <BodyText
                         level={'body2'}
                         weight={'medium'}
-                        className="truncate"
-                        title={platformName}
+                        className="truncate capitalize"
+                        title={platformWithMarketName}
                     >
-                        {platformName}
+                        {`${capitalizeText(formattedPlatformName)} ${getPlatformVersion(platformId)}`}
                     </BodyText>
                 </span>
             )

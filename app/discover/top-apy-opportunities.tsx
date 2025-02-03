@@ -213,7 +213,8 @@ export default function TopApyOpportunities() {
                         Number(chain.chain_id) === Number(item.chain_id)
                 )?.name || '',
             protocol_identifier: item.platform.protocol_identifier,
-            platformName: `${item.platform.name}`,
+            platformName: `${item.platform.platform_name.split('-')[0]}`,
+            platformWithMarketName: `${item.platform.name}`,
             platformId: `${item.platform.platform_name}`,
             platformLogo: item.platform.logo,
             apy_current: item.platform.apy.current,

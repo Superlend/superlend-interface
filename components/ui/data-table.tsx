@@ -309,7 +309,7 @@ export function DataTable<TData, TValue>({
                         <Label
                             size="medium"
                             weight="medium"
-                            className="hidden xs:block shrink-0 text-gray-700"
+                            className="hidden lg:block shrink-0 text-gray-700"
                         >
                             {pagination.pageSize} of{' '}
                             {totalRowCount.toLocaleString()} rows
