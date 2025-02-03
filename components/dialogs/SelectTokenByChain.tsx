@@ -93,6 +93,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
         if (open) {
             setKeywords('')
             setSelectedChains([])
+            setShowAllChains(false)
         }
     }, [open])
 
@@ -182,7 +183,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                     <div className="flex flex-wrap items-center gap-2 md:gap-1">
                         <Button
                             variant={'outline'}
-                            className={`capitalize rounded-4 py-2.5 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${selectedChains.length === 0 ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
+                            className={`capitalize rounded-4 py-3 md:py-2.5 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${selectedChains.length === 0 ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
                             size={'lg'}
                             onClick={() => setSelectedChains([])}
                         >
