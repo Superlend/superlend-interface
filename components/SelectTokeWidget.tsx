@@ -42,8 +42,8 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
         setShowOpportunitiesTable(true)
     }
 
-    const lendHelperText = 'Earn better returns on your assets choose token to see opportunities'
-    const borrowHelperText = 'Get better borrow rates on your assets choose token to see opportunities'
+    const lendHelperText = 'Select an asset from your wallet to see earning opportunities.'
+    const borrowHelperText = 'Select an asset to view the best borrowing opportunities.'
     const helperText = positionType === 'lend' ? lendHelperText : borrowHelperText
 
     return (
@@ -61,7 +61,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                             htmlFor="lendingToken"
                             className="text-left max-[375px]:max-w-[18ch] max-[375px]:text-wrap my-auto text-sm sm:text-md font-medium leading-[1.2] text-gray-600"
                         >
-                            Select {positionType === 'lend' ? 'lending' : 'collateral & borrow'} token
+                            Select {positionType === 'lend' ? 'lending' : 'borrow'} token
                         </Label>}
                     {selectedToken &&
                         <div className="flex gap-2 items-center">

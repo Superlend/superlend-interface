@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import {
     Dialog,
     DialogContent,
@@ -32,7 +32,8 @@ import ImageWithBadge from '../ImageWithBadge'
 import { Skeleton } from '../ui/skeleton'
 import { useAssetsDataContext } from '@/context/data-provider'
 import ImageWithDefault from '../ImageWithDefault'
-import { X } from 'lucide-react'
+import { ArrowLeft, SearchX, X } from 'lucide-react'
+import SearchInput from '../inputs/SearchInput'
 
 interface TokenDetails {
     symbol: string
@@ -82,9 +83,30 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
 }: SelectTokenByChainProps) => {
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
-
+    const maxChainsToShow = isDesktop ? 4 : 3
     const { allChainsData } = useAssetsDataContext()
     const [selectedChains, setSelectedChains] = useState<string[]>([])
+    const [showAllChains, setShowAllChains] = useState(false);
+    const [keywords, setKeywords] = useState<string>('')
+
+    useEffect(() => {
+        if (open) {
+            setKeywords('')
+            setSelectedChains([])
+        }
+    }, [open])
+
+    useEffect(() => {
+        setKeywords('')
+    }, [showAllChains])
+
+    function handleKeywordChange(e: any) {
+        setKeywords(e.target.value)
+    }
+
+    function handleClearSearch() {
+        setKeywords('')
+    }
 
     const chains = allChainsData.map((chain: any) => ({
         name: chain.name,
@@ -106,7 +128,26 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
         return selectedChains.includes(chainId.toString())
     }
 
-    const filteredTokens = (selectedChains.length > 0 && filterByChain) ? tokens.filter((token: any) => selectedChains.includes(token.chain_id.toString())) : tokens;
+    function handleSelectChainClick(chainId: number) {
+        handleSelectChain(chainId)
+        setShowAllChains(false)
+    }
+
+    const filteredTokens = (selectedChains.length > 0 && filterByChain) ?
+        tokens.filter((token: any) =>
+            selectedChains.includes(token.chain_id.toString()) &&
+            token.symbol.toLowerCase().includes(keywords.toLowerCase())
+        ) :
+        tokens.filter((token: any) =>
+            token.symbol.toLowerCase().includes(keywords.toLowerCase())
+        );
+
+    const filteredChains = chains?.filter((chain: any) =>
+        chain.name.toLowerCase().includes(keywords.toLowerCase())
+    );
+
+    const noFilteredChainsFound = filteredChains?.length === 0
+    const noFilteredTokensFound = tokens.length === 0 || filteredTokens?.length === 0
 
     // SUB_COMPONENT: Close button to close the dialog
     const closeContentButton = (
@@ -120,23 +161,42 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
         </Button>
     )
 
+    // SUB_COMPONENT: Back button to close the dialog
+    const backButton = (
+        <Button
+            variant="ghost"
+            onClick={() => setShowAllChains(false)}
+            className="h-6 w-6 flex items-center justify-center absolute left-6 top-[1.6rem] rounded-full bg-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground p-0"
+        >
+            <ArrowLeft strokeWidth={2.5} className="h-4 w-4 text-black" />
+            <span className="sr-only">Back</span>
+        </Button>
+    )
+
     // SUB_COMPONENT: Content
     const content = (
-        <Card className="w-full py-2 border-0 shadow-none bg-white bg-opacity-100 divide-y divide-gray-200">
+        <Card className={`w-full py-2 border-0 shadow-none bg-white bg-opacity-100 ${showAllChains ? '' : 'divide-y divide-gray-200'}`}>
             {/* UI: Filter with chains */}
-            {filterByChain &&
+            {(filterByChain && !showAllChains) &&
                 <div className="my-4 md:my-6 pl-6">
-                    <ScrollArea type='scroll' className="w-full h-fit whitespace-nowrap hide-thumb pb-2">
-                        <div className="flex items-center gap-2 pr-4">
-                            <Button
-                                variant={'outline'}
-                                className={`capitalize rounded-4 py-2.5 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${selectedChains.length === 0 ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
-                                size={'lg'}
-                                onClick={() => setSelectedChains([])}
-                            >
-                                All Chains
-                            </Button>
-                            {chains?.map((chain: any) => (
+                    <div className="flex flex-wrap items-center gap-2 md:gap-1">
+                        <Button
+                            variant={'outline'}
+                            className={`capitalize rounded-4 py-2.5 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${selectedChains.length === 0 ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
+                            size={'lg'}
+                            onClick={() => setSelectedChains([])}
+                        >
+                            All Chains
+                        </Button>
+                        {chains
+                            .sort((a: any, b: any) => {
+                                const aSelected = selectedChains.includes(a.chainId.toString());
+                                const bSelected = selectedChains.includes(b.chainId.toString());
+                                if (aSelected && !bSelected) return -1;
+                                if (!aSelected && bSelected) return 1;
+                                return 0;
+                            })
+                            .slice(0, maxChainsToShow).map((chain: any) => (
                                 <Button
                                     key={chain.name}
                                     variant={'outline'}
@@ -152,13 +212,31 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                     />
                                 </Button>
                             ))}
-                        </div>
-                        <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
+                        <Button
+                            onClick={() => setShowAllChains(true)}
+                            variant={'outline'}
+                            className={`px-4 py-3 rounded-4 flex items-center justify-center border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25`}
+                        >
+                            <BodyText level="body2" weight="semibold">
+                                +{chains.length - maxChainsToShow}
+                            </BodyText>
+                        </Button>
+                    </div>
                 </div>
             }
-            {/* UI: List of tokens */}
+            {showAllChains && backButton}
+            {/* UI: List of tokens / chains */}
             <ScrollArea className="h-[60vh] lg:h-full w-full max-h-[60vh]">
+                {/* Search bar UI */}
+                <div className="sticky top-0 left-0 right-0 z-10 px-5 py-2 bg-white">
+                    <SearchInput
+                        onChange={handleKeywordChange}
+                        onClear={handleClearSearch}
+                        value={keywords}
+                        placeholder={`Search by ${showAllChains ? 'chain name' : 'token name'}`}
+                        className="bg-gray-200"
+                    />
+                </div>
                 <div className="space-y-2 px-4">
                     {/* UI when loading */}
                     {isLoading &&
@@ -167,61 +245,94 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                         ))
                     }
                     {/* UI when does not have tokens */}
-                    {(!isLoading && (filteredTokens.length === 0 || tokens.length === 0)) &&
-                        <div className="flex items-center justify-center h-full py-10">
-                            <BodyText level="body2" weight="medium" className="text-gray-500">
-                                No tokens found
+                    {(!isLoading &&
+                        ((!showAllChains && noFilteredTokensFound) ||
+                            (showAllChains && noFilteredChainsFound))) &&
+                        <div className="flex items-center justify-center gap-2 h-full py-10">
+                            <SearchX className='w-6 h-6 text-gray-500' />
+                            <BodyText level="body1" weight="semibold" className="text-gray-500">
+                                No {showAllChains ? 'chains' : 'tokens'} found
                             </BodyText>
                         </div>
+
                     }
-                    {/* UI when has tokens */}
-                    {(!isLoading && filteredTokens.length > 0) &&
-                        filteredTokens.map((token: any, index: number) => (
-                            <div
-                                key={index}
-                                className="flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4"
-                                onClick={() => onSelectToken(token)}
-                            >
-                                <div className="flex items-center gap-1 select-none">
-                                    <div
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center`}
+                    {/* Tokens List */}
+                    {(!isLoading && filteredTokens.length > 0 && !showAllChains) &&
+                        filteredTokens
+                            .map((token: any, index: number) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4"
+                                    onClick={() => onSelectToken(token)}
+
+                                >
+                                    <div className="flex items-center gap-1 select-none">
+                                        <div
+                                            className={`w-8 h-8 rounded-full flex items-center justify-center`}
+                                        >
+                                            {showChainBadge &&
+                                                <ImageWithBadge
+                                                    mainImg={token.logo}
+                                                    badgeImg={token.chain_logo}
+                                                    mainImgAlt={token.symbol}
+                                                    badgeImgAlt={token.chain_id}
+                                                />
+                                            }
+                                            {!showChainBadge &&
+                                                <Image
+                                                    src={token.logo}
+                                                    alt={token.symbol}
+                                                    width={28}
+                                                    height={28}
+                                                    className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
+                                                />
+                                            }
+                                        </div>
+                                        <div className="flex flex-col gap-0">
+                                            <BodyText level="body2" weight="medium">
+                                                {token.symbol}
+                                            </BodyText>
+                                            <Label className="text-gray-700">{`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}</Label>
+                                        </div>
+                                    </div>
+                                    <div className="text-right select-none flex flex-col gap-0">
+                                        <BodyText
+                                            level="body2"
+                                            weight="medium"
+                                        >{`${hasLowestDisplayValuePrefix(Number(token.amount))} ${formatAmountToDisplay(token.amount)}`}</BodyText>
+                                        <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.amount) * Number(token.price_usd)).toString())}`}</Label>
+                                    </div>
+                                </div>
+                            ))
+                    }
+                    {/* Chains List */}
+                    {
+                        (!isLoading && filterByChain && showAllChains) && (
+                            filteredChains
+                                .map((chain: any) => (
+                                    <Button
+                                        key={chain.name}
+                                        variant={'ghost'}
+                                        className={`w-full px-3 py-2 flex gap-2 items-center justify-start border-gray-300 hover:bg-gray-200/90 active:bg-gray-300/25 ${isChainSelected(chain.chainId) ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
+                                        onClick={() => handleSelectChainClick(chain.chainId)}
                                     >
-                                        {showChainBadge &&
-                                            <ImageWithBadge
-                                                mainImg={token.logo}
-                                                badgeImg={token.chain_logo}
-                                                mainImgAlt={token.symbol}
-                                                badgeImgAlt={token.chain_id}
-                                            />
-                                        }
-                                        {!showChainBadge &&
-                                            <Image
-                                                src={token.logo}
-                                                alt={token.symbol}
-                                                width={28}
-                                                height={28}
-                                                className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
-                                            />
-                                        }
-                                    </div>
-                                    <div className="flex flex-col gap-0">
+                                        <ImageWithDefault
+                                            src={chain.logo}
+                                            alt={chain.name}
+                                            width={28}
+                                            height={28}
+                                            className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
+                                        />
                                         <BodyText level="body2" weight="medium">
-                                            {token.symbol}
+                                            {chain.name}
                                         </BodyText>
-                                        <Label className="text-gray-700">{`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}</Label>
-                                    </div>
-                                </div>
-                                <div className="text-right select-none flex flex-col gap-0">
-                                    <BodyText
-                                        level="body2"
-                                        weight="medium"
-                                    >{`${hasLowestDisplayValuePrefix(Number(token.amount))} ${formatAmountToDisplay(token.amount)}`}</BodyText>
-                                    <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.amount) * Number(token.price_usd)).toString())}`}</Label>
-                                </div>
-                            </div>
-                        ))}
+                                    </Button>
+                                ))
+                        )
+                    }
                 </div>
             </ScrollArea>
+
         </Card>
     )
 
@@ -229,9 +340,9 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
         return (
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent className="max-w-[436px] w-full pt-4 pb-2 px-2">
-                    <DialogHeader className="pt-2 pl-6 select-none">
-                        <HeadingText level="h5" weight="medium">
-                            Select Token
+                    <DialogHeader className="pt-2 select-none">
+                        <HeadingText level="h5" weight="medium" className={`text-center`}>
+                            Select {showAllChains ? 'Chain' : 'Token'}
                         </HeadingText>
                         <VisuallyHidden.Root asChild>
                             <DialogDescription>
@@ -253,7 +364,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                 <DrawerHeader className="pt-6">
                     <DrawerTitle asChild>
                         <HeadingText level="h5" weight="medium">
-                            Select Token
+                            Select {showAllChains ? 'Chain' : 'Token'}
                         </HeadingText>
                     </DrawerTitle>
                     <DrawerDescription>

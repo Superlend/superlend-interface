@@ -14,6 +14,9 @@ import { usePortfolioDataContext } from '@/context/portfolio-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import Opportunities from './opportunities'
 import { AnimatePresence, motion } from 'framer-motion'
+import { PlatformType } from '@/types/platform'
+import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
+import { useSearchParams } from 'next/navigation'
 
 interface ISelectedToken {
     address: string
@@ -30,6 +33,10 @@ interface ISelectedToken {
 
 export default function HomePageComponents() {
     const { isConnectingWallet, walletAddress, isWalletConnected } = useWalletConnection()
+    const updateSearchParams = useUpdateSearchParams()
+    const searchParams = useSearchParams()
+    const tokenAddressParam = searchParams.get('token_address')
+    const chainIdParam = searchParams.get('chain_id')
     const [positionType, setPositionType] = useState<TPositionType>('lend');
     const { portfolioData, isLoadingPortfolioData } = usePortfolioDataContext()
     const { allChainsData } = useAssetsDataContext()
@@ -44,10 +51,30 @@ export default function HomePageComponents() {
             enabled: !!selectedToken,
         })
 
+    function resetHomepageState() {
+        setSelectedToken(null)
+        setShowOpportunitiesTable(false)
+        updateSearchParams({
+            token_address: undefined,
+            chain_id: undefined,
+        })
+    }
+
+    useEffect(() => {
+        if (!selectedToken) {
+            resetHomepageState()
+        }
+    }, [!!selectedToken])
+
+    useEffect(() => {
+        if (!tokenAddressParam || !chainIdParam) {
+            resetHomepageState()
+        }
+    }, [tokenAddressParam, chainIdParam])
+
     useEffect(() => {
         if (!isWalletConnected) {
-            setShowOpportunitiesTable(false)
-            setSelectedToken(null)
+            resetHomepageState()
         }
     }, [isWalletConnected])
 
@@ -64,6 +91,10 @@ export default function HomePageComponents() {
 
     function handleSelectToken(token: any) {
         setSelectedToken(token)
+        updateSearchParams({
+            token_address: token.address,
+            chain_id: token.chain_id,
+        })
         setOpenSelectTokenDialog(false)
     }
 
@@ -76,15 +107,52 @@ export default function HomePageComponents() {
         opportunities: platform.opportunities,
     }))
 
-    const tokensList = positionsByChain.flatMap((positionParent: any) => positionParent.positions.map((position: any) => {
-        return {
+    const tokensList = positionsByChain
+        .flatMap((positionParent: any) => positionParent.positions.map((position: any) => ({
             ...position.token,
             amount: position.amount,
             chain_id: positionParent.chain_id,
             chain_logo: positionParent.chain_logo,
             chain_name: positionParent.chain_name,
-        }
-    }))
+        })))
+        .reduce((acc: any[], curr: any) => {
+            const existingToken = acc.find(token => token.symbol === curr.symbol);
+            if (existingToken) {
+                existingToken.amount += curr.amount;
+                return acc;
+            }
+            return [...acc, curr];
+        }, []);
+
+    function handleExcludeMorphoMarketsForLendAssets(
+        opportunity: any
+    ) {
+        const isVault = opportunity.platform.isVault
+        const isMorpho =
+            opportunity.platform.protocol_type ===
+            PlatformType.MORPHO
+
+        return !(isMorpho && !isVault)
+    }
+
+    function handleExcludeMorphoVaultsForBorrowAssets(
+        opportunity: any
+    ) {
+        const isVault = opportunity.platform.isVault
+        const isMorpho =
+            opportunity.platform.protocol_type ===
+            PlatformType.MORPHO
+
+        return !(isMorpho && isVault)
+    }
+
+    function handleFilterTableRows(opportunity: any) {
+        return positionType === 'borrow'
+            ? handleExcludeMorphoVaultsForBorrowAssets(opportunity)
+            : handleExcludeMorphoMarketsForLendAssets(opportunity)
+    }
+
+    const filteredOpportunitiesData = opportunitiesData.filter(handleFilterTableRows)
 
     return (
         <MainContainer>
@@ -106,7 +174,7 @@ export default function HomePageComponents() {
                         <SelectTokeWidget
                             setOpenSelectTokenDialog={setOpenSelectTokenDialog}
                             selectedToken={selectedToken}
-                            opportunitiesData={isWalletConnected ? opportunitiesData : []}
+                            opportunitiesData={isWalletConnected ? filteredOpportunitiesData : []}
                             positionType={positionType}
                             showOpportunitiesTable={showOpportunitiesTable}
                             setShowOpportunitiesTable={setShowOpportunitiesTable}
@@ -124,7 +192,7 @@ export default function HomePageComponents() {
                             >
                                 <Opportunities
                                     positionType={positionType}
-                                    opportunitiesData={opportunitiesData}
+                                    opportunitiesData={filteredOpportunitiesData}
                                     isLoadingOpportunitiesData={isLoadingOpportunitiesData}
                                 />
                             </motion.div>)

@@ -21,6 +21,7 @@ import { InfiniteMovingTokenBadges } from './infinite-moving-token-badges'
 import Link from 'next/link'
 import useDimensions from '@/hooks/useDimensions'
 import ArrowRightIcon from './icons/arrow-right-icon'
+import { PlatformType } from '@/types/platform'
 
 const TokenRates: React.FC<{
     positionType: TPositionType
@@ -33,12 +34,42 @@ const TokenRates: React.FC<{
                 type: positionType as TPositionType,
                 chain_ids: [],
                 tokens: [],
-                limit: 10,
             })
+
+        function handleExcludeMorphoMarketsForLendAssets(
+            opportunity: any
+        ) {
+            const isVault = opportunity.platform.isVault
+            const isMorpho =
+                opportunity.platform.protocol_type ===
+                PlatformType.MORPHO
+
+
+            return !(isMorpho && !isVault)
+        }
+
+        function handleExcludeMorphoVaultsForBorrowAssets(
+            opportunity: any
+        ) {
+            const isVault = opportunity.platform.isVault
+            const isMorpho =
+                opportunity.platform.protocol_type ===
+                PlatformType.MORPHO
+
+            return !(isMorpho && isVault)
+        }
+
+        function handleFilterTableRows(opportunity: any) {
+            return positionType === 'borrow'
+                ? handleExcludeMorphoVaultsForBorrowAssets(opportunity)
+                : handleExcludeMorphoMarketsForLendAssets(opportunity)
+        }
+
+        const filteredOpportunitiesData = opportunitiesData.filter(handleFilterTableRows).slice(0, 31)
 
         return (
             <div
-                className="scroller overflow-hidden flex items-center justify-center max-w-full lg:max-w-2xl h-32 -my-3 [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]"
+                className="scroller relative z-[11] overflow-hidden flex items-center justify-center max-w-full lg:max-w-2xl h-36 -my-3 [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]"
             >
                 <Carousel
                 // opts={{
@@ -55,7 +86,7 @@ const TokenRates: React.FC<{
                     <CarouselContent
                         className={cn(
                             'animate-scroll [animation-direction:reverse]',
-                            'hover:[animation-play-state:paused]'
+                            'hover:[animation-play-state:paused]',
                         )}
                     >
                         {isLoadingOpportunitiesData &&
@@ -65,7 +96,7 @@ const TokenRates: React.FC<{
                                 </CarouselItem>
                             ))}
                         {!isLoadingOpportunitiesData &&
-                            opportunitiesData.map((opportunity, index) => (
+                            filteredOpportunitiesData.map((opportunity, index) => (
                                 <CarouselItem key={index} className="basis-auto">
                                     <InfoTooltip
                                         side="left"
@@ -80,8 +111,8 @@ const TokenRates: React.FC<{
                                                 <div className="flex gap-2 items-center py-1 pr-2 pl-1 bg-white rounded-4 shadow-sm hover:shadow-none border border-transaprent hover:border-secondary-300 transition-all duration-300">
                                                     <ImageWithDefault
                                                         loading="lazy"
-                                                        src={opportunity.token.logo}
-                                                        alt={opportunity.token.name}
+                                                        src={opportunity?.token?.logo || ''}
+                                                        alt={opportunity?.token?.name || ''}
                                                         width={26}
                                                         height={26}
                                                         className="object-contain shrink-0 rounded-full h-[26px] w-[26px] max-w-[26px] max-h-[26px] select-none"
@@ -104,11 +135,23 @@ const TokenRates: React.FC<{
                                                         className="object-contain shrink-0 h-[16px] w-[16px] max-w-[16px] max-h-[16px]"
                                                     />
                                                     <Label weight="normal" className='text-gray-700'>
-                                                        Current APY
+                                                        {positionType === 'lend' ? 'Supply' : 'Borrow'} APY
                                                     </Label>
                                                 </div>
                                                 <div className="flex gap-2 items-center justify-start py-2 md:py-1">
-
+                                                    <ImageWithDefault
+                                                        loading="lazy"
+                                                        src={opportunity.token.logo}
+                                                        alt={opportunity.token.name}
+                                                        width={14}
+                                                        height={14}
+                                                        className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
+                                                    />
+                                                    <Label weight="normal" className='text-gray-700 truncate max-w-[150px]'>
+                                                        {opportunity.token.name}
+                                                    </Label>
+                                                </div>
+                                                <div className="flex gap-2 items-center justify-start py-2 md:py-1">
                                                     <ImageWithDefault
                                                         loading="lazy"
                                                         src={opportunity.platform.logo}
