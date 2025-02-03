@@ -19,6 +19,8 @@ import { useAssetsDataContext } from '@/context/data-provider'
 import { Skeleton } from './ui/skeleton'
 import { InfiniteMovingTokenBadges } from './infinite-moving-token-badges'
 import Link from 'next/link'
+import useDimensions from '@/hooks/useDimensions'
+import ArrowRightIcon from './icons/arrow-right-icon'
 
 const TokenRates: React.FC<{
     positionType: TPositionType
@@ -39,16 +41,16 @@ const TokenRates: React.FC<{
                 className="scroller overflow-hidden flex items-center justify-center max-w-full lg:max-w-2xl h-32 -my-3 [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]"
             >
                 <Carousel
-                    // opts={{
-                    //     align: 'center',
-                    //     loop: true,
-                    //     dragFree: true,
-                    // }}
-                    // plugins={[
-                    //     Autoplay({
-                    //         delay: 1000,
-                    //     }),
-                    // ]}
+                // opts={{
+                //     align: 'center',
+                //     loop: true,
+                //     dragFree: true,
+                // }}
+                // plugins={[
+                //     Autoplay({
+                //         delay: 1000,
+                //     }),
+                // ]}
                 >
                     <CarouselContent
                         className={cn(
@@ -56,7 +58,6 @@ const TokenRates: React.FC<{
                             'hover:[animation-play-state:paused]'
                         )}
                     >
-
                         {isLoadingOpportunitiesData &&
                             Array.from({ length: 10 }).map((_, index) => (
                                 <CarouselItem key={index} className="basis-auto">
@@ -69,12 +70,13 @@ const TokenRates: React.FC<{
                                     <InfoTooltip
                                         side="left"
                                         label={
-                                            <Link href={getOpportunityUrl({
-                                                tokenAddress: opportunity.token.address,
-                                                protocol_identifier: opportunity.platform.protocol_identifier,
-                                                chain_id: opportunity.chain_id.toString(),
-                                                positionType: positionType,
-                                            })}>
+                                            <LinkWrapper
+                                                href={getOpportunityUrl({
+                                                    tokenAddress: opportunity.token.address,
+                                                    protocol_identifier: opportunity.platform.protocol_identifier,
+                                                    chain_id: opportunity.chain_id.toString(),
+                                                    positionType: positionType,
+                                                })}>
                                                 <div className="flex gap-2 items-center py-1 pr-2 pl-1 bg-white rounded-4 shadow-sm hover:shadow-none border border-transaprent hover:border-secondary-300 transition-all duration-300">
                                                     <ImageWithDefault
                                                         loading="lazy"
@@ -85,10 +87,10 @@ const TokenRates: React.FC<{
                                                         className="object-contain shrink-0 rounded-full h-[26px] w-[26px] max-w-[26px] max-h-[26px] select-none"
                                                     />
                                                     <BodyText level="body2" weight="medium" className='select-none'>
-                                                        {abbreviateNumber(Number(opportunity.platform.apy.avg_7days))}%
+                                                        {abbreviateNumber(Number(opportunity.platform.apy.current))}%
                                                     </BodyText>
                                                 </div>
-                                            </Link>
+                                            </LinkWrapper>
                                         }
                                         content={
                                             <div className='flex flex-col select-none divide-y divide-gray-200'>
@@ -102,10 +104,11 @@ const TokenRates: React.FC<{
                                                         className="object-contain shrink-0 h-[16px] w-[16px] max-w-[16px] max-h-[16px]"
                                                     />
                                                     <Label weight="normal" className='text-gray-700'>
-                                                        Last 7D APY
+                                                        Current APY
                                                     </Label>
                                                 </div>
-                                                <div className="flex gap-2 items-center justify-start py-1">
+                                                <div className="flex gap-2 items-center justify-start py-2 md:py-1">
+
                                                     <ImageWithDefault
                                                         loading="lazy"
                                                         src={opportunity.platform.logo}
@@ -118,7 +121,7 @@ const TokenRates: React.FC<{
                                                         {opportunity.platform.name}
                                                     </Label>
                                                 </div>
-                                                <div className="flex gap-2 items-center justify-start pt-2">
+                                                <div className="flex gap-2 items-center justify-start max-md:py-2 md:pt-2">
                                                     <ImageWithDefault
                                                         loading="lazy"
                                                         src={allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.logo}
@@ -130,6 +133,23 @@ const TokenRates: React.FC<{
                                                     <Label weight="normal" className='text-gray-700 truncate max-w-[150px]'>
                                                         {allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.name}
                                                     </Label>
+                                                </div>
+                                                <div className="flex md:hidden gap-2 items-center justify-start pt-2">
+                                                    <Link
+                                                        href={getOpportunityUrl({
+                                                            tokenAddress: opportunity.token.address,
+                                                            protocol_identifier: opportunity.platform.protocol_identifier,
+                                                            chain_id: opportunity.chain_id.toString(),
+                                                            positionType: positionType,
+                                                        })}
+                                                        className='flex items-center border-b border-secondary-500 gap-1 text-xs text-secondary-500'
+                                                    >
+                                                        <ArrowRightIcon
+                                                            weight="2"
+                                                            className="stroke-secondary-500 -rotate-45"
+                                                        />
+                                                        Know more
+                                                    </Link>
                                                 </div>
                                             </div>
                                         }
@@ -157,4 +177,21 @@ function getOpportunityUrl({
     return `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`
 }
 
+const LinkWrapper = ({ children, ...props }: { children: React.ReactNode } & React.ComponentProps<typeof Link>) => {
+    const { width } = useDimensions();
+
+    if (width < 768) {
+        return (
+            <>
+                {children}
+            </>
+        )
+    }
+
+    return (
+        <Link {...props}>
+            {children}
+        </Link>
+    )
+}
 export default TokenRates
