@@ -54,7 +54,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                     onClick={handleOpenTokenSelectionDialog}
                     type="button"
                     className="relative flex gap-10 justify-between items-center p-6 w-full bg-white rounded-2xl border border-gray-100 border-solid shadow-[0px_4px_16px_rgba(0,0,0,0.04)] max-md:px-5 max-md:max-w-full border-gray-200 hover:border-gray-400 focus:border-gray-400 rounded-5"
-                    disabled={!isWalletConnected || isConnectingWallet || isLoading}
+                    disabled={!isWalletConnected || isConnectingWallet}
                 >
                     {!selectedToken &&
                         <Label
