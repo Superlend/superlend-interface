@@ -36,6 +36,7 @@ import { ArrowLeft, SearchX, X } from 'lucide-react'
 import SearchInput from '../inputs/SearchInput'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { Badge } from '../ui/badge'
+import { STABLECOINS_NAMES_LIST } from '@/constants'
 
 interface TokenDetails {
     symbol: string
@@ -140,7 +141,21 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     }
 
     function sortTokensByBalance(a: any, b: any) {
-        if (!isWalletConnected) return 0;
+        if (!isWalletConnected) {
+            const aIndex = STABLECOINS_NAMES_LIST.indexOf(a.symbol);
+            const bIndex = STABLECOINS_NAMES_LIST.indexOf(b.symbol);
+            
+            // If both tokens are stablecoins, sort by their order in the list
+            if (aIndex !== -1 && bIndex !== -1) {
+                return aIndex - bIndex;
+            }
+            // If only a is a stablecoin, it should come first
+            if (aIndex !== -1) return -1;
+            // If only b is a stablecoin, it should come first  
+            if (bIndex !== -1) return 1;
+            // If neither are stablecoins, maintain original order
+            return 0;
+        }
         return (b.balance || 0) - (a.balance || 0);
     }
 
