@@ -80,7 +80,7 @@ export function OpportunitiesDataTable<TData, TValue>({
         initialState: {
             // ...initialState,
             columnPinning: {
-                left: ['tokenSymbol'],
+                left: ['platformName'],
             },
         },
         onColumnVisibilityChange: setColumnVisibility,
@@ -141,7 +141,7 @@ export function OpportunitiesDataTable<TData, TValue>({
                                     return (
                                         <TableHead
                                             key={header.id}
-                                            className="h-auto py-3 pl-8"
+                                            className="pt-6 pb-3 pl-5 md:pl-7"
                                             style={{
                                                 ...getCommonPinningStyles(
                                                     column as unknown as Column<
@@ -158,7 +158,7 @@ export function OpportunitiesDataTable<TData, TValue>({
                                                 <BodyText
                                                     level="body2"
                                                     weight="normal"
-                                                    className="text-gray-700 select-none"
+                                                    className="text-gray-700 select-none truncate"
                                                 >
                                                     {header.isPlaceholder
                                                         ? null
@@ -222,7 +222,7 @@ export function OpportunitiesDataTable<TData, TValue>({
                                         return (
                                             <TableCell
                                                 key={cell.id}
-                                                className={`py-4 w-[150px] min-w-[150px] max-w-[200px] pl-[32px] ${rowIndex == 0 ? 'first:rounded-tl-5 last:rounded-tr-5' : ''} ${rowIndex == rows.length - 1 ? 'first:rounded-bl-5 last:rounded-br-5' : ''} ${!!handleRowClick ? 'cursor-pointer' : ''}`}
+                                                className={`py-4 max-md:min-w-[100px] md:min-w-[150px] max-w-[100px] md:max-w-[200px] pl-5 md:pl-7 max-md:pr-0 ${rowIndex == 0 ? 'first:rounded-tl-5 last:rounded-tr-5' : ''} ${rowIndex == rows.length - 1 ? 'first:rounded-bl-5 last:rounded-br-5' : ''} ${!!handleRowClick ? 'cursor-pointer' : ''}`}
                                                 style={{
                                                     ...getCommonPinningStyles(
                                                         column as unknown as Column<
