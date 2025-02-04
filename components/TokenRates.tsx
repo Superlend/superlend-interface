@@ -9,7 +9,7 @@ import {
     CarouselPrevious,
 } from '@/components/ui/carousel'
 import Autoplay from 'embla-carousel-autoplay'
-import { TOpportunityTable, TPositionType } from '@/types'
+import { TChain, TOpportunityTable, TPositionType } from '@/types'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import ImageWithDefault from './ImageWithDefault'
 import { abbreviateNumber, cn } from '@/lib/utils'
@@ -22,6 +22,7 @@ import Link from 'next/link'
 import useDimensions from '@/hooks/useDimensions'
 import ArrowRightIcon from './icons/arrow-right-icon'
 import { PlatformType } from '@/types/platform'
+import ImageWithBadge from './ImageWithBadge'
 
 const TokenRates: React.FC<{
     positionType: TPositionType
@@ -69,7 +70,7 @@ const TokenRates: React.FC<{
 
         return (
             <div
-                className="scroller relative z-[11] overflow-hidden flex items-center justify-center max-w-full lg:max-w-2xl h-36 -my-3 [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]"
+                className="scroller relative z-[11] overflow-hidden flex items-center justify-center max-w-full lg:max-w-2xl h-36 -my-5 [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]"
             >
                 <Carousel
                 // opts={{
@@ -109,16 +110,23 @@ const TokenRates: React.FC<{
                                                     positionType: positionType,
                                                 })}>
                                                 <div className="flex gap-2 items-center py-1 pr-2 pl-1 bg-white rounded-4 shadow-sm hover:shadow-none border border-transaprent hover:border-secondary-300 transition-all duration-300">
-                                                    <ImageWithDefault
-                                                        loading="lazy"
-                                                        src={opportunity?.token?.logo || ''}
-                                                        alt={opportunity?.token?.name || ''}
-                                                        width={26}
-                                                        height={26}
-                                                        className="object-contain shrink-0 rounded-full h-[26px] w-[26px] max-w-[26px] max-h-[26px] select-none"
+                                                    <ImageWithBadge
+                                                        mainImg={opportunity?.token?.logo || ''}
+                                                        badgeImg={getChainLogo({
+                                                            chain_id: opportunity.chain_id.toString(),
+                                                            allChainsData,
+                                                        }) || ''}
+                                                        mainImgAlt={opportunity?.token?.name || ''}
+                                                        badgeImgAlt={opportunity?.chain_id?.toString() || ''}
+                                                        mainImgWidth="24"
+                                                        badgeImgWidth="10"
+                                                        mainImgHeight="24"
+                                                        badgeImgHeight="10"
+                                                        badgeCustomClass="bottom-[0px] right-[1px]"
                                                     />
                                                     <BodyText level="body2" weight="medium" className='select-none'>
                                                         {abbreviateNumber(Number(opportunity.platform.apy.current))}%
+
                                                     </BodyText>
                                                 </div>
                                             </LinkWrapper>
@@ -167,14 +175,25 @@ const TokenRates: React.FC<{
                                                 <div className="flex gap-2 items-center justify-start max-md:py-2 md:pt-2">
                                                     <ImageWithDefault
                                                         loading="lazy"
-                                                        src={allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.logo}
-                                                        alt={allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.name}
+                                                        src={getChainLogo({
+                                                            chain_id: opportunity.chain_id.toString(),
+                                                            allChainsData,
+                                                        })}
+                                                        alt={getChainName({
+                                                            chain_id: opportunity.chain_id.toString(),
+                                                            allChainsData,
+                                                        })}
+
                                                         width={14}
                                                         height={14}
                                                         className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
                                                     />
+
                                                     <Label weight="normal" className='text-gray-700 truncate max-w-[150px]'>
-                                                        {allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.name}
+                                                        {getChainName({
+                                                            chain_id: opportunity.chain_id.toString(),
+                                                            allChainsData,
+                                                        })}
                                                     </Label>
                                                 </div>
                                                 <div className="flex md:hidden gap-2 items-center justify-start pt-2">
@@ -237,4 +256,26 @@ const LinkWrapper = ({ children, ...props }: { children: React.ReactNode } & Rea
         </Link>
     )
 }
+
+function getChainLogo({
+    chain_id,
+    allChainsData,
+}: {
+    chain_id: string
+    allChainsData: TChain[]
+}) {
+    return allChainsData.find((chain) => chain.chain_id === Number(chain_id))?.logo
+}
+
+function getChainName({
+    chain_id,
+    allChainsData,
+}: {
+    chain_id: string
+    allChainsData: TChain[]
+}) {
+    return allChainsData.find((chain) => chain.chain_id === Number(chain_id))?.name
+}
+
+
 export default TokenRates

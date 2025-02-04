@@ -34,6 +34,7 @@ import { useAssetsDataContext } from '@/context/data-provider'
 import ImageWithDefault from '../ImageWithDefault'
 import { ArrowLeft, SearchX, X } from 'lucide-react'
 import SearchInput from '../inputs/SearchInput'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 
 interface TokenDetails {
     symbol: string
@@ -47,8 +48,6 @@ interface TokenDetails {
     chain_logo?: string
     chain_name?: string
 }
-
-
 
 interface NetworkDetails {
     name: string
@@ -71,7 +70,6 @@ interface SelectTokenByChainProps {
     showChainBadge?: boolean
 }
 
-
 export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     open,
     setOpen,
@@ -88,6 +86,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     const [selectedChains, setSelectedChains] = useState<string[]>([])
     const [showAllChains, setShowAllChains] = useState(false);
     const [keywords, setKeywords] = useState<string>('')
+    const { isWalletConnected } = useWalletConnection()
 
     useEffect(() => {
         if (open) {
@@ -109,11 +108,16 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
         setKeywords('')
     }
 
-    const chains = allChainsData.map((chain: any) => ({
-        name: chain.name,
-        logo: chain.logo,
-        chainId: chain.chain_id,
-    }))
+    const chains = allChainsData
+        .map((chain: any) => ({
+            name: chain.name,
+            logo: chain.logo,
+            chainId: chain.chain_id,
+        }))
+        .sort((a, b) => {
+            const order = [1, 8453, 42161, 137, 42793, 10, 534352, 43114, 56, 100, 1088];
+            return order.indexOf(a.chainId) - order.indexOf(b.chainId);
+        });
 
     const handleSelectChain = (chainId: number) => {
         setSelectedChains((prev) => {
@@ -183,7 +187,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                     <div className="flex flex-wrap items-center gap-2 md:gap-1">
                         <Button
                             variant={'outline'}
-                            className={`capitalize rounded-4 py-3 md:py-2.5 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${selectedChains.length === 0 ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
+                            className={`capitalize rounded-4 py-3 border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${selectedChains.length === 0 ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
                             size={'lg'}
                             onClick={() => setSelectedChains([])}
                         >
@@ -296,13 +300,15 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                             <Label className="text-gray-700">{`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}</Label>
                                         </div>
                                     </div>
-                                    <div className="text-right select-none flex flex-col gap-0">
-                                        <BodyText
-                                            level="body2"
-                                            weight="medium"
-                                        >{`${hasLowestDisplayValuePrefix(Number(token.amount))} ${formatAmountToDisplay(token.amount)}`}</BodyText>
-                                        <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.amount) * Number(token.price_usd)).toString())}`}</Label>
-                                    </div>
+                                    {isWalletConnected &&
+                                        <div className="text-right select-none flex flex-col gap-0">
+                                            <BodyText
+                                                level="body2"
+                                                weight="medium"
+                                            >{`${hasLowestDisplayValuePrefix(Number(token.balance))} ${formatAmountToDisplay(token.balance)}`}</BodyText>
+                                            <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.balance) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance) * Number(token.price_usd)).toString())}`}</Label>
+                                        </div>
+                                    }
                                 </div>
                             ))
                     }

@@ -9,7 +9,7 @@ import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
 import { usePositionsContext } from '@/context/positions-provider'
 import { useAssetsDataContext } from '@/context/data-provider'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
-import { TPositionType } from '@/types'
+import { TPositionType, TToken } from '@/types'
 import { usePortfolioDataContext } from '@/context/portfolio-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import Opportunities from './opportunities'
@@ -17,6 +17,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { PlatformType } from '@/types/platform'
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { useSearchParams } from 'next/navigation'
+import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { TChain } from '@/types/chain'
 
 interface ISelectedToken {
     address: string
@@ -31,15 +33,23 @@ interface ISelectedToken {
     symbol: string
 }
 
+type TokenBalance = {
+    token: any | undefined;
+    chain: TChain | undefined;
+};
+
 export default function HomePageComponents() {
     const { isConnectingWallet, walletAddress, isWalletConnected } = useWalletConnection()
+    const {
+        erc20TokensBalanceData,
+        isLoading: isLoadingErc20TokensBalanceData
+    } = useUserTokenBalancesContext()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
     const tokenAddressParam = searchParams.get('token_address')
     const chainIdParam = searchParams.get('chain_id')
     const [positionType, setPositionType] = useState<TPositionType>('lend');
-    const { portfolioData, isLoadingPortfolioData } = usePortfolioDataContext()
-    const { allChainsData } = useAssetsDataContext()
+    const { allChainsData, allTokensData } = useAssetsDataContext()
     const [openSelectTokenDialog, setOpenSelectTokenDialog] = useState(false)
     const [selectedToken, setSelectedToken] = useState<ISelectedToken | null>(null)
     const [showOpportunitiesTable, setShowOpportunitiesTable] = useState(false)
@@ -51,32 +61,68 @@ export default function HomePageComponents() {
             enabled: !!selectedToken,
         })
 
+    function getFormattedTokenBalances(
+        erc20TokensBalanceData: Record<number, Record<string, { balanceRaw: string; balanceFormatted: number }>>,
+        allTokensData: any,
+        allChainsData: TChain[]
+    ): TokenBalance[] {
+        const result: TokenBalance[] = [];
+
+        for (const chainId in erc20TokensBalanceData) {
+            const chainIdNumber = Number(chainId);
+            const tokenBalances = erc20TokensBalanceData[chainIdNumber];
+
+            for (const tokenAddress in tokenBalances) {
+                const balanceData = tokenBalances[tokenAddress];
+                const token = allTokensData[chainIdNumber]?.find((token: any) => token.address.toLowerCase() === tokenAddress.toLowerCase());
+                const chain = allChainsData.find((chain) => chain.chain_id === chainIdNumber);
+
+                result.push({
+                    token: {
+                        ...token,
+                        balance: balanceData.balanceFormatted,
+                    },
+                    chain: chain,
+                });
+            }
+        }
+
+        return result;
+    }
+
+    const formattedTokenBalances = getFormattedTokenBalances(erc20TokensBalanceData, allTokensData, allChainsData);
+    const formattedTokensList = formattedTokenBalances.map((tokenBalance) => {
+        return {
+            ...tokenBalance.token,
+            chain_id: tokenBalance.chain?.chain_id,
+            chain_logo: tokenBalance.chain?.logo,
+            chain_name: tokenBalance.chain?.name,
+        }
+    });
+
     function resetHomepageState() {
         setSelectedToken(null)
         setShowOpportunitiesTable(false)
         updateSearchParams({
             token_address: undefined,
             chain_id: undefined,
+            position_type: undefined,
         })
     }
 
+    // Reset homepage state when token is not selected or selectedToken is null
     useEffect(() => {
         if (!selectedToken) {
             resetHomepageState()
         }
     }, [!!selectedToken])
 
+    // Reset homepage state when token address or chain id is not present
     useEffect(() => {
         if (!tokenAddressParam || !chainIdParam) {
             resetHomepageState()
         }
     }, [tokenAddressParam, chainIdParam])
-
-    useEffect(() => {
-        if (!isWalletConnected) {
-            resetHomepageState()
-        }
-    }, [isWalletConnected])
 
     // Set showOpportunitiesTable to true when token is selected
     useEffect(() => {
@@ -87,6 +133,9 @@ export default function HomePageComponents() {
 
     const handlePositionTypeToggle = (type: TPositionType) => {
         setPositionType(type)
+        updateSearchParams({
+            position_type: type,
+        })
     }
 
     function handleSelectToken(token: any) {
@@ -94,35 +143,10 @@ export default function HomePageComponents() {
         updateSearchParams({
             token_address: token.address,
             chain_id: token.chain_id,
+            position_type: positionType,
         })
         setOpenSelectTokenDialog(false)
     }
-
-    const positionsByChain = portfolioData.platforms.flatMap((platform: any) => ({
-        positions: platform.positions.filter((position: any) => position.type === positionType),
-        chain_id: platform.chain_id,
-        chain_logo: allChainsData.find((chain: any) => Number(chain.chain_id) === Number(platform.chain_id))?.logo,
-        chain_name: allChainsData.find((chain: any) => Number(chain.chain_id) === Number(platform.chain_id))?.name,
-        platform_name: platform.platform_name,
-        opportunities: platform.opportunities,
-    }))
-
-    const tokensList = positionsByChain
-        .flatMap((positionParent: any) => positionParent.positions.map((position: any) => ({
-            ...position.token,
-            amount: position.amount,
-            chain_id: positionParent.chain_id,
-            chain_logo: positionParent.chain_logo,
-            chain_name: positionParent.chain_name,
-        })))
-        .reduce((acc: any[], curr: any) => {
-            const existingToken = acc.find(token => token.symbol === curr.symbol);
-            if (existingToken) {
-                existingToken.amount += curr.amount;
-                return acc;
-            }
-            return [...acc, curr];
-        }, []);
 
     function handleExcludeMorphoMarketsForLendAssets(
         opportunity: any
@@ -174,7 +198,7 @@ export default function HomePageComponents() {
                         <SelectTokeWidget
                             setOpenSelectTokenDialog={setOpenSelectTokenDialog}
                             selectedToken={selectedToken}
-                            opportunitiesData={isWalletConnected ? filteredOpportunitiesData : []}
+                            opportunitiesData={filteredOpportunitiesData}
                             positionType={positionType}
                             showOpportunitiesTable={showOpportunitiesTable}
                             setShowOpportunitiesTable={setShowOpportunitiesTable}
@@ -203,9 +227,9 @@ export default function HomePageComponents() {
                 <SelectTokenByChain
                     open={openSelectTokenDialog}
                     setOpen={setOpenSelectTokenDialog}
-                    tokens={tokensList}
+                    tokens={formattedTokensList}
                     onSelectToken={handleSelectToken}
-                    isLoading={isLoadingPortfolioData || isConnectingWallet}
+                    isLoading={isLoadingErc20TokensBalanceData || isConnectingWallet}
                 />
             </div>
         </MainContainer>

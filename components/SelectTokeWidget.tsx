@@ -8,7 +8,6 @@ import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
 import ImageWithDefault from './ImageWithDefault'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
-import ConnectWalletButton from './ConnectWalletButton'
 
 interface ISelectTokeWidgetProps {
     setOpenSelectTokenDialog: (open: boolean) => void
@@ -54,7 +53,6 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                     onClick={handleOpenTokenSelectionDialog}
                     type="button"
                     className="relative flex gap-10 justify-between items-center p-6 w-full bg-white rounded-2xl border border-gray-100 border-solid shadow-[0px_4px_16px_rgba(0,0,0,0.04)] max-md:px-5 max-md:max-w-full border-gray-200 hover:border-gray-400 focus:border-gray-400 rounded-5"
-                    disabled={!isWalletConnected || isConnectingWallet}
                 >
                     {!selectedToken &&
                         <Label
@@ -102,7 +100,9 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
             {selectedToken &&
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-6 pb-4 px-4">
                     <BodyText level="body2" weight="medium" className="text-gray-500">
-                        Balance: {`${hasLowestDisplayValuePrefix(Number(selectedToken.amount))} ${formatAmountToDisplay(selectedToken.amount)}`}
+                        Balance:
+                        {isWalletConnected && <span className=''>{` ${hasLowestDisplayValuePrefix(Number(selectedToken.balance))} ${formatAmountToDisplay(selectedToken.balance)}`}</span>}
+                        {!isWalletConnected && <span className='ml-1'>--</span>}
                     </BodyText>
                     {!isLoading &&
                         <Badge variant="blue" className="w-fit">
@@ -114,26 +114,6 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                     }
                 </div>
             }
-            {/* {(!showOpportunitiesTable && !!walletAddress) &&
-                <Button
-                    type="button"
-                    variant="primary"
-                    size="lg"
-                    disabled={isDisabled}
-                    onClick={handleViewOpportunities}
-                    className="group w-full mt-4 rounded-5 py-2.5 flex items-center gap-2"
-                >
-                    <span className="self-stretch my-auto group-disabled:opacity-[0.5]">
-                        View Opportunities
-                    </span>
-                    <ArrowRightIcon className="w-4 h-4 text-white group-disabled:opacity-[0.5]" />
-                </Button>
-            } */}
-            {!walletAddress && (
-                <div className="mt-4 flex items-center justify-center">
-                    <ConnectWalletButton />
-                </div>
-            )}
         </div>
     )
 }

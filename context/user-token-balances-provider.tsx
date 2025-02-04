@@ -3,6 +3,7 @@
 import { useERC20Balance } from '@/hooks/useERC20Balance'
 import useGetChainsData from '@/hooks/useGetChainsData'
 import useGetTokensData from '@/hooks/useGetTokensData'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { TChain } from '@/types/chain'
 import { createContext, useContext, useEffect, useState } from 'react'
 // import { useActiveAccount } from 'thirdweb/react'
@@ -27,14 +28,14 @@ export default function UserTokenBalancesProvider({
 }: {
     children: React.ReactNode
 }) {
-    const { address: walletAddress } = useAccount()
+    const { walletAddress } = useWalletConnection()
 
     const {
         data: erc20TokensBalanceData,
         isLoading,
         isRefreshing,
         setIsRefreshing,
-    } = useERC20Balance(walletAddress as `0x${string}`)
+    } = useERC20Balance(walletAddress as `0x${string}` || '0x0000000000000000000000000000000000000000')
 
     useEffect(() => {
         setIsRefreshing(true)
