@@ -63,6 +63,7 @@ export default function ConnectWalletButton() {
                             className="rounded-5 py-2 px-4 capitalize w-full"
                             onClick={handleLogin}
                             disabled={isDisabled}
+                            type="button"
                         >
                             {isDisabled ? 'Connecting...' : 'Connect Wallet'}
                         </Button>

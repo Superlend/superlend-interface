@@ -8,20 +8,29 @@ import { TChain } from '@/types/chain'
 import { createContext, useContext, useEffect, useState } from 'react'
 // import { useActiveAccount } from 'thirdweb/react'
 import { useAccount } from 'wagmi'
+import { useAssetsDataContext } from './data-provider'
 
 type TUserTokenBalancesProps = {
     erc20TokensBalanceData: any
+    formattedTokenBalances: TTokenBalance[]
     isLoading: boolean
     isRefreshing: boolean
     setIsRefreshing: (value: boolean) => void
 }
 
+
 export const UserTokenBalancesContext = createContext<TUserTokenBalancesProps>({
     erc20TokensBalanceData: {},
+    formattedTokenBalances: [],
     isLoading: false,
     isRefreshing: false,
     setIsRefreshing: () => { },
 })
+
+type TTokenBalance = {
+    token: any
+    chain: TChain
+}
 
 export default function UserTokenBalancesProvider({
     children,
@@ -29,6 +38,7 @@ export default function UserTokenBalancesProvider({
     children: React.ReactNode
 }) {
     const { walletAddress } = useWalletConnection()
+    const { allTokensData, allChainsData } = useAssetsDataContext()
 
     const {
         data: erc20TokensBalanceData,
@@ -41,10 +51,42 @@ export default function UserTokenBalancesProvider({
         setIsRefreshing(true)
     }, [walletAddress])
 
+    function getFormattedTokenBalances(
+        erc20TokensBalanceData: Record<number, Record<string, { balanceRaw: string; balanceFormatted: number }>>,
+        allTokensData: any,
+        allChainsData: TChain[]
+    ): TTokenBalance[] {
+        const result: TTokenBalance[] = [];
+
+        for (const chainId in erc20TokensBalanceData) {
+            const chainIdNumber = Number(chainId);
+            const tokenBalances = erc20TokensBalanceData[chainIdNumber];
+
+            for (const tokenAddress in tokenBalances) {
+                const balanceData = tokenBalances[tokenAddress];
+                const token = allTokensData[chainIdNumber]?.find((token: any) => token.address.toLowerCase() === tokenAddress.toLowerCase());
+                const chain = allChainsData.find((chain) => chain.chain_id === chainIdNumber);
+
+                result.push({
+                    token: {
+                        ...token,
+                        balance: balanceData.balanceFormatted,
+                    },
+                    chain: chain as TChain,
+                });
+            }
+        }
+
+        return result;
+    }
+
+    const formattedTokenBalances = getFormattedTokenBalances(erc20TokensBalanceData, allTokensData, allChainsData);
+
     return (
         <UserTokenBalancesContext.Provider
             value={{
                 erc20TokensBalanceData,
+                formattedTokenBalances,
                 isLoading,
                 isRefreshing,
                 setIsRefreshing,

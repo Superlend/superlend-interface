@@ -22,7 +22,7 @@ import { TChain } from '@/types/chain'
 
 interface ISelectedToken {
     address: string
-    amount: number
+    balance: number
     chain_id: number
     chain_logo: string
     chain_name: string
@@ -33,25 +33,20 @@ interface ISelectedToken {
     symbol: string
 }
 
-type TokenBalance = {
-    token: any | undefined;
-    chain: TChain | undefined;
-};
-
 export default function HomePageComponents() {
     const { isConnectingWallet, walletAddress, isWalletConnected } = useWalletConnection()
     const {
         erc20TokensBalanceData,
-        isLoading: isLoadingErc20TokensBalanceData
+        isLoading: isLoadingErc20TokensBalanceData,
+        formattedTokenBalances
     } = useUserTokenBalancesContext()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
     const tokenAddressParam = searchParams.get('token_address')
     const chainIdParam = searchParams.get('chain_id')
     const [positionType, setPositionType] = useState<TPositionType>('lend');
-    const { allChainsData, allTokensData } = useAssetsDataContext()
     const [openSelectTokenDialog, setOpenSelectTokenDialog] = useState(false)
-    const [selectedToken, setSelectedToken] = useState<ISelectedToken | null>(null)
+    const [selectedToken, setSelectedToken] = useState<any>(null)
     const [showOpportunitiesTable, setShowOpportunitiesTable] = useState(false)
     const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData } =
         useGetOpportunitiesData({
@@ -61,36 +56,6 @@ export default function HomePageComponents() {
             enabled: !!selectedToken,
         })
 
-    function getFormattedTokenBalances(
-        erc20TokensBalanceData: Record<number, Record<string, { balanceRaw: string; balanceFormatted: number }>>,
-        allTokensData: any,
-        allChainsData: TChain[]
-    ): TokenBalance[] {
-        const result: TokenBalance[] = [];
-
-        for (const chainId in erc20TokensBalanceData) {
-            const chainIdNumber = Number(chainId);
-            const tokenBalances = erc20TokensBalanceData[chainIdNumber];
-
-            for (const tokenAddress in tokenBalances) {
-                const balanceData = tokenBalances[tokenAddress];
-                const token = allTokensData[chainIdNumber]?.find((token: any) => token.address.toLowerCase() === tokenAddress.toLowerCase());
-                const chain = allChainsData.find((chain) => chain.chain_id === chainIdNumber);
-
-                result.push({
-                    token: {
-                        ...token,
-                        balance: balanceData.balanceFormatted,
-                    },
-                    chain: chain,
-                });
-            }
-        }
-
-        return result;
-    }
-
-    const formattedTokenBalances = getFormattedTokenBalances(erc20TokensBalanceData, allTokensData, allChainsData);
     const formattedTokensList = formattedTokenBalances.map((tokenBalance) => {
         return {
             ...tokenBalance.token,
@@ -109,6 +74,8 @@ export default function HomePageComponents() {
             position_type: undefined,
         })
     }
+
+    const tokenBalance = formattedTokenBalances.find(tokenBalance => tokenBalance.token.address === selectedToken?.address)?.token?.balance || 0;
 
     // Reset homepage state when token is not selected or selectedToken is null
     useEffect(() => {
@@ -198,9 +165,9 @@ export default function HomePageComponents() {
                         <SelectTokeWidget
                             setOpenSelectTokenDialog={setOpenSelectTokenDialog}
                             selectedToken={selectedToken}
+                            tokenBalance={tokenBalance}
                             opportunitiesData={filteredOpportunitiesData}
                             positionType={positionType}
-                            showOpportunitiesTable={showOpportunitiesTable}
                             setShowOpportunitiesTable={setShowOpportunitiesTable}
                             isLoading={isLoadingOpportunitiesData}
                         />

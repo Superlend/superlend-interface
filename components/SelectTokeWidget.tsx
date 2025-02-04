@@ -15,8 +15,8 @@ interface ISelectTokeWidgetProps {
     opportunitiesData: any
     positionType: 'lend' | 'borrow'
     setShowOpportunitiesTable: (show: boolean) => void
-    showOpportunitiesTable: boolean
     isLoading: boolean
+    tokenBalance: number
 }
 
 const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
@@ -26,8 +26,8 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
         opportunitiesData,
         positionType,
         setShowOpportunitiesTable,
-        showOpportunitiesTable,
         isLoading,
+        tokenBalance,
     }: ISelectTokeWidgetProps) => {
     const isDisabled = !selectedToken || opportunitiesData.length === 0
     const { walletAddress, isWalletConnected, isConnectingWallet } = useWalletConnection()
@@ -101,7 +101,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-6 pb-4 px-4">
                     <BodyText level="body2" weight="medium" className="text-gray-500">
                         Balance:
-                        {isWalletConnected && <span className=''>{` ${hasLowestDisplayValuePrefix(Number(selectedToken.balance))} ${formatAmountToDisplay(selectedToken.balance)}`}</span>}
+                        {isWalletConnected && <span className=''>{` ${hasLowestDisplayValuePrefix(Number(tokenBalance))} ${formatAmountToDisplay(tokenBalance.toString())}`}</span>}
                         {!isWalletConnected && <span className='ml-1'>--</span>}
                     </BodyText>
                     {!isLoading &&
