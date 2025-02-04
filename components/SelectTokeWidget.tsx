@@ -15,8 +15,9 @@ interface ISelectTokeWidgetProps {
     opportunitiesData: any
     positionType: 'lend' | 'borrow'
     setShowOpportunitiesTable: (show: boolean) => void
-    isLoading: boolean
+    isLoadingOpportunities: boolean
     tokenBalance: number
+    isLoadingBalance: boolean
 }
 
 const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
@@ -26,8 +27,9 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
         opportunitiesData,
         positionType,
         setShowOpportunitiesTable,
-        isLoading,
+        isLoadingOpportunities,
         tokenBalance,
+        isLoadingBalance,
     }: ISelectTokeWidgetProps) => {
     const isDisabled = !selectedToken || opportunitiesData.length === 0
     const { walletAddress, isWalletConnected, isConnectingWallet } = useWalletConnection()
@@ -99,17 +101,19 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
             </div>
             {selectedToken &&
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-6 pb-4 px-4">
-                    <BodyText level="body2" weight="medium" className="text-gray-500">
+                    <BodyText level="body2" weight="medium" className="text-gray-500 flex items-center gap-1">
                         Balance:
-                        {isWalletConnected && <span className=''>{` ${hasLowestDisplayValuePrefix(Number(tokenBalance))} ${formatAmountToDisplay(tokenBalance.toString())}`}</span>}
-                        {!isWalletConnected && <span className='ml-1'>--</span>}
+                        {isLoadingBalance && <Skeleton className="w-6 h-4 rounded-2" />}
+                        {(!isLoadingBalance && isWalletConnected) && <span>{` ${hasLowestDisplayValuePrefix(Number(tokenBalance))} ${formatAmountToDisplay(tokenBalance.toString())}`}</span>}
+                        {(!isLoadingBalance && !isWalletConnected) && <span>--</span>}
                     </BodyText>
-                    {!isLoading &&
+
+                    {!isLoadingOpportunities &&
                         <Badge variant="blue" className="w-fit">
                             {opportunitiesData.length} {opportunitiesData.length === 1 ? 'Opportunity' : 'Opportunities'} found
                         </Badge>
                     }
-                    {isLoading &&
+                    {isLoadingOpportunities &&
                         <Skeleton className="w-24 h-5 rounded-2" />
                     }
                 </div>

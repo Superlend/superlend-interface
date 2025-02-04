@@ -38,6 +38,7 @@ export default function HomePageComponents() {
     const {
         erc20TokensBalanceData,
         isLoading: isLoadingErc20TokensBalanceData,
+        isRefreshing: isRefreshingErc20TokensBalanceData,
         formattedTokenBalances
     } = useUserTokenBalancesContext()
     const updateSearchParams = useUpdateSearchParams()
@@ -166,10 +167,11 @@ export default function HomePageComponents() {
                             setOpenSelectTokenDialog={setOpenSelectTokenDialog}
                             selectedToken={selectedToken}
                             tokenBalance={tokenBalance}
+                            isLoadingBalance={isLoadingErc20TokensBalanceData || isRefreshingErc20TokensBalanceData}
                             opportunitiesData={filteredOpportunitiesData}
                             positionType={positionType}
                             setShowOpportunitiesTable={setShowOpportunitiesTable}
-                            isLoading={isLoadingOpportunitiesData}
+                            isLoadingOpportunities={isLoadingOpportunitiesData}
                         />
                     </motion.div>
                     <AnimatePresence>
