@@ -18,7 +18,6 @@ type TUserTokenBalancesProps = {
     setIsRefreshing: (value: boolean) => void
 }
 
-
 export const UserTokenBalancesContext = createContext<TUserTokenBalancesProps>({
     erc20TokensBalanceData: {},
     formattedTokenBalances: [],
@@ -37,7 +36,7 @@ export default function UserTokenBalancesProvider({
 }: {
     children: React.ReactNode
 }) {
-    const { walletAddress } = useWalletConnection()
+    const { walletAddress, isWalletConnected } = useWalletConnection()
     const { allTokensData, allChainsData } = useAssetsDataContext()
 
     const {
@@ -45,7 +44,7 @@ export default function UserTokenBalancesProvider({
         isLoading,
         isRefreshing,
         setIsRefreshing,
-    } = useERC20Balance(walletAddress as `0x${string}` || '0x0000000000000000000000000000000000000000')
+    } = useERC20Balance(walletAddress as `0x${string}`)
 
     useEffect(() => {
         setIsRefreshing(true)
@@ -80,7 +79,28 @@ export default function UserTokenBalancesProvider({
         return result;
     }
 
-    const formattedTokenBalances = getFormattedTokenBalances(erc20TokensBalanceData, allTokensData, allChainsData);
+    function getFormattedFallbackTokenBalances(allTokensData: any) {
+        const output: any = {};
+
+        for (const chainId in allTokensData) {
+            if (allTokensData.hasOwnProperty(chainId)) {
+                const tokens = allTokensData[chainId];
+                output[chainId] = {};
+
+                tokens.forEach((token: any) => {
+                    output[chainId][token.address] = {
+                        balanceRaw: '0',
+                        balanceFormatted: 0,
+                    };
+                });
+            }
+        }
+
+        return output;
+    }
+
+    const fallbackTokenBalanceData = getFormattedFallbackTokenBalances(allTokensData);
+    const formattedTokenBalances = getFormattedTokenBalances(isWalletConnected ? erc20TokensBalanceData : fallbackTokenBalanceData, allTokensData, allChainsData);
 
     return (
         <UserTokenBalancesContext.Provider
