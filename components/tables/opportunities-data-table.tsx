@@ -212,7 +212,7 @@ export function OpportunitiesDataTable<TData, TValue>({
                                     }
                                     className="border-0 bg-white"
                                     onClick={
-                                        !handleRowClick || screenWidth < 768
+                                        !handleRowClick
                                             ? undefined
                                             : () => handleRowClick(row.original)
                                     }
