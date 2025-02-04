@@ -35,6 +35,7 @@ import ImageWithDefault from '../ImageWithDefault'
 import { ArrowLeft, SearchX, X } from 'lucide-react'
 import SearchInput from '../inputs/SearchInput'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { Badge } from '../ui/badge'
 
 interface TokenDetails {
     symbol: string
@@ -183,7 +184,13 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
         </Button>
     )
 
+    const selectedMoreChainsCount = selectedChains.reduce((count, chainId) => {
+        const chainIndex = chains.findIndex(chain => Number(chain.chainId) === Number(chainId));
+        return chainIndex >= maxChainsToShow ? count + 1 : count;
+    }, 0);
+
     // SUB_COMPONENT: Content
+
     const content = (
         <Card className={`w-full py-2 border-0 shadow-none bg-white bg-opacity-100 ${showAllChains ? '' : 'divide-y divide-gray-200'}`}>
             {/* UI: Filter with chains */}
@@ -198,38 +205,35 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                         >
                             All Chains
                         </Button>
-                        {chains
-                            .sort((a: any, b: any) => {
-                                const aSelected = selectedChains.includes(a.chainId.toString());
-                                const bSelected = selectedChains.includes(b.chainId.toString());
-                                if (aSelected && !bSelected) return -1;
-                                if (!aSelected && bSelected) return 1;
-                                return 0;
-                            })
-                            .slice(0, maxChainsToShow).map((chain: any) => (
-                                <Button
-                                    key={chain.name}
-                                    variant={'outline'}
-                                    className={`px-3 py-2 rounded-4 flex items-center justify-center border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${isChainSelected(chain.chainId) ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
-                                    onClick={() => handleSelectChain(chain.chainId)}
-                                >
-                                    <ImageWithDefault
-                                        src={chain.logo}
-                                        alt={chain.name}
-                                        width={28}
-                                        height={28}
-                                        className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
-                                    />
-                                </Button>
-                            ))}
+                        {chains.slice(0, maxChainsToShow).map((chain: any) => (
+                            <Button
+                                key={chain.name}
+                                variant={'outline'}
+                                className={`px-3 py-2 rounded-4 flex items-center justify-center border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25 ${isChainSelected(chain.chainId) ? 'border-secondary-300 bg-secondary-100/15' : ''}`}
+                                onClick={() => handleSelectChain(chain.chainId)}
+                            >
+                                <ImageWithDefault
+                                    src={chain.logo}
+                                    alt={chain.name}
+                                    width={28}
+                                    height={28}
+                                    className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
+                                />
+                            </Button>
+                        ))}
                         <Button
                             onClick={() => setShowAllChains(true)}
                             variant={'outline'}
-                            className={`px-4 py-3 rounded-4 flex items-center justify-center border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25`}
+                            className={`relative px-4 py-3 rounded-4 flex items-center justify-center border-gray-300 bg-gray-200/50 hover:bg-gray-200/90 active:bg-gray-300/25`}
                         >
                             <BodyText level="body2" weight="semibold">
                                 +{chains.length - maxChainsToShow}
                             </BodyText>
+                            {(selectedMoreChainsCount > 0) &&
+                                <Badge variant={'blue'} className='px-1.5 absolute right-[-7px] -top-2 rounded-full bg-opacity-50 backdrop-blur-sm'>
+                                    {selectedMoreChainsCount}
+                                </Badge>
+                            }
                         </Button>
                     </div>
                 </div>
