@@ -26,6 +26,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: 'Platform',
         accessorFn: (item) => item.platformName,
         cell: ({ row }) => {
+            const searchParams = useSearchParams()
             const platformName: string = row.getValue('platformName')
             const platformLogo = row.original.platformLogo
             const platformId: string = row.original.platformId
@@ -34,12 +35,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 row.original.platformId.split('-')[0].toLowerCase() ===
                 PlatformType.MORPHO
             const isVault = row.original.isVault
+            const tokenAddress = row.original.tokenAddress
+            const protocolIdentifier = row.original.protocol_identifier
             const chainId = row.original.chain_id
             const chainLogo = row.original.chainLogo
             const chainName = row.original.chainName
-            const morphoLabel =
-                isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
-            const formattedPlatformName = isMorpho ? morphoLabel : platformName
+            const positionTypeParam =
+                searchParams.get('position_type') || 'lend'
 
             const tooltipContent = (
                 <span className="flex flex-col gap-[16px]">
@@ -96,7 +98,20 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         className="truncate capitalize"
                         title={platformWithMarketName}
                     >
-                        {`${capitalizeText(formattedPlatformName)} ${getPlatformVersion(platformId)}`}
+                        <Link
+                            href={{
+                                pathname: 'position-management',
+                                query: {
+                                    token: tokenAddress,
+                                    chain_id: chainId,
+                                    protocol_identifier: protocolIdentifier,
+                                    position_type: positionTypeParam,
+                                },
+                            }}
+                            className="truncate"
+                        >
+                            {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
+                        </Link>
                     </BodyText>
                 </span>
             )

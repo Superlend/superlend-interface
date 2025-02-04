@@ -163,9 +163,9 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             const isMorpho =
                 platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
             const isVault = row.original.isVault
-            const morphoLabel =
-                isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
-            const formattedPlatformName = isMorpho ? morphoLabel : platformName
+            // const morphoLabel =
+            //     isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
+            // const formattedPlatformName = isMorpho ? morphoLabel : platformName
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -182,7 +182,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         className="truncate"
                         title={platformWithMarketName}
                     >
-                        {`${capitalizeText(formattedPlatformName)} ${getPlatformVersion(platformId)}`}
+                        {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
                     </BodyText>
                 </span>
             )

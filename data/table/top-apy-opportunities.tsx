@@ -143,9 +143,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
-            const morphoLabel =
-                isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
-            const formattedPlatformName = isMorpho ? morphoLabel : platformName
+            // const morphoLabel =
+            //     isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
+            // const formattedPlatformName = isMorpho ? morphoLabel : platformName
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -161,7 +161,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         className="truncate"
                         title={platformWithMarketName}
                     >
-                        {`${capitalizeText(formattedPlatformName)} ${getPlatformVersion(platformId)}`}
+                        {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
                     </BodyText>
                     {isMorpho && !isVault && positionTypeParam === 'lend' && (
                         <InfoTooltip

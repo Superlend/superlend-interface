@@ -128,7 +128,7 @@ export function OpportunitiesDataTable<TData, TValue>({
 
     return (
         <div className="bg-white bg-opacity-40 rounded-6 p-3 pt-0 border border-transparent overflow-hidden">
-            <ScrollArea className="h-[50vh]">
+            <ScrollArea className="h-[200px] max-h-[200px] md:h-[320px] md:max-h-[320px]">
                 <Table>
                     <TableHeader className="[&_tr]:border-0">
                         {table.getHeaderGroups().map((headerGroup) => (
