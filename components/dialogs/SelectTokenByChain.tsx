@@ -138,14 +138,19 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
         setShowAllChains(false)
     }
 
-    const filteredTokens = (selectedChains.length > 0 && filterByChain) ?
+    function sortTokensByBalance(a: any, b: any) {
+        if (!isWalletConnected) return 0;
+        return (b.balance || 0) - (a.balance || 0);
+    }
+
+    const filteredTokens = ((selectedChains.length > 0 && filterByChain) ?
         tokens.filter((token: any) =>
             selectedChains.includes(token.chain_id.toString()) &&
             token.symbol.toLowerCase().includes(keywords.toLowerCase())
-        ) :
+        ).sort(sortTokensByBalance) :
         tokens.filter((token: any) =>
             token.symbol.toLowerCase().includes(keywords.toLowerCase())
-        );
+        )).sort(sortTokensByBalance);
 
     const filteredChains = chains?.filter((chain: any) =>
         chain.name.toLowerCase().includes(keywords.toLowerCase())
