@@ -236,6 +236,14 @@ export function getLowestDisplayValue(
         : abbreviateNumber(value, maxDecimalsToDisplay)
 }
 
+export function formatAmountToDisplay(amount: string) {
+    if (isLowestValue(Number(amount ?? 0))) {
+        return getLowestDisplayValue(Number(amount ?? 0))
+    } else {
+        return abbreviateNumber(Number(amount ?? 0))
+    }
+}
+
 export function getTokenLogo(tokenSymbol: string): string {
     return `https://app.aave.com/icons/tokens/${tokenSymbol?.toLowerCase()}.svg`
 }

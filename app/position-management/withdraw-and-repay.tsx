@@ -886,20 +886,21 @@ export default function WithdrawAndRepayActionButton({
                     <SelectTokenByChain
                         open={isSelectTokenDialogOpen}
                         setOpen={setIsSelectTokenDialogOpen}
-                        networks={[]}
                         tokens={tokenDetails.map((token) => ({
                             address: token.address,
-                            positionAmount: String(token.tokenAmount),
-                            positionAmountInUsd: String(token.amount),
+                            amount: String(token.tokenAmount),
                             logo: token.logo,
                             symbol: token.symbol,
                             apy: token.apy,
-                            price_usd: token.price_usd,
+                            price_usd: String(token.price_usd),
                             decimals: token.decimals,
                         }))}
                         onSelectToken={handleSelectToken}
+                        filterByChain={false}
+                        showChainBadge={false}
                     />
                 </>
+
             )}
             {/* Single token - Confirmation dialog */}
             {(tokenDetails.length === 1 || isConfirmationDialogOpen) && (

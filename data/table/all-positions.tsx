@@ -47,6 +47,7 @@ export type TPositionsTable = {
     platform_id: string
     protocol_identifier: string
     platformName: string
+    platformWithMarketName: string
     platformLogo: string
     apy: number
     deposits: string
@@ -158,12 +159,13 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         cell: ({ row }) => {
             const platformName: string = row.getValue('platformName')
             const platformId: string = row.original.platform_id
+            const platformWithMarketName: string = row.original.platformWithMarketName
             const isMorpho =
                 platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
             const isVault = row.original.isVault
-            const morphoLabel =
-                isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
-            const formattedPlatformName = isMorpho ? morphoLabel : platformName
+            // const morphoLabel =
+            //     isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
+            // const formattedPlatformName = isMorpho ? morphoLabel : platformName
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -178,9 +180,9 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         level="body2"
                         weight="medium"
                         className="truncate"
-                        title={platformName}
+                        title={platformWithMarketName}
                     >
-                        {platformName}
+                        {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
                     </BodyText>
                 </span>
             )

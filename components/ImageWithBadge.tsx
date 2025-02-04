@@ -10,6 +10,7 @@ interface IProps {
     badgeImgHeight?: string
     mainImgAlt?: string
     badgeImgAlt?: string
+    badgeCustomClass?: string
 }
 
 export default function ImageWithBadge({
@@ -21,6 +22,7 @@ export default function ImageWithBadge({
     badgeImgHeight,
     mainImgAlt,
     badgeImgAlt,
+    badgeCustomClass = '',
 }: IProps) {
     const mainImgSizes = {
         width: mainImgWidth || 20,
@@ -51,7 +53,7 @@ export default function ImageWithBadge({
                 alt={badgeImgAlt || ''}
                 width={badgeImgSizes.width}
                 height={badgeImgSizes.height}
-                className={`absolute bottom-[-6px] right-[-3px] bg-gray-100 rounded-full ring-2 ring-white ${badgeImgSizes.className} object-contain`}
+                className={`absolute bottom-[-6px] right-[-3px] bg-gray-100 rounded-full ring-2 ring-white ${badgeImgSizes.className} object-contain ${badgeCustomClass}`}
                 style={{
                     maxHeight: `${badgeImgSizes.height}px`,
                     maxWidth: `${badgeImgSizes.width}px`,

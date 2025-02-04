@@ -22,7 +22,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { BodyText, Label } from './typography'
+import { BodyText } from '../ui/typography'
 import React, { CSSProperties } from 'react'
 import {
     ArrowDownWideNarrow,
@@ -34,69 +34,62 @@ import {
     ChevronsUpDown,
 } from 'lucide-react'
 import InfoTooltip from '../tooltips/InfoTooltip'
-import { Button } from './button'
-import { ScrollArea, ScrollBar } from './scroll-area'
+import { Button } from '../ui/button'
+import { ScrollArea, ScrollBar } from '../ui/scroll-area'
 import { TOpportunityTable } from '@/types'
 import useDimensions from '@/hooks/useDimensions'
+import Link from 'next/link'
 
-interface DataTableProps<TData, TValue> {
+interface OpportunitiesDataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
-    filters: string
-    setFilters: React.Dispatch<React.SetStateAction<string>>
+    // filters: string
+    // setFilters: React.Dispatch<React.SetStateAction<string>>
     handleRowClick?: any
     columnVisibility?: VisibilityState
     setColumnVisibility?: any
-    initialState?: any
-    sorting?: SortingState
-    setSorting?: React.Dispatch<React.SetStateAction<SortingState>>
-    noDataMessage?: string
-    pagination?: PaginationState
-    setPagination?: any
+    // initialState?: any
+    // sorting?: SortingState
+    // setSorting?: React.Dispatch<React.SetStateAction<SortingState>>
+    // pagination: PaginationState
+    // setPagination: any
+    // totalPages: number
 }
 
-export function DataTable<TData, TValue>({
+export function OpportunitiesDataTable<TData, TValue>({
     columns,
     data,
-    filters,
-    setFilters,
     handleRowClick,
     columnVisibility,
     setColumnVisibility,
-    initialState,
-    sorting,
-    setSorting,
-    noDataMessage,
-    pagination,
-    setPagination,
-}: DataTableProps<TData, TValue>) {
+    // initialState,
+    // sorting,
+    // setSorting,
+}: OpportunitiesDataTableProps<TData, TValue>) {
     const { width: screenWidth } = useDimensions()
 
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
+        state: {
+            columnVisibility,
+            // sorting,
+        },
         initialState: {
-            ...initialState,
+            // ...initialState,
             columnPinning: {
-                left: ['tokenSymbol'],
+                left: ['platformName'],
             },
         },
-        state: {
-            globalFilter: filters,
-            columnVisibility,
-            sorting,
-            // pagination,
-        },
-        onGlobalFilterChange: setFilters,
         onColumnVisibilityChange: setColumnVisibility,
+        // onSortingChange: setSorting,
         enableSortingRemoval: false,
-        onSortingChange: setSorting,
-        // onPaginationChange: setPagination,
+        manualPagination: true,
     })
+
+    const rows = table.getRowModel().rows
 
     const getCommonPinningStyles = (
         column: Column<TOpportunityTable>,
@@ -134,12 +127,15 @@ export function DataTable<TData, TValue>({
     }
 
     return (
-        <div className="bg-white bg-opacity-40 rounded-6 border border-transparent overflow-hidden">
-            <ScrollArea className="h-[calc(100vh-250px)] max-h-[500px]">
+        <div className="bg-white bg-opacity-40 rounded-6 p-3 pt-0 border border-transparent overflow-hidden">
+            <ScrollArea className="h-[320px] md:max-h-[320px]">
                 <Table>
                     <TableHeader className="[&_tr]:border-0">
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
+                            <TableRow
+                                key={headerGroup.id}
+                                className="hover:bg-transparent rounded-4 overflow-hidden"
+                            >
                                 {headerGroup.headers.map((header) => {
                                     const { column } = header
                                     return (
@@ -167,11 +163,11 @@ export function DataTable<TData, TValue>({
                                                     {header.isPlaceholder
                                                         ? null
                                                         : flexRender(
-                                                              header.column
-                                                                  .columnDef
-                                                                  .header,
-                                                              header.getContext()
-                                                          )}
+                                                            header.column
+                                                                .columnDef
+                                                                .header,
+                                                            header.getContext()
+                                                        )}
                                                 </BodyText>
                                                 {header.column.getCanSort() && (
                                                     <ChevronsUpDown
@@ -185,7 +181,7 @@ export function DataTable<TData, TValue>({
                                                         side="bottom"
                                                         label={
                                                             header.column.getIsSorted() ===
-                                                            'asc' ? (
+                                                                'asc' ? (
                                                                 <ArrowUpWideNarrow className="w-4 h-4" />
                                                             ) : (
                                                                 <ArrowDownWideNarrow className="w-4 h-4" />
@@ -193,7 +189,7 @@ export function DataTable<TData, TValue>({
                                                         }
                                                         content={
                                                             header.column.getIsSorted() ===
-                                                            'asc'
+                                                                'asc'
                                                                 ? 'Lowest to Highest'
                                                                 : 'Highest to Lowest'
                                                         }
@@ -207,8 +203,8 @@ export function DataTable<TData, TValue>({
                         ))}
                     </TableHeader>
                     <TableBody className="bg-transparent">
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row, rowIndex) => (
+                        {rows?.length ? (
+                            rows.map((row, rowIndex) => (
                                 <TableRow
                                     key={row.id}
                                     data-state={
@@ -226,7 +222,7 @@ export function DataTable<TData, TValue>({
                                         return (
                                             <TableCell
                                                 key={cell.id}
-                                                className={`py-4 max-md:min-w-[100px] md:min-w-[150px] max-w-[100px] md:max-w-[200px] pl-5 md:pl-7 max-md:pr-0 ${rowIndex == 0 ? 'first:rounded-tl-5 last:rounded-tr-5' : ''} ${rowIndex == table.getRowModel().rows.length - 1 ? 'first:rounded-bl-5 last:rounded-br-5' : ''} ${!!handleRowClick ? 'cursor-pointer' : ''}`}
+                                                className={`py-4 max-md:min-w-[100px] md:min-w-[150px] max-w-[100px] md:max-w-[200px] pl-5 md:pl-7 max-md:pr-0 ${rowIndex == 0 ? 'first:rounded-tl-5 last:rounded-tr-5' : ''} ${rowIndex == rows.length - 1 ? 'first:rounded-bl-5 last:rounded-br-5' : ''} ${!!handleRowClick ? 'cursor-pointer' : ''}`}
                                                 style={{
                                                     ...getCommonPinningStyles(
                                                         column as unknown as Column<
@@ -239,10 +235,22 @@ export function DataTable<TData, TValue>({
                                                     ),
                                                 }}
                                             >
+                                                {/* <Link
+                                                    href={{
+                                                        pathname: 'position-management',
+                                                        query: {
+                                                            token: row.original.token,
+                                                            chain_id: row.original.chain_id,
+                                                            protocol_identifier: row.original.protocol_identifier,
+                                                            position_type: row.original.position_type,
+                                                        },
+                                                    }}
+                                                > */}
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
                                                     cell.getContext()
                                                 )}
+                                                {/* </Link> */}
                                             </TableCell>
                                         )
                                     })}
@@ -254,7 +262,7 @@ export function DataTable<TData, TValue>({
                                     colSpan={columns.length}
                                     className="h-24 text-center"
                                 >
-                                    {noDataMessage || 'No results.'}
+                                    No results
                                 </TableCell>
                             </TableRow>
                         )}
@@ -262,64 +270,6 @@ export function DataTable<TData, TValue>({
                 </Table>
                 <ScrollBar orientation="horizontal" />
             </ScrollArea>
-            {/* Pagination STARTS */}
-            {!!table.getRowModel().rows.length && (
-                <div className="pagination-container flex items-center justify-end sm:justify-between gap-5 flex-wrap py-4 px-4 sm:px-8">
-                    <div className="pagination-stats">
-                        <Label
-                            size="medium"
-                            weight="medium"
-                            className="text-gray-700"
-                        >
-                            {table.getState().pagination.pageIndex + 1} of{' '}
-                            {table.getPageCount()} pages
-                        </Label>
-                    </div>
-                    <div className="pagination-controls flex items-center justify-end space-x-2 flex-1 shrink-0 ml-16">
-                        <Label
-                            size="medium"
-                            weight="medium"
-                            className="hidden xs:block shrink-0 text-gray-700"
-                        >
-                            {table.getRowModel().rows.length.toLocaleString()}{' '}
-                            of {table.getRowCount().toLocaleString()} rows
-                        </Label>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.firstPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            <ChevronsLeft className="w-5 h-5" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            <ChevronRight className="w-5 h-5" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.lastPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            <ChevronsRight className="w-5 h-5" />
-                        </Button>
-                    </div>
-                </div>
-            )}
-            {/* Pagination ENDS */}
         </div>
     )
 }

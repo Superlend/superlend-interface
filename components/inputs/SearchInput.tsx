@@ -9,7 +9,7 @@ type TProps = {
     placeholder?: string
     onChange?: (event: any) => void
     onClear?: (event: any) => void
-    props?: any[]
+    props?: React.HTMLAttributes<HTMLDivElement>[]
 }
 
 export default function SearchInput({

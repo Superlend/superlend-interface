@@ -70,7 +70,7 @@ export default function InfoTooltip({
                             onHoverEnd={handleTooltipToggle(false)}
                             onMouseEnter={handleTooltipToggle(true)}
                             onMouseLeave={handleTooltipToggle(false)}
-                            className="w-fit inline-block shrink-0 cursor-help"
+                            className="w-fit inline-block shrink-0"
                         >
                             {!label && (
                                 <InfoCircleIcon
@@ -85,7 +85,7 @@ export default function InfoTooltip({
                     <TooltipContent
                         side={side}
                         sideOffset={5}
-                        className={`${className?.includes('max-w') ? '' : 'max-w-[280px]'} ${sizes[size]}`}
+                        className={`${className?.includes('max-w') ? '' : 'max-w-[280px] text-wrap'} ${sizes[size]}`}
                     >
                         {typeof content === 'string' && (
                             <Label className="w-fit">{content}</Label>
@@ -98,7 +98,7 @@ export default function InfoTooltip({
     }
 
     return (
-        <Drawer open={open}>
+        <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
                 <span
                     onClick={handleTooltipToggle(true)}
