@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import {
     Carousel,
     CarouselContent,
@@ -23,6 +23,7 @@ import useDimensions from '@/hooks/useDimensions'
 import ArrowRightIcon from './icons/arrow-right-icon'
 import { PlatformType } from '@/types/platform'
 import ImageWithBadge from './ImageWithBadge'
+import { motion } from 'framer-motion'
 
 const TokenRates: React.FC<{
     positionType: TPositionType
@@ -36,6 +37,7 @@ const TokenRates: React.FC<{
                 chain_ids: [],
                 tokens: [],
             })
+        const [isHovering, setIsHovering] = useState(false)
 
         function handleExcludeMorphoMarketsForLendAssets(
             opportunity: any
@@ -70,7 +72,10 @@ const TokenRates: React.FC<{
 
         return (
             <div
-                className="scroller relative z-[11] overflow-hidden flex items-center justify-center max-w-full lg:max-w-2xl h-36 -my-5 [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]"
+                className={cn(
+                    "scroller overflow-hidden flex items-center justify-center max-w-full lg:max-w-2xl h-36 -my-5 [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]",
+                    isHovering ? 'relative z-[11]' : ''
+                )}
             >
                 <Carousel
                 // opts={{
@@ -109,7 +114,10 @@ const TokenRates: React.FC<{
                                                     chain_id: opportunity.chain_id.toString(),
                                                     positionType: positionType,
                                                 })}>
-                                                <div className="flex gap-2 items-center py-1 pr-2 pl-1 bg-white rounded-4 shadow-sm hover:shadow-none border border-transaprent hover:border-secondary-300 transition-all duration-300">
+                                                <motion.div
+                                                    onMouseEnter={() => setIsHovering(true)}
+                                                    onMouseLeave={() => setIsHovering(false)}
+                                                    className="flex gap-2 items-center py-1 pr-2 pl-1 bg-white rounded-4 shadow-sm hover:shadow-none border border-transaprent hover:border-secondary-300 transition-all duration-300">
                                                     <ImageWithBadge
                                                         mainImg={opportunity?.token?.logo || ''}
                                                         badgeImg={getChainLogo({
@@ -128,7 +136,7 @@ const TokenRates: React.FC<{
                                                         {abbreviateNumber(Number(opportunity.platform.apy.current))}%
 
                                                     </BodyText>
-                                                </div>
+                                                </motion.div>
                                             </LinkWrapper>
                                         }
                                         content={

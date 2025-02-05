@@ -149,7 +149,7 @@ export default function HomePageComponents() {
     return (
         <MainContainer className="mt-20 md:mt-24">
             <div className="flex flex-col items-center w-full max-w-[1176px] max-md:max-w-full">
-                <div className="w-full max-w-[300px]">
+                <div className="relative z-10 w-full max-w-[300px]">
                     <LendBorrowToggle
                         type={positionType}
                         handleToggle={handlePositionTypeToggle}
