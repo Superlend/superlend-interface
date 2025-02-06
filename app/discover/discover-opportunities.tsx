@@ -15,11 +15,13 @@ import Link from 'next/link'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import { Skeleton } from '@/components/ui/skeleton'
 import { sendGAEvent } from '@next/third-parties/google'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 const imageBaseUrl = "https://superlend-assets.s3.ap-south-1.amazonaws.com";
 const morphoImageBaseUrl = "https://cdn.morpho.org/assets/logos";
 
 export default function DiscoverOpportunities() {
+    const { logEvent } = useAnalytics();
     // Token Addresses
     const opportunity1TokenAddress = "0xfc24f770f94edbca6d6f885e12d4317320bcb401";
     const opportunity2TokenAddress = "0x4200000000000000000000000000000000000006";
@@ -120,7 +122,13 @@ export default function DiscoverOpportunities() {
                             className="group overflow-hidden relative basis-[90%] md:basis-[380px] bg-white rounded-5 px-5 py-6 lg:hover:shadow-md lg:hover:shadow-gray-200/50 lg:hover:rounded-7 active:scale-95 transition-all duration-300 cursor-pointer">
                             <Link
                                 href={opportunity.link}
-                                onClick={() => sendGAEvent('event', 'buttonClicked', { value: opportunity.tokenSymbol })}
+                                onClick={() => {
+                                    logEvent('card_click', {
+                                        token: opportunity.tokenSymbol,
+                                        platform: opportunity.platformName,
+                                        chain: opportunity.chainName,
+                                    })
+                                }}
                             >
                                 <div className="flex flex-col gap-[53px] relative z-10">
                                     <Badge

@@ -12,6 +12,7 @@
     "dependencies": {
         "@aave/contract-helpers": "npm:@marsfoundation/contract-helpers@1.13.7",
         "@aave/math-utils": "^1.13.5",
+        "@amplitude/analytics-browser": "^2.11.11",
         "@morpho-org/blue-sdk": "^2.1.1",
         "@morpho-org/blue-sdk-wagmi": "^2.0.1",
         "@morpho-org/morpho-blue-bundlers": "^1.1.2",
