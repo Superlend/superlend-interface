@@ -17,3 +17,17 @@ export enum ChainId {
     Metis = 1088,
     Etherlink = 42793,
 }
+
+export enum ChainName {
+    Polygon = 'polygon',
+    Base = 'base',
+    Ethereum = 'ethereum',
+    Avalanche = 'avalanche',
+    Bsc = 'bsc',
+    Gnosis = 'gnosis',
+    Optimism = 'optimism',
+    Scroll = 'scroll',
+    Metis = 'metis',
+    Etherlink = 'etherlink',
+    Arbitrum = 'arbitrum',
+}

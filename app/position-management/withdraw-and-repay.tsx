@@ -101,6 +101,7 @@ import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
 import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 interface ITokenDetails {
     address: string
@@ -122,6 +123,7 @@ export default function WithdrawAndRepayActionButton({
     actionType: 'withdraw' | 'repay'
     tokenDetails: ITokenDetails[]
 }) {
+    const { logEvent } = useAnalytics()
     const {
         erc20TokensBalanceData,
         isLoading: isLoadingErc20TokensBalanceData,
@@ -848,15 +850,6 @@ export default function WithdrawAndRepayActionButton({
                 : 2
     }
 
-    function handleSelectToken(token: any) {
-        // Set selected token details
-        setSelectedTokenDetails(token)
-        // Close select token dialog
-        setIsSelectTokenDialogOpen(false)
-        // Open confirmation dialog
-        setIsConfirmationDialogOpen(true)
-    }
-
     // Loading skeleton
     // if (isLoading && isAaveV3Protocol && isPolygonChain) {
     //     return <LoadingSectionSkeleton className="h-[300px] w-full" />
@@ -867,6 +860,34 @@ export default function WithdrawAndRepayActionButton({
     //     return null
     // }
 
+    const assetDetails = (isMorphoVaultsProtocol || isMorphoMarketsProtocol) ?
+        {
+            ...assetDetailsForTx,
+            vault: !vaultData ? null : vaultData,
+            market: !morphoMarketData ? null : morphoMarketData.marketData,
+        } : assetDetailsForTx
+
+    function handleSelectAction() {
+        setIsSelectTokenDialogOpen(true)
+        logEvent(isWithdrawAction ? 'withdraw_button_clicked' : 'repay_button_clicked')
+    }
+
+    function handleSelectToken(token: any) {
+        // Set selected token details
+        setSelectedTokenDetails(token)
+        // Close select token dialog
+        setIsSelectTokenDialogOpen(false)
+        // Open confirmation dialog
+        setIsConfirmationDialogOpen(true)
+        // Log event
+        logEvent(isWithdrawAction ? 'withdraw_token_selected' : 'repay_token_selected', {
+            token_symbol: token.symbol,
+            platform_name: assetDetails?.name,
+            chain_name: CHAIN_ID_MAPPER[Number(assetDetails.chain_id) as ChainId],
+            wallet_address: walletAddress,
+        })
+    }
+
     // Render component
     return (
         <section className="withdraw-and-repay-section-wrapper flex flex-col gap-[12px]">
@@ -874,7 +895,7 @@ export default function WithdrawAndRepayActionButton({
             {tokenDetails.length > 1 && (
                 <>
                     <Button
-                        onClick={() => setIsSelectTokenDialogOpen(true)}
+                        onClick={handleSelectAction}
                         variant={'secondaryOutline'}
                         size="sm"
                         className="uppercase w-[100px] py-3"
@@ -909,19 +930,8 @@ export default function WithdrawAndRepayActionButton({
                     setIsOpen={setIsConfirmationDialogOpen}
                     disabled={disabledButton}
                     actionType={actionType}
-                    assetDetails={
-                        isMorphoVaultsProtocol || isMorphoMarketsProtocol
-                            ? {
-                                ...assetDetailsForTx,
-                                vault: !vaultData ? null : vaultData,
-                                market: !morphoMarketData ? null : morphoMarketData.marketData,
-                            }
-                            : assetDetailsForTx
-                    }
-                    maxWithdrawAmount={
-                        // isMorphoVaultsProtocol ? maxWithdrawAmountMorphoVaults : maxWithdrawAmountForTx
-                        maxWithdrawAmountForTx
-                    }
+                    assetDetails={assetDetails}
+                    maxWithdrawAmount={maxWithdrawAmountForTx}
                     maxRepayAmount={maxRepayAmountForTx}
                     healthFactorValues={healthFactorValues}
                     amount={amount}

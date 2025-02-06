@@ -16,6 +16,7 @@ import { parseUnits } from 'ethers/lib/utils'
 // import toast from 'react-hot-toast'
 import {
     APPROVE_MESSAGE,
+    CHAIN_ID_MAPPER,
     CONFIRM_ACTION_IN_WALLET_TEXT,
     ERROR_TOAST_ICON_STYLES,
     SOMETHING_WENT_WRONG_MESSAGE,
@@ -30,9 +31,13 @@ import { ArrowRightIcon } from 'lucide-react'
 import { BigNumber } from 'ethers'
 import { getErrorText } from '@/lib/getErrorText'
 import { BodyText } from '@/components/ui/typography'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import { ChainId } from '@/types/chain'
+import { useAssetsDataContext } from '@/context/data-provider'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 
 interface ISupplyAaveButtonProps {
+    assetDetails: any
     disabled: boolean
     poolContractAddress: `0x${string}`
     underlyingAssetAdress: `0x${string}`
@@ -42,6 +47,7 @@ interface ISupplyAaveButtonProps {
 }
 
 const SupplyAaveButton = ({
+    assetDetails,
     poolContractAddress,
     underlyingAssetAdress,
     amount,
@@ -49,6 +55,7 @@ const SupplyAaveButton = ({
     disabled,
     handleCloseModal,
 }: ISupplyAaveButtonProps) => {
+    const { logEvent } = useAnalytics()
     const {
         writeContractAsync,
         isPending,
@@ -61,9 +68,6 @@ const SupplyAaveButton = ({
             hash,
         })
     const { address: walletAddress } = useAccount()
-    // const { createToast } = useCreatePendingToast()
-    const { isConnected } = useAccount()
-    const { connect, connectors } = useConnect()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
 
     const amountBN = useMemo(() => {
@@ -89,16 +93,17 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? lendTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? lendTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+    console.log(assetDetails)
 
     const supply = useCallback(async () => {
         try {
@@ -108,6 +113,14 @@ const SupplyAaveButton = ({
                 hash: '',
                 errorMessage: '',
             }))
+
+            logEvent('lend_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
 
             writeContractAsync({
                 address: poolContractAddress,
@@ -126,6 +139,14 @@ const SupplyAaveButton = ({
                         status: 'view',
                         errorMessage: '',
                     }))
+
+                    logEvent('lend_completed', {
+                        amount,
+                        token_symbol: assetDetails?.asset?.token?.symbol,
+                        platform_name: assetDetails?.name,
+                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        wallet_address: walletAddress,
+                    })
                 })
                 .catch((error) => {
                     setLendTx((prev: TLendTx) => ({
@@ -207,6 +228,14 @@ const SupplyAaveButton = ({
         //     }
         // }
 
+        logEvent('approve_clicked', {
+            amount,
+            token_symbol: assetDetails?.asset?.token?.symbol,
+            platform_name: assetDetails?.name,
+            chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+            wallet_address: walletAddress,
+        })
+
         try {
             setLendTx((prev: TLendTx) => ({
                 ...prev,
@@ -214,6 +243,14 @@ const SupplyAaveButton = ({
                 hash: '',
                 errorMessage: '',
             }))
+
+            logEvent('approve_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
 
             writeContractAsync({
                 address: underlyingAssetAdress,

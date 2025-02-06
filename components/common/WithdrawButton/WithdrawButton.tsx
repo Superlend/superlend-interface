@@ -13,6 +13,7 @@ import { useCallback, useEffect } from 'react'
 // import { AddressType } from '../../../types/address'
 // import { IAssetData } from '@interfaces/IAssetData'
 import {
+    CHAIN_ID_MAPPER,
     CONFIRM_ACTION_IN_WALLET_TEXT,
     ERROR_TOAST_ICON_STYLES,
     POOL_AAVE_MAP,
@@ -39,20 +40,23 @@ import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
 import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
 import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
 import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
+import { ChainId } from '@/types/chain'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 interface IWithdrawButtonProps {
     disabled: boolean
-    asset: any
+    assetDetails: any
     amount: string
     handleCloseModal: (isVisible: boolean) => void
 }
 
 const WithdrawButton = ({
     disabled,
-    asset,
+    assetDetails,
     amount,
     handleCloseModal,
 }: IWithdrawButtonProps) => {
+    const { logEvent } = useAnalytics()
     const {
         writeContractAsync,
         isPending,
@@ -94,6 +98,14 @@ const WithdrawButton = ({
                 hash,
                 isConfirmed: isConfirmed,
             }))
+
+            logEvent('withdraw_completed', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
         }
     }, [hash, isConfirmed])
 
@@ -133,27 +145,33 @@ const WithdrawButton = ({
                     address: cTokenAddress as `0x${string}`,
                     abi: COMPOUND_ABI,
                     functionName: 'withdraw',
-                    args: [parseUnits(amount, asset.decimals)],
+                    args: [parseUnits(amount, assetDetails.decimals)],
                 })
             } catch (error) {
                 error
             }
         },
-        [writeContractAsync, asset]
+        [writeContractAsync, assetDetails]
     )
 
     const withdrawMorphoMarket = useCallback(
-        async (asset: any, amount: string) => {
+        async (assetDetails: any, amount: string) => {
             try {
-                const morphoMarketData = asset?.market as Market;
-                let decimals = asset.decimals;
+                const morphoMarketData = assetDetails?.market as Market;
+                let decimals = assetDetails.asset.token.decimals;
 
                 let amountToWithdraw = parseUnits(amount, decimals);
 
-                // console.log('morphoMarketData', morphoMarketData)
+                logEvent('withdraw_initiated', {
+                    amount,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
 
                 writeContractAsync({
-                    address: asset.core_contract as `0x${string}`,
+                    address: assetDetails.core_contract as `0x${string}`,
                     abi: MORPHO_MARKET_ABI,
                     functionName: 'withdrawCollateral',
                     args: [
@@ -190,19 +208,27 @@ const WithdrawButton = ({
 
     const withdrawAave = useCallback(
         async (
+            assetDetails: any,
             poolContractAddress: string,
             underlyingAssetAdress: string,
             amount: string,
             addressOfWallet: string
         ) => {
             try {
+                logEvent('withdraw_initiated', {
+                    amount,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
                 writeContractAsync({
                     address: poolContractAddress as `0x${string}`,
                     abi: AAVE_POOL_ABI,
                     functionName: 'withdraw',
                     args: [
                         underlyingAssetAdress,
-                        parseUnits(amount, asset.asset.token.decimals),
+                        parseUnits(amount, assetDetails.asset.token.decimals),
                         // 2,
                         // 0,
                         addressOfWallet,
@@ -232,10 +258,10 @@ const WithdrawButton = ({
                 }))
             }
         },
-        [writeContractAsync, asset, handleCloseModal]
+        [writeContractAsync, assetDetails, handleCloseModal]
     )
 
-    const onApproveWithdrawMorphoVault = async (asset: any, amount: string) => {
+    const onApproveWithdrawMorphoVault = async (assetDetails: any, amount: string) => {
         setWithdrawTx((prev: TWithdrawTx) => ({
             ...prev,
             status: 'approve',
@@ -243,16 +269,24 @@ const WithdrawButton = ({
             errorMessage: '',
         }))
 
-        let vault = asset?.vault as Vault
+        let vault = assetDetails?.vault as Vault
         let amountToWithdraw = parseUnits(
             amount,
-            asset.asset.token.decimals
+            assetDetails.asset.token.decimals
         )
         // //  convert asset to share
         let shareAmount = await vault.toShares(amountToWithdraw.toBigInt())
 
         // apprive the vault.address to bunder
-        let bunder_address = BUNDLER_ADDRESS_MORPHO[asset.chain_id]
+        let bunder_address = BUNDLER_ADDRESS_MORPHO[assetDetails.chain_id]
+
+        logEvent('approve_withdraw_initiated', {
+            amount,
+            token_symbol: assetDetails?.asset?.token?.symbol,
+            platform_name: assetDetails?.name,
+            chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+            wallet_address: walletAddress,
+        })
 
         writeContractAsync({
             address: vault.address,
@@ -263,12 +297,12 @@ const WithdrawButton = ({
     }
 
     const withdrawMorphoVault = useCallback(
-        async (asset: any, amount: string) => {
-            let vault = asset?.vault as Vault
+        async (assetDetails: any, amount: string) => {
+            let vault = assetDetails?.vault as Vault
 
             let amountToWithdraw = parseUnits(
                 amount,
-                asset.asset.token.decimals
+                assetDetails.asset.token.decimals
             )
 
             // //  convert asset to share
@@ -280,7 +314,7 @@ const WithdrawButton = ({
             shareAmount = shareAmount + onePercentOfShareAmount
 
             // apprive the vault.address to bunder
-            let bunder_address = BUNDLER_ADDRESS_MORPHO[asset.chain_id]
+            let bunder_address = BUNDLER_ADDRESS_MORPHO[assetDetails.chain_id]
 
             let bunder_calls = [
                 // BundlerAction.erc20TransferFrom(
@@ -296,6 +330,14 @@ const WithdrawButton = ({
                     walletAddress as string
                 ),
             ]
+
+            logEvent('withdraw_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
 
             writeContractAsync({
                 address: bunder_address as `0x${string}`,
@@ -315,31 +357,29 @@ const WithdrawButton = ({
         []
     )
 
-
-
     const onWithdraw = async () => {
-        if (asset?.protocol_type === PlatformType.COMPOUND) {
-            await withdrawCompound(asset?.asset?.token?.address, amount)
+        if (assetDetails?.protocol_type === PlatformType.COMPOUND) {
+            await withdrawCompound(assetDetails?.asset?.token?.address, amount)
             return
         }
-        if (asset?.protocol_type === PlatformType.AAVE) {
+        if (assetDetails?.protocol_type === PlatformType.AAVE) {
             await withdrawAave(
-                POOL_AAVE_MAP[asset?.platform_name as PlatformValue],
-                asset?.asset?.token?.address,
+                assetDetails,
+                POOL_AAVE_MAP[assetDetails?.platform_name as PlatformValue],
+                assetDetails?.asset?.token?.address,
                 amount,
                 walletAddress as string
             )
             return
         }
-        if (asset?.protocol_type === PlatformType.MORPHO && asset?.vault) {
-            await withdrawMorphoVault(asset, amount)
+        if (assetDetails?.protocol_type === PlatformType.MORPHO && assetDetails?.vault) {
+            await withdrawMorphoVault(assetDetails, amount)
             return
         }
 
-        console.log('asset----------', asset.market)
 
-        if (asset?.protocol_type === PlatformType.MORPHO && asset?.market) {
-            await withdrawMorphoMarket(asset, amount)
+        if (assetDetails?.protocol_type === PlatformType.MORPHO && assetDetails?.market) {
+            await withdrawMorphoMarket(assetDetails, amount)
             return
         }
     }
@@ -365,7 +405,7 @@ const WithdrawButton = ({
                 }
                 onClick={() => {
                     if (withdrawTx.status === 'approve') {
-                        onApproveWithdrawMorphoVault(asset, amount)
+                        onApproveWithdrawMorphoVault(assetDetails, amount)
                     } else if (withdrawTx.status === 'withdraw') {
                         onWithdraw()
                     } else {

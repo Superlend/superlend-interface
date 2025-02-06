@@ -39,7 +39,7 @@ const ActionButton = ({
             <BorrowButton
                 disabled={disabled}
                 handleCloseModal={handleCloseModal}
-                asset={asset}
+                assetDetails={asset}
                 amount={amount}
             />
         )
@@ -51,7 +51,7 @@ const ActionButton = ({
                 handleCloseModal={handleCloseModal}
                 poolContractAddress={asset.core_contract}
                 underlyingAssetAdress={asset.asset.token.address}
-                asset={asset}
+                assetDetails={asset}
                 amount={amount}
                 decimals={asset.asset.token.decimals}
             />
@@ -62,7 +62,7 @@ const ActionButton = ({
             <WithdrawButton
                 disabled={disabled}
                 handleCloseModal={handleCloseModal}
-                asset={asset}
+                assetDetails={asset}
                 amount={amount}
             />
         )
@@ -77,6 +77,7 @@ const ActionButton = ({
                     underlyingAssetAdress={asset.asset.token.address}
                     amount={amount}
                     decimals={asset.asset.token.decimals}
+                    assetDetails={asset}
                 />
             )
         }
@@ -98,13 +99,12 @@ const ActionButton = ({
             />
         )
     }
-
     if (asset.protocol_type === PlatformType.MORPHO && actionType === 'lend') {
         return (
             <SupplyMorphoButton
                 disabled={disabled}
                 handleCloseModal={handleCloseModal}
-                asset={asset}
+                assetDetails={asset}
                 amount={amount}
                 setActionType={setActionType}
             />

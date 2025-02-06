@@ -16,6 +16,7 @@ import { parseUnits } from 'ethers/lib/utils'
 // import toast from 'react-hot-toast'
 import {
     APPROVE_MESSAGE,
+    CHAIN_ID_MAPPER,
     CONFIRM_ACTION_IN_WALLET_TEXT,
     ERROR_TOAST_ICON_STYLES,
     SOMETHING_WENT_WRONG_MESSAGE,
@@ -34,10 +35,12 @@ import { BodyText } from '@/components/ui/typography'
 import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
 import { PlatformType } from '@/types/platform'
 import { Market } from '@morpho-org/blue-sdk'
+import { ChainId } from '@/types/chain'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 
 interface IRepayButtonProps {
-    asset: any
+    assetDetails: any
     disabled: boolean
     poolContractAddress: `0x${string}`
     underlyingAssetAdress: `0x${string}`
@@ -47,7 +50,7 @@ interface IRepayButtonProps {
 }
 
 const RepayButton = ({
-    asset,
+    assetDetails,
     poolContractAddress,
     underlyingAssetAdress,
     amount,
@@ -55,6 +58,7 @@ const RepayButton = ({
     disabled,
     handleCloseModal,
 }: IRepayButtonProps) => {
+    const { logEvent } = useAnalytics()
     const {
         writeContractAsync,
         isPending,
@@ -104,27 +108,30 @@ const RepayButton = ({
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
     const repay = useCallback(async () => {
-        // console.log('asset', asset)
-        if (asset?.protocol_type === PlatformType.AAVE) {
+        if (assetDetails?.protocol_type === PlatformType.AAVE) {
             await repayAave()
             return
         }
-        if (asset?.protocol_type === PlatformType.MORPHO && asset?.market) {
-            await repayMorphoMarket(asset)
+        if (assetDetails?.protocol_type === PlatformType.MORPHO && assetDetails?.market) {
+            await repayMorphoMarket(assetDetails)
             return
         }
     }, [amount])
 
-    const repayMorphoMarket = useCallback(async (asset: any) => {
+    const repayMorphoMarket = useCallback(async (assetDetails: any) => {
         try {
+            const morphoMarketData = assetDetails?.market as Market;
 
-            console.log('asset', asset)
-            console.log('amount', amount)
-            const morphoMarketData = asset?.market as Market;
+            logEvent('withdraw_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
 
-            console.log('amountBN', amountBN)
             writeContractAsync({
-                address: asset.core_contract as `0x${string}`,
+                address: assetDetails.core_contract as `0x${string}`,
                 abi: MORPHO_MARKET_ABI,
                 functionName: 'repay',
                 args: [
@@ -179,6 +186,14 @@ const RepayButton = ({
                 hash: '',
                 errorMessage: '',
             }))
+
+            logEvent('repay_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
 
             writeContractAsync({
                 address: poolContractAddress,
@@ -278,6 +293,14 @@ const RepayButton = ({
                 ...prev,
                 hash: hash || '',
             }))
+
+            logEvent('repay_completed', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
         }
     }, [hash, repayTx.status])
 
@@ -295,6 +318,14 @@ const RepayButton = ({
         // }
 
         try {
+            logEvent('approve_repay_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
+
             setRepayTx((prev: TRepayTx) => ({
                 ...prev,
                 status: 'approve',
