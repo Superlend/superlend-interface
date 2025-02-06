@@ -19,6 +19,7 @@ import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { useSearchParams } from 'next/navigation'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 import { TChain } from '@/types/chain'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 interface ISelectedToken {
     address: string
@@ -56,6 +57,7 @@ export default function HomePageComponents() {
             tokens: [selectedToken?.symbol || ''],
             enabled: !!selectedToken,
         })
+    const { logEvent } = useAnalytics()
 
     const formattedTokensList = formattedTokenBalances.map((tokenBalance) => {
         return {
@@ -72,7 +74,7 @@ export default function HomePageComponents() {
         updateSearchParams({
             token_address: undefined,
             chain_id: undefined,
-            position_type: undefined,
+            position_type: 'lend',
         })
     }
 
@@ -112,6 +114,12 @@ export default function HomePageComponents() {
             token_address: token.address,
             chain_id: token.chain_id,
             position_type: positionType,
+        })
+        logEvent('token_selected', {
+            action: positionType,
+            token_symbol: token.symbol,
+            chain_name: token.chain_name,
+            wallet_address: walletAddress,
         })
         setOpenSelectTokenDialog(false)
     }

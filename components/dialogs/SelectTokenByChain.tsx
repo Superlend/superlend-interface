@@ -293,7 +293,6 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                     key={index}
                                     className="flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4"
                                     onClick={() => onSelectToken(token)}
-
                                 >
                                     <div className="flex items-center gap-1 select-none">
                                         <div

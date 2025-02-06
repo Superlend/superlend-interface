@@ -1,7 +1,7 @@
 // components/ConnectWalletButton.tsx
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from './ui/button'
 import useIsClient from '@/hooks/useIsClient'
@@ -14,12 +14,13 @@ import { usePrivy } from '@privy-io/react-auth'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 import { ProfileMenuDropdown } from './dropdowns/ProfileMenuDropdown'
 import { useAssetsDataContext } from '@/context/data-provider'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 export default function ConnectWalletButton() {
     const { isClient } = useIsClient()
     const { ready, authenticated, login, logout, user } = usePrivy()
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
-    // const { erc20TokensBalanceData } = useUserTokenBalancesContext()
+    const { logEvent } = useAnalytics()
     const { allChainsData, allTokensData } = useAssetsDataContext()
     const walletAddress = user?.wallet?.address
     const disableLogin = !ready || (ready && authenticated)
@@ -32,6 +33,7 @@ export default function ConnectWalletButton() {
     function handleLogin(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault()
         login()
+        logEvent('connect_wallet_button_clicked')
     }
 
     return (

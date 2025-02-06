@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -30,6 +30,7 @@ import { abbreviateNumber } from '@/lib/utils'
 import { Button } from '../ui/button'
 import { TChain } from '@/types/chain'
 import { Check, Copy, LoaderCircle, LogOut } from 'lucide-react'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 interface TokenDetails {
     symbol: string
@@ -70,6 +71,13 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
     const isDesktop = screenWidth > 768
     const [addressIsCopied, setAddressIsCopied] = useState(false)
     const [isLoggingOut, setIsLoggingOut] = useState(false)
+    const { logEvent } = useAnalytics()
+
+    useEffect(() => {
+        logEvent('wallet_connected', {
+            wallet_address: walletAddress,
+        })
+    }, [])
 
     function handleAddressCopy() {
         copyToClipboard(walletAddress)
@@ -81,12 +89,16 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
 
     function handleLogout() {
         setIsLoggingOut(true)
+        logEvent('wallet_disconnect_clicked', {
+            wallet_address: walletAddress,
+        })
         logout()
             .then(() => {
                 setOpen(false)
             })
             .finally(() => {
                 setIsLoggingOut(false)
+                logEvent('wallet_disconnected')
             })
     }
 
