@@ -2,7 +2,7 @@
 
 import MainContainer from '@/components/MainContainer'
 import { BodyText, HeadingText } from '@/components/ui/typography'
-import React from 'react'
+import React, { useEffect } from 'react'
 import PortfolioOverview from './portfolio-overview'
 import InfoBannerWithCta from '@/components/InfoBannerWithCta'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -18,10 +18,20 @@ import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import Loading from './loading'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 export default function Portfolio() {
-    const { isConnectingWallet, isWalletConnected } = useWalletConnection()
+    const { isConnectingWallet, isWalletConnected, walletAddress } = useWalletConnection()
     const { isClient } = useIsClient()
+    const { logEvent } = useAnalytics()
+
+    useEffect(() => {
+        if (!isConnectingWallet) {
+            logEvent('portfolio_page_opened', {
+                wallet_address: walletAddress,
+            })
+        }
+    }, [walletAddress, isWalletConnected, isConnectingWallet])
 
     if (!isClient || isConnectingWallet || (isClient && isConnectingWallet)) {
         return (
