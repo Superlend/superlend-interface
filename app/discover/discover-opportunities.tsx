@@ -123,7 +123,7 @@ export default function DiscoverOpportunities() {
                             <Link
                                 href={opportunity.link}
                                 onClick={() => {
-                                    logEvent('card_click', {
+                                    logEvent('discover_opportunity_clicked', {
                                         token: opportunity.tokenSymbol,
                                         platform: opportunity.platformName,
                                         chain: opportunity.chainName,

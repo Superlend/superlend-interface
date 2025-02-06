@@ -7,10 +7,10 @@ import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { DataTable } from '@/components/ui/all-positions-table'
 import { BodyText, HeadingText } from '@/components/ui/typography'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { AssetsDataContext } from '@/context/data-provider'
 import { PositionsContext } from '@/context/positions-provider'
 import { columns, TPositionsTable } from '@/data/table/all-positions'
-import useDimensions from '@/hooks/useDimensions'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { calculateScientificNotation } from '@/lib/utils'
 import { TPositionType } from '@/types'
@@ -18,16 +18,13 @@ import { PlatformType } from '@/types/platform'
 import { SortingState } from '@tanstack/react-table'
 import { useRouter } from 'next/navigation'
 import React, { useContext, useEffect, useState } from 'react'
-// import { useActiveAccount } from 'thirdweb/react'
 import { useAccount } from 'wagmi'
 
 export default function AllPositions() {
     const router = useRouter()
-    // const { width: screenWidth } = useDimensions()
+    const { logEvent } = useAnalytics()
     const { filters, positionType, setPositionType } =
         useContext(PositionsContext)
-    // const activeAccount = useActiveAccount()
-    // const walletAddress = activeAccount?.address
     const { address: walletAddress } = useAccount()
     const [searchKeywords, setSearchKeywords] = useState<string>('')
     const [sorting, setSorting] = useState<SortingState>([
@@ -140,11 +137,16 @@ export default function AllPositions() {
     const tableData = filteredTableData
 
     function handleRowClick(rowData: any) {
-        // if (screenWidth < 768) return
-
         const { tokenAddress, protocol_identifier, chain_id } = rowData
         const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`
         router.push(url)
+        logEvent('portfolio_asset_clicked', {
+            action: positionType,
+            token_symbol: rowData.tokenSymbol,
+            platform_name: rowData.platformName,
+            chain_name: rowData.chainName,
+            wallet_address: walletAddress,
+        })
     }
 
     const toggleOpportunityType = (positionType: TPositionType): void => {

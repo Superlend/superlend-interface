@@ -28,6 +28,8 @@ import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { motion } from 'framer-motion'
 import { useDebounce } from '@/hooks/useDebounce'
 import { PlatformType } from '@/types/platform'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -38,6 +40,8 @@ const EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL = '0x3d819db807d8f8ca10dfef283
 
 export default function TopApyOpportunities() {
     const router = useRouter()
+    const { logEvent } = useAnalytics()
+    const { walletAddress } = useWalletConnection()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
     const positionTypeParam = searchParams.get('position_type') || 'lend'
@@ -308,6 +312,13 @@ export default function TopApyOpportunities() {
         const { tokenAddress, protocol_identifier, chain_id } = rowData
         const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
         router.push(url)
+        logEvent('money_market_selected', {
+            action: positionTypeParam,
+            token_symbol: rowData.tokenSymbol,
+            platform_name: rowData.platformName,
+            chain_name: rowData.chainName,
+            wallet_address: walletAddress,
+        })
     }
 
     const toggleOpportunityType = (positionType: TPositionType): void => {
