@@ -1,5 +1,5 @@
 import { customMetisNetwork } from './config'
-import { ChainId } from './types/chain'
+import { ChainId, ChainName } from './types/chain'
 import { Period, PeriodDisplay } from './types/periodButtons'
 import {
     PlatformDisplayValue,
@@ -278,16 +278,16 @@ export const MORPHO_WEBSITE_LINK = 'https://morpho.org/'
 export const EIP_20_SIGNED_APPROVALS_LINK =
     'https://eips.ethereum.org/EIPS/eip-2612'
 
-export const CHAIN_ID_MAPPER: { [key in ChainId]: AppKitNetwork } = {
-    [ChainId.Polygon]: polygon,
-    [ChainId.Arbitrum]: arbitrum,
-    [ChainId.Base]: base,
-    [ChainId.Ethereum]: mainnet,
-    [ChainId.Avalanche]: avalanche,
-    [ChainId.Bsc]: bsc,
-    [ChainId.Gnosis]: gnosis,
-    [ChainId.Optimism]: optimism,
-    [ChainId.Scroll]: scroll,
-    [ChainId.Metis]: customMetisNetwork,
-    [ChainId.Etherlink]: etherlink,
+export const CHAIN_ID_MAPPER: { [key in ChainId]: ChainName } = {
+    [ChainId.Polygon]: ChainName.Polygon,
+    [ChainId.Arbitrum]: ChainName.Arbitrum,
+    [ChainId.Base]: ChainName.Base,
+    [ChainId.Ethereum]: ChainName.Ethereum,
+    [ChainId.Avalanche]: ChainName.Avalanche,
+    [ChainId.Bsc]: ChainName.Bsc,
+    [ChainId.Gnosis]: ChainName.Gnosis,
+    [ChainId.Optimism]: ChainName.Optimism,
+    [ChainId.Scroll]: ChainName.Scroll,
+    [ChainId.Metis]: ChainName.Metis,
+    [ChainId.Etherlink]: ChainName.Etherlink,
 }

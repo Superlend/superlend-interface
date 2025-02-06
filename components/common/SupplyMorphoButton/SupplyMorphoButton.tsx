@@ -8,6 +8,7 @@ import {
 import { parseUnits } from 'ethers/lib/utils'
 import {
     APPROVE_MESSAGE,
+    CHAIN_ID_MAPPER,
     CONFIRM_ACTION_IN_WALLET_TEXT,
     EIP_20_SIGNED_APPROVALS_LINK,
     ERROR_TOAST_ICON_STYLES,
@@ -33,10 +34,12 @@ import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
 import ExternalLink from '@/components/ExternalLink'
 import { PlatformType } from '@/types/platform'
 import { TPositionType } from '@/types'
+import { ChainId } from '@/types/chain'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 interface ISupplyMorphoButtonProps {
     disabled: boolean
-    asset: any // Replace with proper type
+    assetDetails: any // Replace with proper type
     amount: string
     handleCloseModal: (isVisible: boolean) => void
     setActionType?: (actionType: TPositionType) => void
@@ -44,17 +47,18 @@ interface ISupplyMorphoButtonProps {
 
 const SupplyMorphoButton = ({
     disabled,
-    asset,
+    assetDetails,
     amount,
     handleCloseModal,
     setActionType,
 }: ISupplyMorphoButtonProps) => {
-    const assetDetails = asset.asset
-    const platform = asset.platform
-    const morphoMarketData = asset.morphoMarketData
-    const isMorpho = asset.protocol_type === PlatformType.MORPHO
-    const isMorphoMarkets = isMorpho && !asset?.isVault
-    const isMorphoVault = isMorpho && asset?.isVault
+    const tokenDetails = assetDetails.asset
+    const platform = assetDetails.platform
+    const morphoMarketData = assetDetails.morphoMarketData
+    const isMorpho = assetDetails.protocol_type === PlatformType.MORPHO
+    const isMorphoMarkets = isMorpho && !assetDetails?.isVault
+    const isMorphoVault = isMorpho && assetDetails?.isVault
+    const { logEvent } = useAnalytics()
 
     const {
         writeContractAsync,
@@ -72,9 +76,9 @@ const SupplyMorphoButton = ({
 
     const amountBN = useMemo(() => {
         return amount
-            ? parseUnits(amount, assetDetails?.token?.decimals || 18)
+            ? parseUnits(amount, tokenDetails?.token?.decimals || 18)
             : BigNumber.from(0)
-    }, [amount, assetDetails?.token?.decimals])
+    }, [amount, tokenDetails?.token?.decimals])
 
     const txBtnStatus: Record<string, string> = {
         pending:
@@ -126,13 +130,13 @@ const SupplyMorphoButton = ({
                 throw new Error('Wallet address is required')
             }
 
-            const isVault = asset.isVault
+            const isVault = assetDetails.isVault
 
             if (isVault) {
                 const vault = morphoMarketData as Vault
                 const newAmount = parseUnits(
                     amount,
-                    assetDetails.token.decimals
+                    tokenDetails.token.decimals
                 )
                 const shares = vault.toShares(newAmount.toBigInt())
 
@@ -155,9 +159,17 @@ const SupplyMorphoButton = ({
                     ),
                 ]
 
+                logEvent('lend_initiated', {
+                    amount,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
+
                 writeContractAsync({
                     address: BUNDLER_ADDRESS_MORPHO[
-                        asset.chainId
+                        assetDetails.chainId
                     ] as `0x${string}`,
                     abi: MORPHO_BUNDLER_ABI,
                     functionName: 'multicall',
@@ -169,6 +181,14 @@ const SupplyMorphoButton = ({
                             status: 'view',
                             errorMessage: '',
                         }))
+
+                        logEvent('lend_completed', {
+                            amount,
+                            token_symbol: assetDetails?.asset?.token?.symbol,
+                            platform_name: assetDetails?.name,
+                            chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                            wallet_address: walletAddress,
+                        })
                     })
                     .catch((error) => {
                         setLendTx((prev: TLendTx) => ({
@@ -180,9 +200,16 @@ const SupplyMorphoButton = ({
             } else {
                 //  check if asset is collateral or borrow
                 // If collateral, supplyCollateral if borrowSupply supply
-                const isCollateral = !assetDetails.borrow_enabled
+                const isCollateral = !tokenDetails.borrow_enabled
 
                 if (isCollateral) {
+                    logEvent('add_collateral_initiated', {
+                        amount,
+                        token_symbol: assetDetails?.asset?.token?.symbol,
+                        platform_name: assetDetails?.name,
+                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        wallet_address: walletAddress,
+                    })
                     // call morpho market supplyCollateral
                     writeContractAsync({
                         address: platform.core_contract,
@@ -202,7 +229,7 @@ const SupplyMorphoButton = ({
                                 irm: morphoMarketData.params.irm,
                                 lltv: morphoMarketData.params.lltv,
                             },
-                            parseUnits(amount, assetDetails.token.decimals),
+                            parseUnits(amount, tokenDetails.token.decimals),
                             walletAddress,
                             '0x',
                         ],
@@ -213,6 +240,14 @@ const SupplyMorphoButton = ({
                                 status: 'view',
                                 errorMessage: '',
                             }))
+
+                            logEvent('add_collateral_completed', {
+                                amount,
+                                token_symbol: assetDetails?.asset?.token?.symbol,
+                                platform_name: assetDetails?.name,
+                                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                                wallet_address: walletAddress,
+                            })
                         })
                         .catch((error) => {
                             setLendTx((prev: TLendTx) => ({
@@ -222,6 +257,14 @@ const SupplyMorphoButton = ({
                             }))
                         })
                 } else {
+                    logEvent('lend_initiated', {
+                        amount,
+                        token_symbol: assetDetails?.asset?.token?.symbol,
+                        platform_name: assetDetails?.name,
+                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        wallet_address: walletAddress,
+                    })
+
                     // call morpho market supply
                     writeContractAsync({
                         address: platform.core_contract,
@@ -236,7 +279,7 @@ const SupplyMorphoButton = ({
                                 irm: morphoMarketData.params.irm,
                                 lltv: morphoMarketData.params.lltv,
                             },
-                            parseUnits(amount, assetDetails.token.decimals),
+                            parseUnits(amount, tokenDetails.token.decimals),
                             0,
                             walletAddress,
                             '0x',
@@ -248,6 +291,14 @@ const SupplyMorphoButton = ({
                                 status: 'view',
                                 errorMessage: '',
                             }))
+
+                            logEvent('lend_completed', {
+                                amount,
+                                token_symbol: assetDetails?.asset?.token?.symbol,
+                                platform_name: assetDetails?.name,
+                                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                                wallet_address: walletAddress,
+                            })
                         })
                         .catch((error) => {
                             setLendTx((prev: TLendTx) => ({
@@ -275,7 +326,7 @@ const SupplyMorphoButton = ({
         } catch (error) {
             error
         }
-    }, [amount, assetDetails, platform, walletAddress, writeContractAsync])
+    }, [amount, tokenDetails, platform, walletAddress, writeContractAsync])
 
     useEffect(() => {
         setLendTx((prev: any) => ({
@@ -334,17 +385,25 @@ const SupplyMorphoButton = ({
                 errorMessage: '',
             }))
 
+            logEvent('approve_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
+
             // TODO: Implement Morpho approve logic here
             // Example structure:
             writeContractAsync({
-                address: asset.asset.token.address,
+                address: assetDetails.asset.token.address,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
                 args: [
-                    asset.isVault
-                        ? BUNDLER_ADDRESS_MORPHO[asset.chainId]
+                    assetDetails.isVault
+                        ? BUNDLER_ADDRESS_MORPHO[assetDetails.chainId]
                         : platform.core_contract,
-                    parseUnits(amount, asset.asset.token.decimals),
+                    parseUnits(amount, assetDetails.asset.token.decimals),
                 ],
             })
         } catch (error) {
@@ -354,7 +413,7 @@ const SupplyMorphoButton = ({
 
     return (
         <div className="flex flex-col gap-2">
-            {lendTx.status === 'approve' && !asset.isVault && (
+            {lendTx.status === 'approve' && !assetDetails.isVault && (
                 <CustomAlert
                     variant="info"
                     hasPrefixIcon={false}

@@ -11,6 +11,7 @@ import { Menu, X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ConnectWalletButton from './ConnectWalletButton'
 import Link from 'next/link'
+import { Badge } from './ui/badge'
 
 type TTab = {
     id: number
@@ -86,16 +87,20 @@ const Header: React.FC = () => {
     return (
         <>
             <header className="z-50 sticky top-0 md:top-5 left-0 max-w-[1200px] w-full mx-auto md:px-5">
-                <div className="flex overflow-hidden gap-5 max-lg:gap-10 justify-between items-center py-0 pr-[8px] pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
-                    <Link href="/" className="md:w-[24px] md:w-fit p-0">
+                <div className="flex gap-5 max-lg:gap-10 justify-between items-center py-0 pr-[8px] pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
+                    <Link href="/" className="relative md:w-[24px] md:w-fit p-0">
                         <img
                             loading="lazy"
                             src={'/images/logos/superlend-logo.webp'}
                             alt="Superlend logo"
                             className="object-contain shrink-0 my-auto aspect-[6.54] w-36 cursor-pointer"
                         />
+                        <Badge variant="blue" className="absolute top-[4px] -right-12 w-fit rounded-full px-2 py-[2px]">
+                            Beta
+                        </Badge>
                     </Link>
-                    <nav className="hidden md:flex gap-3 lg:gap-5 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">
+
+                    <nav className="hidden min-[850px]:flex gap-3 lg:gap-5 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">
                         {tabs.map((tab) => (
                             <Button
                                 key={tab.id}
@@ -127,7 +132,7 @@ const Header: React.FC = () => {
             </header>
 
             {/* Footer nav */}
-            <div className="z-50 fixed bottom-0 left-0 md:hidden w-full flex justify-center">
+            <div className="z-50 fixed bottom-0 left-0 min-[850px]:hidden w-full flex justify-center">
                 <nav className="flex gap-4 lg:gap-5 items-center justify-center self-stretch px-10 text-sm tracking-normal leading-none whitespace-nowrap text-stone-800 w-full bg-white bg-opacity-40 backdrop-blur">
                     {tabs.map((tab) => (
                         <Button
@@ -135,7 +140,6 @@ const Header: React.FC = () => {
                             variant={'ghost'}
                             size="lg"
                             className={`${isSelected(tab) ? BUTTON_ACTIVE_MOBILE_STYLES : BUTTON_INACTIVE_MOBILE_STYLES}`}
-                        // onClick={() => handleTabClick(tab)}
                         >
                             <Link
                                 onClick={() => handleTabClick(tab)}
@@ -143,7 +147,7 @@ const Header: React.FC = () => {
                                 className={`${LINK_DEFAULT_STYLES}`}
                             >
                                 <tab.icon className="max-sm:w-5 max-sm:h-5" />
-                                <span className="hidden max-md:inline-block leading-[0] text-inherit">
+                                <span className="max-[850px]:inline-block hidden leading-[0] text-inherit">
                                     {tab.name}
                                 </span>
                             </Link>

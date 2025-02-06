@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import { AreaChartStacked } from '@/components/charts/area-chart-stacked'
 import { useSearchParams } from 'next/navigation'
@@ -23,9 +23,11 @@ import { motion } from 'framer-motion'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import { PlatformType } from '@/types/platform'
 import { usePositionManagementContext } from '@/context/position-management-provider'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 export default function AssetHistory() {
     const searchParams = useSearchParams()
+    const { logEvent } = useAnalytics()
     const tokenAddress = searchParams.get('token') || ''
     // const chain_id = searchParams.get("chain_id") || "";
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
@@ -53,6 +55,17 @@ export default function AssetHistory() {
         token: tokenAddress,
         period: selectedRange,
     })
+
+    useEffect(() => {
+        logEvent('history_range_selected', {
+            option: selectedRange,
+            default: true,
+        })
+        logEvent('history_filter_selected', {
+            option: selectedFilter,
+            default: true,
+        })
+    }, [])
 
     // [CHART_DATA] - Format data for chart
     const chartData: any = platformHistoryData?.processMap?.map((item: any) => {
@@ -93,6 +106,19 @@ export default function AssetHistory() {
     // [EVENT_HANDLERS] - Handle range change
     function handleRangeChange(value: Period) {
         setSelectedRange(value)
+        logEvent('history_range_selected', {
+            option: value,
+            default: false,
+        })
+    }
+
+    // [EVENT_HANDLERS] - Handle filter change
+    function handleFilterChange(value: any) {
+        setSelectedFilter(value)
+        logEvent('history_filter_selected', {
+            option: value,
+            default: false,
+        })
     }
 
     // [FOOTER_STATS] - Get average values for footer stats
@@ -191,7 +217,7 @@ export default function AssetHistory() {
                 selectedRange={selectedRange}
                 handleRangeChange={handleRangeChange}
                 selectedFilter={selectedFilter}
-                handleFilterChange={setSelectedFilter}
+                handleFilterChange={handleFilterChange}
                 chartData={chartData}
                 disableCategoryFilters={disableCategoryFilters}
             />

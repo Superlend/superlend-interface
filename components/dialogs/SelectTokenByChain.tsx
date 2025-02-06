@@ -255,9 +255,9 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
             }
             {showAllChains && backButton}
             {/* UI: List of tokens / chains */}
-            <ScrollArea className="h-[60vh] lg:h-full w-full max-h-[60vh]">
+            <ScrollArea className="h-[300px] lg:h-full w-full max-h-[400px]">
                 {/* Search bar UI */}
-                <div className="sticky top-0 left-0 right-0 z-10 px-5 py-2 bg-white">
+                <div className="sticky -top-0.5 left-0 right-0 z-10 px-5 py-2 bg-white">
                     <SearchInput
                         onChange={handleKeywordChange}
                         onClear={handleClearSearch}
@@ -293,7 +293,6 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                     key={index}
                                     className="flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4"
                                     onClick={() => onSelectToken(token)}
-
                                 >
                                     <div className="flex items-center gap-1 select-none">
                                         <div

@@ -19,6 +19,7 @@ import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { useSearchParams } from 'next/navigation'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 import { TChain } from '@/types/chain'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 interface ISelectedToken {
     address: string
@@ -56,6 +57,7 @@ export default function HomePageComponents() {
             tokens: [selectedToken?.symbol || ''],
             enabled: !!selectedToken,
         })
+    const { logEvent } = useAnalytics()
 
     const formattedTokensList = formattedTokenBalances.map((tokenBalance) => {
         return {
@@ -72,7 +74,7 @@ export default function HomePageComponents() {
         updateSearchParams({
             token_address: undefined,
             chain_id: undefined,
-            position_type: undefined,
+            position_type: 'lend',
         })
     }
 
@@ -113,6 +115,12 @@ export default function HomePageComponents() {
             chain_id: token.chain_id,
             position_type: positionType,
         })
+        logEvent('token_selected', {
+            action: positionType,
+            token_symbol: token.symbol,
+            chain_name: token.chain_name,
+            wallet_address: walletAddress,
+        })
         setOpenSelectTokenDialog(false)
     }
 
@@ -149,7 +157,7 @@ export default function HomePageComponents() {
     return (
         <MainContainer className="mt-20 md:mt-24">
             <div className="flex flex-col items-center w-full max-w-[1176px] max-md:max-w-full">
-                <div className="w-full max-w-[300px]">
+                <div className="relative z-10 w-full max-w-[300px]">
                     <LendBorrowToggle
                         type={positionType}
                         handleToggle={handlePositionTypeToggle}

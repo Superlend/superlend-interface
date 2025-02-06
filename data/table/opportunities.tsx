@@ -6,6 +6,8 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { Badge } from '@/components/ui/badge'
 import { BodyText, Label } from '@/components/ui/typography'
 import { PAIR_BASED_PROTOCOLS } from '@/constants'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 import {
     abbreviateNumber,
     capitalizeText,
@@ -26,6 +28,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: 'Platform',
         accessorFn: (item) => item.platformName,
         cell: ({ row }) => {
+            const { logEvent } = useAnalytics()
+            const { walletAddress } = useWalletConnection()
             const searchParams = useSearchParams()
             const platformName: string = row.getValue('platformName')
             const platformLogo = row.original.platformLogo
@@ -35,6 +39,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 row.original.platformId.split('-')[0].toLowerCase() ===
                 PlatformType.MORPHO
             const isVault = row.original.isVault
+            const tokenSymbol = row.original.tokenSymbol
             const tokenAddress = row.original.tokenAddress
             const protocolIdentifier = row.original.protocol_identifier
             const chainId = row.original.chain_id
@@ -107,6 +112,16 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                     protocol_identifier: protocolIdentifier,
                                     position_type: positionTypeParam,
                                 },
+                            }}
+                            onClick={() => {
+                                logEvent('opportunity_selected', {
+                                    token_symbol: tokenSymbol,
+                                    chain_name: chainName,
+                                    platform_name: platformName,
+                                    apy: row.original.apy_current,
+                                    action: positionTypeParam,
+                                    wallet_address: walletAddress,
+                                })
                             }}
                             className="truncate"
                         >

@@ -13,6 +13,7 @@ import { useCallback, useEffect } from 'react'
 // import { AddressType } from '../../../types/address'
 // import { IAssetData } from '@interfaces/IAssetData'
 import {
+    CHAIN_ID_MAPPER,
     CONFIRM_ACTION_IN_WALLET_TEXT,
     ERROR_TOAST_ICON_STYLES,
     POOL_AAVE_MAP,
@@ -37,10 +38,12 @@ import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
 import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
 
 import type { Market } from '@morpho-org/blue-sdk'
+import { ChainId } from '@/types/chain'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 interface IBorrowButtonProps {
     disabled: boolean
-    asset: any
+    assetDetails: any
     amount: string
     handleCloseModal: (isVisible: boolean) => void
 }
@@ -54,10 +57,11 @@ const txBtnStatus: Record<string, string> = {
 
 const BorrowButton = ({
     disabled,
-    asset,
+    assetDetails,
     amount,
     handleCloseModal,
 }: IBorrowButtonProps) => {
+    const { logEvent } = useAnalytics()
     const {
         writeContractAsync,
         isPending,
@@ -87,6 +91,13 @@ const BorrowButton = ({
                 status: 'view',
                 isConfirmed: isConfirmed,
             }))
+            logEvent('borrow_completed', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
         }
     }, [hash, isConfirmed])
 
@@ -102,11 +113,11 @@ const BorrowButton = ({
 
     const txBtnText =
         txBtnStatus[
-            isConfirming
-                ? 'confirming'
-                : isConfirmed
-                  ? 'success'
-                  : isPending
+        isConfirming
+            ? 'confirming'
+            : isConfirmed
+                ? 'success'
+                : isPending
                     ? 'pending'
                     : 'default'
         ]
@@ -118,13 +129,13 @@ const BorrowButton = ({
                     address: cTokenAddress as `0x${string}`,
                     abi: COMPOUND_ABI,
                     functionName: 'borrow',
-                    args: [parseUnits(amount, asset.decimals)],
+                    args: [parseUnits(amount, assetDetails.decimals)],
                 })
             } catch (error) {
                 error
             }
         },
-        [writeContractAsync, asset]
+        [writeContractAsync, assetDetails]
     )
 
     const borrowAave = useCallback(
@@ -135,13 +146,20 @@ const BorrowButton = ({
             addressOfWallet: string
         ) => {
             try {
+                logEvent('borrow_initiated', {
+                    amount,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
                 writeContractAsync({
                     address: poolContractAddress as `0x${string}`,
                     abi: AAVE_POOL_ABI,
                     functionName: 'borrow',
                     args: [
                         underlyingAssetAdress,
-                        parseUnits(amount, asset.asset.token.decimals),
+                        parseUnits(amount, assetDetails.asset.token.decimals),
                         2,
                         0,
                         addressOfWallet,
@@ -158,7 +176,7 @@ const BorrowButton = ({
                 error
             }
         },
-        [writeContractAsync, asset, handleCloseModal]
+        [writeContractAsync, assetDetails, handleCloseModal]
     )
 
     const borrowMorpho = useCallback(
@@ -168,6 +186,13 @@ const BorrowButton = ({
             const platform = asset?.platform
 
             try {
+                logEvent('borrow_initiated', {
+                    amount,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
                 writeContractAsync({
                     address: platform.core_contract,
                     abi: MORPHO_MARKET_ABI,
@@ -191,25 +216,25 @@ const BorrowButton = ({
                 error
             }
         },
-        [writeContractAsync, asset, handleCloseModal]
+        [writeContractAsync, assetDetails, handleCloseModal]
     )
 
     const onBorrow = async () => {
-        if (asset?.protocol_type === PlatformType.COMPOUND) {
-            await borrowCompound(asset?.asset?.token?.address, amount)
+        if (assetDetails?.protocol_type === PlatformType.COMPOUND) {
+            await borrowCompound(assetDetails?.asset?.token?.address, amount)
             return
         }
-        if (asset?.protocol_type === PlatformType.AAVE) {
+        if (assetDetails?.protocol_type === PlatformType.AAVE) {
             await borrowAave(
-                POOL_AAVE_MAP[asset?.platform_name as PlatformValue],
-                asset?.asset?.token?.address,
+                POOL_AAVE_MAP[assetDetails?.platform_name as PlatformValue],
+                assetDetails?.asset?.token?.address,
                 amount,
                 walletAddress as string
             )
             return
         }
-        if (asset?.protocol_type === PlatformType.MORPHO) {
-            await borrowMorpho(asset, amount)
+        if (assetDetails?.protocol_type === PlatformType.MORPHO) {
+            await borrowMorpho(assetDetails, amount)
             return
         }
     }

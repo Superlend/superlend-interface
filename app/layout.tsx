@@ -76,7 +76,7 @@ export default function RootLayout({
                 <ScrollToTop />
                 <GoogleTagManager gtmId={GTM_ID} />
                 <GoogleAnalytics gaId={GA_ID} />
-                <ContextProvider cookies={cookies}>
+                <ContextProvider>
                     <Toaster />
                     <EasterEgg />
                     <Header />

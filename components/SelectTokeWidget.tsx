@@ -8,6 +8,7 @@ import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
 import ImageWithDefault from './ImageWithDefault'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 interface ISelectTokeWidgetProps {
     setOpenSelectTokenDialog: (open: boolean) => void
@@ -33,8 +34,13 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = (
     }: ISelectTokeWidgetProps) => {
     const isDisabled = !selectedToken || opportunitiesData.length === 0
     const { walletAddress, isWalletConnected, isConnectingWallet } = useWalletConnection()
+    const { logEvent } = useAnalytics()
 
     const handleOpenTokenSelectionDialog = () => {
+        logEvent('select_token_button_clicked', {
+            action: positionType,
+            wallet_address: walletAddress,
+        })
         setOpenSelectTokenDialog(true)
     }
 
