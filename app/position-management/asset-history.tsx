@@ -61,6 +61,10 @@ export default function AssetHistory() {
             option: selectedRange,
             default: true,
         })
+        logEvent('history_filter_selected', {
+            option: selectedFilter,
+            default: true,
+        })
     }, [])
 
     // [CHART_DATA] - Format data for chart
@@ -103,6 +107,15 @@ export default function AssetHistory() {
     function handleRangeChange(value: Period) {
         setSelectedRange(value)
         logEvent('history_range_selected', {
+            option: value,
+            default: false,
+        })
+    }
+
+    // [EVENT_HANDLERS] - Handle filter change
+    function handleFilterChange(value: any) {
+        setSelectedFilter(value)
+        logEvent('history_filter_selected', {
             option: value,
             default: false,
         })
@@ -204,7 +217,7 @@ export default function AssetHistory() {
                 selectedRange={selectedRange}
                 handleRangeChange={handleRangeChange}
                 selectedFilter={selectedFilter}
-                handleFilterChange={setSelectedFilter}
+                handleFilterChange={handleFilterChange}
                 chartData={chartData}
                 disableCategoryFilters={disableCategoryFilters}
             />
