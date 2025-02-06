@@ -245,6 +245,7 @@ export const POOL_AAVE_MAP: { [key in PlatformValue]: `0x${string}` } = {
         '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
     [PlatformValue.AaveV3Polygon]: '0x794a61358D6845594F94dc1DB02A252b5b4814aD',
     [PlatformValue.AaveV3Scoll]: '0x11fCfe756c05AD438e312a7fd934381537D3cFfe',
+    [PlatformValue.SuperlendEtherlink]: "0x3bD16D195786fb2F509f2E2D7F69920262EF114D",
     // [PlatformValue.SparkEthereum]: '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2',
     // [PlatformValue.SparkGnosis]: '0xb50201558B00496A145fE76f7424749556E326D8',
     [PlatformValue.CompoundV2Ethereum]: '0x', // not used
