@@ -82,20 +82,20 @@ export default function TopApyOpportunities() {
         return [{ id: 'apy_current', desc: positionTypeParam === 'lend' }]
     })
 
-    useEffect(() => {
-        const hasFilters = tokenIdsParam.length > 0 || chainIdsParam.length > 0 || platformIdsParam.length > 0
-        const hasTokenIds = tokenIdsParam.length > 0
-        const hasChainIds = chainIdsParam.length > 0
-        const hasPlatformIds = platformIdsParam.length > 0
-        if (hasFilters) {
-            logEvent('filter_selected', {
-                token_symbols: hasTokenIds ? tokenIdsParam.join(',') : null,
-                chain_names: hasChainIds ? chainIdsParam?.map((chain_id) => CHAIN_ID_MAPPER[Number(chain_id) as ChainId]).join(',') : null,
-                protocol_names: hasPlatformIds ? platformIdsParam.join(',') : null,
-                action: positionTypeParam,
-            })
-        }
-    }, [tokenIdsParam, chainIdsParam, platformIdsParam])
+    // useEffect(() => {
+    //     const hasFilters = tokenIdsParam.length > 0 || chainIdsParam.length > 0 || platformIdsParam.length > 0
+    //     const hasTokenIds = tokenIdsParam.length > 0
+    //     const hasChainIds = chainIdsParam.length > 0
+    //     const hasPlatformIds = platformIdsParam.length > 0
+    //     if (hasFilters) {
+    //         logEvent('filter_selected', {
+    //             token_symbols: hasTokenIds ? tokenIdsParam.join(',') : null,
+    //             chain_names: hasChainIds ? chainIdsParam?.map((chain_id) => CHAIN_ID_MAPPER[Number(chain_id) as ChainId]).join(',') : null,
+    //             protocol_names: hasPlatformIds ? platformIdsParam.join(',') : null,
+    //             action: positionTypeParam,
+    //         })
+    //     }
+    // }, [tokenIdsParam, chainIdsParam, platformIdsParam])
 
     useEffect(() => {
         const hasExcludeRiskyMarketsFlag = localStorage.getItem('exclude_risky_markets')
