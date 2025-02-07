@@ -83,15 +83,18 @@ export default function TopApyOpportunities() {
     })
 
     useEffect(() => {
-        const selectedFilters = {
-            token_symbols: tokenIdsParam || null,
-            chain_names: chainIdsParam?.map((chain_id) => CHAIN_ID_MAPPER[Number(chain_id) as ChainId]).join(',') || null,
-            protocol_names: platformIdsParam || null,
+        const hasFilters = tokenIdsParam.length > 0 || chainIdsParam.length > 0 || platformIdsParam.length > 0
+        const hasTokenIds = tokenIdsParam.length > 0
+        const hasChainIds = chainIdsParam.length > 0
+        const hasPlatformIds = platformIdsParam.length > 0
+        if (hasFilters) {
+            logEvent('filter_selected', {
+                token_symbols: hasTokenIds ? tokenIdsParam.join(',') : null,
+                chain_names: hasChainIds ? chainIdsParam?.map((chain_id) => CHAIN_ID_MAPPER[Number(chain_id) as ChainId]).join(',') : null,
+                protocol_names: hasPlatformIds ? platformIdsParam.join(',') : null,
+                action: positionTypeParam,
+            })
         }
-        logEvent('filter_selected', {
-            ...selectedFilters,
-            action: positionTypeParam,
-        })
     }, [tokenIdsParam, chainIdsParam, platformIdsParam])
 
     useEffect(() => {
