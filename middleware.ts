@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
 
     const isVaildUserEasterEgg =
         request.cookies.get('accessEasterEgg')?.value === 'true'
-    if (!isVaildUserEasterEgg && url.pathname === '/easter-egg') {
+    if (!isVaildUserEasterEgg && url.pathname === '/super-hunt') {
         url.pathname = '/discover'
         return NextResponse.redirect(url)
     }

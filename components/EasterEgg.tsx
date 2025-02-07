@@ -22,6 +22,7 @@ import axios from 'axios'
 import { LoaderCircle } from 'lucide-react'
 import { useAccount } from 'wagmi'
 import { useDisconnect } from '@reown/appkit/react'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 
 const fakeCheatCodes =
     process.env.NEXT_PUBLIC_EASTER_EGG_CHEAT_CODES?.split(',') || []
@@ -33,7 +34,7 @@ const EasterEgg = () => {
     const [isModalOpen, setModalOpen] = useState(false)
 
     const pathname = usePathname()
-    const { address: walletAddress } = useAccount()
+    const { walletAddress } = useWalletConnection()
     const formattedAddress =
         walletAddress?.slice(0, 6) + '...' + walletAddress?.slice(-4)
 
@@ -71,12 +72,12 @@ const EasterEgg = () => {
     useEffect(() => {
         if (isModalOpen) return
         if (!inputSequence) return
-        if (pathname === '/easter-egg') return
+        if (pathname === '/super-hunt') return
         if (fakeCheatCodes.some((code) => inputSequence.includes(code))) {
             setInputSequence('')
             toast.success('Cheat Activated!', { duration: 2000 })
             setTimeout(() => {
-                router.push('/easter-egg-not-found')
+                router.push('/easter-egg')
             }, 2000)
             return
         }
@@ -105,7 +106,7 @@ const EasterEgg = () => {
         if (walletAddress) {
             setIsLoadingUser(true)
             axios
-                .get(`${endpoint}/api/entries?walletAddress=${walletAddress}`)
+                .get(`${endpoint}/api/entries?walletAddress=${walletAddress.toLowerCase()}`)
                 .then((res) => {
                     const user = res.data
 
@@ -134,7 +135,7 @@ const EasterEgg = () => {
     }, [walletAddress])
 
     // Exit early if on "/easter-egg"
-    if (pathname === '/easter-egg') {
+    if (pathname === '/super-hunt') {
         return null
     }
 
@@ -151,7 +152,7 @@ const EasterEgg = () => {
         }
         if (isEasterEggUnlocked && !isEasterEggSolved) {
             document.cookie = 'accessEasterEgg=true;'
-            router.push('/easter-egg')
+            router.push('/super-hunt')
             setModalOpen(false)
             return
         }
@@ -171,13 +172,13 @@ const EasterEgg = () => {
             setIsCreatingUser(true)
             const response = await axios.post(`${endpoint}/api/create-entry`, {
                 email,
-                walletAddress,
+                walletAddress: walletAddress.toLowerCase(),
             })
 
             if (response.status === 200) {
                 setIsCreatingUser(false)
                 document.cookie = 'accessEasterEgg=true;'
-                router.push('/easter-egg')
+                router.push('/super-hunt')
                 setModalOpen(false)
             } else {
                 setIsCreatingUser(false)
