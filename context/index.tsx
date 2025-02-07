@@ -39,7 +39,7 @@ const privyConfig = {
     appearance: {
         theme: 'light',
         accentColor: '#676FFF',
-        logo: 'https://beta.superlend.xyz/images/logos/superlend-logo.webp',
+        logo: 'https://app.superlend.xyz/images/logos/superlend-logo.webp',
         landingHeader: 'Connect Wallet',
         loginMessage: 'Select wallet to continue',
         showWalletLoginFirst: true,
