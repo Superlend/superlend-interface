@@ -24,7 +24,7 @@ import { OpportunitiesContext } from '@/context/opportunities-provider'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { TToken } from '@/types'
 import useDimensions from '@/hooks/useDimensions'
-import { STABLECOINS_NAMES_LIST } from '@/constants'
+import { CHAIN_ID_MAPPER, STABLECOINS_NAMES_LIST } from '@/constants'
 import SearchInput from '../inputs/SearchInput'
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { useSearchParams } from 'next/navigation'
@@ -33,6 +33,8 @@ import { motion } from 'framer-motion'
 import { Switch } from '../ui/switch'
 import InfoTooltip from '../tooltips/InfoTooltip'
 import TooltipText from '../tooltips/TooltipText'
+import { ChainId } from '@/types/chain'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 export default function DiscoverFiltersDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false)
@@ -382,6 +384,7 @@ function FilterOptions({
     isStablecoinsSelected: boolean
     selectStablecoins: any
 }) {
+    const { logEvent } = useAnalytics()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
     const [searchKeyword, setSearchKeyword] = useState<string>('')
@@ -461,6 +464,17 @@ function FilterOptions({
             [`${filterType}_ids`]: newFilters.length
                 ? newFilters.join(',')
                 : undefined,
+        })
+
+        const selectedFilters = {
+            token_symbols: filters.token_ids.join(','),
+            chain_names: filters.chain_ids.map((chain_id) => CHAIN_ID_MAPPER[Number(chain_id) as ChainId]).join(','),
+            protocol_names: filters.protocol_ids.join(','),
+        }
+
+        logEvent('filter_selected', {
+            ...selectedFilters,
+            action: positionTypeParam,
         })
     }
 
