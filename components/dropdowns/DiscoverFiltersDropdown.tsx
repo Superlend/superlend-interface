@@ -387,6 +387,9 @@ function FilterOptions({
     const { logEvent } = useAnalytics()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
+    // const tokenSymbolParam = searchParams.get('token_ids')
+    // const chainIdParam = searchParams.get('chain_ids')
+    // const protocolIdParam = searchParams.get('protocol_ids')
     const [searchKeyword, setSearchKeyword] = useState<string>('')
     const [isExcluded, setIsExcluded] = useState(
         localStorage.getItem('exclude_risky_markets') === 'true'
@@ -464,17 +467,6 @@ function FilterOptions({
             [`${filterType}_ids`]: newFilters.length
                 ? newFilters.join(',')
                 : undefined,
-        })
-
-        const selectedFilters = {
-            token_symbols: filters.token_ids.join(','),
-            chain_names: filters.chain_ids.map((chain_id) => CHAIN_ID_MAPPER[Number(chain_id) as ChainId]).join(','),
-            protocol_names: filters.protocol_ids.join(','),
-        }
-
-        logEvent('filter_selected', {
-            ...selectedFilters,
-            action: positionTypeParam,
         })
     }
 
