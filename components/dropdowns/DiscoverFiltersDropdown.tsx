@@ -24,7 +24,7 @@ import { OpportunitiesContext } from '@/context/opportunities-provider'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { TToken } from '@/types'
 import useDimensions from '@/hooks/useDimensions'
-import { STABLECOINS_NAMES_LIST } from '@/constants'
+import { CHAIN_ID_MAPPER, STABLECOINS_NAMES_LIST } from '@/constants'
 import SearchInput from '../inputs/SearchInput'
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { useSearchParams } from 'next/navigation'
@@ -33,6 +33,8 @@ import { motion } from 'framer-motion'
 import { Switch } from '../ui/switch'
 import InfoTooltip from '../tooltips/InfoTooltip'
 import TooltipText from '../tooltips/TooltipText'
+import { ChainId } from '@/types/chain'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 export default function DiscoverFiltersDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false)
@@ -382,8 +384,12 @@ function FilterOptions({
     isStablecoinsSelected: boolean
     selectStablecoins: any
 }) {
+    const { logEvent } = useAnalytics()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
+    const tokenSymbolParam = searchParams.get('token_ids')?.split(",") || []
+    const chainIdParam = searchParams.get('chain_ids')?.split(",") || []
+    const protocolIdParam = searchParams.get('protocol_ids')?.split(",") || []
     const [searchKeyword, setSearchKeyword] = useState<string>('')
     const [isExcluded, setIsExcluded] = useState(
         localStorage.getItem('exclude_risky_markets') === 'true'
@@ -461,6 +467,17 @@ function FilterOptions({
             [`${filterType}_ids`]: newFilters.length
                 ? newFilters.join(',')
                 : undefined,
+        })
+
+        // const hasFilters = tokenSymbolParam.length > 0 || chainIdParam.length > 0 || protocolIdParam.length > 0
+        const hasTokenIds = tokenSymbolParam.length > 0
+        const hasChainIds = chainIdParam.length > 0
+        const hasPlatformIds = protocolIdParam.length > 0
+        logEvent('filter_selected', {
+            token_symbols: hasTokenIds ? tokenSymbolParam.join(',') : null,
+            chain_names: hasChainIds ? chainIdParam?.map((chain_id) => CHAIN_ID_MAPPER[Number(chain_id) as ChainId]).join(',') : null,
+            protocol_names: hasPlatformIds ? protocolIdParam.join(',') : null,
+            action: positionTypeParam,
         })
     }
 

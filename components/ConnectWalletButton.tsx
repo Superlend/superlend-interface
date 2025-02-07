@@ -33,7 +33,6 @@ export default function ConnectWalletButton() {
     function handleLogin(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault()
         login()
-        logEvent('connect_wallet_button_clicked')
     }
 
     return (

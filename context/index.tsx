@@ -56,7 +56,7 @@ function ContextProvider({
 
     return (
         <AnalyticsProvider>
-            <PageVisitTracker />
+            {/* <PageVisitTracker /> */}
             <PrivyProvider
                 appId={appId}
                 config={privyConfig as PrivyClientConfig}

@@ -25,6 +25,11 @@ import { PlatformType } from '@/types/platform'
 import { usePositionManagementContext } from '@/context/position-management-provider'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
+interface IDropdownCategoryFilter {
+    label: string
+    value: string
+}
+
 export default function AssetHistory() {
     const searchParams = useSearchParams()
     const { logEvent } = useAnalytics()
@@ -33,7 +38,7 @@ export default function AssetHistory() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionType = searchParams.get('position_type') || 'lend'
     const [selectedRange, setSelectedRange] = useState<Period>(Period.oneMonth)
-    const [selectedFilter, setSelectedFilter] = useState<any>(
+    const [selectedFilter, setSelectedFilter] = useState<IDropdownCategoryFilter>(
         positionType === 'borrow'
             ? HISTORY_CHART_SELECT_OPTIONS[3]
             : HISTORY_CHART_SELECT_OPTIONS[0]
@@ -62,7 +67,7 @@ export default function AssetHistory() {
             default: true,
         })
         logEvent('history_filter_selected', {
-            option: selectedFilter,
+            option: selectedFilter.label,
             default: true,
         })
     }, [])
@@ -113,10 +118,10 @@ export default function AssetHistory() {
     }
 
     // [EVENT_HANDLERS] - Handle filter change
-    function handleFilterChange(value: any) {
-        setSelectedFilter(value)
+    function handleFilterChange(item: IDropdownCategoryFilter) {
+        setSelectedFilter(item)
         logEvent('history_filter_selected', {
-            option: value,
+            option: item.label,
             default: false,
         })
     }

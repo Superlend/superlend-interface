@@ -782,7 +782,7 @@ export default function WithdrawAndRepayActionButton({
 
     const maxRepayAmountForTx = getMaxRepayAmountForTx()
 
-    const positionAmount = hasSingleToken ? tokenDetails[0]?.amount : selectedTokenDetails?.positionAmount ?? 0
+    const positionAmount = hasSingleToken ? tokenDetails[0]?.amount : selectedTokenDetails?.amount ?? 0
 
     const withdrawErrorMessage = useMemo(() => {
         if (Number(amount) > Number(maxWithdrawAmountForTx)) {
@@ -909,7 +909,7 @@ export default function WithdrawAndRepayActionButton({
                         setOpen={setIsSelectTokenDialogOpen}
                         tokens={tokenDetails.map((token) => ({
                             address: token.address,
-                            amount: String(token.tokenAmount),
+                            amount: String(token.amount),
                             logo: token.logo,
                             symbol: token.symbol,
                             apy: token.apy,

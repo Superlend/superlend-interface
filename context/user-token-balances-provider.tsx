@@ -88,10 +88,13 @@ export default function UserTokenBalancesProvider({
                 output[chainId] = {};
 
                 tokens.forEach((token: any) => {
-                    output[chainId][token.address] = {
-                        balanceRaw: '0',
-                        balanceFormatted: 0,
-                    };
+                    const normalizedAddress = token.address.toLowerCase().trim();
+                    if (!output[chainId][normalizedAddress]) {
+                        output[chainId][normalizedAddress] = {
+                            balanceRaw: '0',
+                            balanceFormatted: 0,
+                        };
+                    }
                 });
             }
         }

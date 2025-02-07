@@ -16,7 +16,7 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { TOpportunityTable, TPositionType } from '@/types'
-import { TChain } from '@/types/chain'
+import { ChainId, TChain } from '@/types/chain'
 import { DataTable } from '@/components/ui/data-table'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
@@ -30,6 +30,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { CHAIN_ID_MAPPER } from '@/constants'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -80,6 +81,21 @@ export default function TopApyOpportunities() {
         }
         return [{ id: 'apy_current', desc: positionTypeParam === 'lend' }]
     })
+
+    // useEffect(() => {
+    //     const hasFilters = tokenIdsParam.length > 0 || chainIdsParam.length > 0 || platformIdsParam.length > 0
+    //     const hasTokenIds = tokenIdsParam.length > 0
+    //     const hasChainIds = chainIdsParam.length > 0
+    //     const hasPlatformIds = platformIdsParam.length > 0
+    //     if (hasFilters) {
+    //         logEvent('filter_selected', {
+    //             token_symbols: hasTokenIds ? tokenIdsParam.join(',') : null,
+    //             chain_names: hasChainIds ? chainIdsParam?.map((chain_id) => CHAIN_ID_MAPPER[Number(chain_id) as ChainId]).join(',') : null,
+    //             protocol_names: hasPlatformIds ? platformIdsParam.join(',') : null,
+    //             action: positionTypeParam,
+    //         })
+    //     }
+    // }, [tokenIdsParam, chainIdsParam, platformIdsParam])
 
     useEffect(() => {
         const hasExcludeRiskyMarketsFlag = localStorage.getItem('exclude_risky_markets')
@@ -302,10 +318,10 @@ export default function TopApyOpportunities() {
     function handleFilterTableRows(opportunity: TOpportunityTable) {
         return positionTypeParam === 'borrow'
             ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity)
+            handleFilterTableRowsByPlatformIds(opportunity)
             : handleExcludeMorphoMarketsByParamFlag(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity) && 
-                  opportunity.protocol_identifier !== EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
+            handleFilterTableRowsByPlatformIds(opportunity) &&
+            opportunity.protocol_identifier !== EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
     }
 
     function handleRowClick(rowData: any) {
