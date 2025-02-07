@@ -14,7 +14,7 @@ import EasterEgg from '@/components/EasterEgg'
 // const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://beta.superlend.xyz'),
+    metadataBase: new URL('https://app.superlend.xyz'),
     alternates: {
         canonical: '/',
         languages: {
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     ],
     openGraph: {
         type: 'website',
-        url: 'https://beta.superlend.xyz/',
+        url: 'https://app.superlend.xyz/',
         title: 'Superlend - Lend & Borrow Aggregator',
         description:
             'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .',

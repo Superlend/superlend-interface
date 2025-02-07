@@ -36,7 +36,7 @@ const EasterEggSolved = ({
     const [rank, setRank] = useState<number | null>(null)
 
     const referral =
-        'I just uncovered a hidden Easter Egg on @SuperlendHQ 🥚💎\nJoin the hunt, unlock rewards, and experience the thrill of SuperHunt.\nTry to find it at beta.superlend.xyz and start your adventure! 🚀'
+        'I just uncovered a hidden Easter Egg on @SuperlendHQ 🥚💎\nJoin the hunt, unlock rewards, and experience the thrill of SuperHunt.\nTry to find it at app.superlend.xyz and start your adventure! 🚀'
     const redirectUrl =
         'https://x.com/intent/post?text=' + encodeURIComponent(referral)
 

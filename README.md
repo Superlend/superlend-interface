@@ -2,7 +2,7 @@
 
 Level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.
 
-- Website: [Superlend](https://beta.superlend.xyz/)
+- Website: [Superlend](https://app.superlend.xyz/)
 - Twitter: [@SuperlendHQ](https://x.com/SuperlendHQ)
 - Discord: [Superlend](https://discord.com/invite/superlend)
 
@@ -10,7 +10,7 @@ Level up your DeFi experience with best lending & borrowing aggregator with over
 
 To access the Superlend Interface, use link from the
 [latest release](https://github.com/Superlend/superlend-interface),
-or visit [Superlend](https://beta.superlend.xyz/).
+or visit [Superlend](https://app.superlend.xyz/).
 
 # Project setup
 
