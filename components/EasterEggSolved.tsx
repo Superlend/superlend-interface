@@ -43,7 +43,7 @@ const EasterEggSolved = ({
     const fetchUserRank = useCallback(async () => {
         try {
             const response = await axios.get(
-                `${endpoint}/api/rank?walletAddress=${walletAddress}`
+                `${endpoint}/api/rank?walletAddress=${walletAddress.toLowerCase()}`
             )
             setRank(response.data.rank)
         } catch (error) {
@@ -56,7 +56,7 @@ const EasterEggSolved = ({
         try {
             setIsUpdating(true)
             await fetchUserRank()
-            await axios.post(`${endpoint}/api/update-entry`, { walletAddress })
+            await axios.post(`${endpoint}/api/update-entry`, { walletAddress: walletAddress.toLowerCase() })
             setIsUpdating(false)
         } catch (error) {
             toast.error('Something went wrong. Please try again later.')
