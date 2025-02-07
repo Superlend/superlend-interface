@@ -909,7 +909,7 @@ export default function WithdrawAndRepayActionButton({
                         setOpen={setIsSelectTokenDialogOpen}
                         tokens={tokenDetails.map((token) => ({
                             address: token.address,
-                            amount: String(token.tokenAmount),
+                            amount: String(token.amount),
                             logo: token.logo,
                             symbol: token.symbol,
                             apy: token.apy,
