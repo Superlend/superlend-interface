@@ -135,16 +135,16 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         // enableGlobalFilter: false,
     },
     {
-        accessorKey: 'apy_current',
-        accessorFn: (item) => Number(item.apy_current),
+        accessorKey: 'apy_avg_7days',
+        accessorFn: (item) => Number(item.apy_avg_7days),
         header: () => {
             const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
             const lendTooltipContent =
-                '% interest you earn on deposits over a year. This includes compounding.'
+                '% 7 day average interest you earn on deposits over a year. This includes compounding.'
             const borrowTooltipContent =
-                '% interest you pay for your borrows over a year. This includes compunding.'
+                '% 7 day average interest you pay for your borrows over a year. This includes compunding.'
             const tooltipContent =
                 positionTypeParam === 'lend'
                     ? lendTooltipContent
@@ -153,7 +153,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <InfoTooltip
                     side="bottom"
-                    label={<TooltipText>APY</TooltipText>}
+                    label={<TooltipText>7D Avg APY</TooltipText>}
                     content={tooltipContent}
                 />
             )
@@ -162,8 +162,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
-            const apyCurrent = Number(row.getValue('apy_current'))
-            const apyCurrentFormatted = apyCurrent.toFixed(2)
+            const apy7DayAvg = Number(row.getValue('apy_avg_7days'))
+            const apy7DayAvgFormatted = apy7DayAvg.toFixed(2)
             const hasRewards =
                 row.original?.additional_rewards &&
                 row.original?.rewards.length > 0
@@ -185,9 +185,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     0
                 )
                 // Lend base rate = APY - Asset Total Rewards
-                const lendBaseRate = apyCurrent - totalRewards
+                const lendBaseRate = apy7DayAvg - totalRewards
                 // Borrow base rate = APY + Asset Total Rewards
-                const borrowBaseRate = apyCurrent + totalRewards
+                const borrowBaseRate = apy7DayAvg + totalRewards
                 baseRate = Number(isLend ? lendBaseRate : borrowBaseRate)
                 baseRateFormatted =
                     baseRate < 0.01 && baseRate > 0
@@ -196,7 +196,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             }
 
             if (
-                apyCurrentFormatted === '0.00' &&
+                apy7DayAvgFormatted === '0.00' &&
                 !isPairBasedProtocol &&
                 !isLend
             ) {
@@ -205,7 +205,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         label={
                             <TooltipText>
                                 <BodyText level={'body2'} weight={'medium'}>
-                                    {`${apyCurrentFormatted}%`}
+                                    {`${apy7DayAvgFormatted}%`}
                                 </BodyText>
                             </TooltipText>
                         }
@@ -217,7 +217,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-1">
                     <BodyText level={'body2'} weight={'medium'}>
-                        {`${apyCurrentFormatted}%`}
+                        {`${apy7DayAvgFormatted}%`}
                     </BodyText>
                     {hasRewards && (
                         <InfoTooltip
@@ -233,7 +233,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             content={getRewardsTooltipContent({
                                 baseRateFormatted: baseRateFormatted || '',
                                 rewards: rewards || [],
-                                apyCurrent: apyCurrent || 0,
+                                apyCurrent: apy7DayAvg || 0,
                                 positionTypeParam,
                             })}
                         />

@@ -89,6 +89,7 @@ export default function Opportunities({
             platformId: `${item.platform.platform_name}`,
             platformLogo: item.platform.logo,
             apy_current: item.platform.apy.current,
+            apy_avg_7days: item.platform.apy.avg_7days,
             max_ltv: item.platform.max_ltv,
             deposits: `${Number(item.platform.liquidity) * Number(item.token.price_usd)}`,
             borrows: `${Number(item.platform.borrows) * Number(item.token.price_usd)}`,
@@ -121,7 +122,7 @@ export default function Opportunities({
             className="opportunities-table flex flex-col gap-[24px]"
         >
             <div className="opportunities-table">
-                {!isLoadingOpportunitiesData && !isTableLoading && (
+                {(!isLoadingOpportunitiesData && !isTableLoading) && (
                     <OpportunitiesDataTable
                         columns={columns}
                         data={tableData}
@@ -131,7 +132,7 @@ export default function Opportunities({
                     />
                 )}
                 {(isLoadingOpportunitiesData || isTableLoading) && (
-                    <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
+                    <LoadingSectionSkeleton className="h-[320px]" />
                 )}
             </div>
         </section>

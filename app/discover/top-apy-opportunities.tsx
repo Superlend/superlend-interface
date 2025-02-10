@@ -238,6 +238,7 @@ export default function TopApyOpportunities() {
             platformId: `${item.platform.platform_name}`,
             platformLogo: item.platform.logo,
             apy_current: item.platform.apy.current,
+            apy_avg_7days: item.platform.apy.avg_7days,
             max_ltv: item.platform.max_ltv,
             deposits: `${Number(item.platform.liquidity) * Number(item.token.price_usd)}`,
             borrows: `${Number(item.platform.borrows) * Number(item.token.price_usd)}`,
@@ -414,7 +415,7 @@ export default function TopApyOpportunities() {
                     <DiscoverFiltersDropdown />
                 </div>
             </div>
-            <div className="top-apy-opportunities-content relative md:z-[50]">
+            <div className="top-apy-opportunities-content">
                 {!isLoadingOpportunitiesData && !isTableLoading && (
                     <DataTable
                         columns={columns}

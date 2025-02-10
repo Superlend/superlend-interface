@@ -101,6 +101,7 @@ import { ChainId } from '@/types/chain'
 import { useSetActiveWallet } from '@privy-io/wagmi'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 
 export default function LendAndBorrowAssets() {
     const { logEvent } = useAnalytics()
@@ -139,13 +140,7 @@ export default function LendAndBorrowAssets() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType =
         (searchParams.get('position_type') as TPositionType) || 'lend'
-    const { address: walletAddress } = useAccount()
-    const { wallets } = useWallets()
-    const wallet = wallets.find(
-        (wallet: any) => wallet.address === walletAddress
-    )
-    const { user } = usePrivy()
-    const isWalletConnected = !!user
+    const { walletAddress, handleSwitchChain, isWalletConnected } = useWalletConnection()
     const {
         fetchAaveV3Data,
         getMaxBorrowAmount,
@@ -176,20 +171,14 @@ export default function LendAndBorrowAssets() {
     })
 
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData
-    const isMorphoVaults =
-        platformData?.platform?.protocol_type === PlatformType.MORPHO &&
-        platformData?.platform?.isVault
-
-    // const customChain = defineChain(Number(chain_id))
+    const isMorphoProtocol = platformData?.platform?.protocol_type === PlatformType.MORPHO
+    const isMorphoVaults = isMorphoProtocol && platformData?.platform?.isVault
+    const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
 
     // Switch chain
     useEffect(() => {
-        async function handleSwitchChain() {
-            await wallet?.switchChain(Number(chain_id))
-        }
         if (!!walletAddress) {
-            // modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
-            handleSwitchChain()
+            handleSwitchChain(Number(chain_id))
         }
     }, [walletAddress, Number(chain_id)])
 
@@ -647,10 +636,6 @@ export default function LendAndBorrowAssets() {
             Number(maxBorrowAmount) <= 0
         )
     }
-
-    const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
-    const isMorphoProtocol = platformData?.platform?.protocol_type === 'morpho'
-    const isPolygonChain = Number(chain_id) === 137
 
     const isLoadingHelperText = isLendPositionType(positionType)
         ? isLoadingErc20TokensBalanceData

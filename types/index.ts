@@ -120,6 +120,7 @@ export type TOpportunityTable = {
     platformWithMarketName: string
     platformLogo: string
     apy_current: string
+    apy_avg_7days: string
     additional_rewards: boolean
     rewards: TReward[]
     max_ltv: number
