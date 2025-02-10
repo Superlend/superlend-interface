@@ -328,8 +328,8 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                             <BodyText
                                                 level="body2"
                                                 weight="medium"
-                                            >{`${hasLowestDisplayValuePrefix(Number(token.balance || token.amount))} ${formatAmountToDisplay(token.balance || token.amount)}`}</BodyText>
-                                            <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.balance || token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance || token.amount) * Number(token.price_usd)).toString())}`}</Label>
+                                            >{`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount))} ${formatAmountToDisplay(token.balance ?? token.amount)}`}</BodyText>
+                                            <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.amount) * Number(token.price_usd)).toString())}`}</Label>
                                         </div>
                                     }
                                 </div>
