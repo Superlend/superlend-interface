@@ -45,34 +45,14 @@ import ExternalLink from '@/components/ExternalLink'
 import { TTxContext, useTxContext } from '@/context/tx-provider'
 import { ChainId } from '@/types/chain'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 // import { modal } from '@/context'
 
 export default function LendAndBorrowAssetsMorpho() {
     const searchParams = useSearchParams()
-    const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
-    const positionTypeParam: TPositionType =
-        (searchParams.get('position_type') as TPositionType) || 'lend'
-    const { address: walletAddress } = useAccount()
-    const { wallets } = useWallets()
-    const wallet = wallets.find(
-        (wallet: any) => wallet.address === walletAddress
-    )
-    const { user } = usePrivy()
-    const isWalletConnected = !!user
-
-    // Switch chain
-    useEffect(() => {
-        async function handleSwitchChain() {
-            await wallet?.switchChain(Number(chain_id))
-        }
-
-        if (!!walletAddress) {
-            // modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
-            handleSwitchChain()
-        }
-    }, [walletAddress, Number(chain_id)])
+    const { walletAddress, handleSwitchChain } = useWalletConnection()
 
     // [API_CALL: GET] - Get Platform data
     const {
@@ -84,13 +64,16 @@ export default function LendAndBorrowAssetsMorpho() {
         chain_id: Number(chain_id),
     })
 
-    const isMorphoMarketsProtocol =
-        platformData?.platform?.protocol_type === 'morpho' &&
-        !platformData?.platform?.isVault
+    const isMorphoProtocol = platformData?.platform?.protocol_type === PlatformType.MORPHO
+    const isMorphoMarketsProtocol = isMorphoProtocol && !platformData?.platform?.isVault
+    const isMorphoVaultsProtocol = isMorphoProtocol && platformData?.platform?.isVault
 
-    const isMorphoVaultsProtocol =
-        platformData?.platform?.protocol_type === 'morpho' &&
-        platformData?.platform?.isVault
+    // Switch chain
+    useEffect(() => {
+        if (!!walletAddress && isMorphoProtocol) {
+            handleSwitchChain(Number(chain_id))
+        }
+    }, [walletAddress, Number(chain_id)])
 
     if (!isMorphoMarketsProtocol && !isMorphoVaultsProtocol) {
         return null
