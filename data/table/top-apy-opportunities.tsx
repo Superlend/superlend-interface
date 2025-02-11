@@ -136,7 +136,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     {
         accessorKey: 'platformName',
         header: 'Platform',
-        accessorFn: (item) => item.platformName,
+        accessorFn: (item) => `${item.platformName} ${item.platformWithMarketName}`,
         cell: ({ row }) => {
             const { width: screenWidth } = useDimensions()
             const platformName: string = row.getValue('platformName')
@@ -154,7 +154,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             // const morphoLabel =
             //     isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
             // const formattedPlatformName = isMorpho ? morphoLabel : platformName
-            const platformDisplayName = `${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`;
+            const platformDisplayName = `${capitalizeText(platformName.split(' ')[0])} ${getPlatformVersion(platformId)}`;
             const showPlatformCuratorName = platformDisplayName.split(' ')[1].toLowerCase() !== formattedPlatformWithMarketName.toLowerCase();
 
             return (
