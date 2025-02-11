@@ -142,6 +142,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const platformName: string = row.getValue('platformName')
             const platformId: string = row.original.platformId
             const platformWithMarketName: string = row.original.platformWithMarketName
+            const formattedPlatformWithMarketName: string = platformWithMarketName.split(' ').slice(1).join(' ')
             const platformLogo = row.original.platformLogo
             const isMorpho =
                 row.original.platformId.split('-')[0].toLowerCase() ===
@@ -153,6 +154,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             // const morphoLabel =
             //     isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
             // const formattedPlatformName = isMorpho ? morphoLabel : platformName
+            const platformDisplayName = `${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`;
+            const showPlatformCuratorName = platformDisplayName.split(' ')[1].toLowerCase() !== formattedPlatformWithMarketName.toLowerCase();
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -162,14 +165,20 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         width={20}
                         height={20}
                     />
-                    <BodyText
-                        level={'body2'}
-                        weight={'medium'}
-                        className="truncate"
-                        title={platformWithMarketName}
-                    >
-                        {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
-                    </BodyText>
+                    <div className="flex flex-col gap-[0px]">
+                        <BodyText
+                            level={'body2'}
+                            weight={'medium'}
+                            className="truncate leading-0"
+                        >
+                            {platformDisplayName}
+                        </BodyText>
+                        {showPlatformCuratorName &&
+                            <Label className="text-gray-800 leading-0 capitalize">
+                                {formattedPlatformWithMarketName}
+                            </Label>
+                        }
+                    </div>
                     {isMorpho && !isVault && positionTypeParam === 'lend' && (
                         <InfoTooltip
                             content="Supplying directly to Morpho markets is risky and not advised by the Morpho team"

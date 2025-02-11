@@ -494,11 +494,11 @@ function getAssetTooltipContent({
             label: 'Platform',
             image: platformLogo || '',
             imageAlt: platformName,
-            displayName: platformName?.split(' ')[0],
+            displayName: platformName,
         },
     ]
     return (
-        <span className="flex flex-col gap-[16px]">
+        <span className="flex flex-col gap-[16px] max-w-[200px]">
             {TooltipData.map((item) => (
                 <span key={item.label} className="flex flex-col gap-[4px]">
                     <Label>{item.label}</Label>
