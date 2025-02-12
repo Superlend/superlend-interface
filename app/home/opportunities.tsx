@@ -8,7 +8,7 @@ import React, {
     useCallback,
     useRef,
 } from 'react'
-import LendBorrowToggle from '@/components/LendBorrowToggle'
+import ToggleTab from '@/components/ToggleTab'
 import { HeadingText } from '@/components/ui/typography'
 import { OpportunitiesDataTable } from '@/components/tables/opportunities-data-table'
 import { columns } from '@/data/table/opportunities'

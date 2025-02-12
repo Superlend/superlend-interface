@@ -1,7 +1,7 @@
 'use client'
 
 import ImageWithDefault from '@/components/ImageWithDefault'
-import LendBorrowToggle from '@/components/LendBorrowToggle'
+import ToggleTab from '@/components/ToggleTab'
 import { Button } from '@/components/ui/button'
 import {
     Card,
@@ -187,7 +187,7 @@ export default function WithdrawAndRepayActionButton({
         getAllowance,
         providerStatus,
     } = useAaveV3Data()
-    const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
+    const { withdrawTx, setWithdrawTx, repayTx, setRepayTx, lendTx, borrowTx } =
         useTxContext() as TTxContext
     const isWithdrawAction = actionType === 'withdraw'
     const [isSelectTokenDialogOpen, setIsSelectTokenDialogOpen] =
@@ -521,16 +521,21 @@ export default function WithdrawAndRepayActionButton({
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
-        if (withdrawTx.status === 'view' && !isConfirmationDialogOpen) {
-            setIsRefreshingErc20TokensBalanceData(true)
-        }
-
-        if (repayTx.status === 'view' && !isConfirmationDialogOpen) {
+        if (
+            (
+                withdrawTx.status === 'view' ||
+                repayTx.status === 'view' ||
+                lendTx.status === 'view' ||
+                borrowTx.status === 'view'
+            ) &&
+            !isConfirmationDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
     }, [
         repayTx.status,
         withdrawTx.status,
+        lendTx.status,
+        borrowTx.status,
     ])
 
     // Refresh balance when wallet address changes

@@ -3,6 +3,19 @@
 import { BigNumber } from 'ethers'
 import { createContext, useContext, useState } from 'react'
 
+export type TTxContext = {
+    lendTx: TLendTx
+    setLendTx: any
+    borrowTx: TBorrowTx
+    setBorrowTx: any
+    repayTx: TRepayTx
+    setRepayTx: any
+    withdrawTx: TWithdrawTx
+    setWithdrawTx: any
+    isConfirmationDialogOpen: boolean
+    setIsConfirmationDialogOpen: any
+}
+
 const TxInitialState: TTxContext = {
     lendTx: {
         status: 'approve',
@@ -14,7 +27,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setLendTx: () => {},
+    setLendTx: () => { },
     borrowTx: {
         status: 'borrow',
         hash: '',
@@ -23,7 +36,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setBorrowTx: () => {},
+    setBorrowTx: () => { },
     repayTx: {
         status: 'approve',
         hash: '',
@@ -34,7 +47,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setRepayTx: () => {},
+    setRepayTx: () => { },
     withdrawTx: {
         status: 'approve',
         hash: '',
@@ -45,7 +58,9 @@ const TxInitialState: TTxContext = {
         isRefreshingAllowance: false,
         allowanceBN: BigNumber.from(0),
     },
-    setWithdrawTx: () => {},
+    setWithdrawTx: () => { },
+    isConfirmationDialogOpen: false,
+    setIsConfirmationDialogOpen: () => { },
 }
 
 export const TxContext = createContext<TTxContext>(TxInitialState)
@@ -89,17 +104,6 @@ export type TWithdrawTx = {
     isConfirmed: boolean
     isRefreshingAllowance: boolean
     allowanceBN: BigNumber
-}
-
-export type TTxContext = {
-    lendTx: TLendTx
-    setLendTx: any
-    borrowTx: TBorrowTx
-    setBorrowTx: any
-    repayTx: TRepayTx
-    setRepayTx: any
-    withdrawTx: TWithdrawTx
-    setWithdrawTx: any
 }
 
 export default function TxProvider({
@@ -149,6 +153,8 @@ export default function TxProvider({
         allowanceBN: BigNumber.from(0),
     })
 
+    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false)
+
     return (
         <TxContext.Provider
             value={{
@@ -160,6 +166,8 @@ export default function TxProvider({
                 setRepayTx,
                 withdrawTx,
                 setWithdrawTx,
+                isConfirmationDialogOpen,
+                setIsConfirmationDialogOpen,
             }}
         >
             {children}

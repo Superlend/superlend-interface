@@ -12,10 +12,9 @@ import {
 } from '@/components/ui/card'
 import { BodyText } from '@/components/ui/typography'
 import PositionDetails from './position-details'
-import LendAndBorrowAssets from './lend-and-borrow'
 import PositionManagementProvider from '@/context/position-management-provider'
 import TxProvider from '@/context/tx-provider'
-import LendAndBorrowAssetsMorpho from './lend-and-borrow-morpho'
+import { AssetTxWidget } from './tx-widgets'
 
 export default function PositionManagementPage() {
     return (
@@ -29,9 +28,8 @@ export default function PositionManagementPage() {
                             <AssetHistory />
                         </div>
                         <div className="order-first xl:order-last">
-                            <LendAndBorrowAssets />
+                            <AssetTxWidget />
                         </div>
-                        <LendAndBorrowAssetsMorpho />
                         {/* <BlogCard /> */}
                     </div>
                 </MainContainer>

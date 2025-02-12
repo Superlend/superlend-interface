@@ -8,7 +8,7 @@ import React, {
     useCallback,
     useRef,
 } from 'react'
-import LendBorrowToggle from '@/components/LendBorrowToggle'
+import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
 import { HeadingText } from '@/components/ui/typography'
 import { columns } from '@/data/table/top-apy-opportunities'
 import SearchInput from '@/components/inputs/SearchInput'
@@ -394,9 +394,11 @@ export default function TopApyOpportunities() {
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="w-full sm:max-w-[350px]">
-                            <LendBorrowToggle
-                                type={positionTypeParam as TPositionType}
-                                handleToggle={toggleOpportunityType}
+                            <ToggleTab
+                                type={positionTypeParam === "lend" ? "tab1" : "tab2"}
+                                handleToggle={(positionType: TTypeToMatch) => {
+                                    toggleOpportunityType(positionType === "tab1" ? "lend" : "borrow")
+                                }}
                             />
                         </div>
                         <div className="sm:max-w-[156px] w-full">

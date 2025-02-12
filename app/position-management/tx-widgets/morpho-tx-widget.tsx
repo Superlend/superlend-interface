@@ -1,11 +1,10 @@
 'use client'
 
-import LendBorrowToggle from '@/components/LendBorrowToggle'
+import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { BodyText } from '@/components/ui/typography'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
-import useGetPlatformData from '@/hooks/useGetPlatformData'
 import {
     abbreviateNumber,
     checkDecimalPlaces,
@@ -18,7 +17,7 @@ import { LoaderCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
-import { ConfirmationDialog, handleSmallestValue } from './lend-and-borrow'
+import { ConfirmationDialog, handleSmallestValue } from '@/components/dialogs/TxDialog'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import { Button } from '@/components/ui/button'
@@ -39,30 +38,21 @@ import {
     useVaultUser,
 } from '@morpho-org/blue-sdk-wagmi'
 import { formatUnits } from 'viem'
-import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import ExternalLink from '@/components/ExternalLink'
 import { TTxContext, useTxContext } from '@/context/tx-provider'
-import { ChainId } from '@/types/chain'
-import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
-// import { modal } from '@/context'
 
-export default function LendAndBorrowAssetsMorpho() {
+export default function MorphoTxWidget({
+    isLoading: isLoadingPlatformData,
+    platformData
+}: {
+    isLoading: boolean
+    platformData: TPlatform
+}) {
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
-    const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const { walletAddress, handleSwitchChain } = useWalletConnection()
-
-    // [API_CALL: GET] - Get Platform data
-    const {
-        data: platformData,
-        isLoading: isLoadingPlatformData,
-        isError: isErrorPlatformData,
-    } = useGetPlatformData({
-        protocol_identifier,
-        chain_id: Number(chain_id),
-    })
 
     const isMorphoProtocol = platformData?.platform?.protocol_type === PlatformType.MORPHO
     const isMorphoMarketsProtocol = isMorphoProtocol && !platformData?.platform?.isVault
@@ -77,30 +67,33 @@ export default function LendAndBorrowAssetsMorpho() {
 
     if (!isMorphoMarketsProtocol && !isMorphoVaultsProtocol) {
         return null
-    } else if (isMorphoMarketsProtocol) {
+    }
+
+    // Morpho Markets
+    if (isMorphoMarketsProtocol) {
         return (
-            <LendAndBorrowAssetsMorphoMarkets
-                platformData={platformData}
-                walletAddress={walletAddress as `0x${string}`}
-                isLoadingPlatformData={isLoadingPlatformData}
-            />
-        )
-    } else if (isMorphoVaultsProtocol) {
-        return (
-            <LendAndBorrowAssetsMorphoVaults
+            <MorphoMarkets
                 platformData={platformData}
                 walletAddress={walletAddress as `0x${string}`}
                 isLoadingPlatformData={isLoadingPlatformData}
             />
         )
     }
+
+    // Morpho Vaults
+    return (
+        <MorphoVaults
+            platformData={platformData}
+            walletAddress={walletAddress as `0x${string}`}
+        />
+    )
 }
 
 function isLendPositionType(positionType: TPositionType) {
     return positionType === 'lend'
 }
 
-function LendAndBorrowAssetsMorphoMarkets({
+function MorphoMarkets({
     platformData,
     walletAddress,
     isLoadingPlatformData,
@@ -114,19 +107,11 @@ function LendAndBorrowAssetsMorphoMarkets({
     const positionTypeParam: TPositionType =
         (searchParams.get('position_type') as TPositionType) || 'lend'
     const [positionType, setPositionType] = useState<TPositionType>('lend')
-    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-        useState(false)
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx, withdrawTx, repayTx } = useTxContext() as TTxContext
+    const { lendTx, borrowTx, withdrawTx, repayTx, isConfirmationDialogOpen, setIsConfirmationDialogOpen } = useTxContext() as TTxContext
     const [refresh, setRefresh] = useState(false)
-    const { wallets } = useWallets()
-    const wallet = wallets.find(
-        (wallet: any) => wallet.address === walletAddress
-    )
-    const { user } = usePrivy()
-    const isWalletConnected = !!user
-
+    const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
 
     useEffect(() => {
@@ -159,11 +144,10 @@ function LendAndBorrowAssetsMorphoMarkets({
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
-        if (lendTx.status === 'view' && !isConfirmationDialogOpen) {
-            setIsRefreshingErc20TokensBalanceData(true)
-        }
-
-        if (borrowTx.status === 'view' && !isConfirmationDialogOpen) {
+        if (
+            (lendTx.status === 'view' || borrowTx.status === 'view') &&
+            !isConfirmationDialogOpen
+        ) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
     }, [
@@ -353,10 +337,6 @@ function LendAndBorrowAssetsMorphoMarkets({
 
     const isLoading = isLoadingPlatformData || isLoadingMaxBorrowingAmount
 
-    // const isMorphoVaultsProtocol =
-    //     platformData?.platform?.protocol_type === 'morpho' &&
-    //     platformData?.platform?.isVault
-
     const {
         erc20TokensBalanceData,
         isLoading: isLoadingErc20TokensBalanceData,
@@ -503,14 +483,14 @@ function LendAndBorrowAssetsMorphoMarkets({
 
     return (
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
-            <LendBorrowToggle
-                type={positionType}
-                handleToggle={(positionType: TPositionType) => {
+            <ToggleTab
+                type={positionType === "lend" ? "tab1" : "tab2"}
+                handleToggle={(positionType: TTypeToMatch) => {
                     setAmount('')
-                    setPositionType(positionType)
+                    setPositionType(positionType === "tab1" ? "lend" : "borrow")
                 }}
                 title={{
-                    lend: isMorphoProtocol ? 'Add Collateral' : 'Lend',
+                    tab1: isMorphoProtocol ? 'Add Collateral' : 'Lend',
                 }}
             />
             <Card className="flex flex-col gap-[12px] p-[16px]">
@@ -622,7 +602,7 @@ function LendAndBorrowAssetsMorphoMarkets({
                                 height={24}
                             />
                         )}
-                        <div className="flex flex-col gap-[4px]">
+                        <div className="flex flex-1 flex-col gap-[4px]">
                             <CustomNumberInput
                                 key={positionType}
                                 amount={amount}
@@ -743,7 +723,7 @@ function LendAndBorrowAssetsMorphoMarkets({
                                     protocol_type:
                                         platformData?.platform?.protocol_type,
                                     morphoMarketData: morphoMarketData,
-                                    chainId: Number(chain_id),
+                                    chain_id: Number(chain_id),
                                 }}
                                 amount={amount}
                                 balance={balance}
@@ -771,30 +751,20 @@ function LendAndBorrowAssetsMorphoMarkets({
     )
 }
 
-function LendAndBorrowAssetsMorphoVaults({
+function MorphoVaults({
     platformData,
     walletAddress,
-    isLoadingPlatformData,
 }: {
     platformData: TPlatform
     walletAddress: `0x${string}`
-    isLoadingPlatformData: boolean
 }) {
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || '1'
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { wallets } = useWallets()
-    const wallet = wallets.find(
-        (wallet: any) => wallet.address === walletAddress
-    )
-    const { user } = usePrivy()
-    const isWalletConnected = !!user
-    const { lendTx, borrowTx } = useTxContext() as TTxContext
-    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-        useState(false)
-
+    const { lendTx, borrowTx, isConfirmationDialogOpen, setIsConfirmationDialogOpen } = useTxContext() as TTxContext
+    const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
 
     const positionTypeParam: TPositionType = 'lend'
@@ -973,7 +943,7 @@ function LendAndBorrowAssetsMorphoVaults({
                                     height={24}
                                 />
                             )}
-                        <div className="flex flex-col gap-[4px]">
+                        <div className="flex flex-1 flex-col gap-[4px]">
                             <CustomNumberInput
                                 key={positionType}
                                 amount={amount}
@@ -1028,7 +998,7 @@ function LendAndBorrowAssetsMorphoVaults({
                                     protocol_type:
                                         platformData?.platform?.protocol_type,
                                     morphoMarketData: vaultData,
-                                    chainId: Number(chain_id),
+                                    chain_id: Number(chain_id),
                                     isVault: true,
                                 }}
                                 amount={amount}

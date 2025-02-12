@@ -1,7 +1,7 @@
 import { WarningMessages } from '@/constants'
 import { Period } from './periodButtons'
 
-export type TPositionType = 'lend' | 'borrow'
+export type TPositionType = 'collateral' | 'lend' | 'borrow'
 export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay'
 
 export type TToken = {
@@ -168,6 +168,8 @@ export type TPlatform = {
         isVault: boolean
         morpho_market_id: string
         core_contract: string
+        uiPoolDataProvider?: string
+        poolAddressesProvider?: string
     }
     assets: TPlatformAsset[]
 }

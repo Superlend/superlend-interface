@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import LendBorrowToggle from '@/components/LendBorrowToggle'
+import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
 import SelectTokeWidget from '@/components/SelectTokeWidget'
 import MainContainer from '@/components/MainContainer'
 import TokenRates from '@/components/TokenRates'
@@ -158,9 +158,11 @@ export default function HomePageComponents() {
         <MainContainer className="mt-20 md:mt-24">
             <div className="flex flex-col items-center w-full max-w-[1176px] max-md:max-w-full">
                 <div className="relative z-10 w-full max-w-[300px]">
-                    <LendBorrowToggle
-                        type={positionType}
-                        handleToggle={handlePositionTypeToggle}
+                    <ToggleTab
+                        type={positionType === "lend" ? "tab1" : "tab2"}
+                        handleToggle={(positionType: TTypeToMatch) => {
+                            handlePositionTypeToggle(positionType === "tab1" ? "lend" : "borrow")
+                        }}
                     />
                 </div>
                 <TokenRates

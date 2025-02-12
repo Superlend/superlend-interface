@@ -16,13 +16,14 @@ import SupplyMorphoButton from '../SupplyMorphoButton'
 import { CodeSquare } from 'lucide-react'
 import { TPositionType } from '@/types'
 import RepayButton from '../RepayButton'
+import SupplyFluidButton from '../SupplyFluidButton'
 
 interface IActionButtonSelectComponent {
     disabled?: boolean
     asset: any
     amount: string
     handleCloseModal: (isVisible: boolean) => void
-    actionType: 'lend' | 'borrow' | 'repay' | 'withdraw'
+    actionType: 'lend' | 'collateral' | 'borrow' | 'repay' | 'withdraw'
     setActionType?: (actionType: TPositionType) => void
 }
 
@@ -106,6 +107,20 @@ const ActionButton = ({
                 handleCloseModal={handleCloseModal}
                 assetDetails={asset}
                 amount={amount}
+                setActionType={setActionType}
+            />
+        )
+    }
+    if (asset.protocol_type === PlatformType.FLUID && actionType === 'lend') {
+        return (
+            <SupplyFluidButton
+                disabled={disabled}
+                handleCloseModal={handleCloseModal}
+                poolContractAddress={asset.core_contract}
+                underlyingAssetAdress={asset.asset.token.address}
+                amount={amount}
+                decimals={asset.asset.token.decimals}
+                assetDetails={asset}
                 setActionType={setActionType}
             />
         )
