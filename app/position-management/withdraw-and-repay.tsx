@@ -219,17 +219,13 @@ export default function WithdrawAndRepayActionButton({
 
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData
 
-    // const isMorphoMarketsProtocol =
-    //     platformData?.platform?.protocol_type === 'morpho' &&
-    //     !platformData?.platform?.isVault
+    const isMorphoProtocol = platformData?.platform?.protocol_type === PlatformType.MORPHO
+    const isMorphoVaultsProtocol = isMorphoProtocol && platformData?.platform?.isVault
+    const isMorphoMarketsProtocol = isMorphoProtocol && !platformData?.platform?.isVault
 
-    const isMorphoVaultsProtocol =
-        platformData?.platform?.protocol_type === 'morpho' &&
-        platformData?.platform?.isVault
-
-    const isMorphoMarketsProtocol =
-        platformData?.platform?.protocol_type === 'morpho' &&
-        !platformData?.platform?.isVault
+    const isFluidProtocol = platformData?.platform?.protocol_type === PlatformType.FLUID
+    const isFluidVaultsProtocol = isFluidProtocol && platformData?.platform?.isVault
+    const isFluidLendProtocol = isFluidProtocol && !platformData?.platform?.isVault
 
     const vaultData = getVaultData({
         vaultId: platformData?.platform?.core_contract as `0x${string}`,
@@ -865,7 +861,7 @@ export default function WithdrawAndRepayActionButton({
     //     return null
     // }
 
-    const assetDetails = (isMorphoVaultsProtocol || isMorphoMarketsProtocol) ?
+    const assetDetails = (isMorphoProtocol) ?
         {
             ...assetDetailsForTx,
             vault: !vaultData ? null : vaultData,
