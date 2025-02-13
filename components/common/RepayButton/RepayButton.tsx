@@ -38,6 +38,7 @@ import { Market } from '@morpho-org/blue-sdk'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
+import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 
 interface IRepayButtonProps {
     assetDetails: any
@@ -108,12 +109,25 @@ const RepayButton = ({
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
     const repay = useCallback(async () => {
-        if (assetDetails?.protocol_type === PlatformType.AAVE) {
+        const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
+        const isAave = assetDetails?.protocol_type === PlatformType.AAVE
+        const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
+        const isMorphoVault = isMorpho && assetDetails?.vault
+        const isMorphoMarket = isMorpho && assetDetails?.market
+        const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
+        const isFluidVault = isFluid && assetDetails?.vault
+        const isFluidLend = isFluid && !assetDetails?.vault
+
+        if (isAave) {
             await repayAave()
             return
         }
-        if (assetDetails?.protocol_type === PlatformType.MORPHO && assetDetails?.market) {
+        if (isMorphoMarket && assetDetails?.market) {
             await repayMorphoMarket(assetDetails)
+            return
+        }
+        if (isFluidVault) {
+            await repayFluidVault()
             return
         }
     }, [amount])
@@ -167,6 +181,69 @@ const RepayButton = ({
             })
         } catch (error) {
             error
+        }
+    }, [
+        amount,
+        poolContractAddress,
+        underlyingAssetAdress,
+        walletAddress,
+        handleCloseModal,
+        writeContractAsync,
+        decimals,
+    ])
+
+    const repayFluidVault = useCallback(async () => {
+        try {
+            setRepayTx((prev: TRepayTx) => ({
+                ...prev,
+                status: 'repay',
+                hash: '',
+                errorMessage: '',
+            }))
+
+            logEvent('repay_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
+
+            writeContractAsync({
+                address: poolContractAddress,
+                abi: FLUID_VAULTS_ABI,
+                functionName: 'repay',
+                args: [
+                    underlyingAssetAdress,
+                    parseUnits(amount, decimals),
+                    2,
+                    walletAddress,
+                ],
+            })
+                .then((data) => {
+                    setRepayTx((prev: TRepayTx) => ({
+                        ...prev,
+                        status: 'view',
+                        errorMessage: '',
+                    }))
+                })
+                .catch((error) => {
+                    setRepayTx((prev: TRepayTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                        isConfirmed: false,
+                        // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+                    }))
+                })
+        } catch (error: any) {
+            setRepayTx((prev: TRepayTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+            }))
         }
     }, [
         amount,

@@ -779,7 +779,8 @@ export default function WithdrawAndRepayActionButton({
         )
     }
 
-    const maxWithdrawAmountForTx = getMaxWithdrawAmountForTx()
+    const maxWithdrawAmountForTx = '3'
+    // getMaxWithdrawAmountForTx()
 
     const maxRepayAmountForTx = getMaxRepayAmountForTx()
 
