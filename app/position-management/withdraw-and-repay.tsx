@@ -1052,10 +1052,11 @@ function ConfirmationDialog({
 
     function handleOpenChange(open: boolean) {
         setIsOpen(open)
-        // When closing the dialog, reset the amount and the tx status
-        if (!open) {
-            setAmount('')
+
+        if (open) {
             resetLendwithdrawTx()
+        } else if (!open) {
+            setAmount('')
         }
     }
 

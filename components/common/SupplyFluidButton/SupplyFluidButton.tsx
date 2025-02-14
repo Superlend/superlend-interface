@@ -12,8 +12,6 @@ import {
     CONFIRM_ACTION_IN_WALLET_TEXT,
     EIP_20_SIGNED_APPROVALS_LINK,
     ERROR_TOAST_ICON_STYLES,
-    MORPHO_ETHERSCAN_TUTORIAL_LINK,
-    MORPHO_WEBSITE_LINK,
     SOMETHING_WENT_WRONG_MESSAGE,
     SUCCESS_MESSAGE,
 } from '@/constants'
@@ -33,7 +31,7 @@ import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 
-interface ISupplyMorphoButtonProps {
+interface ISupplyFluidButtonProps {
     assetDetails: any
     disabled: boolean
     poolContractAddress: `0x${string}`
@@ -44,7 +42,7 @@ interface ISupplyMorphoButtonProps {
     setActionType?: (actionType: TPositionType) => void
 }
 
-const SupplyMorphoButton = ({
+const SupplyFluidButton = ({
     assetDetails,
     poolContractAddress,
     underlyingAssetAdress,
@@ -53,7 +51,7 @@ const SupplyMorphoButton = ({
     disabled,
     handleCloseModal,
     setActionType,
-}: ISupplyMorphoButtonProps) => {
+}: ISupplyFluidButtonProps) => {
     const tokenDetails = assetDetails.asset
     const platform = assetDetails.platform
     const isFluidProtocol = assetDetails.protocol_type === PlatformType.FLUID
@@ -247,14 +245,22 @@ const SupplyMorphoButton = ({
                     poolContractAddress,
                     parseUnits(amount, decimals),
                 ],
-            }).catch((error) => {
-                console.log(error)
-                setLendTx((prev: TLendTx) => ({
-                    ...prev,
-                    isPending: false,
-                    isConfirming: false,
-                }))
             })
+                .then((data) => {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        status: 'lend',
+                        hash: data,
+                    }))
+                })
+                .catch((error) => {
+                    console.log(error)
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                    }))
+                })
         } catch (error) {
             error
         }
@@ -329,4 +335,4 @@ const SupplyMorphoButton = ({
     )
 }
 
-export default SupplyMorphoButton
+export default SupplyFluidButton
