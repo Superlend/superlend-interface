@@ -6,10 +6,11 @@ import ERC20ABI from '../data/abi/erc20ABI.json'
 import { BigNumber } from 'ethers'
 import { formatUnits } from 'ethers/lib/utils'
 import { useAssetsDataContext } from '@/context/data-provider'
+import { ETH_ADDRESSES, ETH_DECIMALS } from '../lib/constants'
 
 export const useERC20Balance = (address: string | undefined) => {
     const { allTokensData, allChainsData } = useAssetsDataContext()
-    const { ethMulticall } = useEthersMulticall(address)
+    const { ethMulticall, fetchNativeBalance } = useEthersMulticall(address)
     const tokenList = allTokensData as unknown as Record<number, TToken[]>
     const chainList: string[] = allChainsData.map((chain) =>
         chain.chain_id.toString()
@@ -32,6 +33,7 @@ export const useERC20Balance = (address: string | undefined) => {
             setIsLoading(true)
 
             const chainLevelRequest: Promise<ContractCallResults[]>[] = []
+            const ethBalanceRequest: Promise<BigNumber>[] = []
             for (const key of Object.keys(tokenList)) {
                 // if (!key) continue
                 const calls: ContractCallContext[][] = [[]]
@@ -57,6 +59,12 @@ export const useERC20Balance = (address: string | undefined) => {
                 }
 
                 const requests: Promise<ContractCallResults>[] = []
+                const ethCallRequest = fetchNativeBalance(
+                    address as string,
+                    Number(key)
+                )
+
+                ethBalanceRequest.push(ethCallRequest)
                 for (const calldata of calls) {
                     requests.push(ethMulticall(calldata, Number(key)))
                 }
@@ -64,18 +72,22 @@ export const useERC20Balance = (address: string | undefined) => {
             }
 
             const multichainResults = await Promise.all(chainLevelRequest)
+            const ethBalanceResults = await Promise.all(ethBalanceRequest)
+
             const result: Record<
                 number,
                 Record<string, { balanceRaw: string; balanceFormatted: number }>
             > = {}
-            for (const singlechainResult of multichainResults) {
+            for (let idx = 0; idx < multichainResults.length; idx++) {
+                const singlechainResult = multichainResults[idx]
+                let chainId = 0
                 for (const tokenResults of singlechainResult) {
                     if (!tokenResults) continue
                     for (const key of Object.keys(tokenResults.results)) {
                         // if (!key) continue
                         const shards = key.split('-')
                         const tokenAddress = shards[0]
-                        const chainId = Number(shards[1])
+                        chainId = Number(shards[1])
 
                         const tokenResult =
                             tokenResults?.results[key]?.callsReturnContext[0]
@@ -94,6 +106,16 @@ export const useERC20Balance = (address: string | undefined) => {
                         }
                         // }
                     }
+                    for (const ethAddress of ETH_ADDRESSES) {
+                        const balanceRaw = ethBalanceResults[idx]?.toString()
+                        const balanceFormatted = Number(
+                            formatUnits(balanceRaw, ETH_DECIMALS)
+                        )
+                        result[chainId][ethAddress] = {
+                            balanceRaw: ethBalanceResults[idx]?.toString(),
+                            balanceFormatted: balanceFormatted,
+                        }
+                    }
                 }
             }
 
@@ -103,7 +125,11 @@ export const useERC20Balance = (address: string | undefined) => {
                 for (const token of tokenList[chainId]) {
                     const tokenResult =
                         result[chainId][token.address.toLowerCase()]
-                    if (!tokenResult) continue
+                    if (
+                        !tokenResult ||
+                        ETH_ADDRESSES.includes(token.address.toLowerCase())
+                    )
+                        continue
                     result[chainId][
                         token.address.toLowerCase()
                     ].balanceFormatted = Number(
