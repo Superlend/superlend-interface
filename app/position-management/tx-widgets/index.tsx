@@ -18,7 +18,7 @@ export const AssetTxWidget: FC = () => {
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType = (searchParams.get('position_type') as TPositionType) || 'lend'
-    const { walletAddress, handleSwitchChain, isWalletConnected } = useWalletConnection()
+    const { walletAddress, handleSwitchChain, isWalletConnected, isConnectingWallet } = useWalletConnection()
 
     // [API_CALL: GET] - Get Platform data
     const {
@@ -41,7 +41,7 @@ export const AssetTxWidget: FC = () => {
         chain_id: [String(chain_id)],
     })
 
-    const isLoading = isLoadingPortfolioData || isLoadingPlatformData
+    const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isConnectingWallet
     const isAaveV3Protocol = platformData?.platform?.protocol_type === PlatformType.AAVE
     const isMorphoProtocol = platformData?.platform?.protocol_type === PlatformType.MORPHO
     const isFluidProtocol = platformData?.platform?.protocol_type === PlatformType.FLUID

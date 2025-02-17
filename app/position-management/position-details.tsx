@@ -45,7 +45,7 @@ export default function PositionDetails() {
     const chain_id = searchParams.get('chain_id') || 0
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     // const { address: walletAddress } = useAccount()
-    const { isWalletConnected, walletAddress } = useWalletConnection()
+    const { isWalletConnected, walletAddress, isConnectingWallet } = useWalletConnection()
     const { lendTx, borrowTx, setWithdrawTx } = useTxContext()
     const [refresh, setRefresh] = useState(false)
 
@@ -93,7 +93,7 @@ export default function PositionDetails() {
         }
     }, [refresh])
 
-    const isLoading = isLoadingPortfolioData || isLoadingPlatformData
+    const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isConnectingWallet
 
     const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
         platformData?.platform?.protocol_type
