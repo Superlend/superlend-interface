@@ -162,10 +162,10 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     const filteredTokens = ((selectedChains.length > 0 && filterByChain) ?
         tokens.filter((token: any) =>
             selectedChains.includes(token.chain_id.toString()) &&
-            token.symbol.toLowerCase().includes(keywords.toLowerCase())
+            token?.symbol?.toLowerCase().includes(keywords.toLowerCase())
         ).sort(sortTokensByBalance) :
         tokens.filter((token: any) =>
-            token.symbol.toLowerCase().includes(keywords.toLowerCase())
+            token?.symbol?.toLowerCase().includes(keywords.toLowerCase())
         )).sort(sortTokensByBalance);
 
     const filteredChains = chains?.filter((chain: any) =>
