@@ -31,21 +31,39 @@ export const abbreviateNumber = (
     value: number = 0,
     fixed: number = 2
 ): string => {
-    if (value >= 1000000000) {
-        return (value / 1000000000).toFixed(fixed) + 'B'
-    } else if (value >= 1000000) {
-        return (value / 1000000).toFixed(fixed) + 'M'
-    } else if (value >= 1000) {
-        return (value / 1000).toFixed(fixed) + 'K'
-    } else if (value <= -1000000000) {
-        return (value / 1000000000).toFixed(fixed) + 'B'
-    } else if (value <= -1000000) {
-        return (value / 1000000).toFixed(fixed) + 'M'
-    } else if (value <= -1000) {
-        return (value / 1000).toFixed(fixed) + 'K'
-    } else {
-        return value.toFixed(fixed).toString()
+    const getAbbreviation = (num: number) => {
+        const abs = Math.abs(num);
+        if (abs >= 1000000000) {
+            return { divisor: 1000000000, suffix: 'B' };
+        } else if (abs >= 1000000) {
+            return { divisor: 1000000, suffix: 'M' };
+        } else if (abs >= 1000) {
+            return { divisor: 1000, suffix: 'K' };
+        }
+        return { divisor: 1, suffix: '' };
     }
+
+    const { divisor, suffix } = getAbbreviation(value);
+    
+    if (divisor === 1) {
+        // For small numbers, preserve all decimal places up to fixed
+        const decimalStr = value.toString();
+        const [whole, decimal] = decimalStr.split('.');
+        if (decimal) {
+            return `${whole}.${decimal.slice(0, fixed)}`;
+        }
+        return whole;
+    }
+
+    // For abbreviated numbers, calculate division precisely
+    const divided = value / divisor;
+    const decimalStr = divided.toString();
+    const [whole, decimal] = decimalStr.split('.');
+    
+    if (decimal) {
+        return `${whole}.${decimal.slice(0, fixed)}${suffix}`;
+    }
+    return `${whole}${suffix}`;
 }
 
 type TOptions = {

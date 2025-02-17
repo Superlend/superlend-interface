@@ -138,7 +138,7 @@ const SupplyFluidButton = ({
             })
 
             writeContractAsync({
-                address: walletAddress as `0x${string}`,
+                address: poolContractAddress,
                 abi: FLUID_LEND_ABI,
                 functionName: 'deposit',
                 args: [

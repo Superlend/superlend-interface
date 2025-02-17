@@ -187,13 +187,13 @@ export default function WithdrawAndRepayActionButton({
         getAllowance,
         providerStatus,
     } = useAaveV3Data()
-    const { withdrawTx, setWithdrawTx, repayTx, setRepayTx, lendTx, borrowTx } =
+    const { withdrawTx, setWithdrawTx, repayTx, setRepayTx, lendTx, borrowTx, isWithdrawRepayTxDialogOpen, isLendBorrowTxDialogOpen, setIsWithdrawRepayTxDialogOpen } =
         useTxContext() as TTxContext
     const isWithdrawAction = actionType === 'withdraw'
     const [isSelectTokenDialogOpen, setIsSelectTokenDialogOpen] =
         useState(false)
-    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-        useState(false)
+    // const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
+    //     useState(false)
     const [selectedTokenDetails, setSelectedTokenDetails] =
         useState<ITokenDetails | null>(null)
     const { handleSwitchChain, walletAddress } = useWalletConnection()
@@ -524,7 +524,8 @@ export default function WithdrawAndRepayActionButton({
                 lendTx.status === 'view' ||
                 borrowTx.status === 'view'
             ) &&
-            !isConfirmationDialogOpen) {
+            !isWithdrawRepayTxDialogOpen &&
+            !isLendBorrowTxDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
     }, [
@@ -532,6 +533,8 @@ export default function WithdrawAndRepayActionButton({
         withdrawTx.status,
         lendTx.status,
         borrowTx.status,
+        isWithdrawRepayTxDialogOpen,
+        isLendBorrowTxDialogOpen
     ])
 
     // Refresh balance when wallet address changes
@@ -739,12 +742,19 @@ export default function WithdrawAndRepayActionButton({
     }
 
     const healthFactorValues = getHealthFactorValues(hasSingleToken ? tokenDetails[0] : selectedTokenDetails)
-    // console.log(healthFactorValues)
 
     function getMaxWithdrawAmountForTx() {
-        const isMorphoVaultsProtocol =
-            assetDetailsForTx.protocol_type === PlatformType.MORPHO &&
-            assetDetailsForTx.isVault
+        const isMorphoVaultsProtocol = assetDetailsForTx.protocol_type === PlatformType.MORPHO && assetDetailsForTx.isVault
+        const isFluidLendProtocol = assetDetailsForTx.protocol_type === PlatformType.FLUID && !assetDetailsForTx.isVault
+
+        if (isFluidLendProtocol) {
+            return (
+                abbreviateNumber(
+                    Number(tokenDetails[0]?.amount),
+                    tokenDetails[0]?.decimals ?? 6
+                ) ?? '0'
+            )
+        }
 
         if (isMorphoVaultsProtocol) {
             return (
@@ -779,8 +789,7 @@ export default function WithdrawAndRepayActionButton({
         )
     }
 
-    const maxWithdrawAmountForTx = '3'
-    // getMaxWithdrawAmountForTx()
+    const maxWithdrawAmountForTx = getMaxWithdrawAmountForTx()
 
     const maxRepayAmountForTx = getMaxRepayAmountForTx()
 
@@ -880,7 +889,7 @@ export default function WithdrawAndRepayActionButton({
         // Close select token dialog
         setIsSelectTokenDialogOpen(false)
         // Open confirmation dialog
-        setIsConfirmationDialogOpen(true)
+        setIsWithdrawRepayTxDialogOpen(true)
         // Log event
         logEvent(isWithdrawAction ? 'withdraw_token_selected' : 'repay_token_selected', {
             token_symbol: token.symbol,
@@ -926,10 +935,10 @@ export default function WithdrawAndRepayActionButton({
 
             )}
             {/* Single token - Confirmation dialog */}
-            {(tokenDetails.length === 1 || isConfirmationDialogOpen) && (
+            {(tokenDetails.length === 1 || isWithdrawRepayTxDialogOpen) && (
                 <ConfirmationDialog
-                    isOpen={isConfirmationDialogOpen}
-                    setIsOpen={setIsConfirmationDialogOpen}
+                    isOpen={isWithdrawRepayTxDialogOpen}
+                    setIsOpen={setIsWithdrawRepayTxDialogOpen}
                     disabled={disabledButton}
                     actionType={actionType}
                     assetDetails={assetDetails}
