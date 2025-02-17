@@ -284,6 +284,7 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
                                 ? ''
                                 : 'Insufficient allowance',
                             isConfirming: false,
+                            isConfirmed: false,
                         }
                     })
                 }
