@@ -123,8 +123,8 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
         borrowTx,
         withdrawTx,
         repayTx,
-        isConfirmationDialogOpen,
-        setIsConfirmationDialogOpen,
+        isLendBorrowTxDialogOpen,
+        setIsLendBorrowTxDialogOpen,
     } = useTxContext() as TTxContext
 
     // Switch chain
@@ -306,7 +306,7 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
                     borrowTx.status === 'view' ||
                     withdrawTx.status === 'view' ||
                     repayTx.status === 'view') &&
-                !isConfirmationDialogOpen)
+                !isLendBorrowTxDialogOpen)
         ) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
@@ -834,8 +834,8 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
                                 maxBorrowAmount={maxBorrowAmount}
                                 setAmount={setAmount}
                                 healthFactorValues={healthFactorValues}
-                                open={isConfirmationDialogOpen}
-                                setOpen={setIsConfirmationDialogOpen}
+                                open={isLendBorrowTxDialogOpen}
+                                setOpen={setIsLendBorrowTxDialogOpen}
                             />
                         </div>
                     )}

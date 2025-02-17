@@ -109,7 +109,7 @@ function MorphoMarkets({
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx, withdrawTx, repayTx, isConfirmationDialogOpen, setIsConfirmationDialogOpen } = useTxContext() as TTxContext
+    const { lendTx, borrowTx, withdrawTx, repayTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } = useTxContext() as TTxContext
     const [refresh, setRefresh] = useState(false)
     const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
@@ -146,14 +146,14 @@ function MorphoMarkets({
     useEffect(() => {
         if (
             (lendTx.status === 'view' || borrowTx.status === 'view') &&
-            !isConfirmationDialogOpen
+            !isLendBorrowTxDialogOpen
         ) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
     }, [
         lendTx.status,
         borrowTx.status,
-        isConfirmationDialogOpen,
+        isLendBorrowTxDialogOpen,
     ])
 
     const { data: morphoMarketData } = useMarket({
@@ -712,8 +712,8 @@ function MorphoMarkets({
                         <div className="flex flex-col gap-[12px] w-full">
                             <ConfirmationDialog
                                 disabled={disabledButton}
-                                open={isConfirmationDialogOpen}
-                                setOpen={setIsConfirmationDialogOpen}
+                                open={isLendBorrowTxDialogOpen}
+                                setOpen={setIsLendBorrowTxDialogOpen}
                                 positionType={positionType}
                                 assetDetails={{
                                     asset: isLendPositionType(positionType)
@@ -763,7 +763,7 @@ function MorphoVaults({
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx, isConfirmationDialogOpen, setIsConfirmationDialogOpen } = useTxContext() as TTxContext
+    const { lendTx, borrowTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } = useTxContext() as TTxContext
     const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
 
@@ -781,17 +781,17 @@ function MorphoVaults({
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
-        if (lendTx.status === 'view' && !isConfirmationDialogOpen) {
+        if (lendTx.status === 'view' && !isLendBorrowTxDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
 
-        if (borrowTx.status === 'view' && !isConfirmationDialogOpen) {
+        if (borrowTx.status === 'view' && !isLendBorrowTxDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
     }, [
         lendTx.status,
         borrowTx.status,
-        isConfirmationDialogOpen,
+        isLendBorrowTxDialogOpen,
     ])
 
     // fetch vault data
@@ -1012,8 +1012,8 @@ function MorphoVaults({
                                     newHealthFactor: 0.0,
                                 }}
                                 isVault={true}
-                                open={isConfirmationDialogOpen}
-                                setOpen={setIsConfirmationDialogOpen}
+                                open={isLendBorrowTxDialogOpen}
+                                setOpen={setIsLendBorrowTxDialogOpen}
                             />
                         </div>
                     )}
