@@ -187,15 +187,19 @@ export default function WithdrawAndRepayActionButton({
         getAllowance,
         providerStatus,
     } = useAaveV3Data()
-    const { withdrawTx, setWithdrawTx, repayTx, setRepayTx, lendTx, borrowTx, isWithdrawRepayTxDialogOpen, isLendBorrowTxDialogOpen, setIsWithdrawRepayTxDialogOpen } =
-        useTxContext() as TTxContext
+    const {
+        withdrawTx,
+        setWithdrawTx,
+        repayTx,
+        setRepayTx,
+        lendTx,
+        borrowTx,
+        isLendBorrowTxDialogOpen
+    } = useTxContext() as TTxContext
     const isWithdrawAction = actionType === 'withdraw'
-    const [isSelectTokenDialogOpen, setIsSelectTokenDialogOpen] =
-        useState(false)
-    // const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-    //     useState(false)
-    const [selectedTokenDetails, setSelectedTokenDetails] =
-        useState<ITokenDetails | null>(null)
+    const [isSelectTokenDialogOpen, setIsSelectTokenDialogOpen] = useState(false)
+    const [isWithdrawRepayTxDialogOpen, setIsWithdrawRepayTxDialogOpen] = useState(false)
+    const [selectedTokenDetails, setSelectedTokenDetails] = useState<ITokenDetails | null>(null)
     const { handleSwitchChain, walletAddress } = useWalletConnection()
 
     const {
@@ -525,7 +529,8 @@ export default function WithdrawAndRepayActionButton({
                 borrowTx.status === 'view'
             ) &&
             !isWithdrawRepayTxDialogOpen &&
-            !isLendBorrowTxDialogOpen) {
+            !isLendBorrowTxDialogOpen
+        ) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
     }, [

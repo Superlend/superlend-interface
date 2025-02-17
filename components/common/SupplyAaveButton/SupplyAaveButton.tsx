@@ -103,7 +103,6 @@ const SupplyAaveButton = ({
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
-    console.log(assetDetails)
 
     const supply = useCallback(async () => {
         try {
@@ -271,7 +270,7 @@ const SupplyAaveButton = ({
 
     return (
         <div className="flex flex-col gap-2">
-            {lendTx.status === 'approve' && (
+            {/* {lendTx.status === 'approve' && (
                 <CustomAlert
                     variant="info"
                     hasPrefixIcon={false}
@@ -296,7 +295,7 @@ const SupplyAaveButton = ({
                         </BodyText>
                     }
                 />
-            )}
+            )} */}
             {error && (
                 <CustomAlert
                     description={
