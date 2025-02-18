@@ -318,20 +318,10 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
         repayTx.status,
     ])
 
-    // Refresh balance when wallet address changes
-    // useEffect(() => {
-    //     setIsRefreshingErc20TokensBalanceData(true)
-    // }, [walletAddress, isWalletConnected])
-
     // Set selected borrow token details
     useEffect(() => {
         setSelectedBorrowTokenDetails(borrowTokensDetails[0])
     }, [!!borrowTokensDetails.length])
-
-    // Reset Amount
-    useEffect(() => {
-        setAmount('')
-    }, [positionType, selectedBorrowTokenDetails?.token?.address])
 
     // Filter user positions
     const [selectedPlatformDetails] = portfolioData?.platforms.filter(
@@ -608,9 +598,10 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
             <ToggleTab
                 type={positionType === "lend" ? "tab1" : "tab2"}
-                handleToggle={(positionType: TTypeToMatch) =>
+                handleToggle={(positionType: TTypeToMatch) => {
                     setPositionType(positionType === "tab1" ? "lend" : "borrow")
-                }
+                    setAmount('')
+                }}
             />
             <Card className="flex flex-col gap-[12px] p-[16px]">
                 <div className="flex items-center justify-between px-[14px]">
@@ -717,9 +708,10 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
                                     selectedItemDetails={
                                         selectedBorrowTokenDetails
                                     }
-                                    setSelectedItemDetails={
-                                        setSelectedBorrowTokenDetails
-                                    }
+                                    setSelectedItemDetails={(token) => {
+                                        setSelectedBorrowTokenDetails(token)
+                                        setAmount('')
+                                    }}
                                 />
                             )}
                         <BodyText
