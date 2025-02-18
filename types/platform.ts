@@ -143,3 +143,10 @@ export enum PlatformType {
     FLUID = 'fluid',
     MORPHO = 'morpho',
 }
+
+export enum PlatformTypeMap {
+    aaveV3 = 'Aave V3',
+    compoundV2 = 'Compound V2',
+    morpho = 'Morpho',
+    fluid = 'Fluid',
+}

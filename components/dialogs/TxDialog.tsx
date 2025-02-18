@@ -3,7 +3,7 @@
 import ImageWithDefault from '@/components/ImageWithDefault'
 import { Button } from '@/components/ui/button'
 import { TPositionType } from '@/types'
-import { PlatformType } from '@/types/platform'
+import { PlatformType, PlatformTypeMap } from '@/types/platform'
 import {
     ArrowRightIcon,
     ArrowUpRightIcon,
@@ -541,26 +541,27 @@ export function ConfirmationDialog({
                                     weight="medium"
                                     className="text-gray-600"
                                 >
-                                    {capitalizeText(assetDetails?.name)}
+                                    {PlatformTypeMap[assetDetails?.protocol_type as keyof typeof PlatformTypeMap]}
                                 </BodyText>
                             </div>
                         </div>
                     </div>
                 )}
             {/* Block 2 */}
+            <div className="flex flex-col items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
             {isShowBlock({
-                lend: false,
+                lend: isMorphoMarkets,
                 borrow: false,
             }) && (
                     <div
-                        className={`flex items-center ${isLendPositionType ? 'justify-end' : 'justify-between'} px-[24px] mb-[4px] gap-1`}
+                        className={`flex items-center justify-between w-full py-3`}
                     >
                         <BodyText
                             level="body2"
                             weight="normal"
                             className="text-gray-600"
                         >
-                            Bal:
+                            Balance
                         </BodyText>
                         <BodyText
                             level="body2"
@@ -574,8 +575,6 @@ export function ConfirmationDialog({
                         </BodyText>
                     </div>
                 )}
-            {/* Block 3 */}
-            <div className="flex flex-col items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
                 {isShowBlock({
                     lend: !isMorphoMarkets,
                     borrow: true,
@@ -837,7 +836,7 @@ export function ConfirmationDialog({
                         )}
                         {((!isLendTxInProgress && lendTx.isConfirmed) || (lendTx.status === 'lend') || (lendTx.status === 'view')) && (
                             <div className="flex items-center justify-start gap-2">
-                                <div className="w-8 h-8 bg-transparent bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
                                     <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
                                 </div>
                                 <BodyText level="body2" weight="medium" className="text-gray-800">
@@ -865,7 +864,7 @@ export function ConfirmationDialog({
                                 </BodyText>
                             </div>
                         )}
-                        {((!isLendTxInProgress && lendTx.isConfirmed) || (lendTx.status === 'view')) && (
+                        {((!isLendTxInProgress && lendTx.isConfirmed) || (lendTx.status === 'view' && lendTx.isConfirmed)) && (
                             <div className="flex items-center justify-start gap-2">
                                 <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
                                     <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
@@ -1031,7 +1030,7 @@ export function getMaxDecimalsToDisplay(tokenSymbol: string): number {
 }
 
 // HELPER FUNCTION: 6
-function getTooltipContent({
+export function getTooltipContent({
     tokenSymbol,
     tokenLogo,
     tokenName,

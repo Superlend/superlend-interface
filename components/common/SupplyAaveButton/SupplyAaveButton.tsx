@@ -309,10 +309,7 @@ const SupplyAaveButton = ({
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button
-                disabled={
-                    (isPending || isConfirming || disabled) &&
-                    lendTx.status !== 'view'
-                }
+                disabled={(isPending || isConfirming || disabled)}
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()
