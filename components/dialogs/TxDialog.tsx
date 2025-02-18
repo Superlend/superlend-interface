@@ -237,7 +237,7 @@ export function ConfirmationDialog({
         )
     }
 
-    const disableActionButton = (disabled || isTxInProgress || (!hasAcknowledgedRisk && !isLendPositionType && isHfLow()))
+    const isDisableActionButton = (disabled || isTxInProgress || (!hasAcknowledgedRisk && !isLendPositionType && isHfLow()))
 
     function getTriggerButtonText() {
         const buttonTextMap: { [key: string]: string } = {
@@ -490,7 +490,7 @@ export function ConfirmationDialog({
                                     mainImgHeight={'32'}
                                     badgeImgWidth={'12'}
                                     badgeImgHeight={'12'}
-                                    badgeCustomClass={'bottom-[-3px] right-[0px]'}
+                                    badgeCustomClass={'bottom-[-2px] right-[1px]'}
                                 />
                             }
                             content={getTooltipContent({
@@ -580,7 +580,7 @@ export function ConfirmationDialog({
                     lend: !isMorphoMarkets,
                     borrow: true,
                 }) && (
-                        <div className="flex items-center justify-between w-full py-2">
+                        <div className="flex items-center justify-between w-full py-3">
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -610,11 +610,11 @@ export function ConfirmationDialog({
                             </Badge>
                         </div>
                     )}
-                {isShowBlock({
+                {/* {isShowBlock({
                     lend: !isMorphoMarkets,
                     borrow: true,
                 }) && (
-                        <div className="flex items-center justify-between w-full py-2">
+                        <div className="flex items-center justify-between w-full py-3">
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -643,12 +643,12 @@ export function ConfirmationDialog({
                                 %
                             </Badge>
                         </div>
-                    )}
+                    )} */}
                 {isShowBlock({
                     lend: false,
                     borrow: (borrowTx.status === 'borrow' || borrowTx.status === 'view'),
                 }) && (
-                        <div className="flex items-center justify-between w-full py-[16px]">
+                        <div className="flex items-center justify-between w-full py-2">
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -688,7 +688,7 @@ export function ConfirmationDialog({
                     lend: false,
                     borrow: (borrowTx.status === 'borrow' || borrowTx.status === 'view'),
                 }) && (
-                        <div className="flex items-center justify-between w-full py-[16px]">
+                        <div className="flex items-center justify-between w-full py-2">
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -696,7 +696,7 @@ export function ConfirmationDialog({
                             >
                                 Health factor
                             </BodyText>
-                            <div className="flex flex-col items-end justify-end gap-2">
+                            <div className="flex flex-col items-end justify-end gap-0">
                                 <div className="flex items-center gap-2">
                                     <BodyText
                                         level="body2"
@@ -867,7 +867,7 @@ export function ConfirmationDialog({
                         )}
                         {((!isLendTxInProgress && lendTx.isConfirmed) || (lendTx.status === 'view')) && (
                             <div className="flex items-center justify-start gap-2">
-                                <div className="w-8 h-8 bg-transparent bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
                                     <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
                                 </div>
                                 <BodyText level="body2" weight="medium" className="text-gray-800">
@@ -897,7 +897,7 @@ export function ConfirmationDialog({
                         )}
                         {(borrowTx.status === 'view' && borrowTx.isConfirmed) && (
                             <div className="flex items-center justify-start gap-2">
-                                <div className="w-8 h-8 bg-transparent bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
                                     <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
                                 </div>
                                 <BodyText level="body2" weight="medium" className="text-gray-800">
@@ -909,7 +909,7 @@ export function ConfirmationDialog({
                 )}
             {/* Block 5 */}
             <ActionButton
-                disabled={disableActionButton}
+                disabled={isDisableActionButton}
                 handleCloseModal={handleOpenChange}
                 asset={assetDetails}
                 amount={amount}
@@ -950,7 +950,7 @@ export function ConfirmationDialog({
                 {/* X Icon to close the drawer */}
                 {closeContentButton}
                 {/* Tx in progress - Loading state UI */}
-                {txInProgressLoadingState}
+                {/* {txInProgressLoadingState} */}
                 <DrawerHeader>{contentHeader}</DrawerHeader>
                 {/* <DrawerFooter>
                     <Button>Submit</Button>

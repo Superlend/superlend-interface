@@ -6,6 +6,7 @@ interface ICustomNumberInputProps {
     setAmount: (value: string) => void
     maxAmount?: number
     maxDecimals?: number
+    [key: string]: any
 }
 
 const CustomNumberInput = ({
@@ -13,6 +14,7 @@ const CustomNumberInput = ({
     setAmount,
     maxAmount,
     maxDecimals = 18,
+    ...restProps
 }: ICustomNumberInputProps) => {
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         let value = e.target.value.replace(/[^0-9.]/g, '')
@@ -44,6 +46,7 @@ const CustomNumberInput = ({
             value={amount}
             onChange={handleChange}
             className="w-full focus:outline-none text-[24px] font-medium placeholder:text-gray-500 empty:bg-transparent p-0 truncate"
+            {...restProps}
         />
     )
 }
