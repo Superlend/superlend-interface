@@ -118,7 +118,11 @@ export const useAaveV3Data = () => {
             !uiPoolDataProviderAddress ||
             !lendingPoolAddressProvider
         ) {
-            console.log('Missing required parameters for fetchReservesData')
+            console.log('Missing required parameters for fetchReservesData', {
+                walletAddress,
+                uiPoolDataProviderAddress,
+                lendingPoolAddressProvider,
+            })
             return Promise.resolve()
         }
 
