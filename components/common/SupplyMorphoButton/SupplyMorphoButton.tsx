@@ -73,7 +73,6 @@ const SupplyMorphoButton = ({
         })
     const { address: walletAddress } = useAccount()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
-
     const amountBN = useMemo(() => {
         return amount
             ? parseUnits(amount, tokenDetails?.token?.decimals || 18)
@@ -116,6 +115,12 @@ const SupplyMorphoButton = ({
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+
+    useEffect(() => {
+        if (lendTx.status === 'lend') {
+            supply()
+        }
+    }, [lendTx.status])
 
     const supply = useCallback(async () => {
         try {

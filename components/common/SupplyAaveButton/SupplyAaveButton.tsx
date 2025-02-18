@@ -104,6 +104,12 @@ const SupplyAaveButton = ({
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
+    useEffect(() => {
+        if (lendTx.status === 'lend') {
+            supply()
+        }
+    }, [lendTx.status])
+
     const supply = useCallback(async () => {
         try {
             setLendTx((prev: TLendTx) => ({

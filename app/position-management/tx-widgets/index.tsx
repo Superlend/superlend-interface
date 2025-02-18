@@ -65,12 +65,12 @@ export const AssetTxWidget: FC = () => {
         />
     }
 
-    if (isFluidProtocol) {
-        return <FluidTxWidget
-            isLoading={isLoadingPlatformData}
-            platformData={platformData}
-        />
-    }
+    // if (isFluidProtocol) {
+    //     return <FluidTxWidget
+    //         isLoading={isLoadingPlatformData}
+    //         platformData={platformData}
+    //     />
+    // }
 
     return null;
 }

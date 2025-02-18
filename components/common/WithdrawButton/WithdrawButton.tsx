@@ -66,7 +66,15 @@ const WithdrawButton = ({
     } = useWriteContract()
     const { address: walletAddress } = useAccount()
     const { withdrawTx, setWithdrawTx } = useTxContext() as TTxContext
-    // console.log('error from useWriteContract', error)
+    // Protocol types
+    const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
+    const isAave = assetDetails?.protocol_type === PlatformType.AAVE
+    const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
+    const isMorphoVault = isMorpho && assetDetails?.vault
+    const isMorphoMarket = isMorpho && assetDetails?.market
+    const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
+    const isFluidVault = isFluid && assetDetails?.vault
+    const isFluidLend = isFluid && !assetDetails?.vault
 
     const txBtnStatus: Record<string, string> = {
         pending: 'Withdrawing...',
@@ -80,6 +88,12 @@ const WithdrawButton = ({
         useWaitForTransactionReceipt({
             hash,
         })
+
+    useEffect(() => {
+        if (withdrawTx.status === 'withdraw' && isMorphoVault) {
+            onWithdraw()
+        }
+    }, [withdrawTx.status])
 
     useEffect(() => {
         if (withdrawTx.status === 'approve') return;
@@ -439,15 +453,6 @@ const WithdrawButton = ({
     )
 
     const onWithdraw = async () => {
-        const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
-        const isAave = assetDetails?.protocol_type === PlatformType.AAVE
-        const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
-        const isMorphoVault = isMorpho && assetDetails?.vault
-        const isMorphoMarket = isMorpho && assetDetails?.market
-        const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
-        const isFluidVault = isFluid && assetDetails?.vault
-        const isFluidLend = isFluid && !assetDetails?.vault
-
         if (isCompound) {
             await withdrawCompound(assetDetails?.asset?.token?.address, amount)
             return
