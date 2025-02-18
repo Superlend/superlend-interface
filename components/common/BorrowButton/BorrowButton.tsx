@@ -89,6 +89,7 @@ const BorrowButton = ({
             setBorrowTx((prev: TBorrowTx) => ({
                 ...prev,
                 status: 'view',
+                hash,
                 isConfirmed: isConfirmed,
             }))
             logEvent('borrow_completed', {

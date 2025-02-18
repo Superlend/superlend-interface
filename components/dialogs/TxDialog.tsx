@@ -872,7 +872,7 @@ export function ConfirmationDialog({
             }) && (
                     <div className="py-1">
                         {isLendTxInProgress && (
-                            <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center justify-between gap-2 w-full">
                                 <div className="flex items-center justify-start gap-2">
                                     <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
                                     <BodyText level="body2" weight="normal" className="text-gray-600">
@@ -920,26 +920,44 @@ export function ConfirmationDialog({
             }) && (
                     <div className="py-1">
                         {isBorrowTxInProgress && (
-                            <div className="flex items-center justify-start gap-2">
-                                <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
-                                <BodyText level="body2" weight="normal" className="text-gray-600">
-                                    {borrowTx.isPending && (
-                                        'Borrow transaction in progress...'
+                            <div className="flex items-center justify-between gap-2 w-full">
+                                <div className="flex items-center justify-start gap-2">
+                                    <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
+                                    <BodyText level="body2" weight="normal" className="text-gray-600">
+                                        {borrowTx.isPending && (
+                                            'Borrow transaction in progress...'
+                                        )}
+                                        {borrowTx.isConfirming && (
+                                            'Confirming borrow transaction...'
+                                        )}
+                                    </BodyText>
+                                    {(borrowTx.hash && (borrowTx.isConfirming || borrowTx.isConfirmed)) && (
+                                        <ExternalLink href={getExplorerLink(borrowTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                            <BodyText level="body2" weight="normal" className="text-inherit">
+                                                View on explorer
+                                            </BodyText>
+                                        </ExternalLink>
                                     )}
-                                    {borrowTx.isConfirming && (
-                                        'Confirming borrow transaction...'
-                                    )}
-                                </BodyText>
+                                </div>
                             </div>
                         )}
                         {(borrowTx.status === 'view' && borrowTx.isConfirmed) && (
-                            <div className="flex items-center justify-start gap-2">
-                                <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                    <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                        <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
+                                    </div>
+                                    <BodyText level="body2" weight="medium" className="text-gray-800">
+                                        Token Borrowed
+                                    </BodyText>
                                 </div>
-                                <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    Token Borrowed
-                                </BodyText>
+                                {(borrowTx.hash && (borrowTx.isConfirming || borrowTx.isConfirmed)) && (
+                                    <ExternalLink href={getExplorerLink(borrowTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                        <BodyText level="body2" weight="normal" className="text-inherit">
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                )}
                             </div>
                         )}
                     </div>

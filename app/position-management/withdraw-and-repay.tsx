@@ -1707,7 +1707,7 @@ function ConfirmationDialog({
                                             )}
                                         </BodyText>
                                         {(repayTx.hash && repayTx.status === 'approve') &&
-                                            <ExternalLink href={getExplorerLink(repayTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                            <ExternalLink href={getExplorerLink(isWithdrawAction ? withdrawTx.hash : repayTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
                                                 <BodyText level="body2" weight="normal" className="text-inherit">
                                                     View on explorer
                                                 </BodyText>
@@ -1727,7 +1727,7 @@ function ConfirmationDialog({
                                         </BodyText>
                                     </div>
                                     {(repayTx.hash && repayTx.status === 'approve') &&
-                                        <ExternalLink href={getExplorerLink(repayTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                        <ExternalLink href={getExplorerLink(isWithdrawAction ? withdrawTx.hash : repayTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
                                             <BodyText level="body2" weight="normal" className="text-inherit">
                                                 View on explorer
                                             </BodyText>
@@ -1756,8 +1756,8 @@ function ConfirmationDialog({
                                             )}
                                         </BodyText>
                                     </div>
-                                    {(repayTx.hash && (repayTx.isConfirming || repayTx.isConfirmed)) &&
-                                        <ExternalLink href={getExplorerLink(repayTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                    {(repayTx.hash && (repayTx.isConfirming || repayTx.isConfirmed)) || (withdrawTx.hash && (withdrawTx.isConfirming || withdrawTx.isConfirmed)) &&
+                                        <ExternalLink href={getExplorerLink(isWithdrawAction ? withdrawTx.hash : repayTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
                                             <BodyText level="body2" weight="normal" className="text-inherit">
                                                 View on explorer
                                             </BodyText>
@@ -1775,8 +1775,8 @@ function ConfirmationDialog({
                                             {actionType === 'withdraw' ? 'Token Withdrawn' : 'Token Repaid'}
                                         </BodyText>
                                     </div>
-                                    {(repayTx.hash && (repayTx.isConfirming || repayTx.isConfirmed)) &&
-                                        <ExternalLink href={getExplorerLink(repayTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                    {(repayTx.hash && (repayTx.isConfirming || repayTx.isConfirmed)) || (withdrawTx.hash && (withdrawTx.isConfirming || withdrawTx.isConfirmed)) &&
+                                        <ExternalLink href={getExplorerLink(isWithdrawAction ? withdrawTx.hash : repayTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
                                             <BodyText level="body2" weight="normal" className="text-inherit">
                                                 View on explorer
                                             </BodyText>
