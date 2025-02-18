@@ -108,6 +108,12 @@ const RepayButton = ({
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
+    useEffect(() => {
+        if (repayTx.status === 'repay') {
+            repay()
+        }
+    }, [repayTx.status])
+
     const repay = useCallback(async () => {
         const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
         const isAave = assetDetails?.protocol_type === PlatformType.AAVE

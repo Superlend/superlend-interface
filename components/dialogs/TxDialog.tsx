@@ -70,6 +70,7 @@ import { getChainDetails } from '@/app/position-management/helper-functions'
 import { useAssetsDataContext } from '@/context/data-provider'
 import InfoTooltip from '../tooltips/InfoTooltip'
 import ImageWithBadge from '../ImageWithBadge'
+import ExternalLink from '../ExternalLink'
 
 // TYPES
 interface IConfirmationDialogProps {
@@ -549,32 +550,32 @@ export function ConfirmationDialog({
                 )}
             {/* Block 2 */}
             <div className="flex flex-col items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
-            {isShowBlock({
-                lend: isMorphoMarkets,
-                borrow: false,
-            }) && (
-                    <div
-                        className={`flex items-center justify-between w-full py-3`}
-                    >
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="text-gray-600"
+                {isShowBlock({
+                    lend: isMorphoMarkets,
+                    borrow: false,
+                }) && (
+                        <div
+                            className={`flex items-center justify-between w-full py-3`}
                         >
-                            Balance
-                        </BodyText>
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="text-gray-600"
-                        >
-                            {handleSmallestValue(
-                                (Number(balance) - Number(amount)).toString()
-                            )}{' '}
-                            {assetDetails?.asset?.token?.symbol}
-                        </BodyText>
-                    </div>
-                )}
+                            <BodyText
+                                level="body2"
+                                weight="normal"
+                                className="text-gray-600"
+                            >
+                                Balance
+                            </BodyText>
+                            <BodyText
+                                level="body2"
+                                weight="normal"
+                                className="text-gray-600"
+                            >
+                                {handleSmallestValue(
+                                    (Number(balance) - Number(amount)).toString()
+                                )}{' '}
+                                {assetDetails?.asset?.token?.symbol}
+                            </BodyText>
+                        </div>
+                    )}
                 {isShowBlock({
                     lend: !isMorphoMarkets,
                     borrow: true,
@@ -822,26 +823,45 @@ export function ConfirmationDialog({
             }) && (
                     <div className="py-1">
                         {(isLendTxInProgress && (lendTx.status === 'approve')) && (
-                            <div className="flex items-center justify-start gap-2">
-                                <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
-                                <BodyText level="body2" weight="normal" className="text-gray-600">
-                                    {lendTx.isPending && (
-                                        'Transaction approval in progress...'
-                                    )}
-                                    {lendTx.isConfirming && (
-                                        'Confirming approval transaction...'
-                                    )}
-                                </BodyText>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
+                                    <BodyText level="body2" weight="normal" className="text-gray-600">
+                                        {lendTx.isPending && (
+                                            'Transaction approval in progress...'
+                                        )}
+                                        {lendTx.isConfirming && (
+                                            'Confirming approval transaction...'
+                                        )}
+                                    </BodyText>
+                                </div>
+                                {(lendTx.hash && lendTx.status === 'approve') &&
+                                    <ExternalLink href={getExplorerLink(lendTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                        <BodyText level="body2" weight="normal" className="text-inherit">
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                }
                             </div>
                         )}
                         {((!isLendTxInProgress && lendTx.isConfirmed) || (lendTx.status === 'lend') || (lendTx.status === 'view')) && (
-                            <div className="flex items-center justify-start gap-2">
-                                <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                    <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                        <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
+                                    </div>
+                                    <BodyText level="body2" weight="medium" className="text-gray-800">
+                                        Token Approved
+                                    </BodyText>
                                 </div>
-                                <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    Token Approved
-                                </BodyText>
+                                {(lendTx.hash && lendTx.status === 'approve') &&
+                                    <ExternalLink
+                                        href={getExplorerLink(lendTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                        <BodyText level="body2" weight="normal" className="text-inherit">
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                }
                             </div>
                         )}
                     </div>
@@ -852,26 +872,44 @@ export function ConfirmationDialog({
             }) && (
                     <div className="py-1">
                         {isLendTxInProgress && (
-                            <div className="flex items-center justify-start gap-2">
-                                <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
-                                <BodyText level="body2" weight="normal" className="text-gray-600">
-                                    {lendTx.isPending && (
-                                        'Lend transaction in progress...'
-                                    )}
-                                    {lendTx.isConfirming && (
-                                        'Confirming lend transaction...'
-                                    )}
-                                </BodyText>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
+                                    <BodyText level="body2" weight="normal" className="text-gray-600">
+                                        {lendTx.isPending && (
+                                            'Lend transaction in progress...'
+                                        )}
+                                        {lendTx.isConfirming && (
+                                            'Confirming lend transaction...'
+                                        )}
+                                    </BodyText>
+                                </div>
+                                {(lendTx.hash && (lendTx.isConfirming || lendTx.isConfirmed)) &&
+                                    <ExternalLink href={getExplorerLink(lendTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                        <BodyText level="body2" weight="normal" className="text-inherit">
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                }
                             </div>
                         )}
                         {((!isLendTxInProgress && lendTx.isConfirmed) || (lendTx.status === 'view' && lendTx.isConfirmed)) && (
-                            <div className="flex items-center justify-start gap-2">
-                                <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                    <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                        <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
+                                    </div>
+                                    <BodyText level="body2" weight="medium" className="text-gray-800">
+                                        Token Lent
+                                    </BodyText>
                                 </div>
-                                <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    Token Lent
-                                </BodyText>
+                                {(lendTx.hash && (lendTx.isConfirming || lendTx.isConfirmed)) &&
+                                    <ExternalLink href={getExplorerLink(lendTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                        <BodyText level="body2" weight="normal" className="text-inherit">
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                }
                             </div>
                         )}
                     </div>
