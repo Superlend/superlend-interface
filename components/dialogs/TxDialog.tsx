@@ -392,8 +392,8 @@ export function ConfirmationDialog({
                                 ? 'Add Collateral'
                                 : isMorphoVault
                                     ? 'Supply to vault'
-                                    : 'Lend Collateral'
-                            : `Borrow ${assetDetails?.asset?.token?.symbol}`}
+                                    : 'Review Lend'
+                            : `Review Borrow`}
                     </HeadingText>
                     // </DialogTitle>
                 )}
@@ -506,11 +506,14 @@ export function ConfirmationDialog({
                             <HeadingText
                                 level="h3"
                                 weight="medium"
-                                className="text-gray-800"
+                                className="text-gray-800 flex items-center gap-1"
                             >
                                 {Number(amount).toFixed(
                                     decimalPlacesCount(amount)
                                 )}
+                                <span className="inline-block truncate max-w-[150px]" title={assetDetails?.asset?.token?.symbol}>
+                                    {assetDetails?.asset?.token?.symbol}
+                                </span>
                             </HeadingText>
                             <div className="flex items-center justify-start gap-1">
                                 <BodyText
@@ -528,10 +531,6 @@ export function ConfirmationDialog({
                                     weight="medium"
                                     className="text-gray-600 flex items-center gap-1"
                                 >
-                                    <span className="inline-block truncate max-w-[50px]" title={assetDetails?.asset?.token?.symbol}>
-                                        {assetDetails?.asset?.token?.symbol}
-                                    </span>
-                                    on
                                     <span className="inline-block truncate max-w-[50px]" title={capitalizeText(chainDetails?.name ?? '')}>
                                         {capitalizeText(chainDetails?.name ?? '')}
                                     </span>
@@ -825,13 +824,13 @@ export function ConfirmationDialog({
                         {(isLendTxInProgress && (lendTx.status === 'approve')) && (
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center justify-start gap-2">
-                                    <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
+                                    <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
                                     <BodyText level="body2" weight="normal" className="text-gray-600">
                                         {lendTx.isPending && (
-                                            'Transaction approval in progress...'
+                                            'Waiting for confirmation...'
                                         )}
                                         {lendTx.isConfirming && (
-                                            'Confirming approval transaction...'
+                                            'Approving...'
                                         )}
                                     </BodyText>
                                 </div>
@@ -848,10 +847,10 @@ export function ConfirmationDialog({
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center justify-start gap-2">
                                     <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                        <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
+                                        <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
                                     </div>
                                     <BodyText level="body2" weight="medium" className="text-gray-800">
-                                        Token Approved
+                                        Approval successful
                                     </BodyText>
                                 </div>
                                 {(lendTx.hash && lendTx.status === 'approve') &&
@@ -874,13 +873,13 @@ export function ConfirmationDialog({
                         {isLendTxInProgress && (
                             <div className="flex items-center justify-between gap-2 w-full">
                                 <div className="flex items-center justify-start gap-2">
-                                    <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
+                                    <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
                                     <BodyText level="body2" weight="normal" className="text-gray-600">
                                         {lendTx.isPending && (
-                                            'Lend transaction in progress...'
+                                            'Waiting for confirmation...'
                                         )}
                                         {lendTx.isConfirming && (
-                                            'Confirming lend transaction...'
+                                            'Lending...'
                                         )}
                                     </BodyText>
                                 </div>
@@ -897,10 +896,10 @@ export function ConfirmationDialog({
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center justify-start gap-2">
                                     <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                        <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
+                                        <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
                                     </div>
                                     <BodyText level="body2" weight="medium" className="text-gray-800">
-                                        Token Lent
+                                        Lend successful
                                     </BodyText>
                                 </div>
                                 {(lendTx.hash && (lendTx.isConfirming || lendTx.isConfirmed)) &&
@@ -920,35 +919,35 @@ export function ConfirmationDialog({
             }) && (
                     <div className="py-1">
                         {isBorrowTxInProgress && (
-                            <div className="flex items-center justify-between gap-2 w-full">
+                            <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center justify-start gap-2">
-                                    <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
+                                    <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
                                     <BodyText level="body2" weight="normal" className="text-gray-600">
                                         {borrowTx.isPending && (
-                                            'Borrow transaction in progress...'
+                                            'Waiting for confirmation...'
                                         )}
                                         {borrowTx.isConfirming && (
-                                            'Confirming borrow transaction...'
+                                            'Borrowing...'
                                         )}
                                     </BodyText>
-                                    {(borrowTx.hash && (borrowTx.isConfirming || borrowTx.isConfirmed)) && (
-                                        <ExternalLink href={getExplorerLink(borrowTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
-                                            <BodyText level="body2" weight="normal" className="text-inherit">
-                                                View on explorer
-                                            </BodyText>
-                                        </ExternalLink>
-                                    )}
                                 </div>
+                                {(borrowTx.hash && (borrowTx.isConfirming || borrowTx.isConfirmed)) && (
+                                    <ExternalLink href={getExplorerLink(borrowTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                        <BodyText level="body2" weight="normal" className="text-inherit">
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                )}
                             </div>
                         )}
                         {(borrowTx.status === 'view' && borrowTx.isConfirmed) && (
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center justify-start gap-2">
                                     <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                        <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
+                                        <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
                                     </div>
                                     <BodyText level="body2" weight="medium" className="text-gray-800">
-                                        Token Borrowed
+                                        Token borrowed
                                     </BodyText>
                                 </div>
                                 {(borrowTx.hash && (borrowTx.isConfirming || borrowTx.isConfirmed)) && (

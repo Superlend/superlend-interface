@@ -85,7 +85,7 @@ const RepayButton = ({
                 : 'Repaying token...',
         confirming: 'Confirming...',
         success: 'Close',
-        default: repayTx.status === 'approve' ? 'Approve token' : 'Repay token',
+        default: repayTx.status === 'approve' ? 'Start repaying' : 'Repay token',
     }
 
     const getTxButtonText = (

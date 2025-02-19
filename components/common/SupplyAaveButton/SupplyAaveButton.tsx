@@ -81,7 +81,7 @@ const SupplyAaveButton = ({
                 : 'Lending token...',
         confirming: 'Confirming...',
         success: 'Close',
-        default: lendTx.status === 'approve' ? 'Approve token' : 'Lend token',
+        default: lendTx.status === 'approve' ? 'Start lending' : 'Lend token',
     }
 
     const getTxButtonText = (

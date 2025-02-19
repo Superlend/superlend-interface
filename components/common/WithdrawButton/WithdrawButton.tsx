@@ -81,7 +81,7 @@ const WithdrawButton = ({
         confirming: 'Confirming...',
         success: 'Close',
         error: 'Close',
-        default: withdrawTx.status === 'approve' ? 'Approve token' : 'Withdraw',
+        default: 'Start withdrawing',
     }
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =

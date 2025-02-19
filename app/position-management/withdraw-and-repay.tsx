@@ -1423,11 +1423,14 @@ function ConfirmationDialog({
                                 <HeadingText
                                     level="h3"
                                     weight="medium"
-                                    className="text-gray-800"
+                                    className="text-gray-800 flex items-center gap-1"
                                 >
                                     {Number(amount).toFixed(
                                         decimalPlacesCount(amount)
                                     )}
+                                    <span className="inline-block truncate max-w-[150px]" title={assetDetails?.asset?.token?.symbol}>
+                                        {assetDetails?.asset?.token?.symbol}
+                                    </span>
                                 </HeadingText>
                                 <div className="flex items-center justify-start gap-1">
                                     <BodyText
@@ -1445,10 +1448,6 @@ function ConfirmationDialog({
                                         weight="medium"
                                         className="text-gray-600 flex items-center gap-1"
                                     >
-                                        <span className="inline-block truncate max-w-[50px]" title={assetDetails?.asset?.token?.symbol}>
-                                            {assetDetails?.asset?.token?.symbol}
-                                        </span>
-                                        on
                                         <span className="inline-block truncate max-w-[50px]" title={capitalizeText(chainDetails?.name ?? '')}>
                                             {capitalizeText(chainDetails?.name ?? '')}
                                         </span>
@@ -1695,35 +1694,35 @@ function ConfirmationDialog({
                 }) && (
                         <div className="py-1">
                             {((isRepayTxInProgress && (repayTx.status === 'approve')) || (isWithdrawTxInProgress && (withdrawTx.status === 'approve'))) && (
-                                <div className="flex items-center justify-start gap-2">
+                                <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center justify-start gap-2">
-                                        <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
+                                        <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
                                         <BodyText level="body2" weight="normal" className="text-gray-600">
                                             {(repayTx.isPending || withdrawTx.isPending) && (
-                                                'Transaction approval in progress...'
+                                                'Waiting for confirmation...'
                                             )}
                                             {(repayTx.isConfirming || withdrawTx.isConfirming) && (
-                                                'Confirming approval transaction...'
+                                                'Approving...'
                                             )}
                                         </BodyText>
-                                        {(repayTx.hash && repayTx.status === 'approve') &&
-                                            <ExternalLink href={getExplorerLink(isWithdrawAction ? withdrawTx.hash : repayTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
-                                                <BodyText level="body2" weight="normal" className="text-inherit">
-                                                    View on explorer
-                                                </BodyText>
-                                            </ExternalLink>
-                                        }
                                     </div>
+                                    {(repayTx.hash && repayTx.status === 'approve') &&
+                                        <ExternalLink href={getExplorerLink(isWithdrawAction ? withdrawTx.hash : repayTx.hash, assetDetails?.chain_id || assetDetails?.platform?.chain_id)}>
+                                            <BodyText level="body2" weight="normal" className="text-inherit">
+                                                View on explorer
+                                            </BodyText>
+                                        </ExternalLink>
+                                    }
                                 </div>
                             )}
                             {(((!isRepayTxInProgress && repayTx.isConfirmed) || (repayTx.status === 'repay') || (repayTx.status === 'view')) || ((!isWithdrawTxInProgress && withdrawTx.isConfirmed) || (withdrawTx.status === 'withdraw') || (withdrawTx.status === 'view'))) && (
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center justify-start gap-2">
                                         <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                            <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
+                                            <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
                                         </div>
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
-                                            Token Approved
+                                            Token approved
                                         </BodyText>
                                     </div>
                                     {(repayTx.hash && repayTx.status === 'approve') &&
@@ -1744,15 +1743,15 @@ function ConfirmationDialog({
                 }) && (
                         <div className="py-1">
                             {(isRepayTxInProgress || (isWithdrawTxInProgress && (withdrawTx.status === 'withdraw' || withdrawTx.status === 'view'))) && (
-                                <div className="flex items-center justify-start gap-2">
+                                <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center justify-start gap-2">
-                                        <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
+                                        <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
                                         <BodyText level="body2" weight="normal" className="text-gray-600">
                                             {(withdrawTx.isPending || repayTx.isPending) && (
-                                                `${actionType === 'withdraw' ? 'Withdraw' : 'Repay'} transaction in progress...`
+                                                `Waiting for confirmation...`
                                             )}
                                             {(withdrawTx.isConfirming || repayTx.isConfirming) && (
-                                                `Confirming ${actionType === 'withdraw' ? 'withdraw' : 'repay'} transaction...`
+                                                `${actionType === 'withdraw' ? 'Withdrawing' : 'Repaying'}...`
                                             )}
                                         </BodyText>
                                     </div>
@@ -1769,10 +1768,10 @@ function ConfirmationDialog({
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center justify-start gap-2">
                                         <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                            <Check className="w-5 h-5 stroke-[#00AD31]" strokeWidth={1.5} />
+                                            <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
                                         </div>
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
-                                            {actionType === 'withdraw' ? 'Token Withdrawn' : 'Token Repaid'}
+                                            {actionType === 'withdraw' ? 'Withdraw successful' : 'Repay successful'}
                                         </BodyText>
                                     </div>
                                     {(repayTx.hash && (repayTx.isConfirming || repayTx.isConfirmed)) || (withdrawTx.hash && (withdrawTx.isConfirming || withdrawTx.isConfirmed)) &&

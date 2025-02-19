@@ -61,7 +61,7 @@ const SupplyERC20CompoundButton = ({
         pending: lastTx === 'mint' ? 'Approving token...' : 'Lending token...',
         confirming: 'Confirming...',
         success: 'View position',
-        default: lastTx === 'mint' ? 'Approve token' : 'Lend token',
+        default: lastTx === 'mint' ? 'Start lending' : 'Lend token',
     }
 
     const getTxButtonText = (

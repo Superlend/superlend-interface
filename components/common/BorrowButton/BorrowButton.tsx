@@ -52,7 +52,7 @@ const txBtnStatus: Record<string, string> = {
     pending: 'Borrowing...',
     confirming: 'Confirming...',
     success: 'Close',
-    default: 'Borrow',
+    default: 'Start borrowing',
 }
 
 const BorrowButton = ({

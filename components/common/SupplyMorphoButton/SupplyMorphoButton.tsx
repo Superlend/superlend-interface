@@ -88,12 +88,12 @@ const SupplyMorphoButton = ({
         success: isMorphoMarkets ? 'Go To Borrow' : 'Close',
         default:
             lendTx.status === 'approve'
-                ? 'Approve token'
+                ? (isMorphoMarkets ? 'Start adding collateral' : 'Start supplying')
                 : isMorphoMarkets
                     ? 'Add Collateral'
                     : isMorphoVault
                         ? 'Supply to vault'
-                        : 'Lend Collateral',
+                        : 'Start lending',
     }
 
     const getTxButtonText = (

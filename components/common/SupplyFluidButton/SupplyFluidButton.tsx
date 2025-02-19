@@ -88,7 +88,7 @@ const SupplyFluidButton = ({
         success: isFluidVaults ? 'Go To Borrow' : 'Close',
         default:
             lendTx.status === 'approve'
-                ? 'Approve token'
+                ? (isFluidVaults ? 'Start adding collateral' : 'Start supplying')
                 : isFluidVaults
                     ? 'Add Collateral'
                     : isFluidLend
