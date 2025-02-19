@@ -34,7 +34,7 @@ export default function DiscoverOpportunities() {
 
     // Protocol Identifiers
     const opportunity1ProtocolIdentifier = "0xf80e34148c541f12a9eec9607c3b5da7ae94dee4c8b33d3a0c1b8b0d13b6f8e8";
-    const opportunity2ProtocolIdentifier = "0x64625634e84e23bf1a2a52d52bc2ed4feed06c4bbdbae1b974d5593d46ff8b4c";
+    const opportunity2ProtocolIdentifier = "0x67c86ad1370e99a0e693761ab8f156e4f42dd52ee22db2cff379571549dd89b5";
     const opportunity3ProtocolIdentifier = "0x027cb6a3b64db87be63dc9a3ee7fa0becb9344829e996c4660ac9cadd236bd38";
 
     // Platform Data
