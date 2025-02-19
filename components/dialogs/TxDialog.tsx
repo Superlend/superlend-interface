@@ -947,7 +947,7 @@ export function ConfirmationDialog({
                                         <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
                                     </div>
                                     <BodyText level="body2" weight="medium" className="text-gray-800">
-                                        Token borrowed
+                                        Borrow successful
                                     </BodyText>
                                 </div>
                                 {(borrowTx.hash && (borrowTx.isConfirming || borrowTx.isConfirmed)) && (
