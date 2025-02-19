@@ -24,7 +24,7 @@ export default function DiscoverOpportunities() {
     const { logEvent } = useAnalytics();
     // Token Addresses
     const opportunity1TokenAddress = "0xfc24f770f94edbca6d6f885e12d4317320bcb401";
-    const opportunity2TokenAddress = "0x4200000000000000000000000000000000000006";
+    const opportunity2TokenAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
     const opportunity3TokenAddress = "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
 
     // Chain IDs
@@ -34,7 +34,7 @@ export default function DiscoverOpportunities() {
 
     // Protocol Identifiers
     const opportunity1ProtocolIdentifier = "0xf80e34148c541f12a9eec9607c3b5da7ae94dee4c8b33d3a0c1b8b0d13b6f8e8";
-    const opportunity2ProtocolIdentifier = "0x7241a58e43dff76b51b74cb4a2b5c6cad847f3f505fbe88618c122206e435ad8";
+    const opportunity2ProtocolIdentifier = "0x64625634e84e23bf1a2a52d52bc2ed4feed06c4bbdbae1b974d5593d46ff8b4c";
     const opportunity3ProtocolIdentifier = "0x027cb6a3b64db87be63dc9a3ee7fa0becb9344829e996c4660ac9cadd236bd38";
 
     // Platform Data
@@ -53,11 +53,15 @@ export default function DiscoverOpportunities() {
 
     // Borrow Rate
     const asset1BorrowRate = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)?.variable_borrow_apy
-    const asset2APY = opportunity2PlatformData.assets.find((asset: any) => asset.token.address === opportunity2TokenAddress)?.variable_borrow_apy
+    const asset2APY = opportunity2PlatformData.assets.find((asset: any) => asset.token.address === opportunity2TokenAddress)?.supply_apy
     // Description
     const description1 = `${asset1BorrowRate?.toFixed(2)}% Borrow Rate`
     const description2 = `Upto ${asset2APY?.toFixed(2)}% APY`
     // const description3 = opportunity3PlatformData?.apy
+
+    function getRedirectLink(tokenAddress: string, protocolIdentifier: string, chainId: number, positionType: string) {
+        return `/position-management?token=${tokenAddress}&protocol_identifier=${protocolIdentifier}&chain_id=${chainId}&position_type=${positionType}`
+    }
 
     // Opportunities
     const opportunities = [
@@ -70,18 +74,18 @@ export default function DiscoverOpportunities() {
             description: description1,
             tokenImage: `${imageBaseUrl}/8453-weth.svg`,
             platformImage: `${imageBaseUrl}/superlend.svg`,
-            link: "/position-management?token=0xfc24f770f94edbca6d6f885e12d4317320bcb401&protocol_identifier=0xf80e34148c541f12a9eec9607c3b5da7ae94dee4c8b33d3a0c1b8b0d13b6f8e8&chain_id=42793&position_type=borrow"
+            link: getRedirectLink(opportunity1TokenAddress, opportunity1ProtocolIdentifier, opportunity1ChainId, "borrow")
         },
         {
             id: 2,
-            label: "What's New?",
-            tokenSymbol: "wsuperOETHb",
+            label: "Automated Strategy",
+            tokenSymbol: "Seamless USDC",
             platformName: "Morpho",
             chainName: "Base",
             description: description2,
-            tokenImage: `${morphoImageBaseUrl}/wsuperoethb.svg`,
+            tokenImage: `${morphoImageBaseUrl}/usdc.svg`,
             platformImage: `${imageBaseUrl}/morpho-logo.svg`,
-            link: "/position-management?token=0x4200000000000000000000000000000000000006&protocol_identifier=0x7241a58e43dff76b51b74cb4a2b5c6cad847f3f505fbe88618c122206e435ad8&chain_id=8453&position_type=lend"
+            link: getRedirectLink(opportunity2TokenAddress, opportunity2ProtocolIdentifier, opportunity2ChainId, "lend")
         },
         {
             id: 3,
@@ -92,7 +96,7 @@ export default function DiscoverOpportunities() {
             description: "+ 25% APY in SHIFT tokens",
             tokenImage: `${morphoImageBaseUrl}/wusdl.svg`,
             platformImage: `${imageBaseUrl}/morpho-logo.svg`,
-            link: "/position-management?token=0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559&protocol_identifier=0x027cb6a3b64db87be63dc9a3ee7fa0becb9344829e996c4660ac9cadd236bd38&chain_id=1&position_type=lend"
+            link: getRedirectLink(opportunity3TokenAddress, opportunity3ProtocolIdentifier, opportunity3ChainId, "lend")
         },
     ]
 

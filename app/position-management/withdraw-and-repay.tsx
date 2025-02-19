@@ -1682,7 +1682,7 @@ function getTxInProgressText({
 
     if (isPending) {
         textByStatus = {
-            approve: `Approve ${(isMorphoVaults && actionType === 'withdraw') ? 'withdrawl of' : actionType === 'repay' ? 'repaying of' : 'spending'} ${formattedText} from your wallet`,
+            approve: `Approve ${(isMorphoVaults && actionType === 'withdraw') ? 'withdraw of' : actionType === 'repay' ? 'repaying of' : 'spending'} ${formattedText} from your wallet`,
             repay: `Approve transaction for repaying ${formattedText} from your wallet`,
             withdraw: `Approve transaction for withdrawing ${formattedText} from your wallet`,
         }
