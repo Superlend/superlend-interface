@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect } from 'react'
 import { Context as ReactContext } from 'react'
 import * as amplitude from '@amplitude/analytics-browser'
+import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
 
 type AmplitudeAnalyticsProviderProps = { children: ReactNode } & {
     apiKey: string
@@ -24,7 +25,16 @@ export const AmplitudeAnalyticsProvider = ({
     children,
 }: AmplitudeAnalyticsProviderProps) => {
     useEffect(() => {
-        amplitude.init(apiKey)
+        const sessionReplay = sessionReplayPlugin({
+            forceSessionTracking: true,
+            sampleRate: 0.5,
+        })
+        amplitude.add(sessionReplay)
+        amplitude.init(apiKey, {
+            defaultTracking: {
+                sessions: true
+            }
+        })
     }, [apiKey])
 
     return (
