@@ -174,7 +174,7 @@ const SupplyMorphoButton = ({
 
                 writeContractAsync({
                     address: BUNDLER_ADDRESS_MORPHO[
-                        assetDetails.chainId
+                        assetDetails.chain_id
                     ] as `0x${string}`,
                     abi: MORPHO_BUNDLER_ABI,
                     functionName: 'multicall',
@@ -406,7 +406,7 @@ const SupplyMorphoButton = ({
                 functionName: 'approve',
                 args: [
                     assetDetails.isVault
-                        ? BUNDLER_ADDRESS_MORPHO[assetDetails.chainId]
+                        ? BUNDLER_ADDRESS_MORPHO[assetDetails.chain_id]
                         : platform.core_contract,
                     parseUnits(amount, assetDetails.asset.token.decimals),
                 ],
