@@ -1,4 +1,4 @@
-import { providers as ethersProviders } from 'ethers'
+import { BigNumber, providers as ethersProviders } from 'ethers'
 import { useEffect, useState } from 'react'
 import {
     ContractCallContext,
@@ -92,6 +92,23 @@ export const useEthersMulticall = (walletAddress: string | undefined) => {
         })
     }
 
+    const fetchNativeBalance = (
+        address: string,
+        chainId: number
+    ): Promise<BigNumber> => {
+        const provider = providers[chainId]
+        if (!provider) return undefined as any
+
+        return new Promise(async (resolve, reject) => {
+            try {
+                const result = await provider.getBalance(address)
+                resolve(result)
+            } catch (error) {
+                reject(error)
+            }
+        })
+    }
+
     useEffect(() => {
         if (!Object.keys(providers).length || !Object.keys(multicall).length) {
             initalizeEthMulticall()
@@ -104,5 +121,6 @@ export const useEthersMulticall = (walletAddress: string | undefined) => {
         multicall,
         setMulticall,
         ethMulticall,
+        fetchNativeBalance,
     }
 }

@@ -42,7 +42,8 @@ import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
 import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
-
+import FLUID_LEND_ABI from '@/data/abi/fluidLendABI.json'
+import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 interface IWithdrawButtonProps {
     disabled: boolean
     assetDetails: any
@@ -65,20 +66,34 @@ const WithdrawButton = ({
     } = useWriteContract()
     const { address: walletAddress } = useAccount()
     const { withdrawTx, setWithdrawTx } = useTxContext() as TTxContext
-    // console.log('error from useWriteContract', error)
+    // Protocol types
+    const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
+    const isAave = assetDetails?.protocol_type === PlatformType.AAVE
+    const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
+    const isMorphoVault = isMorpho && assetDetails?.vault
+    const isMorphoMarket = isMorpho && assetDetails?.market
+    const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
+    const isFluidVault = isFluid && assetDetails?.vault
+    const isFluidLend = isFluid && !assetDetails?.vault
 
     const txBtnStatus: Record<string, string> = {
         pending: 'Withdrawing...',
         confirming: 'Confirming...',
         success: 'Close',
         error: 'Close',
-        default: withdrawTx.status === 'approve' ? 'Approve token' : 'Withdraw',
+        default: 'Start withdrawing',
     }
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
             hash,
         })
+
+    useEffect(() => {
+        if (withdrawTx.status === 'withdraw' && isMorphoVault) {
+            onWithdraw()
+        }
+    }, [withdrawTx.status])
 
     useEffect(() => {
         if (withdrawTx.status === 'approve') return;
@@ -357,12 +372,92 @@ const WithdrawButton = ({
         []
     )
 
+    const withdrawFluidLend = useCallback(
+        async (assetDetails: any, amount: string) => {
+            let amountToWithdraw = parseUnits(
+                amount,
+                assetDetails.asset.token.decimals
+            )
+
+            const maxSharesBurn = amountToWithdraw.mul(10050).div(10000) // 0.5% slippage
+
+            logEvent('withdraw_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
+
+            writeContractAsync({
+                address: assetDetails.core_contract as `0x${string}`,
+                abi: FLUID_LEND_ABI,
+                functionName: 'withdraw',
+                args: [
+                    amountToWithdraw,         // assets_: uint256
+                    walletAddress,            // receiver_: address 
+                    walletAddress,            // owner_: address
+                    maxSharesBurn          // maxSharesBurn_: uint256
+                ],
+            }).catch((error) => {
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    // errorMessage: error.message || 'Something went wrong',
+                }))
+            })
+        },
+        []
+    )
+
+    const withdrawFluidVault = useCallback(
+        async (assetDetails: any, amount: string) => {
+            let amountToWithdraw = parseUnits(
+                amount,
+                assetDetails.asset.token.decimals
+            )
+
+            const maxSharesBurn = amountToWithdraw.mul(10050).div(10000) // 0.5% slippage
+
+            logEvent('withdraw_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
+
+            writeContractAsync({
+                address: assetDetails.core_contract as `0x${string}`,
+                abi: FLUID_VAULTS_ABI,
+                functionName: 'withdraw',
+                args: [
+                    amountToWithdraw,         // assets_: uint256
+                    walletAddress,            // receiver_: address 
+                    walletAddress,            // owner_: address
+                    maxSharesBurn          // maxSharesBurn_: uint256
+                ],
+            }).catch((error) => {
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    // errorMessage: error.message || 'Something went wrong',
+                }))
+            })
+        },
+        []
+    )
+
     const onWithdraw = async () => {
-        if (assetDetails?.protocol_type === PlatformType.COMPOUND) {
+        if (isCompound) {
             await withdrawCompound(assetDetails?.asset?.token?.address, amount)
             return
         }
-        if (assetDetails?.protocol_type === PlatformType.AAVE) {
+        if (isAave) {
             await withdrawAave(
                 assetDetails,
                 POOL_AAVE_MAP[assetDetails?.platform_name as PlatformValue],
@@ -372,14 +467,23 @@ const WithdrawButton = ({
             )
             return
         }
-        if (assetDetails?.protocol_type === PlatformType.MORPHO && assetDetails?.vault) {
+        if (isMorphoVault) {
             await withdrawMorphoVault(assetDetails, amount)
             return
         }
 
-
-        if (assetDetails?.protocol_type === PlatformType.MORPHO && assetDetails?.market) {
+        if (isMorphoMarket) {
             await withdrawMorphoMarket(assetDetails, amount)
+            return
+        }
+
+        if (isFluidLend) {
+            await withdrawFluidLend(assetDetails, amount)
+            return
+        }
+
+        if (isFluidVault) {
+            await withdrawFluidVault(assetDetails, amount)
             return
         }
     }
@@ -399,10 +503,7 @@ const WithdrawButton = ({
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={
-                    (isPending || isConfirming || disabled) &&
-                    withdrawTx.status !== 'view'
-                }
+                disabled={(isPending || isConfirming || disabled)}
                 onClick={() => {
                     if (withdrawTx.status === 'approve') {
                         onApproveWithdrawMorphoVault(assetDetails, amount)

@@ -45,7 +45,7 @@ export default function PositionDetails() {
     const chain_id = searchParams.get('chain_id') || 0
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     // const { address: walletAddress } = useAccount()
-    const { isWalletConnected, walletAddress } = useWalletConnection()
+    const { isWalletConnected, walletAddress, isConnectingWallet } = useWalletConnection()
     const { lendTx, borrowTx, setWithdrawTx } = useTxContext()
     const [refresh, setRefresh] = useState(false)
 
@@ -93,16 +93,16 @@ export default function PositionDetails() {
         }
     }, [refresh])
 
-    const isLoading = isLoadingPortfolioData || isLoadingPlatformData
+    const isLoading = isLoadingPortfolioData || isLoadingPlatformData || isConnectingWallet
 
     const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
         platformData?.platform?.protocol_type
     )
-    const isAaveV3Protocol =
-        platformData?.platform?.protocol_type === PlatformType.AAVE
-    const isMorphoProtocol =
-        platformData?.platform?.protocol_type === PlatformType.MORPHO
-    const isMorphoVaultsProtocol = isMorphoProtocol && platformData?.platform?.isVault
+    const isAaveV3Protocol = platformData?.platform?.protocol_type === PlatformType.AAVE
+    const isMorphoProtocol = platformData?.platform?.protocol_type === PlatformType.MORPHO
+    const isMorphoVaults = isMorphoProtocol && platformData?.platform?.isVault
+    const isFluidProtocol = platformData?.platform?.protocol_type === PlatformType.FLUID
+    const isFluidVaults = isFluidProtocol && platformData?.platform?.isVault
 
     const isPolygonChain = Number(chain_id) === 137
 
@@ -308,14 +308,8 @@ export default function PositionDetails() {
         assetDetails,
     }
 
-    const isMorpho =
-        platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() ===
-        PlatformType.MORPHO
-    const isVault = platformData?.platform?.isVault
-    const isMorphoVaults = isMorpho && isVault
-
-    const isShowWithdrawButton = (isAaveV3Protocol || isMorphoVaults || isMorpho)
-    const isShowRepayButton = (isAaveV3Protocol || isMorpho)
+    const isShowWithdrawButton = (isAaveV3Protocol || isMorphoProtocol || isFluidProtocol)
+    const isShowRepayButton = (isAaveV3Protocol || isMorphoProtocol || isFluidVaults)
 
     const morphoVaultsLiquidationPriceTooltipText =
         'Liquidation is not applicable, as Morpho vaults are designed to only earn & not borrow.'
@@ -324,7 +318,7 @@ export default function PositionDetails() {
     const liquidationPriceValueGeneralTooltipText =
         'You do not have any borrows'
     const liquidationPriceValueTooltipText =
-        isMorpho && isVault
+        isMorphoVaults
             ? morphoVaultsLiquidationPriceTooltipText
             : liquidationPriceValueGeneralTooltipText
     const liquidationPriceLabelTooltipText =
@@ -583,7 +577,7 @@ export default function PositionDetails() {
                                         )}
                                     />
                                     {/* Your borrowed amount */}
-                                    {!(isMorpho && isVault) && (
+                                    {!(isMorphoVaults) && (
                                         <HeadingText
                                             level="h3"
                                             weight="medium"
@@ -621,7 +615,7 @@ export default function PositionDetails() {
                                         </HeadingText>
                                     )}
                                     {/* Borrowed amount for Morpho vaults */}
-                                    {isMorpho && isVault && (
+                                    {isMorphoVaults && (
                                         <InfoTooltip
                                             label={
                                                 <BodyText

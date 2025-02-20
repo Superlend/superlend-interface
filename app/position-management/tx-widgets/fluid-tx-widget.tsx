@@ -1,11 +1,10 @@
 'use client'
 
-import LendBorrowToggle from '@/components/LendBorrowToggle'
+import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { BodyText } from '@/components/ui/typography'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
-import useGetPlatformData from '@/hooks/useGetPlatformData'
 import {
     abbreviateNumber,
     checkDecimalPlaces,
@@ -18,7 +17,7 @@ import { LoaderCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
-import { ConfirmationDialog, handleSmallestValue } from './lend-and-borrow'
+import { ConfirmationDialog, handleSmallestValue } from '@/components/dialogs/TxDialog'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import { Button } from '@/components/ui/button'
@@ -39,68 +38,324 @@ import {
     useVaultUser,
 } from '@morpho-org/blue-sdk-wagmi'
 import { formatUnits } from 'viem'
-import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import ExternalLink from '@/components/ExternalLink'
-import { TTxContext, useTxContext } from '@/context/tx-provider'
-import { ChainId } from '@/types/chain'
-import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { TLendTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
-// import { modal } from '@/context'
 
-export default function LendAndBorrowAssetsMorpho() {
+export default function MorphoTxWidget({
+    isLoading: isLoadingPlatformData,
+    platformData
+}: {
+    isLoading: boolean
+    platformData: TPlatform
+}) {
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
-    const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const { walletAddress, handleSwitchChain } = useWalletConnection()
 
-    // [API_CALL: GET] - Get Platform data
-    const {
-        data: platformData,
-        isLoading: isLoadingPlatformData,
-        isError: isErrorPlatformData,
-    } = useGetPlatformData({
-        protocol_identifier,
-        chain_id: Number(chain_id),
-    })
-
-    const isMorphoProtocol = platformData?.platform?.protocol_type === PlatformType.MORPHO
-    const isMorphoMarketsProtocol = isMorphoProtocol && !platformData?.platform?.isVault
-    const isMorphoVaultsProtocol = isMorphoProtocol && platformData?.platform?.isVault
+    const isFluidProtocol = platformData?.platform?.protocol_type === PlatformType.FLUID
+    const isFluidLend = isFluidProtocol && !platformData?.platform?.isVault
+    const isFluidVaults = isFluidProtocol && platformData?.platform?.isVault
 
     // Switch chain
     useEffect(() => {
-        if (!!walletAddress && isMorphoProtocol) {
+        if (!!walletAddress) {
             handleSwitchChain(Number(chain_id))
         }
     }, [walletAddress, Number(chain_id)])
 
-    if (!isMorphoMarketsProtocol && !isMorphoVaultsProtocol) {
+    if (!isFluidLend && !isFluidVaults) {
         return null
-    } else if (isMorphoMarketsProtocol) {
+    }
+
+    // Fluid Lend
+    if (isFluidLend) {
         return (
-            <LendAndBorrowAssetsMorphoMarkets
+            <FluidLend
                 platformData={platformData}
                 walletAddress={walletAddress as `0x${string}`}
-                isLoadingPlatformData={isLoadingPlatformData}
-            />
-        )
-    } else if (isMorphoVaultsProtocol) {
-        return (
-            <LendAndBorrowAssetsMorphoVaults
-                platformData={platformData}
-                walletAddress={walletAddress as `0x${string}`}
-                isLoadingPlatformData={isLoadingPlatformData}
             />
         )
     }
+
+    // Fluid Vaults
+    // if (isFluidVaults) {
+    //     return (
+    //         <FluidVaults
+    //             platformData={platformData}
+    //             walletAddress={walletAddress as `0x${string}`}
+    //             isLoadingPlatformData={isLoadingPlatformData}
+    //         />
+    //     )
+    // }
+
+    return null;
 }
 
 function isLendPositionType(positionType: TPositionType) {
     return positionType === 'lend'
 }
 
-function LendAndBorrowAssetsMorphoMarkets({
+function FluidLend({
+    platformData,
+    walletAddress
+}: {
+    platformData: TPlatform
+    walletAddress: `0x${string}`
+}) {
+    const searchParams = useSearchParams()
+    const chain_id = searchParams.get('chain_id') || '1'
+    const [positionType, setPositionType] = useState<TPositionType>('lend')
+    const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
+        useState<TPlatformAsset | null>(null)
+    const { lendTx, setLendTx, borrowTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } = useTxContext() as TTxContext
+    const { isWalletConnected } = useWalletConnection()
+    const [amount, setAmount] = useState('')
+    const positionTypeParam: TPositionType = 'lend'
+
+    useEffect(() => {
+        setPositionType(positionTypeParam)
+    }, [positionTypeParam])
+
+    useEffect(() => {
+        if (platformData?.assets[0]) {
+            setSelectedAssetTokenDetails(platformData?.assets[0])
+        }
+    }, [platformData, setSelectedAssetTokenDetails])
+
+    // Refresh balance when view(success) UI after supplying/borrowing an asset
+    useEffect(() => {
+        if (lendTx.status === 'view' && !isLendBorrowTxDialogOpen) {
+            setIsRefreshingErc20TokensBalanceData(true)
+        }
+
+        if (borrowTx.status === 'view' && !isLendBorrowTxDialogOpen) {
+            setIsRefreshingErc20TokensBalanceData(true)
+        }
+    }, [
+        lendTx.status,
+        borrowTx.status,
+        isLendBorrowTxDialogOpen,
+    ])
+
+    const {
+        erc20TokensBalanceData,
+        isLoading: isLoadingErc20TokensBalanceData,
+        // isRefreshing: isRefreshingErc20TokensBalanceData,
+        setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
+    } = useUserTokenBalancesContext()
+
+    const balance = (
+        erc20TokensBalanceData[Number(chain_id)]?.[
+            (selectedAssetTokenDetails?.token?.address?.toLowerCase() ?? '').toLowerCase()
+        ]?.balanceFormatted ?? 0
+    ).toString()
+
+    const isLoading = isLoadingErc20TokensBalanceData
+
+    // console.log("Selected asset token details", selectedAssetTokenDetails)
+
+    // console.log("User token balances data", balance)
+
+    function getMaxDecimalsToDisplay(): number {
+        return selectedAssetTokenDetails?.token?.symbol
+            .toLowerCase()
+            .includes('btc') ||
+            selectedAssetTokenDetails?.token?.symbol
+                .toLowerCase()
+                .includes('eth')
+            ? 6
+            : 2
+    }
+
+    const isDisabledMaxBtn = () => {
+        return (
+            Number(amount) === Number(balance) ||
+            !isWalletConnected ||
+            isLoadingErc20TokensBalanceData ||
+            Number(balance) <= 0
+        )
+    }
+
+    const toManyDecimals = useMemo(() => {
+        if (selectedAssetTokenDetails) {
+            return checkDecimalPlaces(
+                amount,
+                selectedAssetTokenDetails?.token?.decimals ?? 0
+            )
+        }
+        return false
+    }, [selectedAssetTokenDetails, amount])
+
+    const lendErrorMessage = useMemo(() => {
+        if (amount === '') {
+            return null
+        }
+        if (Number(amount) > Number(balance) || Number(balance) <= 0) {
+            return 'You do not have enough balance'
+        } else if (toManyDecimals) {
+            return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
+        } else {
+            return null
+        }
+    }, [amount, balance, toManyDecimals])
+
+    const disabledButton: boolean = useMemo(
+        () =>
+            Number(amount) > Number(balance) ||
+            Number(amount) <= 0 ||
+            toManyDecimals,
+        [amount, balance, toManyDecimals]
+    )
+
+    return (
+        <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
+            <Card className="flex flex-col gap-[12px] p-[16px]">
+                <div className="flex items-center justify-between px-[14px]">
+                    <BodyText
+                        level="body2"
+                        weight="medium"
+                        className="capitalize text-black/90"
+                    >
+                        Lend
+                    </BodyText>
+                    {isWalletConnected && (
+                        <BodyText
+                            level="body2"
+                            weight="normal"
+                            className="text-gray-600 flex items-center gap-[4px]"
+                        >
+                            Bal:{' '}
+                            {isLoadingErc20TokensBalanceData ? (
+                                <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
+                            ) : (
+                                abbreviateNumber(
+                                    Number(
+                                        getLowestDisplayValue(
+                                            Number(balance ?? 0),
+                                            getMaxDecimalsToDisplay()
+                                        )
+                                    ),
+                                    getMaxDecimalsToDisplay()
+                                )
+                            )}
+                            <span className="inline-block truncate max-w-[70px]">
+                                {selectedAssetTokenDetails?.token?.symbol}
+                            </span>
+                        </BodyText>
+                    )}
+                </div>
+                <CardContent className="p-0 bg-white rounded-5">
+                    <div
+                        className={cn(
+                            isLendPositionType(positionType)
+                                ? 'border rounded-5 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]'
+                                : 'border-t rounded-t-5',
+                            'border-gray-200 py-[12px] px-[16px] flex items-center gap-[12px]'
+                        )}
+                    >
+                        {isLoading && (
+                            <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
+                        )}
+                        {/* Lend position type - Selected token image */}
+                        {/* {(isLoading ||
+                            !selectedAssetTokenDetails?.token?.address) &&
+                            isLendPositionType(positionType) && (
+                                <LoaderCircle className="text-primary w-[60px] h-[34px] animate-spin" />
+                            )} */}
+                        {!isLoading &&
+                            !!selectedAssetTokenDetails?.token?.address && (
+                                <ImageWithDefault
+                                    src={
+                                        selectedAssetTokenDetails?.token
+                                            ?.logo || ''
+                                    }
+                                    alt={
+                                        selectedAssetTokenDetails?.token
+                                            ?.symbol || ''
+                                    }
+                                    className="shrink-0 w-[24px] h-[24px] rounded-full"
+                                    width={24}
+                                    height={24}
+                                />
+                            )}
+                        <div className="flex flex-1 flex-col gap-[4px]">
+                            <CustomNumberInput
+                                key={positionType}
+                                amount={amount}
+                                setAmount={(amount) => setAmount(amount)}
+                            />
+                        </div>
+                        <Button
+                            variant="link"
+                            className="uppercase text-[14px] font-medium ml-auto"
+                            onClick={() => setAmount(balance ?? '0')}
+                            disabled={isDisabledMaxBtn()}
+                        >
+                            max
+                        </Button>
+                    </div>
+                    {isWalletConnected && (
+                        <div className="card-content-bottom px-5 py-3">
+                            {(isLoading || !lendErrorMessage) && (
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
+                                >
+                                    {isLoading && 'Loading balance...'}
+                                    {!lendErrorMessage &&
+                                        !isLoading &&
+                                        'Enter amount to proceed with supplying to vault'}
+                                </BodyText>
+                            )}
+                            {lendErrorMessage && !isLoading && (
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-center text-destructive-foreground"
+                                >
+                                    {lendErrorMessage}
+                                </BodyText>
+                            )}
+                        </div>
+                    )}
+                </CardContent>
+                <CardFooter className="p-0 justify-center">
+                    {!isWalletConnected && <ConnectWalletButton />}
+                    {isWalletConnected && !isLoading && (
+                        <div className="flex flex-col gap-[12px] w-full">
+                            <ConfirmationDialog
+                                disabled={disabledButton}
+                                positionType={positionType}
+                                assetDetails={{
+                                    asset: selectedAssetTokenDetails,
+                                    ...platformData?.platform,
+                                }}
+                                amount={amount}
+                                balance={balance}
+                                // TODO: Get max borrow amount
+                                maxBorrowAmount={'0.0'}
+                                setAmount={setAmount}
+                                // TODO: Get health factor values
+                                healthFactorValues={{
+                                    healthFactor: 0.0,
+                                    newHealthFactor: 0.0,
+                                }}
+                                isVault={true}
+                                open={isLendBorrowTxDialogOpen}
+                                setOpen={setIsLendBorrowTxDialogOpen}
+                            />
+                        </div>
+                    )}
+                </CardFooter>
+            </Card>
+        </section>
+    )
+}
+
+function FluidVaults({
     platformData,
     walletAddress,
     isLoadingPlatformData,
@@ -114,20 +369,20 @@ function LendAndBorrowAssetsMorphoMarkets({
     const positionTypeParam: TPositionType =
         (searchParams.get('position_type') as TPositionType) || 'lend'
     const [positionType, setPositionType] = useState<TPositionType>('lend')
-    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-        useState(false)
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx, withdrawTx, repayTx } = useTxContext() as TTxContext
+    const { lendTx, borrowTx, withdrawTx, repayTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } = useTxContext() as TTxContext
     const [refresh, setRefresh] = useState(false)
-    const { wallets } = useWallets()
-    const wallet = wallets.find(
-        (wallet: any) => wallet.address === walletAddress
-    )
-    const { user } = usePrivy()
-    const isWalletConnected = !!user
-
+    const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
+
+    const fluidLendTokenDetails = platformData?.assets.find(
+        (asset) => asset.borrow_enabled === false
+    )
+
+    const fluidBorrowTokenDetails = platformData?.assets?.find(
+        (asset) => asset.borrow_enabled === true
+    )
 
     useEffect(() => {
         const isRefresh =
@@ -159,33 +414,17 @@ function LendAndBorrowAssetsMorphoMarkets({
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
-        if (lendTx.status === 'view' && !isConfirmationDialogOpen) {
-            setIsRefreshingErc20TokensBalanceData(true)
-        }
-
-        if (borrowTx.status === 'view' && !isConfirmationDialogOpen) {
+        if (
+            (lendTx.status === 'view' || borrowTx.status === 'view') &&
+            !isLendBorrowTxDialogOpen
+        ) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
     }, [
         lendTx.status,
         borrowTx.status,
-        isConfirmationDialogOpen,
+        isLendBorrowTxDialogOpen,
     ])
-
-    const { data: morphoMarketData } = useMarket({
-        marketId: platformData?.platform?.morpho_market_id as MarketId,
-        chainId: Number(chain_id),
-    })
-
-    const { data: position } = usePosition({
-        marketId: platformData?.platform?.morpho_market_id as MarketId,
-        user: walletAddress,
-        chainId: Number(chain_id),
-        query: {
-            refetchIntervalInBackground: refresh,
-            refetchInterval: refresh ? 2000 : false,
-        },
-    })
 
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
     const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] =
@@ -199,115 +438,18 @@ function LendAndBorrowAssetsMorphoMarkets({
     // health factor
     const [healthFactor, setHealthFactor] = useState(0)
 
-    const isMorphoProtocol =
-        platformData?.platform?.protocol_type === PlatformType.MORPHO
-
-    useEffect(() => {
-        if (position && morphoMarketData) {
-            const accrualPosition: AccrualPosition = new AccrualPosition(
-                position,
-                morphoMarketData
-            )
-
-            const borrowAssets =
-                ((accrualPosition.maxBorrowableAssets ?? BigInt(0)) *
-                    BigInt(999)) /
-                BigInt(1000)
-
-            const maxBorrowAmount = formatUnits(
-                borrowAssets,
-                morphoBorrowTokenDetails?.token?.decimals ?? 0
-            )
-
-            const maxRepayAmount = formatUnits(
-                accrualPosition.borrowAssets,
-                morphoBorrowTokenDetails?.token?.decimals ?? 0
-            )
-
-            setMaxBorrowAmount(maxBorrowAmount)
-            setIsLoadingMaxBorrowingAmount(false)
-            setHasCollateral(
-                accrualPosition.collateralValue
-                    ? accrualPosition.collateralValue > 0
-                    : false
-            )
-            setCanBorrow(borrowAssets ? borrowAssets > 0 : false)
-
-            const currentBorrowAssets =
-                accrualPosition.borrowAssets ?? BigInt(0)
-            const collUsdValue =
-                (accrualPosition.collateral
-                    ? Number(
-                        formatUnits(
-                            accrualPosition.collateral,
-                            selectedAssetTokenDetails?.token?.decimals ?? 0
-                        )
-                    )
-                    : 0) * (selectedAssetTokenDetails?.token?.price_usd ?? 0)
-            const borrowUsdValue =
-                (borrowAssets
-                    ? Number(
-                        formatUnits(
-                            currentBorrowAssets,
-                            morphoBorrowTokenDetails?.token?.decimals ?? 0
-                        )
-                    )
-                    : 0) * (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
-
-            if (morphoBorrowTokenDetails?.ltv) {
-                const lltv = (morphoBorrowTokenDetails?.ltv ?? 1) / 100
-
-                const healthFactor = (collUsdValue * lltv) / borrowUsdValue
-                setHealthFactor(healthFactor)
-            }
-
-            // if both are same then reallocation is needed
-            if (
-                morphoMarketData.totalBorrowAssets ===
-                morphoMarketData.totalSupplyAssets
-            ) {
-                setDoesMarketHasLiquidity(false)
-            } else {
-                setDoesMarketHasLiquidity(true)
-            }
-
-            // TODO: Get health factor values
-        } else {
-            setMaxBorrowAmount('0')
-            setIsLoadingMaxBorrowingAmount(false)
-            setHasCollateral(false)
-            setCanBorrow(false)
-            setHealthFactor(0)
-        }
-    }, [
-        position,
-        morphoMarketData,
-        maxBorrowAmount,
-        setMaxBorrowAmount,
-        isLoadingMaxBorrowingAmount,
-        setIsLoadingMaxBorrowingAmount,
-        hasCollateral,
-        setHasCollateral,
-        canBorrow,
-        setCanBorrow,
-        doesMarketHasLiquidity,
-        setDoesMarketHasLiquidity,
-        healthFactor,
-        setHealthFactor,
-    ])
-
     const getUpdatedHealthFactor = (
         position: any,
         morphoMarketData: any,
         selectedAssetTokenDetails: any,
-        morphoBorrowTokenDetails: any,
+        fluidBorrowTokenDetails: any,
         amount: string
     ) => {
         if (
             !position ||
             !morphoMarketData ||
             !selectedAssetTokenDetails ||
-            !morphoBorrowTokenDetails
+            !fluidBorrowTokenDetails
         ) {
             return 0.0
         }
@@ -330,7 +472,7 @@ function LendAndBorrowAssetsMorphoMarkets({
                 : Number(
                     formatUnits(
                         currentBorrowAssets,
-                        morphoBorrowTokenDetails?.token?.decimals ?? 0
+                        fluidBorrowTokenDetails?.token?.decimals ?? 0
                     )
                 )
         const borrowNormalizeValueWithAmount =
@@ -341,21 +483,18 @@ function LendAndBorrowAssetsMorphoMarkets({
             (selectedAssetTokenDetails?.token?.price_usd ?? 0)
         const borrowUsdValue =
             borrowNormalizeValueWithAmount *
-            (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
+            (fluidBorrowTokenDetails?.token?.price_usd ?? 0)
 
-        if (morphoBorrowTokenDetails?.ltv) {
-            const lltv = (morphoBorrowTokenDetails?.ltv ?? 1) / 100
+        if (fluidBorrowTokenDetails?.ltv) {
+            const lltv = (fluidBorrowTokenDetails?.ltv ?? 1) / 100
             const healthFactor = (collUsdValue * lltv) / borrowUsdValue
             return healthFactor
         }
         return 0.0
     }
 
-    const isLoading = isLoadingPlatformData || isLoadingMaxBorrowingAmount
-
-    // const isMorphoVaultsProtocol =
-    //     platformData?.platform?.protocol_type === 'morpho' &&
-    //     platformData?.platform?.isVault
+    const isLoading = isLoadingPlatformData
+    // || isLoadingMaxBorrowingAmount
 
     const {
         erc20TokensBalanceData,
@@ -364,19 +503,11 @@ function LendAndBorrowAssetsMorphoMarkets({
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
     } = useUserTokenBalancesContext()
 
-    const morphoLendTokenDetails = platformData?.assets.find(
-        (asset) => asset.borrow_enabled === false
-    )
-
-    const morphoBorrowTokenDetails = platformData?.assets?.find(
-        (asset) => asset.borrow_enabled === true
-    )
-
     useEffect(() => {
-        if (morphoLendTokenDetails) {
-            setSelectedAssetTokenDetails(morphoLendTokenDetails)
+        if (fluidLendTokenDetails) {
+            setSelectedAssetTokenDetails(fluidLendTokenDetails)
         }
-    }, [morphoLendTokenDetails, setSelectedAssetTokenDetails])
+    }, [fluidLendTokenDetails, setSelectedAssetTokenDetails])
 
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[
@@ -395,7 +526,7 @@ function LendAndBorrowAssetsMorphoMarkets({
                 amount,
                 isLendPositionType(positionType)
                     ? (selectedAssetTokenDetails?.token?.decimals ?? 0)
-                    : (morphoBorrowTokenDetails?.token?.decimals ?? 0)
+                    : (fluidBorrowTokenDetails?.token?.decimals ?? 0)
             )
         }
         return false
@@ -462,18 +593,18 @@ function LendAndBorrowAssetsMorphoMarkets({
 
     function getMaxDecimalsToDisplay(): number {
         return isLendPositionType(positionType)
-            ? morphoLendTokenDetails?.token?.symbol
+            ? fluidLendTokenDetails?.token?.symbol
                 .toLowerCase()
                 .includes('btc') ||
-                morphoLendTokenDetails?.token?.symbol
+                fluidLendTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
                 ? 6
                 : 2
-            : morphoBorrowTokenDetails?.token?.symbol
+            : fluidBorrowTokenDetails?.token?.symbol
                 .toLowerCase()
                 .includes('btc') ||
-                morphoBorrowTokenDetails?.token?.symbol
+                fluidBorrowTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
                 ? 6
@@ -502,15 +633,15 @@ function LendAndBorrowAssetsMorphoMarkets({
     }
 
     return (
-        <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
-            <LendBorrowToggle
-                type={positionType}
-                handleToggle={(positionType: TPositionType) => {
+        <section className="collateral-and-borrow-section-wrapper flex flex-col gap-[12px]">
+            <ToggleTab
+                type={positionType === "lend" ? "tab1" : "tab2"}
+                handleToggle={(positionType: TTypeToMatch) => {
                     setAmount('')
-                    setPositionType(positionType)
+                    setPositionType(positionType === "tab1" ? "lend" : "borrow")
                 }}
                 title={{
-                    lend: isMorphoProtocol ? 'Add Collateral' : 'Lend',
+                    tab1: 'Add Collateral',
                 }}
             />
             <Card className="flex flex-col gap-[12px] p-[16px]">
@@ -522,7 +653,7 @@ function LendAndBorrowAssetsMorphoMarkets({
                     >
                         {isLendPositionType(positionType)
                             ? 'add collateral'
-                            : `borrow ${morphoBorrowTokenDetails?.token?.symbol || ''}`}
+                            : `borrow ${fluidBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
 
                     {isWalletConnected && isLendPositionType(positionType) && (
@@ -548,7 +679,7 @@ function LendAndBorrowAssetsMorphoMarkets({
                             <span className="inline-block truncate max-w-[70px]">
                                 {isLendPositionType(positionType)
                                     ? selectedAssetTokenDetails?.token?.symbol
-                                    : morphoBorrowTokenDetails?.token?.symbol}
+                                    : fluidBorrowTokenDetails?.token?.symbol}
                             </span>
                         </BodyText>
                     )}
@@ -574,13 +705,13 @@ function LendAndBorrowAssetsMorphoMarkets({
                 <CardContent className="p-0 bg-white rounded-5">
                     <div
                         className={cn(
-                            isLendPositionType(positionType) || isMorphoProtocol
+                            isLendPositionType(positionType)
                                 ? 'border rounded-5 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]'
                                 : 'border-t rounded-t-5',
                             'border-gray-200 py-[12px] px-[16px] flex items-center gap-[12px]'
                         )}
                     >
-                        {(isLoading || isLoadingMaxBorrowingAmount) && (
+                        {(isLoading) && (
                             <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
                         )}
                         {/* Lend position type - Selected token image */}
@@ -590,7 +721,6 @@ function LendAndBorrowAssetsMorphoMarkets({
                                 <LoaderCircle className="text-primary w-[60px] h-[34px] animate-spin" />
                             )} */}
                         {!isLoading &&
-                            !isLoadingMaxBorrowingAmount &&
                             !!selectedAssetTokenDetails?.token?.address &&
                             isLendPositionType(positionType) && (
                                 <ImageWithDefault
@@ -611,10 +741,10 @@ function LendAndBorrowAssetsMorphoMarkets({
                         {!isLoading && !isLendPositionType(positionType) && (
                             <ImageWithDefault
                                 src={
-                                    morphoBorrowTokenDetails?.token?.logo || ''
+                                    fluidBorrowTokenDetails?.token?.logo || ''
                                 }
                                 alt={
-                                    morphoBorrowTokenDetails?.token?.symbol ||
+                                    fluidBorrowTokenDetails?.token?.symbol ||
                                     ''
                                 }
                                 className="shrink-0 w-[24px] h-[24px] rounded-full"
@@ -622,7 +752,7 @@ function LendAndBorrowAssetsMorphoMarkets({
                                 height={24}
                             />
                         )}
-                        <div className="flex flex-col gap-[4px]">
+                        <div className="flex flex-1 flex-col gap-[4px]">
                             <CustomNumberInput
                                 key={positionType}
                                 amount={amount}
@@ -732,18 +862,12 @@ function LendAndBorrowAssetsMorphoMarkets({
                         <div className="flex flex-col gap-[12px] w-full">
                             <ConfirmationDialog
                                 disabled={disabledButton}
-                                open={isConfirmationDialogOpen}
-                                setOpen={setIsConfirmationDialogOpen}
+                                open={isLendBorrowTxDialogOpen}
+                                setOpen={setIsLendBorrowTxDialogOpen}
                                 positionType={positionType}
                                 assetDetails={{
-                                    asset: isLendPositionType(positionType)
-                                        ? selectedAssetTokenDetails
-                                        : morphoBorrowTokenDetails,
-                                    platform: platformData?.platform,
-                                    protocol_type:
-                                        platformData?.platform?.protocol_type,
-                                    morphoMarketData: morphoMarketData,
-                                    chainId: Number(chain_id),
+                                    asset: selectedAssetTokenDetails,
+                                    ...platformData?.platform,
                                 }}
                                 amount={amount}
                                 balance={balance}
@@ -752,298 +876,10 @@ function LendAndBorrowAssetsMorphoMarkets({
                                 setAmount={setAmount}
                                 // TODO: Get health factor values
                                 healthFactorValues={{
-                                    healthFactor: healthFactor,
-                                    newHealthFactor: getUpdatedHealthFactor(
-                                        position,
-                                        morphoMarketData,
-                                        selectedAssetTokenDetails,
-                                        morphoBorrowTokenDetails,
-                                        amount
-                                    ),
+                                    healthFactor: healthFactor ?? 0,
+                                    newHealthFactor: 0
                                 }}
                                 setActionType={setPositionType}
-                            />
-                        </div>
-                    )}
-                </CardFooter>
-            </Card>
-        </section>
-    )
-}
-
-function LendAndBorrowAssetsMorphoVaults({
-    platformData,
-    walletAddress,
-    isLoadingPlatformData,
-}: {
-    platformData: TPlatform
-    walletAddress: `0x${string}`
-    isLoadingPlatformData: boolean
-}) {
-    const searchParams = useSearchParams()
-    const chain_id = searchParams.get('chain_id') || '1'
-    const [positionType, setPositionType] = useState<TPositionType>('lend')
-    const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
-        useState<TPlatformAsset | null>(null)
-    const { wallets } = useWallets()
-    const wallet = wallets.find(
-        (wallet: any) => wallet.address === walletAddress
-    )
-    const { user } = usePrivy()
-    const isWalletConnected = !!user
-    const { lendTx, borrowTx } = useTxContext() as TTxContext
-    const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-        useState(false)
-
-    const [amount, setAmount] = useState('')
-
-    const positionTypeParam: TPositionType = 'lend'
-
-    useEffect(() => {
-        setPositionType(positionTypeParam)
-    }, [positionTypeParam])
-
-    useEffect(() => {
-        if (platformData?.assets[0]) {
-            setSelectedAssetTokenDetails(platformData?.assets[0])
-        }
-    }, [platformData, setSelectedAssetTokenDetails])
-
-    // Refresh balance when view(success) UI after supplying/borrowing an asset
-    useEffect(() => {
-        if (lendTx.status === 'view' && !isConfirmationDialogOpen) {
-            setIsRefreshingErc20TokensBalanceData(true)
-        }
-
-        if (borrowTx.status === 'view' && !isConfirmationDialogOpen) {
-            setIsRefreshingErc20TokensBalanceData(true)
-        }
-    }, [
-        lendTx.status,
-        borrowTx.status,
-        isConfirmationDialogOpen,
-    ])
-
-    // fetch vault data
-    const { data: vaultData } = useVault({
-        vault: platformData?.platform?.core_contract as `0x${string}`,
-        chainId: Number(chain_id),
-    })
-
-    const vaultAssetAddress = vaultData?.asset
-
-    const {
-        erc20TokensBalanceData,
-        isLoading: isLoadingErc20TokensBalanceData,
-        // isRefreshing: isRefreshingErc20TokensBalanceData,
-        setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
-    } = useUserTokenBalancesContext()
-
-    const balance = (
-        erc20TokensBalanceData[Number(chain_id)]?.[
-            (vaultAssetAddress?.toLowerCase() ?? '').toLowerCase()
-        ]?.balanceFormatted ?? 0
-    ).toString()
-
-    const isLoading = isLoadingErc20TokensBalanceData
-
-    // console.log("Selected asset token details", selectedAssetTokenDetails)
-
-    // console.log("User token balances data", balance)
-
-    function getMaxDecimalsToDisplay(): number {
-        return selectedAssetTokenDetails?.token?.symbol
-            .toLowerCase()
-            .includes('btc') ||
-            selectedAssetTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('eth')
-            ? 6
-            : 2
-    }
-
-    const isDisabledMaxBtn = () => {
-        return (
-            Number(amount) === Number(balance) ||
-            !isWalletConnected ||
-            isLoadingErc20TokensBalanceData ||
-            Number(balance) <= 0
-        )
-    }
-
-    const toManyDecimals = useMemo(() => {
-        if (selectedAssetTokenDetails) {
-            return checkDecimalPlaces(
-                amount,
-                selectedAssetTokenDetails?.token?.decimals ?? 0
-            )
-        }
-        return false
-    }, [selectedAssetTokenDetails, amount])
-
-    const lendErrorMessage = useMemo(() => {
-        if (amount === '') {
-            return null
-        }
-        if (Number(amount) > Number(balance) || Number(balance) <= 0) {
-            return 'You do not have enough balance'
-        } else if (toManyDecimals) {
-            return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
-        } else {
-            return null
-        }
-    }, [amount, balance, toManyDecimals])
-
-    const disabledButton: boolean = useMemo(
-        () =>
-            Number(amount) > Number(balance) ||
-            Number(amount) <= 0 ||
-            toManyDecimals,
-        [amount, balance, toManyDecimals]
-    )
-
-    return (
-        <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
-            <Card className="flex flex-col gap-[12px] p-[16px]">
-                <div className="flex items-center justify-between px-[14px]">
-                    <BodyText
-                        level="body2"
-                        weight="medium"
-                        className="capitalize text-black/90"
-                    >
-                        Supply to vault
-                    </BodyText>
-                    {isWalletConnected && (
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="text-gray-600 flex items-center gap-[4px]"
-                        >
-                            Bal:{' '}
-                            {isLoadingErc20TokensBalanceData ? (
-                                <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
-                            ) : (
-                                abbreviateNumber(
-                                    Number(
-                                        getLowestDisplayValue(
-                                            Number(balance ?? 0),
-                                            getMaxDecimalsToDisplay()
-                                        )
-                                    ),
-                                    getMaxDecimalsToDisplay()
-                                )
-                            )}
-                            <span className="inline-block truncate max-w-[70px]">
-                                {selectedAssetTokenDetails?.token?.symbol}
-                            </span>
-                        </BodyText>
-                    )}
-                </div>
-                <CardContent className="p-0 bg-white rounded-5">
-                    <div
-                        className={cn(
-                            isLendPositionType(positionType)
-                                ? 'border rounded-5 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]'
-                                : 'border-t rounded-t-5',
-                            'border-gray-200 py-[12px] px-[16px] flex items-center gap-[12px]'
-                        )}
-                    >
-                        {isLoading && (
-                            <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
-                        )}
-                        {/* Lend position type - Selected token image */}
-                        {/* {(isLoading ||
-                            !selectedAssetTokenDetails?.token?.address) &&
-                            isLendPositionType(positionType) && (
-                                <LoaderCircle className="text-primary w-[60px] h-[34px] animate-spin" />
-                            )} */}
-                        {!isLoading &&
-                            !!selectedAssetTokenDetails?.token?.address && (
-                                <ImageWithDefault
-                                    src={
-                                        selectedAssetTokenDetails?.token
-                                            ?.logo || ''
-                                    }
-                                    alt={
-                                        selectedAssetTokenDetails?.token
-                                            ?.symbol || ''
-                                    }
-                                    className="shrink-0 w-[24px] h-[24px] rounded-full"
-                                    width={24}
-                                    height={24}
-                                />
-                            )}
-                        <div className="flex flex-col gap-[4px]">
-                            <CustomNumberInput
-                                key={positionType}
-                                amount={amount}
-                                setAmount={(amount) => setAmount(amount)}
-                            />
-                        </div>
-                        <Button
-                            variant="link"
-                            className="uppercase text-[14px] font-medium ml-auto"
-                            onClick={() => setAmount(balance ?? '0')}
-                            disabled={isDisabledMaxBtn()}
-                        >
-                            max
-                        </Button>
-                    </div>
-                    {isWalletConnected && (
-                        <div className="card-content-bottom px-5 py-3">
-                            {(isLoading || !lendErrorMessage) && (
-                                <BodyText
-                                    level="body2"
-                                    weight="normal"
-                                    className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
-                                >
-                                    {isLoading && 'Loading balance...'}
-                                    {!lendErrorMessage &&
-                                        !isLoading &&
-                                        'Enter amount to proceed with supplying to vault'}
-                                </BodyText>
-                            )}
-                            {lendErrorMessage && !isLoading && (
-                                <BodyText
-                                    level="body2"
-                                    weight="normal"
-                                    className="text-center text-destructive-foreground"
-                                >
-                                    {lendErrorMessage}
-                                </BodyText>
-                            )}
-                        </div>
-                    )}
-                </CardContent>
-                <CardFooter className="p-0 justify-center">
-                    {!isWalletConnected && <ConnectWalletButton />}
-                    {isWalletConnected && !isLoading && (
-                        <div className="flex flex-col gap-[12px] w-full">
-                            <ConfirmationDialog
-                                disabled={disabledButton}
-                                positionType={positionType}
-                                assetDetails={{
-                                    asset: selectedAssetTokenDetails,
-                                    platform: platformData?.platform,
-                                    protocol_type:
-                                        platformData?.platform?.protocol_type,
-                                    morphoMarketData: vaultData,
-                                    chainId: Number(chain_id),
-                                    isVault: true,
-                                }}
-                                amount={amount}
-                                balance={balance}
-                                // TODO: Get max borrow amount
-                                maxBorrowAmount={'0.0'}
-                                setAmount={setAmount}
-                                // TODO: Get health factor values
-                                healthFactorValues={{
-                                    healthFactor: 0.0,
-                                    newHealthFactor: 0.0,
-                                }}
-                                isVault={true}
-                                open={isConfirmationDialogOpen}
-                                setOpen={setIsConfirmationDialogOpen}
                             />
                         </div>
                     )}

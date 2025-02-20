@@ -73,7 +73,6 @@ const SupplyMorphoButton = ({
         })
     const { address: walletAddress } = useAccount()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
-
     const amountBN = useMemo(() => {
         return amount
             ? parseUnits(amount, tokenDetails?.token?.decimals || 18)
@@ -89,12 +88,12 @@ const SupplyMorphoButton = ({
         success: isMorphoMarkets ? 'Go To Borrow' : 'Close',
         default:
             lendTx.status === 'approve'
-                ? 'Approve token'
+                ? (isMorphoMarkets ? 'Start adding collateral' : 'Start supplying')
                 : isMorphoMarkets
                     ? 'Add Collateral'
                     : isMorphoVault
                         ? 'Supply to vault'
-                        : 'Lend Collateral',
+                        : 'Start lending',
     }
 
     const getTxButtonText = (
@@ -116,6 +115,12 @@ const SupplyMorphoButton = ({
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+
+    useEffect(() => {
+        if (lendTx.status === 'lend') {
+            supply()
+        }
+    }, [lendTx.status])
 
     const supply = useCallback(async () => {
         try {
@@ -169,7 +174,7 @@ const SupplyMorphoButton = ({
 
                 writeContractAsync({
                     address: BUNDLER_ADDRESS_MORPHO[
-                        assetDetails.chainId
+                        assetDetails.chain_id
                     ] as `0x${string}`,
                     abi: MORPHO_BUNDLER_ABI,
                     functionName: 'multicall',
@@ -401,10 +406,12 @@ const SupplyMorphoButton = ({
                 functionName: 'approve',
                 args: [
                     assetDetails.isVault
-                        ? BUNDLER_ADDRESS_MORPHO[assetDetails.chainId]
+                        ? BUNDLER_ADDRESS_MORPHO[assetDetails.chain_id]
                         : platform.core_contract,
                     parseUnits(amount, assetDetails.asset.token.decimals),
                 ],
+            }).catch((error) => {
+                console.log('Approve tx error: ', error)
             })
         } catch (error) {
             error
@@ -428,7 +435,7 @@ const SupplyMorphoButton = ({
                     }
                 />
             )}
-            {lendTx.status === 'approve' && (
+            {/* {lendTx.status === 'approve' && (
                 <CustomAlert
                     variant="info"
                     hasPrefixIcon={false}
@@ -449,7 +456,7 @@ const SupplyMorphoButton = ({
                         </BodyText>
                     }
                 />
-            )}
+            )} */}
             {error && (
                 <CustomAlert
                     description={

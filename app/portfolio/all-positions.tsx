@@ -2,7 +2,7 @@
 
 import AllPositionsFiltersDropdown from '@/components/dropdowns/AllPositionsFiltersDropdown'
 import SearchInput from '@/components/inputs/SearchInput'
-import LendBorrowToggle from '@/components/LendBorrowToggle'
+import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { DataTable } from '@/components/ui/all-positions-table'
@@ -195,9 +195,11 @@ export default function AllPositions() {
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="w-full sm:max-w-[350px]">
-                            <LendBorrowToggle
-                                type={positionType}
-                                handleToggle={toggleOpportunityType}
+                            <ToggleTab
+                                type={positionType === "lend" ? "tab1" : "tab2"}
+                                handleToggle={(positionType: TTypeToMatch) => {
+                                    toggleOpportunityType(positionType === "tab1" ? "lend" : "borrow")
+                                }}
                             />
                         </div>
                         <div className="sm:max-w-[156px] w-full">

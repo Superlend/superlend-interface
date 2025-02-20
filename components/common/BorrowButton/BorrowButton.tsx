@@ -52,7 +52,7 @@ const txBtnStatus: Record<string, string> = {
     pending: 'Borrowing...',
     confirming: 'Confirming...',
     success: 'Close',
-    default: 'Borrow',
+    default: 'Start borrowing',
 }
 
 const BorrowButton = ({
@@ -89,6 +89,7 @@ const BorrowButton = ({
             setBorrowTx((prev: TBorrowTx) => ({
                 ...prev,
                 status: 'view',
+                hash,
                 isConfirmed: isConfirmed,
             }))
             logEvent('borrow_completed', {
@@ -253,10 +254,7 @@ const BorrowButton = ({
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={
-                    (isPending || isConfirming || disabled) &&
-                    borrowTx.status !== 'view'
-                }
+                disabled={(isPending || isConfirming || disabled)}
                 onClick={
                     borrowTx.status === 'borrow'
                         ? onBorrow

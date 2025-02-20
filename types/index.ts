@@ -168,6 +168,8 @@ export type TPlatform = {
         isVault: boolean
         morpho_market_id: string
         core_contract: string
+        uiPoolDataProvider?: string
+        poolAddressesProvider?: string
     }
     assets: TPlatformAsset[]
 }
