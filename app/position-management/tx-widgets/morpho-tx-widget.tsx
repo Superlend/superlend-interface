@@ -109,10 +109,19 @@ function MorphoMarkets({
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx, withdrawTx, repayTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } = useTxContext() as TTxContext
+    const { lendTx, borrowTx, withdrawTx, repayTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen, setLendTx } = useTxContext() as TTxContext
     const [refresh, setRefresh] = useState(false)
     const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
+
+    useEffect(() => {
+        if (lendTx.status === 'approve' && lendTx.isConfirmed && lendTx.hash) {
+            setLendTx((prev: any) => ({
+                ...prev,
+                status: 'lend',
+            }))
+        }
+    }, [lendTx.status, lendTx.isConfirmed, lendTx.hash])
 
     useEffect(() => {
         const isRefresh =
@@ -763,11 +772,20 @@ function MorphoVaults({
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } = useTxContext() as TTxContext
+    const { lendTx, borrowTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen, setLendTx } = useTxContext() as TTxContext
     const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
 
     const positionTypeParam: TPositionType = 'lend'
+
+    useEffect(() => {
+        if (lendTx.status === 'approve' && lendTx.isConfirmed && lendTx.hash) {
+            setLendTx((prev: any) => ({
+                ...prev,
+                status: 'lend',
+            }))
+        }
+    }, [lendTx.status, lendTx.isConfirmed, lendTx.hash])
 
     useEffect(() => {
         setPositionType(positionTypeParam)
@@ -816,10 +834,6 @@ function MorphoVaults({
     ).toString()
 
     const isLoading = isLoadingErc20TokensBalanceData
-
-    // console.log("Selected asset token details", selectedAssetTokenDetails)
-
-    // console.log("User token balances data", balance)
 
     function getMaxDecimalsToDisplay(): number {
         return selectedAssetTokenDetails?.token?.symbol

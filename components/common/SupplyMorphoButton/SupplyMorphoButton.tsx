@@ -410,6 +410,8 @@ const SupplyMorphoButton = ({
                         : platform.core_contract,
                     parseUnits(amount, assetDetails.asset.token.decimals),
                 ],
+            }).catch((error) => {
+                console.log('Approve tx error: ', error)
             })
         } catch (error) {
             error
@@ -433,7 +435,7 @@ const SupplyMorphoButton = ({
                     }
                 />
             )}
-            {lendTx.status === 'approve' && (
+            {/* {lendTx.status === 'approve' && (
                 <CustomAlert
                     variant="info"
                     hasPrefixIcon={false}
@@ -454,7 +456,7 @@ const SupplyMorphoButton = ({
                         </BodyText>
                     }
                 />
-            )}
+            )} */}
             {error && (
                 <CustomAlert
                     description={
