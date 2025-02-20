@@ -142,7 +142,7 @@ const RepayButton = ({
         try {
             const morphoMarketData = assetDetails?.market as Market;
 
-            logEvent('withdraw_initiated', {
+            logEvent('repay_initiated', {
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
@@ -169,13 +169,20 @@ const RepayButton = ({
                     walletAddress,
                     '0x',
                 ],
-
             }).then((data) => {
                 setRepayTx((prev: TRepayTx) => ({
                     ...prev,
                     status: 'view',
                     errorMessage: '',
                 }))
+
+                logEvent('repay_completed', {
+                    amount,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
             }).catch((error) => {
                 setRepayTx((prev: TRepayTx) => ({
                     ...prev,
@@ -232,6 +239,14 @@ const RepayButton = ({
                         status: 'view',
                         errorMessage: '',
                     }))
+
+                    logEvent('repay_completed', {
+                        amount,
+                        token_symbol: assetDetails?.asset?.token?.symbol,
+                        platform_name: assetDetails?.name,
+                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        wallet_address: walletAddress,
+                    })
                 })
                 .catch((error) => {
                     setRepayTx((prev: TRepayTx) => ({
@@ -295,6 +310,14 @@ const RepayButton = ({
                         status: 'view',
                         errorMessage: '',
                     }))
+
+                    logEvent('repay_completed', {
+                        amount,
+                        token_symbol: assetDetails?.asset?.token?.symbol,
+                        platform_name: assetDetails?.name,
+                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        wallet_address: walletAddress,
+                    })
                 })
                 .catch((error) => {
                     setRepayTx((prev: TRepayTx) => ({
