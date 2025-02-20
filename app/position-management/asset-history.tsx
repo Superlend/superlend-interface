@@ -61,16 +61,16 @@ export default function AssetHistory() {
         period: selectedRange,
     })
 
-    useEffect(() => {
-        logEvent('history_range_selected', {
-            option: selectedRange,
-            default: true,
-        })
-        logEvent('history_filter_selected', {
-            option: selectedFilter.label,
-            default: true,
-        })
-    }, [])
+    // useEffect(() => {
+    //     logEvent('history_range_selected', {
+    //         option: selectedRange,
+    //         default: true,
+    //     })
+    //     logEvent('history_filter_selected', {
+    //         option: selectedFilter.label,
+    //         default: true,
+    //     })
+    // }, [])
 
     // [CHART_DATA] - Format data for chart
     const chartData: any = platformHistoryData?.processMap?.map((item: any) => {
