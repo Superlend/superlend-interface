@@ -27,7 +27,7 @@ export const AmplitudeAnalyticsProvider = ({
     useEffect(() => {
         const sessionReplay = sessionReplayPlugin({
             forceSessionTracking: true,
-            sampleRate: 0.5,
+            sampleRate: 1,
         })
         amplitude.add(sessionReplay)
         amplitude.init(apiKey, {
