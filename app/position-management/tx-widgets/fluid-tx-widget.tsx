@@ -80,15 +80,15 @@ export default function MorphoTxWidget({
     }
 
     // Fluid Vaults
-    // if (isFluidVaults) {
-    //     return (
-    //         <FluidVaults
-    //             platformData={platformData}
-    //             walletAddress={walletAddress as `0x${string}`}
-    //             isLoadingPlatformData={isLoadingPlatformData}
-    //         />
-    //     )
-    // }
+    if (isFluidVaults) {
+        return (
+            <FluidVaults
+                platformData={platformData}
+                walletAddress={walletAddress as `0x${string}`}
+                isLoadingPlatformData={isLoadingPlatformData}
+            />
+        )
+    }
 
     return null;
 }
