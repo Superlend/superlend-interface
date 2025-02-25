@@ -85,7 +85,8 @@ const RepayButton = ({
                 : 'Repaying token...',
         confirming: 'Confirming...',
         success: 'Close',
-        default: repayTx.status === 'approve' ? 'Start repaying' : 'Repay token',
+        default:
+            repayTx.status === 'approve' ? 'Start repaying' : 'Repay token',
     }
 
     const getTxButtonText = (
@@ -97,12 +98,12 @@ const RepayButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? repayTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? repayTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 
@@ -138,65 +139,71 @@ const RepayButton = ({
         }
     }, [amount])
 
-    const repayMorphoMarket = useCallback(async (assetDetails: any) => {
-        try {
-            const morphoMarketData = assetDetails?.market as Market;
+    const repayMorphoMarket = useCallback(
+        async (assetDetails: any) => {
+            try {
+                const morphoMarketData = assetDetails?.market as Market
 
-            logEvent('withdraw_initiated', {
-                amount,
-                token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                wallet_address: walletAddress,
-            })
+                logEvent('withdraw_initiated', {
+                    amount,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[
+                            Number(assetDetails?.chain_id) as ChainId
+                        ],
+                    wallet_address: walletAddress,
+                })
 
-            writeContractAsync({
-                address: assetDetails.core_contract as `0x${string}`,
-                abi: MORPHO_MARKET_ABI,
-                functionName: 'repay',
-                args: [
-
-                    {
-                        loanToken: morphoMarketData.params.loanToken,
-                        collateralToken:
-                            morphoMarketData.params.collateralToken,
-                        oracle: morphoMarketData.params.oracle,
-                        irm: morphoMarketData.params.irm,
-                        lltv: morphoMarketData.params.lltv,
-                    },
-                    amountBN,
-                    0,
-                    walletAddress,
-                    '0x',
-                ],
-
-            }).then((data) => {
-                setRepayTx((prev: TRepayTx) => ({
-                    ...prev,
-                    status: 'view',
-                    errorMessage: '',
-                }))
-            }).catch((error) => {
-                setRepayTx((prev: TRepayTx) => ({
-                    ...prev,
-                    isPending: false,
-                    isConfirming: false,
-                    isConfirmed: false,
-                    // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
-                }))
-            })
-        } catch (error) {
-            error
-        }
-    }, [
-        amount,
-        poolContractAddress,
-        underlyingAssetAdress,
-        walletAddress,
-        handleCloseModal,
-        writeContractAsync,
-        decimals,
-    ])
+                writeContractAsync({
+                    address: assetDetails.core_contract as `0x${string}`,
+                    abi: MORPHO_MARKET_ABI,
+                    functionName: 'repay',
+                    args: [
+                        {
+                            loanToken: morphoMarketData.params.loanToken,
+                            collateralToken:
+                                morphoMarketData.params.collateralToken,
+                            oracle: morphoMarketData.params.oracle,
+                            irm: morphoMarketData.params.irm,
+                            lltv: morphoMarketData.params.lltv,
+                        },
+                        amountBN,
+                        0,
+                        walletAddress,
+                        '0x',
+                    ],
+                })
+                    .then((data) => {
+                        setRepayTx((prev: TRepayTx) => ({
+                            ...prev,
+                            status: 'view',
+                            errorMessage: '',
+                        }))
+                    })
+                    .catch((error) => {
+                        setRepayTx((prev: TRepayTx) => ({
+                            ...prev,
+                            isPending: false,
+                            isConfirming: false,
+                            isConfirmed: false,
+                            // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+                        }))
+                    })
+            } catch (error) {
+                error
+            }
+        },
+        [
+            amount,
+            poolContractAddress,
+            underlyingAssetAdress,
+            walletAddress,
+            handleCloseModal,
+            writeContractAsync,
+            decimals,
+        ]
+    )
 
     const repayFluidVault = useCallback(async () => {
         try {
@@ -211,7 +218,8 @@ const RepayButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -274,7 +282,8 @@ const RepayButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -381,7 +390,8 @@ const RepayButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
         }
@@ -405,7 +415,8 @@ const RepayButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -481,7 +492,7 @@ const RepayButton = ({
                 <CustomAlert description={repayTx.errorMessage} />
             )}
             <Button
-                disabled={(isPending || isConfirming || disabled)}
+                disabled={isPending || isConfirming || disabled}
                 onClick={() => {
                     if (repayTx.status === 'approve') {
                         onApproveSupply()

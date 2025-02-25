@@ -88,12 +88,14 @@ const SupplyMorphoButton = ({
         success: isMorphoMarkets ? 'Go To Borrow' : 'Close',
         default:
             lendTx.status === 'approve'
-                ? (isMorphoMarkets ? 'Start adding collateral' : 'Start supplying')
+                ? isMorphoMarkets
+                    ? 'Start adding collateral'
+                    : 'Start supplying'
                 : isMorphoMarkets
-                    ? 'Add Collateral'
-                    : isMorphoVault
-                        ? 'Supply to vault'
-                        : 'Start lending',
+                  ? 'Add Collateral'
+                  : isMorphoVault
+                    ? 'Supply to vault'
+                    : 'Start lending',
     }
 
     const getTxButtonText = (
@@ -105,12 +107,12 @@ const SupplyMorphoButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? lendTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? lendTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 
@@ -168,7 +170,10 @@ const SupplyMorphoButton = ({
                     amount,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
-                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    chain_name:
+                        CHAIN_ID_MAPPER[
+                            Number(assetDetails?.chain_id) as ChainId
+                        ],
                     wallet_address: walletAddress,
                 })
 
@@ -191,7 +196,10 @@ const SupplyMorphoButton = ({
                             amount,
                             token_symbol: assetDetails?.asset?.token?.symbol,
                             platform_name: assetDetails?.name,
-                            chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                            chain_name:
+                                CHAIN_ID_MAPPER[
+                                    Number(assetDetails?.chain_id) as ChainId
+                                ],
                             wallet_address: walletAddress,
                         })
                     })
@@ -212,7 +220,10 @@ const SupplyMorphoButton = ({
                         amount,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
-                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        chain_name:
+                            CHAIN_ID_MAPPER[
+                                Number(assetDetails?.chain_id) as ChainId
+                            ],
                         wallet_address: walletAddress,
                     })
                     // call morpho market supplyCollateral
@@ -248,9 +259,15 @@ const SupplyMorphoButton = ({
 
                             logEvent('add_collateral_completed', {
                                 amount,
-                                token_symbol: assetDetails?.asset?.token?.symbol,
+                                token_symbol:
+                                    assetDetails?.asset?.token?.symbol,
                                 platform_name: assetDetails?.name,
-                                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                                chain_name:
+                                    CHAIN_ID_MAPPER[
+                                        Number(
+                                            assetDetails?.chain_id
+                                        ) as ChainId
+                                    ],
                                 wallet_address: walletAddress,
                             })
                         })
@@ -266,7 +283,10 @@ const SupplyMorphoButton = ({
                         amount,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
-                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        chain_name:
+                            CHAIN_ID_MAPPER[
+                                Number(assetDetails?.chain_id) as ChainId
+                            ],
                         wallet_address: walletAddress,
                     })
 
@@ -299,9 +319,15 @@ const SupplyMorphoButton = ({
 
                             logEvent('lend_completed', {
                                 amount,
-                                token_symbol: assetDetails?.asset?.token?.symbol,
+                                token_symbol:
+                                    assetDetails?.asset?.token?.symbol,
                                 platform_name: assetDetails?.name,
-                                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                                chain_name:
+                                    CHAIN_ID_MAPPER[
+                                        Number(
+                                            assetDetails?.chain_id
+                                        ) as ChainId
+                                    ],
                                 wallet_address: walletAddress,
                             })
                         })
@@ -394,7 +420,8 @@ const SupplyMorphoButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -430,7 +457,8 @@ const SupplyMorphoButton = ({
                             weight="normal"
                             className="text-secondary-500"
                         >
-                            Note: Adding collateral to Morpho Markets does not yield.
+                            Note: Adding collateral to Morpho Markets does not
+                            yield.
                         </BodyText>
                     }
                 />

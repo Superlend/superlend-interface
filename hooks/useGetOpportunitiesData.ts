@@ -7,7 +7,10 @@ import { useQuery } from '@tanstack/react-query'
 export default function useGetOpportunitiesData(
     params: TGetOpportunitiesParams
 ) {
-    const { data, isLoading, isError, refetch } = useQuery<TOpportunity[], Error>({
+    const { data, isLoading, isError, refetch } = useQuery<
+        TOpportunity[],
+        Error
+    >({
         queryKey: [
             'opportunities',
             params.type,

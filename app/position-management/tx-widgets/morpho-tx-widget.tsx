@@ -17,7 +17,10 @@ import { LoaderCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
-import { ConfirmationDialog, handleSmallestValue } from '@/components/dialogs/TxDialog'
+import {
+    ConfirmationDialog,
+    handleSmallestValue,
+} from '@/components/dialogs/TxDialog'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import { Button } from '@/components/ui/button'
@@ -45,7 +48,7 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 
 export default function MorphoTxWidget({
     isLoading: isLoadingPlatformData,
-    platformData
+    platformData,
 }: {
     isLoading: boolean
     platformData: TPlatform
@@ -54,9 +57,12 @@ export default function MorphoTxWidget({
     const chain_id = searchParams.get('chain_id') || 1
     const { walletAddress, handleSwitchChain } = useWalletConnection()
 
-    const isMorphoProtocol = platformData?.platform?.protocol_type === PlatformType.MORPHO
-    const isMorphoMarketsProtocol = isMorphoProtocol && !platformData?.platform?.isVault
-    const isMorphoVaultsProtocol = isMorphoProtocol && platformData?.platform?.isVault
+    const isMorphoProtocol =
+        platformData?.platform?.protocol_type === PlatformType.MORPHO
+    const isMorphoMarketsProtocol =
+        isMorphoProtocol && !platformData?.platform?.isVault
+    const isMorphoVaultsProtocol =
+        isMorphoProtocol && platformData?.platform?.isVault
 
     // Switch chain
     useEffect(() => {
@@ -109,7 +115,15 @@ function MorphoMarkets({
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx, withdrawTx, repayTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen, setLendTx } = useTxContext() as TTxContext
+    const {
+        lendTx,
+        borrowTx,
+        withdrawTx,
+        repayTx,
+        isLendBorrowTxDialogOpen,
+        setIsLendBorrowTxDialogOpen,
+        setLendTx,
+    } = useTxContext() as TTxContext
     const [refresh, setRefresh] = useState(false)
     const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
@@ -159,11 +173,7 @@ function MorphoMarkets({
         ) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [
-        lendTx.status,
-        borrowTx.status,
-        isLendBorrowTxDialogOpen,
-    ])
+    }, [lendTx.status, borrowTx.status, isLendBorrowTxDialogOpen])
 
     const { data: morphoMarketData } = useMarket({
         marketId: platformData?.platform?.morpho_market_id as MarketId,
@@ -231,20 +241,20 @@ function MorphoMarkets({
             const collUsdValue =
                 (accrualPosition.collateral
                     ? Number(
-                        formatUnits(
-                            accrualPosition.collateral,
-                            selectedAssetTokenDetails?.token?.decimals ?? 0
-                        )
-                    )
+                          formatUnits(
+                              accrualPosition.collateral,
+                              selectedAssetTokenDetails?.token?.decimals ?? 0
+                          )
+                      )
                     : 0) * (selectedAssetTokenDetails?.token?.price_usd ?? 0)
             const borrowUsdValue =
                 (borrowAssets
                     ? Number(
-                        formatUnits(
-                            currentBorrowAssets,
-                            morphoBorrowTokenDetails?.token?.decimals ?? 0
-                        )
-                    )
+                          formatUnits(
+                              currentBorrowAssets,
+                              morphoBorrowTokenDetails?.token?.decimals ?? 0
+                          )
+                      )
                     : 0) * (morphoBorrowTokenDetails?.token?.price_usd ?? 0)
 
             if (morphoBorrowTokenDetails?.ltv) {
@@ -321,11 +331,11 @@ function MorphoMarkets({
             currentBorrowAssets == BigInt(0)
                 ? 0
                 : Number(
-                    formatUnits(
-                        currentBorrowAssets,
-                        morphoBorrowTokenDetails?.token?.decimals ?? 0
-                    )
-                )
+                      formatUnits(
+                          currentBorrowAssets,
+                          morphoBorrowTokenDetails?.token?.decimals ?? 0
+                      )
+                  )
         const borrowNormalizeValueWithAmount =
             borrowNormalizeValue + Number(amount)
 
@@ -431,9 +441,9 @@ function MorphoMarkets({
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-            Number(
-                isLendPositionType(positionType) ? balance : maxBorrowAmount
-            ) ||
+                Number(
+                    isLendPositionType(positionType) ? balance : maxBorrowAmount
+                ) ||
             (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
             toManyDecimals ||
@@ -452,21 +462,21 @@ function MorphoMarkets({
     function getMaxDecimalsToDisplay(): number {
         return isLendPositionType(positionType)
             ? morphoLendTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
-                morphoLendTokenDetails?.token?.symbol
-                    .toLowerCase()
-                    .includes('eth')
+                  .toLowerCase()
+                  .includes('btc') ||
+              morphoLendTokenDetails?.token?.symbol
+                  .toLowerCase()
+                  .includes('eth')
                 ? 6
                 : 2
             : morphoBorrowTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
+                    .toLowerCase()
+                    .includes('btc') ||
                 morphoBorrowTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
-                ? 6
-                : 2
+              ? 6
+              : 2
     }
 
     const isDisabledMaxBtn = () => {
@@ -493,10 +503,10 @@ function MorphoMarkets({
     return (
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
             <ToggleTab
-                type={positionType === "lend" ? "tab1" : "tab2"}
+                type={positionType === 'lend' ? 'tab1' : 'tab2'}
                 handleToggle={(positionType: TTypeToMatch) => {
                     setAmount('')
-                    setPositionType(positionType === "tab1" ? "lend" : "borrow")
+                    setPositionType(positionType === 'tab1' ? 'lend' : 'borrow')
                 }}
                 title={{
                     tab1: isMorphoProtocol ? 'Add Collateral' : 'Lend',
@@ -772,7 +782,13 @@ function MorphoVaults({
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen, setLendTx } = useTxContext() as TTxContext
+    const {
+        lendTx,
+        borrowTx,
+        isLendBorrowTxDialogOpen,
+        setIsLendBorrowTxDialogOpen,
+        setLendTx,
+    } = useTxContext() as TTxContext
     const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
 
@@ -806,11 +822,7 @@ function MorphoVaults({
         if (borrowTx.status === 'view' && !isLendBorrowTxDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [
-        lendTx.status,
-        borrowTx.status,
-        isLendBorrowTxDialogOpen,
-    ])
+    }, [lendTx.status, borrowTx.status, isLendBorrowTxDialogOpen])
 
     // fetch vault data
     const { data: vaultData } = useVault({

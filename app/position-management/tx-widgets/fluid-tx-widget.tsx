@@ -17,7 +17,10 @@ import { LoaderCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
-import { ConfirmationDialog, handleSmallestValue } from '@/components/dialogs/TxDialog'
+import {
+    ConfirmationDialog,
+    handleSmallestValue,
+} from '@/components/dialogs/TxDialog'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import { Button } from '@/components/ui/button'
@@ -45,7 +48,7 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 
 export default function MorphoTxWidget({
     isLoading: isLoadingPlatformData,
-    platformData
+    platformData,
 }: {
     isLoading: boolean
     platformData: TPlatform
@@ -54,7 +57,8 @@ export default function MorphoTxWidget({
     const chain_id = searchParams.get('chain_id') || 1
     const { walletAddress, handleSwitchChain } = useWalletConnection()
 
-    const isFluidProtocol = platformData?.platform?.protocol_type === PlatformType.FLUID
+    const isFluidProtocol =
+        platformData?.platform?.protocol_type === PlatformType.FLUID
     const isFluidLend = isFluidProtocol && !platformData?.platform?.isVault
     const isFluidVaults = isFluidProtocol && platformData?.platform?.isVault
 
@@ -90,7 +94,7 @@ export default function MorphoTxWidget({
         )
     }
 
-    return null;
+    return null
 }
 
 function isLendPositionType(positionType: TPositionType) {
@@ -99,7 +103,7 @@ function isLendPositionType(positionType: TPositionType) {
 
 function FluidLend({
     platformData,
-    walletAddress
+    walletAddress,
 }: {
     platformData: TPlatform
     walletAddress: `0x${string}`
@@ -109,7 +113,13 @@ function FluidLend({
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, setLendTx, borrowTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } = useTxContext() as TTxContext
+    const {
+        lendTx,
+        setLendTx,
+        borrowTx,
+        isLendBorrowTxDialogOpen,
+        setIsLendBorrowTxDialogOpen,
+    } = useTxContext() as TTxContext
     const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
     const positionTypeParam: TPositionType = 'lend'
@@ -133,11 +143,7 @@ function FluidLend({
         if (borrowTx.status === 'view' && !isLendBorrowTxDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [
-        lendTx.status,
-        borrowTx.status,
-        isLendBorrowTxDialogOpen,
-    ])
+    }, [lendTx.status, borrowTx.status, isLendBorrowTxDialogOpen])
 
     const {
         erc20TokensBalanceData,
@@ -148,7 +154,9 @@ function FluidLend({
 
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[
-            (selectedAssetTokenDetails?.token?.address?.toLowerCase() ?? '').toLowerCase()
+            (
+                selectedAssetTokenDetails?.token?.address?.toLowerCase() ?? ''
+            ).toLowerCase()
         ]?.balanceFormatted ?? 0
     ).toString()
 
@@ -371,7 +379,14 @@ function FluidVaults({
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx, withdrawTx, repayTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } = useTxContext() as TTxContext
+    const {
+        lendTx,
+        borrowTx,
+        withdrawTx,
+        repayTx,
+        isLendBorrowTxDialogOpen,
+        setIsLendBorrowTxDialogOpen,
+    } = useTxContext() as TTxContext
     const [refresh, setRefresh] = useState(false)
     const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
@@ -420,11 +435,7 @@ function FluidVaults({
         ) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [
-        lendTx.status,
-        borrowTx.status,
-        isLendBorrowTxDialogOpen,
-    ])
+    }, [lendTx.status, borrowTx.status, isLendBorrowTxDialogOpen])
 
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
     const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] =
@@ -470,11 +481,11 @@ function FluidVaults({
             currentBorrowAssets == BigInt(0)
                 ? 0
                 : Number(
-                    formatUnits(
-                        currentBorrowAssets,
-                        fluidBorrowTokenDetails?.token?.decimals ?? 0
-                    )
-                )
+                      formatUnits(
+                          currentBorrowAssets,
+                          fluidBorrowTokenDetails?.token?.decimals ?? 0
+                      )
+                  )
         const borrowNormalizeValueWithAmount =
             borrowNormalizeValue + Number(amount)
 
@@ -573,9 +584,9 @@ function FluidVaults({
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-            Number(
-                isLendPositionType(positionType) ? balance : maxBorrowAmount
-            ) ||
+                Number(
+                    isLendPositionType(positionType) ? balance : maxBorrowAmount
+                ) ||
             (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
             toManyDecimals ||
@@ -594,21 +605,19 @@ function FluidVaults({
     function getMaxDecimalsToDisplay(): number {
         return isLendPositionType(positionType)
             ? fluidLendTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
-                fluidLendTokenDetails?.token?.symbol
-                    .toLowerCase()
-                    .includes('eth')
+                  .toLowerCase()
+                  .includes('btc') ||
+              fluidLendTokenDetails?.token?.symbol.toLowerCase().includes('eth')
                 ? 6
                 : 2
             : fluidBorrowTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
+                    .toLowerCase()
+                    .includes('btc') ||
                 fluidBorrowTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
-                ? 6
-                : 2
+              ? 6
+              : 2
     }
 
     const isDisabledMaxBtn = () => {
@@ -635,10 +644,10 @@ function FluidVaults({
     return (
         <section className="collateral-and-borrow-section-wrapper flex flex-col gap-[12px]">
             <ToggleTab
-                type={positionType === "lend" ? "tab1" : "tab2"}
+                type={positionType === 'lend' ? 'tab1' : 'tab2'}
                 handleToggle={(positionType: TTypeToMatch) => {
                     setAmount('')
-                    setPositionType(positionType === "tab1" ? "lend" : "borrow")
+                    setPositionType(positionType === 'tab1' ? 'lend' : 'borrow')
                 }}
                 title={{
                     tab1: 'Add Collateral',
@@ -711,7 +720,7 @@ function FluidVaults({
                             'border-gray-200 py-[12px] px-[16px] flex items-center gap-[12px]'
                         )}
                     >
-                        {(isLoading) && (
+                        {isLoading && (
                             <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
                         )}
                         {/* Lend position type - Selected token image */}
@@ -740,12 +749,9 @@ function FluidVaults({
                         {/* Borrow position type - Select token dropdown */}
                         {!isLoading && !isLendPositionType(positionType) && (
                             <ImageWithDefault
-                                src={
-                                    fluidBorrowTokenDetails?.token?.logo || ''
-                                }
+                                src={fluidBorrowTokenDetails?.token?.logo || ''}
                                 alt={
-                                    fluidBorrowTokenDetails?.token?.symbol ||
-                                    ''
+                                    fluidBorrowTokenDetails?.token?.symbol || ''
                                 }
                                 className="shrink-0 w-[24px] h-[24px] rounded-full"
                                 width={24}
@@ -877,7 +883,7 @@ function FluidVaults({
                                 // TODO: Get health factor values
                                 healthFactorValues={{
                                     healthFactor: healthFactor ?? 0,
-                                    newHealthFactor: 0
+                                    newHealthFactor: 0,
                                 }}
                                 setActionType={setPositionType}
                             />

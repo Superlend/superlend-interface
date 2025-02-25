@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { Button } from './ui/button'
 import { TPositionType } from '@/types'
 
-export type TTypeToMatch = 'tab1' | 'tab2';
+export type TTypeToMatch = 'tab1' | 'tab2'
 
 type TProps = {
     type: TTypeToMatch
@@ -33,7 +33,7 @@ const ToggleTab = ({ type, handleToggle, title, showTab }: TProps) => {
         tab1: 'tab1',
         tab2: 'tab2',
     }
-    
+
     function checkType(typeToMatch: TTypeToMatch): boolean {
         return positionType[typeToMatch] === type
     }

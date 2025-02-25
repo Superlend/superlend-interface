@@ -23,7 +23,7 @@ export const UserTokenBalancesContext = createContext<TUserTokenBalancesProps>({
     formattedTokenBalances: [],
     isLoading: false,
     isRefreshing: false,
-    setIsRefreshing: () => { },
+    setIsRefreshing: () => {},
 })
 
 type TTokenBalance = {
@@ -51,20 +51,29 @@ export default function UserTokenBalancesProvider({
     }, [walletAddress])
 
     function getFormattedTokenBalances(
-        erc20TokensBalanceData: Record<number, Record<string, { balanceRaw: string; balanceFormatted: number }>>,
+        erc20TokensBalanceData: Record<
+            number,
+            Record<string, { balanceRaw: string; balanceFormatted: number }>
+        >,
         allTokensData: any,
         allChainsData: TChain[]
     ): TTokenBalance[] {
-        const result: TTokenBalance[] = [];
+        const result: TTokenBalance[] = []
 
         for (const chainId in erc20TokensBalanceData) {
-            const chainIdNumber = Number(chainId);
-            const tokenBalances = erc20TokensBalanceData[chainIdNumber];
+            const chainIdNumber = Number(chainId)
+            const tokenBalances = erc20TokensBalanceData[chainIdNumber]
 
             for (const tokenAddress in tokenBalances) {
-                const balanceData = tokenBalances[tokenAddress];
-                const token = allTokensData[chainIdNumber]?.find((token: any) => token.address.toLowerCase() === tokenAddress.toLowerCase());
-                const chain = allChainsData.find((chain) => chain.chain_id === chainIdNumber);
+                const balanceData = tokenBalances[tokenAddress]
+                const token = allTokensData[chainIdNumber]?.find(
+                    (token: any) =>
+                        token.address.toLowerCase() ===
+                        tokenAddress.toLowerCase()
+                )
+                const chain = allChainsData.find(
+                    (chain) => chain.chain_id === chainIdNumber
+                )
 
                 result.push({
                     token: {
@@ -72,38 +81,43 @@ export default function UserTokenBalancesProvider({
                         balance: balanceData.balanceFormatted,
                     },
                     chain: chain as TChain,
-                });
+                })
             }
         }
 
-        return result;
+        return result
     }
 
     function getFormattedFallbackTokenBalances(allTokensData: any) {
-        const output: any = {};
+        const output: any = {}
 
         for (const chainId in allTokensData) {
             if (allTokensData.hasOwnProperty(chainId)) {
-                const tokens = allTokensData[chainId];
-                output[chainId] = {};
+                const tokens = allTokensData[chainId]
+                output[chainId] = {}
 
                 tokens.forEach((token: any) => {
-                    const normalizedAddress = token.address.toLowerCase().trim();
+                    const normalizedAddress = token.address.toLowerCase().trim()
                     if (!output[chainId][normalizedAddress]) {
                         output[chainId][normalizedAddress] = {
                             balanceRaw: '0',
                             balanceFormatted: 0,
-                        };
+                        }
                     }
-                });
+                })
             }
         }
 
-        return output;
+        return output
     }
 
-    const fallbackTokenBalanceData = getFormattedFallbackTokenBalances(allTokensData);
-    const formattedTokenBalances = getFormattedTokenBalances(isWalletConnected ? erc20TokensBalanceData : fallbackTokenBalanceData, allTokensData, allChainsData);
+    const fallbackTokenBalanceData =
+        getFormattedFallbackTokenBalances(allTokensData)
+    const formattedTokenBalances = getFormattedTokenBalances(
+        isWalletConnected ? erc20TokensBalanceData : fallbackTokenBalanceData,
+        allTokensData,
+        allChainsData
+    )
 
     return (
         <UserTokenBalancesContext.Provider

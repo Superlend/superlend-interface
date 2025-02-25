@@ -106,7 +106,9 @@ const EasterEgg = () => {
         if (walletAddress) {
             setIsLoadingUser(true)
             axios
-                .get(`${endpoint}/api/entries?walletAddress=${walletAddress.toLowerCase()}`)
+                .get(
+                    `${endpoint}/api/entries?walletAddress=${walletAddress.toLowerCase()}`
+                )
                 .then((res) => {
                     const user = res.data
 

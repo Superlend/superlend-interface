@@ -28,14 +28,14 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
-            return (
-                positionTypeParam === 'lend' ? 'Token' : 'Borrow Token'
-            )
+            return positionTypeParam === 'lend' ? 'Token' : 'Borrow Token'
         },
         accessorFn: (item) => item.tokenSymbol,
         cell: ({ row }) => {
             const searchParams = useSearchParams()
-            const isMorphoShiftToken = row.original.tokenAddress === "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
+            const isMorphoShiftToken =
+                row.original.tokenAddress ===
+                '0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559'
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
             const tokenSymbol: string = row.getValue('tokenSymbol')
@@ -115,7 +115,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             {tokenSymbol}
                         </BodyText>
                     </Link>
-                    {(isMorphoShiftToken && positionTypeParam === 'lend') &&
+                    {isMorphoShiftToken && positionTypeParam === 'lend' && (
                         <InfoTooltip
                             label={
                                 <ImageWithDefault
@@ -127,7 +127,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 />
                             }
                             content="Supplying to this vault earns up to 25% APY in SHIFT rewards"
-                        />}
+                        />
+                    )}
                 </span>
             )
         },
@@ -136,13 +137,16 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     {
         accessorKey: 'platformName',
         header: 'Platform',
-        accessorFn: (item) => `${item.platformName} ${item.platformWithMarketName}`,
+        accessorFn: (item) =>
+            `${item.platformName} ${item.platformWithMarketName}`,
         cell: ({ row }) => {
             const { width: screenWidth } = useDimensions()
             const platformName: string = row.getValue('platformName')
             const platformId: string = row.original.platformId
-            const platformWithMarketName: string = row.original.platformWithMarketName
-            const formattedPlatformWithMarketName: string = platformWithMarketName.split(' ').slice(1).join(' ')
+            const platformWithMarketName: string =
+                row.original.platformWithMarketName
+            const formattedPlatformWithMarketName: string =
+                platformWithMarketName.split(' ').slice(1).join(' ')
             const platformLogo = row.original.platformLogo
             const isMorpho =
                 row.original.platformId.split('-')[0].toLowerCase() ===
@@ -154,8 +158,10 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             // const morphoLabel =
             //     isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
             // const formattedPlatformName = isMorpho ? morphoLabel : platformName
-            const platformDisplayName = `${capitalizeText(platformName.split(' ')[0])} ${getPlatformVersion(platformId)}`;
-            const showPlatformCuratorName = platformDisplayName.split(' ')[1].toLowerCase() !== formattedPlatformWithMarketName.toLowerCase();
+            const platformDisplayName = `${capitalizeText(platformName.split(' ')[0])} ${getPlatformVersion(platformId)}`
+            const showPlatformCuratorName =
+                platformDisplayName.split(' ')[1].toLowerCase() !==
+                formattedPlatformWithMarketName.toLowerCase()
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -173,16 +179,14 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         >
                             {platformDisplayName}
                         </BodyText>
-                        {showPlatformCuratorName &&
+                        {showPlatformCuratorName && (
                             <Label className="text-gray-800 leading-0 capitalize">
                                 {formattedPlatformWithMarketName}
                             </Label>
-                        }
+                        )}
                     </div>
                     {isMorpho && !isVault && positionTypeParam === 'lend' && (
-                        <InfoTooltip
-                            content="Supplying directly to Morpho markets is risky and not advised by the Morpho team"
-                        />
+                        <InfoTooltip content="Supplying directly to Morpho markets is risky and not advised by the Morpho team" />
                     )}
                 </span>
             )

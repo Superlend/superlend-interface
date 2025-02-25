@@ -8,7 +8,9 @@ export const AnalyticsProvider = ({ children }: { children: ReactNode }) => {
     if (process.env.NODE_ENV === 'production') {
         return (
             <AmplitudeAnalyticsProvider
-                apiKey={shouldBeDefined(process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY)}
+                apiKey={shouldBeDefined(
+                    process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY
+                )}
             >
                 {children}
             </AmplitudeAnalyticsProvider>
@@ -20,7 +22,7 @@ export const AnalyticsProvider = ({ children }: { children: ReactNode }) => {
 
 export function shouldBeDefined<T>(
     value: T | undefined,
-    valueName: string = 'value',
+    valueName: string = 'value'
 ): T {
     if (value === undefined) {
         throw new Error(`${valueName} is undefined`)

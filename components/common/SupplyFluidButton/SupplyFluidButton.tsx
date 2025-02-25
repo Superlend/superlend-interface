@@ -88,12 +88,14 @@ const SupplyFluidButton = ({
         success: isFluidVaults ? 'Go To Borrow' : 'Close',
         default:
             lendTx.status === 'approve'
-                ? (isFluidVaults ? 'Start adding collateral' : 'Start supplying')
+                ? isFluidVaults
+                    ? 'Start adding collateral'
+                    : 'Start supplying'
                 : isFluidVaults
-                    ? 'Add Collateral'
-                    : isFluidLend
-                        ? 'Supply to vault'
-                        : 'Lend Collateral',
+                  ? 'Add Collateral'
+                  : isFluidLend
+                    ? 'Supply to vault'
+                    : 'Lend Collateral',
     }
 
     const getTxButtonText = (
@@ -105,12 +107,12 @@ const SupplyFluidButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? lendTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? lendTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 
@@ -133,7 +135,8 @@ const SupplyFluidButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -141,10 +144,7 @@ const SupplyFluidButton = ({
                 address: poolContractAddress,
                 abi: FLUID_LEND_ABI,
                 functionName: 'deposit',
-                args: [
-                    amountBN,
-                    walletAddress as `0x${string}`,
-                ],
+                args: [amountBN, walletAddress as `0x${string}`],
             })
                 .then((data) => {
                     setLendTx((prev: TLendTx) => ({
@@ -157,7 +157,10 @@ const SupplyFluidButton = ({
                         amount,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
-                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        chain_name:
+                            CHAIN_ID_MAPPER[
+                                Number(assetDetails?.chain_id) as ChainId
+                            ],
                         wallet_address: walletAddress,
                     })
                 })
@@ -233,7 +236,8 @@ const SupplyFluidButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.protocol_type,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -241,10 +245,7 @@ const SupplyFluidButton = ({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [
-                    poolContractAddress,
-                    parseUnits(amount, decimals),
-                ],
+                args: [poolContractAddress, parseUnits(amount, decimals)],
             })
                 .then((data) => {
                     setLendTx((prev: TLendTx) => ({
@@ -304,9 +305,7 @@ const SupplyFluidButton = ({
             )}
             <Button
                 disabled={
-                    (isPending ||
-                        isConfirming ||
-                        disabled) &&
+                    (isPending || isConfirming || disabled) &&
                     lendTx.status !== 'view'
                 }
                 onClick={() => {

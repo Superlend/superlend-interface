@@ -12,22 +12,20 @@ export const PageVisitTracker = () => {
     useEffect(() => {
         // Function to convert search params to object
         function stringToObject(str: string): { [key: string]: any } {
-            const obj: { [key: string]: any } = {};
+            const obj: { [key: string]: any } = {}
             str.split('&').forEach((pair) => {
-
                 if (pair) {
-                    const [k, v] = pair.split('=');
-                    obj[k.trim()] = v.trim();
+                    const [k, v] = pair.split('=')
+                    obj[k.trim()] = v.trim()
                 }
-            });
-            return obj;
+            })
+            return obj
         }
         // Convert search params to object
-        const searchParamsObject = stringToObject(searchParams.toString());
+        const searchParamsObject = stringToObject(searchParams.toString())
         // Log the object
         trackEvent('page_visit', { pathname, ...searchParamsObject })
     }, [trackEvent, pathname, searchParams])
-
 
     return null
 }

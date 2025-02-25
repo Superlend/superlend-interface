@@ -13,10 +13,7 @@ import {
 } from '@/components/ui/card'
 import { TPlatform, TPositionType } from '@/types'
 import { PlatformType, TPlatformAsset } from '@/types/platform'
-import {
-    LoaderCircle,
-    X,
-} from 'lucide-react'
+import { LoaderCircle, X } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useMemo, useState, useEffect } from 'react'
 import { useSwitchChain } from 'wagmi'
@@ -67,7 +64,11 @@ import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { TPortfolio } from '@/types/queries/portfolio'
-import { ConfirmationDialog, getMaxDecimalsToDisplay, handleSmallestValue } from '@/components/dialogs/TxDialog'
+import {
+    ConfirmationDialog,
+    getMaxDecimalsToDisplay,
+    handleSmallestValue,
+} from '@/components/dialogs/TxDialog'
 
 interface LendAndBorrowAssetsProps {
     isLoading: boolean
@@ -75,7 +76,11 @@ interface LendAndBorrowAssetsProps {
     portfolioData: TPortfolio
 }
 
-export default function AaveV3TxWidget({ isLoading, platformData, portfolioData }: LendAndBorrowAssetsProps) {
+export default function AaveV3TxWidget({
+    isLoading,
+    platformData,
+    portfolioData,
+}: LendAndBorrowAssetsProps) {
     const { logEvent } = useAnalytics()
     const {
         erc20TokensBalanceData,
@@ -110,7 +115,8 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType =
         (searchParams.get('position_type') as TPositionType) || 'lend'
-    const { walletAddress, handleSwitchChain, isWalletConnected } = useWalletConnection()
+    const { walletAddress, handleSwitchChain, isWalletConnected } =
+        useWalletConnection()
     const {
         fetchAaveV3Data,
         getMaxBorrowAmount,
@@ -268,13 +274,18 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
                         logEvent('approve_completed', {
                             amount,
                             token_symbol: assetDetails?.asset?.token?.symbol,
-                            platform_name: assetDetails?.name || platformData?.platform?.name,
-                            chain_name: CHAIN_ID_MAPPER[assetDetails?.chain_id as ChainId],
+                            platform_name:
+                                assetDetails?.name ||
+                                platformData?.platform?.name,
+                            chain_name:
+                                CHAIN_ID_MAPPER[
+                                    assetDetails?.chain_id as ChainId
+                                ],
                             wallet_address: walletAddress,
                             error_message: r.gte(amountBN)
                                 ? ''
                                 : 'Insufficient allowance',
-                            status: r.gte(amountBN) ? 'lend' : 'approve'
+                            status: r.gte(amountBN) ? 'lend' : 'approve',
                         })
 
                         return {
@@ -302,21 +313,15 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
         if (
-            (
-                (lendTx.status === 'view' ||
-                    borrowTx.status === 'view' ||
-                    withdrawTx.status === 'view' ||
-                    repayTx.status === 'view') &&
-                !isLendBorrowTxDialogOpen)
+            (lendTx.status === 'view' ||
+                borrowTx.status === 'view' ||
+                withdrawTx.status === 'view' ||
+                repayTx.status === 'view') &&
+            !isLendBorrowTxDialogOpen
         ) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [
-        lendTx.status,
-        borrowTx.status,
-        withdrawTx.status,
-        repayTx.status,
-    ])
+    }, [lendTx.status, borrowTx.status, withdrawTx.status, repayTx.status])
 
     // Set selected borrow token details
     useEffect(() => {
@@ -465,7 +470,7 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
     } => {
         const borrowTokenDetails =
             maxBorrowTokensAmount?.[
-            selectedBorrowTokenDetails?.token?.address ?? ''
+                selectedBorrowTokenDetails?.token?.address ?? ''
             ] ?? {}
 
         const { user } = borrowTokenDetails
@@ -544,9 +549,9 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-            Number(
-                isLendPositionType(positionType) ? balance : maxBorrowAmount
-            ) ||
+                Number(
+                    isLendPositionType(positionType) ? balance : maxBorrowAmount
+                ) ||
             (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
             toManyDecimals,
@@ -597,9 +602,9 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
     return (
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
             <ToggleTab
-                type={positionType === "lend" ? "tab1" : "tab2"}
+                type={positionType === 'lend' ? 'tab1' : 'tab2'}
                 handleToggle={(positionType: TTypeToMatch) => {
-                    setPositionType(positionType === "tab1" ? "lend" : "borrow")
+                    setPositionType(positionType === 'tab1' ? 'lend' : 'borrow')
                     setAmount('')
                 }}
             />
@@ -682,23 +687,24 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
                             />
                         )}
                         {/* Borrow position type - Select token dropdown */}
-                        {
-                            (!isWalletConnected && !isLendPositionType(positionType)) && (
+                        {!isWalletConnected &&
+                            !isLendPositionType(positionType) && (
                                 <ImageWithDefault
                                     src={assetDetails?.asset?.token?.logo || ''}
-                                    alt={assetDetails?.asset?.token?.symbol || ''}
+                                    alt={
+                                        assetDetails?.asset?.token?.symbol || ''
+                                    }
                                     className="shrink-0 w-[24px] h-[24px] rounded-full"
                                     width={24}
                                     height={24}
                                 />
-                            )
-                        }
-                        {(isLoading ||
-                            (!selectedBorrowTokenDetails?.token?.address) &&
-                            !isLendPositionType(positionType) &&
-                            isWalletConnected) && (
-                                <Skeleton className="shrink-0 w-[34px] h-[34px] rounded-full" />
                             )}
+                        {(isLoading ||
+                            (!selectedBorrowTokenDetails?.token?.address &&
+                                !isLendPositionType(positionType) &&
+                                isWalletConnected)) && (
+                            <Skeleton className="shrink-0 w-[34px] h-[34px] rounded-full" />
+                        )}
                         {!isLoading &&
                             !!selectedBorrowTokenDetails?.token?.address &&
                             !isLendPositionType(positionType) && (
@@ -761,12 +767,12 @@ export default function AaveV3TxWidget({ isLoading, platformData, portfolioData 
                                     {abbreviateNumber(
                                         isLendPositionType(positionType)
                                             ? Number(
-                                                assetDetails?.asset?.apy ?? 0
-                                            )
+                                                  assetDetails?.asset?.apy ?? 0
+                                              )
                                             : Number(
-                                                selectedBorrowTokenDetails?.variable_borrow_apy ??
-                                                0
-                                            )
+                                                  selectedBorrowTokenDetails?.variable_borrow_apy ??
+                                                      0
+                                              )
                                     )}
                                     %
                                 </Badge>
@@ -879,7 +885,7 @@ function SelectTokensDropdown({
                             className={cn(
                                 'flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4',
                                 selectedItemDetails?.token?.address ===
-                                asset?.token?.address && 'bg-gray-400'
+                                    asset?.token?.address && 'bg-gray-400'
                             )}
                         >
                             <ImageWithDefault

@@ -159,7 +159,8 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         cell: ({ row }) => {
             const platformName: string = row.getValue('platformName')
             const platformId: string = row.original.platform_id
-            const platformWithMarketName: string = row.original.platformWithMarketName
+            const platformWithMarketName: string =
+                row.original.platformWithMarketName
             const isMorpho =
                 platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
             const isVault = row.original.isVault

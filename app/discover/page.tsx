@@ -4,7 +4,5 @@ import DiscoverPageComponents from './page-components'
 // import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 
 export default async function DiscoverPage() {
-    return (
-        <DiscoverPageComponents />
-    )
+    return <DiscoverPageComponents />
 }

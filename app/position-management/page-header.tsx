@@ -382,9 +382,7 @@ export default function PageHeader() {
                         {!isLoadingPlatformData && (
                             <>
                                 {/* Supply APY */}
-                                {!(
-                                    isMorphoMarkets
-                                ) && (
+                                {!isMorphoMarkets && (
                                     <>
                                         <div className="flex items-center max-md:justify-between gap-[4px]">
                                             <BodyText

@@ -342,7 +342,14 @@ export const useAaveV3Data = () => {
                             baseCurrencyData.marketReferenceCurrencyDecimals
                         )
                     )
-                    .div(parseUnits(reserveLiquidationThreshold === '0' ? '1' : reserveLiquidationThreshold, 4))
+                    .div(
+                        parseUnits(
+                            reserveLiquidationThreshold === '0'
+                                ? '1'
+                                : reserveLiquidationThreshold,
+                            4
+                        )
+                    )
             }
 
             const newMaxToWithdraw = BigNumber.from(
