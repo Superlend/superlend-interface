@@ -526,19 +526,10 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     },
     {
         accessorKey: 'collateral_exposure',
-        // accessorFn: (item) => item.collateral_exposure,
-        header: () => (
-            <InfoTooltip
-                side="bottom"
-                label={<TooltipText>Collateral Exposure</TooltipText>}
-                content={
-                    'The amount of collateral that is exposed to the protocol.'
-                }
-            />
-        ),
+        header: 'Collateral Exposure',
         cell: ({ row }) => {
             const { allTokensData } = useAssetsDataContext()
-            const maxItemsToShow = 5
+            const MAX_ITEMS_TO_SHOW = 5
 
             const tokenImages = row.original.collateral_exposure?.map(
                 (tokenAddress: `0x${string}`) =>
@@ -573,10 +564,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             content: token.name,
                         })
                     )}
-                    maxItemsToShow={maxItemsToShow}
+                    maxItemsToShow={MAX_ITEMS_TO_SHOW}
                     moreItemsTooltipContent={
                         <div className="flex flex-col gap-2">
-                            {tokenDetails?.filter((_, index) => index > maxItemsToShow - 1)
+                            {tokenDetails
+                                ?.filter((_, index) => index > MAX_ITEMS_TO_SHOW - 1)
+                                .filter((token) => !!token && !!token.name)
                                 .map((token: any) => (
                                     <div className="flex items-center gap-2">
                                         <ImageWithDefault
