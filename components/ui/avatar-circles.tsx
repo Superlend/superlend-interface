@@ -17,18 +17,18 @@ interface AvatarCirclesProps {
     avatarUrls: string[]
     avatarDetails?: any[]
     maxItemsToShow?: number
+    moreItemsTooltipContent?: string | React.ReactNode
 }
 
 const AvatarCircles = ({
-    moreItemsCount,
     className,
     avatarUrls,
     avatarDetails,
     maxItemsToShow = 3,
+    moreItemsTooltipContent
 }: AvatarCirclesProps) => {
-    const avatarUrlsToShow = moreItemsCount
-        ? avatarUrls.slice(0, maxItemsToShow)
-        : avatarUrls
+    const avatarUrlsToShow = avatarUrls.slice(0, maxItemsToShow);
+    const moreItemsCount = avatarUrls.length - maxItemsToShow;
 
     return (
         <div
@@ -82,10 +82,24 @@ const AvatarCircles = ({
                         alt={`Avatar ${index + 1}`}
                     />
                 ))}
-            {!!moreItemsCount && moreItemsCount > 0 && (
-                <span className="flex h-[24px] w-[24px] items-center justify-center rounded-full border-2 border-secondary-300/75 bg-white text-center text-xs font-medium text-secondary-500 hover:bg-gray-400 dark:border-gray-800 dark:bg-white dark:text-black">
-                    +{moreItemsCount}
-                </span>
+            {(moreItemsCount > 0) && (
+                <InfoTooltip
+                    label={
+                        <span className="flex h-[24px] w-[24px] items-center justify-center rounded-full border-2 border-secondary-300/75 bg-white text-center text-xs font-medium text-secondary-500 hover:bg-gray-400 dark:border-gray-800 dark:bg-white dark:text-black">
+                            +{moreItemsCount}
+                        </span>
+                    }
+                    content={
+                        (typeof moreItemsTooltipContent === 'string' ||
+                            !moreItemsTooltipContent) ? (
+                            <BodyText level="body2" weight="medium">
+                                {moreItemsCount} more items
+                            </BodyText>
+                        ) : (
+                            moreItemsTooltipContent
+                        )
+                    }
+                />
             )}
         </div>
     )

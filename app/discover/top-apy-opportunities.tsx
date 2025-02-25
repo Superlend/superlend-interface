@@ -113,6 +113,7 @@ export default function TopApyOpportunities() {
                 deposits: positionTypeParam === 'lend',
                 borrows: positionTypeParam === 'borrow',
                 max_ltv: positionTypeParam === 'borrow',
+                collateral_exposure: positionTypeParam === 'lend',
             }
         })
         setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])
@@ -246,6 +247,7 @@ export default function TopApyOpportunities() {
             additional_rewards: item.platform.additional_rewards,
             rewards: item.platform.rewards,
             isVault: item.platform.isVault || false,
+            collateral_exposure: item.platform.collateral_exposure,
         }
     })
 

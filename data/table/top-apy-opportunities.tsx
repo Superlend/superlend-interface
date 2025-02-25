@@ -3,9 +3,11 @@
 import ImageWithBadge from '@/components/ImageWithBadge'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
+import AvatarCircles from '@/components/ui/avatar-circles'
 import { Badge } from '@/components/ui/badge'
 import { BodyText, Label } from '@/components/ui/typography'
 import { PAIR_BASED_PROTOCOLS } from '@/constants'
+import { useAssetsDataContext } from '@/context/data-provider'
 import useDimensions from '@/hooks/useDimensions'
 import {
     abbreviateNumber,
@@ -523,55 +525,130 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         enableGlobalFilter: false,
     },
     {
-        accessorKey: 'utilization',
-        accessorFn: (item) => Number(item.utilization),
+        accessorKey: 'collateral_exposure',
+        // accessorFn: (item) => item.collateral_exposure,
         header: () => (
             <InfoTooltip
                 side="bottom"
-                label={<TooltipText>Utilization</TooltipText>}
+                label={<TooltipText>Collateral Exposure</TooltipText>}
                 content={
-                    'Ratio between the amount borrowed and the amount deposited.'
+                    'The amount of collateral that is exposed to the protocol.'
                 }
             />
         ),
         cell: ({ row }) => {
-            const isMorpho =
-                row.original.platformId.split('-')[0].toLowerCase() ===
-                PlatformType.MORPHO
-            const isVault = row.original.isVault
+            const { allTokensData } = useAssetsDataContext()
+            const maxItemsToShow = 5
 
-            if (isMorpho && isVault) {
-                return (
-                    <InfoTooltip
-                        label={<Badge>N/A</Badge>}
-                        content="This does not apply to Morpho vaults, as the curator maintains this."
-                    />
-                )
-            }
+            const tokenImages = row.original.collateral_exposure?.map(
+                (tokenAddress: `0x${string}`) =>
+                    allTokensData[row.original.chain_id].find(
+                        (asset: any) =>
+                            asset.address.toLowerCase() ===
+                            tokenAddress.toLowerCase()
+                    )?.logo
+            )
 
-            if (`${Number(row.getValue('utilization')).toFixed(1)}` === '0.0') {
-                return (
-                    <InfoTooltip
-                        label={
-                            <TooltipText>
-                                <BodyText level={'body2'} weight={'medium'}>
-                                    {`${Number(row.getValue('utilization')).toFixed(1)}%`}
-                                </BodyText>
-                            </TooltipText>
-                        }
-                        content={'This asset is non-borrowable'}
-                    />
-                )
-            }
+            const tokenDetails = row.original.collateral_exposure?.map(
+                (tokenAddress: `0x${string}`) => {
+                    const token = allTokensData[row.original.chain_id].find(
+                        (asset: any) =>
+                            asset.address.toLowerCase() ===
+                            tokenAddress.toLowerCase()
+                    )
+                    return {
+                        name: token?.name,
+                        logo: token?.logo,
+                    }
+                }
+            )
 
             return (
-                <BodyText level={'body2'} weight={'medium'}>
-                    {`${Number(row.getValue('utilization')).toFixed(2)}%`}
-                </BodyText>
+                <AvatarCircles
+                    avatarUrls={
+                        tokenImages ?? []
+                    }
+                    avatarDetails={tokenDetails?.map(
+                        (token) => ({
+                            content: token.name,
+                        })
+                    )}
+                    maxItemsToShow={maxItemsToShow}
+                    moreItemsTooltipContent={
+                        <div className="flex flex-col gap-2">
+                            {tokenDetails?.filter((_, index) => index > maxItemsToShow - 1)
+                                .map((token: any) => (
+                                    <div className="flex items-center gap-2">
+                                        <ImageWithDefault
+                                            src={token.logo}
+                                            width={16}
+                                            height={16}
+                                            alt={token.name}
+                                            className="rounded-full shrink-0"
+                                        />
+                                        <BodyText level="body2" weight="medium">
+                                            {token.name}
+                                        </BodyText>
+                                    </div>
+                                ))}
+                        </div>
+                    }
+                />
             )
         },
         enableGlobalFilter: false,
+        enableSorting: false,
     },
+    // {
+    //     accessorKey: 'utilization',
+    //     accessorFn: (item) => Number(item.utilization),
+    //     header: () => (
+    //         <InfoTooltip
+    //             side="bottom"
+    //             label={<TooltipText>Utilization</TooltipText>}
+    //             content={
+    //                 'Ratio between the amount borrowed and the amount deposited.'
+    //             }
+    //         />
+    //     ),
+    //     cell: ({ row }) => {
+    //         const isMorpho =
+    //             row.original.platformId.split('-')[0].toLowerCase() ===
+    //             PlatformType.MORPHO
+    //         const isVault = row.original.isVault
+
+    //         if (isMorpho && isVault) {
+    //             return (
+    //                 <InfoTooltip
+    //                     label={<Badge>N/A</Badge>}
+    //                     content="This does not apply to Morpho vaults, as the curator maintains this."
+    //                 />
+    //             )
+    //         }
+
+    //         if (`${Number(row.getValue('utilization')).toFixed(1)}` === '0.0') {
+    //             return (
+    //                 <InfoTooltip
+    //                     label={
+    //                         <TooltipText>
+    //                             <BodyText level={'body2'} weight={'medium'}>
+    //                                 {`${Number(row.getValue('utilization')).toFixed(1)}%`}
+    //                             </BodyText>
+    //                         </TooltipText>
+    //                     }
+    //                     content={'This asset is non-borrowable'}
+    //                 />
+    //             )
+    //         }
+
+    //         return (
+    //             <BodyText level={'body2'} weight={'medium'}>
+    //                 {`${Number(row.getValue('utilization')).toFixed(2)}%`}
+    //             </BodyText>
+    //         )
+    //     },
+    //     enableGlobalFilter: false,
+    // },
 ]
 
 function TooltipText({

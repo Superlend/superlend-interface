@@ -64,6 +64,7 @@ export default function Opportunities({
                 deposits: positionType === 'lend',
                 borrows: positionType === 'borrow',
                 max_ltv: positionType === 'borrow',
+                collateral_exposure: positionType === 'lend',
             }
         })
     }, [positionType])
@@ -97,6 +98,7 @@ export default function Opportunities({
             additional_rewards: item.platform.additional_rewards,
             rewards: item.platform.rewards,
             isVault: item.platform.isVault || false,
+            collateral_exposure: item.platform.collateral_exposure,
         }
     })
 
