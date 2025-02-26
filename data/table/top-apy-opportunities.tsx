@@ -180,7 +180,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             {platformDisplayName}
                         </BodyText>
                         {showPlatformCuratorName && (
-                            <Label className="text-gray-800 leading-0 capitalize">
+                            <Label className="text-gray-800 leading-0 capitalize truncate max-w-[120px]">
                                 {formattedPlatformWithMarketName}
                             </Label>
                         )}

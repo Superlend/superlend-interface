@@ -46,8 +46,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const chainId = row.original.chain_id
             const chainLogo = row.original.chainLogo
             const chainName = row.original.chainName
-            const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
+            const positionTypeParam = searchParams.get('position_type') || 'lend'
+
+            const formattedPlatformWithMarketName: string = platformWithMarketName.split(' ').slice(1).join(' ')
+            const platformDisplayName = `${capitalizeText(platformName.split(' ')[0])} ${getPlatformVersion(platformId)}`;
+            const showPlatformCuratorName = platformDisplayName.split(' ')[1].toLowerCase() !== formattedPlatformWithMarketName.toLowerCase();
+
 
             const tooltipContent = (
                 <span className="flex flex-col gap-[16px]">
@@ -98,37 +102,37 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         }
                         content={tooltipContent}
                     />
-                    <BodyText
-                        level={'body2'}
-                        weight={'medium'}
-                        className="truncate capitalize"
-                        title={platformWithMarketName}
-                    >
-                        <Link
-                            href={{
-                                pathname: 'position-management',
-                                query: {
-                                    token: tokenAddress,
-                                    chain_id: chainId,
-                                    protocol_identifier: protocolIdentifier,
-                                    position_type: positionTypeParam,
-                                },
-                            }}
-                            onClick={() => {
-                                logEvent('opportunity_selected', {
-                                    token_symbol: tokenSymbol,
-                                    chain_name: chainName,
-                                    platform_name: platformName,
-                                    apy: row.original.apy_current,
-                                    action: positionTypeParam,
-                                    wallet_address: walletAddress,
-                                })
-                            }}
-                            className="truncate"
+                    <span className="flex flex-col gap-[0px]">
+                        <BodyText
+                            level={'body2'}
+                            weight={'medium'}
+                            className="truncate capitalize"
+                            title={platformWithMarketName}
                         >
-                            {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
-                        </Link>
-                    </BodyText>
+                            <Link
+                                href={{
+                                    pathname: 'position-management',
+                                    query: {
+                                        token: tokenAddress,
+                                        chain_id: chainId,
+                                        protocol_identifier: protocolIdentifier,
+                                        position_type: positionTypeParam,
+                                    },
+                                }}
+                                className="truncate"
+                            >
+                                {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
+                            </Link>
+                        </BodyText>
+                        {showPlatformCuratorName &&
+                            <Label
+                                title={formattedPlatformWithMarketName}
+                                className="text-gray-800 leading-0 capitalize truncate max-w-[120px]"
+                            >
+                                {formattedPlatformWithMarketName}
+                            </Label>
+                        }
+                    </span>
                 </span>
             )
         },

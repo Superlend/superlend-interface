@@ -144,66 +144,68 @@ const RepayButton = ({
             try {
                 const morphoMarketData = assetDetails?.market as Market
 
-                logEvent('withdraw_initiated', {
+            logEvent('repay_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
+
+            writeContractAsync({
+                address: assetDetails.core_contract as `0x${string}`,
+                abi: MORPHO_MARKET_ABI,
+                functionName: 'repay',
+                args: [
+
+                    {
+                        loanToken: morphoMarketData.params.loanToken,
+                        collateralToken:
+                            morphoMarketData.params.collateralToken,
+                        oracle: morphoMarketData.params.oracle,
+                        irm: morphoMarketData.params.irm,
+                        lltv: morphoMarketData.params.lltv,
+                    },
+                    amountBN,
+                    0,
+                    walletAddress,
+                    '0x',
+                ],
+            }).then((data) => {
+                setRepayTx((prev: TRepayTx) => ({
+                    ...prev,
+                    status: 'view',
+                    errorMessage: '',
+                }))
+
+                logEvent('repay_completed', {
                     amount,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
-                    chain_name:
-                        CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
-                        ],
+                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                     wallet_address: walletAddress,
                 })
-
-                writeContractAsync({
-                    address: assetDetails.core_contract as `0x${string}`,
-                    abi: MORPHO_MARKET_ABI,
-                    functionName: 'repay',
-                    args: [
-                        {
-                            loanToken: morphoMarketData.params.loanToken,
-                            collateralToken:
-                                morphoMarketData.params.collateralToken,
-                            oracle: morphoMarketData.params.oracle,
-                            irm: morphoMarketData.params.irm,
-                            lltv: morphoMarketData.params.lltv,
-                        },
-                        amountBN,
-                        0,
-                        walletAddress,
-                        '0x',
-                    ],
-                })
-                    .then((data) => {
-                        setRepayTx((prev: TRepayTx) => ({
-                            ...prev,
-                            status: 'view',
-                            errorMessage: '',
-                        }))
-                    })
-                    .catch((error) => {
-                        setRepayTx((prev: TRepayTx) => ({
-                            ...prev,
-                            isPending: false,
-                            isConfirming: false,
-                            isConfirmed: false,
-                            // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
-                        }))
-                    })
-            } catch (error) {
-                error
-            }
-        },
-        [
-            amount,
-            poolContractAddress,
-            underlyingAssetAdress,
-            walletAddress,
-            handleCloseModal,
-            writeContractAsync,
-            decimals,
-        ]
-    )
+            }).catch((error) => {
+                setRepayTx((prev: TRepayTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+                }))
+            })
+        } catch (error) {
+            error
+        }
+    }, [
+        amount,
+        poolContractAddress,
+        underlyingAssetAdress,
+        walletAddress,
+        handleCloseModal,
+        writeContractAsync,
+        decimals,
+    ])
 
     const repayFluidVault = useCallback(async () => {
         try {
@@ -240,6 +242,14 @@ const RepayButton = ({
                         status: 'view',
                         errorMessage: '',
                     }))
+
+                    logEvent('repay_completed', {
+                        amount,
+                        token_symbol: assetDetails?.asset?.token?.symbol,
+                        platform_name: assetDetails?.name,
+                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        wallet_address: walletAddress,
+                    })
                 })
                 .catch((error) => {
                     setRepayTx((prev: TRepayTx) => ({
@@ -304,6 +314,14 @@ const RepayButton = ({
                         status: 'view',
                         errorMessage: '',
                     }))
+
+                    logEvent('repay_completed', {
+                        amount,
+                        token_symbol: assetDetails?.asset?.token?.symbol,
+                        platform_name: assetDetails?.name,
+                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        wallet_address: walletAddress,
+                    })
                 })
                 .catch((error) => {
                     setRepayTx((prev: TRepayTx) => ({

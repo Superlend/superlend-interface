@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     ],
     title: 'Superlend - Lend & Borrow Aggregator',
     description:
-        'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .',
+        'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.',
     icons: [
         { url: '/images/logos/favicon-16x16.png', sizes: '16x16' },
         { url: '/images/logos/favicon-32x32.png', sizes: '32x32' },
@@ -46,14 +46,14 @@ export const metadata: Metadata = {
         url: 'https://app.superlend.xyz/',
         title: 'Superlend - Lend & Borrow Aggregator',
         description:
-            'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .',
+            'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.',
         siteName: 'Superlend - Lend & Borrow Aggregator',
         images: 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png',
     },
     twitter: {
         title: 'Superlend - Lend & Borrow Aggregator',
         description:
-            'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets .',
+            'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.',
         images: 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png',
     },
     verification: {
