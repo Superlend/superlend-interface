@@ -200,7 +200,7 @@ export default function PositionDetails() {
             }),
         [userPositions, isLoadingPortfolioData]
     )
-
+    // console.log('formatted uesr positions ', formattedUserPositions)
     // Calculate borrow power and borrow power used for pool based assets
     function getLiquidationDetailsForPoolBasedAssets() {
         let borrowPower = 0

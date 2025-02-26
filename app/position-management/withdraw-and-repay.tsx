@@ -110,6 +110,7 @@ import { getTooltipContent } from '@/components/dialogs/TxDialog'
 import { getChainDetails } from './helper-functions'
 import { useAssetsDataContext } from '@/context/data-provider'
 import ExternalLink from '@/components/ExternalLink'
+import { useERC20Balance } from '../../hooks/useERC20Balance'
 
 interface ITokenDetails {
     address: string
@@ -212,6 +213,7 @@ export default function WithdrawAndRepayActionButton({
     const [selectedTokenDetails, setSelectedTokenDetails] =
         useState<ITokenDetails | null>(null)
     const { handleSwitchChain, walletAddress } = useWalletConnection()
+    const { data: erc20Balances } = useERC20Balance(walletAddress)
 
     const {
         data: portfolioData,
@@ -359,89 +361,169 @@ export default function WithdrawAndRepayActionButton({
     useEffect(() => {
         setPositionType(positionTypeParam)
     }, [positionTypeParam])
-
     // Get max withdraw amount
     useEffect(() => {
         setIsLoadingMaxBorrowingAmount(true)
         if (
             walletAddress &&
+            Object.keys(erc20Balances).length > 0 &&
             walletAddress.length > 0 &&
             platformData.assets.length > 0 &&
-            platformData.platform.protocol_type === 'aaveV3' &&
             providerStatus.isReady
         ) {
-            // const _borrowableTokens = platformData.assets.filter(
-            //     (a) => a.borrow_enabled
-            // )
-            fetchAaveV3Data(
-                Number(chain_id),
-                platformData.platform.uiPoolDataProvider!,
-                platformData.platform.poolAddressesProvider!
-            )
-                .then((r) => {
-                    if (!r || !r[0]) {
-                        // Add null check
-                        setMaxBorrowAmount('0')
+            if (platformData.platform.protocol_type === 'aaveV3') {
+                fetchAaveV3Data(
+                    Number(chain_id),
+                    platformData.platform.uiPoolDataProvider!,
+                    platformData.platform.poolAddressesProvider!
+                )
+                    .then((r) => {
+                        if (!r || !r[0]) {
+                            // Add null check
+                            setMaxBorrowAmount('0')
 
-                        setIsLoadingMaxBorrowingAmount(false)
-                        return
-                    }
-                    // Initialize maxWithdrawAmounts
-                    const maxWithdrawAmounts: Record<
-                        string,
-                        {
-                            maxToWithdraw: string
-                            maxToWithdrawFormatted: string
-                            user: any
+                            setIsLoadingMaxBorrowingAmount(false)
+                            return
                         }
-                    > = {}
-                    for (const withdrawToken of tokenDetails) {
-                        const withdrawTokenAddress =
-                            withdrawToken?.address.toLowerCase()
-                        maxWithdrawAmounts[withdrawTokenAddress] =
-                            getMaxWithdrawAmount(
-                                withdrawTokenAddress,
-                                r as any
-                            ) ?? {
-                                maxToWithdraw: '0',
-                                maxToWithdrawFormatted: '0',
-                                user: {},
+                        // Initialize maxWithdrawAmounts
+                        const maxWithdrawAmounts: Record<
+                            string,
+                            {
+                                maxToWithdraw: string
+                                maxToWithdrawFormatted: string
+                                user: any
                             }
-                    }
-
-                    const maxRepayAmounts: Record<
-                        string,
-                        {
-                            maxToRepay: string
-                            maxToRepayFormatted: string
-                            user: any
+                        > = {}
+                        for (const withdrawToken of tokenDetails) {
+                            const withdrawTokenAddress =
+                                withdrawToken?.address.toLowerCase()
+                            maxWithdrawAmounts[withdrawTokenAddress] =
+                                getMaxWithdrawAmount(
+                                    withdrawTokenAddress,
+                                    r as any
+                                ) ?? {
+                                    maxToWithdraw: '0',
+                                    maxToWithdrawFormatted: '0',
+                                    user: {},
+                                }
                         }
-                    > = {}
-                    for (const repayToken of tokenDetails) {
-                        const repayTokenAddress =
-                            repayToken?.address.toLowerCase()
-                        maxRepayAmounts[repayTokenAddress] = getMaxRepayAmount(
-                            repayTokenAddress,
-                            chain_id as number,
-                            r as any
-                        ) ?? {
-                            maxToRepay: '0',
-                            maxToRepayFormatted: '0',
-                            user: {},
-                        }
-                    }
 
-                    setMaxRepayTokensAmount(maxRepayAmounts)
-                    setMaxWithdrawTokensAmount(maxWithdrawAmounts)
-                })
-                .catch((error) => {
-                    console.log(
-                        'error fetching max withdraw/repay amount',
-                        error
+                        const maxRepayAmounts: Record<
+                            string,
+                            {
+                                maxToRepay: string
+                                maxToRepayFormatted: string
+                                user: any
+                            }
+                        > = {}
+                        for (const repayToken of tokenDetails) {
+                            const repayTokenAddress =
+                                repayToken?.address.toLowerCase()
+                            maxRepayAmounts[repayTokenAddress] =
+                                getMaxRepayAmount(
+                                    repayTokenAddress,
+                                    chain_id as number,
+                                    r as any
+                                ) ?? {
+                                    maxToRepay: '0',
+                                    maxToRepayFormatted: '0',
+                                    user: {},
+                                }
+                        }
+
+                        setMaxRepayTokensAmount(maxRepayAmounts)
+                        setMaxWithdrawTokensAmount(maxWithdrawAmounts)
+                    })
+                    .catch((error) => {
+                        console.log(
+                            'error fetching max withdraw/repay amount',
+                            error
+                        )
+                        setMaxBorrowAmount('0')
+                        setIsLoadingMaxBorrowingAmount(false)
+                    })
+            } else if (platformData.platform.protocol_type === 'fluid') {
+                const lendTokenDetails = platformData.assets.filter(
+                    (a) => a.ltv > 0
+                )[0]
+                const borrowPositionDetails =
+                    portfolioData.platforms[0].positions.filter(
+                        (p) => p.type === 'borrow'
+                    )[0]
+                const lendPositionDetails =
+                    portfolioData.platforms[0].positions.filter(
+                        (p) => p.type === 'lend'
+                    )[0]
+
+                const maxWithdrawAmounts: Record<
+                    string,
+                    {
+                        maxToWithdraw: string
+                        maxToWithdrawFormatted: string
+                        user: any
+                    }
+                > = {}
+                for (const withdrawToken of tokenDetails) {
+                    if (actionType !== 'withdraw') continue
+                    const withdrawTokenAddress =
+                        withdrawToken?.address.toLowerCase()
+                    const borrowPositionUSD =
+                        borrowPositionDetails.amount *
+                        borrowPositionDetails.token.price_usd
+
+                    const collatRequiredInUsd =
+                        (borrowPositionUSD * 100) / lendTokenDetails.ltv
+                    const collatRequiredInToken =
+                        collatRequiredInUsd /
+                        lendPositionDetails.token.price_usd
+                    const amountToWithdraw = parseUnits(
+                        (
+                            lendPositionDetails.amount - collatRequiredInToken
+                        ).toFixed(lendTokenDetails.token.decimals),
+                        lendTokenDetails.token.decimals
+                    ).toString()
+                    maxWithdrawAmounts[withdrawTokenAddress] = {
+                        maxToWithdraw: amountToWithdraw,
+                        maxToWithdrawFormatted: formatUnits(
+                            amountToWithdraw,
+                            lendTokenDetails.token.decimals
+                        ),
+                        user: {},
+                    }
+                }
+
+                const maxRepayAmounts: Record<
+                    string,
+                    {
+                        maxToRepay: string
+                        maxToRepayFormatted: string
+                        user: any
+                    }
+                > = {}
+                for (const repayToken of tokenDetails) {
+                    if (actionType !== 'repay') continue
+                    const repayTokenAddress = repayToken?.address.toLowerCase()
+                    const maxDebt = parseUnits(
+                        String(repayToken.tokenAmount),
+                        repayToken.decimals
                     )
-                    setMaxBorrowAmount('0')
-                    setIsLoadingMaxBorrowingAmount(false)
-                })
+                    const balance = BigNumber.from(
+                        erc20Balances[chain_id as number][repayTokenAddress]
+                            .balanceRaw
+                    )
+                    const maxRepay = balance.lte(maxDebt) ? balance : maxDebt
+                    maxRepayAmounts[repayTokenAddress] = {
+                        maxToRepay: maxRepay.toString(),
+                        maxToRepayFormatted: formatUnits(
+                            maxRepay.toString(),
+                            repayToken.decimals
+                        ),
+                        user: {},
+                    }
+                }
+                setMaxWithdrawTokensAmount(maxWithdrawAmounts)
+                setMaxRepayTokensAmount(maxRepayAmounts)
+            }
         }
     }, [
         walletAddress,
@@ -453,6 +535,7 @@ export default function WithdrawAndRepayActionButton({
         withdrawTx.isConfirmed,
         repayTx.isConfirmed,
         isSelectTokenDialogOpen,
+        erc20Balances,
     ])
 
     // useEffect(() => {
