@@ -40,18 +40,21 @@ import {
     useVault,
     useVaultUser,
 } from '@morpho-org/blue-sdk-wagmi'
-import { formatUnits } from 'viem'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import ExternalLink from '@/components/ExternalLink'
 import { TLendTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { TPortfolio } from '../../../types/queries/portfolio'
+import { formatUnits, parseUnits } from 'ethers/lib/utils'
 
 export default function MorphoTxWidget({
     isLoading: isLoadingPlatformData,
     platformData,
+    portfolioData,
 }: {
     isLoading: boolean
     platformData: TPlatform
+    portfolioData: TPortfolio
 }) {
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
@@ -88,6 +91,7 @@ export default function MorphoTxWidget({
         return (
             <FluidVaults
                 platformData={platformData}
+                portfolioData={portfolioData}
                 walletAddress={walletAddress as `0x${string}`}
                 isLoadingPlatformData={isLoadingPlatformData}
             />
@@ -365,10 +369,12 @@ function FluidLend({
 
 function FluidVaults({
     platformData,
+    portfolioData,
     walletAddress,
     isLoadingPlatformData,
 }: {
     platformData: TPlatform
+    portfolioData: TPortfolio
     walletAddress: `0x${string}`
     isLoadingPlatformData: boolean
 }) {
@@ -437,7 +443,10 @@ function FluidVaults({
         }
     }, [lendTx.status, borrowTx.status, isLendBorrowTxDialogOpen])
 
-    const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
+    const [maxBorrowAmount, setMaxBorrowAmount] = useState<{
+        maxToBorrow: string
+        maxToBorrowFormatted: string
+    }>({ maxToBorrow: '0', maxToBorrowFormatted: '0' })
     const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] =
         useState(true)
 
@@ -507,6 +516,45 @@ function FluidVaults({
     const isLoading = isLoadingPlatformData
     // || isLoadingMaxBorrowingAmount
 
+    useEffect(() => {
+        if (
+            !platformData ||
+            !portfolioData ||
+            portfolioData.platforms?.length === 0
+        )
+            return
+
+        const borrowPosition = portfolioData.platforms[0].positions.filter(
+            (p) => p.type === 'borrow'
+        )[0]
+        const lendPosition = portfolioData.platforms[0].positions.filter(
+            (p) => p.type === 'lend'
+        )[0]
+        const borrowToken = platformData.assets.filter((a) => a.ltv === 0)[0]
+        const lendToken = platformData.assets.filter((a) => a.ltv !== 0)[0]
+
+        const maxBorrowUsd =
+            (lendPosition.amount *
+                lendPosition.token.price_usd *
+                lendToken.ltv) /
+                100 -
+            borrowPosition.amount * borrowToken.token.price_usd
+        const maxBorrowToken = (
+            maxBorrowUsd / borrowToken.token.price_usd
+        ).toFixed(borrowToken.token.decimals)
+
+        const _maxToBorrow = {
+            maxToBorrow: parseUnits(
+                maxBorrowToken,
+                borrowToken.token.decimals
+            ).toString(),
+            maxToBorrowFormatted: maxBorrowToken,
+        }
+
+        setMaxBorrowAmount(_maxToBorrow)
+        setIsLoadingMaxBorrowingAmount(false)
+    }, [platformData, portfolioData])
+
     const {
         erc20TokensBalanceData,
         isLoading: isLoadingErc20TokensBalanceData,
@@ -560,7 +608,10 @@ function FluidVaults({
         if (!hasCollateral) {
             return 'You do not have any collateral'
         }
-        if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
+        if (
+            !canBorrow ||
+            Number(amount) > Number(maxBorrowAmount.maxToBorrowFormatted ?? 0)
+        ) {
             return 'You do not have any borrow limit'
         }
         return null
@@ -585,7 +636,9 @@ function FluidVaults({
         () =>
             Number(amount) >
                 Number(
-                    isLendPositionType(positionType) ? balance : maxBorrowAmount
+                    isLendPositionType(positionType)
+                        ? balance
+                        : maxBorrowAmount.maxToBorrowFormatted
                 ) ||
             (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
@@ -632,11 +685,11 @@ function FluidVaults({
 
         // TODO: Get max borrow amount
         return (
-            Number(amount) === Number(maxBorrowAmount) ||
+            Number(amount) === Number(maxBorrowAmount.maxToBorrowFormatted) ||
             !isWalletConnected ||
             isLoadingMaxBorrowingAmount ||
             isLoadingErc20TokensBalanceData ||
-            Number(maxBorrowAmount) <= 0 ||
+            Number(maxBorrowAmount.maxToBorrowFormatted) <= 0 ||
             !doesMarketHasLiquidity
         )
     }
@@ -704,7 +757,7 @@ function FluidVaults({
                                 <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
                             ) : (
                                 handleSmallestValue(
-                                    maxBorrowAmount,
+                                    maxBorrowAmount.maxToBorrowFormatted,
                                     getMaxDecimalsToDisplay()
                                 )
                             )}
@@ -772,7 +825,7 @@ function FluidVaults({
                                 setAmount(
                                     isLendPositionType(positionType)
                                         ? (balance ?? '0')
-                                        : maxBorrowAmount
+                                        : maxBorrowAmount.maxToBorrowFormatted
                                 )
                             }
                             disabled={isDisabledMaxBtn()}
@@ -878,7 +931,9 @@ function FluidVaults({
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount
-                                maxBorrowAmount={maxBorrowAmount}
+                                maxBorrowAmount={
+                                    maxBorrowAmount.maxToBorrowFormatted
+                                }
                                 setAmount={setAmount}
                                 // TODO: Get health factor values
                                 healthFactorValues={{

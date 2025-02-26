@@ -84,6 +84,7 @@ export const AssetTxWidget: FC = () => {
             <FluidTxWidget
                 isLoading={isLoadingPlatformData}
                 platformData={platformData}
+                portfolioData={portfolioData}
             />
         )
     }
