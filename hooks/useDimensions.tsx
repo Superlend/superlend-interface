@@ -1,5 +1,6 @@
 'use client'
 
+import { debounce } from '@/lib/utils'
 import { useLayoutEffect, useState } from 'react'
 
 type DimensionsType = {
@@ -10,14 +11,6 @@ type DimensionsType = {
 const dimensionsInit = {
     height: 0,
     width: 0,
-}
-
-function debounce(func: Function, wait: number) {
-    let timeout: NodeJS.Timeout
-    return (...args: any[]) => {
-        clearTimeout(timeout)
-        timeout = setTimeout(() => func(...args), wait)
-    }
 }
 
 export default function useDimensions() {

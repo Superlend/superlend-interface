@@ -5,6 +5,7 @@ import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import AvatarCircles from '@/components/ui/avatar-circles'
 import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { BodyText, Label } from '@/components/ui/typography'
 import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import { useAssetsDataContext } from '@/context/data-provider'
@@ -136,6 +137,86 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         enableSorting: false,
     },
     {
+        id: 'collateral_tokens',
+        header: "Collateral Tokens",
+        cell: ({ row }) => {
+            const { allTokensData } = useAssetsDataContext()
+            const MAX_ITEMS_TO_SHOW = 5
+            const collateralTokensData = row.original.collateral_tokens ?? [];
+
+            const filteredCollateralTokensData = collateralTokensData.filter((tokenAddress: `0x${string}`) => {
+                const token = allTokensData[row.original.chain_id].find(
+                    (asset: any) =>
+                        asset.address.toLowerCase() ===
+                        tokenAddress.toLowerCase()
+                )
+                return !!token?.name
+            })
+
+            const tokenImages = filteredCollateralTokensData?.map(
+                (tokenAddress: `0x${string}`) =>
+                    allTokensData[row.original.chain_id].find(
+                        (asset: any) =>
+                            asset.address.toLowerCase() ===
+                            tokenAddress.toLowerCase()
+                    )?.logo
+            )
+
+            const tokenDetails = filteredCollateralTokensData?.map(
+                (tokenAddress: `0x${string}`) => {
+                    const token = allTokensData[row.original.chain_id].find(
+                        (asset: any) =>
+                            asset.address.toLowerCase() ===
+                            tokenAddress.toLowerCase()
+                    )
+                    return {
+                        name: token?.name,
+                        logo: token?.logo,
+                    }
+                }
+            )
+
+            const moreItemsData = tokenDetails?.filter((_, index) => index > MAX_ITEMS_TO_SHOW - 1)
+
+            return (
+                <AvatarCircles
+                    avatarUrls={
+                        tokenImages ?? []
+                    }
+                    avatarDetails={tokenDetails?.map(
+                        (token) => ({
+                            content: token.name,
+                        })
+                    )}
+                    maxItemsToShow={MAX_ITEMS_TO_SHOW}
+                    moreItemsTooltipContent={
+                        <ScrollArea type="always" className={`${moreItemsData.length > 5 ? 'h-[200px]' : 'h-[50px]'} w-full rounded-md p-0 pr-6`}>
+                            <div className="flex flex-col gap-2">
+                                {moreItemsData
+                                    .filter((token) => !!token && !!token.name)
+                                    .map((token: any) => (
+                                        <div className="flex items-center gap-2">
+                                            <ImageWithDefault
+                                                src={token.logo}
+                                                width={16}
+                                                height={16}
+                                                alt={token.name}
+                                                className="rounded-full shrink-0"
+                                            />
+                                            <BodyText level="body2" weight="medium">
+                                                {token.name}
+                                            </BodyText>
+                                        </div>
+                                    ))}
+                            </div>
+                        </ScrollArea>
+                    }
+                />
+            )
+        },
+        enableSorting: false,
+    },
+    {
         accessorKey: 'platformName',
         header: 'Platform',
         accessorFn: (item) => `${item.platformName} ${item.platformWithMarketName}`,
@@ -176,7 +257,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             {platformDisplayName}
                         </BodyText>
                         {showPlatformCuratorName &&
-                            <Label className="text-gray-800 leading-0 capitalize truncate max-w-[120px]">
+                            <Label className="text-gray-800 inline-block leading-0 capitalize truncate max-w-[100px]">
                                 {formattedPlatformWithMarketName}
                             </Label>
                         }
@@ -530,7 +611,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const { allTokensData } = useAssetsDataContext()
             const MAX_ITEMS_TO_SHOW = 5
-            const filteredCollateralExposureData = row.original.collateral_exposure.filter((tokenAddress: `0x${string}`) => {
+            const collateralExposureData = row.original.collateral_exposure ?? [];
+            const filteredCollateralExposureData = collateralExposureData.filter((tokenAddress: `0x${string}`) => {
                 const token = allTokensData[row.original.chain_id].find(
                     (asset: any) =>
                         asset.address.toLowerCase() ===
@@ -562,6 +644,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 }
             )
 
+            const moreItemsData = tokenDetails?.filter((_, index) => index > MAX_ITEMS_TO_SHOW - 1)
+
             return (
                 <AvatarCircles
                     avatarUrls={
@@ -574,31 +658,69 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     )}
                     maxItemsToShow={MAX_ITEMS_TO_SHOW}
                     moreItemsTooltipContent={
-                        <div className="flex flex-col gap-2">
-                            {tokenDetails
-                                ?.filter((_, index) => index > MAX_ITEMS_TO_SHOW - 1)
-                                .filter((token) => !!token && !!token.name)
-                                .map((token: any) => (
-                                    <div className="flex items-center gap-2">
-                                        <ImageWithDefault
-                                            src={token.logo}
-                                            width={16}
-                                            height={16}
-                                            alt={token.name}
-                                            className="rounded-full shrink-0"
-                                        />
-                                        <BodyText level="body2" weight="medium">
-                                            {token.name}
-                                        </BodyText>
-                                    </div>
-                                ))}
-                        </div>
+                        <ScrollArea type="always" className={`${moreItemsData.length > 5 ? 'h-[200px]' : 'h-[50px]'} w-full rounded-md p-0 pr-6`}>
+                            <div className="flex flex-col gap-2">
+                                {moreItemsData
+                                    .filter((token) => !!token && !!token.name)
+                                    .map((token: any) => (
+                                        <div className="flex items-center gap-2">
+                                            <ImageWithDefault
+                                                src={token.logo}
+                                                width={16}
+                                                height={16}
+                                                alt={token.name}
+                                                className="rounded-full shrink-0"
+                                            />
+                                            <BodyText level="body2" weight="medium">
+                                                {token.name}
+                                            </BodyText>
+                                        </div>
+                                    ))}
+                            </div>
+                        </ScrollArea>
                     }
                 />
             )
         },
         enableGlobalFilter: false,
         enableSorting: false,
+    },
+    {
+        accessorKey: 'available_liquidity',
+        accessorFn: (item) => Number(item.available_liquidity),
+        header: () => (
+            <InfoTooltip
+                side="bottom"
+                label={<TooltipText>Available Liquidity</TooltipText>}
+                content={
+                    'Total amount of asset available to be borrowed.'
+                }
+            />
+        ),
+        cell: ({ row }) => {
+            const isAaveV3 = PlatformType.AAVE.includes(row.original.platformName.toLowerCase())
+            const isCompound = PlatformType.COMPOUND.includes(row.original.platformName.toLowerCase())
+            const isMorpho = PlatformType.MORPHO.includes(row.original.platformName.toLowerCase())
+            const isFluid = PlatformType.FLUID.includes(row.original.platformName.toLowerCase())
+
+            let availableLiquidity;
+            if (isAaveV3) {
+                availableLiquidity = Number(row.original.deposits) - Number(row.original.borrows)
+            } else if (isCompound) {
+                availableLiquidity = Number(row.original.deposits) - Number(row.original.borrows)
+            } else if (isMorpho) {
+                availableLiquidity = Number(row.original.deposits) - Number(row.original.borrows)
+            } else if (isFluid) {
+                availableLiquidity = Number(row.original.deposits) - Number(row.original.borrows)
+            }
+
+            return (
+                <BodyText level={'body2'} weight={'medium'}>
+                    ${abbreviateNumber(availableLiquidity)}
+                </BodyText>
+            )
+        },
+        enableGlobalFilter: false,
     },
     // {
     //     accessorKey: 'utilization',
