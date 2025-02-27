@@ -530,8 +530,16 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const { allTokensData } = useAssetsDataContext()
             const MAX_ITEMS_TO_SHOW = 5
+            const filteredCollateralExposureData = row.original.collateral_exposure.filter((tokenAddress: `0x${string}`) => {
+                const token = allTokensData[row.original.chain_id].find(
+                    (asset: any) =>
+                        asset.address.toLowerCase() ===
+                        tokenAddress.toLowerCase()
+                )
+                return !!token?.name
+            })
 
-            const tokenImages = row.original.collateral_exposure?.map(
+            const tokenImages = filteredCollateralExposureData?.map(
                 (tokenAddress: `0x${string}`) =>
                     allTokensData[row.original.chain_id].find(
                         (asset: any) =>
@@ -540,7 +548,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     )?.logo
             )
 
-            const tokenDetails = row.original.collateral_exposure?.map(
+            const tokenDetails = filteredCollateralExposureData?.map(
                 (tokenAddress: `0x${string}`) => {
                     const token = allTokensData[row.original.chain_id].find(
                         (asset: any) =>
