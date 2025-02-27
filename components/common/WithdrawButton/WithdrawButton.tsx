@@ -16,8 +16,6 @@ import {
     CHAIN_ID_MAPPER,
     CONFIRM_ACTION_IN_WALLET_TEXT,
     ERROR_TOAST_ICON_STYLES,
-    POOL_AAVE_MAP,
-    // POOL_AAVE_MAP,
     SOMETHING_WENT_WRONG_MESSAGE,
     SUCCESS_MESSAGE,
 } from '../../../constants'
@@ -96,7 +94,7 @@ const WithdrawButton = ({
     }, [withdrawTx.status])
 
     useEffect(() => {
-        if (withdrawTx.status === 'approve') return;
+        if (withdrawTx.status === 'approve') return
 
         if (hash) {
             setWithdrawTx((prev: TWithdrawTx) => ({
@@ -118,7 +116,8 @@ const WithdrawButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
         }
@@ -131,26 +130,26 @@ const WithdrawButton = ({
             isPending: isPending,
             isConfirming: isConfirming,
             isConfirmed: isConfirmed,
-            isRefreshingAllowance: isConfirmed
+            isRefreshingAllowance: isConfirmed,
         }))
     }, [isPending, isConfirming, isConfirmed])
 
     const txBtnText =
         txBtnStatus[
-        isConfirming
-            ? 'confirming'
-            : isConfirmed
-                ? withdrawTx.status === 'view'
-                    ? 'success'
-                    : 'default'
-                : isPending
+            isConfirming
+                ? 'confirming'
+                : isConfirmed
+                  ? withdrawTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
                     ? 'pending'
                     : !isPending &&
                         !isConfirming &&
                         !isConfirmed &&
                         withdrawTx.status === 'view'
-                        ? 'error'
-                        : 'default'
+                      ? 'error'
+                      : 'default'
         ]
 
     const withdrawCompound = useCallback(
@@ -172,16 +171,19 @@ const WithdrawButton = ({
     const withdrawMorphoMarket = useCallback(
         async (assetDetails: any, amount: string) => {
             try {
-                const morphoMarketData = assetDetails?.market as Market;
-                let decimals = assetDetails.asset.token.decimals;
+                const morphoMarketData = assetDetails?.market as Market
+                let decimals = assetDetails.asset.token.decimals
 
-                let amountToWithdraw = parseUnits(amount, decimals);
+                let amountToWithdraw = parseUnits(amount, decimals)
 
                 logEvent('withdraw_initiated', {
                     amount,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
-                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    chain_name:
+                        CHAIN_ID_MAPPER[
+                            Number(assetDetails?.chain_id) as ChainId
+                        ],
                     wallet_address: walletAddress,
                 })
 
@@ -234,7 +236,10 @@ const WithdrawButton = ({
                     amount,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
-                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    chain_name:
+                        CHAIN_ID_MAPPER[
+                            Number(assetDetails?.chain_id) as ChainId
+                        ],
                     wallet_address: walletAddress,
                 })
                 writeContractAsync({
@@ -276,7 +281,10 @@ const WithdrawButton = ({
         [writeContractAsync, assetDetails, handleCloseModal]
     )
 
-    const onApproveWithdrawMorphoVault = async (assetDetails: any, amount: string) => {
+    const onApproveWithdrawMorphoVault = async (
+        assetDetails: any,
+        amount: string
+    ) => {
         setWithdrawTx((prev: TWithdrawTx) => ({
             ...prev,
             status: 'approve',
@@ -299,7 +307,8 @@ const WithdrawButton = ({
             amount,
             token_symbol: assetDetails?.asset?.token?.symbol,
             platform_name: assetDetails?.name,
-            chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+            chain_name:
+                CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
             wallet_address: walletAddress,
         })
 
@@ -324,7 +333,8 @@ const WithdrawButton = ({
             let shareAmount = vault.toShares(amountToWithdraw.toBigInt())
 
             // calculate 0.5% of the shareAmount
-            let onePercentOfShareAmount = shareAmount * BigInt(9900) / BigInt(10000);
+            let onePercentOfShareAmount =
+                (shareAmount * BigInt(9900)) / BigInt(10000)
 
             shareAmount = shareAmount + onePercentOfShareAmount
 
@@ -350,7 +360,8 @@ const WithdrawButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -385,7 +396,8 @@ const WithdrawButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -394,10 +406,10 @@ const WithdrawButton = ({
                 abi: FLUID_LEND_ABI,
                 functionName: 'withdraw',
                 args: [
-                    amountToWithdraw,         // assets_: uint256
-                    walletAddress,            // receiver_: address 
-                    walletAddress,            // owner_: address
-                    maxSharesBurn          // maxSharesBurn_: uint256
+                    amountToWithdraw, // assets_: uint256
+                    walletAddress, // receiver_: address
+                    walletAddress, // owner_: address
+                    maxSharesBurn, // maxSharesBurn_: uint256
                 ],
             }).catch((error) => {
                 setWithdrawTx((prev: TWithdrawTx) => ({
@@ -425,7 +437,8 @@ const WithdrawButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -434,10 +447,10 @@ const WithdrawButton = ({
                 abi: FLUID_VAULTS_ABI,
                 functionName: 'withdraw',
                 args: [
-                    amountToWithdraw,         // assets_: uint256
-                    walletAddress,            // receiver_: address 
-                    walletAddress,            // owner_: address
-                    maxSharesBurn          // maxSharesBurn_: uint256
+                    amountToWithdraw, // assets_: uint256
+                    walletAddress, // receiver_: address
+                    walletAddress, // owner_: address
+                    maxSharesBurn, // maxSharesBurn_: uint256
                 ],
             }).catch((error) => {
                 setWithdrawTx((prev: TWithdrawTx) => ({
@@ -460,7 +473,7 @@ const WithdrawButton = ({
         if (isAave) {
             await withdrawAave(
                 assetDetails,
-                POOL_AAVE_MAP[assetDetails?.platform_name as PlatformValue],
+                assetDetails?.core_contract,
                 assetDetails?.asset?.token?.address,
                 amount,
                 walletAddress as string
@@ -503,7 +516,7 @@ const WithdrawButton = ({
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={(isPending || isConfirming || disabled)}
+                disabled={isPending || isConfirming || disabled}
                 onClick={() => {
                     if (withdrawTx.status === 'approve') {
                         onApproveWithdrawMorphoVault(assetDetails, amount)
