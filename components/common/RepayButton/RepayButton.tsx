@@ -39,6 +39,7 @@ import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
+import { ETH_ADDRESSES } from '@/lib/constants'
 
 interface IRepayButtonProps {
     assetDetails: any
@@ -228,12 +229,15 @@ const RepayButton = ({
             writeContractAsync({
                 address: poolContractAddress,
                 abi: FLUID_VAULTS_ABI,
-                functionName: 'repay',
+                functionName: 'operate',
                 args: [
-                    underlyingAssetAdress,
-                    parseUnits(amount, decimals),
-                    2,
+                    assetDetails?.fluid_vault_nftId,
+                    amountBN,
+                    0,
                     walletAddress,
+                    // {
+                    //     value: underlyingAssetAdress === ETH_ADDRESSES[0] ? amountBN : 0,
+                    // }
                 ],
             })
                 .then((data) => {

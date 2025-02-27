@@ -10,6 +10,7 @@ export type TGetPortfolioParams = {
 
 type TPosition = {
     type: string
+    fluid_vault_nftId?: string
     token: {
         address: string
         name: string

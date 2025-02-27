@@ -72,7 +72,7 @@ export default function MorphoTxWidget({
         }
     }, [walletAddress, Number(chain_id)])
 
-    if (!isFluidLend && !isFluidVaults) {
+    if (!isFluidProtocol) {
         return null
     }
 
@@ -127,6 +127,17 @@ function FluidLend({
     const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
     const positionTypeParam: TPositionType = 'lend'
+
+    useEffect(() => {
+        if (lendTx.status === 'approve' && lendTx.isConfirmed) {
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                status: 'lend',
+                hash: '',
+                isConfirmed: false,
+            }))
+        }
+    }, [lendTx.status, lendTx.isConfirmed])
 
     useEffect(() => {
         setPositionType(positionTypeParam)
@@ -387,6 +398,7 @@ function FluidVaults({
         useState<TPlatformAsset | null>(null)
     const {
         lendTx,
+        setLendTx,
         borrowTx,
         withdrawTx,
         repayTx,
@@ -404,6 +416,25 @@ function FluidVaults({
     const fluidBorrowTokenDetails = platformData?.assets?.find(
         (asset) => asset.borrow_enabled === true
     )
+
+    const tokenAddressByPositionType = useMemo(() => {
+        return positionType === 'lend' ? fluidLendTokenDetails?.token?.address?.toLowerCase() : fluidBorrowTokenDetails?.token?.address?.toLowerCase()
+    }, [positionType, fluidLendTokenDetails?.token?.address, fluidBorrowTokenDetails?.token?.address])
+
+    const fluidVaultNftId = useMemo(() => {
+        return portfolioData?.platforms[0]?.positions?.find((p) => p.token.address.toLowerCase() === tokenAddressByPositionType)?.fluid_vault_nftId ?? 0
+    }, [portfolioData?.platforms, tokenAddressByPositionType])
+
+    useEffect(() => {
+        if (lendTx.status === 'approve' && lendTx.isConfirmed) {
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                status: 'lend',
+                hash: '',
+                isConfirmed: false,
+            }))
+        }
+    }, [lendTx.status, lendTx.isConfirmed])
 
     useEffect(() => {
         const isRefresh =
@@ -490,11 +521,11 @@ function FluidVaults({
             currentBorrowAssets == BigInt(0)
                 ? 0
                 : Number(
-                      formatUnits(
-                          currentBorrowAssets,
-                          fluidBorrowTokenDetails?.token?.decimals ?? 0
-                      )
-                  )
+                    formatUnits(
+                        currentBorrowAssets,
+                        fluidBorrowTokenDetails?.token?.decimals ?? 0
+                    )
+                )
         const borrowNormalizeValueWithAmount =
             borrowNormalizeValue + Number(amount)
 
@@ -537,8 +568,8 @@ function FluidVaults({
             (lendPosition.amount *
                 lendPosition.token.price_usd *
                 lendToken.ltv) /
-                100 -
-            borrowPosition.amount * borrowToken.token.price_usd
+            100 -
+            (borrowPosition?.amount ?? '0') * borrowToken.token.price_usd
         const maxBorrowToken = (
             maxBorrowUsd / borrowToken.token.price_usd
         ).toFixed(borrowToken.token.decimals)
@@ -635,11 +666,11 @@ function FluidVaults({
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-                Number(
-                    isLendPositionType(positionType)
-                        ? balance
-                        : maxBorrowAmount.maxToBorrowFormatted
-                ) ||
+            Number(
+                isLendPositionType(positionType)
+                    ? balance
+                    : maxBorrowAmount.maxToBorrowFormatted
+            ) ||
             (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
             toManyDecimals ||
@@ -658,19 +689,19 @@ function FluidVaults({
     function getMaxDecimalsToDisplay(): number {
         return isLendPositionType(positionType)
             ? fluidLendTokenDetails?.token?.symbol
-                  .toLowerCase()
-                  .includes('btc') ||
-              fluidLendTokenDetails?.token?.symbol.toLowerCase().includes('eth')
+                .toLowerCase()
+                .includes('btc') ||
+                fluidLendTokenDetails?.token?.symbol.toLowerCase().includes('eth')
                 ? 6
                 : 2
             : fluidBorrowTokenDetails?.token?.symbol
-                    .toLowerCase()
-                    .includes('btc') ||
+                .toLowerCase()
+                .includes('btc') ||
                 fluidBorrowTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
-              ? 6
-              : 2
+                ? 6
+                : 2
     }
 
     const isDisabledMaxBtn = () => {
@@ -853,8 +884,8 @@ function FluidVaults({
                                     {isLendPositionType(positionType) &&
                                         positionTypeParam === 'lend' && (
                                             <>
-                                                Adding collateral to Morpho
-                                                Markets does not yield.
+                                                Adding collateral to Fluid
+                                                Vaults does not yield.
                                             </>
                                         )}
                                     {isLendPositionType(positionType) &&
@@ -865,42 +896,6 @@ function FluidVaults({
                                         'Enter the amount you want to borrow from this position'}
                                 </BodyText>
                             )}
-                            {!errorMessage &&
-                                !isLoadingHelperText &&
-                                !isLendPositionType(positionType) &&
-                                !doesMarketHasLiquidity && (
-                                    <CustomAlert
-                                        variant="info"
-                                        hasPrefixIcon={false}
-                                        description={
-                                            <BodyText
-                                                level="body3"
-                                                weight="normal"
-                                                className="text-secondary-500 flex-inline"
-                                            >
-                                                {
-                                                    <span className="flex-inline">
-                                                        Superlend doesn&apos;t
-                                                        support borrowing from
-                                                        this market, as
-                                                        there&apos;s not enough
-                                                        liquidity. Try{' '}
-                                                        <span className="mr-1">
-                                                            using
-                                                        </span>
-                                                        <ExternalLink href="https://morpho.org">
-                                                            morpho website
-                                                        </ExternalLink>
-                                                        <span className="ml-1">
-                                                            for
-                                                        </span>{' '}
-                                                        the same
-                                                    </span>
-                                                }
-                                            </BodyText>
-                                        }
-                                    />
-                                )}
                             {errorMessage &&
                                 !isLoadingHelperText &&
                                 !isLoading && (
@@ -927,6 +922,7 @@ function FluidVaults({
                                 assetDetails={{
                                     asset: selectedAssetTokenDetails,
                                     ...platformData?.platform,
+                                    fluid_vault_nftId: fluidVaultNftId,
                                 }}
                                 amount={amount}
                                 balance={balance}

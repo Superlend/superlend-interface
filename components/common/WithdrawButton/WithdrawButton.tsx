@@ -35,7 +35,7 @@ import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorr
 import { Market, Vault } from '@morpho-org/blue-sdk'
 import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
 import { walletActions } from 'viem'
-import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
+import { BUNDLER_ADDRESS_MORPHO, ETH_ADDRESSES } from '@/lib/constants'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
 import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
@@ -138,20 +138,20 @@ const WithdrawButton = ({
 
     const txBtnText =
         txBtnStatus[
-            isConfirming
-                ? 'confirming'
-                : isConfirmed
-                  ? withdrawTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
+        isConfirming
+            ? 'confirming'
+            : isConfirmed
+                ? withdrawTx.status === 'view'
+                    ? 'success'
+                    : 'default'
+                : isPending
                     ? 'pending'
                     : !isPending &&
                         !isConfirming &&
                         !isConfirmed &&
                         withdrawTx.status === 'view'
-                      ? 'error'
-                      : 'default'
+                        ? 'error'
+                        : 'default'
         ]
 
     const withdrawCompound = useCallback(
@@ -184,7 +184,7 @@ const WithdrawButton = ({
                     platform_name: assetDetails?.name,
                     chain_name:
                         CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                        Number(assetDetails?.chain_id) as ChainId
                         ],
                     wallet_address: walletAddress,
                 })
@@ -240,7 +240,7 @@ const WithdrawButton = ({
                     platform_name: assetDetails?.name,
                     chain_name:
                         CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                        Number(assetDetails?.chain_id) as ChainId
                         ],
                     wallet_address: walletAddress,
                 })
@@ -426,14 +426,22 @@ const WithdrawButton = ({
         []
     )
 
+    // console.log('withdrawTx', withdrawTx)
+    let amountToWithdraw = parseUnits(
+        `${-Number(amount)}`,
+        assetDetails.asset.token.decimals
+    )
+
+    console.log('fluid_vault_nftId', assetDetails?.fluid_vault_nftId)
+    console.log('amountToWithdraw', amountToWithdraw.toString())
+    console.log('walletAddress', walletAddress)
+
     const withdrawFluidVault = useCallback(
         async (assetDetails: any, amount: string) => {
             let amountToWithdraw = parseUnits(
-                amount,
+                `${-Number(amount)}`,
                 assetDetails.asset.token.decimals
             )
-
-            const maxSharesBurn = amountToWithdraw.mul(10050).div(10000) // 0.5% slippage
 
             logEvent('withdraw_initiated', {
                 amount,
@@ -447,12 +455,15 @@ const WithdrawButton = ({
             writeContractAsync({
                 address: assetDetails.core_contract as `0x${string}`,
                 abi: FLUID_VAULTS_ABI,
-                functionName: 'withdraw',
+                functionName: 'operate',
                 args: [
-                    amountToWithdraw, // assets_: uint256
-                    walletAddress, // receiver_: address
-                    walletAddress, // owner_: address
-                    maxSharesBurn, // maxSharesBurn_: uint256
+                    assetDetails?.fluid_vault_nftId,
+                    amountToWithdraw,
+                    0,
+                    walletAddress,
+                    // {
+                    //     value: underlyingAssetAdress === ETH_ADDRESSES[0] ? amountBN : 0,
+                    // }
                 ],
             }).catch((error) => {
                 setWithdrawTx((prev: TWithdrawTx) => ({
@@ -475,7 +486,7 @@ const WithdrawButton = ({
         if (isAave) {
             await withdrawAave(
                 assetDetails,
-                POOL_AAVE_MAP[assetDetails?.platform_name as PlatformValue],
+                assetDetails?.core_contract,
                 assetDetails?.asset?.token?.address,
                 amount,
                 walletAddress as string

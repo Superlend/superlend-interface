@@ -30,6 +30,8 @@ import { TPositionType } from '@/types'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
+import { ETH_ADDRESSES } from '@/lib/constants'
 
 interface ISupplyFluidButtonProps {
     assetDetails: any
@@ -92,10 +94,10 @@ const SupplyFluidButton = ({
                     ? 'Start adding collateral'
                     : 'Start supplying'
                 : isFluidVaults
-                  ? 'Add Collateral'
-                  : isFluidLend
-                    ? 'Supply to vault'
-                    : 'Lend Collateral',
+                    ? 'Add Collateral'
+                    : isFluidLend
+                        ? 'Supply to vault'
+                        : 'Lend Collateral',
     }
 
     const getTxButtonText = (
@@ -107,16 +109,85 @@ const SupplyFluidButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? lendTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? lendTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+
+    const addCollateral = useCallback(async () => {
+        try {
+            setLendTx((prev: any) => ({
+                ...prev,
+                status: 'lend',
+                hash: '',
+                errorMessage: '',
+            }))
+
+            if (!walletAddress) {
+                throw new Error('Wallet address is required')
+            }
+
+            logEvent('add_collateral_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
+
+            writeContractAsync({
+                address: poolContractAddress,
+                abi: FLUID_VAULTS_ABI,
+                functionName: 'operate',
+                args: [
+                    assetDetails?.fluid_vault_nftId,
+                    amountBN,
+                    0,
+                    walletAddress,
+                    // {
+                    //     value: underlyingAssetAdress === ETH_ADDRESSES[0] ? amountBN : 0,
+                    // }
+                ],
+                value: underlyingAssetAdress === ETH_ADDRESSES[0] ? BigInt(amountBN.toString()) : BigInt('0'),
+            })
+                .then((data) => {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        status: 'view',
+                        errorMessage: '',
+                    }))
+
+                    logEvent('add_collateral_completed', {
+                        amount,
+                        token_symbol: assetDetails?.asset?.token?.symbol,
+                        platform_name: assetDetails?.name,
+                        chain_name:
+                            CHAIN_ID_MAPPER[
+                            Number(assetDetails?.chain_id) as ChainId
+                            ],
+                        wallet_address: walletAddress,
+                    })
+                })
+                .catch((error) => {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                    }))
+                    console.log('catch error', error)
+                })
+        } catch (error) {
+            error
+            console.log('error', error)
+        }
+    }, [amount, tokenDetails, platform, walletAddress, writeContractAsync])
 
     const supply = useCallback(async () => {
         try {
@@ -159,7 +230,7 @@ const SupplyFluidButton = ({
                         platform_name: assetDetails?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
-                                Number(assetDetails?.chain_id) as ChainId
+                            Number(assetDetails?.chain_id) as ChainId
                             ],
                         wallet_address: walletAddress,
                     })
@@ -247,13 +318,6 @@ const SupplyFluidButton = ({
                 functionName: 'approve',
                 args: [poolContractAddress, parseUnits(amount, decimals)],
             })
-                .then((data) => {
-                    setLendTx((prev: TLendTx) => ({
-                        ...prev,
-                        status: 'lend',
-                        hash: data,
-                    }))
-                })
                 .catch((error) => {
                     console.log(error)
                     setLendTx((prev: TLendTx) => ({
@@ -269,7 +333,7 @@ const SupplyFluidButton = ({
 
     return (
         <div className="flex flex-col gap-2">
-            {lendTx.status === 'approve' && (
+            {/* {lendTx.status === 'approve' && (
                 <CustomAlert
                     variant="info"
                     hasPrefixIcon={false}
@@ -290,7 +354,7 @@ const SupplyFluidButton = ({
                         </BodyText>
                     }
                 />
-            )}
+            )} */}
             {error && (
                 <CustomAlert
                     description={
@@ -312,7 +376,11 @@ const SupplyFluidButton = ({
                     if (lendTx.status === 'approve') {
                         onApproveSupply()
                     } else if (lendTx.status === 'lend') {
-                        supply()
+                        if (isFluidVaults) {
+                            addCollateral()
+                        } else {
+                            supply()
+                        }
                     } else {
                         handleCloseModal(false)
                         setActionType?.('borrow')

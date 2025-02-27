@@ -76,6 +76,16 @@ const BorrowButton = ({
             hash,
         })
 
+    // Protocol types
+    const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
+    const isAave = assetDetails?.protocol_type === PlatformType.AAVE
+    const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
+    const isMorphoVault = isMorpho && assetDetails?.vault
+    const isMorphoMarket = isMorpho && assetDetails?.market
+    const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
+    const isFluidVault = isFluid && assetDetails?.vault
+    const isFluidLend = isFluid && !assetDetails?.vault
+
     useEffect(() => {
         if (hash) {
             setBorrowTx((prev: TBorrowTx) => ({
@@ -115,11 +125,11 @@ const BorrowButton = ({
 
     const txBtnText =
         txBtnStatus[
-            isConfirming
-                ? 'confirming'
-                : isConfirmed
-                  ? 'success'
-                  : isPending
+        isConfirming
+            ? 'confirming'
+            : isConfirmed
+                ? 'success'
+                : isPending
                     ? 'pending'
                     : 'default'
         ]
@@ -154,7 +164,7 @@ const BorrowButton = ({
                     platform_name: assetDetails?.name,
                     chain_name:
                         CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                        Number(assetDetails?.chain_id) as ChainId
                         ],
                     wallet_address: walletAddress,
                 })
@@ -197,7 +207,7 @@ const BorrowButton = ({
                     platform_name: assetDetails?.name,
                     chain_name:
                         CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                        Number(assetDetails?.chain_id) as ChainId
                         ],
                     wallet_address: walletAddress,
                 })
@@ -234,7 +244,7 @@ const BorrowButton = ({
         }
         if (assetDetails?.protocol_type === PlatformType.AAVE) {
             await borrowAave(
-                POOL_AAVE_MAP[assetDetails?.platform_name as PlatformValue],
+                assetDetails?.core_contract,
                 assetDetails?.asset?.token?.address,
                 amount,
                 walletAddress as string
