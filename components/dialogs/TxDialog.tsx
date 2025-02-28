@@ -395,7 +395,7 @@ export function ConfirmationDialog({
                     className="text-gray-800 text-center capitalize"
                 >
                     {isLendPositionType
-                        ? isMorphoMarkets
+                        ? (isMorphoMarkets || isFluidVault)
                             ? 'Add Collateral'
                             : isMorphoVault
                               ? 'Supply to vault'
