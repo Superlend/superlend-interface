@@ -10,8 +10,8 @@
         "format": "prettier . --write"
     },
     "dependencies": {
-        "@aave/contract-helpers": "npm:@marsfoundation/contract-helpers@1.13.7",
-        "@aave/math-utils": "^1.13.5",
+        "@aave/contract-helpers": "^1.32.1",
+        "@aave/math-utils": "^1.32.1",
         "@amplitude/analytics-browser": "^2.11.11",
         "@amplitude/plugin-session-replay-browser": "^1.13.2",
         "@morpho-org/blue-sdk": "^2.1.1",
@@ -35,6 +35,8 @@
         "@reown/appkit-adapter-wagmi": "^1.6.3",
         "@tanstack/react-query": "^5.62.16",
         "@tanstack/react-table": "^8.20.5",
+        "aave-contract-helpers-legacy": "npm:@marsfoundation/contract-helpers@^1.13.7",
+        "aave-math-util-legacy": "npm:@aave/math-utils@1.13.5",
         "axios": "^1.7.7",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.1",

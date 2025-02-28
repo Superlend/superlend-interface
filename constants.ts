@@ -264,6 +264,7 @@ export const TX_EXPLORER_LINKS: { [key in ChainId]: string } = {
     [ChainId.Polygon]: 'https://polygonscan.com',
     [ChainId.Scroll]: 'https://scrollscan.io',
     [ChainId.Etherlink]: 'https://etherscan.io',
+    [ChainId.Linea]: 'https://lineascan.build',
 }
 
 export const APPROXIMATE_ESTIMATE_OF_RETURNS_TOOLTIP_CONTENT =
@@ -291,4 +292,5 @@ export const CHAIN_ID_MAPPER: { [key in ChainId]: ChainName } = {
     [ChainId.Scroll]: ChainName.Scroll,
     [ChainId.Metis]: ChainName.Metis,
     [ChainId.Etherlink]: ChainName.Etherlink,
+    [ChainId.Linea]: ChainName.Linea,
 }

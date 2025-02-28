@@ -518,7 +518,7 @@ export default function PositionDetails() {
                                     <HeadingText
                                         level="h3"
                                         weight="medium"
-                                        className="text-gray-800"
+                                        className="text-gray-800 truncate max-w-[100px]"
                                     >
                                         {hasLowestDisplayValuePrefix(
                                             Number(
@@ -587,7 +587,7 @@ export default function PositionDetails() {
                                         <HeadingText
                                             level="h3"
                                             weight="medium"
-                                            className="text-gray-800"
+                                            className="text-gray-800 truncate max-w-[100px]"
                                         >
                                             {hasLowestDisplayValuePrefix(
                                                 Number(

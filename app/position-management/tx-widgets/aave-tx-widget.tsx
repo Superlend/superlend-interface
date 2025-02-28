@@ -186,6 +186,7 @@ export default function AaveV3TxWidget({
                         maxBorrowAmounts[borrowTokenAddress] =
                             getMaxBorrowAmount(
                                 borrowTokenAddress,
+                                chain_id as number,
                                 r as any
                             ) ?? {
                                 maxToBorrow: '0',

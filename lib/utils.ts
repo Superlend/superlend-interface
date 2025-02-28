@@ -543,3 +543,18 @@ export const validEmail = (email: string) => {
     const patt = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     return patt.test(email)
 }
+
+export function debounce(func: Function, wait: number) {
+    let timeout: NodeJS.Timeout
+    return (...args: any[]) => {
+        clearTimeout(timeout)
+        timeout = setTimeout(() => func(...args), wait)
+    }
+}
+
+export const IsAaveV3Legacy = (chainId: number) => {
+    const legacyChainIds = [
+        1, 43114, 137, 42161, 10, 8453, 56, 534352, 100, 1088, 42793,
+    ]
+    return legacyChainIds.includes(chainId)
+}

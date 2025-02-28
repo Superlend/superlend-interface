@@ -33,7 +33,7 @@ const AvatarCircles = ({
     return (
         <div
             className={cn(
-                'z-10 flex -space-x-3 rtl:space-x-reverse',
+                'flex -space-x-3 rtl:space-x-reverse',
                 className
             )}
         >

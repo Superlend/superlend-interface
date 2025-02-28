@@ -16,8 +16,6 @@ import {
     CHAIN_ID_MAPPER,
     CONFIRM_ACTION_IN_WALLET_TEXT,
     ERROR_TOAST_ICON_STYLES,
-    POOL_AAVE_MAP,
-    // POOL_AAVE_MAP,
     SOMETHING_WENT_WRONG_MESSAGE,
     SUCCESS_MESSAGE,
 } from '../../../constants'
@@ -139,20 +137,20 @@ const WithdrawButton = ({
 
     const txBtnText =
         txBtnStatus[
-        isConfirming
-            ? 'confirming'
-            : isConfirmed
-                ? withdrawTx.status === 'view'
-                    ? 'success'
-                    : 'default'
-                : isPending
+            isConfirming
+                ? 'confirming'
+                : isConfirmed
+                  ? withdrawTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
                     ? 'pending'
                     : !isPending &&
                         !isConfirming &&
                         !isConfirmed &&
                         withdrawTx.status === 'view'
-                        ? 'error'
-                        : 'default'
+                      ? 'error'
+                      : 'default'
         ]
 
     const withdrawCompound = useCallback(

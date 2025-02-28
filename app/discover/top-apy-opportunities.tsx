@@ -119,6 +119,8 @@ export default function TopApyOpportunities() {
                 borrows: positionTypeParam === 'borrow',
                 max_ltv: positionTypeParam === 'borrow',
                 collateral_exposure: positionTypeParam === 'lend',
+                collateral_tokens: positionTypeParam === 'borrow',
+                available_liquidity: positionTypeParam === 'borrow',
             }
         })
         setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])
@@ -226,6 +228,26 @@ export default function TopApyOpportunities() {
     }, [excludeRiskyMarketsFlag])
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
+        const platformName = item.platform.platform_name.split('-')[0].toLowerCase()
+        const isAaveV3 = PlatformType.AAVE.includes(platformName)
+        const isCompound = PlatformType.COMPOUND.includes(platformName)
+        const isMorpho = PlatformType.MORPHO.includes(platformName)
+        const isFluid = PlatformType.FLUID.includes(platformName)
+
+        const liquidityInUSD = Number(item.platform.liquidity) * Number(item.token.price_usd)
+        const borrowsInUSD = Number(item.platform.borrows) * Number(item.token.price_usd)
+
+        let availableLiquidity = 0;
+        if (isAaveV3) {
+            availableLiquidity = liquidityInUSD - borrowsInUSD
+        } else if (isCompound) {
+            availableLiquidity = liquidityInUSD - borrowsInUSD
+        } else if (isMorpho) {
+            availableLiquidity = liquidityInUSD - Number(item.platform.borrows)
+        } else if (isFluid) {
+            availableLiquidity = (Number(item.platform.liquidity) * Number(item.platform.collateral_token_price)) - borrowsInUSD
+        }
+
         return {
             tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,
@@ -255,6 +277,8 @@ export default function TopApyOpportunities() {
             rewards: item.platform.rewards,
             isVault: item.platform.isVault || false,
             collateral_exposure: item.platform.collateral_exposure,
+            collateral_tokens: item.platform.collateral_tokens,
+            available_liquidity: availableLiquidity,
         }
     })
 
