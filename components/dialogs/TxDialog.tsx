@@ -420,7 +420,7 @@ export function ConfirmationDialog({
                     <HeadingText
                         level="h3"
                         weight="medium"
-                        className="text-gray-800"
+                        className="text-gray-800 truncate max-w-[200px]"
                     >
                         {amount} {assetDetails?.asset?.token?.symbol}
                     </HeadingText>
@@ -514,9 +514,11 @@ export function ConfirmationDialog({
                             weight="medium"
                             className="text-gray-800 flex items-center gap-1"
                         >
-                            {Number(amount).toFixed(decimalPlacesCount(amount))}
+                            <span className="inline-block truncate max-w-[200px]" title={amount}>
+                                {Number(amount).toFixed(decimalPlacesCount(amount))}
+                            </span>
                             <span
-                                className="inline-block truncate max-w-[150px]"
+                                className="inline-block truncate max-w-[100px]"
                                 title={assetDetails?.asset?.token?.symbol}
                             >
                                 {assetDetails?.asset?.token?.symbol}

@@ -44,6 +44,7 @@ import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import FLUID_LEND_ABI from '@/data/abi/fluidLendABI.json'
 import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 interface IWithdrawButtonProps {
     disabled: boolean
     assetDetails: any
@@ -64,7 +65,7 @@ const WithdrawButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    const { address: walletAddress } = useAccount()
+    const { walletAddress } = useWalletConnection()
     const { withdrawTx, setWithdrawTx } = useTxContext() as TTxContext
     // Protocol types
     const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
@@ -73,8 +74,8 @@ const WithdrawButton = ({
     const isMorphoVault = isMorpho && assetDetails?.vault
     const isMorphoMarket = isMorpho && assetDetails?.market
     const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
-    const isFluidVault = isFluid && assetDetails?.vault
-    const isFluidLend = isFluid && !assetDetails?.vault
+    const isFluidVault = isFluid && assetDetails?.isVault
+    const isFluidLend = isFluid && !assetDetails?.isVault
 
     const txBtnStatus: Record<string, string> = {
         pending: 'Withdrawing...',
@@ -426,16 +427,6 @@ const WithdrawButton = ({
         []
     )
 
-    // console.log('withdrawTx', withdrawTx)
-    let amountToWithdraw = parseUnits(
-        `${-Number(amount)}`,
-        assetDetails.asset.token.decimals
-    )
-
-    console.log('fluid_vault_nftId', assetDetails?.fluid_vault_nftId)
-    console.log('amountToWithdraw', amountToWithdraw.toString())
-    console.log('walletAddress', walletAddress)
-
     const withdrawFluidVault = useCallback(
         async (assetDetails: any, amount: string) => {
             let amountToWithdraw = parseUnits(
@@ -458,12 +449,9 @@ const WithdrawButton = ({
                 functionName: 'operate',
                 args: [
                     assetDetails?.fluid_vault_nftId,
-                    amountToWithdraw,
+                    BigInt(amountToWithdraw.toString()),
                     0,
                     walletAddress,
-                    // {
-                    //     value: underlyingAssetAdress === ETH_ADDRESSES[0] ? amountBN : 0,
-                    // }
                 ],
             }).catch((error) => {
                 setWithdrawTx((prev: TWithdrawTx) => ({

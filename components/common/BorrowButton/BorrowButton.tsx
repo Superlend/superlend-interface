@@ -41,7 +41,7 @@ import type { Market } from '@morpho-org/blue-sdk'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { BigNumber } from 'ethers'
-
+import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 interface IBorrowButtonProps {
     disabled: boolean
     assetDetails: any
@@ -84,8 +84,8 @@ const BorrowButton = ({
     const isMorphoVault = isMorpho && assetDetails?.vault
     const isMorphoMarket = isMorpho && assetDetails?.market
     const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
-    const isFluidVault = isFluid && assetDetails?.vault
-    const isFluidLend = isFluid && !assetDetails?.vault
+    const isFluidVault = isFluid && assetDetails?.isVault
+    const isFluidLend = isFluid && !assetDetails?.isVault
 
     useEffect(() => {
         if (hash) {
@@ -220,12 +220,12 @@ const BorrowButton = ({
 
                 writeContractAsync({
                     address: poolContractAddress as `0x${string}`,
-                    abi: AAVE_POOL_ABI,
-                    functionName: 'borrow',
+                    abi: FLUID_VAULTS_ABI,
+                    functionName: 'operate',
                     args: [
                         assetDetails?.fluid_vault_nftId,
-                        amountBN,
                         0,
+                        amountBN,
                         walletAddress,
                     ],
                 }).catch((error) => {

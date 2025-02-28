@@ -417,13 +417,13 @@ function FluidVaults({
         (asset) => asset.borrow_enabled === true
     )
 
-    const tokenAddressByPositionType = useMemo(() => {
-        return positionType === 'lend' ? fluidLendTokenDetails?.token?.address?.toLowerCase() : fluidBorrowTokenDetails?.token?.address?.toLowerCase()
-    }, [positionType, fluidLendTokenDetails?.token?.address, fluidBorrowTokenDetails?.token?.address])
+    // const tokenAddressByPositionType = useMemo(() => {
+    //     return positionType === 'lend' ? fluidLendTokenDetails?.token?.address?.toLowerCase() : fluidBorrowTokenDetails?.token?.address?.toLowerCase()
+    // }, [positionType, fluidLendTokenDetails?.token?.address, fluidBorrowTokenDetails?.token?.address])
 
     const fluidVaultNftId = useMemo(() => {
-        return portfolioData?.platforms[0]?.positions?.find((p) => p.token.address.toLowerCase() === tokenAddressByPositionType)?.fluid_vault_nftId ?? 0
-    }, [portfolioData?.platforms, tokenAddressByPositionType])
+        return portfolioData?.platforms[0]?.positions?.find((p) => !!p.fluid_vault_nftId)?.fluid_vault_nftId ?? 0
+    }, [portfolioData?.platforms])
 
     useEffect(() => {
         if (lendTx.status === 'approve' && lendTx.isConfirmed) {
@@ -595,9 +595,10 @@ function FluidVaults({
 
     useEffect(() => {
         if (fluidLendTokenDetails) {
-            setSelectedAssetTokenDetails(fluidLendTokenDetails)
+            const tokenDetails = isLendPositionType(positionType) ? fluidLendTokenDetails : fluidBorrowTokenDetails
+            setSelectedAssetTokenDetails(tokenDetails ?? null)
         }
-    }, [fluidLendTokenDetails, setSelectedAssetTokenDetails])
+    }, [fluidLendTokenDetails, fluidBorrowTokenDetails, setSelectedAssetTokenDetails])
 
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[
@@ -636,11 +637,11 @@ function FluidVaults({
         if (toManyDecimals) {
             return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
         }
-        if (!hasCollateral) {
-            return 'You do not have any collateral'
-        }
+        // if (!hasCollateral) {
+        //     return 'You do not have any collateral'
+        // }
         if (
-            !canBorrow ||
+            // !canBorrow ||
             Number(amount) > Number(maxBorrowAmount.maxToBorrowFormatted ?? 0)
         ) {
             return 'You do not have any borrow limit'
@@ -663,6 +664,7 @@ function FluidVaults({
             : 'Loading borrow limit...'
     }
 
+    // console.log(maxBorrowAmount.maxToBorrowFormatted)
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
@@ -671,10 +673,9 @@ function FluidVaults({
                     ? balance
                     : maxBorrowAmount.maxToBorrowFormatted
             ) ||
-            (isLendPositionType(positionType) ? false : !hasCollateral) ||
+            // (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
-            toManyDecimals ||
-            (!isLendPositionType(positionType) && !doesMarketHasLiquidity),
+            toManyDecimals,
         [
             amount,
             balance,
@@ -920,7 +921,7 @@ function FluidVaults({
                                 setOpen={setIsLendBorrowTxDialogOpen}
                                 positionType={positionType}
                                 assetDetails={{
-                                    asset: selectedAssetTokenDetails,
+                                    asset: isLendPositionType(positionType) ? fluidLendTokenDetails : fluidBorrowTokenDetails,
                                     ...platformData?.platform,
                                     fluid_vault_nftId: fluidVaultNftId,
                                 }}

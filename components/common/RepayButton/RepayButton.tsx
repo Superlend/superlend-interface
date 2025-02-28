@@ -40,6 +40,7 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { ETH_ADDRESSES } from '@/lib/constants'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 
 interface IRepayButtonProps {
     assetDetails: any
@@ -72,7 +73,7 @@ const RepayButton = ({
             confirmations: 2,
             hash,
         })
-    const { address: walletAddress } = useAccount()
+    const { walletAddress } = useWalletConnection()
     const { repayTx, setRepayTx } = useTxContext() as TTxContext
 
     const amountBN = useMemo(() => {
@@ -123,8 +124,8 @@ const RepayButton = ({
         const isMorphoVault = isMorpho && assetDetails?.vault
         const isMorphoMarket = isMorpho && assetDetails?.market
         const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
-        const isFluidVault = isFluid && assetDetails?.vault
-        const isFluidLend = isFluid && !assetDetails?.vault
+        const isFluidVault = isFluid && assetDetails?.isVault
+        const isFluidLend = isFluid && !assetDetails?.isVault
 
         if (isAave) {
             await repayAave()
@@ -238,7 +239,7 @@ const RepayButton = ({
                 args: [
                     assetDetails?.fluid_vault_nftId,
                     0,
-                    amountToRepay,
+                    BigInt(amountToRepay.toString()),
                     walletAddress,
                 ],
                 value: underlyingAssetAdress === ETH_ADDRESSES[0] ? BigInt(amountBN.toString()) : BigInt('0'),

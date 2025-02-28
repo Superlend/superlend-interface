@@ -36,6 +36,7 @@ import {
     getLowestDisplayValue,
     hasExponent,
     hasLowestDisplayValuePrefix,
+    scientificToDecimal,
 } from '@/lib/utils'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import {
@@ -361,6 +362,24 @@ export default function WithdrawAndRepayActionButton({
     useEffect(() => {
         setPositionType(positionTypeParam)
     }, [positionTypeParam])
+
+    function normalizeScientificNotation(value: string | number): string {
+        const strValue = value.toString();
+    
+        // Check if value is in scientific notation
+        if (strValue.includes('e')) {
+            const num = Number(strValue);
+            // If the number is extremely small (less than 1e-6), return "0"
+            if (Math.abs(num) < 1e-6) {
+                return "0";
+            }
+            // Otherwise use the existing scientificToDecimal function
+            return scientificToDecimal(num).toString();
+        }
+        
+        return strValue;
+    }
+
     // Get max withdraw amount
     useEffect(() => {
         setIsLoadingMaxBorrowingAmount(true)
@@ -468,10 +487,9 @@ export default function WithdrawAndRepayActionButton({
                     const withdrawTokenAddress =
                         withdrawToken?.address.toLowerCase()
                     const borrowPositionUSD =
-                        (borrowPositionDetails?.amount ?? 0) *
-                        (borrowPositionDetails?.token?.price_usd ?? 0)
+                    Number(normalizeScientificNotation(borrowPositionDetails?.amount)) * borrowPositionDetails?.token?.price_usd
                     const collatRequiredInUsd =
-                        (borrowPositionUSD * 100) / (lendTokenDetails.ltv ?? 0)
+                        (borrowPositionUSD * 100) / lendTokenDetails.ltv
                     const collatRequiredInToken =
                         collatRequiredInUsd /
                         lendPositionDetails.token.price_usd
@@ -502,8 +520,9 @@ export default function WithdrawAndRepayActionButton({
                 for (const repayToken of tokenDetails) {
                     if (actionType !== 'repay') continue
                     const repayTokenAddress = repayToken?.address.toLowerCase()
+                    // console.log(normalizeScientificNotation(repayToken.tokenAmount.toString()))
                     const maxDebt = parseUnits(
-                        String(repayToken.tokenAmount),
+                        normalizeScientificNotation(repayToken.tokenAmount.toString()),
                         repayToken.decimals
                     )
                     const balance = BigNumber.from(
@@ -929,7 +948,7 @@ export default function WithdrawAndRepayActionButton({
         } else {
             return null
         }
-    }, [amount, balance, toManyDecimals])
+    }, [amount, maxWithdrawAmountForTx, toManyDecimals])
 
     const repayErrorMessage = useMemo(() => {
         if (toManyDecimals) {
@@ -1416,7 +1435,7 @@ function ConfirmationDialog({
                         <HeadingText
                             level="h3"
                             weight="medium"
-                            className="text-gray-800"
+                            className="text-gray-800 truncate max-w-[200px]"
                         >
                             {amount} {assetDetails?.asset?.token?.symbol}
                         </HeadingText>
@@ -1567,11 +1586,13 @@ function ConfirmationDialog({
                                     weight="medium"
                                     className="text-gray-800 flex items-center gap-1"
                                 >
-                                    {Number(amount).toFixed(
-                                        decimalPlacesCount(amount)
-                                    )}
+                                    <span className="inline-block truncate max-w-[200px]" title={amount}>
+                                        {Number(amount).toFixed(
+                                            decimalPlacesCount(amount)
+                                        )}
+                                    </span>
                                     <span
-                                        className="inline-block truncate max-w-[150px]"
+                                        className="inline-block truncate max-w-[100px]"
                                         title={assetDetails?.asset?.token?.symbol}
                                     >
                                         {assetDetails?.asset?.token?.symbol}
@@ -1953,27 +1974,31 @@ function ConfirmationDialog({
                                                 Token approved
                                             </BodyText>
                                         </div>
-                                        {repayTx.hash &&
-                                            repayTx.status === 'approve' && (
-                                                <ExternalLink
-                                                    href={getExplorerLink(
-                                                        isWithdrawAction
-                                                            ? withdrawTx.hash
-                                                            : repayTx.hash,
-                                                        assetDetails?.chain_id ||
-                                                        assetDetails?.platform
-                                                            ?.chain_id
-                                                    )}
-                                                >
-                                                    <BodyText
-                                                        level="body2"
-                                                        weight="normal"
-                                                        className="text-inherit"
+                                        {(repayTx.hash &&
+                                            (repayTx.isConfirming ||
+                                                repayTx.isConfirmed)) ||
+                                            (withdrawTx.hash &&
+                                                (withdrawTx.isConfirming ||
+                                                    withdrawTx.isConfirmed) && (
+                                                    <ExternalLink
+                                                        href={getExplorerLink(
+                                                            isWithdrawAction
+                                                                ? withdrawTx.hash
+                                                                : repayTx.hash,
+                                                            assetDetails?.chain_id ||
+                                                            assetDetails?.platform
+                                                                ?.chain_id
+                                                        )}
                                                     >
-                                                        View on explorer
-                                                    </BodyText>
-                                                </ExternalLink>
-                                            )}
+                                                        <BodyText
+                                                            level="body2"
+                                                            weight="normal"
+                                                            className="text-inherit"
+                                                        >
+                                                            View on explorer
+                                                        </BodyText>
+                                                    </ExternalLink>
+                                                ))}
                                     </div>
                                 )}
                         </div>
@@ -2201,4 +2226,14 @@ function handleSmallestValue(amount: string, maxDecimalsToDisplay: number = 2) {
         ? Math.abs(Number(amount)).toFixed(10)
         : amount.toString()
     return `${hasLowestDisplayValuePrefix(Number(amountFormatted), maxDecimalsToDisplay)} ${getLowestDisplayValue(Number(amountFormatted), maxDecimalsToDisplay)}`
+}
+
+const normalizeAmount = (amount: string | number, decimals: number): string => {
+    const strAmount = amount.toString()
+    if (strAmount.includes('e')) {
+        return scientificToDecimal(Number(strAmount))
+            .toFixed(decimals)
+            .toString()
+    }
+    return strAmount
 }
