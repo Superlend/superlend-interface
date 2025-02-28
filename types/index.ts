@@ -100,6 +100,7 @@ export type TOpportunity = {
         rewards: TReward[]
         collateral_exposure: `0x${string}`[]
         collateral_tokens: `0x${string}`[]
+        collateral_token_price: number
         isVault?: boolean
     }
     trend: {

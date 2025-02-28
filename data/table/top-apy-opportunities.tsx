@@ -698,25 +698,22 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             />
         ),
         cell: ({ row }) => {
-            const isAaveV3 = PlatformType.AAVE.includes(row.original.platformName.toLowerCase())
-            const isCompound = PlatformType.COMPOUND.includes(row.original.platformName.toLowerCase())
-            const isMorpho = PlatformType.MORPHO.includes(row.original.platformName.toLowerCase())
-            const isFluid = PlatformType.FLUID.includes(row.original.platformName.toLowerCase())
+            const value: number = row.original.available_liquidity
 
-            let availableLiquidity;
-            if (isAaveV3) {
-                availableLiquidity = Number(row.original.deposits) - Number(row.original.borrows)
-            } else if (isCompound) {
-                availableLiquidity = Number(row.original.deposits) - Number(row.original.borrows)
-            } else if (isMorpho) {
-                availableLiquidity = Number(row.original.deposits) - Number(row.original.borrows)
-            } else if (isFluid) {
-                availableLiquidity = Number(row.original.deposits) - Number(row.original.borrows)
+            if (containsNegativeInteger(value)) {
+                return (
+                    <BodyText level={'body2'} weight={'medium'}>
+                        -$
+                        {abbreviateNumber(
+                            Number(convertNegativeToPositive(value))
+                        )}
+                    </BodyText>
+                )
             }
 
             return (
                 <BodyText level={'body2'} weight={'medium'}>
-                    ${abbreviateNumber(availableLiquidity)}
+                    ${abbreviateNumber(Number(value))}
                 </BodyText>
             )
         },
