@@ -172,6 +172,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     return {
                         name: token?.name,
                         logo: token?.logo,
+                        symbol: token?.symbol,
                     }
                 }
             )
@@ -220,7 +221,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             className="text-gray-800 truncate max-w-[100px]"
                             title={tokenDetails[0].name}
                         >
-                            {tokenDetails[0].name}
+                            {tokenDetails[0].symbol}
                         </BodyText>
                     }
                 </div>
