@@ -151,9 +151,6 @@ const SupplyFluidButton = ({
                     amountBN,
                     0,
                     walletAddress,
-                    // {
-                    //     value: underlyingAssetAdress === ETH_ADDRESSES[0] ? amountBN : 0,
-                    // }
                 ],
                 value: underlyingAssetAdress === ETH_ADDRESSES[0] ? BigInt(amountBN.toString()) : BigInt('0'),
             })

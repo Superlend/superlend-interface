@@ -209,6 +209,11 @@ const RepayButton = ({
     ])
 
     const repayFluidVault = useCallback(async () => {
+        let amountToRepay= parseUnits(
+            `${-Number(amount)}`,
+            assetDetails.asset.token.decimals
+        )
+
         try {
             setRepayTx((prev: TRepayTx) => ({
                 ...prev,
@@ -232,13 +237,11 @@ const RepayButton = ({
                 functionName: 'operate',
                 args: [
                     assetDetails?.fluid_vault_nftId,
-                    amountBN,
                     0,
+                    amountToRepay,
                     walletAddress,
-                    // {
-                    //     value: underlyingAssetAdress === ETH_ADDRESSES[0] ? amountBN : 0,
-                    // }
                 ],
+                value: underlyingAssetAdress === ETH_ADDRESSES[0] ? BigInt(amountBN.toString()) : BigInt('0'),
             })
                 .then((data) => {
                     setRepayTx((prev: TRepayTx) => ({
