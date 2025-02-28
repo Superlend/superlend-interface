@@ -236,7 +236,7 @@ export default function TopApyOpportunities() {
         } else if (isCompound) {
             availableLiquidity = liquidityInUSD - borrowsInUSD
         } else if (isMorpho) {
-            availableLiquidity = Number(item.platform.liquidity) - Number(item.platform.borrows)
+            availableLiquidity = liquidityInUSD - Number(item.platform.borrows)
         } else if (isFluid) {
             availableLiquidity = (Number(item.platform.liquidity) * Number(item.platform.collateral_token_price)) - borrowsInUSD
         }
