@@ -179,39 +179,51 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const moreItemsData = tokenDetails?.filter((_, index) => index > MAX_ITEMS_TO_SHOW - 1)
 
             return (
-                <AvatarCircles
-                    avatarUrls={
-                        tokenImages ?? []
+                <div className="w-full flex items-center justify-start gap-1">
+                    <AvatarCircles
+                        avatarUrls={
+                            tokenImages ?? []
+                        }
+                        avatarDetails={tokenDetails?.map(
+                            (token) => ({
+                                content: token.name,
+                            })
+                        )}
+                        maxItemsToShow={MAX_ITEMS_TO_SHOW}
+                        moreItemsTooltipContent={
+                            <ScrollArea type="always" className={`${moreItemsData.length > 5 ? 'h-[200px]' : 'h-[50px]'} w-full rounded-md p-0 pr-6`}>
+                                <div className="flex flex-col gap-2">
+                                    {moreItemsData
+                                        .filter((token) => !!token && !!token.name)
+                                        .map((token: any) => (
+                                            <div className="flex items-center gap-2">
+                                                <ImageWithDefault
+                                                    src={token.logo}
+                                                    width={16}
+                                                    height={16}
+                                                    alt={token.name}
+                                                    className="rounded-full shrink-0"
+                                                />
+                                                <BodyText level="body2" weight="medium">
+                                                    {token.name}
+                                                </BodyText>
+                                            </div>
+                                        ))}
+                                </div>
+                            </ScrollArea>
+                        }
+                    />
+                    {tokenImages.length === 1 &&
+                        <BodyText
+                            level="body2"
+                            weight="medium"
+                            className="text-gray-800 truncate max-w-[100px]"
+                            title={tokenDetails[0].name}
+                        >
+                            {tokenDetails[0].name}
+                        </BodyText>
                     }
-                    avatarDetails={tokenDetails?.map(
-                        (token) => ({
-                            content: token.name,
-                        })
-                    )}
-                    maxItemsToShow={MAX_ITEMS_TO_SHOW}
-                    moreItemsTooltipContent={
-                        <ScrollArea type="always" className={`${moreItemsData.length > 5 ? 'h-[200px]' : 'h-[50px]'} w-full rounded-md p-0 pr-6`}>
-                            <div className="flex flex-col gap-2">
-                                {moreItemsData
-                                    .filter((token) => !!token && !!token.name)
-                                    .map((token: any) => (
-                                        <div className="flex items-center gap-2">
-                                            <ImageWithDefault
-                                                src={token.logo}
-                                                width={16}
-                                                height={16}
-                                                alt={token.name}
-                                                className="rounded-full shrink-0"
-                                            />
-                                            <BodyText level="body2" weight="medium">
-                                                {token.name}
-                                            </BodyText>
-                                        </div>
-                                    ))}
-                            </div>
-                        </ScrollArea>
-                    }
-                />
+                </div>
             )
         },
         enableSorting: false,
