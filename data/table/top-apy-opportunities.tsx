@@ -271,7 +271,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             {platformDisplayName}
                         </BodyText>
                         {showPlatformCuratorName && (
-                            <Label className="text-gray-800 inline-block leading-0 capitalize truncate max-w-[100px]">
+                            <Label className="text-gray-800 inline-block leading-0 truncate max-w-[100px]">
                                 {formattedPlatformWithMarketName}
                             </Label>
                         )}
