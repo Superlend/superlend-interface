@@ -27,14 +27,7 @@ import { useSearchParams } from 'next/navigation'
 export const columns: ColumnDef<TOpportunityTable>[] = [
     {
         accessorKey: 'tokenSymbol',
-        header: () => {
-            const searchParams = useSearchParams()
-            const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
-            return (
-                positionTypeParam === 'lend' ? 'Token' : 'Borrow Token'
-            )
-        },
+        header: () => "Token",
         accessorFn: (item) => item.tokenSymbol,
         cell: ({ row }) => {
             const searchParams = useSearchParams()
@@ -138,7 +131,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     },
     {
         id: 'collateral_tokens',
-        header: "Collateral Tokens",
+        header: "Collateral",
         cell: ({ row }) => {
             const { allTokensData } = useAssetsDataContext()
             const MAX_ITEMS_TO_SHOW = 5
@@ -625,7 +618,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const { allTokensData } = useAssetsDataContext()
             const MAX_ITEMS_TO_SHOW = 5
             const collateralExposureData = row.original.collateral_exposure ?? [];
-            const filteredCollateralExposureData = collateralExposureData.filter((tokenAddress: `0x${string}`) => {
+            const filteredCollateralExposureData = collateralExposureData?.filter((tokenAddress: `0x${string}`) => {
                 const token = allTokensData[row.original.chain_id].find(
                     (asset: any) =>
                         asset.address.toLowerCase() ===
@@ -645,7 +638,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
 
             const tokenDetails = filteredCollateralExposureData?.map(
                 (tokenAddress: `0x${string}`) => {
-                    const token = allTokensData[row.original.chain_id].find(
+                    const token = allTokensData[row.original.chain_id]?.find(
                         (asset: any) =>
                             asset.address.toLowerCase() ===
                             tokenAddress.toLowerCase()
