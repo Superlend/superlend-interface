@@ -308,8 +308,8 @@ export default function PositionDetails() {
         assetDetails,
     }
 
-    const isShowWithdrawButton = (isAaveV3Protocol || isMorphoProtocol || isFluidProtocol)
-    const isShowRepayButton = (isAaveV3Protocol || isMorphoProtocol || isFluidVaults)
+    const isShowWithdrawButton = (isAaveV3Protocol || isMorphoProtocol)
+    const isShowRepayButton = (isAaveV3Protocol || isMorphoProtocol)
 
     const morphoVaultsLiquidationPriceTooltipText =
         'Liquidation is not applicable, as Morpho vaults are designed to only earn & not borrow.'
@@ -512,7 +512,7 @@ export default function PositionDetails() {
                                     <HeadingText
                                         level="h3"
                                         weight="medium"
-                                        className="text-gray-800"
+                                        className="text-gray-800 truncate max-w-[100px]"
                                     >
                                         {hasLowestDisplayValuePrefix(
                                             Number(
@@ -581,7 +581,7 @@ export default function PositionDetails() {
                                         <HeadingText
                                             level="h3"
                                             weight="medium"
-                                            className="text-gray-800"
+                                            className="text-gray-800 truncate max-w-[100px]"
                                         >
                                             {hasLowestDisplayValuePrefix(
                                                 Number(

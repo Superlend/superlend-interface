@@ -117,7 +117,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
             chainId: chain.chain_id,
         }))
         .sort((a, b) => {
-            const order = [1, 8453, 42161, 137, 42793, 10, 534352, 43114, 56, 100, 1088];
+            const order = [1, 8453, 42161, 137, 42793, 10, 534352, 43114, 56, 100, 1088, 59144];
             return order.indexOf(a.chainId) - order.indexOf(b.chainId);
         });
 

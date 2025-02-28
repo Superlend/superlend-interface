@@ -87,10 +87,18 @@ export default function InfoTooltip({
                         sideOffset={5}
                         className={`${className?.includes('max-w') ? '' : 'max-w-[280px] text-wrap'} ${sizes[size]}`}
                     >
-                        {typeof content === 'string' && (
-                            <Label className="w-fit">{content}</Label>
-                        )}
-                        {typeof content !== 'string' && content}
+                        <motion.span
+                            onHoverStart={handleTooltipToggle(true)}
+                            onHoverEnd={handleTooltipToggle(false)}
+                            onMouseEnter={handleTooltipToggle(true)}
+                            onMouseLeave={handleTooltipToggle(false)}
+                            className="w-fit inline-block shrink-0"
+                        >
+                            {typeof content === 'string' && (
+                                <Label className="w-fit">{content}</Label>
+                            )}
+                            {typeof content !== 'string' && content}
+                        </motion.span>
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>

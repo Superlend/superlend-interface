@@ -16,8 +16,6 @@ import {
     CHAIN_ID_MAPPER,
     CONFIRM_ACTION_IN_WALLET_TEXT,
     ERROR_TOAST_ICON_STYLES,
-    POOL_AAVE_MAP,
-    // POOL_AAVE_MAP,
     SOMETHING_WENT_WRONG_MESSAGE,
     SUCCESS_MESSAGE,
 } from '../../../constants'
@@ -96,7 +94,8 @@ const BorrowButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
         }
@@ -114,11 +113,11 @@ const BorrowButton = ({
 
     const txBtnText =
         txBtnStatus[
-        isConfirming
-            ? 'confirming'
-            : isConfirmed
-                ? 'success'
-                : isPending
+            isConfirming
+                ? 'confirming'
+                : isConfirmed
+                  ? 'success'
+                  : isPending
                     ? 'pending'
                     : 'default'
         ]
@@ -151,7 +150,10 @@ const BorrowButton = ({
                     amount,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
-                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    chain_name:
+                        CHAIN_ID_MAPPER[
+                            Number(assetDetails?.chain_id) as ChainId
+                        ],
                     wallet_address: walletAddress,
                 })
                 writeContractAsync({
@@ -191,7 +193,10 @@ const BorrowButton = ({
                     amount,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
-                    chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    chain_name:
+                        CHAIN_ID_MAPPER[
+                            Number(assetDetails?.chain_id) as ChainId
+                        ],
                     wallet_address: walletAddress,
                 })
                 writeContractAsync({
@@ -227,7 +232,7 @@ const BorrowButton = ({
         }
         if (assetDetails?.protocol_type === PlatformType.AAVE) {
             await borrowAave(
-                POOL_AAVE_MAP[assetDetails?.platform_name as PlatformValue],
+                assetDetails?.core_contract,
                 assetDetails?.asset?.token?.address,
                 amount,
                 walletAddress as string
@@ -254,7 +259,7 @@ const BorrowButton = ({
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={(isPending || isConfirming || disabled)}
+                disabled={isPending || isConfirming || disabled}
                 onClick={
                     borrowTx.status === 'borrow'
                         ? onBorrow

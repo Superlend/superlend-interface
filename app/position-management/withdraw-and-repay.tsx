@@ -367,6 +367,7 @@ export default function WithdrawAndRepayActionButton({
                         maxWithdrawAmounts[withdrawTokenAddress] =
                             getMaxWithdrawAmount(
                                 withdrawTokenAddress,
+                                chain_id as number,
                                 r as any
                             ) ?? {
                                 maxToWithdraw: '0',
@@ -1425,10 +1426,12 @@ function ConfirmationDialog({
                                     weight="medium"
                                     className="text-gray-800 flex items-center gap-1"
                                 >
-                                    {Number(amount).toFixed(
-                                        decimalPlacesCount(amount)
-                                    )}
-                                    <span className="inline-block truncate max-w-[150px]" title={assetDetails?.asset?.token?.symbol}>
+                                    <span className="inline-block truncate max-w-[200px]" title={amount}>
+                                        {Number(amount).toFixed(
+                                            decimalPlacesCount(amount)
+                                        )}
+                                    </span>
+                                    <span className="inline-block truncate max-w-[100px]" title={assetDetails?.asset?.token?.symbol}>
                                         {assetDetails?.asset?.token?.symbol}
                                     </span>
                                 </HeadingText>

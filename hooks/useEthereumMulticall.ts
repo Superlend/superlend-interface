@@ -54,6 +54,9 @@ export const useEthersMulticall = (walletAddress: string | undefined) => {
                     534352: new ethersProviders.JsonRpcProvider(
                         `https://scroll-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
                     ),
+                    59144: new ethersProviders.JsonRpcProvider(
+                        `https://linea-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
+                    ),
                 }
 
             const _multicall: Record<number, Multicall> = {}

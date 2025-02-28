@@ -99,6 +99,8 @@ export default function Opportunities({
             rewards: item.platform.rewards,
             isVault: item.platform.isVault || false,
             collateral_exposure: item.platform.collateral_exposure,
+            collateral_tokens: item.platform.collateral_tokens,
+            available_liquidity: item.platform.available_liquidity,
         }
     })
 

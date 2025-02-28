@@ -32,38 +32,38 @@ export const abbreviateNumber = (
     fixed: number = 2
 ): string => {
     const getAbbreviation = (num: number) => {
-        const abs = Math.abs(num);
+        const abs = Math.abs(num)
         if (abs >= 1000000000) {
-            return { divisor: 1000000000, suffix: 'B' };
+            return { divisor: 1000000000, suffix: 'B' }
         } else if (abs >= 1000000) {
-            return { divisor: 1000000, suffix: 'M' };
+            return { divisor: 1000000, suffix: 'M' }
         } else if (abs >= 1000) {
-            return { divisor: 1000, suffix: 'K' };
+            return { divisor: 1000, suffix: 'K' }
         }
-        return { divisor: 1, suffix: '' };
+        return { divisor: 1, suffix: '' }
     }
 
-    const { divisor, suffix } = getAbbreviation(value);
-    
+    const { divisor, suffix } = getAbbreviation(value)
+
     if (divisor === 1) {
         // For small numbers, preserve all decimal places up to fixed
-        const decimalStr = value.toString();
-        const [whole, decimal] = decimalStr.split('.');
+        const decimalStr = value.toString()
+        const [whole, decimal] = decimalStr.split('.')
         if (decimal) {
-            return `${whole}.${decimal.slice(0, fixed)}`;
+            return `${whole}.${decimal.slice(0, fixed)}`
         }
-        return whole;
+        return whole
     }
 
     // For abbreviated numbers, calculate division precisely
-    const divided = value / divisor;
-    const decimalStr = divided.toString();
-    const [whole, decimal] = decimalStr.split('.');
-    
+    const divided = value / divisor
+    const decimalStr = divided.toString()
+    const [whole, decimal] = decimalStr.split('.')
+
     if (decimal) {
-        return `${whole}.${decimal.slice(0, fixed)}${suffix}`;
+        return `${whole}.${decimal.slice(0, fixed)}${suffix}`
     }
-    return `${whole}${suffix}`;
+    return `${whole}${suffix}`
 }
 
 type TOptions = {
@@ -542,4 +542,19 @@ export function scientificToDecimal(scientificNum: number): number {
 export const validEmail = (email: string) => {
     const patt = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     return patt.test(email)
+}
+
+export function debounce(func: Function, wait: number) {
+    let timeout: NodeJS.Timeout
+    return (...args: any[]) => {
+        clearTimeout(timeout)
+        timeout = setTimeout(() => func(...args), wait)
+    }
+}
+
+export const IsAaveV3Legacy = (chainId: number) => {
+    const legacyChainIds = [
+        1, 43114, 137, 42161, 10, 8453, 56, 534352, 100, 1088, 42793,
+    ]
+    return legacyChainIds.includes(chainId)
 }

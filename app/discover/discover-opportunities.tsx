@@ -202,14 +202,14 @@ function CardDetailsSkeleton() {
     return (
         <div className="flex items-center gap-2 w-full">
             <Skeleton
-                className="w-12 h-12 rounded-full"
+                className="w-12 h-12 rounded-full bg-gray-300"
             />
             <div className="flex flex-col gap-1">
                 <Skeleton
-                    className="w-24 h-4 rounded-md"
+                    className="w-24 h-4 rounded-md bg-gray-300"
                 />
                 <Skeleton
-                    className="w-12 h-2 rounded-md"
+                    className="w-12 h-2 rounded-md bg-gray-300"
                 />
             </div>
         </div>
