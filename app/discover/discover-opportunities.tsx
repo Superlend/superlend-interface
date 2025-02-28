@@ -23,21 +23,18 @@ const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 export default function DiscoverOpportunities() {
     const { logEvent } = useAnalytics()
     // Token Addresses
-    const opportunity1TokenAddress =
-        '0xfc24f770f94edbca6d6f885e12d4317320bcb401'
-    const opportunity2TokenAddress =
-        '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
-    const opportunity3TokenAddress =
-        '0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559'
+    const opportunity1TokenAddress = "0xfc24f770f94edbca6d6f885e12d4317320bcb401";
+    const opportunity2TokenAddress = "0x8236a87084f8b84306f72007f36f2618a5634494";
+    const opportunity3TokenAddress = "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
 
     // Chain IDs
-    const opportunity1ChainId = 42793
-    const opportunity2ChainId = 8453
-    const opportunity3ChainId = 1
+    const opportunity1ChainId = 42793;
+    const opportunity2ChainId = 1;
+    const opportunity3ChainId = 1;
 
     // Protocol Identifiers
     const opportunity1ProtocolIdentifier = "0xf80e34148c541f12a9eec9607c3b5da7ae94dee4c8b33d3a0c1b8b0d13b6f8e8";
-    const opportunity2ProtocolIdentifier = "0x67c86ad1370e99a0e693761ab8f156e4f42dd52ee22db2cff379571549dd89b5";
+    const opportunity2ProtocolIdentifier = "0x605f89bd6916b261e90c95c8acf371d1cf1edc15f09223b872afcace4827cdae";
     const opportunity3ProtocolIdentifier = "0x027cb6a3b64db87be63dc9a3ee7fa0becb9344829e996c4660ac9cadd236bd38";
 
     // Platform Data
@@ -58,25 +55,11 @@ export default function DiscoverOpportunities() {
         })
 
     // Borrow Rate
-    const asset1BorrowRate = opportunity1PlatformData.assets.find(
-        (asset: any) => asset.token.address === opportunity1TokenAddress
-    )?.variable_borrow_apy
-    const asset2APY = opportunity2PlatformData.assets.find(
-        (asset: any) => asset.token.address === opportunity2TokenAddress
-    )?.supply_apy
+    const asset1BorrowRate = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)?.variable_borrow_apy
     // Description
     const description1 = `${asset1BorrowRate?.toFixed(2)}% Borrow Rate`
-    const description2 = `Upto ${asset2APY?.toFixed(2)}% APY`
+    const description2 = `Upto ${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.supply_apy?.toFixed(2)}% APY`
     // const description3 = opportunity3PlatformData?.apy
-
-    function getRedirectLink(
-        tokenAddress: string,
-        protocolIdentifier: string,
-        chainId: number,
-        positionType: string
-    ) {
-        return `/position-management?token=${tokenAddress}&protocol_identifier=${protocolIdentifier}&chain_id=${chainId}&position_type=${positionType}`
-    }
 
     // Opportunities
     const opportunities = [
@@ -98,12 +81,12 @@ export default function DiscoverOpportunities() {
         },
         {
             id: 2,
-            label: 'Automated Strategy',
-            tokenSymbol: 'Seamless USDC',
-            platformName: 'Morpho',
-            chainName: 'Base',
+            label: "Automated Strategy",
+            tokenSymbol: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol,
+            platformName: "Morpho",
+            chainName: "Ethereum",
             description: description2,
-            tokenImage: `${morphoImageBaseUrl}/usdc.svg`,
+            tokenImage: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.logo,
             platformImage: `${imageBaseUrl}/morpho-logo.svg`,
             link: getRedirectLink(
                 opportunity2TokenAddress,
@@ -173,47 +156,46 @@ export default function DiscoverOpportunities() {
                                     >
                                         {opportunity.label}
                                     </Badge>
-                                    <div className="flex items-center gap-2">
-                                        <ImageWithDefault
-                                            src={opportunity.tokenImage}
-                                            alt={opportunity.tokenSymbol}
-                                            width={36}
-                                            height={36}
-                                            className="rounded-full object-contain"
-                                        />
-                                        <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-2">
-                                                <HeadingText
-                                                    level="h4"
-                                                    weight="medium"
-                                                    className="text-gray-800"
-                                                >
-                                                    {opportunity.tokenSymbol}
-                                                </HeadingText>
-                                                <Badge
-                                                    variant="gray"
-                                                    className="w-fit rounded-md uppercase px-1"
-                                                >
-                                                    <Label
+                                    {isLoading[index + 1] ?
+                                        (<CardDetailsSkeleton />)
+                                        : (<div className="flex items-center gap-2">
+                                            <ImageWithDefault
+                                                src={opportunity.tokenImage}
+                                                alt={opportunity.tokenSymbol}
+                                                width={36}
+                                                height={36}
+                                                className="rounded-full object-contain"
+                                            />
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex items-center gap-2">
+                                                    <HeadingText
+                                                        level="h4"
                                                         weight="medium"
-                                                        className="text-black tracking-wide"
+                                                        className="text-gray-800"
                                                     >
-                                                        {opportunity.chainName}
-                                                    </Label>
-                                                </Badge>
-                                            </div>
-                                            {isLoading[index + 1] ? (
-                                                <Skeleton className="w-full h-[16px] rounded-md" />
-                                            ) : (
+                                                        {opportunity.tokenSymbol}
+                                                    </HeadingText>
+                                                    <Badge
+                                                        variant="gray"
+                                                        className="w-fit rounded-md uppercase px-1"
+                                                    >
+                                                        <Label
+                                                            weight="medium"
+                                                            className="text-black tracking-wide"
+                                                        >
+                                                            {opportunity.chainName}
+                                                        </Label>
+                                                    </Badge>
+                                                </div>
                                                 <Label
                                                     weight="medium"
                                                     className="text-gray-600"
                                                 >
                                                     {opportunity.description}
                                                 </Label>
-                                            )}
-                                        </div>
-                                    </div>
+                                            </div>
+                                        </div>)
+                                    }
                                 </div>
                                 <div className="absolute -right-5 -bottom-5 group-hover:-right-2 group-hover:-bottom-2 transition-all duration-300">
                                     <ImageWithDefault
@@ -232,3 +214,31 @@ export default function DiscoverOpportunities() {
         </div>
     )
 }
+
+// Helper Functions
+function CardDetailsSkeleton() {
+    return (
+        <div className="flex items-center gap-2 w-full">
+            <Skeleton
+                className="w-12 h-12 rounded-full"
+            />
+            <div className="flex flex-col gap-1">
+                <Skeleton
+                    className="w-24 h-4 rounded-md"
+                />
+                <Skeleton
+                    className="w-12 h-2 rounded-md"
+                />
+            </div>
+        </div>
+    )
+}
+
+// Helper Functions
+function getAssetDetails(platformData: any, tokenAddress: string) {
+    return platformData.assets.find((asset: any) => asset.token.address.toLowerCase() === tokenAddress.toLowerCase())
+}
+function getRedirectLink(tokenAddress: string, protocolIdentifier: string, chainId: number, positionType: string) {
+    return `/position-management?token=${tokenAddress}&protocol_identifier=${protocolIdentifier}&chain_id=${chainId}&position_type=${positionType}`
+}
+

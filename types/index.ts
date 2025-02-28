@@ -98,6 +98,7 @@ export type TOpportunity = {
             avg_30days: string
         }
         rewards: TReward[]
+        collateral_exposure: `0x${string}`[]
         isVault?: boolean
     }
     trend: {
@@ -128,6 +129,7 @@ export type TOpportunityTable = {
     borrows: string
     utilization: string
     isVault: boolean
+    collateral_exposure: `0x${string}`[]
 }
 
 // Platform

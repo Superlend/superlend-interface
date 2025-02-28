@@ -159,14 +159,17 @@ export const columns: ColumnDef<TPositionsTable>[] = [
         cell: ({ row }) => {
             const platformName: string = row.getValue('platformName')
             const platformId: string = row.original.platform_id
-            const platformWithMarketName: string =
-                row.original.platformWithMarketName
+            const platformWithMarketName: string = row.original.platformWithMarketName
+            const formattedPlatformWithMarketName: string = platformWithMarketName.split(' ').slice(1).join(' ')
             const isMorpho =
                 platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
             const isVault = row.original.isVault
             // const morphoLabel =
             //     isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
             // const formattedPlatformName = isMorpho ? morphoLabel : platformName
+            const platformDisplayName = `${capitalizeText(platformName.split(' ')[0])} ${getPlatformVersion(platformId)}`;
+            const showPlatformCuratorName = platformDisplayName.split(' ')[1].toLowerCase() !== formattedPlatformWithMarketName.toLowerCase();
+
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -177,14 +180,21 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                         height={20}
                         className="w-[20px] h-[20px] max-w-[20px] max-h-[20px]"
                     />
-                    <BodyText
-                        level="body2"
-                        weight="medium"
-                        className="truncate"
-                        title={platformWithMarketName}
-                    >
-                        {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
-                    </BodyText>
+                    <span className="flex flex-col gap-[0px]">
+                        <BodyText
+                            level="body2"
+                            weight="medium"
+                            className="truncate leading-0"
+                            title={platformWithMarketName}
+                        >
+                            {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
+                        </BodyText>
+                        {showPlatformCuratorName &&
+                            <Label className="text-gray-800 leading-0 capitalize truncate max-w-[120px]">
+                                {formattedPlatformWithMarketName}
+                            </Label>
+                        }
+                    </span>
                 </span>
             )
         },
@@ -321,16 +331,16 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                 Math.abs(Number(value)) === 0
                     ? '$0.00'
                     : Math.abs(Number(value)) < 0.01
-                      ? '< $0.01'
-                      : getSanitizedValue(value)
+                        ? '< $0.01'
+                        : getSanitizedValue(value)
 
             const getPrefixSign = () => {
                 if (positionType === 'lend') {
                     return Number(value) < 0
                         ? '-'
                         : Number(value) > 0
-                          ? '+'
-                          : ''
+                            ? '+'
+                            : ''
                 }
                 return Number(value) === 0 ? '' : '-'
             }
@@ -348,8 +358,8 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                     return Number(value) < 0
                         ? 'destructive'
                         : Number(value) > 0
-                          ? 'green'
-                          : 'default'
+                            ? 'green'
+                            : 'default'
                 }
                 return Number(value) === 0 ? 'default' : 'destructive'
             }
