@@ -120,6 +120,16 @@ const SupplyFluidButton = ({
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
+    useEffect(() => {
+        if (lendTx.status === 'lend') {
+            if (isFluidVaults) {
+                addCollateral()
+            } else {
+                supply()
+            }
+        }
+    }, [lendTx.status])
+
     const addCollateral = useCallback(async () => {
         try {
             setLendTx((prev: any) => ({
@@ -365,10 +375,7 @@ const SupplyFluidButton = ({
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button
-                disabled={
-                    (isPending || isConfirming || disabled) &&
-                    lendTx.status !== 'view'
-                }
+                disabled={(isPending || isConfirming || disabled)}
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()
