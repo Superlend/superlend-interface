@@ -4,12 +4,21 @@ import {
     UiPoolDataProvider,
     UserReserveDataHumanized,
 } from '@aave/contract-helpers'
+import {
+    ReservesDataHumanized as ReservesDataHumanizedLegacy,
+    UserReserveDataHumanized as UserReserveDataHumanizedLegacy,
+    UiPoolDataProvider as UiPoolDataProviderLegacy,
+} from 'aave-contract-helpers-legacy'
 import { useEthersMulticall } from '../useEthereumMulticall'
 import { useState, useEffect } from 'react'
 import { formatReserves, formatUserSummary } from '@aave/math-utils'
+import {
+    formatReserves as formatReservesLegacy,
+    formatUserSummary as formatUserSummaryLegacy,
+} from 'aave-math-util-legacy'
 import { formatUnits, getAddress, parseUnits } from 'ethers/lib/utils'
 import { getMaxAmountAvailableToBorrow } from '../../lib/getMaxAmountAvailableToBorrow'
-import { hasExponent } from '@/lib/utils'
+import { hasExponent, IsAaveV3Legacy } from '@/lib/utils'
 import { erc20Abi } from 'viem'
 import { Contract } from 'ethers'
 import { BigNumber } from 'ethers'
@@ -92,12 +101,20 @@ export const useAaveV3Data = () => {
         initializeProviders()
     }, [providers])
 
-    const [reserveData, setReserveData] =
-        useState<void | ReservesDataHumanized>()
-    const [userData, setUserData] = useState<void | {
-        userReserves: UserReserveDataHumanized[]
-        userEmodeCategoryId: number
-    }>()
+    const [reserveData, setReserveData] = useState<
+        void | ReservesDataHumanized | ReservesDataHumanizedLegacy
+    >()
+    const [userData, setUserData] = useState<
+        | void
+        | {
+              userReserves: UserReserveDataHumanized[]
+              userEmodeCategoryId: number
+          }
+        | {
+              userReserves: UserReserveDataHumanizedLegacy[]
+              userEmodeCategoryId: number
+          }
+    >()
 
     const fetchReservesData = async (
         chainId: number,
@@ -127,13 +144,22 @@ export const useAaveV3Data = () => {
         }
 
         try {
-            const uiPoolDataProviderInstance = new UiPoolDataProvider({
-                uiPoolDataProviderAddress: getAddress(
-                    uiPoolDataProviderAddress
-                ),
-                provider: providers[chainId],
-                chainId: chainId,
-            })
+            const isLegacyInstance = IsAaveV3Legacy(chainId)
+            const uiPoolDataProviderInstance = isLegacyInstance
+                ? new UiPoolDataProviderLegacy({
+                      uiPoolDataProviderAddress: getAddress(
+                          uiPoolDataProviderAddress
+                      ),
+                      provider: providers[chainId],
+                      chainId: chainId,
+                  })
+                : new UiPoolDataProvider({
+                      uiPoolDataProviderAddress: getAddress(
+                          uiPoolDataProviderAddress
+                      ),
+                      provider: providers[chainId],
+                      chainId: chainId,
+                  })
 
             const result =
                 await uiPoolDataProviderInstance.getReservesHumanized({
@@ -173,13 +199,23 @@ export const useAaveV3Data = () => {
         }
 
         try {
-            const uiPoolDataProviderInstance = new UiPoolDataProvider({
-                uiPoolDataProviderAddress: getAddress(
-                    uiPoolDataProviderAddress
-                ),
-                provider: providers[chainId],
-                chainId: chainId,
-            })
+            const isLegacyInstance = IsAaveV3Legacy(chainId)
+
+            const uiPoolDataProviderInstance = isLegacyInstance
+                ? new UiPoolDataProviderLegacy({
+                      uiPoolDataProviderAddress: getAddress(
+                          uiPoolDataProviderAddress
+                      ),
+                      provider: providers[chainId],
+                      chainId: chainId,
+                  })
+                : new UiPoolDataProvider({
+                      uiPoolDataProviderAddress: getAddress(
+                          uiPoolDataProviderAddress
+                      ),
+                      provider: providers[chainId],
+                      chainId: chainId,
+                  })
 
             const result =
                 await uiPoolDataProviderInstance.getUserReservesHumanized({
@@ -248,14 +284,22 @@ export const useAaveV3Data = () => {
 
     const getMaxWithdrawAmount = (
         token: string,
+        chainId: number,
         allData?: [
-            ReservesDataHumanized,
-            {
-                userReserves: UserReserveDataHumanized[]
-                userEmodeCategoryId: number
-            },
+            ReservesDataHumanized | ReservesDataHumanizedLegacy,
+            (
+                | {
+                      userReserves: UserReserveDataHumanized[]
+                      userEmodeCategoryId: number
+                  }
+                | {
+                      userReserves: UserReserveDataHumanizedLegacy[]
+                      userEmodeCategoryId: number
+                  }
+            ),
         ]
     ) => {
+        const isLegacyInstance = IsAaveV3Legacy(chainId)
         const _reserveData = allData ? allData[0] : reserveData
         const _userData = allData ? allData[1] : userData
         if (!_reserveData || !_userData) return
@@ -268,29 +312,54 @@ export const useAaveV3Data = () => {
         )
         if (!reserve || !userReserve) return
         const currentTimestamp = Math.floor(Date.now() / 1000)
-        const formattedPoolReserves = formatReserves({
-            reserves: _reserveData.reservesData as any,
-            currentTimestamp,
-            marketReferenceCurrencyDecimals:
-                baseCurrencyData.marketReferenceCurrencyDecimals,
-            marketReferencePriceInUsd:
-                baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-        }).map((r) => ({
-            ...r,
-            isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
-            isWrappedBaseAsset: false,
-        }))
+        const formattedPoolReserves = isLegacyInstance
+            ? formatReservesLegacy({
+                  reserves: _reserveData.reservesData as any,
+                  currentTimestamp,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+              }).map((r) => ({
+                  ...r,
+                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                  isWrappedBaseAsset: false,
+              }))
+            : formatReserves({
+                  reserves: _reserveData.reservesData as any,
+                  currentTimestamp,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+              }).map((r) => ({
+                  ...r,
+                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                  isWrappedBaseAsset: false,
+              }))
 
-        const user = formatUserSummary({
-            currentTimestamp: currentTimestamp,
-            marketReferencePriceInUsd:
-                baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-            marketReferenceCurrencyDecimals:
-                baseCurrencyData.marketReferenceCurrencyDecimals,
-            userReserves: _userData.userReserves,
-            formattedReserves: formattedPoolReserves,
-            userEmodeCategoryId: _userData.userEmodeCategoryId,
-        })
+        const user = isLegacyInstance
+            ? formatUserSummaryLegacy({
+                  currentTimestamp: currentTimestamp,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  userReserves:
+                      _userData.userReserves as UserReserveDataHumanizedLegacy[],
+                  formattedReserves: formattedPoolReserves as any,
+                  userEmodeCategoryId: _userData.userEmodeCategoryId,
+              })
+            : formatUserSummary({
+                  currentTimestamp: currentTimestamp,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  userReserves: _userData.userReserves,
+                  formattedReserves: formattedPoolReserves as any,
+                  userEmodeCategoryId: _userData.userEmodeCategoryId,
+              })
 
         const _userReserve = user.userReservesData.filter(
             (f) => f.underlyingAsset.toLowerCase() === token.toLowerCase()
@@ -321,6 +390,7 @@ export const useAaveV3Data = () => {
             user.totalBorrowsMarketReferenceCurrency !== '0'
         ) {
             const reserveLiquidationThreshold =
+                'userEmodeCategoryId' in user &&
                 user.userEmodeCategoryId === poolReserve.eModeCategoryId
                     ? String(poolReserve.eModeLiquidationThreshold / 10000)
                     : poolReserve.formattedReserveLiquidationThreshold
@@ -342,7 +412,14 @@ export const useAaveV3Data = () => {
                             baseCurrencyData.marketReferenceCurrencyDecimals
                         )
                     )
-                    .div(parseUnits(reserveLiquidationThreshold === '0' ? '1' : reserveLiquidationThreshold, 4))
+                    .div(
+                        parseUnits(
+                            reserveLiquidationThreshold === '0'
+                                ? '1'
+                                : reserveLiquidationThreshold,
+                            4
+                        )
+                    )
             }
 
             const newMaxToWithdraw = BigNumber.from(
@@ -385,14 +462,22 @@ export const useAaveV3Data = () => {
 
     const getMaxBorrowAmount = (
         token: string,
+        chainId: number,
         allData?: [
-            ReservesDataHumanized,
-            {
-                userReserves: UserReserveDataHumanized[]
-                userEmodeCategoryId: number
-            },
+            ReservesDataHumanized | ReservesDataHumanizedLegacy,
+            (
+                | {
+                      userReserves: UserReserveDataHumanized[]
+                      userEmodeCategoryId: number
+                  }
+                | {
+                      userReserves: UserReserveDataHumanizedLegacy[]
+                      userEmodeCategoryId: number
+                  }
+            ),
         ]
     ) => {
+        const isLegacyInstance = IsAaveV3Legacy(chainId)
         const _reserveData = allData ? allData[0] : reserveData
         const _userData = allData ? allData[1] : userData
         if (!_reserveData || !_userData) return
@@ -407,29 +492,54 @@ export const useAaveV3Data = () => {
 
         const currentTimestamp = Math.floor(Date.now() / 1000)
 
-        const formattedPoolReserves = formatReserves({
-            reserves: _reserveData.reservesData as any,
-            currentTimestamp,
-            marketReferenceCurrencyDecimals:
-                baseCurrencyData.marketReferenceCurrencyDecimals,
-            marketReferencePriceInUsd:
-                baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-        }).map((r) => ({
-            ...r,
-            isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
-            isWrappedBaseAsset: false,
-        }))
+        const formattedPoolReserves = isLegacyInstance
+            ? formatReservesLegacy({
+                  reserves: _reserveData.reservesData as any,
+                  currentTimestamp,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+              }).map((r) => ({
+                  ...r,
+                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                  isWrappedBaseAsset: false,
+              }))
+            : formatReserves({
+                  reserves: _reserveData.reservesData as any,
+                  currentTimestamp,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+              }).map((r) => ({
+                  ...r,
+                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                  isWrappedBaseAsset: false,
+              }))
 
-        const user = formatUserSummary({
-            currentTimestamp: currentTimestamp,
-            marketReferencePriceInUsd:
-                baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-            marketReferenceCurrencyDecimals:
-                baseCurrencyData.marketReferenceCurrencyDecimals,
-            userReserves: _userData.userReserves,
-            formattedReserves: formattedPoolReserves,
-            userEmodeCategoryId: _userData.userEmodeCategoryId,
-        })
+        const user = isLegacyInstance
+            ? formatUserSummaryLegacy({
+                  currentTimestamp: currentTimestamp,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  userReserves:
+                      _userData.userReserves as UserReserveDataHumanizedLegacy[],
+                  formattedReserves: formattedPoolReserves as any,
+                  userEmodeCategoryId: _userData.userEmodeCategoryId,
+              })
+            : formatUserSummary({
+                  currentTimestamp: currentTimestamp,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  userReserves: _userData.userReserves,
+                  formattedReserves: formattedPoolReserves as any,
+                  userEmodeCategoryId: _userData.userEmodeCategoryId,
+              })
 
         const maxToBorrow = getMaxAmountAvailableToBorrow(
             formattedPoolReserves.find(
@@ -462,13 +572,20 @@ export const useAaveV3Data = () => {
         token: string,
         chainId: number,
         allData?: [
-            ReservesDataHumanized,
-            {
-                userReserves: UserReserveDataHumanized[]
-                userEmodeCategoryId: number
-            },
+            ReservesDataHumanized | ReservesDataHumanizedLegacy,
+            (
+                | {
+                      userReserves: UserReserveDataHumanized[]
+                      userEmodeCategoryId: number
+                  }
+                | {
+                      userReserves: UserReserveDataHumanizedLegacy[]
+                      userEmodeCategoryId: number
+                  }
+            ),
         ]
     ) => {
+        const isLegacyInstance = IsAaveV3Legacy(chainId)
         const _reserveData = allData ? allData[0] : reserveData
         const _userData = allData ? allData[1] : userData
         if (!_reserveData || !_userData) return
@@ -483,29 +600,54 @@ export const useAaveV3Data = () => {
 
         const currentTimestamp = Math.floor(Date.now() / 1000)
 
-        const formattedPoolReserves = formatReserves({
-            reserves: _reserveData.reservesData as any,
-            currentTimestamp,
-            marketReferenceCurrencyDecimals:
-                baseCurrencyData.marketReferenceCurrencyDecimals,
-            marketReferencePriceInUsd:
-                baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-        }).map((r) => ({
-            ...r,
-            isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
-            isWrappedBaseAsset: false,
-        }))
+        const formattedPoolReserves = isLegacyInstance
+            ? formatReservesLegacy({
+                  reserves: _reserveData.reservesData as any,
+                  currentTimestamp,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+              }).map((r) => ({
+                  ...r,
+                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                  isWrappedBaseAsset: false,
+              }))
+            : formatReserves({
+                  reserves: _reserveData.reservesData as any,
+                  currentTimestamp,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+              }).map((r) => ({
+                  ...r,
+                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                  isWrappedBaseAsset: false,
+              }))
 
-        const user = formatUserSummary({
-            currentTimestamp: currentTimestamp,
-            marketReferencePriceInUsd:
-                baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-            marketReferenceCurrencyDecimals:
-                baseCurrencyData.marketReferenceCurrencyDecimals,
-            userReserves: _userData.userReserves,
-            formattedReserves: formattedPoolReserves,
-            userEmodeCategoryId: _userData.userEmodeCategoryId,
-        })
+        const user = isLegacyInstance
+            ? formatUserSummaryLegacy({
+                  currentTimestamp: currentTimestamp,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  userReserves:
+                      _userData.userReserves as UserReserveDataHumanizedLegacy[],
+                  formattedReserves: formattedPoolReserves as any,
+                  userEmodeCategoryId: _userData.userEmodeCategoryId,
+              })
+            : formatUserSummary({
+                  currentTimestamp: currentTimestamp,
+                  marketReferencePriceInUsd:
+                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                  marketReferenceCurrencyDecimals:
+                      baseCurrencyData.marketReferenceCurrencyDecimals,
+                  userReserves: _userData.userReserves,
+                  formattedReserves: formattedPoolReserves as any,
+                  userEmodeCategoryId: _userData.userEmodeCategoryId,
+              })
 
         const userToken = erc20TokensBalanceData[chainId]
             ? erc20TokensBalanceData[chainId][token.toLowerCase()]

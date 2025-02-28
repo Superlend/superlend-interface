@@ -551,3 +551,10 @@ export function debounce(func: Function, wait: number) {
         timeout = setTimeout(() => func(...args), wait)
     }
 }
+
+export const IsAaveV3Legacy = (chainId: number) => {
+    const legacyChainIds = [
+        1, 43114, 137, 42161, 10, 8453, 56, 534352, 100, 1088, 42793,
+    ]
+    return legacyChainIds.includes(chainId)
+}

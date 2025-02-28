@@ -367,6 +367,7 @@ export default function WithdrawAndRepayActionButton({
                         maxWithdrawAmounts[withdrawTokenAddress] =
                             getMaxWithdrawAmount(
                                 withdrawTokenAddress,
+                                chain_id as number,
                                 r as any
                             ) ?? {
                                 maxToWithdraw: '0',
