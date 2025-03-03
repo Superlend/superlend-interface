@@ -552,8 +552,11 @@ function FluidVaults({
             !platformData ||
             !portfolioData ||
             portfolioData.platforms?.length === 0
-        )
+        ) {
+            setMaxBorrowAmount({ maxToBorrow: '0', maxToBorrowFormatted: '0' })
+            setIsLoadingMaxBorrowingAmount(false)
             return
+        }
 
         const borrowPosition = portfolioData.platforms[0].positions.filter(
             (p) => p.type === 'borrow'
@@ -569,7 +572,7 @@ function FluidVaults({
                 lendPosition.token.price_usd *
                 lendToken.ltv) /
             100 -
-            (borrowPosition?.amount ?? '0') * borrowToken.token.price_usd
+            borrowPosition?.amount * borrowToken.token.price_usd
         const maxBorrowToken = (
             maxBorrowUsd / borrowToken.token.price_usd
         ).toFixed(borrowToken.token.decimals)
@@ -734,9 +737,6 @@ function FluidVaults({
                     setAmount('')
                     setPositionType(positionType === 'tab1' ? 'lend' : 'borrow')
                 }}
-                // title={{
-                //     tab1: 'Add Collateral',
-                // }}
             />
             <Card className="flex flex-col gap-[12px] p-[16px]">
                 <div className="flex items-center justify-between px-[14px]">

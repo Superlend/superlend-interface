@@ -95,7 +95,7 @@ const SupplyMorphoButton = ({
                   ? 'Add Collateral'
                   : isMorphoVault
                     ? 'Supply to vault'
-                    : 'Start lending',
+                    : 'Start earning',
     }
 
     const getTxButtonText = (

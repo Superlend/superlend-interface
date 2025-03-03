@@ -247,7 +247,7 @@ export function ConfirmationDialog({
         const buttonTextMap: { [key: string]: string } = {
             'morpho-markets': 'Add Collateral',
             'morpho-vault': 'Supply to vault',
-            default: 'Lend',
+            default: 'Earn',
             borrow: 'Borrow',
         }
 

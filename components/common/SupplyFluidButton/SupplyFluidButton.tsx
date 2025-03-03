@@ -91,11 +91,11 @@ const SupplyFluidButton = ({
         default:
             lendTx.status === 'approve'
                 ? isFluidVaults
-                    ? 'Start lending'
+                    ? 'Start earning'
                     : 'Start supplying'
                 :isFluidLend
                         ? 'Supply to vault'
-                        : 'Lend Collateral',
+                        : 'Earn',
     }
 
     const getTxButtonText = (
