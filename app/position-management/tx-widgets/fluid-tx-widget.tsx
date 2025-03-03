@@ -422,7 +422,11 @@ function FluidVaults({
     // }, [positionType, fluidLendTokenDetails?.token?.address, fluidBorrowTokenDetails?.token?.address])
 
     const fluidVaultNftId = useMemo(() => {
-        return portfolioData?.platforms[0]?.positions?.find((p) => !!p.fluid_vault_nftId)?.fluid_vault_nftId ?? 0
+        return (
+            portfolioData?.platforms[0]?.positions?.find(
+                (p) => !!p.fluid_vault_nftId
+            )?.fluid_vault_nftId ?? 0
+        )
     }, [portfolioData?.platforms])
 
     useEffect(() => {
@@ -487,62 +491,44 @@ function FluidVaults({
     const [doesMarketHasLiquidity, setDoesMarketHasLiquidity] = useState(true)
 
     // health factor
-    const [healthFactor, setHealthFactor] = useState(0)
 
-    const getUpdatedHealthFactor = (
-        position: any,
-        morphoMarketData: any,
-        selectedAssetTokenDetails: any,
-        fluidBorrowTokenDetails: any,
-        amount: string
-    ) => {
-        if (
-            !position ||
-            !morphoMarketData ||
-            !selectedAssetTokenDetails ||
-            !fluidBorrowTokenDetails
-        ) {
-            return 0.0
+    const getHealthFactorValues = (): {
+        healthFactor: any
+        newHealthFactor: any
+    } => {
+        const lendAmount =
+            portfolioData.platforms[0]?.positions?.filter(
+                (p) => p.type === 'lend'
+            )[0]?.amount ?? 0
+        const borrowAmount =
+            portfolioData.platforms[0]?.positions?.filter(
+                (p) => p.type === 'borrow'
+            )[0]?.amount ?? 0
+
+        const borrowPower =
+            (Number(fluidLendTokenDetails?.ltv ?? 0) *
+                lendAmount *
+                Number(fluidLendTokenDetails?.token.price_usd ?? 0)) /
+            100
+        const currentBorrows =
+            borrowAmount *
+            Number(fluidBorrowTokenDetails?.token?.price_usd ?? 0)
+        const currentHf = borrowPower / currentBorrows
+
+        const newBorrows =
+            currentBorrows +
+            Number(amount) *
+                Number(fluidBorrowTokenDetails?.token?.price_usd ?? 0)
+
+        const newHf = borrowPower / newBorrows
+
+        return {
+            healthFactor: currentHf,
+            newHealthFactor: newHf,
         }
-
-        const accrualPosition: AccrualPosition = new AccrualPosition(
-            position,
-            morphoMarketData
-        )
-        const currentBorrowAssets = accrualPosition.borrowAssets ?? BigInt(0)
-
-        const collNormalizeValue = Number(
-            formatUnits(
-                accrualPosition.collateral ?? BigInt(0),
-                selectedAssetTokenDetails?.token?.decimals ?? 0
-            )
-        )
-        const borrowNormalizeValue =
-            currentBorrowAssets == BigInt(0)
-                ? 0
-                : Number(
-                    formatUnits(
-                        currentBorrowAssets,
-                        fluidBorrowTokenDetails?.token?.decimals ?? 0
-                    )
-                )
-        const borrowNormalizeValueWithAmount =
-            borrowNormalizeValue + Number(amount)
-
-        const collUsdValue =
-            collNormalizeValue *
-            (selectedAssetTokenDetails?.token?.price_usd ?? 0)
-        const borrowUsdValue =
-            borrowNormalizeValueWithAmount *
-            (fluidBorrowTokenDetails?.token?.price_usd ?? 0)
-
-        if (fluidBorrowTokenDetails?.ltv) {
-            const lltv = (fluidBorrowTokenDetails?.ltv ?? 1) / 100
-            const healthFactor = (collUsdValue * lltv) / borrowUsdValue
-            return healthFactor
-        }
-        return 0.0
     }
+
+    const healthFactorValues = getHealthFactorValues()
 
     const isLoading = isLoadingPlatformData
     // || isLoadingMaxBorrowingAmount
@@ -571,7 +557,7 @@ function FluidVaults({
             (lendPosition.amount *
                 lendPosition.token.price_usd *
                 lendToken.ltv) /
-            100 -
+                100 -
             borrowPosition?.amount * borrowToken.token.price_usd
         const maxBorrowToken = (
             maxBorrowUsd / borrowToken.token.price_usd
@@ -598,10 +584,16 @@ function FluidVaults({
 
     useEffect(() => {
         if (fluidLendTokenDetails) {
-            const tokenDetails = isLendPositionType(positionType) ? fluidLendTokenDetails : fluidBorrowTokenDetails
+            const tokenDetails = isLendPositionType(positionType)
+                ? fluidLendTokenDetails
+                : fluidBorrowTokenDetails
             setSelectedAssetTokenDetails(tokenDetails ?? null)
         }
-    }, [fluidLendTokenDetails, fluidBorrowTokenDetails, setSelectedAssetTokenDetails])
+    }, [
+        fluidLendTokenDetails,
+        fluidBorrowTokenDetails,
+        setSelectedAssetTokenDetails,
+    ])
 
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[
@@ -671,11 +663,11 @@ function FluidVaults({
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-            Number(
-                isLendPositionType(positionType)
-                    ? balance
-                    : maxBorrowAmount.maxToBorrowFormatted
-            ) ||
+                Number(
+                    isLendPositionType(positionType)
+                        ? balance
+                        : maxBorrowAmount.maxToBorrowFormatted
+                ) ||
             // (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
             toManyDecimals,
@@ -693,19 +685,19 @@ function FluidVaults({
     function getMaxDecimalsToDisplay(): number {
         return isLendPositionType(positionType)
             ? fluidLendTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
-                fluidLendTokenDetails?.token?.symbol.toLowerCase().includes('eth')
+                  .toLowerCase()
+                  .includes('btc') ||
+              fluidLendTokenDetails?.token?.symbol.toLowerCase().includes('eth')
                 ? 6
                 : 2
             : fluidBorrowTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
+                    .toLowerCase()
+                    .includes('btc') ||
                 fluidBorrowTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
-                ? 6
-                : 2
+              ? 6
+              : 2
     }
 
     const isDisabledMaxBtn = () => {
@@ -921,7 +913,9 @@ function FluidVaults({
                                 setOpen={setIsLendBorrowTxDialogOpen}
                                 positionType={positionType}
                                 assetDetails={{
-                                    asset: isLendPositionType(positionType) ? fluidLendTokenDetails : fluidBorrowTokenDetails,
+                                    asset: isLendPositionType(positionType)
+                                        ? fluidLendTokenDetails
+                                        : fluidBorrowTokenDetails,
                                     ...platformData?.platform,
                                     fluid_vault_nftId: fluidVaultNftId,
                                 }}
@@ -933,10 +927,7 @@ function FluidVaults({
                                 }
                                 setAmount={setAmount}
                                 // TODO: Get health factor values
-                                healthFactorValues={{
-                                    healthFactor: healthFactor ?? 0,
-                                    newHealthFactor: 0,
-                                }}
+                                healthFactorValues={healthFactorValues}
                                 setActionType={setPositionType}
                             />
                         </div>
