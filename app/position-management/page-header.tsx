@@ -201,7 +201,26 @@ export default function PageHeader() {
 
     const formattedBorrowRate = (isMorphoVault || isFluidLend)
         ? 'N/A'
-        : `${pageHeaderStats?.borrow_rate}`
+        : (
+            <>
+                {isLowestValue(
+                    Number(
+                        pageHeaderStats?.borrow_rate ?? 0
+                    )
+                )
+                    ? getLowestDisplayValue(
+                        Number(
+                            pageHeaderStats?.borrow_rate ?? 0
+                        )
+                    )
+                    : abbreviateNumber(
+                        Number(
+                            pageHeaderStats?.borrow_rate ?? 0
+                        ),
+                        2
+                    )}%
+            </>
+        )
 
     return (
         <>
@@ -435,22 +454,7 @@ export default function PageHeader() {
                                     </BodyText>
                                     <Badge variant="yellow">
                                         <BodyText level="body1" weight="medium">
-                                            {isLowestValue(
-                                                Number(
-                                                    formattedBorrowRate ?? 0
-                                                )
-                                            )
-                                                ? getLowestDisplayValue(
-                                                    Number(
-                                                        formattedBorrowRate ?? 0
-                                                    )
-                                                )
-                                                : abbreviateNumber(
-                                                    Number(
-                                                        formattedBorrowRate ?? 0
-                                                    ),
-                                                    2
-                                                )}%
+                                            {formattedBorrowRate}
                                         </BodyText>
                                     </Badge>
                                 </div>
