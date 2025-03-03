@@ -875,13 +875,6 @@ function FluidVaults({
                                     className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
                                 >
                                     {isLendPositionType(positionType) &&
-                                        positionTypeParam === 'lend' && (
-                                            <>
-                                                Adding collateral to Fluid
-                                                Vaults does not yield.
-                                            </>
-                                        )}
-                                    {isLendPositionType(positionType) &&
                                         positionTypeParam === 'borrow' &&
                                         'Enter amount to proceed with supplying collateral for this position'}
                                     {!isLendPositionType(positionType) &&
