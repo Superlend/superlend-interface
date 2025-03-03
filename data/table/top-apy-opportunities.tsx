@@ -186,6 +186,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 content: token.name,
                             })
                         )}
+                        showMoreItemsTooltip={moreItemsData.length > 0}
                         maxItemsToShow={MAX_ITEMS_TO_SHOW}
                         moreItemsTooltipContent={
                             <ScrollArea type="always" className={`${moreItemsData.length > 5 ? 'h-[200px]' : 'h-[50px]'} w-full rounded-md p-0 pr-6`}>
@@ -231,7 +232,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: (item) =>
             `${item.platformName} ${item.platformWithMarketName}`,
         cell: ({ row }) => {
-            const { width: screenWidth } = useDimensions()
             const platformName: string = row.getValue('platformName')
             const platformId: string = row.original.platformId
             const platformWithMarketName: string =
@@ -271,7 +271,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             {platformDisplayName}
                         </BodyText>
                         {showPlatformCuratorName && (
-                            <Label className="text-gray-800 inline-block leading-0 truncate max-w-[100px]">
+                            <Label title={formattedPlatformWithMarketName} className="text-gray-800 inline-block leading-0 truncate max-w-[100px]">
                                 {formattedPlatformWithMarketName}
                             </Label>
                         )}
@@ -503,58 +503,58 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         },
         enableGlobalFilter: false,
     },
-    {
-        accessorKey: 'max_ltv',
-        accessorFn: (item) => Number(item.max_ltv),
-        header: () => (
-            <InfoTooltip
-                side="bottom"
-                label={<TooltipText>Max LTV</TooltipText>}
-                content={
-                    'Maximum amount that can be borrowed against the value of collateral.'
-                }
-            />
-        ),
-        cell: ({ row }) => {
-            const isMorpho =
-                row.original.platformId.split('-')[0].toLowerCase() ===
-                PlatformType.MORPHO
-            const isVault = row.original.isVault
+    // {
+    //     accessorKey: 'max_ltv',
+    //     accessorFn: (item) => Number(item.max_ltv),
+    //     header: () => (
+    //         <InfoTooltip
+    //             side="bottom"
+    //             label={<TooltipText>Max LTV</TooltipText>}
+    //             content={
+    //                 'Maximum amount that can be borrowed against the value of collateral.'
+    //             }
+    //         />
+    //     ),
+    //     cell: ({ row }) => {
+    //         const isMorpho =
+    //             row.original.platformId.split('-')[0].toLowerCase() ===
+    //             PlatformType.MORPHO
+    //         const isVault = row.original.isVault
 
-            if (isMorpho && isVault) {
-                return (
-                    <InfoTooltip
-                        label={<Badge>N/A</Badge>}
-                        content="This does not apply to Morpho vaults, as the curator maintains this."
-                    />
-                )
-            }
+    //         if (isMorpho && isVault) {
+    //             return (
+    //                 <InfoTooltip
+    //                     label={<Badge>N/A</Badge>}
+    //                     content="This does not apply to Morpho vaults, as the curator maintains this."
+    //                 />
+    //             )
+    //         }
 
-            return (
-                <span className="flex items-center gap-2">
-                    {Number(row.getValue('max_ltv')) > 0 && (
-                        <BodyText level={'body2'} weight={'medium'}>
-                            {`${Number(row.getValue('max_ltv')).toFixed(2)}%`}
-                        </BodyText>
-                    )}
-                    {Number(row.getValue('max_ltv')) === 0 && (
-                        <InfoTooltip
-                            label={
-                                <TooltipText>
-                                    <BodyText level={'body2'} weight={'medium'}>
-                                        {`${row.getValue('max_ltv')}%`}
-                                    </BodyText>
-                                </TooltipText>
-                            }
-                            content="This asset cannot be used as collateral to take out a loan"
-                        />
-                    )}
-                </span>
-            )
-        },
-        size: 150,
-        enableGlobalFilter: false,
-    },
+    //         return (
+    //             <span className="flex items-center gap-2">
+    //                 {Number(row.getValue('max_ltv')) > 0 && (
+    //                     <BodyText level={'body2'} weight={'medium'}>
+    //                         {`${Number(row.getValue('max_ltv')).toFixed(2)}%`}
+    //                     </BodyText>
+    //                 )}
+    //                 {Number(row.getValue('max_ltv')) === 0 && (
+    //                     <InfoTooltip
+    //                         label={
+    //                             <TooltipText>
+    //                                 <BodyText level={'body2'} weight={'medium'}>
+    //                                     {`${row.getValue('max_ltv')}%`}
+    //                                 </BodyText>
+    //                             </TooltipText>
+    //                         }
+    //                         content="This asset cannot be used as collateral to take out a loan"
+    //                     />
+    //                 )}
+    //             </span>
+    //         )
+    //     },
+    //     size: 150,
+    //     enableGlobalFilter: false,
+    // },
     {
         accessorKey: 'deposits',
         accessorFn: (item) => Number(item.deposits),
@@ -668,6 +668,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             content: token.name,
                         })
                     )}
+                    showMoreItemsTooltip={moreItemsData.length > 0}
                     maxItemsToShow={MAX_ITEMS_TO_SHOW}
                     moreItemsTooltipContent={
                         <ScrollArea type="always" className={`${moreItemsData.length > 5 ? 'h-[200px]' : 'h-[50px]'} w-full rounded-md p-0 pr-6`}>

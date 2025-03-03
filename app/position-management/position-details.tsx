@@ -108,8 +108,7 @@ export default function PositionDetails() {
     const isFluidProtocol =
         platformData?.platform?.protocol_type === PlatformType.FLUID
     const isFluidVaults = isFluidProtocol && platformData?.platform?.isVault
-
-    const isPolygonChain = Number(chain_id) === 137
+    const isFluidLend = isFluidProtocol && !platformData?.platform?.isVault
 
     // Get user positions from portfolio data using protocol identifier
     const userPositions = useMemo(
@@ -322,6 +321,8 @@ export default function PositionDetails() {
         'Liquidation is not applicable, as Morpho vaults are designed to only earn & not borrow.'
     const morphoVaultsYourBorrowingTooltipText =
         'Borrowing is not applicable, as Morpho vaults are designed to only earn & not borrow.'
+    const fluidLendYourBorrowingTooltipText =
+        'Borrowing is not applicable, as Fluid lend is designed to only lend & not borrow.'
     const liquidationPriceValueGeneralTooltipText =
         'You do not have any borrows'
     const liquidationPriceValueTooltipText = isMorphoVaults
@@ -583,7 +584,7 @@ export default function PositionDetails() {
                                         )}
                                     />
                                     {/* Your borrowed amount */}
-                                    {!isMorphoVaults && (
+                                    {(!isMorphoVaults && !isFluidLend) && (
                                         <HeadingText
                                             level="h3"
                                             weight="medium"
@@ -621,7 +622,7 @@ export default function PositionDetails() {
                                         </HeadingText>
                                     )}
                                     {/* Borrowed amount for Morpho vaults */}
-                                    {isMorphoVaults && (
+                                    {(isMorphoVaults || isFluidLend) && (
                                         <InfoTooltip
                                             label={
                                                 <BodyText
@@ -635,7 +636,9 @@ export default function PositionDetails() {
                                                 </BodyText>
                                             }
                                             content={
-                                                morphoVaultsYourBorrowingTooltipText
+                                                isMorphoVaults
+                                                    ? morphoVaultsYourBorrowingTooltipText
+                                                    : fluidLendYourBorrowingTooltipText
                                             }
                                         />
                                     )}

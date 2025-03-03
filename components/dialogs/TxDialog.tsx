@@ -246,7 +246,6 @@ export function ConfirmationDialog({
     function getTriggerButtonText() {
         const buttonTextMap: { [key: string]: string } = {
             'morpho-markets': 'Add Collateral',
-            'fluid-lend': 'Add Collateral',
             'morpho-vault': 'Supply to vault',
             default: 'Lend',
             borrow: 'Borrow',
@@ -258,8 +257,6 @@ export function ConfirmationDialog({
                       ? 'morpho-markets'
                       : isMorphoVault
                         ? 'morpho-vault'
-                        : isFluidVault
-                          ? 'fluid-lend'
                           : 'default'
               }`
             : 'borrow'
@@ -395,7 +392,7 @@ export function ConfirmationDialog({
                     className="text-gray-800 text-center capitalize"
                 >
                     {isLendPositionType
-                        ? (isMorphoMarkets || isFluidVault)
+                        ? isMorphoMarkets
                             ? 'Add Collateral'
                             : isMorphoVault
                               ? 'Supply to vault'
@@ -541,7 +538,7 @@ export function ConfirmationDialog({
                                 className="text-gray-600 flex items-center gap-1"
                             >
                                 <span
-                                    className="inline-block truncate max-w-[50px]"
+                                    className="inline-block truncate max-w-full"
                                     title={capitalizeText(
                                         chainDetails?.name ?? ''
                                     )}
@@ -553,7 +550,10 @@ export function ConfirmationDialog({
                             <BodyText
                                 level="body3"
                                 weight="medium"
-                                className="text-gray-600"
+                                className="text-gray-600 truncate max-w-full"
+                                title={PlatformTypeMap[
+                                    assetDetails?.protocol_type as keyof typeof PlatformTypeMap
+                                ]}
                             >
                                 {
                                     PlatformTypeMap[

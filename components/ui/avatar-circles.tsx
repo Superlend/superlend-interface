@@ -17,6 +17,7 @@ interface AvatarCirclesProps {
     avatarUrls: string[]
     avatarDetails?: any[]
     maxItemsToShow?: number
+    showMoreItemsTooltip?: boolean
     moreItemsTooltipContent?: string | React.ReactNode
 }
 
@@ -25,6 +26,7 @@ const AvatarCircles = ({
     avatarUrls,
     avatarDetails,
     maxItemsToShow = 3,
+    showMoreItemsTooltip = false,
     moreItemsTooltipContent
 }: AvatarCirclesProps) => {
     const avatarUrlsToShow = avatarUrls.slice(0, maxItemsToShow);
@@ -82,7 +84,14 @@ const AvatarCircles = ({
                         alt={`Avatar ${index + 1}`}
                     />
                 ))}
-            {(moreItemsCount > 0) && (
+            {/* Show more items count */}
+            {moreItemsCount > 0 && !showMoreItemsTooltip && (
+                <span className="select-none flex h-[24px] w-[24px] items-center justify-center rounded-full border-2 border-secondary-300/75 bg-white text-center text-xs font-medium text-secondary-500 hover:bg-gray-400 dark:border-gray-800 dark:bg-white dark:text-black">
+                    +{moreItemsCount}
+                </span>
+            )}
+            {/* Show more items tooltip */}
+            {(moreItemsCount > 0 && showMoreItemsTooltip) && (
                 <InfoTooltip
                     label={
                         <span className="flex h-[24px] w-[24px] items-center justify-center rounded-full border-2 border-secondary-300/75 bg-white text-center text-xs font-medium text-secondary-500 hover:bg-gray-400 dark:border-gray-800 dark:bg-white dark:text-black">

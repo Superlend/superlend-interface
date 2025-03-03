@@ -111,6 +111,9 @@ export default function PageHeader() {
     const morpho_market_id = platformData?.platform?.morpho_market_id
     const network_name = chainName
     const core_contract = platformData?.platform?.core_contract
+    const isFluidLend =
+        platformData?.platform?.protocol_type === PlatformType.FLUID &&
+        !platformData?.platform?.isVault
     const isFluidVault =
         platformData?.platform?.protocol_type === PlatformType.FLUID &&
         platformData?.platform?.isVault
@@ -130,7 +133,7 @@ export default function PageHeader() {
         network_name,
     })
 
-    const formattedBorrowRate = isMorphoVault
+    const formattedBorrowRate = (isMorphoVault || isFluidLend)
         ? 'N/A'
         : `${pageHeaderStats?.borrow_rate}%`
 

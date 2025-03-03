@@ -734,9 +734,9 @@ function FluidVaults({
                     setAmount('')
                     setPositionType(positionType === 'tab1' ? 'lend' : 'borrow')
                 }}
-                title={{
-                    tab1: 'Add Collateral',
-                }}
+                // title={{
+                //     tab1: 'Add Collateral',
+                // }}
             />
             <Card className="flex flex-col gap-[12px] p-[16px]">
                 <div className="flex items-center justify-between px-[14px]">
@@ -746,7 +746,7 @@ function FluidVaults({
                         className="capitalize text-gray-600"
                     >
                         {isLendPositionType(positionType)
-                            ? 'add collateral'
+                            ? 'Lend'
                             : `borrow ${fluidBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
 

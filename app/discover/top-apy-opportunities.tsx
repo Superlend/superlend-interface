@@ -117,7 +117,7 @@ export default function TopApyOpportunities() {
             return {
                 deposits: positionTypeParam === 'lend',
                 borrows: positionTypeParam === 'borrow',
-                max_ltv: positionTypeParam === 'borrow',
+                // max_ltv: positionTypeParam === 'borrow',
                 collateral_exposure: positionTypeParam === 'lend',
                 collateral_tokens: positionTypeParam === 'borrow',
                 available_liquidity: positionTypeParam === 'borrow',

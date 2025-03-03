@@ -91,11 +91,9 @@ const SupplyFluidButton = ({
         default:
             lendTx.status === 'approve'
                 ? isFluidVaults
-                    ? 'Start adding collateral'
+                    ? 'Start lending'
                     : 'Start supplying'
-                : isFluidVaults
-                    ? 'Add Collateral'
-                    : isFluidLend
+                :isFluidLend
                         ? 'Supply to vault'
                         : 'Lend Collateral',
     }
@@ -123,14 +121,14 @@ const SupplyFluidButton = ({
     useEffect(() => {
         if (lendTx.status === 'lend') {
             if (isFluidVaults) {
-                addCollateral()
+                handleVaultsLendTx()
             } else {
-                supply()
+                handleLendTx()
             }
         }
     }, [lendTx.status])
 
-    const addCollateral = useCallback(async () => {
+    const handleVaultsLendTx = useCallback(async () => {
         try {
             setLendTx((prev: any) => ({
                 ...prev,
@@ -143,7 +141,7 @@ const SupplyFluidButton = ({
                 throw new Error('Wallet address is required')
             }
 
-            logEvent('add_collateral_initiated', {
+            logEvent('lend_initiated', {
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
@@ -171,7 +169,7 @@ const SupplyFluidButton = ({
                         errorMessage: '',
                     }))
 
-                    logEvent('add_collateral_completed', {
+                    logEvent('lend_completed', {
                         amount,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
@@ -196,7 +194,7 @@ const SupplyFluidButton = ({
         }
     }, [amount, tokenDetails, platform, walletAddress, writeContractAsync])
 
-    const supply = useCallback(async () => {
+    const handleLendTx = useCallback(async () => {
         try {
             setLendTx((prev: any) => ({
                 ...prev,
@@ -381,9 +379,9 @@ const SupplyFluidButton = ({
                         onApproveSupply()
                     } else if (lendTx.status === 'lend') {
                         if (isFluidVaults) {
-                            addCollateral()
+                            handleVaultsLendTx()
                         } else {
-                            supply()
+                            handleLendTx()
                         }
                     } else {
                         handleCloseModal(false)
