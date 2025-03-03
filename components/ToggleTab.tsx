@@ -19,7 +19,7 @@ type TProps = {
 }
 
 const titleInitial = {
-    tab1: 'Earn',
+    tab1: 'Lend',
     tab2: 'Borrow',
 }
 
