@@ -33,7 +33,7 @@ import { getMaxAmountAvailableToBorrow } from '@/lib/getMaxAmountAvailableToBorr
 import { Market, Vault } from '@morpho-org/blue-sdk'
 import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
 import { walletActions } from 'viem'
-import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
+import { BUNDLER_ADDRESS_MORPHO, ETH_ADDRESSES } from '@/lib/constants'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
 import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
@@ -42,10 +42,15 @@ import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import FLUID_LEND_ABI from '@/data/abi/fluidLendABI.json'
 import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { BigNumber } from 'ethers'
 interface IWithdrawButtonProps {
     disabled: boolean
     assetDetails: any
-    amount: string
+    amount: {
+        amountRaw: string
+        scValue: string
+    }
     handleCloseModal: (isVisible: boolean) => void
 }
 
@@ -62,7 +67,7 @@ const WithdrawButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    const { address: walletAddress } = useAccount()
+    const { walletAddress } = useWalletConnection()
     const { withdrawTx, setWithdrawTx } = useTxContext() as TTxContext
     // Protocol types
     const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
@@ -71,8 +76,8 @@ const WithdrawButton = ({
     const isMorphoVault = isMorpho && assetDetails?.vault
     const isMorphoMarket = isMorpho && assetDetails?.market
     const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
-    const isFluidVault = isFluid && assetDetails?.vault
-    const isFluidLend = isFluid && !assetDetails?.vault
+    const isFluidVault = isFluid && assetDetails?.isVault
+    const isFluidLend = isFluid && !assetDetails?.isVault
 
     const txBtnStatus: Record<string, string> = {
         pending: 'Withdrawing...',
@@ -152,29 +157,36 @@ const WithdrawButton = ({
                       : 'default'
         ]
 
-    const withdrawCompound = useCallback(
-        async (cTokenAddress: string, amount: string) => {
-            try {
-                writeContractAsync({
-                    address: cTokenAddress as `0x${string}`,
-                    abi: COMPOUND_ABI,
-                    functionName: 'withdraw',
-                    args: [parseUnits(amount, assetDetails.decimals)],
-                })
-            } catch (error) {
-                error
-            }
-        },
-        [writeContractAsync, assetDetails]
-    )
+    // const withdrawCompound = useCallback(
+    //     async (cTokenAddress: string, amount: string) => {
+    //         try {
+    //             writeContractAsync({
+    //                 address: cTokenAddress as `0x${string}`,
+    //                 abi: COMPOUND_ABI,
+    //                 functionName: 'withdraw',
+    //                 args: [parseUnits(amount, assetDetails.decimals)],
+    //             })
+    //         } catch (error) {
+    //             error
+    //         }
+    //     },
+    //     [writeContractAsync, assetDetails]
+    // )
 
     const withdrawMorphoMarket = useCallback(
-        async (assetDetails: any, amount: string) => {
+        async (
+            assetDetails: any,
+            amount: {
+                amountRaw: string
+                scValue: string
+            }
+        ) => {
             try {
                 const morphoMarketData = assetDetails?.market as Market
                 let decimals = assetDetails.asset.token.decimals
 
-                let amountToWithdraw = parseUnits(amount, decimals)
+                let amountToWithdraw = amount.amountRaw
+                // parseUnits(amount, decimals)
 
                 logEvent('withdraw_initiated', {
                     amount,
@@ -228,12 +240,15 @@ const WithdrawButton = ({
             assetDetails: any,
             poolContractAddress: string,
             underlyingAssetAdress: string,
-            amount: string,
+            amount: {
+                amountRaw: string
+                scValue: string
+            },
             addressOfWallet: string
         ) => {
             try {
                 logEvent('withdraw_initiated', {
-                    amount,
+                    amount: amount.amountRaw,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
                     chain_name:
@@ -248,7 +263,8 @@ const WithdrawButton = ({
                     functionName: 'withdraw',
                     args: [
                         underlyingAssetAdress,
-                        parseUnits(amount, assetDetails.asset.token.decimals),
+                        amount.amountRaw,
+                        // parseUnits(amount, assetDetails.asset.token.decimals),
                         // 2,
                         // 0,
                         addressOfWallet,
@@ -283,7 +299,10 @@ const WithdrawButton = ({
 
     const onApproveWithdrawMorphoVault = async (
         assetDetails: any,
-        amount: string
+        amount: {
+            amountRaw: string
+            scValue: string
+        }
     ) => {
         setWithdrawTx((prev: TWithdrawTx) => ({
             ...prev,
@@ -293,18 +312,21 @@ const WithdrawButton = ({
         }))
 
         let vault = assetDetails?.vault as Vault
-        let amountToWithdraw = parseUnits(
-            amount,
-            assetDetails.asset.token.decimals
-        )
+        let amountToWithdraw = amount.amountRaw
+        // parseUnits(
+        //     amount,
+        //     assetDetails.asset.token.decimals
+        // )
         // //  convert asset to share
-        let shareAmount = await vault.toShares(amountToWithdraw.toBigInt())
+        let shareAmount = await vault.toShares(
+            BigNumber.from(amountToWithdraw).toBigInt()
+        )
 
         // apprive the vault.address to bunder
         let bunder_address = BUNDLER_ADDRESS_MORPHO[assetDetails.chain_id]
 
         logEvent('approve_withdraw_initiated', {
-            amount,
+            amount: amount.amountRaw,
             token_symbol: assetDetails?.asset?.token?.symbol,
             platform_name: assetDetails?.name,
             chain_name:
@@ -321,13 +343,20 @@ const WithdrawButton = ({
     }
 
     const withdrawMorphoVault = useCallback(
-        async (assetDetails: any, amount: string) => {
+        async (
+            assetDetails: any,
+            amount: {
+                amountRaw: string
+                scValue: string
+            }
+        ) => {
             let vault = assetDetails?.vault as Vault
 
-            let amountToWithdraw = parseUnits(
-                amount,
-                assetDetails.asset.token.decimals
-            )
+            let amountToWithdraw = BigNumber.from(amount.amountRaw)
+            // parseUnits(
+            //     amount,
+            //     assetDetails.asset.token.decimals
+            // )
 
             // //  convert asset to share
             let shareAmount = vault.toShares(amountToWithdraw.toBigInt())
@@ -357,7 +386,7 @@ const WithdrawButton = ({
             ]
 
             logEvent('withdraw_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -384,11 +413,14 @@ const WithdrawButton = ({
     )
 
     const withdrawFluidLend = useCallback(
-        async (assetDetails: any, amount: string) => {
-            let amountToWithdraw = parseUnits(
-                amount,
-                assetDetails.asset.token.decimals
-            )
+        async (
+            assetDetails: any,
+            amount: {
+                amountRaw: string
+                scValue: string
+            }
+        ) => {
+            let amountToWithdraw = BigNumber.from(amount.amountRaw)
 
             const maxSharesBurn = amountToWithdraw.mul(10050).div(10000) // 0.5% slippage
 
@@ -425,13 +457,14 @@ const WithdrawButton = ({
     )
 
     const withdrawFluidVault = useCallback(
-        async (assetDetails: any, amount: string) => {
-            let amountToWithdraw = parseUnits(
-                amount,
-                assetDetails.asset.token.decimals
-            )
-
-            const maxSharesBurn = amountToWithdraw.mul(10050).div(10000) // 0.5% slippage
+        async (
+            assetDetails: any,
+            amount: {
+                amountRaw: string
+                scValue: string
+            }
+        ) => {
+            let amountToWithdraw = amount.scValue
 
             logEvent('withdraw_initiated', {
                 amount,
@@ -445,12 +478,12 @@ const WithdrawButton = ({
             writeContractAsync({
                 address: assetDetails.core_contract as `0x${string}`,
                 abi: FLUID_VAULTS_ABI,
-                functionName: 'withdraw',
+                functionName: 'operate',
                 args: [
-                    amountToWithdraw, // assets_: uint256
-                    walletAddress, // receiver_: address
-                    walletAddress, // owner_: address
-                    maxSharesBurn, // maxSharesBurn_: uint256
+                    assetDetails?.fluid_vault_nftId,
+                    BigInt(amountToWithdraw),
+                    0,
+                    walletAddress,
                 ],
             }).catch((error) => {
                 setWithdrawTx((prev: TWithdrawTx) => ({
@@ -466,10 +499,10 @@ const WithdrawButton = ({
     )
 
     const onWithdraw = async () => {
-        if (isCompound) {
-            await withdrawCompound(assetDetails?.asset?.token?.address, amount)
-            return
-        }
+        // if (isCompound) {
+        //     await withdrawCompound(assetDetails?.asset?.token?.address, amount)
+        //     return
+        // }
         if (isAave) {
             await withdrawAave(
                 assetDetails,

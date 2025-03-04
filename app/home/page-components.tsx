@@ -35,18 +35,19 @@ interface ISelectedToken {
 }
 
 export default function HomePageComponents() {
-    const { isConnectingWallet, walletAddress, isWalletConnected } = useWalletConnection()
+    const { isConnectingWallet, walletAddress, isWalletConnected } =
+        useWalletConnection()
     const {
         erc20TokensBalanceData,
         isLoading: isLoadingErc20TokensBalanceData,
         isRefreshing: isRefreshingErc20TokensBalanceData,
-        formattedTokenBalances
+        formattedTokenBalances,
     } = useUserTokenBalancesContext()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
     const tokenAddressParam = searchParams.get('token_address')
     const chainIdParam = searchParams.get('chain_id')
-    const [positionType, setPositionType] = useState<TPositionType>('lend');
+    const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [openSelectTokenDialog, setOpenSelectTokenDialog] = useState(false)
     const [selectedToken, setSelectedToken] = useState<any>(null)
     const [showOpportunitiesTable, setShowOpportunitiesTable] = useState(false)
@@ -66,7 +67,7 @@ export default function HomePageComponents() {
             chain_logo: tokenBalance.chain?.logo,
             chain_name: tokenBalance.chain?.name,
         }
-    });
+    })
 
     function resetHomepageState() {
         setSelectedToken(null)
@@ -78,7 +79,11 @@ export default function HomePageComponents() {
         })
     }
 
-    const tokenBalance = formattedTokenBalances.find(tokenBalance => tokenBalance.token.address === selectedToken?.address)?.token?.balance || 0;
+    const tokenBalance =
+        formattedTokenBalances.find(
+            (tokenBalance) =>
+                tokenBalance.token.address === selectedToken?.address
+        )?.token?.balance || 0
 
     // Reset homepage state when token is not selected or selectedToken is null
     useEffect(() => {
@@ -124,24 +129,18 @@ export default function HomePageComponents() {
         setOpenSelectTokenDialog(false)
     }
 
-    function handleExcludeMorphoMarketsForLendAssets(
-        opportunity: any
-    ) {
+    function handleExcludeMorphoMarketsForLendAssets(opportunity: any) {
         const isVault = opportunity.platform.isVault
         const isMorpho =
-            opportunity.platform.protocol_type ===
-            PlatformType.MORPHO
+            opportunity.platform.protocol_type === PlatformType.MORPHO
 
         return !(isMorpho && !isVault)
     }
 
-    function handleExcludeMorphoVaultsForBorrowAssets(
-        opportunity: any
-    ) {
+    function handleExcludeMorphoVaultsForBorrowAssets(opportunity: any) {
         const isVault = opportunity.platform.isVault
         const isMorpho =
-            opportunity.platform.protocol_type ===
-            PlatformType.MORPHO
+            opportunity.platform.protocol_type === PlatformType.MORPHO
 
         return !(isMorpho && isVault)
     }
@@ -152,55 +151,73 @@ export default function HomePageComponents() {
             : handleExcludeMorphoMarketsForLendAssets(opportunity)
     }
 
-    const filteredOpportunitiesData = opportunitiesData.filter(handleFilterTableRows)
+    const filteredOpportunitiesData = opportunitiesData.filter(
+        handleFilterTableRows
+    )
 
     return (
         <MainContainer className="mt-20 md:mt-24">
             <div className="flex flex-col items-center w-full max-w-[1176px] max-md:max-w-full">
                 <div className="relative z-10 w-full max-w-[300px]">
                     <ToggleTab
-                        type={positionType === "lend" ? "tab1" : "tab2"}
+                        type={positionType === 'lend' ? 'tab1' : 'tab2'}
                         handleToggle={(positionType: TTypeToMatch) => {
-                            handlePositionTypeToggle(positionType === "tab1" ? "lend" : "borrow")
+                            handlePositionTypeToggle(
+                                positionType === 'tab1' ? 'lend' : 'borrow'
+                            )
                         }}
                     />
                 </div>
-                <TokenRates
-                    positionType={positionType}
-                />
+                <TokenRates positionType={positionType} />
                 <div className="flex flex-col lg:flex-row lg:items-start justify-center gap-2 transition-all duration-300 max-w-full w-full md:overflow-hidden">
                     <motion.div
                         animate={{ x: showOpportunitiesTable ? 0 : 'auto' }}
-                        transition={{ duration: 0.7, ease: 'easeInOut', delay: 0.2 }}
+                        transition={{
+                            duration: 0.7,
+                            ease: 'easeInOut',
+                            delay: 0.2,
+                        }}
                     >
                         <SelectTokeWidget
                             setOpenSelectTokenDialog={setOpenSelectTokenDialog}
                             selectedToken={selectedToken}
                             tokenBalance={tokenBalance}
-                            isLoadingBalance={isLoadingErc20TokensBalanceData || isRefreshingErc20TokensBalanceData}
+                            isLoadingBalance={
+                                isLoadingErc20TokensBalanceData ||
+                                isRefreshingErc20TokensBalanceData
+                            }
                             opportunitiesData={filteredOpportunitiesData}
                             positionType={positionType}
-                            setShowOpportunitiesTable={setShowOpportunitiesTable}
+                            setShowOpportunitiesTable={
+                                setShowOpportunitiesTable
+                            }
                             isLoadingOpportunities={isLoadingOpportunitiesData}
                         />
                     </motion.div>
                     <AnimatePresence>
-                        {showOpportunitiesTable ?
-                            (<motion.div
+                        {showOpportunitiesTable ? (
+                            <motion.div
                                 initial={{ x: 1400, opacity: 0, width: 0 }}
                                 animate={{ x: 0, opacity: 1, width: '100%' }}
                                 exit={{ x: 1400, opacity: 0, width: 0 }}
-                                transition={{ duration: 1.5, ease: 'easeInOut', delay: 0.3 }}
+                                transition={{
+                                    duration: 1.5,
+                                    ease: 'easeInOut',
+                                    delay: 0.3,
+                                }}
                                 className="w-full lg:max-w-[600px] xl:max-w-[750px]"
                             >
                                 <Opportunities
                                     positionType={positionType}
-                                    opportunitiesData={filteredOpportunitiesData}
-                                    isLoadingOpportunitiesData={isLoadingOpportunitiesData}
+                                    opportunitiesData={
+                                        filteredOpportunitiesData
+                                    }
+                                    isLoadingOpportunitiesData={
+                                        isLoadingOpportunitiesData
+                                    }
                                 />
-                            </motion.div>)
-                            : null
-                        }
+                            </motion.div>
+                        ) : null}
                     </AnimatePresence>
                 </div>
                 <SelectTokenByChain
@@ -208,7 +225,9 @@ export default function HomePageComponents() {
                     setOpen={setOpenSelectTokenDialog}
                     tokens={formattedTokensList}
                     onSelectToken={handleSelectToken}
-                    isLoading={isLoadingErc20TokensBalanceData || isConnectingWallet}
+                    isLoading={
+                        isLoadingErc20TokensBalanceData || isConnectingWallet
+                    }
                 />
             </div>
         </MainContainer>

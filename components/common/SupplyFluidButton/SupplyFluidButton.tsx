@@ -30,13 +30,18 @@ import { TPositionType } from '@/types'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
+import { ETH_ADDRESSES } from '@/lib/constants'
 
 interface ISupplyFluidButtonProps {
     assetDetails: any
     disabled: boolean
     poolContractAddress: `0x${string}`
     underlyingAssetAdress: `0x${string}`
-    amount: string
+    amount: {
+        amountRaw: string
+        scValue: string
+    }
     decimals: number
     handleCloseModal: (isVisible: boolean) => void
     setActionType?: (actionType: TPositionType) => void
@@ -73,11 +78,11 @@ const SupplyFluidButton = ({
     const { walletAddress } = useWalletConnection()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
 
-    const amountBN = useMemo(() => {
-        return amount
-            ? parseUnits(amount, tokenDetails?.token?.decimals || 18)
-            : BigNumber.from(0)
-    }, [amount, tokenDetails?.token?.decimals])
+    // const amountBN = useMemo(() => {
+    //     return amount
+    //         ? parseUnits(amount, tokenDetails?.token?.decimals || 18)
+    //         : BigNumber.from(0)
+    // }, [amount, tokenDetails?.token?.decimals])
 
     const txBtnStatus: Record<string, string> = {
         pending:
@@ -88,12 +93,12 @@ const SupplyFluidButton = ({
         success: isFluidVaults ? 'Go To Borrow' : 'Close',
         default:
             lendTx.status === 'approve'
-                ? (isFluidVaults ? 'Start adding collateral' : 'Start supplying')
-                : isFluidVaults
-                    ? 'Add Collateral'
-                    : isFluidLend
+                ? isFluidVaults
+                    ? 'Start earning'
+                    : 'Start supplying'
+                :isFluidLend
                         ? 'Supply to vault'
-                        : 'Lend Collateral',
+                        : 'Earn',
     }
 
     const getTxButtonText = (
@@ -116,7 +121,17 @@ const SupplyFluidButton = ({
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
-    const supply = useCallback(async () => {
+    useEffect(() => {
+        if (lendTx.status === 'lend') {
+            if (isFluidVaults) {
+                handleVaultsLendTx()
+            } else {
+                handleLendTx()
+            }
+        }
+    }, [lendTx.status])
+
+    const handleVaultsLendTx = useCallback(async () => {
         try {
             setLendTx((prev: any) => ({
                 ...prev,
@@ -133,18 +148,22 @@ const SupplyFluidButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
             writeContractAsync({
                 address: poolContractAddress,
-                abi: FLUID_LEND_ABI,
-                functionName: 'deposit',
+                abi: FLUID_VAULTS_ABI,
+                functionName: 'operate',
                 args: [
-                    amountBN,
-                    walletAddress as `0x${string}`,
+                    assetDetails?.fluid_vault_nftId,
+                    amount.amountRaw,
+                    0,
+                    walletAddress,
                 ],
+                value: underlyingAssetAdress === ETH_ADDRESSES[0] ? BigInt(amount.amountRaw) : BigInt('0'),
             })
                 .then((data) => {
                     setLendTx((prev: TLendTx) => ({
@@ -157,7 +176,70 @@ const SupplyFluidButton = ({
                         amount,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
-                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        chain_name:
+                            CHAIN_ID_MAPPER[
+                            Number(assetDetails?.chain_id) as ChainId
+                            ],
+                        wallet_address: walletAddress,
+                    })
+                })
+                .catch((error) => {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                    }))
+                    console.log('catch error', error)
+                })
+        } catch (error) {
+            error
+            console.log('error', error)
+        }
+    }, [amount, tokenDetails, platform, walletAddress, writeContractAsync])
+
+    const handleLendTx = useCallback(async () => {
+        try {
+            setLendTx((prev: any) => ({
+                ...prev,
+                status: 'lend',
+                hash: '',
+                errorMessage: '',
+            }))
+
+            if (!walletAddress) {
+                throw new Error('Wallet address is required')
+            }
+
+            logEvent('lend_initiated', {
+                amount,
+                token_symbol: assetDetails?.asset?.token?.symbol,
+                platform_name: assetDetails?.name,
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
+
+            writeContractAsync({
+                address: poolContractAddress,
+                abi: FLUID_LEND_ABI,
+                functionName: 'deposit',
+                args: [amount.amountRaw, walletAddress as `0x${string}`],
+            })
+                .then((data) => {
+                    setLendTx((prev: TLendTx) => ({
+                        ...prev,
+                        status: 'view',
+                        errorMessage: '',
+                    }))
+
+                    logEvent('lend_completed', {
+                        amount,
+                        token_symbol: assetDetails?.asset?.token?.symbol,
+                        platform_name: assetDetails?.name,
+                        chain_name:
+                            CHAIN_ID_MAPPER[
+                            Number(assetDetails?.chain_id) as ChainId
+                            ],
                         wallet_address: walletAddress,
                     })
                 })
@@ -187,7 +269,7 @@ const SupplyFluidButton = ({
         if (lendTx.status === 'view') return
 
         if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amountBN)) {
+            if (lendTx.allowanceBN.gte(amount.amountRaw)) {
                 setLendTx((prev: any) => ({
                     ...prev,
                     status: 'lend',
@@ -233,7 +315,8 @@ const SupplyFluidButton = ({
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.protocol_type,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -241,18 +324,8 @@ const SupplyFluidButton = ({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [
-                    poolContractAddress,
-                    parseUnits(amount, decimals),
-                ],
+                args: [poolContractAddress, amount.amountRaw],
             })
-                .then((data) => {
-                    setLendTx((prev: TLendTx) => ({
-                        ...prev,
-                        status: 'lend',
-                        hash: data,
-                    }))
-                })
                 .catch((error) => {
                     console.log(error)
                     setLendTx((prev: TLendTx) => ({
@@ -268,7 +341,7 @@ const SupplyFluidButton = ({
 
     return (
         <div className="flex flex-col gap-2">
-            {lendTx.status === 'approve' && (
+            {/* {lendTx.status === 'approve' && (
                 <CustomAlert
                     variant="info"
                     hasPrefixIcon={false}
@@ -289,7 +362,7 @@ const SupplyFluidButton = ({
                         </BodyText>
                     }
                 />
-            )}
+            )} */}
             {error && (
                 <CustomAlert
                     description={
@@ -303,17 +376,16 @@ const SupplyFluidButton = ({
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button
-                disabled={
-                    (isPending ||
-                        isConfirming ||
-                        disabled) &&
-                    lendTx.status !== 'view'
-                }
+                disabled={(isPending || isConfirming || disabled)}
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()
                     } else if (lendTx.status === 'lend') {
-                        supply()
+                        if (isFluidVaults) {
+                            handleVaultsLendTx()
+                        } else {
+                            handleLendTx()
+                        }
                     } else {
                         handleCloseModal(false)
                         setActionType?.('borrow')

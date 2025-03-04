@@ -37,7 +37,8 @@ type TTopApyOpportunitiesProps = {
     columns: ColumnDef<TOpportunityTable>[]
 }
 
-const EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL = '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed'
+const EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL =
+    '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed'
 
 export default function Opportunities({
     positionType,
@@ -126,7 +127,7 @@ export default function Opportunities({
             className="opportunities-table flex flex-col gap-[24px]"
         >
             <div className="opportunities-table">
-                {(!isLoadingOpportunitiesData && !isTableLoading) && (
+                {!isLoadingOpportunitiesData && !isTableLoading && (
                     <OpportunitiesDataTable
                         columns={columns}
                         data={tableData}

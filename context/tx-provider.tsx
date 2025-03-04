@@ -29,7 +29,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setLendTx: () => { },
+    setLendTx: () => {},
     borrowTx: {
         status: 'borrow',
         hash: '',
@@ -38,7 +38,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setBorrowTx: () => { },
+    setBorrowTx: () => {},
     repayTx: {
         status: 'approve',
         hash: '',
@@ -49,7 +49,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setRepayTx: () => { },
+    setRepayTx: () => {},
     withdrawTx: {
         status: 'approve',
         hash: '',
@@ -60,11 +60,11 @@ const TxInitialState: TTxContext = {
         isRefreshingAllowance: false,
         allowanceBN: BigNumber.from(0),
     },
-    setWithdrawTx: () => { },
+    setWithdrawTx: () => {},
     isLendBorrowTxDialogOpen: false,
-    setIsLendBorrowTxDialogOpen: () => { },
+    setIsLendBorrowTxDialogOpen: () => {},
     isWithdrawRepayTxDialogOpen: false,
-    setIsWithdrawRepayTxDialogOpen: () => { },
+    setIsWithdrawRepayTxDialogOpen: () => {},
 }
 
 export const TxContext = createContext<TTxContext>(TxInitialState)
@@ -157,8 +157,10 @@ export default function TxProvider({
         allowanceBN: BigNumber.from(0),
     })
 
-    const [isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen] = useState(false)
-    const [isWithdrawRepayTxDialogOpen, setIsWithdrawRepayTxDialogOpen] = useState(false)
+    const [isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen] =
+        useState(false)
+    const [isWithdrawRepayTxDialogOpen, setIsWithdrawRepayTxDialogOpen] =
+        useState(false)
 
     return (
         <TxContext.Provider

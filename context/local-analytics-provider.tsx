@@ -11,11 +11,14 @@ const localAnalytics: AnalyticsContextState = {
     },
     logEvent: (name, data) => {
         console.log('Log event: ', name, data)
-    }
+    },
 }
 
-
-export const LocalAnalyticsProvider = ({ children }: { children: ReactNode }) => {
+export const LocalAnalyticsProvider = ({
+    children,
+}: {
+    children: ReactNode
+}) => {
     return (
         <AnalyticsContext.Provider value={localAnalytics}>
             {children}

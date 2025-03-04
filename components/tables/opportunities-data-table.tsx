@@ -163,11 +163,11 @@ export function OpportunitiesDataTable<TData, TValue>({
                                                     {header.isPlaceholder
                                                         ? null
                                                         : flexRender(
-                                                            header.column
-                                                                .columnDef
-                                                                .header,
-                                                            header.getContext()
-                                                        )}
+                                                              header.column
+                                                                  .columnDef
+                                                                  .header,
+                                                              header.getContext()
+                                                          )}
                                                 </BodyText>
                                                 {header.column.getCanSort() && (
                                                     <ChevronsUpDown
@@ -181,7 +181,7 @@ export function OpportunitiesDataTable<TData, TValue>({
                                                         side="bottom"
                                                         label={
                                                             header.column.getIsSorted() ===
-                                                                'asc' ? (
+                                                            'asc' ? (
                                                                 <ArrowUpWideNarrow className="w-4 h-4" />
                                                             ) : (
                                                                 <ArrowDownWideNarrow className="w-4 h-4" />
@@ -189,7 +189,7 @@ export function OpportunitiesDataTable<TData, TValue>({
                                                         }
                                                         content={
                                                             header.column.getIsSorted() ===
-                                                                'asc'
+                                                            'asc'
                                                                 ? 'Lowest to Highest'
                                                                 : 'Highest to Lowest'
                                                         }

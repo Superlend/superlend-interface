@@ -56,7 +56,9 @@ const EasterEggSolved = ({
         try {
             setIsUpdating(true)
             await fetchUserRank()
-            await axios.post(`${endpoint}/api/update-entry`, { walletAddress: walletAddress.toLowerCase() })
+            await axios.post(`${endpoint}/api/update-entry`, {
+                walletAddress: walletAddress.toLowerCase(),
+            })
             setIsUpdating(false)
         } catch (error) {
             toast.error('Something went wrong. Please try again later.')

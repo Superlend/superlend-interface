@@ -21,7 +21,8 @@ import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 export default function Portfolio() {
-    const { isConnectingWallet, isWalletConnected, walletAddress } = useWalletConnection()
+    const { isConnectingWallet, isWalletConnected, walletAddress } =
+        useWalletConnection()
     const { isClient } = useIsClient()
     const { logEvent } = useAnalytics()
 
@@ -74,8 +75,8 @@ export default function Portfolio() {
                             Your Portfolio
                         </HeadingText>
                         <BodyText level="body1" className="text-gray-600">
-                            Track all your lending and borrowing positions
-                            in one place.
+                            Track all your lending and borrowing positions in
+                            one place.
                         </BodyText>
                     </div>
                     {/* <Button variant="primary" className='group uppercase py-[9px] px-[16px] flex items-center gap-[4px]'>

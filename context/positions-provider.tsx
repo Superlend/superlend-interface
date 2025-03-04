@@ -49,9 +49,9 @@ const PortfolioDataInit = {
 
 export const PositionsContext = createContext<TPositionsContext>({
     filters: filtersInit,
-    setFilters: () => { },
+    setFilters: () => {},
     positionType: positionTypeInit,
-    setPositionType: () => { },
+    setPositionType: () => {},
     portfolioData: PortfolioDataInit,
     isLoadingPortfolioData: false,
     isErrorPortfolioData: false,
@@ -109,8 +109,8 @@ export default function PositionsProvider({
     useEffect(() => {
         setIsLoadingPortfolioData(
             isLoadingPortfolioData1 &&
-            isLoadingPortfolioData2 &&
-            isLoadingPortfolioData3
+                isLoadingPortfolioData2 &&
+                isLoadingPortfolioData3
         )
     }, [
         isLoadingPortfolioData1,
@@ -122,8 +122,8 @@ export default function PositionsProvider({
     useEffect(() => {
         setIsErrorPortfolioData(
             isErrorPortfolioData1 ||
-            isErrorPortfolioData2 ||
-            isErrorPortfolioData3
+                isErrorPortfolioData2 ||
+                isErrorPortfolioData3
         )
     }, [isErrorPortfolioData1, isErrorPortfolioData2, isErrorPortfolioData3])
 
@@ -166,4 +166,4 @@ export default function PositionsProvider({
     )
 }
 
-export const usePositionsContext = () => useContext(PositionsContext);
+export const usePositionsContext = () => useContext(PositionsContext)

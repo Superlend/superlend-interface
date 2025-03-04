@@ -34,7 +34,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const platformName: string = row.getValue('platformName')
             const platformLogo = row.original.platformLogo
             const platformId: string = row.original.platformId
-            const platformWithMarketName: string = row.original.platformWithMarketName
+            const platformWithMarketName: string =
+                row.original.platformWithMarketName
             const isMorpho =
                 row.original.platformId.split('-')[0].toLowerCase() ===
                 PlatformType.MORPHO

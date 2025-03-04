@@ -21,7 +21,10 @@ import SupplyFluidButton from '../SupplyFluidButton'
 interface IActionButtonSelectComponent {
     disabled?: boolean
     asset: any
-    amount: string
+    amount: {
+        amountRaw: string
+        scValue: string
+    }
     handleCloseModal: (isVisible: boolean) => void
     actionType: 'lend' | 'collateral' | 'borrow' | 'repay' | 'withdraw'
     setActionType?: (actionType: TPositionType) => void
@@ -83,23 +86,23 @@ const ActionButton = ({
             )
         }
     }
-    if (
-        asset.protocol_type === PlatformType.COMPOUND &&
-        asset.asset.token.symbol === 'cETH'
-    ) {
-        return (
-            <SupplyETHCompoundButton
-                disabled={disabled}
-                handleCloseModal={handleCloseModal}
-                cTokenAddress={asset.core_contract}
-                amount={amount}
-                decimals={countCompoundDecimals(
-                    asset.asset.token.decimals,
-                    asset.asset.token.decimals
-                )}
-            />
-        )
-    }
+    // if (
+    //     asset.protocol_type === PlatformType.COMPOUND &&
+    //     asset.asset.token.symbol === 'cETH'
+    // ) {
+    //     return (
+    //         <SupplyETHCompoundButton
+    //             disabled={disabled}
+    //             handleCloseModal={handleCloseModal}
+    //             cTokenAddress={asset.core_contract}
+    //             amount={amount}
+    //             decimals={countCompoundDecimals(
+    //                 asset.asset.token.decimals,
+    //                 asset.asset.token.decimals
+    //             )}
+    //         />
+    //     )
+    // }
     if (asset.protocol_type === PlatformType.MORPHO && actionType === 'lend') {
         return (
             <SupplyMorphoButton
@@ -125,20 +128,20 @@ const ActionButton = ({
             />
         )
     }
-
-    return (
-        <SupplyERC20CompoundButton
-            disabled={disabled}
-            handleCloseModal={handleCloseModal}
-            underlyingToken={asset.asset.token.address}
-            cTokenAddress={asset.core_contract}
-            amount={amount}
-            decimals={countCompoundDecimals(
-                asset.asset.token.decimals,
-                asset.asset.token.decimals
-            )}
-        />
-    )
+    return null;
+    // return (
+    //     <SupplyERC20CompoundButton
+    //         disabled={disabled}
+    //         handleCloseModal={handleCloseModal}
+    //         underlyingToken={asset.asset.token.address}
+    //         cTokenAddress={asset.core_contract}
+    //         amount={amount}
+    //         decimals={countCompoundDecimals(
+    //             asset.asset.token.decimals,
+    //             asset.asset.token.decimals
+    //         )}
+    //     />
+    // )
 }
 
 export default ActionButton

@@ -19,8 +19,8 @@ export default function useDimensions() {
     useLayoutEffect(() => {
         const updateDimensions = function () {
             const { innerWidth, innerHeight } = window
-            
-            setDimensions(prev => {
+
+            setDimensions((prev) => {
                 // Only update if dimensions actually changed
                 if (prev.width === innerWidth && prev.height === innerHeight) {
                     return prev
@@ -31,7 +31,7 @@ export default function useDimensions() {
 
         const debouncedUpdate = debounce(updateDimensions, 100)
         updateDimensions()
-        
+
         window.addEventListener('resize', debouncedUpdate)
         return () => {
             window.removeEventListener('resize', debouncedUpdate)

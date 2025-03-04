@@ -196,9 +196,13 @@ export default function AllPositions() {
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="w-full sm:max-w-[350px]">
                             <ToggleTab
-                                type={positionType === "lend" ? "tab1" : "tab2"}
+                                type={positionType === 'lend' ? 'tab1' : 'tab2'}
                                 handleToggle={(positionType: TTypeToMatch) => {
-                                    toggleOpportunityType(positionType === "tab1" ? "lend" : "borrow")
+                                    toggleOpportunityType(
+                                        positionType === 'tab1'
+                                            ? 'lend'
+                                            : 'borrow'
+                                    )
                                 }}
                             />
                         </div>

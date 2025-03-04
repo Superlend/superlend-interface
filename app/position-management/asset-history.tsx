@@ -38,11 +38,12 @@ export default function AssetHistory() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionType = searchParams.get('position_type') || 'lend'
     const [selectedRange, setSelectedRange] = useState<Period>(Period.oneMonth)
-    const [selectedFilter, setSelectedFilter] = useState<IDropdownCategoryFilter>(
-        positionType === 'borrow'
-            ? HISTORY_CHART_SELECT_OPTIONS[3]
-            : HISTORY_CHART_SELECT_OPTIONS[0]
-    )
+    const [selectedFilter, setSelectedFilter] =
+        useState<IDropdownCategoryFilter>(
+            positionType === 'borrow'
+                ? HISTORY_CHART_SELECT_OPTIONS[3]
+                : HISTORY_CHART_SELECT_OPTIONS[0]
+        )
     const { platformData } = usePositionManagementContext()
 
     const isMorpho =

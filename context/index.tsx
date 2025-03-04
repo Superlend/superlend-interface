@@ -7,7 +7,20 @@ import AssetsDataProvider from './data-provider'
 import UserTokenBalancesProvider from './user-token-balances-provider'
 import { PrivyClientConfig, PrivyProvider } from '@privy-io/react-auth'
 import { createConfig, WagmiProvider } from '@privy-io/wagmi'
-import { base, mainnet, polygon, avalanche, optimism, gnosis, arbitrum, etherlink, bsc, scroll, metis, linea } from 'viem/chains'
+import {
+    base,
+    mainnet,
+    polygon,
+    avalanche,
+    optimism,
+    gnosis,
+    arbitrum,
+    etherlink,
+    bsc,
+    scroll,
+    metis,
+    linea,
+} from 'viem/chains'
 import { http } from 'wagmi'
 import { AnalyticsProvider } from './analytics-provider'
 import { PageVisitTracker } from '@/components/analytics/PageVisitTracker'
@@ -18,7 +31,20 @@ const queryClient = new QueryClient()
 const appId = 'cm5o77rga039b99tzkjakb6ji'
 
 export const config = createConfig({
-    chains: [mainnet, polygon, base, scroll, avalanche, optimism, bsc, gnosis, arbitrum, etherlink, metis, linea], // Pass your required chains as an array
+    chains: [
+        mainnet,
+        polygon,
+        base,
+        scroll,
+        avalanche,
+        optimism,
+        bsc,
+        gnosis,
+        arbitrum,
+        etherlink,
+        metis,
+        linea,
+    ], // Pass your required chains as an array
     transports: {
         [mainnet.id]: http(),
         [polygon.id]: http(),
@@ -31,7 +57,7 @@ export const config = createConfig({
         [gnosis.id]: http(),
         [arbitrum.id]: http(),
         [etherlink.id]: http(),
-        [linea.id]: http()
+        [linea.id]: http(),
     },
 })
 
@@ -44,17 +70,32 @@ const privyConfig = {
         landingHeader: 'Connect Wallet',
         loginMessage: 'Select wallet to continue',
         showWalletLoginFirst: true,
-        walletList: ['metamask', 'coinbase_wallet', 'okx_wallet', 'rainbow', 'rabby_wallet', 'wallet_connect']
+        walletList: [
+            'metamask',
+            'coinbase_wallet',
+            'okx_wallet',
+            'rainbow',
+            'rabby_wallet',
+            'wallet_connect',
+        ],
     },
-    supportedChains: [mainnet, polygon, base, scroll, avalanche, optimism, bsc, gnosis, arbitrum, etherlink, metis, linea],
+    supportedChains: [
+        mainnet,
+        polygon,
+        base,
+        scroll,
+        avalanche,
+        optimism,
+        bsc,
+        gnosis,
+        arbitrum,
+        etherlink,
+        metis,
+        linea,
+    ],
 }
 
-function ContextProvider({
-    children,
-}: {
-    children: ReactNode
-}) {
-
+function ContextProvider({ children }: { children: ReactNode }) {
     return (
         <AnalyticsProvider>
             {/* <PageVisitTracker /> */}
