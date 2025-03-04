@@ -452,9 +452,7 @@ export default function WithdrawAndRepayActionButton({
                     const repayTokenAddress = repayToken?.address.toLowerCase()
                     // console.log(normalizeScientificNotation(repayToken.tokenAmount.toString()))
                     const maxDebt = parseUnits(
-                        normalizeScientificNotation(
-                            repayToken.tokenAmount.toString()
-                        ),
+                        normalizeScientificNotation(repayToken?.tokenAmount?.toString() ?? '0'),
                         repayToken.decimals
                     )
                     const balance = BigNumber.from(

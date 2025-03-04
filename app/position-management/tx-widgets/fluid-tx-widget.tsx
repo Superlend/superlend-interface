@@ -555,10 +555,10 @@ function FluidVaults({
 
         const maxBorrowUsd =
             ((lendPosition.amount ?? 0) *
-                lendToken.token.price_usd *
-                lendToken.ltv) /
+                (lendPosition.token.price_usd ?? 0) *
+                (lendToken.ltv ?? 0)) /
                 100 -
-            (borrowPosition?.amount ?? 0) * borrowToken.token.price_usd
+            ((borrowPosition?.amount ?? 0) * (borrowToken.token.price_usd ?? 0))
         const maxBorrowToken = (
             maxBorrowUsd / borrowToken.token.price_usd
         ).toFixed(borrowToken.token.decimals)
