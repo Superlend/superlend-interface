@@ -72,14 +72,13 @@ export default function WithdrawAndRepayActionButton({
     const { getVaultData, getMarketData } = useMorphoVaultData()
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [amount, setAmount] = useState('')
-    const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
     // Morpho vault when the user is withdrawing from morpho vaults
     const [maxWithdrawAmountMorphoVaults, setMaxWithdrawAmountMorphoVaults] =
         useState('0')
     // Morpho vault when the user is withdrawing from morpho vaults
     const [morphoVault, setMorphoVault] = useState<any>(null)
 
-    const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] =
+    const [isLoadingMaxAmount, setIsLoadingMaxAmount] =
         useState(false)
     const [borrowTokensDetails, setBorrowTokensDetails] = useState<
         TPlatformAsset[]
@@ -191,6 +190,7 @@ export default function WithdrawAndRepayActionButton({
 
     const hasSingleToken = tokenDetails.length === 1
 
+    // Get max withdraw amount for morpho
     useEffect(() => {
         if (vaultData) {
             setMorphoVault(vaultData)
@@ -307,14 +307,14 @@ export default function WithdrawAndRepayActionButton({
         return strValue
     }
 
-    // Get max withdraw amount
+    // Get max withdraw amount for aave v3 and fluid
     useEffect(() => {
-        setIsLoadingMaxBorrowingAmount(true)
+        setIsLoadingMaxAmount(true)
+
         if (
-            walletAddress &&
-            Object.keys(erc20Balances).length > 0 &&
-            walletAddress.length > 0 &&
-            platformData.assets.length > 0 &&
+            !!walletAddress &&
+            !!Object.keys(erc20Balances).length &&
+            !!platformData.assets.length &&
             providerStatus.isReady
         ) {
             if (isAaveV3Protocol) {
@@ -326,9 +326,9 @@ export default function WithdrawAndRepayActionButton({
                     .then((r) => {
                         if (!r || !r[0]) {
                             // Add null check
-                            setMaxBorrowAmount('0')
+                            // setMaxBorrowAmount('0')
 
-                            setIsLoadingMaxBorrowingAmount(false)
+                            setIsLoadingMaxAmount(false)
                             return
                         }
                         // Initialize maxWithdrawAmounts
@@ -398,8 +398,8 @@ export default function WithdrawAndRepayActionButton({
                             'error fetching max withdraw/repay amount',
                             error
                         )
-                        setMaxBorrowAmount('0')
-                        setIsLoadingMaxBorrowingAmount(false)
+                        // setMaxBorrowAmount('0')
+                        setIsLoadingMaxAmount(false)
                     })
             } else if (isFluidVaultsProtocol) {
                 const lendTokenDetails = platformData.assets.filter(
@@ -414,6 +414,7 @@ export default function WithdrawAndRepayActionButton({
                         (p) => p.type === 'lend'
                     )[0]
 
+                // Get max withdraw amount for fluid
                 const maxWithdrawAmounts: Record<
                     string,
                     {
@@ -434,15 +435,15 @@ export default function WithdrawAndRepayActionButton({
                             )
                         ) * (borrowPositionDetails?.token?.price_usd ?? 0)
                     const collatRequiredInUsd =
-                        (borrowPositionUSD * 100) / lendTokenDetails.ltv
+                        (borrowPositionUSD * 100) / (lendTokenDetails?.ltv ?? 1)
                     const collatRequiredInToken =
                         collatRequiredInUsd /
                         lendPositionDetails.token.price_usd
                     const amountToWithdraw = parseUnits(
                         (
                             lendPositionDetails.amount - collatRequiredInToken
-                        ).toFixed(lendTokenDetails.token.decimals),
-                        lendTokenDetails.token.decimals
+                        ).toFixed(lendTokenDetails?.token?.decimals ?? 0),
+                        (lendTokenDetails?.token?.decimals ?? 0)
                     ).toString()
 
                     const amountToWithdrawFluid =
@@ -453,13 +454,14 @@ export default function WithdrawAndRepayActionButton({
                         maxToWithdraw: amountToWithdraw,
                         maxToWithdrawFormatted: formatUnits(
                             amountToWithdraw,
-                            lendTokenDetails.token.decimals
+                            (lendTokenDetails?.token?.decimals ?? 0)
                         ),
                         maxToWithdrawSCValue: amountToWithdrawFluid,
                         user: {},
                     }
                 }
 
+                // Get max repay amount for fluid
                 const maxRepayAmounts: Record<
                     string,
                     {
@@ -472,7 +474,6 @@ export default function WithdrawAndRepayActionButton({
                 for (const repayToken of tokenDetails) {
                     if (actionType !== 'repay') continue
                     const repayTokenAddress = repayToken?.address.toLowerCase()
-                    // console.log(normalizeScientificNotation(repayToken.tokenAmount.toString()))
                     const maxDebt = parseUnits(
                         normalizeScientificNotation(repayToken?.tokenAmount?.toString() ?? '0'),
                         repayToken.decimals
@@ -495,9 +496,11 @@ export default function WithdrawAndRepayActionButton({
                         user: {},
                     }
                 }
+
                 setMaxWithdrawTokensAmount(maxWithdrawAmounts)
                 setMaxRepayTokensAmount(maxRepayAmounts)
             }
+            setIsLoadingMaxAmount(false)
         }
     }, [
         walletAddress,
@@ -846,8 +849,23 @@ export default function WithdrawAndRepayActionButton({
             assetDetailsForTx.protocol_type === PlatformType.FLUID &&
             !assetDetailsForTx.isVault
 
-        if (isFluidLendProtocol || isMorphoVaultsProtocol) {
-            const maxToWithdraw = Number(tokenDetails[0]?.amount)
+        if (isMorphoVaultsProtocol) {
+            const maxToWithdraw = (Number(tokenDetails[0]?.tokenAmount) * 0.999)
+            .toFixed(tokenDetails[0]?.decimals)
+            .toString() ?? '0'
+
+            return (
+                {
+                    maxToWithdraw: maxToWithdraw,
+                    maxToWithdrawFormatted: maxToWithdraw,
+                    maxToWithdrawSCValue: '0',
+                    user: {},
+                }
+            )
+        }
+
+        if (isFluidLendProtocol) {
+            const maxToWithdraw = Number(tokenDetails[0]?.tokenAmount)
             .toFixed(tokenDetails[0]?.decimals)
             .toString() ?? '0'
 
@@ -953,17 +971,6 @@ export default function WithdrawAndRepayActionButton({
     )
 
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
-    const isPolygonChain = Number(chain_id) === 137
-
-    const isLoadingHelperText = isWithdrawAction
-        ? isLoadingErc20TokensBalanceData
-        : isLoadingMaxBorrowingAmount
-
-    function getLoadingHelperText() {
-        return isWithdrawAction
-            ? 'Loading balance...'
-            : 'Loading borrow limit...'
-    }
 
     function getMaxDecimalsToDisplay(): number {
         return isWithdrawAction
@@ -1083,6 +1090,7 @@ export default function WithdrawAndRepayActionButton({
                     assetDetails={assetDetails}
                     maxWithdrawAmount={maxWithdrawAmountForTx}
                     maxRepayAmount={maxRepayAmountForTx}
+                    isLoadingMaxAmount={isLoadingMaxAmount}
                     healthFactorValues={healthFactorValues}
                     amount={amount}
                     setAmount={setAmount}

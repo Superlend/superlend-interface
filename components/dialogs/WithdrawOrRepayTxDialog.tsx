@@ -75,6 +75,7 @@ export function WithdrawOrRepayTxDialog({
     assetDetails,
     maxWithdrawAmount,
     maxRepayAmount,
+    isLoadingMaxAmount,
     healthFactorValues,
     amount,
     setAmount,
@@ -98,6 +99,7 @@ export function WithdrawOrRepayTxDialog({
         maxToRepaySCValue: string
         user: any
     }
+    isLoadingMaxAmount: boolean
     healthFactorValues: {
         healthFactor: any
         newHealthFactor: any
@@ -297,11 +299,12 @@ export function WithdrawOrRepayTxDialog({
             return (
                 !isWalletConnected ||
                 Number(amount) ===
-                    Number(maxWithdrawAmount.maxToWithdrawFormatted)
+                    Number(maxWithdrawAmount.maxToWithdrawFormatted) ||
+                isLoadingMaxAmount
             )
         }
 
-        return !isWalletConnected || Number(amount) === Number(positionAmount)
+        return !isWalletConnected || Number(amount) === Number(positionAmount) || isLoadingMaxAmount
     }
 
     // SUB_COMPONENT: Trigger button to open the dialog
@@ -654,19 +657,23 @@ export function WithdrawOrRepayTxDialog({
                                     ? 'Withdraw limit:'
                                     : 'Borrowed:'}
                             </BodyText>
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-800"
+                            {isLoadingMaxAmount ? (
+                                <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
+                            ) : (
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-gray-800"
                             >
                                 {handleSmallestValue(
                                     isWithdrawAction
                                         ? maxWithdrawAmount.maxToWithdrawFormatted
                                         : (positionAmount ?? 0).toString()
                                 )}{' '}
-                                {assetDetails?.asset?.token?.symbol ??
-                                    assetDetails?.token?.symbol}
-                            </BodyText>
+                                    {assetDetails?.asset?.token?.symbol ??
+                                        assetDetails?.token?.symbol}
+                                </BodyText>
+                            )}
                         </div>
                     )}
                     {isShowBlock({
