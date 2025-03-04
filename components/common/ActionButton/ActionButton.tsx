@@ -14,17 +14,14 @@ import WithdrawButton from '../WithdrawButton'
 import { BigNumber } from 'ethers'
 import SupplyMorphoButton from '../SupplyMorphoButton'
 import { CodeSquare } from 'lucide-react'
-import { TPositionType } from '@/types'
+import { TPositionType, TScAmount } from '@/types'
 import RepayButton from '../RepayButton'
 import SupplyFluidButton from '../SupplyFluidButton'
 
 interface IActionButtonSelectComponent {
     disabled?: boolean
     asset: any
-    amount: {
-        amountRaw: string
-        scValue: string
-    }
+    amount: TScAmount
     handleCloseModal: (isVisible: boolean) => void
     actionType: 'lend' | 'collateral' | 'borrow' | 'repay' | 'withdraw'
     setActionType?: (actionType: TPositionType) => void

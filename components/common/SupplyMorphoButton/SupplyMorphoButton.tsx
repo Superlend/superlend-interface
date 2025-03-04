@@ -33,17 +33,14 @@ import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
 import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
 import ExternalLink from '@/components/ExternalLink'
 import { PlatformType } from '@/types/platform'
-import { TPositionType } from '@/types'
+import { TPositionType, TScAmount } from '@/types'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
 interface ISupplyMorphoButtonProps {
     disabled: boolean
     assetDetails: any // Replace with proper type
-    amount: {
-        amountRaw: string
-        scValue: string
-    }
+    amount: TScAmount
     handleCloseModal: (isVisible: boolean) => void
     setActionType?: (actionType: TPositionType) => void
 }
@@ -148,7 +145,7 @@ const SupplyMorphoButton = ({
                 //     amount,
                 //     tokenDetails.token.decimals
                 // )
-                const shares = vault.toShares(BigInt(amount.amountRaw))
+                const shares = vault.toShares(BigInt(amount.amountParsed))
 
                 // minAmount of share will be 0.99% of the shares
                 const minAmount = BigNumber.from(shares)
@@ -159,18 +156,18 @@ const SupplyMorphoButton = ({
                 const calls = [
                     BundlerAction.erc20TransferFrom(
                         vault.asset,
-                        BigInt(amount.amountRaw)
+                        BigInt(amount.amountParsed)
                     ),
                     BundlerAction.erc4626Deposit(
                         vault.address,
-                        BigInt(amount.amountRaw),
+                        BigInt(amount.amountParsed),
                         minAmount,
                         walletAddress
                     ),
                 ]
 
                 logEvent('lend_initiated', {
-                    amount,
+                    amount: amount.amountRaw,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
                     chain_name:
@@ -196,7 +193,7 @@ const SupplyMorphoButton = ({
                         }))
 
                         logEvent('lend_completed', {
-                            amount,
+                            amount: amount.amountRaw,
                             token_symbol: assetDetails?.asset?.token?.symbol,
                             platform_name: assetDetails?.name,
                             chain_name:
@@ -220,7 +217,7 @@ const SupplyMorphoButton = ({
 
                 if (isCollateral) {
                     logEvent('add_collateral_initiated', {
-                        amount,
+                        amount: amount.amountRaw,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
                         chain_name:
@@ -248,7 +245,7 @@ const SupplyMorphoButton = ({
                                 irm: morphoMarketData.params.irm,
                                 lltv: morphoMarketData.params.lltv,
                             },
-                            amount.amountRaw,
+                            amount.amountParsed,
                             walletAddress,
                             '0x',
                         ],
@@ -261,7 +258,7 @@ const SupplyMorphoButton = ({
                             }))
 
                             logEvent('add_collateral_completed', {
-                                amount,
+                                amount: amount.amountRaw,
                                 token_symbol:
                                     assetDetails?.asset?.token?.symbol,
                                 platform_name: assetDetails?.name,
@@ -283,7 +280,7 @@ const SupplyMorphoButton = ({
                         })
                 } else {
                     logEvent('lend_initiated', {
-                        amount,
+                        amount: amount.amountRaw,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
                         chain_name:
@@ -307,7 +304,7 @@ const SupplyMorphoButton = ({
                                 irm: morphoMarketData.params.irm,
                                 lltv: morphoMarketData.params.lltv,
                             },
-                            amount.amountRaw,
+                            amount.amountParsed,
                             0,
                             walletAddress,
                             '0x',
@@ -321,7 +318,7 @@ const SupplyMorphoButton = ({
                             }))
 
                             logEvent('lend_completed', {
-                                amount,
+                                amount: amount.amountRaw,
                                 token_symbol:
                                     assetDetails?.asset?.token?.symbol,
                                 platform_name: assetDetails?.name,
@@ -377,7 +374,7 @@ const SupplyMorphoButton = ({
         if (lendTx.status === 'view') return
 
         if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amount.amountRaw)) {
+            if (lendTx.allowanceBN.gte(amount.amountParsed)) {
                 setLendTx((prev: any) => ({
                     ...prev,
                     status: 'lend',
@@ -420,7 +417,7 @@ const SupplyMorphoButton = ({
             }))
 
             logEvent('approve_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -438,7 +435,7 @@ const SupplyMorphoButton = ({
                     assetDetails.isVault
                         ? BUNDLER_ADDRESS_MORPHO[assetDetails.chain_id]
                         : platform.core_contract,
-                    amount.amountRaw,
+                    amount.amountParsed,
                 ],
             }).catch((error) => {
                 console.log('Approve tx error: ', error)

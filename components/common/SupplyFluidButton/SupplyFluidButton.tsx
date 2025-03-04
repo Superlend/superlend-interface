@@ -26,7 +26,7 @@ import FLUID_LEND_ABI from '@/data/abi/fluidLendABI.json'
 import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
 import ExternalLink from '@/components/ExternalLink'
 import { PlatformType } from '@/types/platform'
-import { TPositionType } from '@/types'
+import { TPositionType, TScAmount } from '@/types'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
@@ -38,10 +38,7 @@ interface ISupplyFluidButtonProps {
     disabled: boolean
     poolContractAddress: `0x${string}`
     underlyingAssetAdress: `0x${string}`
-    amount: {
-        amountRaw: string
-        scValue: string
-    }
+    amount: TScAmount
     decimals: number
     handleCloseModal: (isVisible: boolean) => void
     setActionType?: (actionType: TPositionType) => void
@@ -145,7 +142,7 @@ const SupplyFluidButton = ({
             }
 
             logEvent('lend_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -159,11 +156,11 @@ const SupplyFluidButton = ({
                 functionName: 'operate',
                 args: [
                     assetDetails?.fluid_vault_nftId,
-                    amount.amountRaw,
+                    amount.amountParsed,
                     0,
                     walletAddress,
                 ],
-                value: underlyingAssetAdress === ETH_ADDRESSES[0] ? BigInt(amount.amountRaw) : BigInt('0'),
+                value: underlyingAssetAdress === ETH_ADDRESSES[0] ? BigInt(amount.amountParsed) : BigInt('0'),
             })
                 .then((data) => {
                     setLendTx((prev: TLendTx) => ({
@@ -173,7 +170,7 @@ const SupplyFluidButton = ({
                     }))
 
                     logEvent('lend_completed', {
-                        amount,
+                        amount: amount.amountRaw,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
                         chain_name:
@@ -211,7 +208,7 @@ const SupplyFluidButton = ({
             }
 
             logEvent('lend_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -223,7 +220,7 @@ const SupplyFluidButton = ({
                 address: poolContractAddress,
                 abi: FLUID_LEND_ABI,
                 functionName: 'deposit',
-                args: [amount.amountRaw, walletAddress as `0x${string}`],
+                args: [amount.amountParsed, walletAddress as `0x${string}`],
             })
                 .then((data) => {
                     setLendTx((prev: TLendTx) => ({
@@ -233,7 +230,7 @@ const SupplyFluidButton = ({
                     }))
 
                     logEvent('lend_completed', {
-                        amount,
+                        amount: amount.amountRaw,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
                         chain_name:
@@ -269,7 +266,7 @@ const SupplyFluidButton = ({
         if (lendTx.status === 'view') return
 
         if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amount.amountRaw)) {
+            if (lendTx.allowanceBN.gte(amount.amountParsed)) {
                 setLendTx((prev: any) => ({
                     ...prev,
                     status: 'lend',
@@ -312,7 +309,7 @@ const SupplyFluidButton = ({
             }))
 
             logEvent('approve_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.protocol_type,
                 chain_name:
@@ -324,7 +321,7 @@ const SupplyFluidButton = ({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [poolContractAddress, amount.amountRaw],
+                args: [poolContractAddress, amount.amountParsed],
             })
                 .catch((error) => {
                     console.log(error)

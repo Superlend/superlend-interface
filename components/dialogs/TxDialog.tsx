@@ -175,28 +175,26 @@ export function ConfirmationDialog({
 
     const getActionButtonAmount = () => {
         if (positionType === 'lend') {
-            const amountRaw = parseUnits(
+            const amountParsed = parseUnits(
                 amount === '' ? '0' : amount,
                 assetDetails?.asset?.token?.decimals ?? 0
             ).toString()
             return {
-                amountRaw: amountRaw,
-                scValue: amountRaw,
+                amountRaw: amount,
+                scValue: amount,
+                amountParsed,
             }
         }
         if (positionType === 'borrow') {
-            const amountRaw = parseUnits(
+            const amountParsed = parseUnits(
                 amount === '' ? '0' : amount,
                 assetDetails?.asset?.token?.decimals ?? 0
             ).toString()
             const v = {
-                amountRaw: amountRaw,
-                scValue:
-                    amountRaw === maxBorrowAmount.maxToBorrow
-                        ? maxBorrowAmount.maxToBorrowSCValue
-                        : '-' + amountRaw.toString(),
+                amountRaw: amount,
+                scValue: amount,
+                amountParsed,
             }
-            // console.log('v', v, maxBorrowAmount)
             return v
         }
         return { amountRaw: '0', scValue: '0' }

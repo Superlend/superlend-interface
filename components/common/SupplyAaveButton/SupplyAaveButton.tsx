@@ -35,16 +35,14 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { ChainId } from '@/types/chain'
 import { useAssetsDataContext } from '@/context/data-provider'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
+import { TScAmount } from '@/types'
 
 interface ISupplyAaveButtonProps {
     assetDetails: any
     disabled: boolean
     poolContractAddress: `0x${string}`
     underlyingAssetAdress: `0x${string}`
-    amount: {
-        amountRaw: string
-        scValue: string
-    }
+    amount: TScAmount
     decimals: number
     handleCloseModal: (isVisible: boolean) => void
 }
@@ -123,7 +121,7 @@ const SupplyAaveButton = ({
             }))
 
             logEvent('lend_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -137,7 +135,7 @@ const SupplyAaveButton = ({
                 functionName: 'supply',
                 args: [
                     underlyingAssetAdress,
-                    amount.amountRaw,
+                    amount.amountParsed,
                     walletAddress,
                     0,
                 ],
@@ -150,7 +148,7 @@ const SupplyAaveButton = ({
                     }))
 
                     logEvent('lend_completed', {
-                        amount,
+                        amount: amount.amountRaw,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
                         chain_name:
@@ -194,7 +192,7 @@ const SupplyAaveButton = ({
         if (lendTx.status === 'view') return
 
         if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amount.amountRaw)) {
+            if (lendTx.allowanceBN.gte(amount.amountParsed)) {
                 setLendTx((prev: TLendTx) => ({
                     ...prev,
                     status: 'lend',
@@ -241,7 +239,7 @@ const SupplyAaveButton = ({
         // }
 
         logEvent('approve_clicked', {
-            amount,
+            amount: amount.amountRaw,
             token_symbol: assetDetails?.asset?.token?.symbol,
             platform_name: assetDetails?.name,
             chain_name:
@@ -258,7 +256,7 @@ const SupplyAaveButton = ({
             }))
 
             logEvent('approve_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -270,7 +268,7 @@ const SupplyAaveButton = ({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [poolContractAddress, amount.amountRaw],
+                args: [poolContractAddress, amount.amountParsed],
             }).catch((error) => {
                 setLendTx((prev: TLendTx) => ({
                     ...prev,

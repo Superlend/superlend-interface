@@ -112,29 +112,31 @@ export function WithdrawOrRepayTxDialog({
     const getActionButtonAmount = () => {
         const amountWithSlippage = (Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)
         if (actionType === 'repay') {
-            const amountRaw = parseUnits(
+            const amountParsed = parseUnits(
                 amount === '' ? '0' : amountWithSlippage,
                 assetDetails?.asset?.token?.decimals ?? 0
             ).toString()
             return {
-                amountRaw: amountRaw,
+                amountRaw: amountWithSlippage,
+                amountParsed,
                 scValue:
-                    amountRaw === maxRepayAmount.maxToRepay
+                    amountParsed === maxRepayAmount.maxToRepay
                         ? maxRepayAmount.maxToRepaySCValue
-                        : '-' + amountRaw.toString(),
+                        : '-' + amountParsed.toString(),
             }
         }
         if (actionType === 'withdraw') {
-            const amountRaw = parseUnits(
+            const amountParsed = parseUnits(
                 amount === '' ? '0' : amountWithSlippage,
                 assetDetails?.asset?.token?.decimals ?? 0
             ).toString()
             const v = {
-                amountRaw: amountRaw,
+                amountRaw: amountWithSlippage,
+                amountParsed,
                 scValue:
-                    amountRaw === maxWithdrawAmount.maxToWithdraw
+                    amountParsed === maxWithdrawAmount.maxToWithdraw
                         ? maxWithdrawAmount.maxToWithdrawSCValue
-                        : '-' + amountRaw.toString(),
+                        : '-' + amountParsed.toString(),
             }
             // console.log('v', v, maxWithdrawAmount)
             return v

@@ -40,13 +40,11 @@ import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { BigNumber } from 'ethers'
 import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
+import { TScAmount } from '@/types'
 interface IBorrowButtonProps {
     disabled: boolean
     assetDetails: any
-    amount: {
-        amountRaw: string
-        scValue: string
-    }
+    amount: TScAmount
     handleCloseModal: (isVisible: boolean) => void
 }
 
@@ -141,32 +139,32 @@ const BorrowButton = ({
     //         : BigNumber.from(0)
     // }, [amount, assetDetails?.asset?.token?.decimals])
 
-    const borrowCompound = useCallback(
-        async (cTokenAddress: string, amount: string) => {
-            try {
-                writeContractAsync({
-                    address: cTokenAddress as `0x${string}`,
-                    abi: COMPOUND_ABI,
-                    functionName: 'borrow',
-                    args: [parseUnits(amount, assetDetails.decimals)],
-                })
-            } catch (error) {
-                error
-            }
-        },
-        [writeContractAsync, assetDetails]
-    )
+    // const borrowCompound = useCallback(
+    //     async (cTokenAddress: string, amount: TScAmount) => {
+    //         try {
+    //             writeContractAsync({
+    //                 address: cTokenAddress as `0x${string}`,
+    //                 abi: COMPOUND_ABI,
+    //                 functionName: 'borrow',
+    //                 args: [parseUnits(amount.amountRaw, assetDetails.decimals)],
+    //             })
+    //         } catch (error) {
+    //             error
+    //         }
+    //     },
+    //     [writeContractAsync, assetDetails]
+    // )
 
     const borrowAave = useCallback(
         async (
             poolContractAddress: string,
             underlyingAssetAdress: string,
-            amount: string,
+            amount: TScAmount,
             addressOfWallet: string
         ) => {
             try {
                 logEvent('borrow_initiated', {
-                    amount,
+                    amount: amount.amountRaw,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
                     chain_name:
@@ -181,7 +179,7 @@ const BorrowButton = ({
                     functionName: 'borrow',
                     args: [
                         underlyingAssetAdress,
-                        parseUnits(amount, assetDetails.asset.token.decimals),
+                        amount.amountParsed,
                         2,
                         0,
                         addressOfWallet,
@@ -204,11 +202,11 @@ const BorrowButton = ({
     const borrowFluidVault = useCallback(
         async (
             poolContractAddress: string,
-            amount: string,
+            amount: TScAmount,
         ) => {
             try {
                 logEvent('borrow_initiated', {
-                    amount,
+                    amount: amount.amountRaw,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
                     chain_name:
@@ -225,7 +223,7 @@ const BorrowButton = ({
                     args: [
                         assetDetails?.fluid_vault_nftId,
                         0,
-                        amount,
+                        amount.amountParsed,
                         walletAddress,
                     ],
                 }).catch((error) => {
@@ -244,14 +242,14 @@ const BorrowButton = ({
     )
 
     const borrowMorpho = useCallback(
-        async (asset: any, amount: string) => {
+        async (asset: any, amount: TScAmount) => {
             const morphoMarketData: Market = asset?.morphoMarketData
             const assetDetails = asset?.asset
             const platform = asset?.platform
 
             try {
                 logEvent('borrow_initiated', {
-                    amount,
+                    amount: amount.amountRaw,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
                     chain_name:
@@ -273,7 +271,7 @@ const BorrowButton = ({
                             irm: morphoMarketData.params.irm,
                             lltv: morphoMarketData.params.lltv,
                         },
-                        parseUnits(amount, assetDetails.token.decimals),
+                        amount.amountParsed,
                         0,
                         walletAddress,
                         walletAddress,
@@ -287,27 +285,27 @@ const BorrowButton = ({
     )
 
     const onBorrow = async () => {
-        if (isCompound) {
-            await borrowCompound(assetDetails?.asset?.token?.address, amount.amountRaw)
-            return
-        }
+        // if (isCompound) {
+        //     await borrowCompound(assetDetails?.asset?.token?.address, amount)
+        //     return
+        // }
         if (isAave) {
             await borrowAave(
                 assetDetails?.core_contract,
                 assetDetails?.asset?.token?.address,
-                amount.amountRaw,
+                amount,
                 walletAddress as string
             )
             return
         }
         if (isMorpho) {
-            await borrowMorpho(assetDetails, amount.amountRaw)
+            await borrowMorpho(assetDetails, amount)
             return
         }
         if (isFluidVault) {
             await borrowFluidVault(
                 assetDetails?.core_contract,
-                amount.amountRaw,
+                amount,
             )
             return
         }

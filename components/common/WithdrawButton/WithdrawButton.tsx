@@ -44,13 +44,12 @@ import FLUID_LEND_ABI from '@/data/abi/fluidLendABI.json'
 import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { BigNumber } from 'ethers'
+import { TScAmount } from '@/types'
+
 interface IWithdrawButtonProps {
     disabled: boolean
     assetDetails: any
-    amount: {
-        amountRaw: string
-        scValue: string
-    }
+    amount: TScAmount
     handleCloseModal: (isVisible: boolean) => void
 }
 
@@ -118,7 +117,7 @@ const WithdrawButton = ({
             }))
 
             logEvent('withdraw_completed', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -176,20 +175,17 @@ const WithdrawButton = ({
     const withdrawMorphoMarket = useCallback(
         async (
             assetDetails: any,
-            amount: {
-                amountRaw: string
-                scValue: string
-            }
+            amount: TScAmount
         ) => {
             try {
                 const morphoMarketData = assetDetails?.market as Market
                 let decimals = assetDetails.asset.token.decimals
 
-                let amountToWithdraw = amount.amountRaw
+                let amountToWithdraw = amount.amountParsed
                 // parseUnits(amount, decimals)
 
                 logEvent('withdraw_initiated', {
-                    amount,
+                    amount: amount.amountRaw,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
                     chain_name:
@@ -240,10 +236,7 @@ const WithdrawButton = ({
             assetDetails: any,
             poolContractAddress: string,
             underlyingAssetAdress: string,
-            amount: {
-                amountRaw: string
-                scValue: string
-            },
+            amount: TScAmount,
             addressOfWallet: string
         ) => {
             try {
@@ -263,7 +256,7 @@ const WithdrawButton = ({
                     functionName: 'withdraw',
                     args: [
                         underlyingAssetAdress,
-                        amount.amountRaw,
+                        amount.amountParsed,
                         // parseUnits(amount, assetDetails.asset.token.decimals),
                         // 2,
                         // 0,
@@ -299,10 +292,7 @@ const WithdrawButton = ({
 
     const onApproveWithdrawMorphoVault = async (
         assetDetails: any,
-        amount: {
-            amountRaw: string
-            scValue: string
-        }
+        amount: TScAmount
     ) => {
         setWithdrawTx((prev: TWithdrawTx) => ({
             ...prev,
@@ -312,7 +302,7 @@ const WithdrawButton = ({
         }))
 
         let vault = assetDetails?.vault as Vault
-        let amountToWithdraw = amount.amountRaw
+        let amountToWithdraw = amount.amountParsed
         // parseUnits(
         //     amount,
         //     assetDetails.asset.token.decimals
@@ -345,14 +335,11 @@ const WithdrawButton = ({
     const withdrawMorphoVault = useCallback(
         async (
             assetDetails: any,
-            amount: {
-                amountRaw: string
-                scValue: string
-            }
+            amount: TScAmount
         ) => {
             let vault = assetDetails?.vault as Vault
 
-            let amountToWithdraw = BigNumber.from(amount.amountRaw)
+            let amountToWithdraw = BigNumber.from(amount.amountParsed)
             // parseUnits(
             //     amount,
             //     assetDetails.asset.token.decimals
@@ -415,17 +402,14 @@ const WithdrawButton = ({
     const withdrawFluidLend = useCallback(
         async (
             assetDetails: any,
-            amount: {
-                amountRaw: string
-                scValue: string
-            }
+            amount: TScAmount
         ) => {
-            let amountToWithdraw = BigNumber.from(amount.amountRaw)
+            let amountToWithdraw = BigNumber.from(amount.amountParsed)
 
             const maxSharesBurn = amountToWithdraw.mul(10050).div(10000) // 0.5% slippage
 
             logEvent('withdraw_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -459,15 +443,12 @@ const WithdrawButton = ({
     const withdrawFluidVault = useCallback(
         async (
             assetDetails: any,
-            amount: {
-                amountRaw: string
-                scValue: string
-            }
+            amount: TScAmount
         ) => {
             let amountToWithdraw = amount.scValue
 
             logEvent('withdraw_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
