@@ -92,6 +92,7 @@ export default function WithdrawAndRepayActionButton({
             {
                 maxToWithdraw: string
                 maxToWithdrawFormatted: string
+                maxToWithdrawSCValue: string
                 user: any
             }
         >
@@ -99,7 +100,12 @@ export default function WithdrawAndRepayActionButton({
     const [maxRepayTokensAmount, setMaxRepayTokensAmount] = useState<
         Record<
             string,
-            { maxToRepay: string; maxToRepayFormatted: string; user: any }
+            {
+                maxToRepay: string
+                maxToRepayFormatted: string
+                maxToRepaySCValue: string
+                user: any
+            }
         >
     >({})
 
@@ -253,6 +259,7 @@ export default function WithdrawAndRepayActionButton({
                         maxToWithdraw: newformattedWithdrawAmount.toString(),
                         maxToWithdrawFormatted:
                             newformattedWithdrawAmount.toString(),
+                        maxToWithdrawSCValue: '0', // TODO : update this
                         user: {},
                     },
                 })
@@ -262,6 +269,7 @@ export default function WithdrawAndRepayActionButton({
                     [loanToken]: {
                         maxToRepay: newformattedRepayAmount.toString(),
                         maxToRepayFormatted: newformattedRepayAmount.toString(),
+                        maxToRepaySCValue: '0', // TODO: update this
                         user: {},
                     },
                 })
@@ -329,22 +337,30 @@ export default function WithdrawAndRepayActionButton({
                             {
                                 maxToWithdraw: string
                                 maxToWithdrawFormatted: string
+                                maxToWithdrawSCValue: string
                                 user: any
                             }
                         > = {}
                         for (const withdrawToken of tokenDetails) {
                             const withdrawTokenAddress =
                                 withdrawToken?.address.toLowerCase()
+                            const _maxWithdrawValue = getMaxWithdrawAmount(
+                                withdrawTokenAddress,
+                                chain_id as number,
+                                r as any
+                            )
                             maxWithdrawAmounts[withdrawTokenAddress] =
-                                getMaxWithdrawAmount(
-                                    withdrawTokenAddress,
-                                    chain_id as number,
-                                    r as any
-                                ) ?? {
-                                    maxToWithdraw: '0',
-                                    maxToWithdrawFormatted: '0',
-                                    user: {},
-                                }
+                                _maxWithdrawValue
+                                    ? {
+                                          ..._maxWithdrawValue,
+                                          maxToWithdrawSCValue: '0',
+                                      }
+                                    : {
+                                          maxToWithdraw: '0',
+                                          maxToWithdrawFormatted: '0',
+                                          maxToWithdrawSCValue: '0',
+                                          user: {},
+                                      }
                         }
 
                         const maxRepayAmounts: Record<
@@ -352,22 +368,26 @@ export default function WithdrawAndRepayActionButton({
                             {
                                 maxToRepay: string
                                 maxToRepayFormatted: string
+                                maxToRepaySCValue: string
                                 user: any
                             }
                         > = {}
                         for (const repayToken of tokenDetails) {
                             const repayTokenAddress =
                                 repayToken?.address.toLowerCase()
-                            maxRepayAmounts[repayTokenAddress] =
-                                getMaxRepayAmount(
-                                    repayTokenAddress,
-                                    chain_id as number,
-                                    r as any
-                                ) ?? {
-                                    maxToRepay: '0',
-                                    maxToRepayFormatted: '0',
-                                    user: {},
-                                }
+                            const _maxRepayValue = getMaxRepayAmount(
+                                repayTokenAddress,
+                                chain_id as number,
+                                r as any
+                            )
+                            maxRepayAmounts[repayTokenAddress] = _maxRepayValue
+                                ? { ..._maxRepayValue, maxToRepaySCValue: '0' }
+                                : {
+                                      maxToRepay: '0',
+                                      maxToRepayFormatted: '0',
+                                      maxToRepaySCValue: '0',
+                                      user: {},
+                                  }
                         }
 
                         setMaxRepayTokensAmount(maxRepayAmounts)
@@ -399,6 +419,7 @@ export default function WithdrawAndRepayActionButton({
                     {
                         maxToWithdraw: string
                         maxToWithdrawFormatted: string
+                        maxToWithdrawSCValue: string
                         user: any
                     }
                 > = {}
@@ -423,27 +444,28 @@ export default function WithdrawAndRepayActionButton({
                         ).toFixed(lendTokenDetails.token.decimals),
                         lendTokenDetails.token.decimals
                     ).toString()
-                    console.log('collat required in usd ', collatRequiredInUsd)
+
                     const amountToWithdrawFluid =
                         collatRequiredInUsd === 0
                             ? FLUID_MAX_VALUE
-                            : amountToWithdraw
+                            : '-' + amountToWithdraw
                     maxWithdrawAmounts[withdrawTokenAddress] = {
-                        maxToWithdraw: amountToWithdrawFluid,
+                        maxToWithdraw: amountToWithdraw,
                         maxToWithdrawFormatted: formatUnits(
                             amountToWithdraw,
                             lendTokenDetails.token.decimals
                         ),
+                        maxToWithdrawSCValue: amountToWithdrawFluid,
                         user: {},
                     }
                 }
-                console.log('max withdraw amount ', maxWithdrawAmounts)
 
                 const maxRepayAmounts: Record<
                     string,
                     {
                         maxToRepay: string
                         maxToRepayFormatted: string
+                        maxToRepaySCValue: string
                         user: any
                     }
                 > = {}
@@ -462,13 +484,14 @@ export default function WithdrawAndRepayActionButton({
                     const maxRepay = balance.lte(maxDebt) ? balance : maxDebt
                     const maxRepayFluid = maxRepay.eq(maxDebt)
                         ? FLUID_MAX_VALUE
-                        : maxRepay
+                        : '-' + maxRepay.toString()
                     maxRepayAmounts[repayTokenAddress] = {
-                        maxToRepay: maxRepayFluid.toString(),
+                        maxToRepay: maxRepay.toString(),
                         maxToRepayFormatted: formatUnits(
                             maxRepay.toString(),
                             repayToken.decimals
                         ),
+                        maxToRepaySCValue: maxRepayFluid,
                         user: {},
                     }
                 }
@@ -823,29 +846,34 @@ export default function WithdrawAndRepayActionButton({
             assetDetailsForTx.protocol_type === PlatformType.FLUID &&
             !assetDetailsForTx.isVault
 
-        if (isFluidLendProtocol) {
-            return (
-                abbreviateNumber(
-                    Number(tokenDetails[0]?.amount),
-                    tokenDetails[0]?.decimals ?? 6
-                ) ?? '0'
-            )
-        }
+        // if (isFluidLendProtocol) {
+        //     return (
+        //         abbreviateNumber(
+        //             Number(tokenDetails[0]?.amount),
+        //             tokenDetails[0]?.decimals ?? 6
+        //         ) ?? '0'
+        //     )
+        // }
 
-        if (isMorphoVaultsProtocol) {
-            return (
-                Number(tokenDetails[0]?.amount)
-                    .toFixed(tokenDetails[0]?.decimals)
-                    .toString() ?? '0'
-            )
-        }
+        // if (isMorphoVaultsProtocol) {
+        //     return (
+        //         Number(tokenDetails[0]?.amount)
+        //             .toFixed(tokenDetails[0]?.decimals)
+        //             .toString() ?? '0'
+        //     )
+        // }
 
         return (
             maxWithdrawTokensAmount[
                 hasSingleToken
                     ? tokenDetails[0].address
                     : (selectedTokenDetails?.address ?? '')
-            ]?.maxToWithdrawFormatted ?? '0'
+            ] ?? {
+                maxToWithdraw: '0',
+                maxToWithdrawFormatted: '0',
+                maxToWithdrawSCValue: '0',
+                user: {},
+            }
         )
     }
 
@@ -854,20 +882,25 @@ export default function WithdrawAndRepayActionButton({
             assetDetailsForTx.protocol_type === PlatformType.MORPHO &&
             assetDetailsForTx.isVault
 
-        if (isMorphoVaultsProtocol) {
-            return (
-                Number(tokenDetails[0]?.amount)
-                    .toFixed(tokenDetails[0]?.decimals)
-                    .toString() ?? '0'
-            )
-        }
+        // if (isMorphoVaultsProtocol) {
+        //     return (
+        //         Number(tokenDetails[0]?.amount)
+        //             .toFixed(tokenDetails[0]?.decimals)
+        //             .toString() ?? '0'
+        //     )
+        // }
 
         return (
             maxRepayTokensAmount[
                 hasSingleToken
                     ? tokenDetails[0].address
                     : (selectedTokenDetails?.address ?? '')
-            ]?.maxToRepayFormatted ?? '0'
+            ] ?? {
+                maxToRepay: '0',
+                maxToRepayFormatted: '0',
+                maxToRepaySCValue: '0',
+                user: {},
+            }
         )
     }
 
