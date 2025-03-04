@@ -41,7 +41,10 @@ interface ISupplyAaveButtonProps {
     disabled: boolean
     poolContractAddress: `0x${string}`
     underlyingAssetAdress: `0x${string}`
-    amount: string
+    amount: {
+        amountRaw: string
+        scValue: string
+    }
     decimals: number
     handleCloseModal: (isVisible: boolean) => void
 }
@@ -70,9 +73,9 @@ const SupplyAaveButton = ({
     const { address: walletAddress } = useAccount()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
 
-    const amountBN = useMemo(() => {
-        return amount ? parseUnits(amount, decimals) : BigNumber.from(0)
-    }, [amount, decimals])
+    // const amountBN = useMemo(() => {
+    //     return amount ? parseUnits(amount, decimals) : BigNumber.from(0)
+    // }, [amount, decimals])
 
     const txBtnStatus: Record<string, string> = {
         pending:
@@ -134,7 +137,7 @@ const SupplyAaveButton = ({
                 functionName: 'supply',
                 args: [
                     underlyingAssetAdress,
-                    parseUnits(amount, decimals),
+                    amount.amountRaw,
                     walletAddress,
                     0,
                 ],
@@ -191,7 +194,7 @@ const SupplyAaveButton = ({
         if (lendTx.status === 'view') return
 
         if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amountBN)) {
+            if (lendTx.allowanceBN.gte(amount.amountRaw)) {
                 setLendTx((prev: TLendTx) => ({
                     ...prev,
                     status: 'lend',
@@ -267,7 +270,7 @@ const SupplyAaveButton = ({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [poolContractAddress, parseUnits(amount, decimals)],
+                args: [poolContractAddress, amount.amountRaw],
             }).catch((error) => {
                 setLendTx((prev: TLendTx) => ({
                     ...prev,

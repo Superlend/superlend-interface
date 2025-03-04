@@ -38,7 +38,10 @@ interface ISupplyFluidButtonProps {
     disabled: boolean
     poolContractAddress: `0x${string}`
     underlyingAssetAdress: `0x${string}`
-    amount: string
+    amount: {
+        amountRaw: string
+        scValue: string
+    }
     decimals: number
     handleCloseModal: (isVisible: boolean) => void
     setActionType?: (actionType: TPositionType) => void
@@ -75,11 +78,11 @@ const SupplyFluidButton = ({
     const { walletAddress } = useWalletConnection()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
 
-    const amountBN = useMemo(() => {
-        return amount
-            ? parseUnits(amount, tokenDetails?.token?.decimals || 18)
-            : BigNumber.from(0)
-    }, [amount, tokenDetails?.token?.decimals])
+    // const amountBN = useMemo(() => {
+    //     return amount
+    //         ? parseUnits(amount, tokenDetails?.token?.decimals || 18)
+    //         : BigNumber.from(0)
+    // }, [amount, tokenDetails?.token?.decimals])
 
     const txBtnStatus: Record<string, string> = {
         pending:
@@ -156,11 +159,11 @@ const SupplyFluidButton = ({
                 functionName: 'operate',
                 args: [
                     assetDetails?.fluid_vault_nftId,
-                    amountBN,
+                    amount.amountRaw,
                     0,
                     walletAddress,
                 ],
-                value: underlyingAssetAdress === ETH_ADDRESSES[0] ? BigInt(amountBN.toString()) : BigInt('0'),
+                value: underlyingAssetAdress === ETH_ADDRESSES[0] ? BigInt(amount.amountRaw) : BigInt('0'),
             })
                 .then((data) => {
                     setLendTx((prev: TLendTx) => ({
@@ -220,7 +223,7 @@ const SupplyFluidButton = ({
                 address: poolContractAddress,
                 abi: FLUID_LEND_ABI,
                 functionName: 'deposit',
-                args: [amountBN, walletAddress as `0x${string}`],
+                args: [amount.amountRaw, walletAddress as `0x${string}`],
             })
                 .then((data) => {
                     setLendTx((prev: TLendTx) => ({
@@ -266,7 +269,7 @@ const SupplyFluidButton = ({
         if (lendTx.status === 'view') return
 
         if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amountBN)) {
+            if (lendTx.allowanceBN.gte(amount.amountRaw)) {
                 setLendTx((prev: any) => ({
                     ...prev,
                     status: 'lend',
@@ -321,7 +324,7 @@ const SupplyFluidButton = ({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [poolContractAddress, parseUnits(amount, decimals)],
+                args: [poolContractAddress, amount.amountRaw],
             })
                 .catch((error) => {
                     console.log(error)

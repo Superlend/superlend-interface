@@ -747,7 +747,12 @@ function MorphoMarkets({
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount
-                                maxBorrowAmount={maxBorrowAmount}
+                                maxBorrowAmount={{
+                                    maxToBorrow: maxBorrowAmount,
+                                    maxToBorrowFormatted: maxBorrowAmount,
+                                    maxToBorrowSCValue: '0',
+                                    user: {},
+                                }}
                                 setAmount={setAmount}
                                 // TODO: Get health factor values
                                 healthFactorValues={{
@@ -1030,7 +1035,12 @@ function MorphoVaults({
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount
-                                maxBorrowAmount={'0.0'}
+                                maxBorrowAmount={{
+                                    maxToBorrow: '0.0',
+                                    maxToBorrowFormatted: '0.0',
+                                    maxToBorrowSCValue: '0',
+                                    user: {},
+                                }}
                                 setAmount={setAmount}
                                 // TODO: Get health factor values
                                 healthFactorValues={{

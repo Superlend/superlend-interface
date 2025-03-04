@@ -831,7 +831,12 @@ export default function AaveV3TxWidget({
                                 }
                                 amount={amount}
                                 balance={balance}
-                                maxBorrowAmount={maxBorrowAmount}
+                                maxBorrowAmount={{
+                                    maxToBorrow: maxBorrowAmount,
+                                    maxToBorrowFormatted: maxBorrowAmount,
+                                    maxToBorrowSCValue: '0',
+                                    user: {},
+                                }}
                                 setAmount={setAmount}
                                 healthFactorValues={healthFactorValues}
                                 open={isLendBorrowTxDialogOpen}

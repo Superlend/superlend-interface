@@ -16,11 +16,13 @@ import {
 import { useSearchParams } from 'next/navigation'
 import { useMemo, useState, useEffect } from 'react'
 import {
+    abbreviateNumber,
     capitalizeText,
     decimalPlacesCount,
     getLowestDisplayValue,
     hasExponent,
     hasLowestDisplayValuePrefix,
+    isLowestValue,
 } from '@/lib/utils'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
@@ -106,9 +108,10 @@ export function WithdrawOrRepayTxDialog({
     errorMessage: string | null
 }) {
     const getActionButtonAmount = () => {
+        const amountWithSlippage = (Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)
         if (actionType === 'repay') {
             const amountRaw = parseUnits(
-                amount === '' ? '0' : amount,
+                amount === '' ? '0' : amountWithSlippage,
                 assetDetails?.asset?.token?.decimals ?? 0
             ).toString()
             return {
@@ -121,7 +124,7 @@ export function WithdrawOrRepayTxDialog({
         }
         if (actionType === 'withdraw') {
             const amountRaw = parseUnits(
-                amount === '' ? '0' : amount,
+                amount === '' ? '0' : amountWithSlippage,
                 assetDetails?.asset?.token?.decimals ?? 0
             ).toString()
             const v = {
@@ -131,7 +134,7 @@ export function WithdrawOrRepayTxDialog({
                         ? maxWithdrawAmount.maxToWithdrawSCValue
                         : '-' + amountRaw.toString(),
             }
-            console.log('v', v, maxWithdrawAmount)
+            // console.log('v', v, maxWithdrawAmount)
             return v
         }
         return { amountRaw: '0', scValue: '0' }
@@ -480,7 +483,7 @@ export function WithdrawOrRepayTxDialog({
     // SUB_COMPONENT: Content body UI
     const contentBody = (
         <>
-            <div className="flex flex-col gap-[12px]">
+            <div className="flex flex-col gap-[12px] max-w-full overflow-hidden">
                 {/* Edit amount block when approving repay or withdraw - Block 1*/}
                 {isShowBlock({
                     repay: repayTx.status === 'approve',
@@ -581,9 +584,7 @@ export function WithdrawOrRepayTxDialog({
                                     className="inline-block truncate max-w-[200px]"
                                     title={amount}
                                 >
-                                    {Number(amount).toFixed(
-                                        decimalPlacesCount(amount)
-                                    )}
+                                    {(Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)}
                                 </span>
                                 <span
                                     className="inline-block truncate max-w-[100px]"
@@ -688,9 +689,11 @@ export function WithdrawOrRepayTxDialog({
                                             weight="normal"
                                             className={`text-gray-800`}
                                         >
-                                            {handleSmallestValue(
-                                                currentPositionAmount.toString()
-                                            )}
+                                             {hasLowestDisplayValuePrefix(currentPositionAmount)}{' '}
+                                                $
+                                                {isLowestValue(currentPositionAmount)
+                                                    ? getLowestDisplayValue(currentPositionAmount)
+                                                    : abbreviateNumber(currentPositionAmount)}
                                         </BodyText>
                                         {!(
                                             currentPositionAmount !==
@@ -728,9 +731,11 @@ export function WithdrawOrRepayTxDialog({
                                                         weight="normal"
                                                         className={`text-gray-800`}
                                                     >
-                                                        {handleSmallestValue(
-                                                            newPositionAmount.toString()
-                                                        )}
+                                                        {hasLowestDisplayValuePrefix(newPositionAmount)}{' '}
+                                                        $
+                                                        {isLowestValue(newPositionAmount)
+                                                            ? getLowestDisplayValue(newPositionAmount)
+                                                            : abbreviateNumber(newPositionAmount)}
                                                     </BodyText>
                                                     <ImageWithDefault
                                                         src={

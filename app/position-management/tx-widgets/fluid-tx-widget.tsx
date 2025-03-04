@@ -359,7 +359,12 @@ function FluidLend({
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount
-                                maxBorrowAmount={'0.0'}
+                                maxBorrowAmount={{
+                                    maxToBorrow: '0.0',
+                                    maxToBorrowFormatted: '0.0',
+                                    maxToBorrowSCValue: '0.0',
+                                    user: {},
+                                }}
                                 setAmount={setAmount}
                                 // TODO: Get health factor values
                                 healthFactorValues={{
@@ -915,9 +920,12 @@ function FluidVaults({
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount
-                                maxBorrowAmount={
-                                    maxBorrowAmount.maxToBorrowFormatted
-                                }
+                                maxBorrowAmount={{
+                                    maxToBorrow: maxBorrowAmount.maxToBorrow,
+                                    maxToBorrowFormatted: maxBorrowAmount.maxToBorrowFormatted,
+                                    maxToBorrowSCValue: '0',
+                                    user: {},
+                                }}
                                 setAmount={setAmount}
                                 // TODO: Get health factor values
                                 healthFactorValues={healthFactorValues}

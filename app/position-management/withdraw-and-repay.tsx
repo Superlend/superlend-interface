@@ -846,22 +846,20 @@ export default function WithdrawAndRepayActionButton({
             assetDetailsForTx.protocol_type === PlatformType.FLUID &&
             !assetDetailsForTx.isVault
 
-        // if (isFluidLendProtocol) {
-        //     return (
-        //         abbreviateNumber(
-        //             Number(tokenDetails[0]?.amount),
-        //             tokenDetails[0]?.decimals ?? 6
-        //         ) ?? '0'
-        //     )
-        // }
+        if (isFluidLendProtocol || isMorphoVaultsProtocol) {
+            const maxToWithdraw = Number(tokenDetails[0]?.amount)
+            .toFixed(tokenDetails[0]?.decimals)
+            .toString() ?? '0'
 
-        // if (isMorphoVaultsProtocol) {
-        //     return (
-        //         Number(tokenDetails[0]?.amount)
-        //             .toFixed(tokenDetails[0]?.decimals)
-        //             .toString() ?? '0'
-        //     )
-        // }
+            return (
+                {
+                    maxToWithdraw: maxToWithdraw,
+                    maxToWithdrawFormatted: maxToWithdraw,
+                    maxToWithdrawSCValue: '0',
+                    user: {},
+                }
+            )
+        }
 
         return (
             maxWithdrawTokensAmount[
@@ -882,13 +880,18 @@ export default function WithdrawAndRepayActionButton({
             assetDetailsForTx.protocol_type === PlatformType.MORPHO &&
             assetDetailsForTx.isVault
 
-        // if (isMorphoVaultsProtocol) {
-        //     return (
-        //         Number(tokenDetails[0]?.amount)
-        //             .toFixed(tokenDetails[0]?.decimals)
-        //             .toString() ?? '0'
-        //     )
-        // }
+        const maxToRepay = Number(tokenDetails[0]?.amount)
+            .toFixed(tokenDetails[0]?.decimals)
+            .toString() ?? '0'
+
+        if (isMorphoVaultsProtocol) {
+            return {
+                maxToRepay: maxToRepay,
+                maxToRepayFormatted: maxToRepay,
+                maxToRepaySCValue: '0',
+                user: {},
+            }
+        }
 
         return (
             maxRepayTokensAmount[
@@ -913,7 +916,7 @@ export default function WithdrawAndRepayActionButton({
         : (selectedTokenDetails?.amount ?? 0)
 
     const withdrawErrorMessage = useMemo(() => {
-        if (Number(amount) > Number(maxWithdrawAmountForTx)) {
+        if (Number(amount) > Number(maxWithdrawAmountForTx.maxToWithdrawFormatted)) {
             return 'You do not have enough withdraw limit'
         } else if (toManyDecimals) {
             return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
@@ -926,7 +929,7 @@ export default function WithdrawAndRepayActionButton({
         if (toManyDecimals) {
             return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
         }
-        if (Number(amount) > Number(maxRepayAmountForTx)) {
+        if (Number(amount) > Number(maxRepayAmountForTx.maxToRepayFormatted)) {
             return 'Amount exceeds available repay limit'
         }
         return null
@@ -941,8 +944,8 @@ export default function WithdrawAndRepayActionButton({
             Number(amount) >
                 Number(
                     isWithdrawAction
-                        ? maxWithdrawAmountForTx
-                        : maxRepayAmountForTx
+                        ? maxWithdrawAmountForTx.maxToWithdrawFormatted
+                        : maxRepayAmountForTx.maxToRepayFormatted
                 ) ||
             Number(amount) <= 0 ||
             toManyDecimals,

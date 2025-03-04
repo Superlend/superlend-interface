@@ -185,7 +185,7 @@ const WithdrawButton = ({
                 const morphoMarketData = assetDetails?.market as Market
                 let decimals = assetDetails.asset.token.decimals
 
-                let amountToWithdraw = amount.scValue
+                let amountToWithdraw = amount.amountRaw
                 // parseUnits(amount, decimals)
 
                 logEvent('withdraw_initiated', {
@@ -248,7 +248,7 @@ const WithdrawButton = ({
         ) => {
             try {
                 logEvent('withdraw_initiated', {
-                    amount,
+                    amount: amount.amountRaw,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
                     chain_name:
@@ -263,7 +263,7 @@ const WithdrawButton = ({
                     functionName: 'withdraw',
                     args: [
                         underlyingAssetAdress,
-                        amount.scValue,
+                        amount.amountRaw,
                         // parseUnits(amount, assetDetails.asset.token.decimals),
                         // 2,
                         // 0,
@@ -326,7 +326,7 @@ const WithdrawButton = ({
         let bunder_address = BUNDLER_ADDRESS_MORPHO[assetDetails.chain_id]
 
         logEvent('approve_withdraw_initiated', {
-            amount,
+            amount: amount.amountRaw,
             token_symbol: assetDetails?.asset?.token?.symbol,
             platform_name: assetDetails?.name,
             chain_name:
@@ -352,7 +352,7 @@ const WithdrawButton = ({
         ) => {
             let vault = assetDetails?.vault as Vault
 
-            let amountToWithdraw = BigNumber.from(amount.scValue)
+            let amountToWithdraw = BigNumber.from(amount.amountRaw)
             // parseUnits(
             //     amount,
             //     assetDetails.asset.token.decimals
@@ -386,7 +386,7 @@ const WithdrawButton = ({
             ]
 
             logEvent('withdraw_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:

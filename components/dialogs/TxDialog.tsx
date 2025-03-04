@@ -68,6 +68,7 @@ import { useAssetsDataContext } from '@/context/data-provider'
 import InfoTooltip from '../tooltips/InfoTooltip'
 import ImageWithBadge from '../ImageWithBadge'
 import ExternalLink from '../ExternalLink'
+import { parseUnits } from 'ethers/lib/utils'
 
 // TYPES
 interface IConfirmationDialogProps {
@@ -76,7 +77,12 @@ interface IConfirmationDialogProps {
     assetDetails: any
     amount: string
     balance: string
-    maxBorrowAmount: string
+    maxBorrowAmount: {
+        maxToBorrow: string
+        maxToBorrowFormatted: string
+        maxToBorrowSCValue: string
+        user: any
+    }
     setAmount: (amount: string) => void
     healthFactorValues: {
         healthFactor: any
@@ -165,6 +171,35 @@ export function ConfirmationDialog({
             isConfirmed: false,
             errorMessage: '',
         }))
+    }
+
+    const getActionButtonAmount = () => {
+        if (positionType === 'lend') {
+            const amountRaw = parseUnits(
+                amount === '' ? '0' : amount,
+                assetDetails?.asset?.token?.decimals ?? 0
+            ).toString()
+            return {
+                amountRaw: amountRaw,
+                scValue: amountRaw,
+            }
+        }
+        if (positionType === 'borrow') {
+            const amountRaw = parseUnits(
+                amount === '' ? '0' : amount,
+                assetDetails?.asset?.token?.decimals ?? 0
+            ).toString()
+            const v = {
+                amountRaw: amountRaw,
+                scValue:
+                    amountRaw === maxBorrowAmount.maxToBorrow
+                        ? maxBorrowAmount.maxToBorrowSCValue
+                        : '-' + amountRaw.toString(),
+            }
+            // console.log('v', v, maxBorrowAmount)
+            return v
+        }
+        return { amountRaw: '0', scValue: '0' }
     }
 
     function handleOpenChange(open: boolean) {
@@ -476,7 +511,7 @@ export function ConfirmationDialog({
 
     // SUB_COMPONENT: Content body UI
     const contentBody = (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 max-w-full overflow-hidden">
             {/* Block 1 */}
             {isShowBlock({
                 lend: true,
@@ -682,7 +717,7 @@ export function ConfirmationDialog({
                             >
                                 {handleSmallestValue(
                                     (
-                                        Number(maxBorrowAmount) - Number(amount)
+                                        Number(maxBorrowAmount.maxToBorrowFormatted) - Number(amount)
                                     ).toString(),
                                     getMaxDecimalsToDisplay(
                                         assetDetails?.asset?.token?.symbol ||
@@ -1087,7 +1122,7 @@ export function ConfirmationDialog({
                 disabled={isDisableActionButton}
                 handleCloseModal={handleOpenChange}
                 asset={assetDetails}
-                amount={amount}
+                amount={getActionButtonAmount()}
                 setActionType={setActionType}
                 actionType={positionType}
             />

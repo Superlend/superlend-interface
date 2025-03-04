@@ -40,7 +40,10 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 interface ISupplyMorphoButtonProps {
     disabled: boolean
     assetDetails: any // Replace with proper type
-    amount: string
+    amount: {
+        amountRaw: string
+        scValue: string
+    }
     handleCloseModal: (isVisible: boolean) => void
     setActionType?: (actionType: TPositionType) => void
 }
@@ -73,11 +76,11 @@ const SupplyMorphoButton = ({
         })
     const { address: walletAddress } = useAccount()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
-    const amountBN = useMemo(() => {
-        return amount
-            ? parseUnits(amount, tokenDetails?.token?.decimals || 18)
-            : BigNumber.from(0)
-    }, [amount, tokenDetails?.token?.decimals])
+    // const amountBN = useMemo(() => {
+    //     return amount
+    //         ? parseUnits(amount, tokenDetails?.token?.decimals || 18)
+    //         : BigNumber.from(0)
+    // }, [amount, tokenDetails?.token?.decimals])
 
     const txBtnStatus: Record<string, string> = {
         pending:
@@ -141,11 +144,11 @@ const SupplyMorphoButton = ({
 
             if (isVault) {
                 const vault = morphoMarketData as Vault
-                const newAmount = parseUnits(
-                    amount,
-                    tokenDetails.token.decimals
-                )
-                const shares = vault.toShares(newAmount.toBigInt())
+                // const newAmount = parseUnits(
+                //     amount,
+                //     tokenDetails.token.decimals
+                // )
+                const shares = vault.toShares(BigInt(amount.amountRaw))
 
                 // minAmount of share will be 0.99% of the shares
                 const minAmount = BigNumber.from(shares)
@@ -156,11 +159,11 @@ const SupplyMorphoButton = ({
                 const calls = [
                     BundlerAction.erc20TransferFrom(
                         vault.asset,
-                        newAmount.toBigInt()
+                        BigInt(amount.amountRaw)
                     ),
                     BundlerAction.erc4626Deposit(
                         vault.address,
-                        newAmount.toBigInt(),
+                        BigInt(amount.amountRaw),
                         minAmount,
                         walletAddress
                     ),
@@ -245,7 +248,7 @@ const SupplyMorphoButton = ({
                                 irm: morphoMarketData.params.irm,
                                 lltv: morphoMarketData.params.lltv,
                             },
-                            parseUnits(amount, tokenDetails.token.decimals),
+                            amount.amountRaw,
                             walletAddress,
                             '0x',
                         ],
@@ -304,7 +307,7 @@ const SupplyMorphoButton = ({
                                 irm: morphoMarketData.params.irm,
                                 lltv: morphoMarketData.params.lltv,
                             },
-                            parseUnits(amount, tokenDetails.token.decimals),
+                            amount.amountRaw,
                             0,
                             walletAddress,
                             '0x',
@@ -374,7 +377,7 @@ const SupplyMorphoButton = ({
         if (lendTx.status === 'view') return
 
         if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amountBN)) {
+            if (lendTx.allowanceBN.gte(amount.amountRaw)) {
                 setLendTx((prev: any) => ({
                     ...prev,
                     status: 'lend',
@@ -435,7 +438,7 @@ const SupplyMorphoButton = ({
                     assetDetails.isVault
                         ? BUNDLER_ADDRESS_MORPHO[assetDetails.chain_id]
                         : platform.core_contract,
-                    parseUnits(amount, assetDetails.asset.token.decimals),
+                    amount.amountRaw,
                 ],
             }).catch((error) => {
                 console.log('Approve tx error: ', error)

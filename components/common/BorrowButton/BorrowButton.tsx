@@ -43,7 +43,10 @@ import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 interface IBorrowButtonProps {
     disabled: boolean
     assetDetails: any
-    amount: string
+    amount: {
+        amountRaw: string
+        scValue: string
+    }
     handleCloseModal: (isVisible: boolean) => void
 }
 
@@ -132,12 +135,11 @@ const BorrowButton = ({
                     ? 'pending'
                     : 'default'
         ]
-
-    const amountBN = useMemo(() => {
-        return amount
-            ? parseUnits(amount, assetDetails?.asset?.token?.decimals || 18)
-            : BigNumber.from(0)
-    }, [amount, assetDetails?.asset?.token?.decimals])
+    // const amountBN = useMemo(() => {
+    //     return amount
+    //         ? parseUnits(amount.amountRaw ?? '0', assetDetails?.asset?.token?.decimals || 18)
+    //         : BigNumber.from(0)
+    // }, [amount, assetDetails?.asset?.token?.decimals])
 
     const borrowCompound = useCallback(
         async (cTokenAddress: string, amount: string) => {
@@ -202,7 +204,7 @@ const BorrowButton = ({
     const borrowFluidVault = useCallback(
         async (
             poolContractAddress: string,
-            amountBN: BigNumber,
+            amount: string,
         ) => {
             try {
                 logEvent('borrow_initiated', {
@@ -223,7 +225,7 @@ const BorrowButton = ({
                     args: [
                         assetDetails?.fluid_vault_nftId,
                         0,
-                        amountBN,
+                        amount,
                         walletAddress,
                     ],
                 }).catch((error) => {
@@ -286,26 +288,26 @@ const BorrowButton = ({
 
     const onBorrow = async () => {
         if (isCompound) {
-            await borrowCompound(assetDetails?.asset?.token?.address, amount)
+            await borrowCompound(assetDetails?.asset?.token?.address, amount.amountRaw)
             return
         }
         if (isAave) {
             await borrowAave(
                 assetDetails?.core_contract,
                 assetDetails?.asset?.token?.address,
-                amount,
+                amount.amountRaw,
                 walletAddress as string
             )
             return
         }
         if (isMorpho) {
-            await borrowMorpho(assetDetails, amount)
+            await borrowMorpho(assetDetails, amount.amountRaw)
             return
         }
         if (isFluidVault) {
             await borrowFluidVault(
                 assetDetails?.core_contract,
-                amountBN,
+                amount.amountRaw,
             )
             return
         }

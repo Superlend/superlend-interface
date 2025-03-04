@@ -150,7 +150,7 @@ const RepayButton = ({
                 const morphoMarketData = assetDetails?.market as Market
 
                 logEvent('repay_initiated', {
-                    amount,
+                    amount: amount.amountRaw,
                     token_symbol: assetDetails?.asset?.token?.symbol,
                     platform_name: assetDetails?.name,
                     chain_name:
@@ -173,7 +173,7 @@ const RepayButton = ({
                             irm: morphoMarketData.params.irm,
                             lltv: morphoMarketData.params.lltv,
                         },
-                        amountBN,
+                        amount.amountRaw,
                         0,
                         walletAddress,
                         '0x',
@@ -187,7 +187,7 @@ const RepayButton = ({
                         }))
 
                         logEvent('repay_completed', {
-                            amount,
+                            amount: amount.amountRaw,
                             token_symbol: assetDetails?.asset?.token?.symbol,
                             platform_name: assetDetails?.name,
                             chain_name:
@@ -237,7 +237,7 @@ const RepayButton = ({
             }))
 
             logEvent('repay_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -268,7 +268,7 @@ const RepayButton = ({
                     }))
 
                     logEvent('repay_completed', {
-                        amount,
+                        amount: amount.amountRaw,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
                         chain_name:
@@ -316,7 +316,7 @@ const RepayButton = ({
             }))
 
             logEvent('repay_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -330,7 +330,7 @@ const RepayButton = ({
                 functionName: 'repay',
                 args: [
                     underlyingAssetAdress,
-                    parseUnits(amount.amountRaw, decimals),
+                    amount.amountRaw,
                     2,
                     walletAddress,
                 ],
@@ -343,7 +343,7 @@ const RepayButton = ({
                     }))
 
                     logEvent('repay_completed', {
-                        amount,
+                        amount: amount.amountRaw,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
                         chain_name:
