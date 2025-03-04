@@ -690,10 +690,9 @@ export function WithdrawOrRepayTxDialog({
                                             className={`text-gray-800`}
                                         >
                                              {hasLowestDisplayValuePrefix(currentPositionAmount)}{' '}
-                                                $
-                                                {isLowestValue(currentPositionAmount)
-                                                    ? getLowestDisplayValue(currentPositionAmount)
-                                                    : abbreviateNumber(currentPositionAmount)}
+                                             {isLowestValue(currentPositionAmount)
+                                                ? getLowestDisplayValue(currentPositionAmount)
+                                                : abbreviateNumber(currentPositionAmount)}
                                         </BodyText>
                                         {!(
                                             currentPositionAmount !==
@@ -732,7 +731,6 @@ export function WithdrawOrRepayTxDialog({
                                                         className={`text-gray-800`}
                                                     >
                                                         {hasLowestDisplayValuePrefix(newPositionAmount)}{' '}
-                                                        $
                                                         {isLowestValue(newPositionAmount)
                                                             ? getLowestDisplayValue(newPositionAmount)
                                                             : abbreviateNumber(newPositionAmount)}
