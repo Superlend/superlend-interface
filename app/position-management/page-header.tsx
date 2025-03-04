@@ -149,28 +149,28 @@ export default function PageHeader() {
         platformData?.platform?.protocol_type === PlatformType.FLUID
 
     // If has Collateral Token, then get the Collateral token details
-    const collateralTokenSymbol = platformName.split(' ')[1]?.split('/')[0]
-    const getCollateralTokenDetails = (tokenSymbol: string) => {
+    const collateralTokenAddress = platformData.assets.find((asset: TPlatformAsset) => asset.borrow_enabled)?.token?.address || ''
+    const getCollateralTokenDetails = (tokenAddress: string) => {
         const collateralTokenDetails = allTokensData[Number(chain_id)]?.find(
             (token: any) =>
-                token?.symbol?.toLowerCase() === tokenSymbol?.toLowerCase()
+                token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
         )
         return collateralTokenDetails
     }
     const collateralTokenDetails = getCollateralTokenDetails(
-        collateralTokenSymbol
+        collateralTokenAddress
     )
 
     // If has Loan Token, then get the loan token details
-    const loanTokenSymbol = platformName.split(' ')[1]?.split('/')[1]
-    const getLoanTokenDetails = (tokenSymbol: string) => {
+    const loanTokenAddress = platformData.assets.find((asset: TPlatformAsset) => !asset.borrow_enabled)?.token?.address || ''
+    const getLoanTokenDetails = (tokenAddress: string) => {
         const loanTokenDetails = allTokensData[Number(chain_id)]?.find(
             (token: any) =>
-                token?.symbol?.toLowerCase() === tokenSymbol?.toLowerCase()
+                token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
         )
         return loanTokenDetails
     }
-    const loanTokenDetails = getLoanTokenDetails(loanTokenSymbol)
+    const loanTokenDetails = getLoanTokenDetails(loanTokenAddress)
 
     const hasWarnings =
         platformData.assets.filter(
@@ -487,13 +487,12 @@ function getPageHeaderStats({
         .reduce((acc: any, item: TPlatformAsset, currentIndex: number, array: TPlatformAsset[]) => {
             if (!item.borrow_enabled && array.length > 1) {
                 acc.supply_apy = item.supply_apy
-                return acc
             } else if (item.borrow_enabled && array.length > 1) {
                 acc.borrow_rate = item.variable_borrow_apy
-                return acc
+            } else {
+                acc.supply_apy = abbreviateNumber(item.supply_apy, 2)
+                acc.borrow_rate = abbreviateNumber(item.variable_borrow_apy, 2)
             }
-            acc.supply_apy = abbreviateNumber(item.supply_apy, 2)
-            acc.borrow_rate = abbreviateNumber(item.variable_borrow_apy, 2)
             return acc
         }, {})
 

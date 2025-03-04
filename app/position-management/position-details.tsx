@@ -393,31 +393,21 @@ export default function PositionDetails() {
                                 )}
                             </div>
                             <div className="flex items-center gap-[16px]">
-                                {isAaveV3Protocol && (
-                                    <InfoTooltip
-                                        label={
-                                            <BodyText
-                                                level="body2"
-                                                className="capitalize"
-                                            >
-                                                <TooltipText>
-                                                    Liquidation price
-                                                </TooltipText>
-                                            </BodyText>
-                                        }
-                                        content={
-                                            liquidationPriceLabelTooltipText
-                                        }
-                                    />
-                                )}
-                                {!isAaveV3Protocol && (
-                                    <BodyText
-                                        level="body2"
-                                        className="capitalize"
-                                    >
-                                        Liquidation price
-                                    </BodyText>
-                                )}
+                                <InfoTooltip
+                                    label={
+                                        <BodyText
+                                            level="body2"
+                                            className="capitalize"
+                                        >
+                                            <TooltipText>
+                                                Liquidation price
+                                            </TooltipText>
+                                        </BodyText>
+                                    }
+                                    content={
+                                        liquidationPriceLabelTooltipText
+                                    }
+                                />
                                 <div className="flex items-center gap-[6px]">
                                     {isPairBasedProtocol && (
                                         <ImageWithDefault
