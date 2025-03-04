@@ -554,11 +554,11 @@ function FluidVaults({
         const lendToken = platformData.assets.filter((a) => a.ltv !== 0)[0]
 
         const maxBorrowUsd =
-            (lendPosition.amount *
-                lendPosition.token.price_usd *
+            ((lendPosition.amount ?? 0) *
+                lendToken.token.price_usd *
                 lendToken.ltv) /
                 100 -
-            borrowPosition?.amount * borrowToken.token.price_usd
+            (borrowPosition?.amount ?? 0) * borrowToken.token.price_usd
         const maxBorrowToken = (
             maxBorrowUsd / borrowToken.token.price_usd
         ).toFixed(borrowToken.token.decimals)

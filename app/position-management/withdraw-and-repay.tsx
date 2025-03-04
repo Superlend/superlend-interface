@@ -17,6 +17,7 @@ import { useReadContract } from 'wagmi'
 import { formatUnits, parseUnits } from 'ethers/lib/utils'
 import {
     CHAIN_ID_MAPPER,
+    FLUID_MAX_VALUE,
     POOL_BASED_PROTOCOLS,
     TOO_MANY_DECIMALS_VALIDATIONS_TEXT,
 } from '@/constants'
@@ -282,20 +283,20 @@ export default function WithdrawAndRepayActionButton({
     }, [positionTypeParam])
 
     function normalizeScientificNotation(value: string | number): string {
-        const strValue = value.toString();
+        const strValue = value.toString()
 
         // Check if value is in scientific notation
         if (strValue.includes('e')) {
-            const num = Number(strValue);
+            const num = Number(strValue)
             // If the number is extremely small (less than 1e-6), return "0"
             if (Math.abs(num) < 1e-6) {
-                return "0";
+                return '0'
             }
             // Otherwise use the existing scientificToDecimal function
-            return scientificToDecimal(num).toString();
+            return scientificToDecimal(num).toString()
         }
 
-        return strValue;
+        return strValue
     }
 
     // Get max withdraw amount
@@ -406,7 +407,11 @@ export default function WithdrawAndRepayActionButton({
                     const withdrawTokenAddress =
                         withdrawToken?.address.toLowerCase()
                     const borrowPositionUSD =
-                        Number(normalizeScientificNotation(borrowPositionDetails?.amount)) * borrowPositionDetails?.token?.price_usd
+                        Number(
+                            normalizeScientificNotation(
+                                borrowPositionDetails?.amount ?? 0
+                            )
+                        ) * (borrowPositionDetails?.token?.price_usd ?? 0)
                     const collatRequiredInUsd =
                         (borrowPositionUSD * 100) / lendTokenDetails.ltv
                     const collatRequiredInToken =
@@ -418,8 +423,13 @@ export default function WithdrawAndRepayActionButton({
                         ).toFixed(lendTokenDetails.token.decimals),
                         lendTokenDetails.token.decimals
                     ).toString()
+                    console.log('collat required in usd ', collatRequiredInUsd)
+                    const amountToWithdrawFluid =
+                        collatRequiredInUsd === 0
+                            ? FLUID_MAX_VALUE
+                            : amountToWithdraw
                     maxWithdrawAmounts[withdrawTokenAddress] = {
-                        maxToWithdraw: amountToWithdraw,
+                        maxToWithdraw: amountToWithdrawFluid,
                         maxToWithdrawFormatted: formatUnits(
                             amountToWithdraw,
                             lendTokenDetails.token.decimals
@@ -427,6 +437,7 @@ export default function WithdrawAndRepayActionButton({
                         user: {},
                     }
                 }
+                console.log('max withdraw amount ', maxWithdrawAmounts)
 
                 const maxRepayAmounts: Record<
                     string,
@@ -441,7 +452,9 @@ export default function WithdrawAndRepayActionButton({
                     const repayTokenAddress = repayToken?.address.toLowerCase()
                     // console.log(normalizeScientificNotation(repayToken.tokenAmount.toString()))
                     const maxDebt = parseUnits(
-                        normalizeScientificNotation(repayToken.tokenAmount.toString()),
+                        normalizeScientificNotation(
+                            repayToken.tokenAmount.toString()
+                        ),
                         repayToken.decimals
                     )
                     const balance = BigNumber.from(
@@ -449,8 +462,11 @@ export default function WithdrawAndRepayActionButton({
                             .balanceRaw
                     )
                     const maxRepay = balance.lte(maxDebt) ? balance : maxDebt
+                    const maxRepayFluid = maxRepay.eq(maxDebt)
+                        ? FLUID_MAX_VALUE
+                        : maxRepay
                     maxRepayAmounts[repayTokenAddress] = {
-                        maxToRepay: maxRepay.toString(),
+                        maxToRepay: maxRepayFluid.toString(),
                         maxToRepayFormatted: formatUnits(
                             maxRepay.toString(),
                             repayToken.decimals
@@ -673,14 +689,20 @@ export default function WithdrawAndRepayActionButton({
     )
 
     const fluidVaultNftId = useMemo(() => {
-        return portfolioData?.platforms[0]?.positions?.find((p) => p.token.address.toLowerCase() === assetDetailsForTx?.asset?.token?.address?.toLowerCase())?.fluid_vault_nftId ?? 0
+        return (
+            portfolioData?.platforms[0]?.positions?.find(
+                (p) =>
+                    p.token.address.toLowerCase() ===
+                    assetDetailsForTx?.asset?.token?.address?.toLowerCase()
+            )?.fluid_vault_nftId ?? 0
+        )
     }, [portfolioData?.platforms, assetDetailsForTx?.asset?.token?.address])
 
     // Get balance
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[
             selectedTokenDetails?.address.toLowerCase() ??
-            tokenAddress.toLowerCase()
+                tokenAddress.toLowerCase()
         ]?.balanceFormatted ?? 0
     ).toString()
 
@@ -749,7 +771,7 @@ export default function WithdrawAndRepayActionButton({
     } => {
         const borrowTokenDetails =
             maxBorrowTokensAmount?.[
-            selectedBorrowTokenDetails?.token?.address ?? ''
+                selectedBorrowTokenDetails?.token?.address ?? ''
             ] ?? {}
 
         const { user } = borrowTokenDetails
@@ -886,11 +908,11 @@ export default function WithdrawAndRepayActionButton({
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-            Number(
-                isWithdrawAction
-                    ? maxWithdrawAmountForTx
-                    : maxRepayAmountForTx
-            ) ||
+                Number(
+                    isWithdrawAction
+                        ? maxWithdrawAmountForTx
+                        : maxRepayAmountForTx
+                ) ||
             Number(amount) <= 0 ||
             toManyDecimals,
         [amount, maxWithdrawAmountForTx, toManyDecimals, isWithdrawAction]
@@ -912,21 +934,21 @@ export default function WithdrawAndRepayActionButton({
     function getMaxDecimalsToDisplay(): number {
         return isWithdrawAction
             ? assetDetailsForTx?.asset?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
-                assetDetailsForTx?.asset?.token?.symbol
-                    .toLowerCase()
-                    .includes('eth')
+                  .toLowerCase()
+                  .includes('btc') ||
+              assetDetailsForTx?.asset?.token?.symbol
+                  .toLowerCase()
+                  .includes('eth')
                 ? 4
                 : 2
             : selectedBorrowTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
+                    .toLowerCase()
+                    .includes('btc') ||
                 selectedBorrowTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
-                ? 4
-                : 2
+              ? 4
+              : 2
     }
 
     // Loading skeleton
@@ -941,16 +963,16 @@ export default function WithdrawAndRepayActionButton({
 
     const assetDetails = isMorphoProtocol
         ? {
-            ...assetDetailsForTx,
-            vault: !vaultData ? null : vaultData,
-            market: !morphoMarketData ? null : morphoMarketData.marketData,
-        }
+              ...assetDetailsForTx,
+              vault: !vaultData ? null : vaultData,
+              market: !morphoMarketData ? null : morphoMarketData.marketData,
+          }
         : isFluidVaultsProtocol
-            ? {
+          ? {
                 ...assetDetailsForTx,
                 fluid_vault_nftId: fluidVaultNftId,
             }
-            : assetDetailsForTx
+          : assetDetailsForTx
 
     function handleSelectAction() {
         setIsSelectTokenDialogOpen(true)
