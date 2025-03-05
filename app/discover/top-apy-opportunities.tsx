@@ -121,6 +121,7 @@ export default function TopApyOpportunities() {
                 collateral_exposure: positionTypeParam === 'lend',
                 collateral_tokens: positionTypeParam === 'borrow',
                 available_liquidity: positionTypeParam === 'borrow',
+                apy_avg_7days: positionTypeParam === 'borrow',
             }
         })
         setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])

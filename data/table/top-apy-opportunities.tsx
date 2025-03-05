@@ -433,6 +433,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
+            const isFluidProtocol = row.original.platformId.split('-')[0].toLowerCase() === PlatformType.FLUID
+
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -479,7 +481,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <BodyText level={'body2'} weight={'medium'}>
                         {`${apy7DayAvgFormatted}%`}
                     </BodyText>
-                    {hasRewards && (
+                    {(hasRewards && !isFluidProtocol) && (
                         <InfoTooltip
                             label={
                                 <ImageWithDefault
