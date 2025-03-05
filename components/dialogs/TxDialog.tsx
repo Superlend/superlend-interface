@@ -197,7 +197,7 @@ export function ConfirmationDialog({
             }
             return v
         }
-        return { amountRaw: '0', scValue: '0' }
+        return { amountRaw: '0', scValue: '0', amountParsed: '0' }
     }
 
     function handleOpenChange(open: boolean) {
