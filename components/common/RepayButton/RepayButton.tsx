@@ -41,16 +41,14 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { TScAmount } from '@/types'
 
 interface IRepayButtonProps {
     assetDetails: any
     disabled: boolean
     poolContractAddress: `0x${string}`
     underlyingAssetAdress: `0x${string}`
-    amount: {
-        amountRaw: string
-        scValue: string
-    }
+    amount: TScAmount
     decimals: number
     handleCloseModal: (isVisible: boolean) => void
 }
@@ -79,9 +77,9 @@ const RepayButton = ({
     const { walletAddress } = useWalletConnection()
     const { repayTx, setRepayTx } = useTxContext() as TTxContext
 
-    const amountBN = useMemo(() => {
-        return amount ? BigNumber.from(amount.amountRaw) : BigNumber.from(0)
-    }, [amount])
+    // const amountBN = useMemo(() => {
+    //     return amount ? BigNumber.from(amount.amountRaw) : BigNumber.from(0)
+    // }, [amount])
 
     const txBtnStatus: Record<string, string> = {
         pending:
@@ -257,7 +255,7 @@ const RepayButton = ({
                 ],
                 value:
                     underlyingAssetAdress === ETH_ADDRESSES[0]
-                        ? BigInt(amountBN.toString())
+                        ? BigInt(amount.amountParsed.toString())
                         : BigInt('0'),
             })
                 .then((data) => {
@@ -330,7 +328,7 @@ const RepayButton = ({
                 functionName: 'repay',
                 args: [
                     underlyingAssetAdress,
-                    amount.amountRaw,
+                    amount.amountParsed,
                     2,
                     walletAddress,
                 ],
@@ -398,9 +396,9 @@ const RepayButton = ({
             !repayTx.isConfirmed &&
             !repayTx.isPending &&
             !repayTx.isConfirming &&
-            amountBN.gt(0)
+            Number(amount.amountParsed) > 0
         ) {
-            if (repayTx.allowanceBN.gte(amountBN)) {
+            if (repayTx.allowanceBN.gte(amount.amountParsed)) {
                 setRepayTx((prev: TRepayTx) => ({
                     ...prev,
                     status: 'repay',
@@ -435,7 +433,7 @@ const RepayButton = ({
             }))
 
             logEvent('repay_completed', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -460,7 +458,7 @@ const RepayButton = ({
 
         try {
             logEvent('approve_repay_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
                 chain_name:
@@ -479,7 +477,7 @@ const RepayButton = ({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [poolContractAddress, parseUnits(amount.amountRaw, decimals)],
+                args: [poolContractAddress, amount.amountParsed],
             }).catch((error) => {
                 setRepayTx((prev: TRepayTx) => ({
                     ...prev,

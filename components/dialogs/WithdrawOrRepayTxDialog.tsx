@@ -138,10 +138,10 @@ export function WithdrawOrRepayTxDialog({
                         ? maxWithdrawAmount.maxToWithdrawSCValue
                         : '-' + amountParsed.toString(),
             }
-            // console.log('v', v, maxWithdrawAmount)
+
             return v
         }
-        return { amountRaw: '0', scValue: '0' }
+        return { amountRaw: '0', scValue: '0', amountParsed: '0' }
     }
 
     const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
@@ -292,6 +292,8 @@ export function WithdrawOrRepayTxDialog({
 
     const currentPositionAmount = Number(positionAmount)
     const newPositionAmount = Number(positionAmount) - Number(amount)
+    // console.log('positionAmount', positionAmount)
+    // console.log('amount', amount)
 
     const disableActionButton = disabled || isTxInProgress
     // || (!hasAcknowledgedRisk && !isWithdrawAction && isHfLow())
