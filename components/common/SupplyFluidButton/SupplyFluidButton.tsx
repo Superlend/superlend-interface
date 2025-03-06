@@ -87,7 +87,7 @@ const SupplyFluidButton = ({
                 ? 'Approving token...'
                 : 'Lending token...',
         confirming: 'Confirming...',
-        success: isFluidVaults ? 'Go To Borrow' : 'Close',
+        success: 'Close',
         default:
             lendTx.status === 'approve'
                 ? isFluidVaults
@@ -385,7 +385,7 @@ const SupplyFluidButton = ({
                         }
                     } else {
                         handleCloseModal(false)
-                        setActionType?.('borrow')
+                        // setActionType?.('borrow')
                     }
                 }}
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
