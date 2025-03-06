@@ -16,6 +16,13 @@ const axiosInstance = axios.create({
     },
 })
 
+const axiosMerklInstance = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_MERKL_HOST as string,
+    headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+    },
+})
+
 export async function request<TResponse = void>(config: IRequestConfig) {
     const axiosConfig: AxiosRequestConfig = {
         url: config.path,
@@ -26,6 +33,23 @@ export async function request<TResponse = void>(config: IRequestConfig) {
     try {
         const response = await axiosInstance(axiosConfig)
         return response.data.data as TResponse
+    } catch (error) {
+        throw new Error('HTTP request has been failed', {
+            cause: error,
+        })
+    }
+}
+
+export async function requestMerkle<TResponse = void>(config: IRequestConfig) {
+    const axiosConfig: AxiosRequestConfig = {
+        url: config.path,
+        method: config.method,
+        params: config.query,
+        data: config.body,
+    }
+    try {
+        const response = await axiosMerklInstance(axiosConfig)
+        return response.data as TResponse
     } catch (error) {
         throw new Error('HTTP request has been failed', {
             cause: error,

@@ -18,8 +18,10 @@ import {
     getPlatformVersion,
 } from '@/lib/utils'
 import { TOpportunityTable, TReward } from '@/types'
+import { ChainId } from '@/types/chain'
 import { PlatformType } from '@/types/platform'
 import { ColumnDef } from '@tanstack/react-table'
+import { motion } from 'framer-motion'
 import { ChartNoAxesColumnIncreasing, ShieldAlertIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -253,6 +255,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const showPlatformCuratorName =
                 platformDisplayName.split(' ')[1].toLowerCase() !==
                 formattedPlatformWithMarketName.toLowerCase()
+            const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -278,6 +281,26 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     </div>
                     {isMorpho && !isVault && positionTypeParam === 'lend' && (
                         <InfoTooltip content="Supplying directly to Morpho markets is risky and not advised by the Morpho team" />
+                    )}
+                    {isEtherlinkChain && (
+                        <InfoTooltip
+                            label={
+                                <motion.div
+                                    initial={{ rotate: 0 }}
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
+                                    whileHover={{ rotate: -360 }}
+                                >
+                                    <ImageWithDefault
+                                        src="/images/apple-farm-favicon.ico"
+                                        alt="Etherlink Rewards"
+                                        width={16}
+                                        height={16}
+                                    />
+                                </motion.div>
+                            }
+                            content="Rewards coming soon..."
+                        />
                     )}
                 </span>
             )

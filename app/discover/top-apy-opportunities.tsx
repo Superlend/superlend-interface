@@ -31,6 +31,7 @@ import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { CHAIN_ID_MAPPER } from '@/constants'
+import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -72,6 +73,10 @@ export default function TopApyOpportunities() {
             type: positionTypeParam as TPositionType,
             chain_ids: chainIdsParam.map((id) => Number(id)),
             tokens: tokenIdsParam,
+        })
+    const { data: merklOpportunitiesData, isLoading: isLoadingMerklOpportunitiesData } =
+        useGetMerklOpportunitiesData({
+            id: '5496924370606392788',
         })
     const { allChainsData } = useContext<any>(AssetsDataContext)
 
@@ -351,11 +356,11 @@ export default function TopApyOpportunities() {
     function handleFilterTableRows(opportunity: TOpportunityTable) {
         return positionTypeParam === 'borrow'
             ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity)
+            handleFilterTableRowsByPlatformIds(opportunity)
             : handleExcludeMorphoMarketsByParamFlag(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity) &&
-                  opportunity.protocol_identifier !==
-                      EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
+            handleFilterTableRowsByPlatformIds(opportunity) &&
+            opportunity.protocol_identifier !==
+            EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
     }
 
     function handleRowClick(rowData: any) {
