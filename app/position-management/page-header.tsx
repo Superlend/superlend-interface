@@ -149,7 +149,7 @@ export default function PageHeader() {
         platformData?.platform?.protocol_type === PlatformType.FLUID
 
     // If has Collateral Token, then get the Collateral token details
-    const collateralTokenAddress = platformData.assets.find((asset: TPlatformAsset) => asset.borrow_enabled)?.token?.address || ''
+    const collateralTokenAddress = platformData.assets.find((asset: TPlatformAsset) => !asset.borrow_enabled)?.token?.address || ''
     const getCollateralTokenDetails = (tokenAddress: string) => {
         const collateralTokenDetails = allTokensData[Number(chain_id)]?.find(
             (token: any) =>
@@ -162,7 +162,7 @@ export default function PageHeader() {
     )
 
     // If has Loan Token, then get the loan token details
-    const loanTokenAddress = platformData.assets.find((asset: TPlatformAsset) => !asset.borrow_enabled)?.token?.address || ''
+    const loanTokenAddress = platformData.assets.find((asset: TPlatformAsset) => asset.borrow_enabled)?.token?.address || ''
     const getLoanTokenDetails = (tokenAddress: string) => {
         const loanTokenDetails = allTokensData[Number(chain_id)]?.find(
             (token: any) =>
