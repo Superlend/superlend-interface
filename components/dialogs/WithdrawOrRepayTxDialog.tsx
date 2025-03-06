@@ -699,8 +699,8 @@ export function WithdrawOrRepayTxDialog({
                                             weight="normal"
                                             className={`text-gray-800`}
                                         >
-                                             ${hasLowestDisplayValuePrefix(currentPositionAmount)}
-                                             {isLowestValue(currentPositionAmount)
+                                             {hasLowestDisplayValuePrefix(currentPositionAmount)}
+                                             ${isLowestValue(currentPositionAmount)
                                                 ? getLowestDisplayValue(currentPositionAmount)
                                                 : abbreviateNumber(currentPositionAmount)}
                                         </BodyText>
@@ -740,8 +740,8 @@ export function WithdrawOrRepayTxDialog({
                                                         weight="normal"
                                                         className={`text-gray-800`}
                                                     >
-                                                        ${hasLowestDisplayValuePrefix(newPositionAmount)}
-                                                        {isLowestValue(newPositionAmount)
+                                                        {hasLowestDisplayValuePrefix(newPositionAmount)}
+                                                        ${isLowestValue(newPositionAmount)
                                                             ? getLowestDisplayValue(newPositionAmount)
                                                             : abbreviateNumber(newPositionAmount)}
                                                     </BodyText>
