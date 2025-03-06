@@ -351,16 +351,16 @@ function FilterCardContent({
                             {!!getActiveFiltersCountByCategory(
                                 `${item.value.toLowerCase()}_ids`
                             ) && (
-                                    <Label
-                                        size="small"
-                                        weight="medium"
-                                        className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer"
-                                    >
-                                        {getActiveFiltersCountByCategory(
-                                            `${item.value.toLowerCase()}_ids`
-                                        )}
-                                    </Label>
-                                )}
+                                <Label
+                                    size="small"
+                                    weight="medium"
+                                    className="w-fit text-right flex items-center justify-center bg-gray-300 text-gray-500 rounded-full px-1.5 cursor-pointer"
+                                >
+                                    {getActiveFiltersCountByCategory(
+                                        `${item.value.toLowerCase()}_ids`
+                                    )}
+                                </Label>
+                            )}
                         </Button>
                     </motion.div>
                 ))}
@@ -387,9 +387,9 @@ function FilterOptions({
     const { logEvent } = useAnalytics()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
-    const tokenSymbolParam = searchParams.get('token_ids')?.split(",") || []
-    const chainIdParam = searchParams.get('chain_ids')?.split(",") || []
-    const protocolIdParam = searchParams.get('protocol_ids')?.split(",") || []
+    const tokenSymbolParam = searchParams.get('token_ids')?.split(',') || []
+    const chainIdParam = searchParams.get('chain_ids')?.split(',') || []
+    const protocolIdParam = searchParams.get('protocol_ids')?.split(',') || []
     const [searchKeyword, setSearchKeyword] = useState<string>('')
     const [isExcluded, setIsExcluded] = useState(
         localStorage.getItem('exclude_risky_markets') === 'true'
@@ -430,7 +430,10 @@ function FilterOptions({
             exclude_risky_markets:
                 positionTypeParam === 'lend' ? isExcluded : undefined,
         })
-        localStorage.setItem('exclude_risky_markets', isExcluded ? 'true' : 'false')
+        localStorage.setItem(
+            'exclude_risky_markets',
+            isExcluded ? 'true' : 'false'
+        )
     }, [isExcluded, positionTypeParam])
 
     const getFiltersFromURL = () => ({
@@ -475,7 +478,14 @@ function FilterOptions({
         const hasPlatformIds = protocolIdParam.length > 0
         logEvent('filter_selected', {
             token_symbols: hasTokenIds ? tokenSymbolParam.join(',') : null,
-            chain_names: hasChainIds ? chainIdParam?.map((chain_id) => CHAIN_ID_MAPPER[Number(chain_id) as ChainId]).join(',') : null,
+            chain_names: hasChainIds
+                ? chainIdParam
+                      ?.map(
+                          (chain_id) =>
+                              CHAIN_ID_MAPPER[Number(chain_id) as ChainId]
+                      )
+                      .join(',')
+                : null,
             protocol_names: hasPlatformIds ? protocolIdParam.join(',') : null,
             action: positionTypeParam,
         })
@@ -499,7 +509,9 @@ function FilterOptions({
                 {type === 'token' && (
                     <Button
                         variant={
-                            isStablecoinsSelected ? 'secondaryOutline' : 'outline'
+                            isStablecoinsSelected
+                                ? 'secondaryOutline'
+                                : 'outline'
                         }
                         className="m-4 mb-0 ml-3 flex items-center justify-center gap-1"
                         onClick={selectStablecoins}
@@ -562,7 +574,9 @@ function FilterOptions({
                         <InfoTooltip
                             label={
                                 <Label htmlFor="exclude-morpho-markets">
-                                    <TooltipText>Exclude Risky Platforms</TooltipText>
+                                    <TooltipText>
+                                        Exclude Risky Platforms
+                                    </TooltipText>
                                 </Label>
                             }
                             content="Supplying to Morpho markets are risky. Excluding them."

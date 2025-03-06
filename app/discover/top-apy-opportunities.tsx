@@ -37,7 +37,8 @@ type TTopApyOpportunitiesProps = {
     columns: ColumnDef<TOpportunityTable>[]
 }
 
-const EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL = '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed'
+const EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL =
+    '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed'
 
 export default function TopApyOpportunities() {
     const router = useRouter()
@@ -52,7 +53,9 @@ export default function TopApyOpportunities() {
     const keywordsParam = searchParams.get('keywords') || ''
     const pageParam = searchParams.get('page')
     const sortingParam = searchParams.get('sort')?.split(',') || []
-    const excludeRiskyMarketsFlag = typeof window !== 'undefined' && localStorage.getItem('exclude_risky_markets') === 'true'
+    const excludeRiskyMarketsFlag =
+        typeof window !== 'undefined' &&
+        localStorage.getItem('exclude_risky_markets') === 'true'
     const [keywords, setKeywords] = useState<string>(keywordsParam)
     const debouncedKeywords = useDebounce(keywords, 300)
     const [pagination, setPagination] = useState<PaginationState>({
@@ -98,7 +101,9 @@ export default function TopApyOpportunities() {
     // }, [tokenIdsParam, chainIdsParam, platformIdsParam])
 
     useEffect(() => {
-        const hasExcludeRiskyMarketsFlag = localStorage.getItem('exclude_risky_markets')
+        const hasExcludeRiskyMarketsFlag = localStorage.getItem(
+            'exclude_risky_markets'
+        )
         if (!hasExcludeRiskyMarketsFlag) {
             localStorage.setItem('exclude_risky_markets', 'true')
             updateSearchParams({
@@ -112,10 +117,11 @@ export default function TopApyOpportunities() {
             return {
                 deposits: positionTypeParam === 'lend',
                 borrows: positionTypeParam === 'borrow',
-                max_ltv: positionTypeParam === 'borrow',
+                // max_ltv: positionTypeParam === 'borrow',
                 collateral_exposure: positionTypeParam === 'lend',
                 collateral_tokens: positionTypeParam === 'borrow',
                 available_liquidity: positionTypeParam === 'borrow',
+                apy_avg_7days: positionTypeParam === 'borrow',
             }
         })
         setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])
@@ -216,7 +222,9 @@ export default function TopApyOpportunities() {
     useEffect(() => {
         updateSearchParams({
             exclude_risky_markets:
-                positionTypeParam === 'lend' ? excludeRiskyMarketsFlag : undefined,
+                positionTypeParam === 'lend'
+                    ? excludeRiskyMarketsFlag
+                    : undefined,
         })
     }, [excludeRiskyMarketsFlag])
 
@@ -326,9 +334,7 @@ export default function TopApyOpportunities() {
             opportunity.platformId.split('-')[0].toLowerCase() ===
             PlatformType.MORPHO
 
-        return excludeRiskyMarketsFlag
-            ? !(isMorpho && !isVault)
-            : true
+        return excludeRiskyMarketsFlag ? !(isMorpho && !isVault) : true
     }
 
     function handleExcludeMorphoVaultsByPositionType(
@@ -345,10 +351,11 @@ export default function TopApyOpportunities() {
     function handleFilterTableRows(opportunity: TOpportunityTable) {
         return positionTypeParam === 'borrow'
             ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
-            handleFilterTableRowsByPlatformIds(opportunity)
+                  handleFilterTableRowsByPlatformIds(opportunity)
             : handleExcludeMorphoMarketsByParamFlag(opportunity) &&
-            handleFilterTableRowsByPlatformIds(opportunity) &&
-            opportunity.protocol_identifier !== EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
+                  handleFilterTableRowsByPlatformIds(opportunity) &&
+                  opportunity.protocol_identifier !==
+                      EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
     }
 
     function handleRowClick(rowData: any) {
@@ -376,7 +383,8 @@ export default function TopApyOpportunities() {
 
         const params = {
             position_type: positionType,
-            exclude_risky_markets: positionType === 'lend' ? excludeRiskyMarketsFlag : undefined,
+            exclude_risky_markets:
+                positionType === 'lend' ? excludeRiskyMarketsFlag : undefined,
             protocol_ids: positionType === 'lend' ? filteredIds : unfilteredIds,
         }
         updateSearchParams(params)
@@ -421,9 +429,17 @@ export default function TopApyOpportunities() {
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="w-full sm:max-w-[350px]">
                             <ToggleTab
-                                type={positionTypeParam === "lend" ? "tab1" : "tab2"}
+                                type={
+                                    positionTypeParam === 'lend'
+                                        ? 'tab1'
+                                        : 'tab2'
+                                }
                                 handleToggle={(positionType: TTypeToMatch) => {
-                                    toggleOpportunityType(positionType === "tab1" ? "lend" : "borrow")
+                                    toggleOpportunityType(
+                                        positionType === 'tab1'
+                                            ? 'lend'
+                                            : 'borrow'
+                                    )
                                 }}
                             />
                         </div>

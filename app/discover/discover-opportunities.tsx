@@ -8,7 +8,7 @@ import {
     CarouselItem,
     CarouselNext,
     CarouselPrevious,
-} from "@/components/ui/carousel"
+} from '@/components/ui/carousel'
 import { Badge } from '@/components/ui/badge'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import Link from 'next/link'
@@ -17,11 +17,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { sendGAEvent } from '@next/third-parties/google'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
-const imageBaseUrl = "https://superlend-assets.s3.ap-south-1.amazonaws.com";
-const morphoImageBaseUrl = "https://cdn.morpho.org/assets/logos";
+const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
+const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 
 export default function DiscoverOpportunities() {
-    const { logEvent } = useAnalytics();
+    const { logEvent } = useAnalytics()
     // Token Addresses
     const opportunity1TokenAddress = "0xfc24f770f94edbca6d6f885e12d4317320bcb401";
     const opportunity2TokenAddress = "0x8236a87084f8b84306f72007f36f2618a5634494";
@@ -38,18 +38,21 @@ export default function DiscoverOpportunities() {
     const opportunity3ProtocolIdentifier = "0x027cb6a3b64db87be63dc9a3ee7fa0becb9344829e996c4660ac9cadd236bd38";
 
     // Platform Data
-    const { data: opportunity1PlatformData, isLoading: isLoading1 } = useGetPlatformData({
-        chain_id: opportunity1ChainId,
-        protocol_identifier: opportunity1ProtocolIdentifier,
-    })
-    const { data: opportunity2PlatformData, isLoading: isLoading2 } = useGetPlatformData({
-        chain_id: opportunity2ChainId,
-        protocol_identifier: opportunity2ProtocolIdentifier,
-    })
-    const { data: opportunity3PlatformData, isLoading: isLoading3 } = useGetPlatformData({
-        chain_id: opportunity3ChainId,
-        protocol_identifier: opportunity3ProtocolIdentifier,
-    })
+    const { data: opportunity1PlatformData, isLoading: isLoading1 } =
+        useGetPlatformData({
+            chain_id: opportunity1ChainId,
+            protocol_identifier: opportunity1ProtocolIdentifier,
+        })
+    const { data: opportunity2PlatformData, isLoading: isLoading2 } =
+        useGetPlatformData({
+            chain_id: opportunity2ChainId,
+            protocol_identifier: opportunity2ProtocolIdentifier,
+        })
+    const { data: opportunity3PlatformData, isLoading: isLoading3 } =
+        useGetPlatformData({
+            chain_id: opportunity3ChainId,
+            protocol_identifier: opportunity3ProtocolIdentifier,
+        })
 
     // Borrow Rate
     const asset1BorrowRate = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)?.variable_borrow_apy
@@ -62,14 +65,19 @@ export default function DiscoverOpportunities() {
     const opportunities = [
         {
             id: 1,
-            label: "Lowest Borrow Rate",
-            tokenSymbol: "WETH",
-            platformName: "Superlend",
-            chainName: "Etherlink",
+            label: 'Lowest Borrow Rate',
+            tokenSymbol: 'WETH',
+            platformName: 'Superlend',
+            chainName: 'Etherlink',
             description: description1,
             tokenImage: `${imageBaseUrl}/8453-weth.svg`,
             platformImage: `${imageBaseUrl}/superlend.svg`,
-            link: getRedirectLink(opportunity1TokenAddress, opportunity1ProtocolIdentifier, opportunity1ChainId, "borrow")
+            link: getRedirectLink(
+                opportunity1TokenAddress,
+                opportunity1ProtocolIdentifier,
+                opportunity1ChainId,
+                'borrow'
+            ),
         },
         {
             id: 2,
@@ -80,18 +88,28 @@ export default function DiscoverOpportunities() {
             description: description2,
             tokenImage: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.logo,
             platformImage: `${imageBaseUrl}/morpho-logo.svg`,
-            link: getRedirectLink(opportunity2TokenAddress, opportunity2ProtocolIdentifier, opportunity2ChainId, "lend")
+            link: getRedirectLink(
+                opportunity2TokenAddress,
+                opportunity2ProtocolIdentifier,
+                opportunity2ChainId,
+                'lend'
+            ),
         },
         {
             id: 3,
-            label: "Assured Airdrop",
-            tokenSymbol: "Coinshift Vault",
-            platformName: "Morpho",
-            chainName: "Ethereum",
-            description: "+ 25% APY in SHIFT tokens",
+            label: 'Assured Airdrop',
+            tokenSymbol: 'Coinshift Vault',
+            platformName: 'Morpho',
+            chainName: 'Ethereum',
+            description: '+ 25% APY in SHIFT tokens',
             tokenImage: `${morphoImageBaseUrl}/wusdl.svg`,
             platformImage: `${imageBaseUrl}/morpho-logo.svg`,
-            link: getRedirectLink(opportunity3TokenAddress, opportunity3ProtocolIdentifier, opportunity3ChainId, "lend")
+            link: getRedirectLink(
+                opportunity3TokenAddress,
+                opportunity3ProtocolIdentifier,
+                opportunity3ChainId,
+                'lend'
+            ),
         },
     ]
 
@@ -118,7 +136,8 @@ export default function DiscoverOpportunities() {
                     {opportunities.map((opportunity, index) => (
                         <CarouselItem
                             key={opportunity.id}
-                            className="group overflow-hidden relative basis-[90%] md:basis-[380px] bg-white rounded-5 px-5 py-6 lg:hover:shadow-md lg:hover:shadow-gray-200/50 lg:hover:rounded-7 active:scale-95 transition-all duration-300 cursor-pointer">
+                            className="group overflow-hidden relative basis-[90%] md:basis-[380px] bg-white rounded-5 px-5 py-6 lg:hover:shadow-md lg:hover:shadow-gray-200/50 lg:hover:rounded-7 active:scale-95 transition-all duration-300 cursor-pointer"
+                        >
                             <Link
                                 href={opportunity.link}
                                 onClick={() => {
@@ -192,7 +211,6 @@ export default function DiscoverOpportunities() {
                     ))}
                 </CarouselContent>
             </Carousel>
-
         </div>
     )
 }

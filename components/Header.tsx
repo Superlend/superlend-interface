@@ -21,7 +21,7 @@ type TTab = {
 }
 
 const tabs: TTab[] = [
-    { id: 1, name: 'Home', href: "/", icon: HomeIcon },
+    { id: 1, name: 'Home', href: '/', icon: HomeIcon },
     { id: 2, name: 'Discover', href: '/discover', icon: CompassIcon },
     { id: 3, name: 'Portfolio', href: '/portfolio', icon: PieChartIcon },
 ]
@@ -88,14 +88,20 @@ const Header: React.FC = () => {
         <>
             <header className="z-50 sticky top-0 md:top-5 left-0 max-w-[1200px] w-full mx-auto md:px-5">
                 <div className="flex gap-5 max-lg:gap-10 justify-between items-center py-0 pr-[8px] pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
-                    <Link href="/" className="relative md:w-[24px] md:w-fit p-0">
+                    <Link
+                        href="/"
+                        className="relative md:w-[24px] md:w-fit p-0"
+                    >
                         <img
                             loading="lazy"
                             src={'/images/logos/superlend-logo.webp'}
                             alt="Superlend logo"
                             className="object-contain shrink-0 my-auto aspect-[6.54] w-36 cursor-pointer"
                         />
-                        <Badge variant="blue" className="absolute top-[4px] -right-12 w-fit rounded-full px-2 py-[2px]">
+                        <Badge
+                            variant="blue"
+                            className="absolute top-[4px] -right-12 w-fit rounded-full px-2 py-[2px]"
+                        >
                             Beta
                         </Badge>
                     </Link>
@@ -107,7 +113,7 @@ const Header: React.FC = () => {
                                 variant={isSelected(tab) ? 'default' : 'ghost'}
                                 size="lg"
                                 className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`}
-                            // onClick={() => handleTabClick(tab)}
+                                // onClick={() => handleTabClick(tab)}
                             >
                                 <Link
                                     onClick={() => handleTabClick(tab)}

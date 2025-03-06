@@ -614,17 +614,17 @@ export default function AaveV3TxWidget({
                     <BodyText
                         level="body2"
                         weight="normal"
-                        className="capitalize text-gray-600"
+                        className="text-gray-600"
                     >
                         {isLendPositionType(positionType)
-                            ? 'lend collateral'
-                            : `borrow ${selectedBorrowTokenDetails?.token?.symbol || ''}`}
+                            ? 'Lend Collateral'
+                            : `Borrow ${selectedBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
                     {isWalletConnected && isLendPositionType(positionType) && (
                         <BodyText
                             level="body2"
                             weight="normal"
-                            className="capitalize text-gray-600 flex items-center gap-[4px]"
+                            className="text-gray-600 flex items-center gap-[4px]"
                         >
                             Bal:{' '}
                             {isLoadingErc20TokensBalanceData ? (
@@ -831,7 +831,12 @@ export default function AaveV3TxWidget({
                                 }
                                 amount={amount}
                                 balance={balance}
-                                maxBorrowAmount={maxBorrowAmount}
+                                maxBorrowAmount={{
+                                    maxToBorrow: maxBorrowAmount,
+                                    maxToBorrowFormatted: maxBorrowAmount,
+                                    maxToBorrowSCValue: '0',
+                                    user: {},
+                                }}
                                 setAmount={setAmount}
                                 healthFactorValues={healthFactorValues}
                                 open={isLendBorrowTxDialogOpen}

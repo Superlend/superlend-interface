@@ -17,7 +17,10 @@ import { LoaderCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
-import { ConfirmationDialog, handleSmallestValue } from '@/components/dialogs/TxDialog'
+import {
+    ConfirmationDialog,
+    handleSmallestValue,
+} from '@/components/dialogs/TxDialog'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import { Button } from '@/components/ui/button'
@@ -37,24 +40,28 @@ import {
     useVault,
     useVaultUser,
 } from '@morpho-org/blue-sdk-wagmi'
-import { formatUnits } from 'viem'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import ExternalLink from '@/components/ExternalLink'
 import { TLendTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { TPortfolio } from '../../../types/queries/portfolio'
+import { formatUnits, parseUnits } from 'ethers/lib/utils'
 
 export default function MorphoTxWidget({
     isLoading: isLoadingPlatformData,
-    platformData
+    platformData,
+    portfolioData,
 }: {
     isLoading: boolean
     platformData: TPlatform
+    portfolioData: TPortfolio
 }) {
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
     const { walletAddress, handleSwitchChain } = useWalletConnection()
 
-    const isFluidProtocol = platformData?.platform?.protocol_type === PlatformType.FLUID
+    const isFluidProtocol =
+        platformData?.platform?.protocol_type === PlatformType.FLUID
     const isFluidLend = isFluidProtocol && !platformData?.platform?.isVault
     const isFluidVaults = isFluidProtocol && platformData?.platform?.isVault
 
@@ -65,7 +72,7 @@ export default function MorphoTxWidget({
         }
     }, [walletAddress, Number(chain_id)])
 
-    if (!isFluidLend && !isFluidVaults) {
+    if (!isFluidProtocol) {
         return null
     }
 
@@ -80,17 +87,18 @@ export default function MorphoTxWidget({
     }
 
     // Fluid Vaults
-    // if (isFluidVaults) {
-    //     return (
-    //         <FluidVaults
-    //             platformData={platformData}
-    //             walletAddress={walletAddress as `0x${string}`}
-    //             isLoadingPlatformData={isLoadingPlatformData}
-    //         />
-    //     )
-    // }
+    if (isFluidVaults) {
+        return (
+            <FluidVaults
+                platformData={platformData}
+                portfolioData={portfolioData}
+                walletAddress={walletAddress as `0x${string}`}
+                isLoadingPlatformData={isLoadingPlatformData}
+            />
+        )
+    }
 
-    return null;
+    return null
 }
 
 function isLendPositionType(positionType: TPositionType) {
@@ -99,7 +107,7 @@ function isLendPositionType(positionType: TPositionType) {
 
 function FluidLend({
     platformData,
-    walletAddress
+    walletAddress,
 }: {
     platformData: TPlatform
     walletAddress: `0x${string}`
@@ -109,10 +117,27 @@ function FluidLend({
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, setLendTx, borrowTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } = useTxContext() as TTxContext
+    const {
+        lendTx,
+        setLendTx,
+        borrowTx,
+        isLendBorrowTxDialogOpen,
+        setIsLendBorrowTxDialogOpen,
+    } = useTxContext() as TTxContext
     const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
     const positionTypeParam: TPositionType = 'lend'
+
+    useEffect(() => {
+        if (lendTx.status === 'approve' && lendTx.isConfirmed) {
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                status: 'lend',
+                hash: '',
+                isConfirmed: false,
+            }))
+        }
+    }, [lendTx.status, lendTx.isConfirmed])
 
     useEffect(() => {
         setPositionType(positionTypeParam)
@@ -133,11 +158,7 @@ function FluidLend({
         if (borrowTx.status === 'view' && !isLendBorrowTxDialogOpen) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [
-        lendTx.status,
-        borrowTx.status,
-        isLendBorrowTxDialogOpen,
-    ])
+    }, [lendTx.status, borrowTx.status, isLendBorrowTxDialogOpen])
 
     const {
         erc20TokensBalanceData,
@@ -148,7 +169,9 @@ function FluidLend({
 
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[
-            (selectedAssetTokenDetails?.token?.address?.toLowerCase() ?? '').toLowerCase()
+            (
+                selectedAssetTokenDetails?.token?.address?.toLowerCase() ?? ''
+            ).toLowerCase()
         ]?.balanceFormatted ?? 0
     ).toString()
 
@@ -336,7 +359,12 @@ function FluidLend({
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount
-                                maxBorrowAmount={'0.0'}
+                                maxBorrowAmount={{
+                                    maxToBorrow: '0.0',
+                                    maxToBorrowFormatted: '0.0',
+                                    maxToBorrowSCValue: '0.0',
+                                    user: {},
+                                }}
                                 setAmount={setAmount}
                                 // TODO: Get health factor values
                                 healthFactorValues={{
@@ -357,10 +385,12 @@ function FluidLend({
 
 function FluidVaults({
     platformData,
+    portfolioData,
     walletAddress,
     isLoadingPlatformData,
 }: {
     platformData: TPlatform
+    portfolioData: TPortfolio
     walletAddress: `0x${string}`
     isLoadingPlatformData: boolean
 }) {
@@ -371,7 +401,15 @@ function FluidVaults({
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
-    const { lendTx, borrowTx, withdrawTx, repayTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } = useTxContext() as TTxContext
+    const {
+        lendTx,
+        setLendTx,
+        borrowTx,
+        withdrawTx,
+        repayTx,
+        isLendBorrowTxDialogOpen,
+        setIsLendBorrowTxDialogOpen,
+    } = useTxContext() as TTxContext
     const [refresh, setRefresh] = useState(false)
     const { isWalletConnected } = useWalletConnection()
     const [amount, setAmount] = useState('')
@@ -383,6 +421,29 @@ function FluidVaults({
     const fluidBorrowTokenDetails = platformData?.assets?.find(
         (asset) => asset.borrow_enabled === true
     )
+
+    // const tokenAddressByPositionType = useMemo(() => {
+    //     return positionType === 'lend' ? fluidLendTokenDetails?.token?.address?.toLowerCase() : fluidBorrowTokenDetails?.token?.address?.toLowerCase()
+    // }, [positionType, fluidLendTokenDetails?.token?.address, fluidBorrowTokenDetails?.token?.address])
+
+    const fluidVaultNftId = useMemo(() => {
+        return (
+            portfolioData?.platforms[0]?.positions?.find(
+                (p) => !!p.fluid_vault_nftId
+            )?.fluid_vault_nftId ?? 0
+        )
+    }, [portfolioData?.platforms])
+
+    useEffect(() => {
+        if (lendTx.status === 'approve' && lendTx.isConfirmed) {
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                status: 'lend',
+                hash: '',
+                isConfirmed: false,
+            }))
+        }
+    }, [lendTx.status, lendTx.isConfirmed])
 
     useEffect(() => {
         const isRefresh =
@@ -420,13 +481,12 @@ function FluidVaults({
         ) {
             setIsRefreshingErc20TokensBalanceData(true)
         }
-    }, [
-        lendTx.status,
-        borrowTx.status,
-        isLendBorrowTxDialogOpen,
-    ])
+    }, [lendTx.status, borrowTx.status, isLendBorrowTxDialogOpen])
 
-    const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
+    const [maxBorrowAmount, setMaxBorrowAmount] = useState<{
+        maxToBorrow: string
+        maxToBorrowFormatted: string
+    }>({ maxToBorrow: '0', maxToBorrowFormatted: '0' })
     const [isLoadingMaxBorrowingAmount, setIsLoadingMaxBorrowingAmount] =
         useState(true)
 
@@ -436,65 +496,89 @@ function FluidVaults({
     const [doesMarketHasLiquidity, setDoesMarketHasLiquidity] = useState(true)
 
     // health factor
-    const [healthFactor, setHealthFactor] = useState(0)
 
-    const getUpdatedHealthFactor = (
-        position: any,
-        morphoMarketData: any,
-        selectedAssetTokenDetails: any,
-        fluidBorrowTokenDetails: any,
-        amount: string
-    ) => {
-        if (
-            !position ||
-            !morphoMarketData ||
-            !selectedAssetTokenDetails ||
-            !fluidBorrowTokenDetails
-        ) {
-            return 0.0
+    const getHealthFactorValues = (): {
+        healthFactor: any
+        newHealthFactor: any
+    } => {
+        const lendAmount =
+            portfolioData.platforms[0]?.positions?.filter(
+                (p) => p.type === 'lend'
+            )[0]?.amount ?? 0
+        const borrowAmount =
+            portfolioData.platforms[0]?.positions?.filter(
+                (p) => p.type === 'borrow'
+            )[0]?.amount ?? 0
+
+        const borrowPower =
+            (Number(fluidLendTokenDetails?.ltv ?? 0) *
+                lendAmount *
+                Number(fluidLendTokenDetails?.token.price_usd ?? 0)) /
+            100
+        const currentBorrows =
+            borrowAmount *
+            Number(fluidBorrowTokenDetails?.token?.price_usd ?? 0)
+        const currentHf = borrowPower / currentBorrows
+
+        const newBorrows =
+            currentBorrows +
+            Number(amount) *
+                Number(fluidBorrowTokenDetails?.token?.price_usd ?? 0)
+
+        const newHf = borrowPower / newBorrows
+
+        return {
+            healthFactor: currentHf,
+            newHealthFactor: newHf,
         }
-
-        const accrualPosition: AccrualPosition = new AccrualPosition(
-            position,
-            morphoMarketData
-        )
-        const currentBorrowAssets = accrualPosition.borrowAssets ?? BigInt(0)
-
-        const collNormalizeValue = Number(
-            formatUnits(
-                accrualPosition.collateral ?? BigInt(0),
-                selectedAssetTokenDetails?.token?.decimals ?? 0
-            )
-        )
-        const borrowNormalizeValue =
-            currentBorrowAssets == BigInt(0)
-                ? 0
-                : Number(
-                    formatUnits(
-                        currentBorrowAssets,
-                        fluidBorrowTokenDetails?.token?.decimals ?? 0
-                    )
-                )
-        const borrowNormalizeValueWithAmount =
-            borrowNormalizeValue + Number(amount)
-
-        const collUsdValue =
-            collNormalizeValue *
-            (selectedAssetTokenDetails?.token?.price_usd ?? 0)
-        const borrowUsdValue =
-            borrowNormalizeValueWithAmount *
-            (fluidBorrowTokenDetails?.token?.price_usd ?? 0)
-
-        if (fluidBorrowTokenDetails?.ltv) {
-            const lltv = (fluidBorrowTokenDetails?.ltv ?? 1) / 100
-            const healthFactor = (collUsdValue * lltv) / borrowUsdValue
-            return healthFactor
-        }
-        return 0.0
     }
+
+    const healthFactorValues = getHealthFactorValues()
 
     const isLoading = isLoadingPlatformData
     // || isLoadingMaxBorrowingAmount
+
+    useEffect(() => {
+        if (
+            !platformData ||
+            !portfolioData ||
+            portfolioData.platforms?.length === 0
+        ) {
+            setMaxBorrowAmount({ maxToBorrow: '0', maxToBorrowFormatted: '0' })
+            setIsLoadingMaxBorrowingAmount(false)
+            return
+        }
+
+        const borrowPosition = portfolioData.platforms[0].positions.filter(
+            (p) => p.type === 'borrow'
+        )[0]
+        const lendPosition = portfolioData.platforms[0].positions.filter(
+            (p) => p.type === 'lend'
+        )[0]
+        const borrowToken = platformData.assets.filter((a) => a.ltv === 0)[0]
+        const lendToken = platformData.assets.filter((a) => a.ltv !== 0)[0]
+
+        const maxBorrowUsd =
+            ((lendPosition.amount ?? 0) *
+                (lendPosition.token.price_usd ?? 0) *
+                (lendToken.ltv ?? 0)) /
+                100 -
+            ((borrowPosition?.amount ?? 0) * (borrowToken.token.price_usd ?? 0))
+        const maxBorrowToken = (
+            maxBorrowUsd / borrowToken.token.price_usd
+        ).toFixed(borrowToken.token.decimals)
+
+        const _maxToBorrow = {
+            maxToBorrow: parseUnits(
+                maxBorrowToken,
+                borrowToken.token.decimals
+            ).toString(),
+            maxToBorrowFormatted: maxBorrowToken,
+        }
+
+        setMaxBorrowAmount(_maxToBorrow)
+        setIsLoadingMaxBorrowingAmount(false)
+    }, [platformData, portfolioData])
 
     const {
         erc20TokensBalanceData,
@@ -505,9 +589,16 @@ function FluidVaults({
 
     useEffect(() => {
         if (fluidLendTokenDetails) {
-            setSelectedAssetTokenDetails(fluidLendTokenDetails)
+            const tokenDetails = isLendPositionType(positionType)
+                ? fluidLendTokenDetails
+                : fluidBorrowTokenDetails
+            setSelectedAssetTokenDetails(tokenDetails ?? null)
         }
-    }, [fluidLendTokenDetails, setSelectedAssetTokenDetails])
+    }, [
+        fluidLendTokenDetails,
+        fluidBorrowTokenDetails,
+        setSelectedAssetTokenDetails,
+    ])
 
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[
@@ -546,10 +637,13 @@ function FluidVaults({
         if (toManyDecimals) {
             return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
         }
-        if (!hasCollateral) {
-            return 'You do not have any collateral'
-        }
-        if (!canBorrow || Number(amount) > Number(maxBorrowAmount ?? 0)) {
+        // if (!hasCollateral) {
+        //     return 'You do not have any collateral'
+        // }
+        if (
+            // !canBorrow ||
+            Number(amount) > Number(maxBorrowAmount.maxToBorrowFormatted ?? 0)
+        ) {
             return 'You do not have any borrow limit'
         }
         return null
@@ -570,16 +664,18 @@ function FluidVaults({
             : 'Loading borrow limit...'
     }
 
+    // console.log(maxBorrowAmount.maxToBorrowFormatted)
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-            Number(
-                isLendPositionType(positionType) ? balance : maxBorrowAmount
-            ) ||
-            (isLendPositionType(positionType) ? false : !hasCollateral) ||
+                Number(
+                    isLendPositionType(positionType)
+                        ? balance
+                        : maxBorrowAmount.maxToBorrowFormatted
+                ) ||
+            // (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
-            toManyDecimals ||
-            (!isLendPositionType(positionType) && !doesMarketHasLiquidity),
+            toManyDecimals,
         [
             amount,
             balance,
@@ -594,21 +690,19 @@ function FluidVaults({
     function getMaxDecimalsToDisplay(): number {
         return isLendPositionType(positionType)
             ? fluidLendTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
-                fluidLendTokenDetails?.token?.symbol
-                    .toLowerCase()
-                    .includes('eth')
+                  .toLowerCase()
+                  .includes('btc') ||
+              fluidLendTokenDetails?.token?.symbol.toLowerCase().includes('eth')
                 ? 6
                 : 2
             : fluidBorrowTokenDetails?.token?.symbol
-                .toLowerCase()
-                .includes('btc') ||
+                    .toLowerCase()
+                    .includes('btc') ||
                 fluidBorrowTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
-                ? 6
-                : 2
+              ? 6
+              : 2
     }
 
     const isDisabledMaxBtn = () => {
@@ -623,11 +717,11 @@ function FluidVaults({
 
         // TODO: Get max borrow amount
         return (
-            Number(amount) === Number(maxBorrowAmount) ||
+            Number(amount) === Number(maxBorrowAmount.maxToBorrowFormatted) ||
             !isWalletConnected ||
             isLoadingMaxBorrowingAmount ||
             isLoadingErc20TokensBalanceData ||
-            Number(maxBorrowAmount) <= 0 ||
+            Number(maxBorrowAmount.maxToBorrowFormatted) <= 0 ||
             !doesMarketHasLiquidity
         )
     }
@@ -635,13 +729,10 @@ function FluidVaults({
     return (
         <section className="collateral-and-borrow-section-wrapper flex flex-col gap-[12px]">
             <ToggleTab
-                type={positionType === "lend" ? "tab1" : "tab2"}
+                type={positionType === 'lend' ? 'tab1' : 'tab2'}
                 handleToggle={(positionType: TTypeToMatch) => {
                     setAmount('')
-                    setPositionType(positionType === "tab1" ? "lend" : "borrow")
-                }}
-                title={{
-                    tab1: 'Add Collateral',
+                    setPositionType(positionType === 'tab1' ? 'lend' : 'borrow')
                 }}
             />
             <Card className="flex flex-col gap-[12px] p-[16px]">
@@ -649,11 +740,11 @@ function FluidVaults({
                     <BodyText
                         level="body2"
                         weight="normal"
-                        className="capitalize text-gray-600"
+                        className="text-gray-600"
                     >
                         {isLendPositionType(positionType)
-                            ? 'add collateral'
-                            : `borrow ${fluidBorrowTokenDetails?.token?.symbol || ''}`}
+                            ? 'Lend'
+                            : `Borrow ${fluidBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
 
                     {isWalletConnected && isLendPositionType(positionType) && (
@@ -695,7 +786,7 @@ function FluidVaults({
                                 <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
                             ) : (
                                 handleSmallestValue(
-                                    maxBorrowAmount,
+                                    maxBorrowAmount.maxToBorrowFormatted,
                                     getMaxDecimalsToDisplay()
                                 )
                             )}
@@ -711,7 +802,7 @@ function FluidVaults({
                             'border-gray-200 py-[12px] px-[16px] flex items-center gap-[12px]'
                         )}
                     >
-                        {(isLoading) && (
+                        {isLoading && (
                             <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
                         )}
                         {/* Lend position type - Selected token image */}
@@ -740,12 +831,9 @@ function FluidVaults({
                         {/* Borrow position type - Select token dropdown */}
                         {!isLoading && !isLendPositionType(positionType) && (
                             <ImageWithDefault
-                                src={
-                                    fluidBorrowTokenDetails?.token?.logo || ''
-                                }
+                                src={fluidBorrowTokenDetails?.token?.logo || ''}
                                 alt={
-                                    fluidBorrowTokenDetails?.token?.symbol ||
-                                    ''
+                                    fluidBorrowTokenDetails?.token?.symbol || ''
                                 }
                                 className="shrink-0 w-[24px] h-[24px] rounded-full"
                                 width={24}
@@ -766,7 +854,7 @@ function FluidVaults({
                                 setAmount(
                                     isLendPositionType(positionType)
                                         ? (balance ?? '0')
-                                        : maxBorrowAmount
+                                        : maxBorrowAmount.maxToBorrowFormatted
                                 )
                             }
                             disabled={isDisabledMaxBtn()}
@@ -792,56 +880,12 @@ function FluidVaults({
                                     className="mx-auto w-full text-gray-500 text-center max-w-[250px]"
                                 >
                                     {isLendPositionType(positionType) &&
-                                        positionTypeParam === 'lend' && (
-                                            <>
-                                                Adding collateral to Morpho
-                                                Markets does not yield.
-                                            </>
-                                        )}
-                                    {isLendPositionType(positionType) &&
-                                        positionTypeParam === 'borrow' &&
                                         'Enter amount to proceed with supplying collateral for this position'}
                                     {!isLendPositionType(positionType) &&
                                         doesMarketHasLiquidity &&
                                         'Enter the amount you want to borrow from this position'}
                                 </BodyText>
                             )}
-                            {!errorMessage &&
-                                !isLoadingHelperText &&
-                                !isLendPositionType(positionType) &&
-                                !doesMarketHasLiquidity && (
-                                    <CustomAlert
-                                        variant="info"
-                                        hasPrefixIcon={false}
-                                        description={
-                                            <BodyText
-                                                level="body3"
-                                                weight="normal"
-                                                className="text-secondary-500 flex-inline"
-                                            >
-                                                {
-                                                    <span className="flex-inline">
-                                                        Superlend doesn&apos;t
-                                                        support borrowing from
-                                                        this market, as
-                                                        there&apos;s not enough
-                                                        liquidity. Try{' '}
-                                                        <span className="mr-1">
-                                                            using
-                                                        </span>
-                                                        <ExternalLink href="https://morpho.org">
-                                                            morpho website
-                                                        </ExternalLink>
-                                                        <span className="ml-1">
-                                                            for
-                                                        </span>{' '}
-                                                        the same
-                                                    </span>
-                                                }
-                                            </BodyText>
-                                        }
-                                    />
-                                )}
                             {errorMessage &&
                                 !isLoadingHelperText &&
                                 !isLoading && (
@@ -866,19 +910,24 @@ function FluidVaults({
                                 setOpen={setIsLendBorrowTxDialogOpen}
                                 positionType={positionType}
                                 assetDetails={{
-                                    asset: selectedAssetTokenDetails,
+                                    asset: isLendPositionType(positionType)
+                                        ? fluidLendTokenDetails
+                                        : fluidBorrowTokenDetails,
                                     ...platformData?.platform,
+                                    fluid_vault_nftId: fluidVaultNftId,
                                 }}
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount
-                                maxBorrowAmount={maxBorrowAmount}
+                                maxBorrowAmount={{
+                                    maxToBorrow: maxBorrowAmount.maxToBorrow,
+                                    maxToBorrowFormatted: maxBorrowAmount.maxToBorrowFormatted,
+                                    maxToBorrowSCValue: '0',
+                                    user: {},
+                                }}
                                 setAmount={setAmount}
                                 // TODO: Get health factor values
-                                healthFactorValues={{
-                                    healthFactor: healthFactor ?? 0,
-                                    newHealthFactor: 0
-                                }}
+                                healthFactorValues={healthFactorValues}
                                 setActionType={setPositionType}
                             />
                         </div>

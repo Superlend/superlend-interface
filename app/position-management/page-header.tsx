@@ -7,9 +7,11 @@ import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import { Badge } from '@/components/ui/badge'
 import {
     abbreviateNumber,
+    getLowestDisplayValue,
     getPlatformVersion,
     getPlatformWebsiteLink,
     getTokenLogo,
+    isLowestValue,
 } from '@/lib/utils'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -88,11 +90,6 @@ export default function PageHeader() {
         isLoadingPlatformData,
     ])
 
-    const pageHeaderStats = getPageHeaderStats({
-        tokenAddress,
-        platformData: platformData as TPlatform,
-    })
-
     const isMorpho =
         platformData?.platform?.platform_name?.split('-')[0]?.toLowerCase() ===
         PlatformType.MORPHO
@@ -111,6 +108,9 @@ export default function PageHeader() {
     const morpho_market_id = platformData?.platform?.morpho_market_id
     const network_name = chainName
     const core_contract = platformData?.platform?.core_contract
+    const isFluidLend =
+        platformData?.platform?.protocol_type === PlatformType.FLUID &&
+        !platformData?.platform?.isVault
     const isFluidVault =
         platformData?.platform?.protocol_type === PlatformType.FLUID &&
         platformData?.platform?.isVault
@@ -129,10 +129,6 @@ export default function PageHeader() {
         morpho_market_id,
         network_name,
     })
-
-    const formattedBorrowRate = isMorphoVault
-        ? 'N/A'
-        : `${pageHeaderStats?.borrow_rate}%`
 
     const checkForPairBasedTokens = (
         platformTypes: string[],
@@ -153,28 +149,28 @@ export default function PageHeader() {
         platformData?.platform?.protocol_type === PlatformType.FLUID
 
     // If has Collateral Token, then get the Collateral token details
-    const collateralTokenSymbol = platformName.split(' ')[1]?.split('/')[0]
-    const getCollateralTokenDetails = (tokenSymbol: string) => {
+    const collateralTokenAddress = platformData.assets.find((asset: TPlatformAsset) => !asset.borrow_enabled)?.token?.address || ''
+    const getCollateralTokenDetails = (tokenAddress: string) => {
         const collateralTokenDetails = allTokensData[Number(chain_id)]?.find(
             (token: any) =>
-                token?.symbol?.toLowerCase() === tokenSymbol?.toLowerCase()
+                token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
         )
         return collateralTokenDetails
     }
     const collateralTokenDetails = getCollateralTokenDetails(
-        collateralTokenSymbol
+        collateralTokenAddress
     )
 
     // If has Loan Token, then get the loan token details
-    const loanTokenSymbol = platformName.split(' ')[1]?.split('/')[1]
-    const getLoanTokenDetails = (tokenSymbol: string) => {
+    const loanTokenAddress = platformData.assets.find((asset: TPlatformAsset) => asset.borrow_enabled)?.token?.address || ''
+    const getLoanTokenDetails = (tokenAddress: string) => {
         const loanTokenDetails = allTokensData[Number(chain_id)]?.find(
             (token: any) =>
-                token?.symbol?.toLowerCase() === tokenSymbol?.toLowerCase()
+                token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
         )
         return loanTokenDetails
     }
-    const loanTokenDetails = getLoanTokenDetails(loanTokenSymbol)
+    const loanTokenDetails = getLoanTokenDetails(loanTokenAddress)
 
     const hasWarnings =
         platformData.assets.filter(
@@ -198,6 +194,34 @@ export default function PageHeader() {
         ? [tokenDetails]
         : [collateralTokenDetails, loanTokenDetails]
 
+    const pageHeaderStats = getPageHeaderStats({
+        tokenAddress: isDisplayOneToken ? [tokenDetails?.address] : [collateralTokenDetails?.address, loanTokenDetails?.address],
+        platformData: platformData as TPlatform,
+    })
+
+    const formattedBorrowRate = (isMorphoVault || isFluidLend)
+        ? 'N/A'
+        : (
+            <>
+                {isLowestValue(
+                    Number(
+                        pageHeaderStats?.borrow_rate ?? 0
+                    )
+                )
+                    ? getLowestDisplayValue(
+                        Number(
+                            pageHeaderStats?.borrow_rate ?? 0
+                        )
+                    )
+                    : abbreviateNumber(
+                        Number(
+                            pageHeaderStats?.borrow_rate ?? 0
+                        ),
+                        2
+                    )}%
+            </>
+        )
+
     return (
         <>
             {hasWarnings && (
@@ -207,7 +231,7 @@ export default function PageHeader() {
                             key={index}
                             description={
                                 WarningMessages[
-                                    message.type as keyof typeof WarningMessages
+                                message.type as keyof typeof WarningMessages
                                 ]
                             }
                         />
@@ -218,9 +242,9 @@ export default function PageHeader() {
             <section className="header relative z-[20] flex flex-col sm:flex-row items-start gap-[24px]">
                 <motion.div
                     className="will-change-transform"
-                    // initial={{ opacity: 0.7, y: 30 }}
-                    // animate={{ opacity: 1, y: 0 }}
-                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                // initial={{ opacity: 0.7, y: 30 }}
+                // animate={{ opacity: 1, y: 0 }}
+                // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                 >
                     <Button
                         className="py-[8px] px-[12px] rounded-3"
@@ -236,9 +260,9 @@ export default function PageHeader() {
                 <div className="flex flex-col xl:flex-row items-start justify-between gap-[24px] w-full">
                     <motion.div
                         className="flex flex-wrap items-center gap-[16px] will-change-transform"
-                        // initial={{ opacity: 0.7, y: 30 }}
-                        // animate={{ opacity: 1, y: 0 }}
-                        // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                    // initial={{ opacity: 0.7, y: 30 }}
+                    // animate={{ opacity: 1, y: 0 }}
+                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                     >
                         {/* Loading Skeleton */}
                         {isLoadingPlatformData && <LoadingSkeleton />}
@@ -371,9 +395,9 @@ export default function PageHeader() {
                     {/* Page Header Stats */}
                     <motion.div
                         className="header-right flex flex-wrap items-center shrink-0 gap-[24px]"
-                        // initial={{ opacity: 0.7, y: 30 }}
-                        // animate={{ opacity: 1, y: 0 }}
-                        // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                    // initial={{ opacity: 0.7, y: 30 }}
+                    // animate={{ opacity: 1, y: 0 }}
+                    // transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                     >
                         {/* Loading Skeleton */}
                         {isLoadingPlatformData && (
@@ -382,9 +406,7 @@ export default function PageHeader() {
                         {!isLoadingPlatformData && (
                             <>
                                 {/* Supply APY */}
-                                {!(
-                                    isMorphoMarkets
-                                ) && (
+                                {!isMorphoMarkets && (
                                     <>
                                         <div className="flex items-center max-md:justify-between gap-[4px]">
                                             <BodyText
@@ -398,10 +420,22 @@ export default function PageHeader() {
                                                     level="body1"
                                                     weight="medium"
                                                 >
-                                                    {
-                                                        pageHeaderStats?.supply_apy
-                                                    }
-                                                    %
+                                                    {isLowestValue(
+                                                        Number(
+                                                            pageHeaderStats?.supply_apy ?? 0
+                                                        )
+                                                    )
+                                                        ? getLowestDisplayValue(
+                                                            Number(
+                                                                pageHeaderStats?.supply_apy ?? 0
+                                                            )
+                                                        )
+                                                        : abbreviateNumber(
+                                                            Number(
+                                                                pageHeaderStats?.supply_apy ?? 0
+                                                            ),
+                                                            2
+                                                        )}%
                                                 </BodyText>
                                             </Badge>
                                         </div>
@@ -439,19 +473,28 @@ function getPageHeaderStats({
     tokenAddress,
     platformData,
 }: {
-    tokenAddress: string
+    tokenAddress: string[]
     platformData: TPlatform
 }) {
-    const [stats] = platformData?.assets
+    const stats = platformData?.assets
         ?.filter(
             (asset: TPlatformAsset) =>
                 asset?.token?.address?.toLowerCase() ===
-                tokenAddress?.toLowerCase()
+                tokenAddress[0]?.toLowerCase() ||
+                asset?.token?.address?.toLowerCase() ===
+                tokenAddress[1]?.toLowerCase()
         )
-        .map((item: TPlatformAsset) => ({
-            supply_apy: abbreviateNumber(item.supply_apy),
-            borrow_rate: abbreviateNumber(item.variable_borrow_apy),
-        }))
+        .reduce((acc: any, item: TPlatformAsset, currentIndex: number, array: TPlatformAsset[]) => {
+            if (!item.borrow_enabled && array.length > 1) {
+                acc.supply_apy = item.supply_apy
+            } else if (item.borrow_enabled && array.length > 1) {
+                acc.borrow_rate = item.variable_borrow_apy
+            } else {
+                acc.supply_apy = abbreviateNumber(item.supply_apy, 2)
+                acc.borrow_rate = abbreviateNumber(item.variable_borrow_apy, 2)
+            }
+            return acc
+        }, {})
 
     return stats
 }

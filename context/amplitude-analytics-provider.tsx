@@ -19,7 +19,6 @@ const amplitudeAnalytics: AnalyticsContextState = {
     },
 }
 
-
 export const AmplitudeAnalyticsProvider = ({
     apiKey,
     children,
@@ -56,14 +55,14 @@ export const AnalyticsContext = createContext<
 
 export const useAnalytics = createContextHook(
     AnalyticsContext,
-    'AnalyticsContext',
+    'AnalyticsContext'
 )
 
 // Helper function to create a context hook
 export function createContextHook<T, R = T>(
     Context: ReactContext<T | undefined>,
     contextName: string,
-    transform?: (context: T) => R,
+    transform?: (context: T) => R
 ): () => R {
     return (): R => {
         const context = useContext(Context)

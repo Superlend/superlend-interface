@@ -4,6 +4,12 @@ import { Period } from './periodButtons'
 export type TPositionType = 'lend' | 'borrow'
 export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay'
 
+export type TScAmount = {
+    amountRaw: string
+    scValue: string
+    amountParsed: string
+}
+
 export type TToken = {
     address: string
     decimals: number

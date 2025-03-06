@@ -35,13 +35,14 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { ChainId } from '@/types/chain'
 import { useAssetsDataContext } from '@/context/data-provider'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
+import { TScAmount } from '@/types'
 
 interface ISupplyAaveButtonProps {
     assetDetails: any
     disabled: boolean
     poolContractAddress: `0x${string}`
     underlyingAssetAdress: `0x${string}`
-    amount: string
+    amount: TScAmount
     decimals: number
     handleCloseModal: (isVisible: boolean) => void
 }
@@ -70,9 +71,9 @@ const SupplyAaveButton = ({
     const { address: walletAddress } = useAccount()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
 
-    const amountBN = useMemo(() => {
-        return amount ? parseUnits(amount, decimals) : BigNumber.from(0)
-    }, [amount, decimals])
+    // const amountBN = useMemo(() => {
+    //     return amount ? parseUnits(amount, decimals) : BigNumber.from(0)
+    // }, [amount, decimals])
 
     const txBtnStatus: Record<string, string> = {
         pending:
@@ -81,7 +82,7 @@ const SupplyAaveButton = ({
                 : 'Lending token...',
         confirming: 'Confirming...',
         success: 'Close',
-        default: lendTx.status === 'approve' ? 'Start lending' : 'Lend token',
+        default: lendTx.status === 'approve' ? 'Start earning' : 'Earn',
     }
 
     const getTxButtonText = (
@@ -93,12 +94,12 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? lendTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? lendTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 
@@ -120,10 +121,11 @@ const SupplyAaveButton = ({
             }))
 
             logEvent('lend_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -133,7 +135,7 @@ const SupplyAaveButton = ({
                 functionName: 'supply',
                 args: [
                     underlyingAssetAdress,
-                    parseUnits(amount, decimals),
+                    amount.amountParsed,
                     walletAddress,
                     0,
                 ],
@@ -146,10 +148,13 @@ const SupplyAaveButton = ({
                     }))
 
                     logEvent('lend_completed', {
-                        amount,
+                        amount: amount.amountRaw,
                         token_symbol: assetDetails?.asset?.token?.symbol,
                         platform_name: assetDetails?.name,
-                        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                        chain_name:
+                            CHAIN_ID_MAPPER[
+                                Number(assetDetails?.chain_id) as ChainId
+                            ],
                         wallet_address: walletAddress,
                     })
                 })
@@ -187,7 +192,7 @@ const SupplyAaveButton = ({
         if (lendTx.status === 'view') return
 
         if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amountBN)) {
+            if (lendTx.allowanceBN.gte(amount.amountParsed)) {
                 setLendTx((prev: TLendTx) => ({
                     ...prev,
                     status: 'lend',
@@ -234,10 +239,11 @@ const SupplyAaveButton = ({
         // }
 
         logEvent('approve_clicked', {
-            amount,
+            amount: amount.amountRaw,
             token_symbol: assetDetails?.asset?.token?.symbol,
             platform_name: assetDetails?.name,
-            chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+            chain_name:
+                CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
             wallet_address: walletAddress,
         })
 
@@ -250,10 +256,11 @@ const SupplyAaveButton = ({
             }))
 
             logEvent('approve_initiated', {
-                amount,
+                amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
                 platform_name: assetDetails?.name,
-                chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
 
@@ -261,7 +268,7 @@ const SupplyAaveButton = ({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [poolContractAddress, parseUnits(amount, decimals)],
+                args: [poolContractAddress, amount.amountParsed],
             }).catch((error) => {
                 setLendTx((prev: TLendTx) => ({
                     ...prev,
@@ -315,7 +322,7 @@ const SupplyAaveButton = ({
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button
-                disabled={(isPending || isConfirming || disabled)}
+                disabled={isPending || isConfirming || disabled}
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()

@@ -1,5 +1,10 @@
 import { Market, MarketId } from '@morpho-org/blue-sdk'
-import { useMarket, usePosition, usePositions, useVault } from '@morpho-org/blue-sdk-wagmi'
+import {
+    useMarket,
+    usePosition,
+    usePositions,
+    useVault,
+} from '@morpho-org/blue-sdk-wagmi'
 import { useQuery } from '@tanstack/react-query'
 import { Position } from 'postcss'
 
@@ -21,7 +26,6 @@ function getMarketData({
     enabled: boolean
     walletAddress: `0x${string}`
 }) {
-
     if (!enabled) return null
     const { data: marketData } = useMarket({
         marketId,

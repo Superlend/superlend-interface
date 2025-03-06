@@ -98,13 +98,12 @@ export const InfiniteMovingTokenBadges = ({
                     pauseOnHover && 'hover:[animation-play-state:paused]'
                 )}
             >
-                {isLoadingOpportunitiesData && (
+                {isLoadingOpportunitiesData &&
                     Array.from({ length: 10 }).map((_, index) => (
                         <li key={`opportunity-${index}`} className="w-auto">
                             <Skeleton className="h-[32px] w-[100px] rounded-4" />
                         </li>
-                    ))
-                )}
+                    ))}
                 {!isLoadingOpportunitiesData &&
                     opportunitiesData.map((opportunity: any, index: number) => (
                         <li key={`opportunity-${index}`} className="w-auto">
@@ -120,23 +119,38 @@ export const InfiniteMovingTokenBadges = ({
                                             height={26}
                                             className="object-contain shrink-0 rounded-full h-[26px] w-[26px] max-w-[26px] max-h-[26px] select-none"
                                         />
-                                        <BodyText level="body2" weight="medium" className='select-none'>
-                                            {abbreviateNumber(Number(opportunity.platform.apy.avg_7days))}%
+                                        <BodyText
+                                            level="body2"
+                                            weight="medium"
+                                            className="select-none"
+                                        >
+                                            {abbreviateNumber(
+                                                Number(
+                                                    opportunity.platform.apy
+                                                        .avg_7days
+                                                )
+                                            )}
+                                            %
                                         </BodyText>
                                     </div>
                                 }
                                 content={
-                                    <div className='flex flex-col select-none divide-y divide-gray-200'>
+                                    <div className="flex flex-col select-none divide-y divide-gray-200">
                                         <div className="flex gap-2 items-center justify-start pb-2">
                                             <ImageWithDefault
                                                 loading="lazy"
-                                                src={'/icons/graph-up-in-box.svg'}
+                                                src={
+                                                    '/icons/graph-up-in-box.svg'
+                                                }
                                                 alt={'Last 7D APY'}
                                                 width={16}
                                                 height={16}
                                                 className="object-contain shrink-0 h-[16px] w-[16px] max-w-[16px] max-h-[16px]"
                                             />
-                                            <Label weight="normal" className='text-gray-700'>
+                                            <Label
+                                                weight="normal"
+                                                className="text-gray-700"
+                                            >
                                                 Last 7D APY
                                             </Label>
                                         </div>
@@ -149,29 +163,52 @@ export const InfiniteMovingTokenBadges = ({
                                                 height={14}
                                                 className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
                                             />
-                                            <Label weight="normal" className='text-gray-700'>
+                                            <Label
+                                                weight="normal"
+                                                className="text-gray-700"
+                                            >
                                                 {opportunity.platform.name}
                                             </Label>
                                         </div>
                                         <div className="flex gap-2 items-center justify-start pt-2">
                                             <ImageWithDefault
                                                 loading="lazy"
-                                                src={allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.logo}
-                                                alt={allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.name}
+                                                src={
+                                                    allChainsData.find(
+                                                        (chain) =>
+                                                            chain.chain_id ===
+                                                            opportunity.chain_id
+                                                    )?.logo
+                                                }
+                                                alt={
+                                                    allChainsData.find(
+                                                        (chain) =>
+                                                            chain.chain_id ===
+                                                            opportunity.chain_id
+                                                    )?.name
+                                                }
                                                 width={14}
                                                 height={14}
                                                 className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
                                             />
-                                            <Label weight="normal" className='text-gray-700'>
-                                                {allChainsData.find((chain) => chain.chain_id === opportunity.chain_id)?.name}
+                                            <Label
+                                                weight="normal"
+                                                className="text-gray-700"
+                                            >
+                                                {
+                                                    allChainsData.find(
+                                                        (chain) =>
+                                                            chain.chain_id ===
+                                                            opportunity.chain_id
+                                                    )?.name
+                                                }
                                             </Label>
                                         </div>
                                     </div>
                                 }
                             />
                         </li>
-                    ))
-                }
+                    ))}
             </ul>
         </div>
     )

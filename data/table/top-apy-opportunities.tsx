@@ -31,7 +31,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorFn: (item) => item.tokenSymbol,
         cell: ({ row }) => {
             const searchParams = useSearchParams()
-            const isMorphoShiftToken = row.original.tokenAddress === "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
+            const isMorphoShiftToken =
+                row.original.tokenAddress ===
+                '0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559'
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
             const tokenSymbol: string = row.getValue('tokenSymbol')
@@ -111,7 +113,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             {tokenSymbol}
                         </BodyText>
                     </Link>
-                    {(isMorphoShiftToken && positionTypeParam === 'lend') &&
+                    {isMorphoShiftToken && positionTypeParam === 'lend' && (
                         <InfoTooltip
                             label={
                                 <ImageWithDefault
@@ -123,7 +125,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 />
                             }
                             content="Supplying to this vault earns up to 25% APY in SHIFT rewards"
-                        />}
+                        />
+                    )}
                 </span>
             )
         },
@@ -183,6 +186,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 content: token.name,
                             })
                         )}
+                        showMoreItemsTooltip={moreItemsData.length > 0}
                         maxItemsToShow={MAX_ITEMS_TO_SHOW}
                         moreItemsTooltipContent={
                             <ScrollArea type="always" className={`${moreItemsData.length > 5 ? 'h-[200px]' : 'h-[50px]'} w-full rounded-md p-0 pr-6`}>
@@ -225,13 +229,15 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     {
         accessorKey: 'platformName',
         header: 'Platform',
-        accessorFn: (item) => `${item.platformName} ${item.platformWithMarketName}`,
+        accessorFn: (item) =>
+            `${item.platformName} ${item.platformWithMarketName}`,
         cell: ({ row }) => {
-            const { width: screenWidth } = useDimensions()
             const platformName: string = row.getValue('platformName')
             const platformId: string = row.original.platformId
-            const platformWithMarketName: string = row.original.platformWithMarketName
-            const formattedPlatformWithMarketName: string = platformWithMarketName.split(' ').slice(1).join(' ')
+            const platformWithMarketName: string =
+                row.original.platformWithMarketName
+            const formattedPlatformWithMarketName: string =
+                platformWithMarketName.split(' ').slice(1).join(' ')
             const platformLogo = row.original.platformLogo
             const isMorpho =
                 row.original.platformId.split('-')[0].toLowerCase() ===
@@ -243,8 +249,10 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             // const morphoLabel =
             //     isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
             // const formattedPlatformName = isMorpho ? morphoLabel : platformName
-            const platformDisplayName = `${capitalizeText(platformName.split(' ')[0])} ${getPlatformVersion(platformId)}`;
-            const showPlatformCuratorName = platformDisplayName.split(' ')[1].toLowerCase() !== formattedPlatformWithMarketName.toLowerCase();
+            const platformDisplayName = `${capitalizeText(platformName.split(' ')[0])} ${getPlatformVersion(platformId)}`
+            const showPlatformCuratorName =
+                platformDisplayName.split(' ')[1].toLowerCase() !==
+                formattedPlatformWithMarketName.toLowerCase()
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -262,16 +270,14 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         >
                             {platformDisplayName}
                         </BodyText>
-                        {showPlatformCuratorName &&
-                            <Label className="text-gray-800 inline-block leading-0 capitalize truncate max-w-[100px]">
+                        {showPlatformCuratorName && (
+                            <Label title={formattedPlatformWithMarketName} className="text-gray-800 inline-block leading-0 truncate max-w-[100px]">
                                 {formattedPlatformWithMarketName}
                             </Label>
-                        }
+                        )}
                     </div>
                     {isMorpho && !isVault && positionTypeParam === 'lend' && (
-                        <InfoTooltip
-                            content="Supplying directly to Morpho markets is risky and not advised by the Morpho team"
-                        />
+                        <InfoTooltip content="Supplying directly to Morpho markets is risky and not advised by the Morpho team" />
                     )}
                 </span>
             )
@@ -427,6 +433,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
+            const isFluidProtocol = row.original.platformId.split('-')[0].toLowerCase() === PlatformType.FLUID
+
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -473,7 +481,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <BodyText level={'body2'} weight={'medium'}>
                         {`${apy7DayAvgFormatted}%`}
                     </BodyText>
-                    {hasRewards && (
+                    {(hasRewards && !isFluidProtocol) && (
                         <InfoTooltip
                             label={
                                 <ImageWithDefault
@@ -497,58 +505,58 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         },
         enableGlobalFilter: false,
     },
-    {
-        accessorKey: 'max_ltv',
-        accessorFn: (item) => Number(item.max_ltv),
-        header: () => (
-            <InfoTooltip
-                side="bottom"
-                label={<TooltipText>Max LTV</TooltipText>}
-                content={
-                    'Maximum amount that can be borrowed against the value of collateral.'
-                }
-            />
-        ),
-        cell: ({ row }) => {
-            const isMorpho =
-                row.original.platformId.split('-')[0].toLowerCase() ===
-                PlatformType.MORPHO
-            const isVault = row.original.isVault
+    // {
+    //     accessorKey: 'max_ltv',
+    //     accessorFn: (item) => Number(item.max_ltv),
+    //     header: () => (
+    //         <InfoTooltip
+    //             side="bottom"
+    //             label={<TooltipText>Max LTV</TooltipText>}
+    //             content={
+    //                 'Maximum amount that can be borrowed against the value of collateral.'
+    //             }
+    //         />
+    //     ),
+    //     cell: ({ row }) => {
+    //         const isMorpho =
+    //             row.original.platformId.split('-')[0].toLowerCase() ===
+    //             PlatformType.MORPHO
+    //         const isVault = row.original.isVault
 
-            if (isMorpho && isVault) {
-                return (
-                    <InfoTooltip
-                        label={<Badge>N/A</Badge>}
-                        content="This does not apply to Morpho vaults, as the curator maintains this."
-                    />
-                )
-            }
+    //         if (isMorpho && isVault) {
+    //             return (
+    //                 <InfoTooltip
+    //                     label={<Badge>N/A</Badge>}
+    //                     content="This does not apply to Morpho vaults, as the curator maintains this."
+    //                 />
+    //             )
+    //         }
 
-            return (
-                <span className="flex items-center gap-2">
-                    {Number(row.getValue('max_ltv')) > 0 && (
-                        <BodyText level={'body2'} weight={'medium'}>
-                            {`${Number(row.getValue('max_ltv')).toFixed(2)}%`}
-                        </BodyText>
-                    )}
-                    {Number(row.getValue('max_ltv')) === 0 && (
-                        <InfoTooltip
-                            label={
-                                <TooltipText>
-                                    <BodyText level={'body2'} weight={'medium'}>
-                                        {`${row.getValue('max_ltv')}%`}
-                                    </BodyText>
-                                </TooltipText>
-                            }
-                            content="This asset cannot be used as collateral to take out a loan"
-                        />
-                    )}
-                </span>
-            )
-        },
-        size: 150,
-        enableGlobalFilter: false,
-    },
+    //         return (
+    //             <span className="flex items-center gap-2">
+    //                 {Number(row.getValue('max_ltv')) > 0 && (
+    //                     <BodyText level={'body2'} weight={'medium'}>
+    //                         {`${Number(row.getValue('max_ltv')).toFixed(2)}%`}
+    //                     </BodyText>
+    //                 )}
+    //                 {Number(row.getValue('max_ltv')) === 0 && (
+    //                     <InfoTooltip
+    //                         label={
+    //                             <TooltipText>
+    //                                 <BodyText level={'body2'} weight={'medium'}>
+    //                                     {`${row.getValue('max_ltv')}%`}
+    //                                 </BodyText>
+    //                             </TooltipText>
+    //                         }
+    //                         content="This asset cannot be used as collateral to take out a loan"
+    //                     />
+    //                 )}
+    //             </span>
+    //         )
+    //     },
+    //     size: 150,
+    //     enableGlobalFilter: false,
+    // },
     {
         accessorKey: 'deposits',
         accessorFn: (item) => Number(item.deposits),
@@ -662,6 +670,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             content: token.name,
                         })
                     )}
+                    showMoreItemsTooltip={moreItemsData.length > 0}
                     maxItemsToShow={MAX_ITEMS_TO_SHOW}
                     moreItemsTooltipContent={
                         <ScrollArea type="always" className={`${moreItemsData.length > 5 ? 'h-[200px]' : 'h-[50px]'} w-full rounded-md p-0 pr-6`}>
