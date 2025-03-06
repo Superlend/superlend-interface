@@ -517,11 +517,11 @@ function MorphoMarkets({
                     <BodyText
                         level="body2"
                         weight="normal"
-                        className="capitalize text-gray-600"
+                        className="text-gray-600"
                     >
                         {isLendPositionType(positionType)
-                            ? 'add collateral'
-                            : `borrow ${morphoBorrowTokenDetails?.token?.symbol || ''}`}
+                            ? 'Add Collateral'
+                            : `Borrow ${morphoBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
 
                     {isWalletConnected && isLendPositionType(positionType) && (

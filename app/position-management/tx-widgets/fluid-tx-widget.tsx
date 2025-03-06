@@ -740,11 +740,11 @@ function FluidVaults({
                     <BodyText
                         level="body2"
                         weight="normal"
-                        className="capitalize text-gray-600"
+                        className="text-gray-600"
                     >
                         {isLendPositionType(positionType)
                             ? 'Lend'
-                            : `borrow ${fluidBorrowTokenDetails?.token?.symbol || ''}`}
+                            : `Borrow ${fluidBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
 
                     {isWalletConnected && isLendPositionType(positionType) && (
