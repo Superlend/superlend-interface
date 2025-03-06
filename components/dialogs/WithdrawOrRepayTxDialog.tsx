@@ -290,10 +290,9 @@ export function WithdrawOrRepayTxDialog({
         )
     }
 
-    const currentPositionAmount = Number(positionAmount)
-    const newPositionAmount = Number(positionAmount) - Number(amount)
-    // console.log('positionAmount', positionAmount)
-    // console.log('amount', amount)
+    const currentPositionAmount = Number(positionAmount) // In Dollar Value
+    const inputAmountInDollar = (Number(amount) * Number(assetDetails?.asset?.token?.price_usd))
+    const newPositionAmount = currentPositionAmount - inputAmountInDollar
 
     const disableActionButton = disabled || isTxInProgress
     // || (!hasAcknowledgedRisk && !isWithdrawAction && isHfLow())
@@ -308,7 +307,7 @@ export function WithdrawOrRepayTxDialog({
             )
         }
 
-        return !isWalletConnected || Number(amount) === Number(positionAmount) || isLoadingMaxAmount
+        return !isWalletConnected || newPositionAmount < 0 || currentPositionAmount === inputAmountInDollar || isLoadingMaxAmount
     }
 
     // SUB_COMPONENT: Trigger button to open the dialog
@@ -700,7 +699,7 @@ export function WithdrawOrRepayTxDialog({
                                             weight="normal"
                                             className={`text-gray-800`}
                                         >
-                                             {hasLowestDisplayValuePrefix(currentPositionAmount)}{' '}
+                                             ${hasLowestDisplayValuePrefix(currentPositionAmount)}
                                              {isLowestValue(currentPositionAmount)
                                                 ? getLowestDisplayValue(currentPositionAmount)
                                                 : abbreviateNumber(currentPositionAmount)}
@@ -741,12 +740,12 @@ export function WithdrawOrRepayTxDialog({
                                                         weight="normal"
                                                         className={`text-gray-800`}
                                                     >
-                                                        {hasLowestDisplayValuePrefix(newPositionAmount)}{' '}
+                                                        ${hasLowestDisplayValuePrefix(newPositionAmount)}
                                                         {isLowestValue(newPositionAmount)
                                                             ? getLowestDisplayValue(newPositionAmount)
                                                             : abbreviateNumber(newPositionAmount)}
                                                     </BodyText>
-                                                    <ImageWithDefault
+                                                    {/* <ImageWithDefault
                                                         src={
                                                             assetDetails?.asset
                                                                 ?.token?.logo
@@ -758,7 +757,7 @@ export function WithdrawOrRepayTxDialog({
                                                         width={16}
                                                         height={16}
                                                         className="rounded-full max-w-[16px] max-h-[16px]"
-                                                    />
+                                                    /> */}
                                                 </div>
                                             </>
                                         )}
