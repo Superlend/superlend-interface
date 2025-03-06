@@ -14,6 +14,8 @@ import {
 } from 'react'
 import { AssetsDataContext } from './data-provider'
 import { useAccount } from 'wagmi'
+import { useSearchParams } from 'next/navigation'
+import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 
 export type TPositionsFilters = {
     token_ids: string[]
@@ -62,9 +64,48 @@ export default function PositionsProvider({
 }: {
     children: React.ReactNode
 }) {
-    const [positionType, setPositionType] =
-        useState<TPositionType>(positionTypeInit)
-    const [filters, setFilters] = useState<TPositionsFilters>(filtersInit)
+    const searchParams = useSearchParams()
+    const updateSearchParams = useUpdateSearchParams()
+    const positionTypeParam = searchParams.get('position_type') || 'lend'
+    const tokenIdsParam = searchParams.get('token_ids')?.split(',').filter(Boolean) || []
+    const chainIdsParam = searchParams.get('chain_ids')?.split(',').filter(Boolean) || []
+    const platformIdsParam = searchParams.get('protocol_ids')?.split(',').filter(Boolean) || []
+
+    const [positionType, setPositionType] = useState<TPositionType>(positionTypeParam as TPositionType)
+    const [filters, setFilters] = useState<TPositionsFilters>({
+        token_ids: tokenIdsParam,
+        chain_ids: chainIdsParam,
+        platform_ids: platformIdsParam,
+        protocol_identifier: [],
+    })
+
+    // Update URL when filters change
+    useEffect(() => {
+        updateSearchParams({
+            token_ids: filters.token_ids.length ? filters.token_ids.join(',') : undefined,
+            chain_ids: filters.chain_ids.length ? filters.chain_ids.join(',') : undefined,
+            protocol_ids: filters.platform_ids.length ? filters.platform_ids.join(',') : undefined,
+        })
+    }, [filters])
+
+    // Update URL when position type changes
+    useEffect(() => {
+        updateSearchParams({
+            position_type: positionType,
+        })
+    }, [positionType])
+
+    // Initialize from URL params only once on mount
+    useEffect(() => {
+        setFilters({
+            token_ids: tokenIdsParam,
+            chain_ids: chainIdsParam,
+            platform_ids: platformIdsParam,
+            protocol_identifier: [],
+        })
+        setPositionType(positionTypeParam as TPositionType)
+    }, []) // Empty dependency array means this runs only once on mount
+
     const [isLoadingPortfolioData, setIsLoadingPortfolioData] =
         useState<boolean>(false)
     const [isErrorPortfolioData, setIsErrorPortfolioData] =
