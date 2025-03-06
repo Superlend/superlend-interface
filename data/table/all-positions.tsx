@@ -190,7 +190,7 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                             {`${capitalizeText(platformName)} ${getPlatformVersion(platformId)}`}
                         </BodyText>
                         {showPlatformCuratorName &&
-                            <Label className="text-gray-800 leading-0 capitalize truncate max-w-[120px]">
+                            <Label className="text-gray-800 leading-0 truncate max-w-[120px]">
                                 {formattedPlatformWithMarketName}
                             </Label>
                         }
