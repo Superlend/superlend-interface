@@ -66,6 +66,7 @@ import { getChainDetails } from '@/app/position-management/helper-functions'
 import { useAssetsDataContext } from '@/context/data-provider'
 import ExternalLink from '@/components/ExternalLink'
 import { parseUnits } from 'ethers/lib/utils'
+import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 
 export function WithdrawOrRepayTxDialog({
     isOpen,
@@ -109,41 +110,6 @@ export function WithdrawOrRepayTxDialog({
     positionAmount: string | number | undefined
     errorMessage: string | null
 }) {
-    const getActionButtonAmount = () => {
-        const amountWithSlippage = (Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)
-        if (actionType === 'repay') {
-            const amountParsed = parseUnits(
-                amount === '' ? '0' : amountWithSlippage,
-                assetDetails?.asset?.token?.decimals ?? 0
-            ).toString()
-            return {
-                amountRaw: amountWithSlippage,
-                amountParsed,
-                scValue:
-                    amountParsed === maxRepayAmount.maxToRepay
-                        ? maxRepayAmount.maxToRepaySCValue
-                        : '-' + amountParsed.toString(),
-            }
-        }
-        if (actionType === 'withdraw') {
-            const amountParsed = parseUnits(
-                amount === '' ? '0' : amountWithSlippage,
-                assetDetails?.asset?.token?.decimals ?? 0
-            ).toString()
-            const v = {
-                amountRaw: amountWithSlippage,
-                amountParsed,
-                scValue:
-                    amountParsed === maxWithdrawAmount.maxToWithdraw
-                        ? maxWithdrawAmount.maxToWithdrawSCValue
-                        : '-' + amountParsed.toString(),
-            }
-
-            return v
-        }
-        return { amountRaw: '0', scValue: '0', amountParsed: '0' }
-    }
-
     const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
         useTxContext() as TTxContext
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
@@ -163,6 +129,17 @@ export function WithdrawOrRepayTxDialog({
         allChainsData,
         chainIdToMatch: assetDetails?.chain_id,
     })
+    const {
+        erc20TokensBalanceData,
+        isLoading: isLoadingErc20TokensBalanceData,
+        // isRefreshing: isRefreshingErc20TokensBalanceData,
+        setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
+    } = useUserTokenBalancesContext()
+
+    const currentTokenBalanceInWallet = (
+        erc20TokensBalanceData[Number(chain_id)]?.[assetDetails?.asset?.token?.address.toLowerCase()]
+            ?.balanceFormatted ?? 0
+    ).toString()
 
     const isMorphoVaultsProtocol = !!assetDetails?.vault
     // const isMorphoMarketProtocol = !!assetDetails?.market
@@ -646,6 +623,34 @@ export function WithdrawOrRepayTxDialog({
                 <div className="flex flex-col items-center justify-between px-6 bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
                     {isShowBlock({
                         repay: true,
+                        withdraw: false,
+                    }) && (
+                        <div
+                            className={`flex items-center justify-between w-full py-3`}
+                        >
+                            <BodyText
+                                level="body2"
+                                weight="normal"
+                                className="text-gray-600"
+                            >
+                                Balance
+                            </BodyText>
+                            {isLoadingErc20TokensBalanceData ? (
+                                <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
+                            ) : (
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-gray-800"
+                            >
+                                {handleSmallestValue(currentTokenBalanceInWallet)}{" "}
+                                {assetDetails?.asset?.token?.symbol}
+                                </BodyText>
+                            )}
+                        </div>
+                    )}
+                    {isShowBlock({
+                        repay: true,
                         withdraw: true,
                     }) && (
                         <div
@@ -657,8 +662,8 @@ export function WithdrawOrRepayTxDialog({
                                 className="text-gray-600"
                             >
                                 {isWithdrawAction
-                                    ? 'Withdraw limit:'
-                                    : 'Borrowed:'}
+                                    ? 'Withdraw limit'
+                                    : 'Borrowed'}
                             </BodyText>
                             {isLoadingMaxAmount ? (
                                 <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
@@ -1129,7 +1134,13 @@ export function WithdrawOrRepayTxDialog({
                     disabled={disableActionButton}
                     handleCloseModal={handleOpenChange}
                     asset={assetDetails}
-                    amount={getActionButtonAmount()}
+                    amount={getActionButtonAmount({
+                        amount,
+                        actionType,
+                        assetDetails,
+                        maxRepayAmount,
+                        maxWithdrawAmount,
+                    })}
                     actionType={actionType}
                 />
             </div>
@@ -1229,4 +1240,51 @@ function handleSmallestValue(amount: string, maxDecimalsToDisplay: number = 2) {
         ? Math.abs(Number(amount)).toFixed(10)
         : amount.toString()
     return `${hasLowestDisplayValuePrefix(Number(amountFormatted), maxDecimalsToDisplay)} ${getLowestDisplayValue(Number(amountFormatted), maxDecimalsToDisplay)}`
+}
+
+const getActionButtonAmount = ({
+    amount,
+    actionType,
+    assetDetails,
+    maxRepayAmount,
+    maxWithdrawAmount,
+}: {
+    amount: string
+    actionType: TActionType 
+    assetDetails: any
+    maxRepayAmount: any
+    maxWithdrawAmount: any
+}) => {
+    const amountWithSlippage = (Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)
+    if (actionType === 'repay') {
+        const amountParsed = parseUnits(
+            amount === '' ? '0' : amountWithSlippage,
+            assetDetails?.asset?.token?.decimals ?? 0
+        ).toString()
+        return {
+            amountRaw: amountWithSlippage,
+            amountParsed,
+            scValue:
+                amountParsed === maxRepayAmount.maxToRepay
+                    ? maxRepayAmount.maxToRepaySCValue
+                    : '-' + amountParsed.toString(),
+        }
+    }
+    if (actionType === 'withdraw') {
+        const amountParsed = parseUnits(
+            amount === '' ? '0' : amountWithSlippage,
+            assetDetails?.asset?.token?.decimals ?? 0
+        ).toString()
+        const v = {
+            amountRaw: amountWithSlippage,
+            amountParsed,
+            scValue:
+                amountParsed === maxWithdrawAmount.maxToWithdraw
+                    ? maxWithdrawAmount.maxToWithdrawSCValue
+                    : '-' + amountParsed.toString(),
+        }
+
+        return v
+    }
+    return { amountRaw: '0', scValue: '0', amountParsed: '0' }
 }

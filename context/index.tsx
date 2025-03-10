@@ -20,6 +20,7 @@ import {
     scroll,
     metis,
     linea,
+    sonic,
 } from 'viem/chains'
 import { http } from 'wagmi'
 import { AnalyticsProvider } from './analytics-provider'
@@ -44,6 +45,7 @@ export const config = createConfig({
         etherlink,
         metis,
         linea,
+        sonic,
     ], // Pass your required chains as an array
     transports: {
         [mainnet.id]: http(),
@@ -58,6 +60,7 @@ export const config = createConfig({
         [arbitrum.id]: http(),
         [etherlink.id]: http(),
         [linea.id]: http(),
+        [sonic.id]: http(),
     },
 })
 
@@ -92,6 +95,7 @@ const privyConfig = {
         etherlink,
         metis,
         linea,
+        sonic,
     ],
 }
 

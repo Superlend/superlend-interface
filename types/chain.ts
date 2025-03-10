@@ -17,6 +17,7 @@ export enum ChainId {
     Metis = 1088,
     Etherlink = 42793,
     Linea = 59144,
+    Sonic = 146,
 }
 
 export enum ChainName {
@@ -32,4 +33,5 @@ export enum ChainName {
     Etherlink = 'etherlink',
     Arbitrum = 'arbitrum',
     Linea = 'linea',
+    Sonic = 'sonic',
 }
