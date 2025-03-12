@@ -1128,7 +1128,10 @@ export function WithdrawOrRepayTxDialog({
                     </div>
                 )}
                 {/* Error Message */}
-                {errorMessage && <CustomAlert description={errorMessage} />}
+                {
+                    (errorMessage && withdrawTx.status !== 'view' && repayTx.status !== 'view') && 
+                    <CustomAlert description={errorMessage} />
+                }
                 {/* Block 4 */}
                 <ActionButton
                     disabled={disableActionButton}

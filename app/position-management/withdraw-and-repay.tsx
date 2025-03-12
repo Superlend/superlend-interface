@@ -959,15 +959,16 @@ export default function WithdrawAndRepayActionButton({
 
     const disabledButton: boolean = useMemo(
         () =>
-            Number(amount) >
+        (isWithdrawAction ? (withdrawTx.status === 'view') : (repayTx.status === 'view')) ? false :
+            (Number(amount) >
                 Number(
                     isWithdrawAction
                         ? maxWithdrawAmountForTx.maxToWithdrawFormatted
                         : maxRepayAmountForTx.maxToRepayFormatted
                 ) ||
             Number(amount) <= 0 ||
-            toManyDecimals,
-        [amount, maxWithdrawAmountForTx, toManyDecimals, isWithdrawAction]
+            toManyDecimals),
+        [amount, maxWithdrawAmountForTx, toManyDecimals, isWithdrawAction, withdrawTx.status, repayTx.status]
     )
 
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
