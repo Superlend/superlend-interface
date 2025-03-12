@@ -1261,11 +1261,11 @@ const getActionButtonAmount = ({
     const amountWithSlippage = (Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)
     if (actionType === 'repay') {
         const amountParsed = parseUnits(
-            amount === '' ? '0' : amountWithSlippage,
+            amount === '' ? '0' : amount,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
         return {
-            amountRaw: amountWithSlippage,
+            amountRaw: amount,
             amountParsed,
             scValue:
                 amountParsed === maxRepayAmount.maxToRepay
@@ -1275,11 +1275,11 @@ const getActionButtonAmount = ({
     }
     if (actionType === 'withdraw') {
         const amountParsed = parseUnits(
-            amount === '' ? '0' : amountWithSlippage,
+            amount === '' ? '0' : amount,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
         const v = {
-            amountRaw: amountWithSlippage,
+            amountRaw: amount,
             amountParsed,
             scValue:
                 amountParsed === maxWithdrawAmount.maxToWithdraw
