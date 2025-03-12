@@ -212,6 +212,9 @@ export function ConfirmationDialog({
             (lendTx.status !== 'approve' || borrowTx.status !== 'borrow')
         ) {
             setAmount('')
+            setTimeout(() => {
+                resetLendBorrowTx()
+            }, 1000)
         }
     }
 
