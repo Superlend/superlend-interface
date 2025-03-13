@@ -24,7 +24,7 @@ export default function DiscoverOpportunities() {
     const { logEvent } = useAnalytics()
     // Token Addresses
     const opportunity1TokenAddress = "0xfc24f770f94edbca6d6f885e12d4317320bcb401";
-    const opportunity2TokenAddress = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
+    const opportunity2TokenAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";
     const opportunity3TokenAddress = "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
 
     // Chain IDs
@@ -34,7 +34,7 @@ export default function DiscoverOpportunities() {
 
     // Protocol Identifiers
     const opportunity1ProtocolIdentifier = "0xf80e34148c541f12a9eec9607c3b5da7ae94dee4c8b33d3a0c1b8b0d13b6f8e8";
-    const opportunity2ProtocolIdentifier = "0x61b49ba86d3fe3b9371211150cc34ae8fcd52998889a72dcbb88165034335933";
+    const opportunity2ProtocolIdentifier = "0x988c79a8e0baacf7cf1d3975d3cf5a6ef407bec6c11149ab05e7f65fc997cab1";
     const opportunity3ProtocolIdentifier = "0x027cb6a3b64db87be63dc9a3ee7fa0becb9344829e996c4660ac9cadd236bd38";
 
     // Platform Data
@@ -82,9 +82,9 @@ export default function DiscoverOpportunities() {
         {
             id: 2,
             label: "Automated Strategy",
-            tokenSymbol: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol,
+            tokenSymbol: `Seamless ${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol}`,
             platformName: "Morpho",
-            chainName: "Ethereum",
+            chainName: "Base",
             description: description2,
             tokenImage: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.logo,
             platformImage: `${imageBaseUrl}/morpho-logo.svg`,
