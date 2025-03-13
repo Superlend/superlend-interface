@@ -883,7 +883,7 @@ function SelectTokensDropdown({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden">
-                <ScrollArea className="h-[200px]">
+                <div className="h-full max-h-[200px] overflow-y-auto">
                     {options?.map((asset: any) => (
                         <DropdownMenuItem
                             key={asset?.token?.address}
@@ -910,7 +910,7 @@ function SelectTokensDropdown({
                             </BodyText>
                         </DropdownMenuItem>
                     ))}
-                </ScrollArea>
+                </div>
             </DropdownMenuContent>
         </DropdownMenu>
     )
