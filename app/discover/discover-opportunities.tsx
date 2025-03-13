@@ -82,7 +82,7 @@ export default function DiscoverOpportunities() {
         {
             id: 2,
             label: "Automated Strategy",
-            tokenSymbol: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol,
+            tokenSymbol: `Seamless ${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol}`,
             platformName: "Morpho",
             chainName: "Base",
             description: description2,
