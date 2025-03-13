@@ -2,7 +2,7 @@ import { createContext, ReactNode, useContext, useEffect } from 'react'
 import { Context as ReactContext } from 'react'
 import * as amplitude from '@amplitude/analytics-browser'
 import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
-import { plugin as engagementPlugin } from '@amplitude/engagement-browser';
+// import { plugin as engagementPlugin } from '@amplitude/engagement-browser';
 
 type AmplitudeAnalyticsProviderProps = { children: ReactNode } & {
     apiKey: string
@@ -30,7 +30,7 @@ export const AmplitudeAnalyticsProvider = ({
             sampleRate: 1,
         })
         amplitude.add(sessionReplay)
-        amplitude.add(engagementPlugin())
+        // amplitude.add(engagementPlugin())
         amplitude.init(apiKey, {
             defaultTracking: {
                 sessions: true
