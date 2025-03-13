@@ -24,17 +24,17 @@ export default function DiscoverOpportunities() {
     const { logEvent } = useAnalytics()
     // Token Addresses
     const opportunity1TokenAddress = "0xfc24f770f94edbca6d6f885e12d4317320bcb401";
-    const opportunity2TokenAddress = "0x8236a87084f8b84306f72007f36f2618a5634494";
+    const opportunity2TokenAddress = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
     const opportunity3TokenAddress = "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
 
     // Chain IDs
     const opportunity1ChainId = 42793;
-    const opportunity2ChainId = 1;
+    const opportunity2ChainId = 8453;
     const opportunity3ChainId = 1;
 
     // Protocol Identifiers
     const opportunity1ProtocolIdentifier = "0xf80e34148c541f12a9eec9607c3b5da7ae94dee4c8b33d3a0c1b8b0d13b6f8e8";
-    const opportunity2ProtocolIdentifier = "0x605f89bd6916b261e90c95c8acf371d1cf1edc15f09223b872afcace4827cdae";
+    const opportunity2ProtocolIdentifier = "0x61b49ba86d3fe3b9371211150cc34ae8fcd52998889a72dcbb88165034335933";
     const opportunity3ProtocolIdentifier = "0x027cb6a3b64db87be63dc9a3ee7fa0becb9344829e996c4660ac9cadd236bd38";
 
     // Platform Data
