@@ -31,6 +31,7 @@ import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { CHAIN_ID_MAPPER } from '@/constants'
+import useIsClient from '@/hooks/useIsClient'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -41,6 +42,7 @@ const EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL =
     '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed'
 
 export default function TopApyOpportunities() {
+    const isClient = useIsClient()
     const router = useRouter()
     const { logEvent } = useAnalytics()
     const { walletAddress } = useWalletConnection()
@@ -54,7 +56,7 @@ export default function TopApyOpportunities() {
     const pageParam = searchParams.get('page')
     const sortingParam = searchParams.get('sort')?.split(',') || []
     const excludeRiskyMarketsFlag =
-        typeof window !== 'undefined' &&
+        isClient &&
         localStorage.getItem('exclude_risky_markets') === 'true'
     const [keywords, setKeywords] = useState<string>(keywordsParam)
     const debouncedKeywords = useDebounce(keywords, 300)

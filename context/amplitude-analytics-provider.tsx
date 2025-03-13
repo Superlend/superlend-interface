@@ -2,6 +2,7 @@ import { createContext, ReactNode, useContext, useEffect } from 'react'
 import { Context as ReactContext } from 'react'
 import * as amplitude from '@amplitude/analytics-browser'
 import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
+import { plugin as engagementPlugin } from '@amplitude/engagement-browser';
 
 type AmplitudeAnalyticsProviderProps = { children: ReactNode } & {
     apiKey: string
@@ -24,6 +25,13 @@ export const AmplitudeAnalyticsProvider = ({
     children,
 }: AmplitudeAnalyticsProviderProps) => {
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            import('@amplitude/engagement-browser')
+                .then(({ plugin: engagementPlugin }) => {
+                    amplitude.add(engagementPlugin());
+                })
+                .catch((err) => console.error('Failed to load Amplitude SDK', err));
+        }
         const sessionReplay = sessionReplayPlugin({
             forceSessionTracking: true,
             sampleRate: 1,
