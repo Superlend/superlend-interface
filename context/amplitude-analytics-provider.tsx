@@ -25,12 +25,18 @@ export const AmplitudeAnalyticsProvider = ({
     children,
 }: AmplitudeAnalyticsProviderProps) => {
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            import('@amplitude/engagement-browser')
+                .then(({ plugin: engagementPlugin }) => {
+                    amplitude.add(engagementPlugin());
+                })
+                .catch((err) => console.error('Failed to load Amplitude SDK', err));
+        }
         const sessionReplay = sessionReplayPlugin({
             forceSessionTracking: true,
             sampleRate: 1,
         })
         amplitude.add(sessionReplay)
-        amplitude.add(engagementPlugin())
         amplitude.init(apiKey, {
             defaultTracking: {
                 sessions: true
