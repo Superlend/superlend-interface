@@ -70,8 +70,6 @@ export default function TopApyOpportunities() {
     const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData } =
         useGetOpportunitiesData({
             type: positionTypeParam as TPositionType,
-            chain_ids: chainIdsParam.map((id) => Number(id)),
-            tokens: tokenIdsParam,
         })
     const { allChainsData } = useContext<any>(AssetsDataContext)
 
@@ -233,12 +231,13 @@ export default function TopApyOpportunities() {
         const isCompound = PlatformType.COMPOUND.includes(platformName)
         const isMorpho = PlatformType.MORPHO.includes(platformName)
         const isFluid = PlatformType.FLUID.includes(platformName)
+        const isSuperlend = PlatformType.SUPERLEND.includes(platformName)
 
         const liquidityInUSD = Number(item.platform.liquidity) * Number(item.token.price_usd)
         const borrowsInUSD = Number(item.platform.borrows) * Number(item.token.price_usd)
 
         let availableLiquidity = 0;
-        if (isAaveV3) {
+        if (isAaveV3 || isSuperlend) {
             availableLiquidity = liquidityInUSD - borrowsInUSD
         } else if (isCompound) {
             availableLiquidity = liquidityInUSD - borrowsInUSD
@@ -348,13 +347,20 @@ export default function TopApyOpportunities() {
     }
 
     function handleFilterTableRows(opportunity: TOpportunityTable) {
+        const matchesChainId = chainIdsParam.length === 0 || chainIdsParam.includes(opportunity.chain_id.toString())
+        const matchesToken = tokenIdsParam.length === 0 || tokenIdsParam.includes(opportunity.tokenSymbol)
+
         return positionTypeParam === 'borrow'
             ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity)
+                  handleFilterTableRowsByPlatformIds(opportunity) &&
+                  matchesChainId &&
+                  matchesToken
             : handleExcludeMorphoMarketsByParamFlag(opportunity) &&
                   handleFilterTableRowsByPlatformIds(opportunity) &&
                   opportunity.protocol_identifier !==
-                      EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
+                      EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL &&
+                  matchesChainId &&
+                  matchesToken
     }
 
     function handleRowClick(rowData: any) {

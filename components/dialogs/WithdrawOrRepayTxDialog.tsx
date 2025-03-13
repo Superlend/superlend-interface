@@ -113,6 +113,10 @@ export function WithdrawOrRepayTxDialog({
     const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
         useTxContext() as TTxContext
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
+    const [localAssetDetails, setLocalAssetDetails] = useState(assetDetails)
+    const [localPositionAmount, setLocalPositionAmount] = useState(positionAmount)
+    const [localMaxWithdrawAmount, setLocalMaxWithdrawAmount] = useState(maxWithdrawAmount)
+    const [localMaxRepayAmount, setLocalMaxRepayAmount] = useState(maxRepayAmount)
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
     const { width: screenWidth } = useDimensions()
@@ -127,7 +131,7 @@ export function WithdrawOrRepayTxDialog({
     const { allChainsData } = useAssetsDataContext()
     const chainDetails = getChainDetails({
         allChainsData,
-        chainIdToMatch: assetDetails?.chain_id,
+        chainIdToMatch: localAssetDetails?.chain_id,
     })
     const {
         erc20TokensBalanceData,
@@ -137,11 +141,11 @@ export function WithdrawOrRepayTxDialog({
     } = useUserTokenBalancesContext()
 
     const currentTokenBalanceInWallet = (
-        erc20TokensBalanceData[Number(chain_id)]?.[assetDetails?.asset?.token?.address.toLowerCase()]
+        erc20TokensBalanceData[Number(chain_id)]?.[localAssetDetails?.asset?.token?.address.toLowerCase()]
             ?.balanceFormatted ?? 0
     ).toString()
 
-    const isMorphoVaultsProtocol = !!assetDetails?.vault
+    const isMorphoVaultsProtocol = !!localAssetDetails?.vault
     // const isMorphoMarketProtocol = !!assetDetails?.market
 
     useEffect(() => {
@@ -169,9 +173,13 @@ export function WithdrawOrRepayTxDialog({
         setHasAcknowledgedRisk(false)
 
         if (isOpen) {
+            // Update local states when dialog opens
+            setLocalAssetDetails(assetDetails)
+            setLocalPositionAmount(positionAmount)
+            setLocalMaxWithdrawAmount(maxWithdrawAmount)
+            setLocalMaxRepayAmount(maxRepayAmount)
             // Switch chain when the dialog is opened
             if (!!walletAddress) {
-                // modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
                 handleSwitchChain(Number(chain_id))
             }
         }
@@ -215,7 +223,7 @@ export function WithdrawOrRepayTxDialog({
     }
 
     const inputUsdAmount =
-        Number(amount) * Number(assetDetails?.asset?.token?.price_usd)
+        Number(amount) * Number(localAssetDetails?.asset?.token?.price_usd)
 
     function handleInputUsdAmount(amount: string) {
         const amountFormatted = hasExponent(amount)
@@ -267,8 +275,8 @@ export function WithdrawOrRepayTxDialog({
         )
     }
 
-    const currentPositionAmount = Number(positionAmount) // In Dollar Value
-    const inputAmountInDollar = (Number(amount) * Number(assetDetails?.asset?.token?.price_usd))
+    const currentPositionAmount = Number(localPositionAmount) // In Dollar Value
+    const inputAmountInDollar = (Number(amount) * Number(localAssetDetails?.asset?.token?.price_usd))
     const newPositionAmount = currentPositionAmount - inputAmountInDollar
 
     const disableActionButton = disabled || isTxInProgress
@@ -279,7 +287,7 @@ export function WithdrawOrRepayTxDialog({
             return (
                 !isWalletConnected ||
                 Number(amount) ===
-                    Number(maxWithdrawAmount.maxToWithdrawFormatted) ||
+                    Number(localMaxWithdrawAmount.maxToWithdrawFormatted) ||
                 isLoadingMaxAmount
             )
         }
@@ -326,10 +334,10 @@ export function WithdrawOrRepayTxDialog({
             >
                 {getTxInProgressText({
                     amount,
-                    tokenName: assetDetails?.asset?.token?.symbol,
+                    tokenName: localAssetDetails?.asset?.token?.symbol,
                     txStatus: isWithdrawAction ? withdrawTx : repayTx,
                     actionType,
-                    isMorphoVaults: !!assetDetails?.vault,
+                    isMorphoVaults: !!localAssetDetails?.vault,
                 })}
             </BodyText>
             {canDisplayExplorerLinkWhileLoading && (
@@ -352,8 +360,8 @@ export function WithdrawOrRepayTxDialog({
                                     isWithdrawAction
                                         ? withdrawTx.hash
                                         : repayTx.hash,
-                                    assetDetails?.chain_id ||
-                                        assetDetails?.platform?.chain_id
+                                    localAssetDetails?.chain_id ||
+                                        localAssetDetails?.platform?.chain_id
                                 )}
                                 target="_blank"
                                 rel="noreferrer"
@@ -401,8 +409,8 @@ export function WithdrawOrRepayTxDialog({
             }) && (
                 <div className="flex flex-col items-center justify-center gap-[6px]">
                     <ImageWithDefault
-                        src={assetDetails?.asset?.token?.logo}
-                        alt={assetDetails?.asset?.token?.symbol}
+                        src={localAssetDetails?.asset?.token?.logo}
+                        alt={localAssetDetails?.asset?.token?.symbol}
                         width={40}
                         height={40}
                         className="rounded-full max-w-[40px] max-h-[40px]"
@@ -412,7 +420,7 @@ export function WithdrawOrRepayTxDialog({
                         weight="medium"
                         className="text-gray-800 truncate max-w-[200px]"
                     >
-                        {amount} {assetDetails?.asset?.token?.symbol}
+                        {amount} {localAssetDetails?.asset?.token?.symbol}
                     </HeadingText>
                     {isShowBlock({
                         repay: false,
@@ -477,8 +485,8 @@ export function WithdrawOrRepayTxDialog({
                 }) && (
                     <div className="flex items-center gap-2 px-6 py-3 bg-gray-200 lg:bg-white rounded-5 w-full ring-1 ring-inset ring-secondary-300">
                         <ImageWithDefault
-                            src={assetDetails?.asset?.token?.logo}
-                            alt={assetDetails?.asset?.token?.symbol}
+                            src={localAssetDetails?.asset?.token?.logo}
+                            alt={localAssetDetails?.asset?.token?.symbol}
                             width={24}
                             height={24}
                             className="rounded-full max-w-6 max-h-6"
@@ -507,9 +515,9 @@ export function WithdrawOrRepayTxDialog({
                             onClick={() =>
                                 setAmount(
                                     isWithdrawAction
-                                        ? (maxWithdrawAmount.maxToWithdrawFormatted ??
+                                        ? (localMaxWithdrawAmount.maxToWithdrawFormatted ??
                                               '0')
-                                        : (maxRepayAmount.maxToRepayFormatted ??
+                                        : (localMaxRepayAmount.maxToRepayFormatted ??
                                               '0')
                                 )
                             }
@@ -533,11 +541,11 @@ export function WithdrawOrRepayTxDialog({
                             label={
                                 <ImageWithBadge
                                     mainImg={
-                                        assetDetails?.asset?.token?.logo || ''
+                                        localAssetDetails?.asset?.token?.logo || ''
                                     }
                                     badgeImg={chainDetails?.logo || ''}
                                     mainImgAlt={
-                                        assetDetails?.asset?.token?.symbol
+                                        localAssetDetails?.asset?.token?.symbol
                                     }
                                     badgeImgAlt={chainDetails?.name}
                                     mainImgWidth={'32'}
@@ -550,9 +558,9 @@ export function WithdrawOrRepayTxDialog({
                                 />
                             }
                             content={getTooltipContent({
-                                tokenSymbol: assetDetails?.asset?.token?.symbol,
-                                tokenLogo: assetDetails?.asset?.token?.logo,
-                                tokenName: assetDetails?.asset?.token?.name,
+                                tokenSymbol: localAssetDetails?.asset?.token?.symbol,
+                                tokenLogo: localAssetDetails?.asset?.token?.logo,
+                                tokenName: localAssetDetails?.asset?.token?.name,
                                 chainName: chainDetails?.name || '',
                                 chainLogo: chainDetails?.logo || '',
                             })}
@@ -567,13 +575,13 @@ export function WithdrawOrRepayTxDialog({
                                     className="inline-block truncate max-w-[200px]"
                                     title={amount}
                                 >
-                                    {(Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)}
+                                    {amount}
                                 </span>
                                 <span
                                     className="inline-block truncate max-w-[100px]"
-                                    title={assetDetails?.asset?.token?.symbol}
+                                    title={localAssetDetails?.asset?.token?.symbol}
                                 >
-                                    {assetDetails?.asset?.token?.symbol}
+                                    {localAssetDetails?.asset?.token?.symbol}
                                 </span>
                             </HeadingText>
                             <div className="flex items-center justify-start gap-1">
@@ -611,7 +619,7 @@ export function WithdrawOrRepayTxDialog({
                                 >
                                     {
                                         PlatformTypeMap[
-                                            assetDetails?.protocol_type as keyof typeof PlatformTypeMap
+                                            localAssetDetails?.protocol_type as keyof typeof PlatformTypeMap
                                         ]
                                     }
                                 </BodyText>
@@ -644,7 +652,7 @@ export function WithdrawOrRepayTxDialog({
                                     className="text-gray-800"
                             >
                                 {handleSmallestValue(currentTokenBalanceInWallet)}{" "}
-                                {assetDetails?.asset?.token?.symbol}
+                                {localAssetDetails?.asset?.token?.symbol}
                                 </BodyText>
                             )}
                         </div>
@@ -675,11 +683,11 @@ export function WithdrawOrRepayTxDialog({
                             >
                                 {handleSmallestValue(
                                     isWithdrawAction
-                                        ? maxWithdrawAmount.maxToWithdrawFormatted
-                                        : (positionAmount ?? 0).toString()
+                                        ? localMaxWithdrawAmount.maxToWithdrawFormatted
+                                        : (localPositionAmount ?? 0).toString()
                                 )}{' '}
-                                    {assetDetails?.asset?.token?.symbol ??
-                                        assetDetails?.token?.symbol}
+                                    {localAssetDetails?.asset?.token?.symbol ??
+                                        localAssetDetails?.token?.symbol}
                                 </BodyText>
                             )}
                         </div>
@@ -709,29 +717,8 @@ export function WithdrawOrRepayTxDialog({
                                                 ? getLowestDisplayValue(currentPositionAmount)
                                                 : abbreviateNumber(currentPositionAmount)}
                                         </BodyText>
-                                        {!(
-                                            currentPositionAmount !==
-                                                newPositionAmount &&
-                                            !errorMessage
-                                        ) && (
-                                            <ImageWithDefault
-                                                src={
-                                                    assetDetails?.asset?.token
-                                                        ?.logo
-                                                }
-                                                alt={
-                                                    assetDetails?.asset?.token
-                                                        ?.symbol
-                                                }
-                                                width={16}
-                                                height={16}
-                                                className="rounded-full max-w-[16px] max-h-[16px]"
-                                            />
-                                        )}
                                     </div>
-                                    {currentPositionAmount !==
-                                        newPositionAmount &&
-                                        !errorMessage && (
+                                    {(currentPositionAmount !== newPositionAmount || withdrawTx.status === 'view' || repayTx.status === 'view') && (
                                             <>
                                                 <ArrowRightIcon
                                                     width={16}
@@ -750,19 +737,6 @@ export function WithdrawOrRepayTxDialog({
                                                             ? getLowestDisplayValue(newPositionAmount)
                                                             : abbreviateNumber(newPositionAmount)}
                                                     </BodyText>
-                                                    {/* <ImageWithDefault
-                                                        src={
-                                                            assetDetails?.asset
-                                                                ?.token?.logo
-                                                        }
-                                                        alt={
-                                                            assetDetails?.asset
-                                                                ?.token?.symbol
-                                                        }
-                                                        width={16}
-                                                        height={16}
-                                                        className="rounded-full max-w-[16px] max-h-[16px]"
-                                                    /> */}
                                                 </div>
                                             </>
                                         )}
@@ -838,8 +812,8 @@ export function WithdrawOrRepayTxDialog({
                                             isWithdrawAction
                                                 ? withdrawTx.hash
                                                 : repayTx.hash,
-                                            assetDetails?.chain_id ||
-                                                assetDetails?.platform?.chain_id
+                                            localAssetDetails?.chain_id ||
+                                                localAssetDetails?.platform?.chain_id
                                         )}
                                         target="_blank"
                                         rel="noreferrer"
@@ -947,8 +921,8 @@ export function WithdrawOrRepayTxDialog({
                                                 isWithdrawAction
                                                     ? withdrawTx.hash
                                                     : repayTx.hash,
-                                                assetDetails?.chain_id ||
-                                                    assetDetails?.platform
+                                                localAssetDetails?.chain_id ||
+                                                    localAssetDetails?.platform
                                                         ?.chain_id
                                             )}
                                         >
@@ -997,8 +971,8 @@ export function WithdrawOrRepayTxDialog({
                                                     isWithdrawAction
                                                         ? withdrawTx.hash
                                                         : repayTx.hash,
-                                                    assetDetails?.chain_id ||
-                                                        assetDetails?.platform
+                                                    localAssetDetails?.chain_id ||
+                                                        localAssetDetails?.platform
                                                             ?.chain_id
                                                 )}
                                             >
@@ -1060,8 +1034,8 @@ export function WithdrawOrRepayTxDialog({
                                                     isWithdrawAction
                                                         ? withdrawTx.hash
                                                         : repayTx.hash,
-                                                    assetDetails?.chain_id ||
-                                                        assetDetails?.platform
+                                                    localAssetDetails?.chain_id ||
+                                                        localAssetDetails?.platform
                                                             ?.chain_id
                                                 )}
                                             >
@@ -1109,8 +1083,8 @@ export function WithdrawOrRepayTxDialog({
                                                     isWithdrawAction
                                                         ? withdrawTx.hash
                                                         : repayTx.hash,
-                                                    assetDetails?.chain_id ||
-                                                        assetDetails?.platform
+                                                    localAssetDetails?.chain_id ||
+                                                        localAssetDetails?.platform
                                                             ?.chain_id
                                                 )}
                                             >
@@ -1136,13 +1110,13 @@ export function WithdrawOrRepayTxDialog({
                 <ActionButton
                     disabled={disableActionButton}
                     handleCloseModal={handleOpenChange}
-                    asset={assetDetails}
+                    asset={localAssetDetails}
                     amount={getActionButtonAmount({
                         amount,
                         actionType,
-                        assetDetails,
-                        maxRepayAmount,
-                        maxWithdrawAmount,
+                        assetDetails: localAssetDetails,
+                        maxRepayAmount: localMaxRepayAmount,
+                        maxWithdrawAmount: localMaxWithdrawAmount,
                     })}
                     actionType={actionType}
                 />
@@ -1261,11 +1235,11 @@ const getActionButtonAmount = ({
     const amountWithSlippage = (Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)
     if (actionType === 'repay') {
         const amountParsed = parseUnits(
-            amount === '' ? '0' : amountWithSlippage,
+            amount === '' ? '0' : amount,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
         return {
-            amountRaw: amountWithSlippage,
+            amountRaw: amount,
             amountParsed,
             scValue:
                 amountParsed === maxRepayAmount.maxToRepay
@@ -1275,11 +1249,11 @@ const getActionButtonAmount = ({
     }
     if (actionType === 'withdraw') {
         const amountParsed = parseUnits(
-            amount === '' ? '0' : amountWithSlippage,
+            amount === '' ? '0' : amount,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
         const v = {
-            amountRaw: amountWithSlippage,
+            amountRaw: amount,
             amountParsed,
             scValue:
                 amountParsed === maxWithdrawAmount.maxToWithdraw
