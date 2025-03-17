@@ -222,7 +222,7 @@ export function OpportunitiesDataTable<TData, TValue>({
                                         return (
                                             <TableCell
                                                 key={cell.id}
-                                                className={`py-4 max-md:min-w-[100px] md:min-w-[150px] max-w-[100px] md:max-w-[200px] overflow-hidden truncate first:pl-5 md:first:pl-7 max-md:pr-0 ${rowIndex == 0 ? 'first:rounded-tl-5 last:rounded-tr-5' : ''} ${rowIndex == rows.length - 1 ? 'first:rounded-bl-5 last:rounded-br-5' : ''} ${!!handleRowClick ? 'cursor-pointer' : ''}`}
+                                                className={`py-4 w-[100px] min-w-[100px] max-w-[150px] overflow-hidden truncate first:pl-5 md:first:pl-7 max-md:pr-0 ${rowIndex == 0 ? 'first:rounded-tl-5 last:rounded-tr-5' : ''} ${rowIndex == rows.length - 1 ? 'first:rounded-bl-5 last:rounded-br-5' : ''} ${!!handleRowClick ? 'cursor-pointer' : ''}`}
                                                 style={{
                                                     ...getCommonPinningStyles(
                                                         column as unknown as Column<
