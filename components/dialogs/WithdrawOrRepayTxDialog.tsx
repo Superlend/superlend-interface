@@ -35,7 +35,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { TX_EXPLORER_LINKS } from '@/constants'
+import { SLIPPAGE_PERCENTAGE, TX_EXPLORER_LINKS } from '@/constants'
 import ActionButton from '@/components/common/ActionButton'
 import {
     TRepayTx,
@@ -260,12 +260,16 @@ export function WithdrawOrRepayTxDialog({
         const newHF = Number(healthFactorValues.newHealthFactor.toString())
         const HF = Number(healthFactorValues.healthFactor.toString())
 
-        if (newHF < HF) {
+        // if (newHF < HF) {
+        //     return 'text-danger-500'
+        // } else if (newHF > HF) {
+        //     return 'text-success-500'
+        // } else {
+        //     return 'text-warning-500'
+        // }
+
+        if(newHF < 2) {
             return 'text-danger-500'
-        } else if (newHF > HF) {
-            return 'text-success-500'
-        } else {
-            return 'text-warning-500'
         }
     }
 
@@ -515,9 +519,9 @@ export function WithdrawOrRepayTxDialog({
                             onClick={() =>
                                 setAmount(
                                     isWithdrawAction
-                                        ? (localMaxWithdrawAmount.maxToWithdrawFormatted ??
+                                        ? ((Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
                                               '0')
-                                        : (localMaxRepayAmount.maxToRepayFormatted ??
+                                        : ((Number(localMaxRepayAmount.maxToRepayFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
                                               '0')
                                 )
                             }
@@ -1232,14 +1236,14 @@ const getActionButtonAmount = ({
     maxRepayAmount: any
     maxWithdrawAmount: any
 }) => {
-    const amountWithSlippage = (Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)
+    const amountWithSlippage = (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
     if (actionType === 'repay') {
         const amountParsed = parseUnits(
-            amount === '' ? '0' : amount,
+            amount === '' ? '0' : amountWithSlippage,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
         return {
-            amountRaw: amount,
+            amountRaw: amountWithSlippage,
             amountParsed,
             scValue:
                 amountParsed === maxRepayAmount.maxToRepay
@@ -1249,11 +1253,11 @@ const getActionButtonAmount = ({
     }
     if (actionType === 'withdraw') {
         const amountParsed = parseUnits(
-            amount === '' ? '0' : amount,
+            amount === '' ? '0' : amountWithSlippage,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
         const v = {
-            amountRaw: amount,
+            amountRaw: amountWithSlippage,
             amountParsed,
             scValue:
                 amountParsed === maxWithdrawAmount.maxToWithdraw

@@ -46,6 +46,7 @@ import { TLendTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { TPortfolio } from '../../../types/queries/portfolio'
 import { formatUnits, parseUnits } from 'ethers/lib/utils'
+import { ETH_ADDRESSES } from '@/lib/constants'
 
 export default function MorphoTxWidget({
     isLoading: isLoadingPlatformData,
@@ -433,6 +434,23 @@ function FluidVaults({
             )?.fluid_vault_nftId ?? 0
         )
     }, [portfolioData?.platforms])
+
+
+    // Handle the case where the user is supplying ETH to the vault
+    useEffect(() => {
+        if (
+            lendTx.status === 'approve' && 
+            ETH_ADDRESSES.includes(fluidLendTokenDetails?.token.address?.toLowerCase() ?? '') &&
+            isLendBorrowTxDialogOpen
+        ) {
+            setLendTx((prev: any) => ({
+                ...prev,
+                status: 'lend',
+                hash: '',
+                errorMessage: '',
+            }))
+        }
+    }, [isLendBorrowTxDialogOpen])
 
     useEffect(() => {
         if (lendTx.status === 'approve' && lendTx.isConfirmed) {

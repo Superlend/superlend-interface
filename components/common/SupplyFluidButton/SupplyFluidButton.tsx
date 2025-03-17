@@ -118,15 +118,27 @@ const SupplyFluidButton = ({
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
-    useEffect(() => {
-        if (lendTx.status === 'lend') {
-            if (isFluidVaults) {
-                handleVaultsLendTx()
-            } else {
-                handleLendTx()
-            }
-        }
-    }, [lendTx.status])
+    // useEffect(() => {
+    //     if (lendTx.status === 'approve' && ETH_ADDRESSES.includes(underlyingAssetAdress)) {
+    //         console.log('working')
+    //         setLendTx((prev: any) => ({
+    //             ...prev,
+    //             status: 'lend',
+    //             hash: '',
+    //             errorMessage: '',
+    //         }))
+    //     }
+    // }, [])
+
+    // useEffect(() => {
+    //     if (lendTx.status === 'lend') {
+    //         if (isFluidVaults) {
+    //             handleVaultsLendTx()
+    //         } else {
+    //             handleLendTx()
+    //         }
+    //     }
+    // }, [lendTx.status])
 
     const handleVaultsLendTx = useCallback(async () => {
         try {
@@ -264,27 +276,27 @@ const SupplyFluidButton = ({
         }))
     }, [isPending, isConfirming, isConfirmed])
 
-    useEffect(() => {
-        if (lendTx.status === 'view') return
+    // useEffect(() => {
+    //     if (lendTx.status === 'view') return
 
-        if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amount.amountParsed)) {
-                setLendTx((prev: any) => ({
-                    ...prev,
-                    status: 'lend',
-                    hash: '',
-                    errorMessage: '',
-                }))
-            } else {
-                setLendTx((prev: any) => ({
-                    ...prev,
-                    status: 'approve',
-                    hash: '',
-                    errorMessage: '',
-                }))
-            }
-        }
-    }, [lendTx.allowanceBN])
+    //     if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
+    //         if (lendTx.allowanceBN.gte(amount.amountParsed)) {
+    //             setLendTx((prev: any) => ({
+    //                 ...prev,
+    //                 status: 'lend',
+    //                 hash: '',
+    //                 errorMessage: '',
+    //             }))
+    //         } else {
+    //             setLendTx((prev: any) => ({
+    //                 ...prev,
+    //                 status: 'approve',
+    //                 hash: '',
+    //                 errorMessage: '',
+    //             }))
+    //         }
+    //     }
+    // }, [lendTx.allowanceBN])
 
     useEffect(() => {
         if ((lendTx.status === 'approve' || lendTx.status === 'lend') && hash) {
