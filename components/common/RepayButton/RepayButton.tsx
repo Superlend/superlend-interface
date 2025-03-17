@@ -220,7 +220,7 @@ const RepayButton = ({
     )
 
     const repayFluidVault = useCallback(async () => {
-        let amountToRepay =  amount.scValue
+        let amountToRepay = amount.scValue
         //  parseUnits(
         //     `${-Number(amount)}`,
         //     assetDetails.asset.token.decimals
@@ -253,10 +253,9 @@ const RepayButton = ({
                     BigInt(amountToRepay.toString()),
                     walletAddress,
                 ],
-                value:
-                    underlyingAssetAdress === ETH_ADDRESSES[0]
-                        ? BigInt(amount.amountParsed.toString())
-                        : BigInt('0'),
+                value: ETH_ADDRESSES.includes(underlyingAssetAdress)
+                    ? BigInt(amount.amountParsed.toString())
+                    : BigInt('0'),
             })
                 .then((data) => {
                     setRepayTx((prev: TRepayTx) => ({

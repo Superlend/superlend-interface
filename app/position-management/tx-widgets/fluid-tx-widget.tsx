@@ -563,7 +563,7 @@ function FluidVaults({
                 (lendPosition.token.price_usd ?? 0) *
                 (lendToken.ltv ?? 0)) /
                 100 -
-            ((borrowPosition?.amount ?? 0) * (borrowToken.token.price_usd ?? 0))
+            (borrowPosition?.amount ?? 0) * (borrowToken.token.price_usd ?? 0)
         const maxBorrowToken = (
             maxBorrowUsd / borrowToken.token.price_usd
         ).toFixed(borrowToken.token.decimals)
@@ -921,7 +921,8 @@ function FluidVaults({
                                 // TODO: Get max borrow amount
                                 maxBorrowAmount={{
                                     maxToBorrow: maxBorrowAmount.maxToBorrow,
-                                    maxToBorrowFormatted: maxBorrowAmount.maxToBorrowFormatted,
+                                    maxToBorrowFormatted:
+                                        maxBorrowAmount.maxToBorrowFormatted,
                                     maxToBorrowSCValue: '0',
                                     user: {},
                                 }}
