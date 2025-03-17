@@ -93,9 +93,9 @@ const SupplyFluidButton = ({
                 ? isFluidVaults
                     ? 'Start earning'
                     : 'Start supplying'
-                :isFluidLend
-                        ? 'Supply to vault'
-                        : 'Earn',
+                : isFluidLend
+                  ? 'Supply to vault'
+                  : 'Earn',
     }
 
     const getTxButtonText = (
@@ -107,26 +107,38 @@ const SupplyFluidButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? lendTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? lendTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
-    useEffect(() => {
-        if (lendTx.status === 'lend') {
-            if (isFluidVaults) {
-                handleVaultsLendTx()
-            } else {
-                handleLendTx()
-            }
-        }
-    }, [lendTx.status])
+    // useEffect(() => {
+    //     if (lendTx.status === 'approve' && ETH_ADDRESSES.includes(underlyingAssetAdress)) {
+    //         console.log('working')
+    //         setLendTx((prev: any) => ({
+    //             ...prev,
+    //             status: 'lend',
+    //             hash: '',
+    //             errorMessage: '',
+    //         }))
+    //     }
+    // }, [])
+
+    // useEffect(() => {
+    //     if (lendTx.status === 'lend') {
+    //         if (isFluidVaults) {
+    //             handleVaultsLendTx()
+    //         } else {
+    //             handleLendTx()
+    //         }
+    //     }
+    // }, [lendTx.status])
 
     const handleVaultsLendTx = useCallback(async () => {
         try {
@@ -160,7 +172,9 @@ const SupplyFluidButton = ({
                     0,
                     walletAddress,
                 ],
-                value: underlyingAssetAdress === ETH_ADDRESSES[0] ? BigInt(amount.amountParsed) : BigInt('0'),
+                value: ETH_ADDRESSES.includes(underlyingAssetAdress)
+                    ? BigInt(amount.amountParsed)
+                    : BigInt('0'),
             })
                 .then((data) => {
                     setLendTx((prev: TLendTx) => ({
@@ -175,7 +189,7 @@ const SupplyFluidButton = ({
                         platform_name: assetDetails?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                                Number(assetDetails?.chain_id) as ChainId
                             ],
                         wallet_address: walletAddress,
                     })
@@ -235,7 +249,7 @@ const SupplyFluidButton = ({
                         platform_name: assetDetails?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                                Number(assetDetails?.chain_id) as ChainId
                             ],
                         wallet_address: walletAddress,
                     })
@@ -262,27 +276,27 @@ const SupplyFluidButton = ({
         }))
     }, [isPending, isConfirming, isConfirmed])
 
-    useEffect(() => {
-        if (lendTx.status === 'view') return
+    // useEffect(() => {
+    //     if (lendTx.status === 'view') return
 
-        if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amount.amountParsed)) {
-                setLendTx((prev: any) => ({
-                    ...prev,
-                    status: 'lend',
-                    hash: '',
-                    errorMessage: '',
-                }))
-            } else {
-                setLendTx((prev: any) => ({
-                    ...prev,
-                    status: 'approve',
-                    hash: '',
-                    errorMessage: '',
-                }))
-            }
-        }
-    }, [lendTx.allowanceBN])
+    //     if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
+    //         if (lendTx.allowanceBN.gte(amount.amountParsed)) {
+    //             setLendTx((prev: any) => ({
+    //                 ...prev,
+    //                 status: 'lend',
+    //                 hash: '',
+    //                 errorMessage: '',
+    //             }))
+    //         } else {
+    //             setLendTx((prev: any) => ({
+    //                 ...prev,
+    //                 status: 'approve',
+    //                 hash: '',
+    //                 errorMessage: '',
+    //             }))
+    //         }
+    //     }
+    // }, [lendTx.allowanceBN])
 
     useEffect(() => {
         if ((lendTx.status === 'approve' || lendTx.status === 'lend') && hash) {
@@ -322,15 +336,14 @@ const SupplyFluidButton = ({
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
                 args: [poolContractAddress, amount.amountParsed],
+            }).catch((error) => {
+                console.log(error)
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                }))
             })
-                .catch((error) => {
-                    console.log(error)
-                    setLendTx((prev: TLendTx) => ({
-                        ...prev,
-                        isPending: false,
-                        isConfirming: false,
-                    }))
-                })
         } catch (error) {
             error
         }
@@ -373,7 +386,7 @@ const SupplyFluidButton = ({
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button
-                disabled={(isPending || isConfirming || disabled)}
+                disabled={isPending || isConfirming || disabled}
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()

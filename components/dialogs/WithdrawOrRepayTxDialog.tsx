@@ -35,7 +35,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { TX_EXPLORER_LINKS } from '@/constants'
+import { SLIPPAGE_PERCENTAGE, TX_EXPLORER_LINKS } from '@/constants'
 import ActionButton from '@/components/common/ActionButton'
 import {
     TRepayTx,
@@ -67,6 +67,7 @@ import { useAssetsDataContext } from '@/context/data-provider'
 import ExternalLink from '@/components/ExternalLink'
 import { parseUnits } from 'ethers/lib/utils'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { ETH_ADDRESSES } from '@/lib/constants'
 
 export function WithdrawOrRepayTxDialog({
     isOpen,
@@ -183,7 +184,7 @@ export function WithdrawOrRepayTxDialog({
                 handleSwitchChain(Number(chain_id))
             }
         }
-    }, [isOpen, chain_id])
+    }, [isOpen, chain_id, maxWithdrawAmount, maxRepayAmount, assetDetails, positionAmount])
 
     function resetLendwithdrawTx() {
         setRepayTx((prev: TRepayTx) => ({
@@ -260,12 +261,16 @@ export function WithdrawOrRepayTxDialog({
         const newHF = Number(healthFactorValues.newHealthFactor.toString())
         const HF = Number(healthFactorValues.healthFactor.toString())
 
-        if (newHF < HF) {
+        // if (newHF < HF) {
+        //     return 'text-danger-500'
+        // } else if (newHF > HF) {
+        //     return 'text-success-500'
+        // } else {
+        //     return 'text-warning-500'
+        // }
+
+        if(newHF < 2) {
             return 'text-danger-500'
-        } else if (newHF > HF) {
-            return 'text-success-500'
-        } else {
-            return 'text-warning-500'
         }
     }
 
@@ -477,7 +482,7 @@ export function WithdrawOrRepayTxDialog({
             <div className="flex flex-col gap-[12px] max-w-full overflow-hidden">
                 {/* Edit amount block when approving repay or withdraw - Block 1*/}
                 {isShowBlock({
-                    repay: repayTx.status === 'approve',
+                    repay: repayTx.status === 'approve' || (repayTx.status === 'repay' && ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? '')),
                     withdraw:
                         withdrawTx.status === 'approve' ||
                         (!isMorphoVaultsProtocol &&
@@ -515,9 +520,9 @@ export function WithdrawOrRepayTxDialog({
                             onClick={() =>
                                 setAmount(
                                     isWithdrawAction
-                                        ? (localMaxWithdrawAmount.maxToWithdrawFormatted ??
+                                        ? ((Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
                                               '0')
-                                        : (localMaxRepayAmount.maxToRepayFormatted ??
+                                        : ((Number(localMaxRepayAmount.maxToRepayFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
                                               '0')
                                 )
                             }
@@ -530,7 +535,7 @@ export function WithdrawOrRepayTxDialog({
                 {/* Display the token details after amount is set - Block 2 */}
                 {isShowBlock({
                     repay:
-                        repayTx.status === 'repay' || repayTx.status === 'view',
+                    (repayTx.status === 'repay' && !ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? '')) || repayTx.status === 'view',
                     withdraw:
                         (isMorphoVaultsProtocol &&
                             withdrawTx.status === 'withdraw') ||
@@ -943,7 +948,8 @@ export function WithdrawOrRepayTxDialog({
                             (!isWithdrawTxInProgress &&
                                 withdrawTx.isConfirmed) ||
                             withdrawTx.status === 'withdraw' ||
-                            withdrawTx.status === 'view') && (
+                            withdrawTx.status === 'view') && 
+                            (!ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? '')) && (
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center justify-start gap-2">
                                     <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
@@ -1232,14 +1238,14 @@ const getActionButtonAmount = ({
     maxRepayAmount: any
     maxWithdrawAmount: any
 }) => {
-    const amountWithSlippage = (Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)
+    const amountWithSlippage = (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
     if (actionType === 'repay') {
         const amountParsed = parseUnits(
-            amount === '' ? '0' : amount,
+            amount === '' ? '0' : amountWithSlippage,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
         return {
-            amountRaw: amount,
+            amountRaw: amountWithSlippage,
             amountParsed,
             scValue:
                 amountParsed === maxRepayAmount.maxToRepay
@@ -1249,11 +1255,11 @@ const getActionButtonAmount = ({
     }
     if (actionType === 'withdraw') {
         const amountParsed = parseUnits(
-            amount === '' ? '0' : amount,
+            amount === '' ? '0' : amountWithSlippage,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
         const v = {
-            amountRaw: amount,
+            amountRaw: amountWithSlippage,
             amountParsed,
             scValue:
                 amountParsed === maxWithdrawAmount.maxToWithdraw
