@@ -67,6 +67,7 @@ import { useAssetsDataContext } from '@/context/data-provider'
 import ExternalLink from '@/components/ExternalLink'
 import { parseUnits } from 'ethers/lib/utils'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { ETH_ADDRESSES } from '@/lib/constants'
 
 export function WithdrawOrRepayTxDialog({
     isOpen,
@@ -183,7 +184,7 @@ export function WithdrawOrRepayTxDialog({
                 handleSwitchChain(Number(chain_id))
             }
         }
-    }, [isOpen, chain_id])
+    }, [isOpen, chain_id, maxWithdrawAmount, maxRepayAmount, assetDetails, positionAmount])
 
     function resetLendwithdrawTx() {
         setRepayTx((prev: TRepayTx) => ({
@@ -481,7 +482,7 @@ export function WithdrawOrRepayTxDialog({
             <div className="flex flex-col gap-[12px] max-w-full overflow-hidden">
                 {/* Edit amount block when approving repay or withdraw - Block 1*/}
                 {isShowBlock({
-                    repay: repayTx.status === 'approve',
+                    repay: repayTx.status === 'approve' || (repayTx.status === 'repay' && ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? '')),
                     withdraw:
                         withdrawTx.status === 'approve' ||
                         (!isMorphoVaultsProtocol &&
@@ -534,7 +535,7 @@ export function WithdrawOrRepayTxDialog({
                 {/* Display the token details after amount is set - Block 2 */}
                 {isShowBlock({
                     repay:
-                        repayTx.status === 'repay' || repayTx.status === 'view',
+                    (repayTx.status === 'repay' && !ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? '')) || repayTx.status === 'view',
                     withdraw:
                         (isMorphoVaultsProtocol &&
                             withdrawTx.status === 'withdraw') ||
@@ -947,7 +948,8 @@ export function WithdrawOrRepayTxDialog({
                             (!isWithdrawTxInProgress &&
                                 withdrawTx.isConfirmed) ||
                             withdrawTx.status === 'withdraw' ||
-                            withdrawTx.status === 'view') && (
+                            withdrawTx.status === 'view') && 
+                            (!ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? '')) && (
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center justify-start gap-2">
                                     <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">

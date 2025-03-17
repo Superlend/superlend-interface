@@ -37,7 +37,7 @@ import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
 import { useMorphoVaultData } from '@/hooks/protocols/useMorphoVaultData'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
-import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
+import { BUNDLER_ADDRESS_MORPHO, ETH_ADDRESSES } from '@/lib/constants'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useERC20Balance } from '../../hooks/useERC20Balance'
 import { WithdrawOrRepayTxDialog } from '@/components/dialogs/WithdrawOrRepayTxDialog'
@@ -840,6 +840,22 @@ export default function WithdrawAndRepayActionButton({
     const healthFactorValues = getHealthFactorValues(
         hasSingleToken ? tokenDetails[0] : selectedTokenDetails
     )
+
+    // Handle the case where the user is supplying ETH to the vault
+    useEffect(() => {
+        if (
+            repayTx.status === 'approve' &&
+            ETH_ADDRESSES.includes(hasSingleToken ? tokenDetails[0].address : selectedTokenDetails?.address ?? '') &&
+            isWithdrawRepayTxDialogOpen
+        ) {
+            setRepayTx((prev: any) => ({
+                ...prev,
+                status: 'repay',
+                hash: '',
+                errorMessage: '',
+            }))
+        }
+    }, [isWithdrawRepayTxDialogOpen])
 
     function getMaxWithdrawAmountForTx() {
         const isMorphoVaultsProtocol =
