@@ -118,27 +118,15 @@ const SupplyFluidButton = ({
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
-    // useEffect(() => {
-    //     if (lendTx.status === 'approve' && ETH_ADDRESSES.includes(underlyingAssetAdress)) {
-    //         console.log('working')
-    //         setLendTx((prev: any) => ({
-    //             ...prev,
-    //             status: 'lend',
-    //             hash: '',
-    //             errorMessage: '',
-    //         }))
-    //     }
-    // }, [])
-
-    // useEffect(() => {
-    //     if (lendTx.status === 'lend') {
-    //         if (isFluidVaults) {
-    //             handleVaultsLendTx()
-    //         } else {
-    //             handleLendTx()
-    //         }
-    //     }
-    // }, [lendTx.status])
+    useEffect(() => {
+        if (lendTx.status === 'lend') {
+            if (isFluidVaults) {
+                handleVaultsLendTx()
+            } else {
+                handleLendTx()
+            }
+        }
+    }, [lendTx.status])
 
     const handleVaultsLendTx = useCallback(async () => {
         try {
