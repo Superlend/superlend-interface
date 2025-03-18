@@ -56,7 +56,7 @@ export default function TopApyOpportunities() {
     const pageParam = searchParams.get('page')
     const sortingParam = searchParams.get('sort')?.split(',') || []
     const excludeRiskyMarketsFlag =
-        isClient &&
+        isClient && typeof window !== 'undefined' &&
         localStorage.getItem('exclude_risky_markets') === 'true'
     const [keywords, setKeywords] = useState<string>(keywordsParam)
     const debouncedKeywords = useDebounce(keywords, 300)

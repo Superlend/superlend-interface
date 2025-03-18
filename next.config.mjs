@@ -8,7 +8,13 @@ const nextConfig = {
             {
                 hostname: 'coin-images.coingecko.com',
             },
+            {
+                hostname: 'cdn.morpho.org',
+            },
         ],
+        dangerouslyAllowSVG: true,
+        contentDispositionType: 'attachment',
+        contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     },
     webpack: (config) => {
         config.resolve.fallback = { fs: false, net: false, tls: false }
