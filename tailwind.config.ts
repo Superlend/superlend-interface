@@ -158,6 +158,30 @@ const config = {
                     '0%': { transform: 'translateX(-100%) skewX(-20deg)' },
                     '100%': { transform: 'translateX(200%) skewX(-20deg)' },
                 },
+                fall: {
+                    '0%': { 
+                        transform: 'translateY(-20px)',
+                        opacity: '0'
+                    },
+                    '10%': {
+                        opacity: '0.8'
+                    },
+                    '90%': {
+                        opacity: '0.8'
+                    },
+                    '100%': { 
+                        transform: 'translateY(100vh)',
+                        opacity: '0'
+                    }
+                },
+                spin: {
+                    from: {
+                        transform: 'rotate(0deg)'
+                    },
+                    to: {
+                        transform: 'rotate(360deg)'
+                    }
+                }
             },
             animation: {
                 'accordion-down': 'accordion-down 0.2s ease-out',
@@ -165,6 +189,8 @@ const config = {
                 scroll: 'scroll var(--animation-duration, 30s) var(--animation-direction, forwards) linear infinite',
                 pulse: 'pulse var(--duration) ease-out infinite',
                 shimmer: 'shimmer 1.5s infinite',
+                'fall': 'fall 4s linear infinite',
+                'spin': 'spin 2s linear infinite'
             },
         },
     },
