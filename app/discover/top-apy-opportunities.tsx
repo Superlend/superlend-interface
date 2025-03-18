@@ -233,10 +233,21 @@ export default function TopApyOpportunities() {
     // Add effect to handle raining apples animation
     useEffect(() => {
         if (chainIdsParam.includes('42793') && !hasShownAnimation.current) {
-            setShowRainingApples(true)
-            hasShownAnimation.current = true
+            setShowRainingApples(true);
+            hasShownAnimation.current = true;
+
+            // Set a timer to hide the animation after it completes
+            const timer = setTimeout(() => {
+                setShowRainingApples(false);
+            }, 10000); // 10 seconds = 5s animation + 3s max delay + 2s buffer
+
+            return () => clearTimeout(timer);
         }
-    }, [chainIdsParam])
+    }, [chainIdsParam]);
+
+    useEffect(() => {
+        console.log('showRainingApples state:', showRainingApples);
+    }, [showRainingApples]);
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         const platformName = item.platform.platform_name.split('-')[0].toLowerCase()

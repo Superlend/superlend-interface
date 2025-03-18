@@ -1,33 +1,18 @@
 'use client'
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import Image from 'next/image';
 
 const RainingApples = () => {
-    const [isAnimating, setIsAnimating] = useState(true);
-    
-    // Increased number of apples from 20 to 35
-    const apples = useMemo(() => Array.from({ length: 200 }, (_, i) => ({
-        id: i,
-        left: Math.random() * 100,
-        delay: Math.random() * 3,
-        size: 32 + Math.random() * 8,
-        rotationSpeed: 0.5 + Math.random() * 1, // Random rotation speed between 2-4 seconds
-    })), []);
-
-    useEffect(() => {
-        // Calculate total animation time: 
-        // Base animation time (5s) + Maximum delay (3s) + Extra buffer (2s)
-        const totalAnimationTime = (5 + 3 + 2) * 1000;
-        
-        const timer = setTimeout(() => {
-            setIsAnimating(false);
-        }, totalAnimationTime);
-
-        return () => clearTimeout(timer);
+    const apples = useMemo(() => {
+        return Array.from({ length: 200 }, (_, i) => ({
+            id: i,
+            left: Math.random() * 100,
+            delay: Math.random() * 3,
+            size: 32 + Math.random() * 8,
+            rotationSpeed: 0.5 + Math.random() * 1,
+        }));
     }, []);
-
-    if (!isAnimating) return null;
 
     return (
         <div 
@@ -40,25 +25,21 @@ const RainingApples = () => {
             {apples.map((apple) => (
                 <div
                     key={apple.id}
+                    className="absolute animate-fall"
                     style={{
-                        position: 'absolute',
                         left: `${apple.left}%`,
                         top: '-50px',
                         width: `${apple.size}px`,
                         height: `${apple.size}px`,
-                        '--fall-delay': `${apple.delay}s`,
-                        animation: 'fall 5s linear forwards',
-                        animationDelay: `var(--fall-delay)`,
+                        animationDelay: `${apple.delay}s`,
                         willChange: 'transform',
                         transform: 'translateZ(0)',
-                    } as React.CSSProperties}
+                    }}
                 >
                     <div 
+                        className="w-full h-full animate-spin"
                         style={{
-                            width: '100%',
-                            height: '100%',
-                            animation: `spin ${apple.rotationSpeed}s linear infinite`,
-                            animationDelay: `var(--fall-delay)`,
+                            animationDelay: `${apple.delay}s`,
                         }}
                     >
                         <Image

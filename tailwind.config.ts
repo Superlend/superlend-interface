@@ -160,16 +160,16 @@ const config = {
                 },
                 fall: {
                     '0%': { 
-                        transform: 'translate3d(0, -100%, 0)',
+                        transform: 'translate3d(0, -100px, 0)',
                         opacity: '0'
                     },
-                    '5%': {
+                    '10%': {
                         transform: 'translate3d(0, 0, 0)',
-                        opacity: '0.8'
+                        opacity: '1'
                     },
                     '90%': {
                         transform: 'translate3d(0, 100vh, 0)',
-                        opacity: '0.8'
+                        opacity: '1'
                     },
                     '100%': { 
                         transform: 'translate3d(0, 120vh, 0)',
@@ -177,10 +177,10 @@ const config = {
                     }
                 },
                 spin: {
-                    from: {
+                    '0%': {
                         transform: 'rotate(0deg)'
                     },
-                    to: {
+                    '100%': {
                         transform: 'rotate(360deg)'
                     }
                 }
@@ -191,8 +191,8 @@ const config = {
                 scroll: 'scroll var(--animation-duration, 30s) var(--animation-direction, forwards) linear infinite',
                 pulse: 'pulse var(--duration) ease-out infinite',
                 shimmer: 'shimmer 1.5s infinite',
-                'fall': 'fall 5s linear forwards',
-                'spin': 'spin 5s linear infinite',
+                'fall': 'fall 5s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                'spin': 'spin 2s linear infinite',
             },
         },
     },
