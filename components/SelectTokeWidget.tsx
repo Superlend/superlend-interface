@@ -82,7 +82,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = ({
                         </Label>
                     )}
                     {selectedToken && (
-                        <div className="flex gap-2 items-center">
+                        <div className="flex gap-2 items-center max-w-full truncate">
                             {!!selectedToken.chain_logo && (
                                 <ImageWithBadge
                                     mainImg={selectedToken.logo}
@@ -103,7 +103,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = ({
                                     height="32"
                                 />
                             )}
-                            <HeadingText level="h4" weight="medium">
+                            <HeadingText level="h4" weight="medium" className="truncate max-w-full" title={selectedToken.symbol}>
                                 {selectedToken.symbol}
                             </HeadingText>
                         </div>

@@ -49,37 +49,38 @@ export function HeadingText({
     level = 'h1',
     weight = 'bold',
     className,
+    ...props
 }: IHeadingTextProps) {
     const headingLevel = getHeadingLevel(level)
     return (
         <>
             {headingLevel === 'h1' && (
-                <h1 className={getHeadingClassName(level, weight, className)}>
+                <h1 className={getHeadingClassName(level, weight, className)} {...props}>
                     {children}
                 </h1>
             )}
             {headingLevel === 'h2' && (
-                <h2 className={getHeadingClassName(level, weight, className)}>
+                <h2 className={getHeadingClassName(level, weight, className)} {...props}>
                     {children}
                 </h2>
             )}
             {headingLevel === 'h3' && (
-                <h3 className={getHeadingClassName(level, weight, className)}>
+                <h3 className={getHeadingClassName(level, weight, className)} {...props}>
                     {children}
                 </h3>
             )}
             {headingLevel === 'h4' && (
-                <h4 className={getHeadingClassName(level, weight, className)}>
+                <h4 className={getHeadingClassName(level, weight, className)} {...props}>
                     {children}
                 </h4>
             )}
             {headingLevel === 'h5' && (
-                <h5 className={getHeadingClassName(level, weight, className)}>
+                <h5 className={getHeadingClassName(level, weight, className)} {...props}>
                     {children}
                 </h5>
             )}
             {headingLevel === 'h6' && (
-                <h6 className={getHeadingClassName(level, weight, className)}>
+                <h6 className={getHeadingClassName(level, weight, className)} {...props}>
                     {children}
                 </h6>
             )}
