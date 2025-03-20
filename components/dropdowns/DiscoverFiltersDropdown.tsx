@@ -53,10 +53,10 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
         
         if (checked) {
             // Navigate to discover without params
-            router.push('/discover')
+            router.replace('/discover')
         } else {
             // Navigate to etherlink with chain_ids
-            router.push('/etherlink?chain_ids=42793')
+            router.replace('/etherlink?chain_ids=42793')
         }
     }
 
