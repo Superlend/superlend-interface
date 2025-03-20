@@ -27,7 +27,9 @@ const tabs: TTab[] = [
 ]
 
 const activeTabInitialValue = (pathname: string) => {
-    return tabs.find((tab) => tab.href === pathname) || null
+    // Treat /etherlink as /discover for tab highlighting
+    const normalizedPath = pathname === '/etherlink' ? '/discover' : pathname
+    return tabs.find((tab) => tab.href === normalizedPath) || null
 }
 
 const Header: React.FC = () => {
@@ -45,6 +47,10 @@ const Header: React.FC = () => {
     const handleTabClick = (tab: TTab) => {
         setActiveTab(tab)
         setOpenMenu(false)
+        // Don't navigate to /discover if we're already on /etherlink
+        if (tab.href === '/discover' && pathname === '/etherlink') {
+            return
+        }
         router.push(`${tab.href}`)
     }
 
@@ -113,18 +119,29 @@ const Header: React.FC = () => {
                                 variant={isSelected(tab) ? 'default' : 'ghost'}
                                 size="lg"
                                 className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`}
-                                // onClick={() => handleTabClick(tab)}
                             >
-                                <Link
-                                    onClick={() => handleTabClick(tab)}
-                                    href={tab.href}
-                                    className={`${LINK_DEFAULT_STYLES}`}
-                                >
-                                    <tab.icon />
-                                    <span className="leading-[0]">
-                                        {tab.name}
-                                    </span>
-                                </Link>
+                                {pathname === '/etherlink' && tab.href === '/discover' ? (
+                                    <div
+                                        onClick={() => handleTabClick(tab)}
+                                        className={LINK_DEFAULT_STYLES}
+                                    >
+                                        <tab.icon />
+                                        <span className="leading-[0]">
+                                            {tab.name}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <Link
+                                        onClick={() => handleTabClick(tab)}
+                                        href={tab.href}
+                                        className={LINK_DEFAULT_STYLES}
+                                    >
+                                        <tab.icon />
+                                        <span className="leading-[0]">
+                                            {tab.name}
+                                        </span>
+                                    </Link>
+                                )}
                             </Button>
                         ))}
                     </nav>
