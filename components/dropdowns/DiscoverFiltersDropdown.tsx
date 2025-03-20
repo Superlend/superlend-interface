@@ -27,7 +27,7 @@ import useDimensions from '@/hooks/useDimensions'
 import { CHAIN_ID_MAPPER, STABLECOINS_NAMES_LIST } from '@/constants'
 import SearchInput from '../inputs/SearchInput'
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { PlatformLogo, ProtocolIdentifier } from '@/types/platform'
 import { motion } from 'framer-motion'
 import { Switch } from '../ui/switch'
@@ -43,6 +43,7 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
     const router = useRouter()
+    const pathname = usePathname()
 
     // Handle switch toggle and route change
     const handleShowAllMarketsChange = (checked: boolean) => {
@@ -91,11 +92,11 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
 
     const hasActiveFilters =
         !!filters.token_ids.length ||
-        !!filters.chain_ids.length ||
+        (pathname === '/etherlink' ? false : !!filters.chain_ids.length) ||
         !!filters.protocol_ids.length
     const activeFiltersTotalCount =
         filters.token_ids.length +
-        filters.chain_ids.length +
+        (pathname === '/etherlink' ? 0 : filters.chain_ids.length) +
         filters.protocol_ids.length
     const getActiveFiltersCountByCategory = (
         filterName: keyof typeof filters
