@@ -37,12 +37,13 @@ import RainingApples from '@/components/animations/RainingApples'
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
     columns: ColumnDef<TOpportunityTable>[]
+    chain: string
 }
 
 const EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL =
     '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed'
 
-export default function TopApyOpportunities() {
+export default function TopApyOpportunities({ chain }: { chain: string }) {
     const isClient = useIsClient()
     const router = useRouter()
     const { logEvent } = useAnalytics()
@@ -453,7 +454,7 @@ export default function TopApyOpportunities() {
                         </div>
                         {/* Filter button for Tablet and below screens */}
                         <div className="block lg:hidden">
-                            <DiscoverFiltersDropdown />
+                            <DiscoverFiltersDropdown chain={chain} />
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
@@ -486,7 +487,7 @@ export default function TopApyOpportunities() {
                 {/* Filter buttons for Desktop and above screens */}
                 <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
                     {/* <ChainSelectorDropdown /> */}
-                    <DiscoverFiltersDropdown />
+                    <DiscoverFiltersDropdown chain={chain} />
                 </div>
             </div>
             <div className="top-apy-opportunities-content">

@@ -20,7 +20,7 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
 const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 
-export default function DiscoverOpportunities() {
+export default function DiscoverOpportunities({ chain }: { chain: string }) {
     const { logEvent } = useAnalytics()
     // Token Addresses
     const opportunity1TokenAddress = "0xfc24f770f94edbca6d6f885e12d4317320bcb401";

@@ -27,7 +27,7 @@ import useDimensions from '@/hooks/useDimensions'
 import { CHAIN_ID_MAPPER, STABLECOINS_NAMES_LIST } from '@/constants'
 import SearchInput from '../inputs/SearchInput'
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { PlatformLogo, ProtocolIdentifier } from '@/types/platform'
 import { motion } from 'framer-motion'
 import { Switch } from '../ui/switch'
@@ -36,11 +36,45 @@ import TooltipText from '../tooltips/TooltipText'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
-export default function DiscoverFiltersDropdown() {
+export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     const [isOpen, setIsOpen] = React.useState<boolean>(false)
+    const [showAllMarkets, setShowAllMarkets] = React.useState(chain === 'discover')
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext)
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
+    const router = useRouter()
+
+    // Handle switch toggle and route change
+    const handleShowAllMarketsChange = (checked: boolean) => {
+        setShowAllMarkets(checked)
+        // Reset filters
+        handleClearFilters()
+        
+        if (checked) {
+            // Navigate to discover without params
+            router.push('/discover')
+        } else {
+            // Navigate to etherlink with chain_ids
+            router.push('/etherlink?chain_ids=42793')
+        }
+    }
+
+    // Set initial chain_ids for etherlink
+    useEffect(() => {
+        const currentChainIds = searchParams.get('chain_ids')?.split(',') || []
+        
+        if (chain === 'etherlink' && currentChainIds.length === 0) {
+            updateSearchParams({
+                chain_ids: '42793'
+            })
+        }
+    }, [chain, searchParams, updateSearchParams])
+
+    // Update showAllMarkets based on chain changes
+    useEffect(() => {
+        setShowAllMarkets(chain === 'discover')
+    }, [chain])
+
     const getFiltersFromURL = () => ({
         token_ids: searchParams.get('token_ids')?.split(',') || [],
         chain_ids: searchParams.get('chain_ids')?.split(',') || [],
@@ -122,20 +156,29 @@ export default function DiscoverFiltersDropdown() {
         },
     ]
 
-    const FILTER_CATEGORIES = [
-        {
-            label: 'Tokens',
-            value: 'token',
-        },
-        {
-            label: 'Chains',
-            value: 'chain',
-        },
-        {
-            label: 'Platforms',
-            value: 'protocol',
-        },
-    ]
+    const FILTER_CATEGORIES = useMemo(() => {
+        const categories = [
+            {
+                label: 'Tokens',
+                value: 'token',
+            },
+            {
+                label: 'Chains',
+                value: 'chain',
+            },
+            {
+                label: 'Platforms',
+                value: 'protocol',
+            },
+        ]
+
+        // Remove Chain and Platforms filter categories when on etherlink route
+        if (chain === 'etherlink') {
+            return categories.filter(category => category.value === 'token')
+        }
+
+        return categories
+    }, [chain])
 
     const FILTER_OPTIONS: any = {
         token: {
@@ -202,87 +245,113 @@ export default function DiscoverFiltersDropdown() {
 
     if (isDesktop) {
         return (
-            <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-                <DropdownMenuTrigger asChild>
-                    <Button
-                        size="lg"
-                        className="w-fit relative flex items-center gap-2 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-600 rounded-xl"
-                    >
-                        <FilterIcon
-                            className={`hidden xs:inline-block ${hasActiveFilters ? 'fill-gray-600' : ''}`}
-                            width={16}
-                            height={16}
-                        />
-                        <span className="trigger-label">Filters</span>
-                        <ChevronDownIcon
-                            className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`}
-                        />
-                        <div
-                            className={`${hasActiveFilters ? 'absolute block' : 'hidden'} -top-[10px] -right-[8px] flex items-center justify-center w-5 h-5 bg-red-500 rounded-full`}
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <Switch
+                        id="show-all-markets"
+                        checked={showAllMarkets}
+                        onCheckedChange={handleShowAllMarketsChange}
+                    />
+                    <Label htmlFor="show-all-markets" weight="medium" className="text-sm text-gray-600 capitalize">
+                        Show all markets
+                    </Label>
+                </div>
+                <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            size="lg"
+                            className="w-fit relative flex items-center gap-2 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-600 rounded-xl"
                         >
-                            <Label size="small" className="text-white">
-                                {activeFiltersTotalCount}
-                            </Label>
+                            <FilterIcon
+                                className={`hidden xs:inline-block ${hasActiveFilters ? 'fill-gray-600' : ''}`}
+                                width={16}
+                                height={16}
+                            />
+                            <span className="trigger-label">Filters</span>
+                            <ChevronDownIcon
+                                className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                            />
+                            <div
+                                className={`${hasActiveFilters ? 'absolute block' : 'hidden'} -top-[10px] -right-[8px] flex items-center justify-center w-5 h-5 bg-red-500 rounded-full`}
+                            >
+                                <Label size="small" className="text-white">
+                                    {activeFiltersTotalCount}
+                                </Label>
+                            </div>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                        side="bottom"
+                        align="end"
+                        className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden"
+                    >
+                        <div className="filter-card flex flex-col md:min-w-[480px] max-w-[480px]">
+                            <FilterCardHeader {...filterCardHeaderProps} />
+                            <FilterCardContent {...filterCardContentProps} />
                         </div>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                    side="bottom"
-                    align="end"
-                    className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden"
-                >
-                    <div className="filter-card flex flex-col md:min-w-[480px] max-w-[480px]">
-                        <FilterCardHeader {...filterCardHeaderProps} />
-                        <FilterCardContent {...filterCardContentProps} />
-                    </div>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         )
     }
 
     return (
-        <Drawer open={isOpen} onOpenChange={setIsOpen}>
-            <DrawerTrigger asChild>
-                <Button
-                    size="lg"
-                    className="w-fit relative flex items-center gap-2 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-600 rounded-xl"
-                >
-                    <FilterIcon
-                        className={`hidden xs:inline-block ${hasActiveFilters ? 'fill-gray-600' : ''}`}
-                        width={16}
-                        height={16}
+        <>
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <Switch
+                        id="show-all-markets-mobile"
+                        checked={showAllMarkets}
+                        onCheckedChange={handleShowAllMarketsChange}
                     />
-                    <span className="trigger-label">Filters</span>
-                    <ChevronDownIcon
-                        className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`}
-                    />
-                    <div
-                        className={`${hasActiveFilters ? 'absolute block' : 'hidden'} -top-[10px] -right-[8px] flex items-center justify-center w-5 h-5 bg-red-500 rounded-full`}
-                    >
-                        <Label size="small" className="text-white">
-                            {activeFiltersTotalCount}
-                        </Label>
-                    </div>
-                </Button>
-            </DrawerTrigger>
-            <DrawerContent>
-                <div className="filter-card flex flex-col">
-                    <FilterCardHeader {...filterCardHeaderProps} />
-                    <FilterCardContent {...filterCardContentProps} />
+                    <Label htmlFor="show-all-markets-mobile" weight="medium" className="text-sm text-gray-600 capitalize">
+                        Show all markets
+                    </Label>
                 </div>
-                <DrawerFooter className="w-full">
-                    <DrawerClose className="w-full">
+                <Drawer open={isOpen} onOpenChange={setIsOpen}>
+                    <DrawerTrigger asChild>
                         <Button
-                            size={'lg'}
-                            variant="outline"
-                            className="w-full"
+                            size="lg"
+                            className="w-fit relative flex items-center gap-2 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-600 rounded-xl"
                         >
-                            Close
+                            <FilterIcon
+                                className={`hidden xs:inline-block ${hasActiveFilters ? 'fill-gray-600' : ''}`}
+                                width={16}
+                                height={16}
+                            />
+                            <span className="trigger-label">Filters</span>
+                            <ChevronDownIcon
+                                className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                            />
+                            <div
+                                className={`${hasActiveFilters ? 'absolute block' : 'hidden'} -top-[10px] -right-[8px] flex items-center justify-center w-5 h-5 bg-red-500 rounded-full`}
+                            >
+                                <Label size="small" className="text-white">
+                                    {activeFiltersTotalCount}
+                                </Label>
+                            </div>
                         </Button>
-                    </DrawerClose>
-                </DrawerFooter>
-            </DrawerContent>
-        </Drawer>
+                    </DrawerTrigger>
+                    <DrawerContent>
+                        <div className="filter-card flex flex-col">
+                            <FilterCardHeader {...filterCardHeaderProps} />
+                            <FilterCardContent {...filterCardContentProps} />
+                        </div>
+                        <DrawerFooter className="w-full">
+                            <DrawerClose className="w-full">
+                                <Button
+                                    size={'lg'}
+                                    variant="outline"
+                                    className="w-full"
+                                >
+                                    Close
+                                </Button>
+                            </DrawerClose>
+                        </DrawerFooter>
+                    </DrawerContent>
+                </Drawer>
+            </div>
+        </>
     )
 }
 
