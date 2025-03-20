@@ -19,6 +19,7 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 import Loading from './loading'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import AppleFarmRewardsBanner from '@/components/AppleFarmRewardsBanner'
 
 export default function Portfolio() {
     const { isConnectingWallet, isWalletConnected, walletAddress } =
@@ -61,10 +62,10 @@ export default function Portfolio() {
 
     return (
         <PortfolioProvider>
-            <MainContainer className="px-0">
+            <MainContainer className="px-0 flex flex-col gap-6">
                 <section
                     id="your-portfolio"
-                    className="portfolio-page-header flex flex-col md:flex-row gap-[16px] items-start md:items-center justify-between mb-[24px] px-5"
+                    className="portfolio-page-header flex flex-col md:flex-row gap-[16px] items-start md:items-center justify-between mb-6 px-5"
                 >
                     <div className="flex flex-col gap-[4px]">
                         <HeadingText
@@ -97,6 +98,12 @@ export default function Portfolio() {
                     transaction history
                     <ArrowRightIcon width={16} height={16} weight='2' className='stroke-white group-hover:opacity-75 group-active:opacity-75' />
                 </Button> */}
+                </section>
+                <section className="px-5">
+                    <AppleFarmRewardsBanner
+                        totalRewards="1,000"
+                        isLoading={false}
+                    />
                 </section>
             </MainContainer>
         </PortfolioProvider>
