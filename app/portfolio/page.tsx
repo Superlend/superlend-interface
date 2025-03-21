@@ -85,26 +85,24 @@ export default function Portfolio() {
                         <ArrowRightIcon width={16} height={16} weight='2' className='stroke-white group-hover:opacity-75 group-active:opacity-75' />
                     </Button> */}
                 </section>
-                <section>
-                    <div className="flex flex-col gap-[72px]">
-                        <PortfolioOverview />
-                        <YourPositionsAtRisk />
-                        <PositionsProvider>
-                            <AllPositions />
-                        </PositionsProvider>
-                        {/* <TopLowRiskPositions /> */}
-                    </div>
-                    {/* <Button variant="primary" className='group uppercase py-[9px] px-[16px] flex items-center gap-[4px]'>
+                <div className="flex flex-col gap-[72px]">
+                    <PortfolioOverview />
+                    <section className="px-5">
+                        <AppleFarmRewardsBanner
+                            totalRewards="1,000"
+                            isLoading={false}
+                        />
+                    </section>
+                    <YourPositionsAtRisk />
+                    <PositionsProvider>
+                        <AllPositions />
+                    </PositionsProvider>
+                    {/* <TopLowRiskPositions /> */}
+                </div>
+                {/* <Button variant="primary" className='group uppercase py-[9px] px-[16px] flex items-center gap-[4px]'>
                     transaction history
                     <ArrowRightIcon width={16} height={16} weight='2' className='stroke-white group-hover:opacity-75 group-active:opacity-75' />
                 </Button> */}
-                </section>
-                <section className="px-5">
-                    <AppleFarmRewardsBanner
-                        totalRewards="1,000"
-                        isLoading={false}
-                    />
-                </section>
             </MainContainer>
         </PortfolioProvider>
     )

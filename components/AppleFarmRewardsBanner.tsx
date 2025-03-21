@@ -43,7 +43,7 @@ export default function AppleFarmRewardsBanner({ totalRewards, isLoading = false
   return (
     <Card className="relative overflow-hidden bg-gradient-to-r from-[#F5FFF7] via-[#EDFBEF] to-[#EDFBEF] md:to-[#00985b] hover:shadow-md transition-all duration-300">
       <RainingApples />
-      <div className="flex items-center justify-between p-6 gap-4">
+      <div className="flex flex-wrap items-center justify-between p-6 gap-4">
         <div className="flex flex-col gap-2 z-10">
           <div className="flex items-center gap-3">
             <ImageWithDefault
@@ -53,11 +53,20 @@ export default function AppleFarmRewardsBanner({ totalRewards, isLoading = false
               height={32}
               className="object-contain"
             />
-            <HeadingText level="h4" weight="medium" className="text-gray-800">
-              Your Apple Farm Rewards
-            </HeadingText>
+            <div className="flex flex-col">
+              <HeadingText level="h4" weight="medium" className="text-gray-800">
+                Your Apple Farm Rewards
+              </HeadingText>
+              {isLoading ? (
+                <Skeleton className="h-6 w-32" />
+              ) : (
+                <BodyText level="body1" className="text-emerald-600 font-semibold">
+                  {totalRewards || '0'} Rewards Available
+                </BodyText>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
+          {/* <div className="flex flex-col gap-1">
             {isLoading ? (
               <Skeleton className="h-6 w-32" />
             ) : (
@@ -68,18 +77,18 @@ export default function AppleFarmRewardsBanner({ totalRewards, isLoading = false
             <BodyText level="body2" className="text-gray-600">
               Claim your rewards on Apple Farm
             </BodyText>
-          </div>
+          </div> */}
         </div>
-        
-        <Link 
-          href="https://www.applefarm.xyz/waitlist" 
-          target="_blank" 
+
+        <Link
+          href="https://www.applefarm.xyz/waitlist"
+          target="_blank"
           rel="noopener noreferrer"
           className="shrink-0"
         >
-          <Button 
+          <Button
             size="lg"
-            variant="default" 
+            variant="default"
             className="bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             Claim Rewards
