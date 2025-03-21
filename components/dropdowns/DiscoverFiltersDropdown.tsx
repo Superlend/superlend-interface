@@ -35,7 +35,6 @@ import InfoTooltip from '../tooltips/InfoTooltip'
 import TooltipText from '../tooltips/TooltipText'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
-import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 
 export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     const searchParams = useSearchParams()
@@ -46,7 +45,6 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     })
     const filters = getFiltersFromURL()
     const [isOpen, setIsOpen] = React.useState<boolean>(false)
-    const { showAllMarkets, toggleShowAllMarkets, isLoading } = useShowAllMarkets()
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext)
     const updateSearchParams = useUpdateSearchParams()
     const pathname = usePathname()

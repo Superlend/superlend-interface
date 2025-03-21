@@ -20,25 +20,22 @@ type TTab = {
     icon: React.FC<{ height?: number; width?: number; className?: string }>
 }
 
-const tabs: TTab[] = [
-    { id: 1, name: 'Home', href: '/', icon: HomeIcon },
-    { id: 2, name: 'Discover', href: '/discover', icon: CompassIcon },
-    { id: 3, name: 'Portfolio', href: '/portfolio', icon: PieChartIcon },
-]
-
-const activeTabInitialValue = (pathname: string) => {
-    // Treat /etherlink as /discover for tab highlighting
-    const normalizedPath = pathname === '/etherlink' ? '/discover' : pathname
-    return tabs.find((tab) => tab.href === normalizedPath) || null
-}
-
 const Header: React.FC = () => {
-    const router = useRouter()
+    const tabs: TTab[] = [
+        { id: 1, name: 'Home', href: '/', icon: HomeIcon },
+        { id: 2, name: 'Discover', href: getRedirectionLink('/discover'), icon: CompassIcon },
+        { id: 3, name: 'Portfolio', href: '/portfolio', icon: PieChartIcon },
+    ]
+
+    const activeTabInitialValue = (pathname: string) => {
+        // Treat /etherlink as /discover for tab highlighting
+        const normalizedPath = pathname === '/etherlink' ? '/etherlink' : pathname
+        return tabs.find((tab) => tab.href.includes(normalizedPath)) || null
+    }
     const pathname = usePathname()
     const [activeTab, setActiveTab] = useState<TTab | null>(
         activeTabInitialValue(pathname)
     )
-    const [openMenu, setOpenMenu] = useState(false)
 
     useEffect(() => {
         setActiveTab(activeTabInitialValue(pathname))
@@ -46,31 +43,26 @@ const Header: React.FC = () => {
 
     const handleTabClick = (tab: TTab) => {
         setActiveTab(tab)
-        setOpenMenu(false)
-        
-        // Special handling for Discover tab
-        if (tab.href === '/discover') {
+    }
+
+    function getRedirectionLink(href: string) {
+        if (href === '/discover') {
             // Get the initial state from localStorage, default to false if not set
             const stored = localStorage.getItem('show_all_markets')
-            const showAllMarkets = stored !== null ? stored === 'true' : false
-            
+            const showAllMarkets = stored !== null ? stored === 'true' : true
+
             // Set the initial value in localStorage if not set
             if (stored === null) {
-                localStorage.setItem('show_all_markets', 'false')
+                localStorage.setItem('show_all_markets', 'true')
             }
-            
+
             // Always navigate to the correct route based on the localStorage value
-            const targetPath = showAllMarkets ? '/discover' : '/etherlink'
-            
-            // Don't navigate if we're already on the correct path
-            if (pathname === targetPath) {
-                return
-            }
-            router.push(targetPath)
-            return
+            const targetPath = showAllMarkets ? '/discover' : '/etherlink?chain_ids=42793'
+
+            return targetPath
         }
-        
-        router.push(`${tab.href}`)
+
+        return href
     }
 
     const BUTTON_DEFAULT_DESKTOP_STYLES =
@@ -88,10 +80,6 @@ const Header: React.FC = () => {
 
     function isSelected(tab: TTab) {
         return tab.id === activeTab?.id
-    }
-
-    function handleCloseMenu() {
-        setOpenMenu(false)
     }
 
     const menuContainerVariant = {
@@ -139,36 +127,21 @@ const Header: React.FC = () => {
                                 size="lg"
                                 className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`}
                             >
-                                {pathname === '/etherlink' && tab.href === '/discover' ? (
-                                    <div
-                                        onClick={() => handleTabClick(tab)}
-                                        className={LINK_DEFAULT_STYLES}
-                                    >
-                                        <tab.icon />
-                                        <span className="leading-[0]">
-                                            {tab.name}
-                                        </span>
-                                    </div>
-                                ) : (
-                                    <Link
-                                        onClick={() => handleTabClick(tab)}
-                                        href={tab.href}
-                                        className={LINK_DEFAULT_STYLES}
-                                    >
-                                        <tab.icon />
-                                        <span className="leading-[0]">
-                                            {tab.name}
-                                        </span>
-                                    </Link>
-                                )}
+                                <Link
+                                    onClick={() => handleTabClick(tab)}
+                                    href={tab.href}
+                                    className={LINK_DEFAULT_STYLES}
+                                >
+                                    <tab.icon />
+                                    <span className="leading-[0]">
+                                        {tab.name}
+                                    </span>
+                                </Link>
                             </Button>
                         ))}
                     </nav>
                     <div className="flex items-center gap-[12px]">
                         <ConnectWalletButton />
-                        {/* <Button variant="outline" size={"md"} className="hidden max-md:block rounded-[12px] py-2 border border-gray-500 py-[6px]" onClick={() => setOpenMenu(true)}>
-              <Menu className='text-gray-600' />
-            </Button> */}
                     </div>
                 </div>
             </header>

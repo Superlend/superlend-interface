@@ -249,9 +249,9 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         }
     }, [chainIdsParam]);
 
-    useEffect(() => {
-        console.log('showRainingApples state:', showRainingApples);
-    }, [showRainingApples]);
+    // useEffect(() => {
+    //     console.log('showRainingApples state:', showRainingApples);
+    // }, [showRainingApples]);
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         const platformName = item.platform.platform_name.split('-')[0].toLowerCase()
