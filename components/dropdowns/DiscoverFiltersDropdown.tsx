@@ -27,7 +27,7 @@ import useDimensions from '@/hooks/useDimensions'
 import { CHAIN_ID_MAPPER, STABLECOINS_NAMES_LIST } from '@/constants'
 import SearchInput from '../inputs/SearchInput'
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { PlatformLogo, ProtocolIdentifier } from '@/types/platform'
 import { motion } from 'framer-motion'
 import { Switch } from '../ui/switch'
@@ -36,10 +36,7 @@ import TooltipText from '../tooltips/TooltipText'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 
-export default function DiscoverFiltersDropdown() {
-    const [isOpen, setIsOpen] = React.useState<boolean>(false)
-    const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext)
-    const updateSearchParams = useUpdateSearchParams()
+export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     const searchParams = useSearchParams()
     const getFiltersFromURL = () => ({
         token_ids: searchParams.get('token_ids')?.split(',') || [],
@@ -47,6 +44,10 @@ export default function DiscoverFiltersDropdown() {
         protocol_ids: searchParams.get('protocol_ids')?.split(',') || [],
     })
     const filters = getFiltersFromURL()
+    const [isOpen, setIsOpen] = React.useState<boolean>(false)
+    const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext)
+    const updateSearchParams = useUpdateSearchParams()
+    const pathname = usePathname()
     const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(
         STABLECOINS_NAMES_LIST.every((name) =>
             filters.token_ids.includes(name)
@@ -55,13 +56,27 @@ export default function DiscoverFiltersDropdown() {
     const { width: screenWidth } = useDimensions()
     const isDesktop = useMemo(() => screenWidth > 768, [screenWidth])
 
+    // Set initial chain_ids for etherlink and clear filters when switching
+    // useEffect(() => {
+    //     if (!isLoading) {
+    //         if (!showAllMarkets && pathname === '/etherlink') {
+    //             const currentChainIds = searchParams.get('chain_ids')?.split(',') || []
+    //             if (currentChainIds.length === 0) {
+    //                 updateSearchParams({
+    //                     chain_ids: '42793'
+    //                 })
+    //             }
+    //         }
+    //     }
+    // }, [pathname, searchParams, updateSearchParams, isLoading, showAllMarkets])
+
     const hasActiveFilters =
         !!filters.token_ids.length ||
-        !!filters.chain_ids.length ||
+        (pathname === '/etherlink' ? false : !!filters.chain_ids.length) ||
         !!filters.protocol_ids.length
     const activeFiltersTotalCount =
         filters.token_ids.length +
-        filters.chain_ids.length +
+        (pathname === '/etherlink' ? 0 : filters.chain_ids.length) +
         filters.protocol_ids.length
     const getActiveFiltersCountByCategory = (
         filterName: keyof typeof filters
@@ -122,20 +137,29 @@ export default function DiscoverFiltersDropdown() {
         },
     ]
 
-    const FILTER_CATEGORIES = [
-        {
-            label: 'Tokens',
-            value: 'token',
-        },
-        {
-            label: 'Chains',
-            value: 'chain',
-        },
-        {
-            label: 'Platforms',
-            value: 'protocol',
-        },
-    ]
+    const FILTER_CATEGORIES = useMemo(() => {
+        const categories = [
+            {
+                label: 'Tokens',
+                value: 'token',
+            },
+            {
+                label: 'Chains',
+                value: 'chain',
+            },
+            {
+                label: 'Platforms',
+                value: 'protocol',
+            },
+        ]
+
+        // Remove Chain and Platforms filter categories when on etherlink route
+        if (chain === 'etherlink') {
+            return categories.filter(category => category.value === 'token')
+        }
+
+        return categories
+    }, [chain])
 
     const FILTER_OPTIONS: any = {
         token: {
@@ -202,87 +226,93 @@ export default function DiscoverFiltersDropdown() {
 
     if (isDesktop) {
         return (
-            <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-                <DropdownMenuTrigger asChild>
-                    <Button
-                        size="lg"
-                        className="w-fit relative flex items-center gap-2 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-600 rounded-xl"
-                    >
-                        <FilterIcon
-                            className={`hidden xs:inline-block ${hasActiveFilters ? 'fill-gray-600' : ''}`}
-                            width={16}
-                            height={16}
-                        />
-                        <span className="trigger-label">Filters</span>
-                        <ChevronDownIcon
-                            className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`}
-                        />
-                        <div
-                            className={`${hasActiveFilters ? 'absolute block' : 'hidden'} -top-[10px] -right-[8px] flex items-center justify-center w-5 h-5 bg-red-500 rounded-full`}
+            <div className="flex items-center gap-4">
+                <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            size="lg"
+                            className="w-fit relative flex items-center gap-2 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-600 rounded-xl"
                         >
-                            <Label size="small" className="text-white">
-                                {activeFiltersTotalCount}
-                            </Label>
+                            <FilterIcon
+                                className={`hidden xs:inline-block ${hasActiveFilters ? 'fill-gray-600' : ''}`}
+                                width={16}
+                                height={16}
+                            />
+                            <span className="trigger-label">Filters</span>
+                            <ChevronDownIcon
+                                className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                            />
+                            <div
+                                className={`${hasActiveFilters ? 'absolute block' : 'hidden'} -top-[10px] -right-[8px] flex items-center justify-center w-5 h-5 bg-red-500 rounded-full`}
+                            >
+                                <Label size="small" className="text-white">
+                                    {activeFiltersTotalCount}
+                                </Label>
+                            </div>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                        side="bottom"
+                        align="end"
+                        className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden"
+                    >
+                        <div className="filter-card flex flex-col md:min-w-[480px] max-w-[480px]">
+                            <FilterCardHeader {...filterCardHeaderProps} />
+                            <FilterCardContent {...filterCardContentProps} />
                         </div>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                    side="bottom"
-                    align="end"
-                    className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden"
-                >
-                    <div className="filter-card flex flex-col md:min-w-[480px] max-w-[480px]">
-                        <FilterCardHeader {...filterCardHeaderProps} />
-                        <FilterCardContent {...filterCardContentProps} />
-                    </div>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         )
     }
 
     return (
-        <Drawer open={isOpen} onOpenChange={setIsOpen}>
-            <DrawerTrigger asChild>
-                <Button
-                    size="lg"
-                    className="w-fit relative flex items-center gap-2 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-600 rounded-xl"
-                >
-                    <FilterIcon
-                        className={`hidden xs:inline-block ${hasActiveFilters ? 'fill-gray-600' : ''}`}
-                        width={16}
-                        height={16}
-                    />
-                    <span className="trigger-label">Filters</span>
-                    <ChevronDownIcon
-                        className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`}
-                    />
-                    <div
-                        className={`${hasActiveFilters ? 'absolute block' : 'hidden'} -top-[10px] -right-[8px] flex items-center justify-center w-5 h-5 bg-red-500 rounded-full`}
-                    >
-                        <Label size="small" className="text-white">
-                            {activeFiltersTotalCount}
-                        </Label>
-                    </div>
-                </Button>
-            </DrawerTrigger>
-            <DrawerContent>
-                <div className="filter-card flex flex-col">
-                    <FilterCardHeader {...filterCardHeaderProps} />
-                    <FilterCardContent {...filterCardContentProps} />
-                </div>
-                <DrawerFooter className="w-full">
-                    <DrawerClose className="w-full">
+        <>
+            <div className="flex items-center gap-4">
+                <Drawer>
+                    <DrawerTrigger asChild>
                         <Button
-                            size={'lg'}
-                            variant="outline"
-                            className="w-full"
+                            size="lg"
+                            className="w-fit relative flex items-center gap-2 data-[state=open]:ring-2 data-[state=open]:ring-secondary-500 text-gray-600 rounded-xl"
                         >
-                            Close
+                            <FilterIcon
+                                className={`hidden xs:inline-block ${hasActiveFilters ? 'fill-gray-600' : ''}`}
+                                width={16}
+                                height={16}
+                            />
+                            <span className="trigger-label">Filters</span>
+                            <ChevronDownIcon
+                                className={`hidden md:inline-block w-4 h-4 text-gray-600 transition-all duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                            />
+                            <div
+                                className={`${hasActiveFilters ? 'absolute block' : 'hidden'} -top-[10px] -right-[8px] flex items-center justify-center w-5 h-5 bg-red-500 rounded-full`}
+                            >
+                                <Label size="small" className="text-white">
+                                    {activeFiltersTotalCount}
+                                </Label>
+                            </div>
                         </Button>
-                    </DrawerClose>
-                </DrawerFooter>
-            </DrawerContent>
-        </Drawer>
+                    </DrawerTrigger>
+                    <DrawerContent>
+                        <div className="filter-card flex flex-col">
+                            <FilterCardHeader {...filterCardHeaderProps} />
+                            <FilterCardContent {...filterCardContentProps} />
+                        </div>
+                        <DrawerFooter className="w-full">
+                            <DrawerClose className="w-full">
+                                <Button
+                                    size={'lg'}
+                                    variant="outline"
+                                    className="w-full"
+                                >
+                                    Close
+                                </Button>
+                            </DrawerClose>
+                        </DrawerFooter>
+                    </DrawerContent>
+                </Drawer>
+            </div>
+        </>
     )
 }
 

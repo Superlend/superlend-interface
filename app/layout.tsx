@@ -9,6 +9,8 @@ import ScrollToTop from '@/components/ScrollToTop'
 import { Meta } from '@/components/Meta'
 import { Toaster } from 'react-hot-toast'
 import EasterEgg from '@/components/EasterEgg'
+import { ShowAllMarketsProvider } from '@/context/show-all-markets-provider'
+import MarketsBanner from '@/components/MarketsBanner'
 // import { Inter } from "next/font/google";
 
 // const inter = Inter({ subsets: ["latin"] });
@@ -80,8 +82,9 @@ export default function RootLayout({
                     <Toaster />
                     <EasterEgg />
                     <Header />
+                    <MarketsBanner />
                     {children}
-                    <Footer />
+                    {/* <Footer /> */}
                 </ContextProvider>
             </body>
         </html>

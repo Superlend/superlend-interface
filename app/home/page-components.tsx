@@ -5,7 +5,7 @@ import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
 import SelectTokeWidget from '@/components/SelectTokeWidget'
 import MainContainer from '@/components/MainContainer'
 import TokenRates from '@/components/TokenRates'
-import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
+import { SelectTokenByChain as SelectTokenByChainDialog } from '@/components/dialogs/SelectTokenByChain'
 import { usePositionsContext } from '@/context/positions-provider'
 import { useAssetsDataContext } from '@/context/data-provider'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
@@ -20,6 +20,7 @@ import { useSearchParams } from 'next/navigation'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 import { TChain } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import MarketsExplorerBanner from '@/components/MarketsExplorerBanner'
 
 interface ISelectedToken {
     address: string
@@ -220,7 +221,7 @@ export default function HomePageComponents() {
                         ) : null}
                     </AnimatePresence>
                 </div>
-                <SelectTokenByChain
+                <SelectTokenByChainDialog
                     open={openSelectTokenDialog}
                     setOpen={setOpenSelectTokenDialog}
                     tokens={formattedTokensList}
@@ -229,6 +230,7 @@ export default function HomePageComponents() {
                         isLoadingErc20TokensBalanceData || isConnectingWallet
                     }
                 />
+                <MarketsExplorerBanner className="mt-5" />
             </div>
         </MainContainer>
     )
