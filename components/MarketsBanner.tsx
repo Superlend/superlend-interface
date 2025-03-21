@@ -105,10 +105,8 @@ export default function MarketsBanner() {
                                         </div>
                                     </div>
                                     {tab.isActive && (
-                                        <motion.div
-                                            layoutId="active-tab"
-                                            className="absolute inset-0 border-2 border-secondary-500 rounded-[16px]"
-                                            transition={{ duration: 0.3 }}
+                                        <div 
+                                            className="absolute inset-0 border-2 border-secondary-500 rounded-[16px] transition-[transform,opacity] duration-200 ease-out"
                                         />
                                     )}
                                 </motion.button>
