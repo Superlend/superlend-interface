@@ -35,10 +35,11 @@ import InfoTooltip from '../tooltips/InfoTooltip'
 import TooltipText from '../tooltips/TooltipText'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 
 export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     const [isOpen, setIsOpen] = React.useState<boolean>(false)
-    const [showAllMarkets, setShowAllMarkets] = React.useState(chain === 'discover')
+    const { showAllMarkets, toggleShowAllMarkets, isLoading } = useShowAllMarkets()
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext)
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
@@ -47,34 +48,30 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
 
     // Handle switch toggle and route change
     const handleShowAllMarketsChange = (checked: boolean) => {
-        setShowAllMarkets(checked)
         // Reset filters
         handleClearFilters()
-        
-        if (checked) {
-            // Navigate to discover without params
-            router.replace('/discover')
-        } else {
-            // Navigate to etherlink with chain_ids
-            router.replace('/etherlink?chain_ids=42793')
-        }
+        // Use the context's toggle function
+        toggleShowAllMarkets(checked)
     }
 
-    // Set initial chain_ids for etherlink
+    // Set initial chain_ids for etherlink and clear filters when switching
     useEffect(() => {
-        const currentChainIds = searchParams.get('chain_ids')?.split(',') || []
-        
-        if (chain === 'etherlink' && currentChainIds.length === 0) {
-            updateSearchParams({
-                chain_ids: '42793'
-            })
+        if (!isLoading) {
+            if (!showAllMarkets && pathname === '/etherlink') {
+                const currentChainIds = searchParams.get('chain_ids')?.split(',') || []
+                if (currentChainIds.length === 0) {
+                    updateSearchParams({
+                        chain_ids: '42793'
+                    })
+                }
+            }
         }
-    }, [chain, searchParams, updateSearchParams])
+    }, [pathname, searchParams, updateSearchParams, isLoading, showAllMarkets])
 
-    // Update showAllMarkets based on chain changes
-    useEffect(() => {
-        setShowAllMarkets(chain === 'discover')
-    }, [chain])
+    // Don't render while loading initial state
+    if (isLoading) {
+        return null
+    }
 
     const getFiltersFromURL = () => ({
         token_ids: searchParams.get('token_ids')?.split(',') || [],
@@ -247,16 +244,6 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     if (isDesktop) {
         return (
             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                    <Switch
-                        id="show-all-markets"
-                        checked={showAllMarkets}
-                        onCheckedChange={handleShowAllMarketsChange}
-                    />
-                    <Label htmlFor="show-all-markets" weight="medium" className="text-sm text-gray-600 capitalize">
-                        Show all markets
-                    </Label>
-                </div>
                 <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
                     <DropdownMenuTrigger asChild>
                         <Button
@@ -299,17 +286,7 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     return (
         <>
             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                    <Switch
-                        id="show-all-markets-mobile"
-                        checked={showAllMarkets}
-                        onCheckedChange={handleShowAllMarketsChange}
-                    />
-                    <Label htmlFor="show-all-markets-mobile" weight="medium" className="text-sm text-gray-600 capitalize">
-                        Show all markets
-                    </Label>
-                </div>
-                <Drawer open={isOpen} onOpenChange={setIsOpen}>
+                <Drawer>
                     <DrawerTrigger asChild>
                         <Button
                             size="lg"

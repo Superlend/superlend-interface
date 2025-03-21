@@ -33,6 +33,7 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { CHAIN_ID_MAPPER } from '@/constants'
 import useIsClient from '@/hooks/useIsClient'
 import RainingApples from '@/components/animations/RainingApples'
+import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -78,6 +79,8 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const { allChainsData } = useContext<any>(AssetsDataContext)
     const [showRainingApples, setShowRainingApples] = useState(false)
     const hasShownAnimation = useRef(false)
+    const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
+    const pathname = usePathname()
 
     // Add this ref at component level
     const prevParamsRef = useRef(searchParams.toString())
@@ -431,6 +434,16 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
     function handleClearSearch() {
         setKeywords('')
+    }
+
+    // Don't render anything while loading
+    if (isStateLoading || isLoadingOpportunitiesData) {
+        return <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
+    }
+
+    // Only render for discover route when showing all markets
+    if ((pathname === '/etherlink' && showAllMarkets) || (pathname === '/discover' && !showAllMarkets)) {
+        return null
     }
 
     return (

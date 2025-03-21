@@ -16,12 +16,27 @@ import useGetPlatformData from '@/hooks/useGetPlatformData'
 import { Skeleton } from '@/components/ui/skeleton'
 import { sendGAEvent } from '@next/third-parties/google'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import { usePathname } from 'next/navigation'
+import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 
 const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
 const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 
 export default function DiscoverOpportunities({ chain }: { chain: string }) {
     const { logEvent } = useAnalytics()
+    const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
+    const pathname = usePathname()
+
+    // Don't render anything while loading
+    if (isStateLoading) {
+        return null
+    }
+
+    // Only render for discover route when showing all markets
+    if (!showAllMarkets) {
+        return null
+    }
+
     // Token Addresses
     const opportunity1TokenAddress = "0xfc24f770f94edbca6d6f885e12d4317320bcb401";
     const opportunity2TokenAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";

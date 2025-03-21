@@ -47,10 +47,29 @@ const Header: React.FC = () => {
     const handleTabClick = (tab: TTab) => {
         setActiveTab(tab)
         setOpenMenu(false)
-        // Don't navigate to /discover if we're already on /etherlink
-        if (tab.href === '/discover' && pathname === '/etherlink') {
+        
+        // Special handling for Discover tab
+        if (tab.href === '/discover') {
+            // Get the initial state from localStorage, default to false if not set
+            const stored = localStorage.getItem('show_all_markets')
+            const showAllMarkets = stored !== null ? stored === 'true' : false
+            
+            // Set the initial value in localStorage if not set
+            if (stored === null) {
+                localStorage.setItem('show_all_markets', 'false')
+            }
+            
+            // Always navigate to the correct route based on the localStorage value
+            const targetPath = showAllMarkets ? '/discover' : '/etherlink'
+            
+            // Don't navigate if we're already on the correct path
+            if (pathname === targetPath) {
+                return
+            }
+            router.push(targetPath)
             return
         }
+        
         router.push(`${tab.href}`)
     }
 
