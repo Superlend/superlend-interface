@@ -33,7 +33,7 @@ export default function MarketsExplorerBanner({ className }: MarketsExplorerBann
                     relative overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer group
                     ${showAllMarkets
                         ? 'bg-gradient-to-br from-[#F5FFF7] via-[#EDFBEF] to-[#00985b]'
-                        : 'bg-gradient-to-br from-primary-gradientStart via-primary-gradientEnd to-primary-gradientEndHover'
+                        : 'bg-gradient-to-br from-primary-gradientStart via-primary-gradientEndHover to-primary-gradientStart'
                     }
                     before:absolute before:inset-0 before:bg-[url('/images/grid-pattern.svg')] before:opacity-5 before:bg-repeat
                     after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/5 after:to-transparent after:opacity-0 
