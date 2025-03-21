@@ -43,42 +43,7 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext)
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
-    const router = useRouter()
     const pathname = usePathname()
-
-    // Handle switch toggle and route change
-    const handleShowAllMarketsChange = (checked: boolean) => {
-        // Reset filters
-        handleClearFilters()
-        // Use the context's toggle function
-        toggleShowAllMarkets(checked)
-    }
-
-    // Set initial chain_ids for etherlink and clear filters when switching
-    useEffect(() => {
-        if (!isLoading) {
-            if (!showAllMarkets && pathname === '/etherlink') {
-                const currentChainIds = searchParams.get('chain_ids')?.split(',') || []
-                if (currentChainIds.length === 0) {
-                    updateSearchParams({
-                        chain_ids: '42793'
-                    })
-                }
-            }
-        }
-    }, [pathname, searchParams, updateSearchParams, isLoading, showAllMarkets])
-
-    // Don't render while loading initial state
-    if (isLoading) {
-        return null
-    }
-
-    const getFiltersFromURL = () => ({
-        token_ids: searchParams.get('token_ids')?.split(',') || [],
-        chain_ids: searchParams.get('chain_ids')?.split(',') || [],
-        protocol_ids: searchParams.get('protocol_ids')?.split(',') || [],
-    })
-    const filters = getFiltersFromURL()
     const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(
         STABLECOINS_NAMES_LIST.every((name) =>
             filters.token_ids.includes(name)
@@ -86,6 +51,27 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     )
     const { width: screenWidth } = useDimensions()
     const isDesktop = useMemo(() => screenWidth > 768, [screenWidth])
+
+    // Set initial chain_ids for etherlink and clear filters when switching
+    // useEffect(() => {
+    //     if (!isLoading) {
+    //         if (!showAllMarkets && pathname === '/etherlink') {
+    //             const currentChainIds = searchParams.get('chain_ids')?.split(',') || []
+    //             if (currentChainIds.length === 0) {
+    //                 updateSearchParams({
+    //                     chain_ids: '42793'
+    //                 })
+    //             }
+    //         }
+    //     }
+    // }, [pathname, searchParams, updateSearchParams, isLoading, showAllMarkets])
+
+    const getFiltersFromURL = () => ({
+        token_ids: searchParams.get('token_ids')?.split(',') || [],
+        chain_ids: searchParams.get('chain_ids')?.split(',') || [],
+        protocol_ids: searchParams.get('protocol_ids')?.split(',') || [],
+    })
+    const filters = getFiltersFromURL()
 
     const hasActiveFilters =
         !!filters.token_ids.length ||
