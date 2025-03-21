@@ -38,11 +38,17 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 
 export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
+    const searchParams = useSearchParams()
+    const getFiltersFromURL = () => ({
+        token_ids: searchParams.get('token_ids')?.split(',') || [],
+        chain_ids: searchParams.get('chain_ids')?.split(',') || [],
+        protocol_ids: searchParams.get('protocol_ids')?.split(',') || [],
+    })
+    const filters = getFiltersFromURL()
     const [isOpen, setIsOpen] = React.useState<boolean>(false)
     const { showAllMarkets, toggleShowAllMarkets, isLoading } = useShowAllMarkets()
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext)
     const updateSearchParams = useUpdateSearchParams()
-    const searchParams = useSearchParams()
     const pathname = usePathname()
     const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(
         STABLECOINS_NAMES_LIST.every((name) =>
@@ -65,13 +71,6 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     //         }
     //     }
     // }, [pathname, searchParams, updateSearchParams, isLoading, showAllMarkets])
-
-    const getFiltersFromURL = () => ({
-        token_ids: searchParams.get('token_ids')?.split(',') || [],
-        chain_ids: searchParams.get('chain_ids')?.split(',') || [],
-        protocol_ids: searchParams.get('protocol_ids')?.split(',') || [],
-    })
-    const filters = getFiltersFromURL()
 
     const hasActiveFilters =
         !!filters.token_ids.length ||
