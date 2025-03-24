@@ -230,7 +230,11 @@ export default function HomePageComponents() {
                         isLoadingErc20TokensBalanceData || isConnectingWallet
                     }
                 />
-                <MarketsExplorerBanner className="mt-5" />
+                {!showOpportunitiesTable && (
+                    <div className="max-w-[400px] mt-5">
+                        <MarketsExplorerBanner />
+                    </div>
+                )}
             </div>
         </MainContainer>
     )

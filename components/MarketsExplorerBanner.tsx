@@ -33,7 +33,7 @@ export default function MarketsExplorerBanner({ className }: MarketsExplorerBann
                     relative overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer group
                     ${showAllMarkets
                         ? 'bg-gradient-to-br from-[#F5FFF7] via-[#EDFBEF] to-[#00985b]'
-                        : 'bg-gradient-to-br from-primary-gradientStart via-primary-gradientEndHover to-primary-gradientStart'
+                        : 'bg-gradient-to-br from-[#0F244B] via-[#5F81E9] to-[#0F244B]'
                     }
                     before:absolute before:inset-0 before:bg-[url('/images/grid-pattern.svg')] before:opacity-5 before:bg-repeat
                     after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/5 after:to-transparent after:opacity-0 
@@ -46,9 +46,11 @@ export default function MarketsExplorerBanner({ className }: MarketsExplorerBann
 
                 <div className="relative flex items-center justify-between p-6 gap-4">
                     <div className="flex flex-col gap-2">
+                        {!showAllMarkets && <Sparkles className={`w-6 h-6 text-white fill-current`} />}
+                        {showAllMarkets && <ImageWithDefault src="/images/logos/apple-green.png" alt="Apple Farm Logo" width={20} height={20} className="w-6 h-6" />}
                         <div className="flex items-center gap-2">
-                            {!showAllMarkets && <Sparkles className={`w-5 h-5 text-white`} />}
-                            {showAllMarkets && <ImageWithDefault src="/images/logos/apple-green.png" alt="Apple Farm Logo" width={20} height={20} className="w-5 h-5" />}
+                            {/* {!showAllMarkets && <Sparkles className={`w-5 h-5 text-white`} />} */}
+                            {/* {showAllMarkets && <ImageWithDefault src="/images/logos/apple-green.png" alt="Apple Farm Logo" width={20} height={20} className="w-5 h-5" />} */}
                             <HeadingText
                                 level="h4"
                                 weight="medium"
