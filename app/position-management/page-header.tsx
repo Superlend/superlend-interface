@@ -117,10 +117,11 @@ export default function PageHeader() {
     const isMorphoVault =
         platformData?.platform?.protocol_type === PlatformType.MORPHO &&
         platformData?.platform?.isVault
+    const isEulerProtocol = platformData?.platform?.protocol_type === PlatformType.EULER
     const platformWebsiteLink = getPlatformWebsiteLink({
         platformId,
         chainName,
-        tokenAddress: tokenDetails?.address,
+        tokenAddress: isEulerProtocol ? core_contract : tokenDetails?.address,
         chainId: chain_id,
         vaultId,
         isFluidVault,
@@ -183,11 +184,14 @@ export default function PageHeader() {
     const isDisplayOneToken =
         hasPoolBasedTokens ||
         (isFluidPlatform && !isFluidVault) ||
-        (isMorpho && isMorphoVault)
+        (isMorpho && isMorphoVault) || 
+        isEulerProtocol
+
     const isDisplayTwoTokens = !(
         hasPoolBasedTokens ||
         (isFluidPlatform && !isFluidVault) ||
-        (isMorpho && isMorphoVault)
+        (isMorpho && isMorphoVault) ||
+        isEulerProtocol
     )
 
     const tokensToDisplayOnTooltip = isDisplayOneToken

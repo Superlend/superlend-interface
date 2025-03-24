@@ -26,6 +26,7 @@ export type TPlatformWebsiteLinks = {
     fluid: PlatformWebsiteLink.FLUID
     morpho: PlatformWebsiteLink.MORPHO
     superlend: PlatformWebsiteLink.SUPERLEND
+    euler: PlatformWebsiteLink.EULER
 }
 
 export type TChainNamesBasedOnAaveMarkets = {
@@ -126,6 +127,7 @@ export const platformWebsiteLinks: TPlatformWebsiteLinks = {
     fluid: PlatformWebsiteLink.FLUID,
     morpho: PlatformWebsiteLink.MORPHO,
     superlend: PlatformWebsiteLink.SUPERLEND,
+    euler: PlatformWebsiteLink.EULER,
 }
 
 export const SHEET_FORM_URL =

@@ -120,6 +120,11 @@ export default function DiscoverFiltersDropdown() {
             name: 'SUPERLEND',
             protocol_id: 'SUPERLEND',
         },
+        {
+            logo: PlatformLogo.EULER,
+            name: 'EULER',
+            protocol_id: 'EULER',
+        },
     ]
 
     const FILTER_CATEGORIES = [
