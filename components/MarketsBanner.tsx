@@ -52,7 +52,7 @@ export default function MarketsBanner() {
                         </div>
                     }
                     {!isLoading &&
-                        <div className="flex gap-4 w-full bg-white bg-opacity-40 backdrop-blur-md rounded-4 md:rounded-5 p-1">
+                        <div className="flex gap-4 w-full bg-white bg-opacity-40 backdrop-blur-md rounded-4 md:rounded-5 p-2">
                             {tabs.map((tab, index) => (
                                 <motion.button
                                     key={tab.id}
@@ -61,13 +61,13 @@ export default function MarketsBanner() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3, delay: index * 0.1 }}
                                     className={cn(
-                                        "flex-1 group relative p-2 rounded-4 md:rounded-5 transition-all duration-300",
+                                        "flex-1 group relative p-2 md:px-5 md:py-4 rounded-4 md:rounded-5 transition-all duration-300",
                                         tab.isActive
                                             ? "bg-primary backdrop-blur-md shadow-lg"
                                             : "bg-white bg-opacity-0 hover:bg-opacity-40"
                                     )}
                                 >
-                                    <div className="flex flex-col items-center justify-center gap-2">
+                                    <div className="flex items-center justify-center gap-4">
                                         <div className="flex items-start gap-1">
                                             <span className={cn(
                                                 "transition-colors duration-300",
@@ -85,7 +85,7 @@ export default function MarketsBanner() {
                                                 {tab.title}
                                             </Label>
                                         </div>
-                                        <div className="hidden md:flex flex-wrap items-center justify-center gap-2">
+                                        <div className="hidden md:flex flex-wrap items-center justify-center gap-1">
                                             {tab.stats.map((stat, i) => (
                                                 <React.Fragment key={i}>
                                                     <Label
