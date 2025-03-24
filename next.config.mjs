@@ -11,6 +11,9 @@ const nextConfig = {
             {
                 hostname: 'cdn.morpho.org',
             },
+            {
+                hostname: 'raw.githubusercontent.com',
+            },
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'attachment',
