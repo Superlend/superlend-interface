@@ -25,7 +25,7 @@ export default function MarketsBanner() {
             title: 'All Markets',
             stats: ['350+ Markets', '15+ Chains'],
             isActive: showAllMarkets,
-            icon: <Globe className="w-4 h-4" />
+            icon: <Globe className="w-4 h-4 text-inherit" />
         },
         {
             id: 'etherlink',
@@ -41,7 +41,7 @@ export default function MarketsBanner() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full"
+            className="w-full max-md:sticky max-md:top-20 max-md:z-50"
         >
             <div className="max-w-[1200px] mx-auto">
                 <div className="mx-5 mb-6">
@@ -52,7 +52,7 @@ export default function MarketsBanner() {
                         </div>
                     }
                     {!isLoading &&
-                        <div className="flex gap-4 w-full">
+                        <div className="flex gap-4 w-full bg-white bg-opacity-40 backdrop-blur-md rounded-4 md:rounded-5 p-1">
                             {tabs.map((tab, index) => (
                                 <motion.button
                                     key={tab.id}
@@ -61,17 +61,17 @@ export default function MarketsBanner() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3, delay: index * 0.1 }}
                                     className={cn(
-                                        "flex-1 group relative px-5 py-4 bg-white bg-opacity-40 backdrop-blur-md rounded-[16px] border transition-all duration-300 hover:shadow-lg",
+                                        "flex-1 group relative p-2 rounded-4 md:rounded-5 transition-all duration-300",
                                         tab.isActive
-                                            ? "border-secondary-500 shadow-lg"
-                                            : "border-white border-opacity-40 hover:border-secondary-300"
+                                            ? "bg-primary backdrop-blur-md shadow-lg"
+                                            : "bg-white bg-opacity-0 hover:bg-opacity-40"
                                     )}
                                 >
                                     <div className="flex flex-col items-center justify-center gap-2">
-                                        <div className="flex items-start gap-2">
+                                        <div className="flex items-start gap-1">
                                             <span className={cn(
                                                 "transition-colors duration-300",
-                                                tab.isActive ? "text-gray-800" : "text-gray-600 group-hover:text-gray-700 grayscale"
+                                                tab.isActive ? "text-white" : "text-gray-600 group-hover:text-gray-700 grayscale group-hover:grayscale-0"
                                             )}>
                                                 {tab.icon}
                                             </span>
@@ -79,36 +79,31 @@ export default function MarketsBanner() {
                                                 weight="medium"
                                                 className={cn(
                                                     "text-[15px] leading-tight transition-colors duration-300",
-                                                    tab.isActive ? "text-gray-800" : "text-gray-600 group-hover:text-gray-700"
+                                                    tab.isActive ? "text-white" : "text-gray-600 group-hover:text-gray-700"
                                                 )}
                                             >
                                                 {tab.title}
                                             </Label>
                                         </div>
-                                        <div className="flex flex-wrap items-center justify-center gap-2">
+                                        <div className="hidden md:flex flex-wrap items-center justify-center gap-2">
                                             {tab.stats.map((stat, i) => (
                                                 <React.Fragment key={i}>
                                                     <Label
                                                         className={cn(
                                                             "text-xs transition-colors duration-300",
-                                                            tab.isActive ? "text-gray-600" : "text-gray-500 group-hover:text-gray-600"
+                                                            tab.isActive ? "text-white/80" : "text-gray-500 group-hover:text-gray-600"
                                                         )}
                                                         weight="medium"
                                                     >
                                                         {stat}
                                                     </Label>
                                                     {i < tab.stats.length - 1 && (
-                                                        <span className="hidden md:block w-1 h-1 rounded-full bg-gray-500" />
+                                                        <span className="hidden md:block w-1 h-1 rounded-full bg-gray-300" />
                                                     )}
                                                 </React.Fragment>
                                             ))}
                                         </div>
                                     </div>
-                                    {tab.isActive && (
-                                        <div 
-                                            className="absolute inset-0 border-2 border-secondary-500 rounded-[16px] transition-[transform,opacity] duration-200 ease-out"
-                                        />
-                                    )}
                                 </motion.button>
                             ))}
                         </div>
