@@ -20,6 +20,7 @@ import InfoCircleIcon from '../icons/info-circle-icon'
 import useDimensions from '@/hooks/useDimensions'
 import { Button } from '../ui/button'
 import { DialogTitle } from '@radix-ui/react-dialog'
+import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 
 type TProps = {
     label?: any
@@ -60,9 +61,9 @@ export default function InfoTooltip({
 
     if (isDesktop) {
         return (
-            <TooltipProvider delayDuration={200}>
-                <Tooltip open={open}>
-                    <TooltipTrigger asChild>
+            <TooltipPrimitive.Provider delayDuration={200} skipDelayDuration={0}>
+                <TooltipPrimitive.Root open={open}>
+                    <TooltipPrimitive.Trigger asChild>
                         <motion.span
                             // Tool tip triggers
                             onClick={handleTooltipToggle(true)}
@@ -81,27 +82,29 @@ export default function InfoTooltip({
                             )}
                             {label && label}
                         </motion.span>
-                    </TooltipTrigger>
-                    <TooltipContent
-                        side={side}
-                        sideOffset={5}
-                        className={`${className?.includes('max-w') ? '' : 'max-w-[280px] text-wrap'} ${sizes[size]}`}
-                    >
-                        <motion.span
-                            onHoverStart={handleTooltipToggle(true)}
-                            onHoverEnd={handleTooltipToggle(false)}
-                            onMouseEnter={handleTooltipToggle(true)}
-                            onMouseLeave={handleTooltipToggle(false)}
-                            className="w-fit inline-block shrink-0"
+                    </TooltipPrimitive.Trigger>
+                    <TooltipPrimitive.Portal>
+                        <TooltipPrimitive.Content
+                            side={side}
+                            sideOffset={12}
+                            className={`z-[9999] overflow-visible pointer-events-auto bg-white rounded-4 border shadow-md ${className?.includes('max-w') ? '' : 'max-w-[280px] text-wrap'} ${sizes[size]}`}
                         >
-                            {typeof content === 'string' && (
-                                <Label className="w-fit">{content}</Label>
-                            )}
-                            {typeof content !== 'string' && content}
-                        </motion.span>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+                            <motion.span
+                                onHoverStart={handleTooltipToggle(true)}
+                                onHoverEnd={handleTooltipToggle(false)}
+                                onMouseEnter={handleTooltipToggle(true)}
+                                onMouseLeave={handleTooltipToggle(false)}
+                                className="w-fit inline-block shrink-0"
+                            >
+                                {typeof content === 'string' && (
+                                    <Label className="w-fit">{content}</Label>
+                                )}
+                                {typeof content !== 'string' && content}
+                            </motion.span>
+                        </TooltipPrimitive.Content>
+                    </TooltipPrimitive.Portal>
+                </TooltipPrimitive.Root>
+            </TooltipPrimitive.Provider>
         )
     }
 
