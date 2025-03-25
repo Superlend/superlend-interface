@@ -11,6 +11,12 @@ const nextConfig = {
             {
                 hostname: 'cdn.morpho.org',
             },
+            {
+                hostname: 'www.etherlink.com',
+            },
+            {
+                hostname: 'raw.githubusercontent.com',
+            },
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'attachment',

@@ -265,6 +265,7 @@ export const TX_EXPLORER_LINKS: { [key in ChainId]: string } = {
     [ChainId.Scroll]: 'https://scrollscan.io',
     [ChainId.Etherlink]: 'https://etherscan.io',
     [ChainId.Linea]: 'https://lineascan.build',
+    [ChainId.Sonic]: 'https://sonicscan.org',
 }
 
 export const APPROXIMATE_ESTIMATE_OF_RETURNS_TOOLTIP_CONTENT =
@@ -293,6 +294,9 @@ export const CHAIN_ID_MAPPER: { [key in ChainId]: ChainName } = {
     [ChainId.Metis]: ChainName.Metis,
     [ChainId.Etherlink]: ChainName.Etherlink,
     [ChainId.Linea]: ChainName.Linea,
+    [ChainId.Sonic]: ChainName.Sonic,
 }
 
 export const FLUID_MAX_VALUE = "-57896044618658097711785492504343953926634992332820282019728792003956564819968";
+
+export const SLIPPAGE_PERCENTAGE = 0.995;

@@ -425,9 +425,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
             const lendTooltipContent =
-                '% 7 day average interest you earn on deposits over a year. This includes compounding.'
+                '% 7 day average interest you earn on deposits over a year. This exludes rewards.'
             const borrowTooltipContent =
-                '% 7 day average interest you pay for your borrows over a year. This includes compunding.'
+                '% 7 day average interest you pay for your borrows over a year. This exludes rewards.'
             const tooltipContent =
                 positionTypeParam === 'lend'
                     ? lendTooltipContent
@@ -436,94 +436,19 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <InfoTooltip
                     side="bottom"
-                    label={<TooltipText>7D Avg APY</TooltipText>}
+                    label={<TooltipText>7D Base APY</TooltipText>}
                     content={tooltipContent}
                 />
             )
         },
         cell: ({ row }) => {
-            const searchParams = useSearchParams()
-            const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
             const apy7DayAvg = Number(row.getValue('apy_avg_7days'))
-            const apy7DayAvgFormatted = apy7DayAvg.toFixed(2)
-            const hasRewards =
-                row.original?.additional_rewards &&
-                row.original?.rewards.length > 0
-            // Declare tooltip content related variables
-            let baseRate, baseRateFormatted, rewards, totalRewards
-            const isLend = positionTypeParam === 'lend'
-            const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
-                row.original?.platformId.split('-')[0].toLowerCase()
-            )
-            const isFluidProtocol = row.original.platformId.split('-')[0].toLowerCase() === PlatformType.FLUID
-
-
-            if (hasRewards) {
-                // Update rewards grouped by asset address
-                rewards = getRewardsGroupedByAsset(row.original?.rewards)
-                // Get total rewards
-                totalRewards = rewards.reduce(
-                    (acc, curr) =>
-                        acc +
-                        Number(isLend ? curr.supply_apy : curr.borrow_apy),
-                    0
-                )
-                // Lend base rate = APY - Asset Total Rewards
-                const lendBaseRate = apy7DayAvg - totalRewards
-                // Borrow base rate = APY + Asset Total Rewards
-                const borrowBaseRate = apy7DayAvg + totalRewards
-                baseRate = Number(isLend ? lendBaseRate : borrowBaseRate)
-                baseRateFormatted =
-                    baseRate < 0.01 && baseRate > 0
-                        ? '<0.01'
-                        : getFormattedBaseRate(baseRate)
-            }
-
-            if (
-                apy7DayAvgFormatted === '0.00' &&
-                !isPairBasedProtocol &&
-                !isLend
-            ) {
-                return (
-                    <InfoTooltip
-                        label={
-                            <TooltipText>
-                                <BodyText level={'body2'} weight={'medium'}>
-                                    {`${apy7DayAvgFormatted}%`}
-                                </BodyText>
-                            </TooltipText>
-                        }
-                        content={'This asset is non-borrowable'}
-                    />
-                )
-            }
+            const apy7DayAvgFormatted = abbreviateNumber(apy7DayAvg)
 
             return (
-                <span className="flex items-center gap-1">
-                    <BodyText level={'body2'} weight={'medium'}>
-                        {`${apy7DayAvgFormatted}%`}
-                    </BodyText>
-                    {(hasRewards && !isFluidProtocol) && (
-                        <InfoTooltip
-                            label={
-                                <ImageWithDefault
-                                    src="/icons/sparkles.svg"
-                                    alt="Rewards"
-                                    width={22}
-                                    height={22}
-                                    className="cursor-pointer hover:scale-110"
-                                />
-                            }
-                            content={getRewardsTooltipContent({
-                                baseRateFormatted: baseRateFormatted || '',
-                                rewards: rewards || [],
-                                apyCurrent: apy7DayAvg || 0,
-                                positionTypeParam,
-                            })}
-                        />
-                    )}
-                </span>
+                <BodyText level={'body2'} weight={'medium'}>
+                    {`${apy7DayAvgFormatted}%`}
+                </BodyText>
             )
         },
         enableGlobalFilter: false,

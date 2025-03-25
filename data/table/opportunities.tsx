@@ -52,7 +52,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const platformDisplayName = `${capitalizeText(platformName.split(' ')[0])} ${getPlatformVersion(platformId)}`;
             const showPlatformCuratorName = platformDisplayName.split(' ')[1].toLowerCase() !== formattedPlatformWithMarketName.toLowerCase();
 
-
             const tooltipContent = (
                 <span className="flex flex-col gap-[16px]">
                     <span className="flex flex-col gap-[4px]">
@@ -90,7 +89,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
 
             return (
-                <span className="flex items-center gap-[8px]">
+                <span className="flex items-center gap-[8px] max-w-[120px]">
                     <InfoTooltip
                         label={
                             <ImageWithBadge
@@ -102,11 +101,11 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         }
                         content={tooltipContent}
                     />
-                    <span className="flex flex-col gap-[0px]">
+                    <span className="flex flex-col gap-[0px] max-w-full truncate">
                         <BodyText
                             level={'body2'}
                             weight={'medium'}
-                            className="truncate capitalize"
+                            className="truncate capitalize max-w-full"
                             title={platformWithMarketName}
                         >
                             <Link
@@ -127,7 +126,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         {showPlatformCuratorName &&
                             <Label
                                 title={formattedPlatformWithMarketName}
-                                className="text-gray-800 leading-0 capitalize truncate max-w-[120px]"
+                                className="inline-block text-gray-800 leading-0 capitalize truncate max-w-full"
                             >
                                 {formattedPlatformWithMarketName}
                             </Label>
@@ -138,18 +137,19 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         },
         enableSorting: false,
         // enableGlobalFilter: false,
+        size: 60,
     },
     {
-        accessorKey: 'apy_avg_7days',
-        accessorFn: (item) => Number(item.apy_avg_7days),
+        accessorKey: 'apy_current',
+        accessorFn: (item) => Number(item.apy_current),
         header: () => {
             const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
             const lendTooltipContent =
-                '% 7 day average interest you earn on deposits over a year. This includes compounding.'
+                '% interest you earn on deposits over a year. This includes compounding.'
             const borrowTooltipContent =
-                '% 7 day average interest you pay for your borrows over a year. This includes compunding.'
+                '% interest you pay for your borrows over a year. This includes compunding.'
             const tooltipContent =
                 positionTypeParam === 'lend'
                     ? lendTooltipContent
@@ -158,7 +158,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <InfoTooltip
                     side="bottom"
-                    label={<TooltipText>7D Avg APY</TooltipText>}
+                    label={<TooltipText>APY</TooltipText>}
                     content={tooltipContent}
                 />
             )
@@ -167,8 +167,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
-            const apy7DayAvg = Number(row.getValue('apy_avg_7days'))
-            const apy7DayAvgFormatted = apy7DayAvg.toFixed(2)
+            const apyCurrent = Number(row.getValue('apy_current'))
+            const apyCurrentFormatted = apyCurrent.toFixed(2)
             const hasRewards =
                 row.original?.additional_rewards &&
                 row.original?.rewards.length > 0
@@ -190,9 +190,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     0
                 )
                 // Lend base rate = APY - Asset Total Rewards
-                const lendBaseRate = apy7DayAvg - totalRewards
+                const lendBaseRate = apyCurrent - totalRewards
                 // Borrow base rate = APY + Asset Total Rewards
-                const borrowBaseRate = apy7DayAvg + totalRewards
+                const borrowBaseRate = apyCurrent + totalRewards
                 baseRate = Number(isLend ? lendBaseRate : borrowBaseRate)
                 baseRateFormatted =
                     baseRate < 0.01 && baseRate > 0
@@ -201,7 +201,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             }
 
             if (
-                apy7DayAvgFormatted === '0.00' &&
+                apyCurrentFormatted === '0.00' &&
                 !isPairBasedProtocol &&
                 !isLend
             ) {
@@ -210,7 +210,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         label={
                             <TooltipText>
                                 <BodyText level={'body2'} weight={'medium'}>
-                                    {`${apy7DayAvgFormatted}%`}
+                                    {`${apyCurrentFormatted}%`}
                                 </BodyText>
                             </TooltipText>
                         }
@@ -222,7 +222,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-1">
                     <BodyText level={'body2'} weight={'medium'}>
-                        {`${apy7DayAvgFormatted}%`}
+                        {`${apyCurrentFormatted}%`}
                     </BodyText>
                     {hasRewards && (
                         <InfoTooltip
@@ -238,11 +238,53 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             content={getRewardsTooltipContent({
                                 baseRateFormatted: baseRateFormatted || '',
                                 rewards: rewards || [],
-                                apyCurrent: apy7DayAvg || 0,
+                                apyCurrent: apyCurrent || 0,
                                 positionTypeParam,
                             })}
                         />
                     )}
+                </span>
+            )
+        },
+        enableGlobalFilter: false,
+        size: 60,
+    },
+    {
+        accessorKey: 'apy_avg_7days',
+        accessorFn: (item) => Number(item.apy_avg_7days),
+        header: () => {
+            const searchParams = useSearchParams()
+            const positionTypeParam =
+                searchParams.get('position_type') || 'lend'
+            const lendTooltipContent =
+                '% 7 day average interest you earn on deposits over a year. This excludes rewards.'
+            const borrowTooltipContent =
+                '% 7 day average interest you pay for your borrows over a year. This excludes rewards.'
+            const tooltipContent =
+                positionTypeParam === 'lend'
+                    ? lendTooltipContent
+                    : borrowTooltipContent
+
+            return (
+                <InfoTooltip
+                    side="bottom"
+                    label={<TooltipText>7D Base APY</TooltipText>}
+                    content={tooltipContent}
+                />
+            )
+        },
+        cell: ({ row }) => {
+            const searchParams = useSearchParams()
+            const positionTypeParam =
+                searchParams.get('position_type') || 'lend'
+            const apy7DayAvg = Number(row.getValue('apy_avg_7days'))
+            const apy7DayAvgFormatted = abbreviateNumber(apy7DayAvg)
+
+            return (
+                <span className="flex items-center gap-1">
+                    <BodyText level={'body2'} weight={'medium'}>
+                        {`${apy7DayAvgFormatted}%`}
+                    </BodyText>
                 </span>
             )
         },

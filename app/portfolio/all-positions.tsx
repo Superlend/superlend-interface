@@ -16,19 +16,30 @@ import { calculateScientificNotation } from '@/lib/utils'
 import { TPositionType } from '@/types'
 import { PlatformType } from '@/types/platform'
 import { SortingState } from '@tanstack/react-table'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import React, { useContext, useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
+import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
+import { useDebounce } from '@/hooks/useDebounce'
 
 export default function AllPositions() {
     const router = useRouter()
+    const updateSearchParams = useUpdateSearchParams()
+    const searchParams = useSearchParams()
+    const positionTypeParam = searchParams.get('position_type') || 'lend'
+    const tokenIdsParam = searchParams.get('token_ids')?.split(',') || []
+    const chainIdsParam = searchParams.get('chain_ids')?.split(',') || []
+    const platformIdsParam = searchParams.get('protocol_ids')?.split(',') || []
+    const keywordsParam = searchParams.get('keywords') || ''
+    const sortingParam = searchParams.get('sort')?.split(',') || []
+
     const { logEvent } = useAnalytics()
-    const { filters, positionType, setPositionType } =
-        useContext(PositionsContext)
+    const { filters, positionType, setPositionType } = useContext(PositionsContext)
     const { address: walletAddress } = useAccount()
     const [searchKeywords, setSearchKeywords] = useState<string>('')
+    const debouncedKeywords = useDebounce(searchKeywords, 300)
     const [sorting, setSorting] = useState<SortingState>([
-        { id: 'apy', desc: positionType === 'lend' },
+        { id: 'apy', desc: positionTypeParam === 'lend' },
     ])
     const [columnVisibility, setColumnVisibility] = useState({
         deposits: true,
@@ -47,15 +58,26 @@ export default function AllPositions() {
     useEffect(() => {
         setColumnVisibility(() => {
             return {
-                deposits: positionType === 'lend',
-                borrows: positionType === 'borrow',
+                deposits: positionTypeParam === 'lend',
+                borrows: positionTypeParam === 'borrow',
             }
         })
-    }, [positionType])
+        setSorting([{ id: 'apy', desc: positionTypeParam === 'lend' }])
+    }, [positionTypeParam])
 
     useEffect(() => {
-        setSorting([{ id: 'apy', desc: positionType === 'lend' }])
-    }, [positionType])
+        const params = {
+            keywords: !!debouncedKeywords.trim().length ? debouncedKeywords : undefined,
+        }
+        updateSearchParams(params)
+    }, [debouncedKeywords])
+
+    useEffect(() => {
+        if (sorting.length > 0) {
+            const sortParam = `${sorting[0].id},${sorting[0].desc ? 'desc' : 'asc'}`
+            updateSearchParams({ sort: sortParam })
+        }
+    }, [sorting])
 
     const POSITIONS = portfolioData?.platforms
         ?.flatMap((platform) => {
@@ -79,7 +101,7 @@ export default function AllPositions() {
             })
         })
         .flat(portfolioData?.platforms.length)
-        .filter((position) => position.type === positionType)
+        .filter((position) => position.type === positionTypeParam)
 
     const rawTableData: TPositionsTable[] = POSITIONS?.map((item) => {
         return {
@@ -138,10 +160,10 @@ export default function AllPositions() {
 
     function handleRowClick(rowData: any) {
         const { tokenAddress, protocol_identifier, chain_id } = rowData
-        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`
+        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
         router.push(url)
         logEvent('portfolio_asset_clicked', {
-            action: positionType,
+            action: positionTypeParam,
             token_symbol: rowData.tokenSymbol,
             platform_name: rowData.platformName,
             chain_name: rowData.chainName,

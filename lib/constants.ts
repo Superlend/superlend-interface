@@ -4,6 +4,7 @@ export const DEFAULT_ROUTE = {
 
 export const MULTICALL_ADDRESSES: Record<number, string> = {
     42793: '0x84EF812D47a703d521e0D67319222c9590bc1E48',
+    146: '0xcA11bde05977b3631167028862bE2a173976CA11',
 }
 
 export const BUNDLER_ADDRESS_MORPHO: Record<number, string> = {

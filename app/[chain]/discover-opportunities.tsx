@@ -16,27 +16,28 @@ import useGetPlatformData from '@/hooks/useGetPlatformData'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import Image from 'next/image';
-
+import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
 const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 
-export default function DiscoverOpportunities() {
+// Token Addresses
+const opportunity1TokenAddress = "0xfc24f770f94edbca6d6f885e12d4317320bcb401";
+const opportunity2TokenAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";
+const opportunity3TokenAddress = "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
+
+// Chain IDs
+const opportunity1ChainId = 42793;
+const opportunity2ChainId = 8453;
+const opportunity3ChainId = 1;
+
+// Protocol Identifiers
+const opportunity1ProtocolIdentifier = "0xf80e34148c541f12a9eec9607c3b5da7ae94dee4c8b33d3a0c1b8b0d13b6f8e8";
+const opportunity2ProtocolIdentifier = "0x988c79a8e0baacf7cf1d3975d3cf5a6ef407bec6c11149ab05e7f65fc997cab1";
+const opportunity3ProtocolIdentifier = "0x027cb6a3b64db87be63dc9a3ee7fa0becb9344829e996c4660ac9cadd236bd38";
+
+export default function DiscoverOpportunities({ chain }: { chain: string }) {
     const { logEvent } = useAnalytics()
-    // Token Addresses
-    const opportunity1TokenAddress = "0xc9b53ab2679f573e480d01e0f49e2b5cfb7a3eab";
-    const opportunity2TokenAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";
-    const opportunity3TokenAddress = "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
-
-    // Chain IDs
-    const opportunity1ChainId = 42793;
-    const opportunity2ChainId = 1;
-    const opportunity3ChainId = 1;
-
-    // Protocol Identifiers
-    const opportunity1ProtocolIdentifier = "0xd68cf3aa73c75811ca1665efe01a10524ed5adcba0f412df44d78f04f1c902bf";
-    const opportunity2ProtocolIdentifier = "0x988c79a8e0baacf7cf1d3975d3cf5a6ef407bec6c11149ab05e7f65fc997cab1";
-    const opportunity3ProtocolIdentifier = "0x027cb6a3b64db87be63dc9a3ee7fa0becb9344829e996c4660ac9cadd236bd38";
-
+    const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
     // Platform Data
     const { data: opportunity1PlatformData, isLoading: isLoading1 } =
         useGetPlatformData({
@@ -53,6 +54,16 @@ export default function DiscoverOpportunities() {
             chain_id: opportunity3ChainId,
             protocol_identifier: opportunity3ProtocolIdentifier,
         })
+
+    // Don't render anything while loading
+    if (isStateLoading) {
+        return null
+    }
+
+    // Only render for discover route when showing all markets
+    if (!showAllMarkets) {
+        return null
+    }
 
     // Borrow Rate
     const asset1LendRate = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)?.supply_apy
@@ -82,9 +93,9 @@ export default function DiscoverOpportunities() {
         {
             id: 2,
             label: "Automated Strategy",
-            tokenSymbol: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol,
+            tokenSymbol: `Seamless ${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol}`,
             platformName: "Morpho",
-            chainName: "Ethereum",
+            chainName: "Base",
             description: description2,
             tokenImage: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.logo,
             platformImage: `${imageBaseUrl}/morpho-logo.svg`,

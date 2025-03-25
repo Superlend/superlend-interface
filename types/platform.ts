@@ -142,6 +142,7 @@ export enum PlatformType {
     COMPOUND = 'compoundV2',
     FLUID = 'fluid',
     MORPHO = 'morpho',
+    SUPERLEND = 'superlend',
 }
 
 export enum PlatformTypeMap {
