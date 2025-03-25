@@ -14,6 +14,9 @@ const nextConfig = {
             {
                 hostname: 'www.etherlink.com',
             },
+            {
+                hostname: 'raw.githubusercontent.com',
+            },
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'attachment',

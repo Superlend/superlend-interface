@@ -33,7 +33,7 @@ export default function MarketsExplorerBanner({ className }: MarketsExplorerBann
                     relative overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer group
                     ${showAllMarkets
                         ? 'bg-gradient-to-br from-[#F5FFF7] via-[#EDFBEF] to-[#00985b]'
-                        : 'bg-gradient-to-br from-[#6075FF] via-[#5268FF] to-[#3A50FF]'
+                        : 'bg-[#F1FF52]'
                     }
                     before:absolute before:inset-0 before:bg-[url('/images/grid-pattern.svg')] before:opacity-5 before:bg-repeat
                     after:absolute after:inset-0 ${!showAllMarkets ? 'after:bg-[linear-gradient(135deg,transparent_25%,rgba(255,255,255,0.15)_50%,transparent_75%)] after:opacity-100' : 'after:bg-gradient-to-r after:from-transparent after:via-white/5 after:to-transparent after:opacity-0 hover:after:opacity-100'}
@@ -47,18 +47,18 @@ export default function MarketsExplorerBanner({ className }: MarketsExplorerBann
                 <div className="relative flex items-center justify-between p-6 gap-4">
                     <div className="flex flex-col gap-2">
                         <div className="flex items-start gap-2">
-                            {!showAllMarkets && <Sparkles className={`w-6 h-6 text-white fill-current pt-1`} />}
-                            {showAllMarkets && <ImageWithDefault src="/images/logos/apple-green.png" alt="Apple Farm Logo" width={20} height={20} className="w-6 h-6" />}
-                            <HeadingText
-                                level="h4"
+                            {!showAllMarkets && <Sparkles className={`w-5 h-5 text-[#2A2826] fill-current pt-1`} />}
+                            {showAllMarkets && <ImageWithDefault src="/images/logos/apple-green.png" alt="Apple Farm Logo" width={20} height={20} className="w-5 h-5" />}
+                            <BodyText
+                                level="body2"
                                 weight="medium"
-                                className={`${showAllMarkets ? 'text-gray-800' : 'text-white'} text-lg sm:text-xl`}
+                                className={`${showAllMarkets ? 'text-gray-800' : 'text-[#2A2826]'}`}
                             >
                                 {showAllMarkets
                                     ? "3 Million in rewards on Etherlink"
                                     : "Explore 350+ markets across 15+ chains"
                                 }
-                            </HeadingText>
+                            </BodyText>
                         </div>
                         {/* <BodyText
                             level="body2"
@@ -71,10 +71,10 @@ export default function MarketsExplorerBanner({ className }: MarketsExplorerBann
                         </BodyText> */}
                     </div>
                     <div className={`
-                        flex items-center justify-center w-10 h-10 rounded-full 
+                        flex items-center justify-center w-10 h-10 rounded-full shrink-0 
                         ${showAllMarkets
                             ? 'bg-emerald-50 text-emerald-600'
-                            : 'bg-white/10 text-white'
+                            : 'bg-white/50 text-[#2A2826]'
                         }
                         group-hover:scale-110 transition-transform duration-300
                     `}>
