@@ -444,7 +444,64 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                         ))
                         : // When no chains are selected (All Chains), show grouped tokens
                           groupedTokens.map((group) => {
-                            // If the group is expanded, render each token variant as a separate item
+                            // If token exists only on one chain, show expanded view directly
+                            if (group.tokenCount === 1) {
+                                const token = group.tokens[0];
+                                return (
+                                    <div
+                                        key={`${token.address}-${token.chain_id}`}
+                                        className="flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4"
+                                        onClick={() => onSelectToken(token)}
+                                    >
+                                        <div className="flex items-center gap-1 select-none">
+                                            <div className="w-8 h-8 rounded-full flex items-center justify-center">
+                                                {showChainBadge && token.chain_logo && (
+                                                    <ImageWithBadge
+                                                        mainImg={token.logo || ''}
+                                                        badgeImg={token.chain_logo}
+                                                        mainImgAlt={token.symbol}
+                                                        badgeImgAlt={token.chain_id?.toString()}
+                                                    />
+                                                )}
+                                                {(showChainBadge && !token.chain_logo) || !showChainBadge && (
+                                                    <Image
+                                                        src={token.logo || ''}
+                                                        alt={token.symbol}
+                                                        width={28}
+                                                        height={28}
+                                                        className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
+                                                    />
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col gap-0">
+                                                <div className="flex items-center gap-1">
+                                                    <BodyText level="body2" weight="medium" className="max-w-[120px] truncate">
+                                                        {token.symbol}
+                                                    </BodyText>
+                                                    <Label className="text-gray-500">
+                                                        on {token.chain_name}
+                                                    </Label>
+                                                </div>
+                                                <Label className="text-gray-700">
+                                                    {`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}
+                                                </Label>
+                                            </div>
+                                        </div>
+                                        {isWalletConnected && (
+                                            <div className="text-right select-none flex flex-col gap-0">
+                                                <BodyText level="body2" weight="medium">
+                                                    {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount))} ${formatAmountToDisplay(token.balance ?? token.amount)}`}
+                                                </BodyText>
+                                                <Label className="text-gray-700">
+                                                    {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.amount) * Number(token.price_usd)).toString())}`}
+                                                </Label>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            }
+
+                            // For tokens with multiple chains, show group header with expand/collapse
                             if (isTokenExpanded(group.mainnetAddress)) {
                                 return (
                                     <div 
