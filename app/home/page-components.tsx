@@ -231,7 +231,7 @@ export default function HomePageComponents() {
                     }
                 />
                 {!showOpportunitiesTable && (
-                    <div className="max-w-[400px] mt-5">
+                    <div className="w-full max-w-[400px] mt-5">
                         <MarketsExplorerBanner />
                     </div>
                 )}
