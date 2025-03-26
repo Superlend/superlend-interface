@@ -234,12 +234,13 @@ export default function TopApyOpportunities() {
         const isMorpho = PlatformType.MORPHO.includes(platformName)
         const isFluid = PlatformType.FLUID.includes(platformName)
         const isSuperlend = PlatformType.SUPERLEND.includes(platformName)
+        const isEuler = PlatformType.EULER.includes(platformName)
 
         const liquidityInUSD = Number(item.platform.liquidity) * Number(item.token.price_usd)
         const borrowsInUSD = Number(item.platform.borrows) * Number(item.token.price_usd)
 
         let availableLiquidity = 0;
-        if (isAaveV3 || isSuperlend) {
+        if (isAaveV3 || isSuperlend || isEuler) {
             availableLiquidity = liquidityInUSD - borrowsInUSD
         } else if (isCompound) {
             availableLiquidity = liquidityInUSD - borrowsInUSD
