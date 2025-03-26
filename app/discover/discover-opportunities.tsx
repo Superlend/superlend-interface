@@ -236,7 +236,7 @@ function CardDetailsSkeleton() {
 
 // Helper Functions
 function getAssetDetails(platformData: any, tokenAddress: string) {
-    return platformData.assets.find((asset: any) => asset.token.address.toLowerCase() === tokenAddress.toLowerCase())
+    return platformData.assets.find((asset: any) => asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase())
 }
 function getRedirectLink(tokenAddress: string, protocolIdentifier: string, chainId: number, positionType: string) {
     return `/position-management?token=${tokenAddress}&protocol_identifier=${protocolIdentifier}&chain_id=${chainId}&position_type=${positionType}`

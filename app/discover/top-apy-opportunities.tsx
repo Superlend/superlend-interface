@@ -228,7 +228,7 @@ export default function TopApyOpportunities() {
     }, [excludeRiskyMarketsFlag])
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
-        const platformName = item.platform.platform_name.split('-')[0].toLowerCase()
+        const platformName = item.platform.platform_name?.split('-')[0]?.toLowerCase()
         const isAaveV3 = PlatformType.AAVE.includes(platformName)
         const isCompound = PlatformType.COMPOUND.includes(platformName)
         const isMorpho = PlatformType.MORPHO.includes(platformName)
@@ -288,7 +288,7 @@ export default function TopApyOpportunities() {
     ) {
         const isVault = opportunity.isVault
         const isMorpho =
-            opportunity.platformId.split('-')[0].toLowerCase() ===
+            opportunity.platformId?.split('-')[0]?.toLowerCase() ===
             PlatformType.MORPHO
         const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
 
@@ -331,7 +331,7 @@ export default function TopApyOpportunities() {
     ) {
         const isVault = opportunity.isVault
         const isMorpho =
-            opportunity.platformId.split('-')[0].toLowerCase() ===
+            opportunity.platformId?.split('-')[0]?.toLowerCase() ===
             PlatformType.MORPHO
 
         return excludeRiskyMarketsFlag ? !(isMorpho && !isVault) : true
@@ -342,7 +342,7 @@ export default function TopApyOpportunities() {
     ) {
         const isVault = opportunity.isVault
         const isMorpho =
-            opportunity.platformId.split('-')[0].toLowerCase() ===
+            opportunity.platformId?.split('-')[0]?.toLowerCase() ===
             PlatformType.MORPHO
 
         return positionTypeParam === 'borrow' ? !(isMorpho && isVault) : true
