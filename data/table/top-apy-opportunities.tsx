@@ -342,8 +342,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 [eligibleAppleFarmRewards[2]]: xtzOpportunityData,
             }
             const merklOpportunityData = (merklOpportunityDataList[row.original.tokenAddress] ?? 0)
-            // Lend base rate for assets with apple farm rewards = APY - Asset Total Rewards
-            const appleFarmBaseRate = apyCurrent - merklOpportunityData
+            const appleFarmBaseRate = Number(row.original.apy_current)
 
             const merklOpportunityDataFormatted = merklOpportunityData < 0.01 && merklOpportunityData > 0 
                 ? '<0.01' 
@@ -351,6 +350,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
                 ? '<0.01'
                 : appleFarmBaseRate.toFixed(2)
+            const netAppleFarmAPY = Number(row.original.apy_current) + merklOpportunityData
 
             const appleFarmRewards = [
                 {
@@ -358,7 +358,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         address: row.original.tokenAddress as `0x${string}`,
                         name: row.original.tokenName,
                         symbol: row.original.tokenSymbol,
-                        logo: row.original.tokenLogo,
+                        logo: '/images/apple-farm-favicon.ico',
                         decimals: 0,
                         price_usd: 0,
                     },
@@ -453,7 +453,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             content={getRewardsTooltipContent({
                                 baseRateFormatted: appleFarmBaseRateFormatted || '',
                                 rewards: appleFarmRewards || [],
-                                apyCurrent: apyCurrent || 0,
+                                apyCurrent: netAppleFarmAPY || 0,
                                 positionTypeParam,
                                 netApyIcon: '/images/apple-farm-favicon.ico',
                             })}
