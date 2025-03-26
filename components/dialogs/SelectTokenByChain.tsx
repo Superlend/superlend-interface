@@ -244,13 +244,13 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
             ? tokens.filter((token: TokenDetails) => {
                 const matchesChain = selectedChains.includes(token.chain_id?.toString() || '');
                 const matchesSearch = 
-                    token.symbol.toLowerCase().includes(keywords.toLowerCase()) ||
-                    token.address.toLowerCase().includes(keywords.toLowerCase());
+                    token?.symbol?.toLowerCase().includes(keywords.toLowerCase()) ||
+                    token?.address?.toLowerCase().includes(keywords.toLowerCase());
                 return matchesChain && matchesSearch;
             })
             : tokens.filter((token: TokenDetails) => 
-                token.symbol.toLowerCase().includes(keywords.toLowerCase()) ||
-                token.address.toLowerCase().includes(keywords.toLowerCase())
+                token?.symbol?.toLowerCase().includes(keywords.toLowerCase()) ||
+                token?.address?.toLowerCase().includes(keywords.toLowerCase())
             )
     ).sort(sortTokensByBalance);
 
