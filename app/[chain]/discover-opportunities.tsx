@@ -21,7 +21,7 @@ const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
 const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 
 // Token Addresses
-const opportunity1TokenAddress = "0xfc24f770f94edbca6d6f885e12d4317320bcb401";
+const opportunity1TokenAddress = "0x2c03058c8afc06713be23e58d2febc8337dbfe6a";
 const opportunity2TokenAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";
 const opportunity3TokenAddress = "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
 
@@ -87,7 +87,7 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
                 opportunity1TokenAddress,
                 opportunity1ProtocolIdentifier,
                 opportunity1ChainId,
-                'lend'
+                'borrow'
             ),
         },
         {
