@@ -77,9 +77,17 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         useGetOpportunitiesData({
             type: positionTypeParam as TPositionType,
         })
-    const { data: merklOpportunitiesData, isLoading: isLoadingMerklOpportunitiesData } =
+    const { data: mBasisOpportunityData, isLoading: isLoadingMBasisOpportunityData } =
         useGetMerklOpportunitiesData({
-            id: '5496924370606392788',
+            campaignId: '0x39b5121a483f8dc07e5f43c6a33e6d2f5ed98ae474f640aa8d98c5239d4c00a2',
+        })
+    const { data: mTBillOpportunityData, isLoading: isLoadingMTBillOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0xd0aea857cb16a8a83d7c3b5cc99d7a826f8ce4b19e685f0582b3598fe6887818',
+        })
+    const { data: xtzOpportunityData, isLoading: isLoadingXTZOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0x6645ea6142d6532339c87a5bde9d589bc9556ade3dc0598b6582bf8a6dc2c628',
         })
     const { allChainsData } = useContext<any>(AssetsDataContext)
     const [showRainingApples, setShowRainingApples] = useState(false)
@@ -311,6 +319,11 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             collateral_exposure: item.platform.collateral_exposure,
             collateral_tokens: item.platform.collateral_tokens,
             available_liquidity: availableLiquidity,
+            merkl_opportunity_data: {
+                mBasis_apr: mBasisOpportunityData?.[0]?.Opportunity?.apr,
+                mTBill_apr: mTBillOpportunityData?.[0]?.Opportunity?.apr,
+                xtz_apr: xtzOpportunityData?.[0]?.Opportunity?.apr,
+            },
         }
     })
 
@@ -385,15 +398,15 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
         return positionTypeParam === 'borrow'
             ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity) &&
-                  matchesChainId &&
-                  matchesToken
+            handleFilterTableRowsByPlatformIds(opportunity) &&
+            matchesChainId &&
+            matchesToken
             : handleExcludeMorphoMarketsByParamFlag(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity) &&
-                  opportunity.protocol_identifier !==
-                      EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL &&
-                  matchesChainId &&
-                  matchesToken
+            handleFilterTableRowsByPlatformIds(opportunity) &&
+            opportunity.protocol_identifier !==
+            EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL &&
+            matchesChainId &&
+            matchesToken
     }
 
     function handleRowClick(rowData: any) {

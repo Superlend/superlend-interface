@@ -4,20 +4,20 @@ import { fallbackMerklOpportunityData, getMerklOpportunitiesData, TMerklOpportun
 import { useQuery } from "@tanstack/react-query"
 
 export const useGetMerklOpportunitiesData = ({
-    id,
+    campaignId,
 }: {
-    id: string
+    campaignId: string
 }) => {
-    const { data, isLoading, isError } = useQuery<TMerklOpportunity, Error>({
-        queryKey: ['merkl-opportunities-data', id],
+    const { data, isLoading, isError } = useQuery<TMerklOpportunity[], Error>({
+        queryKey: ['merkl-opportunities-data', campaignId],
         queryFn: async () => {
             try {
                 const responseData = await getMerklOpportunitiesData({
-                    id,
+                    campaignId,
                 })
-                return responseData || fallbackMerklOpportunityData
+                return responseData || []
             } catch (error) {
-                return fallbackMerklOpportunityData
+                return []
             }
         },
         staleTime: Infinity,

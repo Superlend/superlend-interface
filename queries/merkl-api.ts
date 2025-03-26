@@ -1,23 +1,71 @@
 import { requestMerkle } from './request'
 
 export type TGetMerklOpportunitiesParams = {
-    id: string
+    campaignId: string
 }
 
 export type TMerklOpportunity = {
-    chainId: number
-    type: string
-    identifier: string
-    name: string
-    status: string
-    action: string
-    tvl: number
-    apr: number
-    dailyRewards: number
-    depositUrl: string
-    tags: string[]
     id: string
-    tokens: {
+    computeChainId: number
+    distributionChainId: number
+    campaignId: string
+    type: string
+    subType: number
+    rewardTokenId: string
+    amount: string
+    opportunityId: string
+    startTimestamp: number
+    endTimestamp: number
+    creatorAddress: string
+    Opportunity: {
+        id: string
+        chainId: number
+        type: string
+        identifier: string
+        name: string
+        depositUrl: string
+        explorerAddress: string
+        status: string
+        action: string
+        mainProtocolId: string
+        tvl: number
+        apr: number
+        dailyRewards: number
+        tags: string[]
+    }
+    params: {
+        url: string
+        hooks: Array<{
+            key: string
+            chainId: number
+            hookType: number
+            defaultBoost: string
+            contractState: string
+            boostForInvited: string
+            contractAddress: string
+            cumulativeBoost: boolean
+            boostForReferrer: string
+            maximumBoostInvited: number
+            maximumBoostReferrer: number
+            valueForBoostForInvited: number
+            valueForBoostForReferrer: number
+        }>
+        duration: number
+        blacklist: string[]
+        whitelist: string[]
+        forwarders: string[]
+        targetToken: string
+        symbolRewardToken: string
+        symbolTargetToken: string
+        decimalsRewardToken: number
+        decimalsTargetToken: number
+    }
+    chain: {
+        id: number
+        name: string
+        icon: string
+    }
+    rewardToken: {
         id: string
         name: string
         chainId: number
@@ -26,118 +74,109 @@ export type TMerklOpportunity = {
         icon: string
         verified: boolean
         isTest: boolean
-        price: number
+        isPoint: boolean
+        isNative: boolean
+        price: number | null
         symbol: string
-    }[]
-    chain: {
+    }
+    distributionChain: {
         id: number
         name: string
         icon: string
     }
-    aprRecord: {
-        cumulated: number
-        timestamp: number
-        breakdowns: {
-            id: number
-            type: string
-            identifier: string
-            value: number
-            aprRecordId: string
-        }[]
-    }
-    tvlRecord: {
-        total: number
-        timestamp: number
-        breakdowns: {
-            id: number
-            type: string
-            identifier: string
-            value: number
-            tvlRecordId: string
-        }[]
-    }
-    rewardsRecord: {
-        id: string
-        total: number
-        timestamp: number
-        breakdowns: {
-            id: number
-            campaignId: string
-            value: number
-            dailyRewardsRecordId: string
-            token: {
-                id: string
-                name: string
-                chainId: number
-                address: string
-                decimals: number
-                icon: string
-                verified: boolean
-                isTest: boolean
-                price: number
-                symbol: string
-            }
-            amount: number
-        }[]
-    }
-    protocol: {
-        id: string
-        name: string
-        icon: string
+    creator: {
+        address: string
         tags: string[]
-        description: string
-        url: string
+        creatorId: string | null
     }
+    createdAt: string
 }
 
 export const fallbackMerklOpportunityData: TMerklOpportunity = {
-    chainId: 0,
-    type: '',
-    identifier: '',
-    name: '',
-    status: '',
-    action: '',
-    tvl: 0,
-    apr: 0,
-    dailyRewards: 0,
-    depositUrl: '',
-    tags: [],
     id: '',
-    tokens: [],
+    computeChainId: 0,
+    distributionChainId: 0,
+    campaignId: '',
+    type: '',
+    subType: 0,
+    rewardTokenId: '',
+    amount: '0',
+    opportunityId: '',
+    startTimestamp: 0,
+    endTimestamp: 0,
+    creatorAddress: '',
+    Opportunity: {
+        id: '',
+        chainId: 0,
+        type: '',
+        identifier: '',
+        name: '',
+        depositUrl: '',
+        explorerAddress: '',
+        status: '',
+        action: '',
+        mainProtocolId: '',
+        tvl: 0,
+        apr: 0,
+        dailyRewards: 0,
+        tags: []
+    },
+    params: {
+        url: '',
+        hooks: [],
+        duration: 0,
+        blacklist: [],
+        whitelist: [],
+        forwarders: [],
+        targetToken: '',
+        symbolRewardToken: '',
+        symbolTargetToken: '',
+        decimalsRewardToken: 0,
+        decimalsTargetToken: 0
+    },
     chain: {
         id: 0,
         name: '',
-        icon: '',
+        icon: ''
     },
-    aprRecord: {
-        cumulated: 0,
-        timestamp: 0,
-        breakdowns: [],
-    },
-    tvlRecord: {
-        total: 0,
-        timestamp: 0,
-        breakdowns: [],
-    },
-    rewardsRecord: {
-        id: '',
-        total: 0,
-        timestamp: 0,
-        breakdowns: [],
-    },
-    protocol: {
+    rewardToken: {
         id: '',
         name: '',
+        chainId: 0,
+        address: '',
+        decimals: 0,
         icon: '',
-        tags: [],
-        description: '',
-        url: '',
+        verified: false,
+        isTest: false,
+        isPoint: false,
+        isNative: false,
+        price: null,
+        symbol: ''
     },
+    distributionChain: {
+        id: 0,
+        name: '',
+        icon: ''
+    },
+    creator: {
+        address: '',
+        tags: [],
+        creatorId: null
+    },
+    createdAt: ''
 }
 
-export async function getMerklOpportunitiesData({ id }: TGetMerklOpportunitiesParams) {
-    return requestMerkle<TMerklOpportunity>({
+export async function getMerklOpportunitiesData({
+    campaignId,
+}: TGetMerklOpportunitiesParams) {
+    return requestMerkle<TMerklOpportunity[]>({
         method: 'GET',
-        path: `/opportunities/${id}`,
+        path: `/campaigns`,
+        query: {
+            campaignId: campaignId,
+            chainId: 42793,
+            point: true,
+            withOpportunity: true,
+        },
     })
 }

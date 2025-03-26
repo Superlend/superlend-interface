@@ -255,7 +255,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const showPlatformCuratorName =
                 platformDisplayName.split(' ')[1].toLowerCase() !==
                 formattedPlatformWithMarketName.toLowerCase()
-            const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
 
             return (
                 <span className="flex items-center gap-[8px]">
@@ -281,26 +280,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     </div>
                     {isMorpho && !isVault && positionTypeParam === 'lend' && (
                         <InfoTooltip content="Supplying directly to Morpho markets is risky and not advised by the Morpho team" />
-                    )}
-                    {isEtherlinkChain && (
-                        <InfoTooltip
-                            label={
-                                <motion.div
-                                    initial={{ rotate: 0 }}
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
-                                    whileHover={{ rotate: -360 }}
-                                >
-                                    <ImageWithDefault
-                                        src="/images/apple-farm-favicon.ico"
-                                        alt="Etherlink Rewards"
-                                        width={16}
-                                        height={16}
-                                    />
-                                </motion.div>
-                            }
-                            content="Rewards coming soon..."
-                        />
                     )}
                 </span>
             )
@@ -347,6 +326,22 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
+            const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
+            const eligibleAppleFarmRewards = [
+                "0x2247b5a46bb79421a314ab0f0b67ffd11dd37ee4",
+                "0xdd629e5241cbc5919847783e6c96b2de4754e438",
+                "0xc9b53ab2679f573e480d01e0f49e2b5cfb7a3eab"
+            ]
+            const hasAppleFarmRewards = eligibleAppleFarmRewards.includes(row.original.tokenAddress) && positionTypeParam === 'lend'
+            const mBasisOpportunityData = row.original.merkl_opportunity_data?.mBasis_apr
+            const mTBillOpportunityData = row.original.merkl_opportunity_data?.mTBill_apr
+            const xtzOpportunityData = row.original.merkl_opportunity_data?.xtz_apr
+            const merklOpportunityData = {
+                [eligibleAppleFarmRewards[0]]: mBasisOpportunityData,
+                [eligibleAppleFarmRewards[1]]: mTBillOpportunityData,
+                [eligibleAppleFarmRewards[2]]: xtzOpportunityData,
+            }
+            const merklOpportunityDataFormatted = abbreviateNumber(merklOpportunityData[row.original.tokenAddress])
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -393,6 +388,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <BodyText level={'body2'} weight={'medium'}>
                         {`${apyCurrentFormatted}%`}
                     </BodyText>
+                    {/* REWARDS */}
                     {hasRewards && (
                         <InfoTooltip
                             label={
@@ -409,6 +405,29 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 rewards: rewards || [],
                                 apyCurrent: apyCurrent || 0,
                                 positionTypeParam,
+                            })}
+                        />
+                    )}
+                    {/* APPLE FARM REWARDS */}
+                    {isEtherlinkChain && hasAppleFarmRewards && (
+                        <InfoTooltip
+                            label={
+                                <motion.div
+                                    initial={{ rotate: 0 }}
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
+                                    whileHover={{ rotate: -360 }}
+                                >
+                                    <ImageWithDefault
+                                        src="/images/apple-farm-favicon.ico"
+                                        alt="Etherlink Rewards"
+                                        width={16}
+                                        height={16}
+                                    />
+                                </motion.div>
+                            }
+                            content={getAppleFarmRewardsTooltipContent({
+                                merklOpportunityData: Number(merklOpportunityDataFormatted),
                             })}
                         />
                     )}
@@ -871,6 +890,41 @@ function getRewardsTooltipContent({
                     className="text-gray-800"
                 >
                     = {abbreviateNumber(apyCurrent)}%
+                </BodyText>
+            </div>
+        </div>
+    )
+}
+
+/**
+ * Get apple rewards tooltip content
+ * @param merklOpportunityData
+ * @returns apple rewards tooltip content
+ */
+function getAppleFarmRewardsTooltipContent({
+    merklOpportunityData,
+}: {
+    merklOpportunityData: number
+}) {
+    return (
+        <div className="flex flex-col divide-y divide-gray-800">
+            <BodyText
+                level="body1"
+                weight="medium"
+                className="pb-2 text-gray-800/75"
+            >
+                Apple Rewards
+            </BodyText>
+            <div className="flex items-center gap-2 pt-2">
+                <ImageWithDefault
+                    src="/images/apple-farm-favicon.ico"
+                    width={16}
+                    height={16}
+                    alt="Apple Farm"
+                    className="inline-block"
+                />
+                <BodyText level="body3" weight="medium" className="text-gray-800">
+                    {merklOpportunityData}% APR
                 </BodyText>
             </div>
         </div>
