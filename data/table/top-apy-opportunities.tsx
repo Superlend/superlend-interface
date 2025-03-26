@@ -336,12 +336,36 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const mBasisOpportunityData = row.original.merkl_opportunity_data?.mBasis_apr
             const mTBillOpportunityData = row.original.merkl_opportunity_data?.mTBill_apr
             const xtzOpportunityData = row.original.merkl_opportunity_data?.xtz_apr
-            const merklOpportunityData = {
+            const merklOpportunityDataList = {
                 [eligibleAppleFarmRewards[0]]: mBasisOpportunityData,
                 [eligibleAppleFarmRewards[1]]: mTBillOpportunityData,
                 [eligibleAppleFarmRewards[2]]: xtzOpportunityData,
             }
-            const merklOpportunityDataFormatted = abbreviateNumber(merklOpportunityData[row.original.tokenAddress])
+            const merklOpportunityData = (merklOpportunityDataList[row.original.tokenAddress] ?? 0)
+            // Lend base rate for assets with apple farm rewards = APY - Asset Total Rewards
+            const appleFarmBaseRate = apyCurrent - merklOpportunityData
+
+            const merklOpportunityDataFormatted = merklOpportunityData < 0.01 && merklOpportunityData > 0 
+                ? '<0.01' 
+                : merklOpportunityData.toFixed(2)
+            const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
+                ? '<0.01'
+                : appleFarmBaseRate.toFixed(2)
+
+            const appleFarmRewards = [
+                {
+                    asset: {
+                        address: row.original.tokenAddress as `0x${string}`,
+                        name: row.original.tokenName,
+                        symbol: row.original.tokenSymbol,
+                        logo: row.original.tokenLogo,
+                        decimals: 0,
+                        price_usd: 0,
+                    },
+                    supply_apy: merklOpportunityData,
+                    borrow_apy: 0,
+                }
+            ]
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -361,7 +385,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 baseRateFormatted =
                     baseRate < 0.01 && baseRate > 0
                         ? '<0.01'
-                        : getFormattedBaseRate(baseRate)
+                        : baseRate.toFixed(2)
             }
 
             if (
@@ -426,8 +450,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                     />
                                 </motion.div>
                             }
-                            content={getAppleFarmRewardsTooltipContent({
-                                merklOpportunityData: Number(merklOpportunityDataFormatted),
+                            content={getRewardsTooltipContent({
+                                baseRateFormatted: appleFarmBaseRateFormatted || '',
+                                rewards: appleFarmRewards || [],
+                                apyCurrent: apyCurrent || 0,
+                                positionTypeParam,
+                                netApyIcon: '/images/apple-farm-favicon.ico',
                             })}
                         />
                     )}
@@ -800,11 +828,13 @@ function getRewardsTooltipContent({
     rewards,
     apyCurrent,
     positionTypeParam,
+    netApyIcon,
 }: {
     baseRateFormatted: string
     rewards: TReward[]
     apyCurrent: number
     positionTypeParam: string
+    netApyIcon?: string
 }) {
     const baseRateOperator = positionTypeParam === 'lend' ? '+' : '-'
     const isLend = positionTypeParam === 'lend'
@@ -874,7 +904,7 @@ function getRewardsTooltipContent({
             >
                 <div className="flex items-center gap-1">
                     <ImageWithDefault
-                        src="/icons/sparkles.svg"
+                        src={netApyIcon || '/icons/sparkles.svg'}
                         alt="Net APY"
                         width={16}
                         height={16}
