@@ -7,7 +7,7 @@ import { ArrowRightIcon } from 'lucide-react'
 
 export default function AppleFarmBanner() {
   return (
-    <Link href="https://www.applefarm.xyz/waitlist" target="_blank" rel="noopener noreferrer">
+    <Link href="https://www.applefarm.xyz" target="_blank" rel="noopener noreferrer">
       <Card className="relative overflow-hidden bg-gradient-to-r from-[#F5FFF7] via-[#EDFBEF] to-[#EDFBEF] md:to-[#00985b] hover:shadow-md transition-all duration-300 cursor-pointer group">
         <div className="flex items-center justify-between p-6 gap-4">
           <div className="flex flex-col gap-2 z-10">

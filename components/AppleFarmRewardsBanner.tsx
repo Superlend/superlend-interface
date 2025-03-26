@@ -81,7 +81,7 @@ export default function AppleFarmRewardsBanner({ totalRewards, isLoading = false
         </div>
 
         <Link
-          href="https://www.applefarm.xyz/waitlist"
+          href="https://www.applefarm.xyz"
           target="_blank"
           rel="noopener noreferrer"
           className="shrink-0"
