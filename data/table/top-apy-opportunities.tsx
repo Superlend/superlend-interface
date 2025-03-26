@@ -356,7 +356,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 {
                     asset: {
                         address: row.original.tokenAddress as `0x${string}`,
-                        name: row.original.tokenName,
+                        name: "APR",
                         symbol: row.original.tokenSymbol,
                         logo: '/images/apple-farm-favicon.ico',
                         decimals: 0,
