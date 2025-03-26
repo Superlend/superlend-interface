@@ -9,7 +9,7 @@ import DiscoverOpportunities from './discover-opportunities'
 export default async function DiscoverPageComponents() {
     return (
         <MainContainer className="flex flex-col gap-[72px] px-0">
-            {/* <DiscoverOpportunities /> */}
+            <DiscoverOpportunities />
             <OpportunitiesProvider>
                 <TopApyOpportunities />
             </OpportunitiesProvider>
