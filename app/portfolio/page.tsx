@@ -87,12 +87,12 @@ export default function Portfolio() {
                 </section>
                 <div className="flex flex-col gap-[72px]">
                     <PortfolioOverview />
-                    <section className="px-5">
+                    {/* <section className="px-5">
                         <AppleFarmRewardsBanner
                             totalRewards="1,000"
                             isLoading={false}
                         />
-                    </section>
+                    </section> */}
                     <YourPositionsAtRisk />
                     <PositionsProvider>
                         <AllPositions />
