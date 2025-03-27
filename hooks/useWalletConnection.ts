@@ -6,7 +6,7 @@ export const useWalletConnection = () => {
     const { user, ready, authenticated } = usePrivy()
     const isConnectingWallet = isConnectingWagmi || !ready
     const isWalletConnected = !!user
-    const walletAddress = user?.wallet?.address
+    const walletAddress = user?.wallet?.address as `0x${string}`
     const { wallets } = useWallets()
     const wallet = wallets.find(
         (wallet: any) => wallet.address === walletAddress

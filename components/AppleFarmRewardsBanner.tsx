@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { ArrowRightIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useGetMerklUserRewardsData } from '@/hooks/useGetMerklUserRewardsData'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 
 interface AppleFarmRewardsBannerProps {
   totalRewards?: string;
@@ -39,7 +41,14 @@ const RainingApples = () => {
   )
 }
 
-export default function AppleFarmRewardsBanner({ totalRewards, isLoading = false }: AppleFarmRewardsBannerProps) {
+export default function AppleFarmRewardsBanner({ isLoading = false }: AppleFarmRewardsBannerProps) {
+  const { walletAddress } = useWalletConnection()
+  const { data: userRewardsData, isLoading: isUserRewardsLoading } = useGetMerklUserRewardsData({
+    walletAddress: walletAddress,
+  })
+
+  const totalRewards: number = Number(userRewardsData?.[0]?.rewards?.[0]?.amount ?? 0) / 1e18
+
   return (
     <Card className="relative overflow-hidden bg-gradient-to-r from-[#F5FFF7] via-[#EDFBEF] to-[#EDFBEF] md:to-[#00985b] hover:shadow-md transition-all duration-300">
       <RainingApples />
@@ -57,11 +66,11 @@ export default function AppleFarmRewardsBanner({ totalRewards, isLoading = false
               <HeadingText level="h4" weight="medium" className="text-gray-800">
                 Your Apple Farm Rewards
               </HeadingText>
-              {isLoading ? (
+              {isUserRewardsLoading ? (
                 <Skeleton className="h-6 w-32" />
               ) : (
                 <BodyText level="body1" className="text-emerald-600 font-semibold">
-                  {totalRewards || '0'} Rewards Available
+                  {!!totalRewards ? totalRewards.toFixed(2) : 'No'} Rewards Available
                 </BodyText>
               )}
             </div>
@@ -81,8 +90,8 @@ export default function AppleFarmRewardsBanner({ totalRewards, isLoading = false
         </div>
 
         <Link
-          href="https://www.applefarm.xyz"
-          target="_blank"
+          href={!totalRewards ? "/etherlink?chainId=42793" : "https://www.applefarm.xyz"}
+          target={!totalRewards ? "_self" : "_blank"}
           rel="noopener noreferrer"
           className="shrink-0"
         >
@@ -91,8 +100,8 @@ export default function AppleFarmRewardsBanner({ totalRewards, isLoading = false
             variant="default"
             className="bg-emerald-600 hover:bg-emerald-700 text-white"
           >
-            Claim Rewards
-            <ArrowRightIcon className="w-4 h-4 ml-2 -rotate-45" />
+            {!totalRewards ? "Start Supplying" : "Claim Rewards"}
+            {!!totalRewards && <ArrowRightIcon className="w-4 h-4 ml-2 -rotate-45" />}
           </Button>
         </Link>
       </div>
