@@ -1,6 +1,6 @@
 "use client"
 
-import { fallbackMerklOpportunityData, getMerklOpportunitiesData, TMerklOpportunity } from "@/queries/merkl-api"
+import { fallbackMerklOpportunityData, getMerklOpportunitiesData, TMerklOpportunity } from "@/queries/merkl-campaign-api"
 import { useQuery } from "@tanstack/react-query"
 
 export const useGetMerklOpportunitiesData = ({
