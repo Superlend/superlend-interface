@@ -315,8 +315,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
-            const apyCurrent = Number(row.getValue('apy_current'))
-            const apyCurrentFormatted = apyCurrent.toFixed(2)
             const hasRewards =
                 row.original?.additional_rewards &&
                 row.original?.rewards.length > 0
@@ -344,8 +342,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const merklOpportunityData = (merklOpportunityDataList[row.original.tokenAddress] ?? 0)
             const appleFarmBaseRate = Number(row.original.apy_current)
 
-            const merklOpportunityDataFormatted = merklOpportunityData < 0.01 && merklOpportunityData > 0 
-                ? '<0.01' 
+            const merklOpportunityDataFormatted = merklOpportunityData < 0.01 && merklOpportunityData > 0
+                ? '<0.01'
                 : merklOpportunityData.toFixed(2)
             const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
                 ? '<0.01'
@@ -366,6 +364,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     borrow_apy: 0,
                 }
             ]
+            const apyCurrent = Number(row.getValue('apy_current'))
+            const apyCurrentFormatted = (isEtherlinkChain && hasAppleFarmRewards) ? abbreviateNumber(netAppleFarmAPY) : abbreviateNumber(apyCurrent)
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
