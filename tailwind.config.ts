@@ -158,6 +158,45 @@ const config = {
                     '0%': { transform: 'translateX(-100%) skewX(-20deg)' },
                     '100%': { transform: 'translateX(200%) skewX(-20deg)' },
                 },
+                rain: {
+                    '0%': { 
+                        transform: 'translate3d(0, -20px, 0) rotate(0deg)',
+                        opacity: '1'
+                    },
+                    '50%': {
+                        opacity: '1'
+                    },
+                    '100%': { 
+                        transform: 'translate3d(30px, 120vh, 0) rotate(60deg)',
+                        opacity: '1'
+                    }
+                },
+                fall: {
+                    '0%': { 
+                        transform: 'translate3d(0, -100px, 0)',
+                        opacity: '0'
+                    },
+                    '10%': {
+                        transform: 'translate3d(0, 0, 0)',
+                        opacity: '1'
+                    },
+                    '90%': {
+                        transform: 'translate3d(0, 100vh, 0)',
+                        opacity: '1'
+                    },
+                    '100%': { 
+                        transform: 'translate3d(0, 120vh, 0)',
+                        opacity: '0'
+                    }
+                },
+                spin: {
+                    '0%': {
+                        transform: 'rotate(0deg)'
+                    },
+                    '100%': {
+                        transform: 'rotate(360deg)'
+                    }
+                }
             },
             animation: {
                 'accordion-down': 'accordion-down 0.2s ease-out',
@@ -165,6 +204,9 @@ const config = {
                 scroll: 'scroll var(--animation-duration, 30s) var(--animation-direction, forwards) linear infinite',
                 pulse: 'pulse var(--duration) ease-out infinite',
                 shimmer: 'shimmer 1.5s infinite',
+                'rain': 'rain 3s linear infinite',
+                'fall': 'fall 5s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                'spin': 'spin 2s linear infinite',
             },
         },
     },

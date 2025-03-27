@@ -25,9 +25,7 @@ import { PlatformType } from '@/types/platform'
 import ImageWithBadge from './ImageWithBadge'
 import { motion } from 'framer-motion'
 
-const TokenRates: React.FC<{
-    positionType: TPositionType
-}> = ({ positionType }) => {
+export default function TokenRates({ positionType }: { positionType: TPositionType }) {
     const { allChainsData } = useAssetsDataContext()
     const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData } =
         useGetOpportunitiesData({
@@ -66,22 +64,11 @@ const TokenRates: React.FC<{
     return (
         <div
             className={cn(
-                'scroller overflow-hidden flex items-center justify-center max-w-full lg:max-w-2xl h-36 -my-5 [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]',
-                isHovering ? 'relative z-[11]' : ''
+                'scroller overflow-hidden flex items-center justify-center max-w-full lg:max-w-2xl h-36 -my-5',
+                '[mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]'
             )}
         >
-            <Carousel
-            // opts={{
-            //     align: 'center',
-            //     loop: true,
-            //     dragFree: true,
-            // }}
-            // plugins={[
-            //     Autoplay({
-            //         delay: 1000,
-            //     }),
-            // ]}
-            >
+            <Carousel>
                 <CarouselContent
                     className={cn(
                         'animate-scroll [animation-direction:reverse]',
@@ -99,6 +86,7 @@ const TokenRates: React.FC<{
                             <CarouselItem key={index} className="basis-auto">
                                 <InfoTooltip
                                     side="left"
+                                    className="z-[9999]"
                                     label={
                                         <LinkWrapper
                                             href={getOpportunityUrl({
@@ -335,5 +323,3 @@ function getChainName({
     return allChainsData.find((chain) => chain.chain_id === Number(chain_id))
         ?.name
 }
-
-export default TokenRates

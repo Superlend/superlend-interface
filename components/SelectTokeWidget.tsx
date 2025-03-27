@@ -4,6 +4,7 @@ import ImageWithBadge from './ImageWithBadge'
 import { Badge } from './ui/badge'
 import {
     abbreviateNumber,
+    cn,
     formatAmountToDisplay,
     hasLowestDisplayValuePrefix,
 } from '@/lib/utils'
@@ -69,7 +70,10 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = ({
                     variant="ghost"
                     onClick={handleOpenTokenSelectionDialog}
                     type="button"
-                    className="relative flex gap-10 justify-between items-center p-6 w-full bg-white rounded-2xl border border-gray-100 border-solid shadow-[0px_4px_16px_rgba(0,0,0,0.04)] max-md:px-5 max-md:max-w-full border-gray-200 hover:border-gray-400 focus:border-gray-400 rounded-5"
+                    className={cn(
+                        'relative flex gap-10 justify-between items-center px-6 w-full bg-white rounded-2xl border border-gray-100 border-solid shadow-[0px_4px_16px_rgba(0,0,0,0.04)] max-md:px-5 max-md:max-w-full border-gray-200 hover:border-gray-400 focus:border-gray-400 rounded-5',
+                        selectedToken ? 'py-2' : 'py-6'
+                    )}
                 >
                     {!selectedToken && (
                         <Label
@@ -82,7 +86,7 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = ({
                         </Label>
                     )}
                     {selectedToken && (
-                        <div className="flex gap-2 items-center max-w-full truncate">
+                        <div className="flex gap-2 items-center max-w-full truncate min-h-[60px]">
                             {!!selectedToken.chain_logo && (
                                 <ImageWithBadge
                                     mainImg={selectedToken.logo}

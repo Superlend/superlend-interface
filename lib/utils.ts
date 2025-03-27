@@ -407,6 +407,7 @@ export function getPlatformWebsiteLink({
             ? `/vault?vault=${core_contract}&network=${formattedNetworkName}`
             : `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
         superlend: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=etherlink`,
+        euler: `/vault/${tokenAddress}/?network=ethereum`,
     }
 
     const path = paths[platformNameId]

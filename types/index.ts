@@ -140,6 +140,11 @@ export type TOpportunityTable = {
     collateral_exposure: `0x${string}`[]
     collateral_tokens: `0x${string}`[]
     available_liquidity: number
+    merkl_opportunity_data?: {
+        mBasis_apr?: number
+        mTBill_apr?: number
+        xtz_apr?: number
+    }
 }
 
 // Platform
@@ -172,8 +177,7 @@ export type TPlatform = {
         name: string
         platform_name: string
         protocol_identifier: string
-        // protocol_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
-        protocol_type: 'aaveV3' | 'compoundV2' | 'morpho' | 'fluid'
+        protocol_type: 'aaveV3' | 'compoundV2' | 'morpho' | 'fluid' | 'euler'
         logo: string
         chain_id: number
         vaultId: string
