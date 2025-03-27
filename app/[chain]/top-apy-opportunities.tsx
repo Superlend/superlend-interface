@@ -31,17 +31,21 @@ import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { CHAIN_ID_MAPPER } from '@/constants'
+import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
 import useIsClient from '@/hooks/useIsClient'
+import RainingApples from '@/components/animations/RainingApples'
+import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
     columns: ColumnDef<TOpportunityTable>[]
+    chain: string
 }
 
 const EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL =
     '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed'
 
-export default function TopApyOpportunities() {
+export default function TopApyOpportunities({ chain }: { chain: string }) {
     const isClient = useIsClient()
     const router = useRouter()
     const { logEvent } = useAnalytics()
@@ -73,7 +77,23 @@ export default function TopApyOpportunities() {
         useGetOpportunitiesData({
             type: positionTypeParam as TPositionType,
         })
+    const { data: mBasisOpportunityData, isLoading: isLoadingMBasisOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0x39b5121a483f8dc07e5f43c6a33e6d2f5ed98ae474f640aa8d98c5239d4c00a2',
+        })
+    const { data: mTBillOpportunityData, isLoading: isLoadingMTBillOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0xd0aea857cb16a8a83d7c3b5cc99d7a826f8ce4b19e685f0582b3598fe6887818',
+        })
+    const { data: xtzOpportunityData, isLoading: isLoadingXTZOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0x6645ea6142d6532339c87a5bde9d589bc9556ade3dc0598b6582bf8a6dc2c628',
+        })
     const { allChainsData } = useContext<any>(AssetsDataContext)
+    const [showRainingApples, setShowRainingApples] = useState(false)
+    const hasShownAnimation = useRef(false)
+    const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
+    const pathname = usePathname()
 
     // Add this ref at component level
     const prevParamsRef = useRef(searchParams.toString())
@@ -227,6 +247,25 @@ export default function TopApyOpportunities() {
         })
     }, [excludeRiskyMarketsFlag])
 
+    // Add effect to handle raining apples animation
+    useEffect(() => {
+        if (chainIdsParam.includes('42793') && !hasShownAnimation.current) {
+            setShowRainingApples(true);
+            hasShownAnimation.current = true;
+
+            // Set a timer to hide the animation after it completes
+            const timer = setTimeout(() => {
+                setShowRainingApples(false);
+            }, 10000); // 10 seconds = 5s animation + 3s max delay + 2s buffer
+
+            return () => clearTimeout(timer);
+        }
+    }, [chainIdsParam]);
+
+    // useEffect(() => {
+    //     console.log('showRainingApples state:', showRainingApples);
+    // }, [showRainingApples]);
+
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         const platformName = item.platform.platform_name?.split('-')[0]?.toLowerCase()
         const isAaveV3 = PlatformType.AAVE.includes(platformName)
@@ -281,6 +320,11 @@ export default function TopApyOpportunities() {
             collateral_exposure: item.platform.collateral_exposure,
             collateral_tokens: item.platform.collateral_tokens,
             available_liquidity: availableLiquidity,
+            merkl_opportunity_data: {
+                mBasis_apr: mBasisOpportunityData?.[0]?.Opportunity?.apr,
+                mTBill_apr: mTBillOpportunityData?.[0]?.Opportunity?.apr,
+                xtz_apr: xtzOpportunityData?.[0]?.Opportunity?.apr,
+            },
         }
     })
 
@@ -355,15 +399,15 @@ export default function TopApyOpportunities() {
 
         return positionTypeParam === 'borrow'
             ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity) &&
-                  matchesChainId &&
-                  matchesToken
+            handleFilterTableRowsByPlatformIds(opportunity) &&
+            matchesChainId &&
+            matchesToken
             : handleExcludeMorphoMarketsByParamFlag(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity) &&
-                  opportunity.protocol_identifier !==
-                      EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL &&
-                  matchesChainId &&
-                  matchesToken
+            handleFilterTableRowsByPlatformIds(opportunity) &&
+            opportunity.protocol_identifier !==
+            EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL &&
+            matchesChainId &&
+            matchesToken
     }
 
     function handleRowClick(rowData: any) {
@@ -411,11 +455,22 @@ export default function TopApyOpportunities() {
         setKeywords('')
     }
 
+    // Don't render anything while loading
+    if (isStateLoading || isLoadingOpportunitiesData) {
+        return <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
+    }
+
+    // Only render for discover route when showing all markets
+    if ((pathname === '/etherlink' && showAllMarkets) || (pathname === '/discover' && !showAllMarkets)) {
+        return null
+    }
+
     return (
         <section
             id="top-apy-opportunities"
             className="top-apy-opportunities-container flex flex-col gap-[24px] px-5"
         >
+            {showRainingApples && <RainingApples />}
             <div className="top-apy-opportunities-header flex items-end lg:items-center justify-between gap-[12px]">
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                     <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
@@ -431,7 +486,7 @@ export default function TopApyOpportunities() {
                         </div>
                         {/* Filter button for Tablet and below screens */}
                         <div className="block lg:hidden">
-                            <DiscoverFiltersDropdown />
+                            <DiscoverFiltersDropdown chain={chain} />
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
@@ -464,7 +519,7 @@ export default function TopApyOpportunities() {
                 {/* Filter buttons for Desktop and above screens */}
                 <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
                     {/* <ChainSelectorDropdown /> */}
-                    <DiscoverFiltersDropdown />
+                    <DiscoverFiltersDropdown chain={chain} />
                 </div>
             </div>
             <div className="top-apy-opportunities-content">

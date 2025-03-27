@@ -18,8 +18,10 @@ import {
     getPlatformVersion,
 } from '@/lib/utils'
 import { TOpportunityTable, TReward } from '@/types'
+import { ChainId } from '@/types/chain'
 import { PlatformType } from '@/types/platform'
 import { ColumnDef } from '@tanstack/react-table'
+import { motion } from 'framer-motion'
 import { ChartNoAxesColumnIncreasing, ShieldAlertIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -324,6 +326,46 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
+            const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
+            const eligibleAppleFarmRewards = [
+                "0x2247b5a46bb79421a314ab0f0b67ffd11dd37ee4",
+                "0xdd629e5241cbc5919847783e6c96b2de4754e438",
+                "0xc9b53ab2679f573e480d01e0f49e2b5cfb7a3eab"
+            ]
+            const hasAppleFarmRewards = eligibleAppleFarmRewards.includes(row.original.tokenAddress) && positionTypeParam === 'lend'
+            const mBasisOpportunityData = row.original.merkl_opportunity_data?.mBasis_apr
+            const mTBillOpportunityData = row.original.merkl_opportunity_data?.mTBill_apr
+            const xtzOpportunityData = row.original.merkl_opportunity_data?.xtz_apr
+            const merklOpportunityDataList = {
+                [eligibleAppleFarmRewards[0]]: mBasisOpportunityData,
+                [eligibleAppleFarmRewards[1]]: mTBillOpportunityData,
+                [eligibleAppleFarmRewards[2]]: xtzOpportunityData,
+            }
+            const merklOpportunityData = (merklOpportunityDataList[row.original.tokenAddress] ?? 0)
+            const appleFarmBaseRate = Number(row.original.apy_current)
+
+            const merklOpportunityDataFormatted = merklOpportunityData < 0.01 && merklOpportunityData > 0 
+                ? '<0.01' 
+                : merklOpportunityData.toFixed(2)
+            const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
+                ? '<0.01'
+                : appleFarmBaseRate.toFixed(2)
+            const netAppleFarmAPY = Number(row.original.apy_current) + merklOpportunityData
+
+            const appleFarmRewards = [
+                {
+                    asset: {
+                        address: row.original.tokenAddress as `0x${string}`,
+                        name: "APR",
+                        symbol: row.original.tokenSymbol,
+                        logo: '/images/apple-farm-favicon.ico',
+                        decimals: 0,
+                        price_usd: 0,
+                    },
+                    supply_apy: merklOpportunityData,
+                    borrow_apy: 0,
+                }
+            ]
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -343,7 +385,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 baseRateFormatted =
                     baseRate < 0.01 && baseRate > 0
                         ? '<0.01'
-                        : getFormattedBaseRate(baseRate)
+                        : baseRate.toFixed(2)
             }
 
             if (
@@ -370,6 +412,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     <BodyText level={'body2'} weight={'medium'}>
                         {`${apyCurrentFormatted}%`}
                     </BodyText>
+                    {/* REWARDS */}
                     {hasRewards && (
                         <InfoTooltip
                             label={
@@ -386,6 +429,33 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 rewards: rewards || [],
                                 apyCurrent: apyCurrent || 0,
                                 positionTypeParam,
+                            })}
+                        />
+                    )}
+                    {/* APPLE FARM REWARDS */}
+                    {isEtherlinkChain && hasAppleFarmRewards && (
+                        <InfoTooltip
+                            label={
+                                <motion.div
+                                    initial={{ rotate: 0 }}
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
+                                    whileHover={{ rotate: -360 }}
+                                >
+                                    <ImageWithDefault
+                                        src="/images/apple-farm-favicon.ico"
+                                        alt="Etherlink Rewards"
+                                        width={16}
+                                        height={16}
+                                    />
+                                </motion.div>
+                            }
+                            content={getRewardsTooltipContent({
+                                baseRateFormatted: appleFarmBaseRateFormatted || '',
+                                rewards: appleFarmRewards || [],
+                                apyCurrent: netAppleFarmAPY || 0,
+                                positionTypeParam,
+                                netApyIcon: '/images/apple-farm-favicon.ico',
                             })}
                         />
                     )}
@@ -758,11 +828,13 @@ function getRewardsTooltipContent({
     rewards,
     apyCurrent,
     positionTypeParam,
+    netApyIcon,
 }: {
     baseRateFormatted: string
     rewards: TReward[]
     apyCurrent: number
     positionTypeParam: string
+    netApyIcon?: string
 }) {
     const baseRateOperator = positionTypeParam === 'lend' ? '+' : '-'
     const isLend = positionTypeParam === 'lend'
@@ -832,7 +904,7 @@ function getRewardsTooltipContent({
             >
                 <div className="flex items-center gap-1">
                     <ImageWithDefault
-                        src="/icons/sparkles.svg"
+                        src={netApyIcon || '/icons/sparkles.svg'}
                         alt="Net APY"
                         width={16}
                         height={16}
@@ -848,6 +920,41 @@ function getRewardsTooltipContent({
                     className="text-gray-800"
                 >
                     = {abbreviateNumber(apyCurrent)}%
+                </BodyText>
+            </div>
+        </div>
+    )
+}
+
+/**
+ * Get apple rewards tooltip content
+ * @param merklOpportunityData
+ * @returns apple rewards tooltip content
+ */
+function getAppleFarmRewardsTooltipContent({
+    merklOpportunityData,
+}: {
+    merklOpportunityData: number
+}) {
+    return (
+        <div className="flex flex-col divide-y divide-gray-800">
+            <BodyText
+                level="body1"
+                weight="medium"
+                className="pb-2 text-gray-800/75"
+            >
+                Apple Rewards
+            </BodyText>
+            <div className="flex items-center gap-2 pt-2">
+                <ImageWithDefault
+                    src="/images/apple-farm-favicon.ico"
+                    width={16}
+                    height={16}
+                    alt="Apple Farm"
+                    className="inline-block"
+                />
+                <BodyText level="body3" weight="medium" className="text-gray-800">
+                    {merklOpportunityData}% APR
                 </BodyText>
             </div>
         </div>
