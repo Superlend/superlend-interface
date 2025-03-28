@@ -1,5 +1,6 @@
 'use client'
 
+import ExternalLink from '@/components/ExternalLink'
 import ImageWithBadge from '@/components/ImageWithBadge'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
@@ -365,7 +366,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 }
             ]
             const apyCurrent = Number(row.getValue('apy_current'))
-            const apyCurrentFormatted = (isEtherlinkChain && hasAppleFarmRewards) ? abbreviateNumber(netAppleFarmAPY) : abbreviateNumber(apyCurrent)
+            const apyCurrentFormatted = abbreviateNumber(apyCurrent)
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -450,13 +451,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                     />
                                 </motion.div>
                             }
-                            content={getRewardsTooltipContent({
-                                baseRateFormatted: appleFarmBaseRateFormatted || '',
-                                rewards: appleFarmRewards || [],
-                                apyCurrent: netAppleFarmAPY || 0,
-                                positionTypeParam,
-                                netApyIcon: '/images/apple-farm-favicon.ico',
-                            })}
+                            content={getAppleFarmRewardsTooltipContent(merklOpportunityDataFormatted)}
                         />
                     )}
                 </span>
@@ -928,35 +923,44 @@ function getRewardsTooltipContent({
 
 /**
  * Get apple rewards tooltip content
- * @param merklOpportunityData
+ * @param score
  * @returns apple rewards tooltip content
  */
-function getAppleFarmRewardsTooltipContent({
-    merklOpportunityData,
-}: {
-    merklOpportunityData: number
-}) {
+function getAppleFarmRewardsTooltipContent(score: string) {
     return (
-        <div className="flex flex-col divide-y divide-gray-800">
-            <BodyText
-                level="body1"
-                weight="medium"
-                className="pb-2 text-gray-800/75"
-            >
-                Apple Rewards
-            </BodyText>
-            <div className="flex items-center gap-2 pt-2">
-                <ImageWithDefault
-                    src="/images/apple-farm-favicon.ico"
-                    width={16}
-                    height={16}
-                    alt="Apple Farm"
-                    className="inline-block"
-                />
-                <BodyText level="body3" weight="medium" className="text-gray-800">
-                    {merklOpportunityData}% APR
+        <div className="flex flex-col divide-y divide-gray-800 max-w-[220px]">
+            <div className="flex items-end justify-between gap-2 pb-2">
+                <BodyText
+                    level="body2"
+                    weight="medium"
+                    className="text-gray-800/75"
+                >
+                    Score:
                 </BodyText>
+                <div className="flex items-center gap-1">
+                    <BodyText level="body2" weight="medium" className="text-gray-800">
+                        {score}
+                    </BodyText>
+                    <ImageWithDefault
+                        src="/images/apple-farm-favicon.ico"
+                        width={16}
+                        height={16}
+                        alt="Apple Farm"
+                        className="inline-block"
+                    />
+                </div>
             </div>
+            <BodyText level="body3" weight="medium" className="text-gray-800 pt-2">
+                The Score factor indicates the proportion of daily Apples you receive relative to your contribution.
+                <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                    <ExternalLink 
+                        href="https://app.applefarm.xyz/" 
+                        className='pl-1'
+                    >
+                        Know more
+                    </ExternalLink>
+                </span>
+            </BodyText>
         </div>
     )
 }

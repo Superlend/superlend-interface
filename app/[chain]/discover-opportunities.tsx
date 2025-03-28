@@ -31,9 +31,9 @@ const opportunity2ChainId = 8453;
 const opportunity3ChainId = 1;
 
 // Protocol Identifiers
-const opportunity1ProtocolIdentifier = "0xf80e34148c541f12a9eec9607c3b5da7ae94dee4c8b33d3a0c1b8b0d13b6f8e8";
-const opportunity2ProtocolIdentifier = "0x988c79a8e0baacf7cf1d3975d3cf5a6ef407bec6c11149ab05e7f65fc997cab1";
-const opportunity3ProtocolIdentifier = "0x027cb6a3b64db87be63dc9a3ee7fa0becb9344829e996c4660ac9cadd236bd38";
+const opportunity1ProtocolIdentifier = "0xd68cf3aa73c75811ca1665efe01a10524ed5adcba0f412df44d78f04f1c902bf";
+const opportunity2ProtocolIdentifier = "0x2a2ef6e5ef864ff2361fb1aff63df8f60d12a43c704c8453ef76d9ea7d3edc81";
+const opportunity3ProtocolIdentifier = "0x87eb69182347a95a4a9be4d83afdf0af705a0d7dd3e7d19f22e5cf34090f1d22";
 
 export default function DiscoverOpportunities({ chain }: { chain: string }) {
     const { logEvent } = useAnalytics()
