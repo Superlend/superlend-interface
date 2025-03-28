@@ -366,7 +366,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 }
             ]
             const apyCurrent = Number(row.getValue('apy_current'))
-            const apyCurrentFormatted = abbreviateNumber(apyCurrent)
+            const apyCurrentFormatted = (apyCurrent > 0 && apyCurrent < 0.01) ? '<0.01' : abbreviateNumber(apyCurrent)
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -953,8 +953,8 @@ function getAppleFarmRewardsTooltipContent(score: string) {
             <BodyText level="body3" weight="medium" className="text-gray-800 pt-2">
                 The Score factor indicates the proportion of daily Apples you receive relative to your contribution.
                 <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                    <ExternalLink 
-                        href="https://app.applefarm.xyz/" 
+                    <ExternalLink
+                        href="https://app.applefarm.xyz/"
                         className='pl-1'
                     >
                         Know more

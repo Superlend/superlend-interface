@@ -11,6 +11,7 @@ import {
     getPlatformVersion,
     getPlatformWebsiteLink,
     getTokenLogo,
+    hasLowestDisplayValuePrefix,
     isLowestValue,
 } from '@/lib/utils'
 import ImageWithDefault from '@/components/ImageWithDefault'
@@ -212,11 +213,15 @@ export default function PageHeader() {
                         pageHeaderStats?.borrow_rate ?? 0
                     )
                 )
-                    ? getLowestDisplayValue(
+                    ? `${hasLowestDisplayValuePrefix(
                         Number(
                             pageHeaderStats?.borrow_rate ?? 0
                         )
-                    )
+                    )}${getLowestDisplayValue(
+                        Number(
+                            pageHeaderStats?.borrow_rate ?? 0
+                        )
+                    )}`
                     : abbreviateNumber(
                         Number(
                             pageHeaderStats?.borrow_rate ?? 0
@@ -429,11 +434,15 @@ export default function PageHeader() {
                                                             pageHeaderStats?.supply_apy ?? 0
                                                         )
                                                     )
-                                                        ? getLowestDisplayValue(
+                                                        ? `${hasLowestDisplayValuePrefix(
                                                             Number(
                                                                 pageHeaderStats?.supply_apy ?? 0
                                                             )
-                                                        )
+                                                        )}${getLowestDisplayValue(
+                                                            Number(
+                                                                pageHeaderStats?.supply_apy ?? 0
+                                                            )
+                                                        )}`
                                                         : abbreviateNumber(
                                                             Number(
                                                                 pageHeaderStats?.supply_apy ?? 0
@@ -494,8 +503,8 @@ function getPageHeaderStats({
             } else if (item.borrow_enabled && array.length > 1) {
                 acc.borrow_rate = item.variable_borrow_apy
             } else {
-                acc.supply_apy = abbreviateNumber(item.supply_apy, 2)
-                acc.borrow_rate = abbreviateNumber(item.variable_borrow_apy, 2)
+                acc.supply_apy = item.supply_apy
+                acc.borrow_rate = item.variable_borrow_apy
             }
             return acc
         }, {})
