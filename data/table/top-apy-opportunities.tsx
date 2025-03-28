@@ -928,17 +928,17 @@ function getRewardsTooltipContent({
  */
 function getAppleFarmRewardsTooltipContent(score: string) {
     return (
-        <div className="flex flex-col divide-y divide-gray-800">
-            <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col divide-y divide-gray-800 max-w-[220px]">
+            <div className="flex items-end justify-between gap-2 pb-2">
                 <BodyText
                     level="body2"
                     weight="medium"
-                    className="pb-2 text-gray-800/75"
+                    className="text-gray-800/75"
                 >
                     Score:
                 </BodyText>
                 <div className="flex items-center gap-2">
-                    <BodyText level="body3" weight="medium" className="text-gray-800">
+                    <BodyText level="body2" weight="medium" className="text-gray-800">
                         {score}
                     </BodyText>
                     <ImageWithDefault
