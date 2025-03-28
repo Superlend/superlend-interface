@@ -952,7 +952,14 @@ function getAppleFarmRewardsTooltipContent(score: string) {
             </div>
             <BodyText level="body3" weight="medium" className="text-gray-800 pt-2">
                 The Score factor indicates the proportion of daily Apples you receive relative to your contribution.
-                <ExternalLink href="https://app.applefarm.xyz/" className='pl-1'>Know more</ExternalLink>
+                <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                    <ExternalLink 
+                        href="https://app.applefarm.xyz/" 
+                        className='pl-1'
+                    >
+                        Know more
+                    </ExternalLink>
+                </span>
             </BodyText>
         </div>
     )
