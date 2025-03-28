@@ -135,11 +135,11 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
             name: 'SUPERLEND',
             protocol_id: 'SUPERLEND',
         },
-        // {
-        //     logo: PlatformLogo.EULER,
-        //     name: 'EULER',
-        //     protocol_id: 'EULER',
-        // },
+        {
+            logo: PlatformLogo.EULER,
+            name: 'EULER',
+            protocol_id: 'EULER',
+        },
     ]
 
     const FILTER_CATEGORIES = useMemo(() => {
