@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import {
     Tooltip,
     TooltipContent,
@@ -52,25 +52,38 @@ export default function InfoTooltip({
     const [open, setOpen] = useState<boolean>(false)
     const { width: screenWidth } = useDimensions()
     const isDesktop = useMemo(() => screenWidth > 768, [screenWidth])
+    const closeTimeoutRef = useRef<NodeJS.Timeout>()
 
-    function handleTooltipToggle(state: boolean) {
-        return () => {
-            setOpen(state)
+    const handleMouseEnter = () => {
+        if (closeTimeoutRef.current) {
+            clearTimeout(closeTimeoutRef.current)
         }
+        setOpen(true)
     }
+
+    const handleMouseLeave = () => {
+        closeTimeoutRef.current = setTimeout(() => {
+            setOpen(false)
+        }, 100) // Small delay to allow mouse movement between elements
+    }
+
+    useEffect(() => {
+        return () => {
+            if (closeTimeoutRef.current) {
+                clearTimeout(closeTimeoutRef.current)
+            }
+        }
+    }, [])
 
     if (isDesktop) {
         return (
-            <TooltipPrimitive.Provider delayDuration={200} skipDelayDuration={0}>
+            <TooltipPrimitive.Provider>
                 <TooltipPrimitive.Root open={open}>
                     <TooltipPrimitive.Trigger asChild>
                         <motion.span
-                            // Tool tip triggers
-                            onClick={handleTooltipToggle(true)}
-                            onHoverStart={handleTooltipToggle(true)}
-                            onHoverEnd={handleTooltipToggle(false)}
-                            onMouseEnter={handleTooltipToggle(true)}
-                            onMouseLeave={handleTooltipToggle(false)}
+                            onClick={() => setOpen(true)}
+                            onMouseEnter={handleMouseEnter}
+                            onMouseLeave={handleMouseLeave}
                             className="w-fit inline-block shrink-0"
                         >
                             {!label && (
@@ -86,14 +99,14 @@ export default function InfoTooltip({
                     <TooltipPrimitive.Portal>
                         <TooltipPrimitive.Content
                             side={side}
-                            sideOffset={12}
-                            className={`z-[9999] overflow-visible pointer-events-auto bg-white rounded-4 border shadow-md ${className?.includes('max-w') ? '' : 'max-w-[280px] text-wrap'} ${sizes[size]}`}
+                            sideOffset={5}
+                            collisionPadding={16}
+                            forceMount
+                            onMouseEnter={handleMouseEnter}
+                            onMouseLeave={handleMouseLeave}
+                            className={`z-[9999] select-none pointer-events-auto bg-white rounded-4 border shadow-md ${className?.includes('max-w') ? '' : 'max-w-[280px] text-wrap'} ${sizes[size]}`}
                         >
                             <motion.span
-                                onHoverStart={handleTooltipToggle(true)}
-                                onHoverEnd={handleTooltipToggle(false)}
-                                onMouseEnter={handleTooltipToggle(true)}
-                                onMouseLeave={handleTooltipToggle(false)}
                                 className="w-fit inline-block shrink-0"
                             >
                                 {typeof content === 'string' && (
@@ -101,6 +114,7 @@ export default function InfoTooltip({
                                 )}
                                 {typeof content !== 'string' && content}
                             </motion.span>
+                            <TooltipPrimitive.Arrow className="fill-white" />
                         </TooltipPrimitive.Content>
                     </TooltipPrimitive.Portal>
                 </TooltipPrimitive.Root>
@@ -112,7 +126,7 @@ export default function InfoTooltip({
         <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
                 <span
-                    onClick={handleTooltipToggle(true)}
+                    onClick={() => setOpen(true)}
                     className="w-fit inline-block shrink-0"
                 >
                     {!label && (
@@ -138,7 +152,7 @@ export default function InfoTooltip({
                             size={'lg'}
                             variant="outline"
                             className="w-full"
-                            onClick={handleTooltipToggle(false)}
+                            onClick={() => setOpen(false)}
                         >
                             Close
                         </Button>
