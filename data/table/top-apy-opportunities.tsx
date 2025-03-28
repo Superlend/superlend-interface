@@ -937,7 +937,7 @@ function getAppleFarmRewardsTooltipContent(score: string) {
                 >
                     Score:
                 </BodyText>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                     <BodyText level="body2" weight="medium" className="text-gray-800">
                         {score}
                     </BodyText>
