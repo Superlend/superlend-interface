@@ -475,7 +475,7 @@ export function ConfirmationDialog({
                                     ? 'Add Collateral'
                                     : isMorphoVault
                                       ? 'Supply to vault'
-                                      : 'Lend'
+                                      : 'Earn'
                                 : 'Borrow'}{' '}
                             {isTxFailed ? 'Failed' : 'Successful'}
                             {!isTxFailed && (
