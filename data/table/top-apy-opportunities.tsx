@@ -417,13 +417,15 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     {hasRewards && (
                         <InfoTooltip
                             label={
-                                <ImageWithDefault
-                                    src="/icons/sparkles.svg"
-                                    alt="Rewards"
-                                    width={22}
-                                    height={22}
-                                    className="cursor-pointer hover:scale-110"
-                                />
+                                <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                                    <ImageWithDefault
+                                        src="/icons/sparkles.svg"
+                                        alt="Rewards"
+                                        width={22}
+                                        height={22}
+                                        className="cursor-pointer hover:scale-110"
+                                    />
+                                </span>
                             }
                             content={getRewardsTooltipContent({
                                 baseRateFormatted: baseRateFormatted || '',
@@ -442,6 +444,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                     animate={{ rotate: 360 }}
                                     transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
                                     whileHover={{ rotate: -360 }}
+                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                 >
                                     <ImageWithDefault
                                         src="/images/apple-farm-favicon.ico"

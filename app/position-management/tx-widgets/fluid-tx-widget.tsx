@@ -242,7 +242,7 @@ function FluidLend({
                         weight="medium"
                         className="capitalize text-black/90"
                     >
-                        Lend
+                        Earn
                     </BodyText>
                     {isWalletConnected && (
                         <BodyText
@@ -761,7 +761,7 @@ function FluidVaults({
                         className="text-gray-600"
                     >
                         {isLendPositionType(positionType)
-                            ? 'Lend'
+                            ? 'Earn'
                             : `Borrow ${fluidBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
 
