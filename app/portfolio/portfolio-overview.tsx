@@ -13,6 +13,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { UserPositionsByPlatform } from '@/components/charts/user-positions-pie-chart'
 import { PortfolioContext } from '@/context/portfolio-provider'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
 
 export default function PortfolioOverview() {
     const { portfolioData, isLoadingPortfolioData, isErrorPortfolioData } =
@@ -22,7 +23,7 @@ export default function PortfolioOverview() {
     const BORROWINGS = getStatDisplayValue(portfolioData?.total_borrowed)
     const NET_WORTH = getStatDisplayValue(
         Number(portfolioData?.total_supplied ?? 0) -
-            Number(portfolioData?.total_borrowed ?? 0)
+        Number(portfolioData?.total_borrowed ?? 0)
     )
     const EARNINGS = getStatDisplayValue(
         portfolioData?.platforms.reduce(
@@ -67,6 +68,7 @@ export default function PortfolioOverview() {
                     className="w-6 h-6"
                 />
             ),
+            valueTooltip: 'Your earnings from Aave V3 positions only',
         },
     ]
 
@@ -108,13 +110,21 @@ export default function PortfolioOverview() {
                                                     {!isLoadingPortfolioData &&
                                                         position.icon}
                                                     {!isLoadingPortfolioData && (
-                                                        <BodyText
-                                                            level="body1"
-                                                            weight="medium"
-                                                            className="leading-none text-gray-800 mt-2"
-                                                        >
-                                                            {position.data}
-                                                        </BodyText>
+                                                        <div className="flex items-center gap-1 mt-2">
+                                                            <BodyText
+                                                                level="body1"
+                                                                weight="medium"
+                                                                className="leading-none text-gray-800"
+                                                            >
+                                                                {position.data}
+                                                            </BodyText>
+                                                            {position.valueTooltip && (
+                                                                <InfoTooltip
+                                                                    side="bottom"
+                                                                    content={position.valueTooltip}
+                                                                />
+                                                            )}
+                                                        </div>
                                                     )}
                                                     <Label className="text-gray-600 capitalize">
                                                         Your {position.label}
