@@ -6,10 +6,12 @@ import { usePathname, useRouter } from 'next/navigation'
 import HomeIcon from './icons/home-icon'
 import CompassIcon from './icons/compass-icon'
 import PieChartIcon from './icons/pie-chart-icon'
+import RewardsIcon from './icons/rewards-icon'
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet'
 import { Menu, X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ConnectWalletButton from './ConnectWalletButton'
+import CheckInButton from './CheckInButton'
 import Link from 'next/link'
 import { Badge } from './ui/badge'
 
@@ -25,6 +27,7 @@ const Header: React.FC = () => {
         { id: 1, name: 'Home', href: '/', icon: HomeIcon },
         { id: 2, name: 'Discover', href: getRedirectionLink('/discover'), icon: CompassIcon },
         { id: 3, name: 'Portfolio', href: '/portfolio', icon: PieChartIcon },
+        { id: 4, name: 'Rewards', href: '/rewards', icon: RewardsIcon },
     ]
 
     const activeTabInitialValue = (pathname: string) => {
@@ -104,10 +107,10 @@ const Header: React.FC = () => {
     return (
         <>
             <header className="z-50 sticky top-0 md:top-5 left-0 max-w-[1200px] w-full mx-auto md:px-5">
-                <div className="flex gap-5 max-lg:gap-10 justify-between items-center py-0 pr-[8px] pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
+                <div className="flex gap-5 max-lg:gap-5 justify-between items-center py-0 pr-[16px] pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
                     <Link
                         href="/"
-                        className="relative md:w-[24px] md:w-fit p-0"
+                        className="relative md:w-[24px] md:w-fit p-0 mr-2"
                     >
                         <img
                             loading="lazy"
@@ -123,7 +126,7 @@ const Header: React.FC = () => {
                         </Badge>
                     </Link>
 
-                    <nav className="hidden min-[850px]:flex gap-3 lg:gap-5 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">
+                    <nav className="hidden min-[850px]:flex gap-4 lg:gap-8 items-center self-stretch my-auto text-sm tracking-normal leading-none whitespace-nowrap min-w-[240px] text-stone-800 max-md:max-w-full">
                         {tabs.map((tab) => (
                             <Button
                                 key={tab.id}
@@ -144,7 +147,8 @@ const Header: React.FC = () => {
                             </Button>
                         ))}
                     </nav>
-                    <div className="flex items-center gap-[12px]">
+                    <div className="flex items-center gap-[16px]">
+                        <CheckInButton />
                         <ConnectWalletButton />
                     </div>
                 </div>
