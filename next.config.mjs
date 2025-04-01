@@ -17,6 +17,9 @@ const nextConfig = {
             {
                 hostname: 'raw.githubusercontent.com',
             },
+            {
+                hostname: 'superlend-public-assets.s3.ap-south-1.amazonaws.com',
+            },
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'attachment',
