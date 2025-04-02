@@ -388,8 +388,8 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                     {!isLoading &&
                         groupedTokens.length > 0 &&
                         !showAllChains && (
-                        selectedChains.length > 0 
-                        ? // When specific chains are selected, show expanded tokens
+                        selectedChains.length > 0 || isWalletConnected
+                        ? // When specific chains are selected or wallet is connected, show expanded tokens
                           filteredTokens.map((token) => (
                             <div
                                 key={`${token.address}-${token.chain_id}`}
@@ -442,7 +442,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                 )}
                             </div>
                         ))
-                        : // When no chains are selected (All Chains), show grouped tokens
+                        : // When no chains are selected (All Chains) and wallet is not connected, show grouped tokens
                           groupedTokens.map((group) => {
                             // If token exists only on one chain, show expanded view directly
                             if (group.tokenCount === 1) {
