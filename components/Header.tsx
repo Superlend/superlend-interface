@@ -47,19 +47,23 @@ const Header: React.FC = () => {
 
     function getRedirectionLink(href: string) {
         if (href === '/discover') {
-            // Get the initial state from localStorage, default to false if not set
-            const stored = localStorage.getItem('show_all_markets')
-            const showAllMarkets = stored !== null ? stored === 'true' : false
+            // Check if we're in a browser environment before accessing localStorage
+            if (typeof window !== 'undefined') {
+                // Get the initial state from localStorage, default to false if not set
+                const stored = localStorage.getItem('show_all_markets')
+                const showAllMarkets = stored !== null ? stored === 'true' : false
 
-            // Set the initial value in localStorage if not set
-            if (stored === null) {
-                localStorage.setItem('show_all_markets', 'false')
+                // Set the initial value in localStorage if not set
+                if (stored === null) {
+                    localStorage.setItem('show_all_markets', 'false')
+                }
+
+                // Always navigate to the correct route based on the localStorage value
+                const targetPath = showAllMarkets ? '/discover' : '/etherlink?chain_ids=42793'
+                return targetPath
             }
-
-            // Always navigate to the correct route based on the localStorage value
-            const targetPath = showAllMarkets ? '/discover' : '/etherlink?chain_ids=42793'
-
-            return targetPath
+            // Default path for server-side rendering
+            return '/etherlink?chain_ids=42793'
         }
 
         return href

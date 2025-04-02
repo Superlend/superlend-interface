@@ -252,14 +252,20 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         if (!hasShownAnimation && chainIdsParam.includes('42793')) {
             setShowRainingApples(true);
             sessionStorage.setItem('has_shown_apple_animation', 'true');
-            
+
             const timer = setTimeout(() => {
                 setShowRainingApples(false);
             }, 10000);
-            
+
             return () => clearTimeout(timer);
         }
     }, []);
+
+    useEffect(() => {
+        if ((pathname === '/etherlink' || pathname.endsWith('/etherlink')) && chainIdsParam.length === 0) {
+            updateSearchParams({ chain_ids: '42793' });
+        }
+    }, [pathname, chainIdsParam.length, updateSearchParams]);
 
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
         const platformName = item.platform.platform_name?.split('-')[0]?.toLowerCase()
