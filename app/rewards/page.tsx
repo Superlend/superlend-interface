@@ -300,11 +300,11 @@ export default function RewardsPage() {
               </div>
             </CardContent>
             
-            <CardFooter className="bg-gray-50 py-4 px-6 border-t border-gray-100">
+            {/* <CardFooter className="bg-gray-50 py-4 px-6 border-t border-gray-100">
               <BodyText level="body2" className="text-gray-500">
                 Points Program is currently in beta. Your feedback helps us improve!
               </BodyText>
-            </CardFooter>
+            </CardFooter> */}
           </Card>
         </section>
         
