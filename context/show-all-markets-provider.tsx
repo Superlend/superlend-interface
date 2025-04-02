@@ -30,20 +30,12 @@ export function ShowAllMarketsProvider({ children }: { children: React.ReactNode
     // Handle route synchronization
     useEffect(() => {
         if (!isLoading && (pathname === '/discover' || pathname === '/etherlink')) {
-            const storedShowAll = localStorage.getItem('show_all_markets') === 'true'
-            
-            // If state doesn't match localStorage, update state to match localStorage
-            if (showAllMarkets !== storedShowAll) {
-                setShowAllMarkets(storedShowAll)
-            }
-            
-            // Then ensure route matches the localStorage value
-            const expectedRoute = storedShowAll ? '/discover' : '/etherlink'
-            if (pathname !== expectedRoute) {
-                router.replace(expectedRoute + (expectedRoute === '/etherlink' ? '?chain_ids=42793' : ''))
-            }
+            // Always update state and localStorage to match the URL pathname
+            const shouldShowAll = pathname === '/discover'
+            setShowAllMarkets(shouldShowAll)
+            localStorage.setItem('show_all_markets', shouldShowAll.toString())
         }
-    }, [pathname, isLoading, showAllMarkets, router])
+    }, [pathname, isLoading])
 
     const toggleShowAllMarkets = (checked: boolean) => {
         setShowAllMarkets(checked)
