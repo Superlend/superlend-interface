@@ -13,6 +13,8 @@ import { useAuth } from '@/context/auth-provider'
 import useGetUserDetails from '@/hooks/points/useGetUserDetails'
 import useCheckInUser from '@/hooks/points/useCheckInUser'
 import InfoTooltip from './tooltips/InfoTooltip'
+import Link from 'next/link'
+import ImageWithDefault from './ImageWithDefault'
 
 // Compact version of CheckInButton specifically for this component
 function CompactCheckInButton() {
@@ -186,20 +188,34 @@ export default function PointsWithCheckInCard() {
   })();
 
   return (
-    <Card className="max-w-full md:max-w-[380px] w-full h-[80px] max-h-[80px] overflow-hidden">
-      <CardContent className="p-3 flex items-center h-full gap-12">
+    <Card className="max-w-full md:max-w-[380px] w-full">
+      <CardContent className="p-3 flex max-md:flex-wrap items-center h-full max-md:gap-5 gap-12">
         {/* Left side: Trophy icon and Points */}
-        <div className="flex flex-col gap-1.5 flex-shrink-0 mr-4">
-          <div className="flex items-center gap-1.5 mb-0.5">
+        <div className="flex flex-col gap-2.5 flex-shrink-0">
+          <div className="flex items-center gap-1.5">
             <TrophyIcon className="w-3.5 h-3.5 text-primary" />
-            <BodyText level="body3" weight="medium" className="text-gray-800">
+            <HeadingText level="h5" weight="medium" className="text-gray-800">
               Points
+            </HeadingText>
+            <BodyText level="body2" weight="medium" className="text-secondary-500 underline hover:no-underline">
+              <Link href="/rewards">
+                How it works?
+              </Link>
             </BodyText>
           </div>
           <div className="flex items-center gap-2">
             <HeadingText level="h4" weight="semibold" className="text-primary leading-none">
               {userPoints}
             </HeadingText>
+            <div className="rounded-full bg-white p-1 w-5 h-5">
+              <ImageWithDefault
+                src="/images/logos/favicon-32x32.png"
+                alt="Points"
+                width={14}
+                height={14}
+                className="w-3 h-3"
+              />
+            </div>
             {/* <Link href="/rewards">
               <Button
                 variant="outline"
@@ -214,8 +230,8 @@ export default function PointsWithCheckInCard() {
         </div>
 
         {/* Right: Buttons */}
-        <div className="flex items-center gap-2 ml-auto">
-          <div className="flex flex-col items-end justify-end gap-1">
+        <div className="flex items-center gap-2 md:ml-auto">
+          <div className="flex flex-col md:items-end justify-end gap-1">
             {/* Epoch time */}
             <div className="flex items-center gap-1 flex-shrink-0">
               <Clock className="w-3 h-3 text-gray-500 flex-shrink-0" />

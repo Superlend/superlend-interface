@@ -83,9 +83,9 @@ export default function Portfolio() {
                             one place.
                         </BodyText>
                     </div>
-                    <div className="flex items-center h-[80px] max-md:w-full">
+                    {/* <div className="flex items-center h-[80px] max-md:w-full">
                         <PointsWithCheckInCard />
-                    </div>
+                    </div> */}
                 </section>
                 <div className="flex flex-col gap-[72px]">
                     <PortfolioOverview />
