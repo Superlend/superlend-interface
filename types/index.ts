@@ -3,6 +3,7 @@ import { Period } from './periodButtons'
 
 export type TPositionType = 'lend' | 'borrow'
 export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay'
+export type TAddress = `0x${string}`
 
 export type TScAmount = {
     amountRaw: string

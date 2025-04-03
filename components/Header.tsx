@@ -27,7 +27,7 @@ const Header: React.FC = () => {
         { id: 1, name: 'Home', href: '/', icon: HomeIcon },
         { id: 2, name: 'Discover', href: getRedirectionLink('/discover'), icon: CompassIcon },
         { id: 3, name: 'Portfolio', href: '/portfolio', icon: PieChartIcon },
-        { id: 4, name: 'Rewards', href: '/rewards', icon: RewardsIcon },
+        // { id: 4, name: 'Rewards', href: '/rewards', icon: RewardsIcon },
     ]
 
     const activeTabInitialValue = (pathname: string) => {
@@ -107,7 +107,7 @@ const Header: React.FC = () => {
     return (
         <>
             <header className="z-50 sticky top-0 md:top-5 left-0 max-w-[1200px] w-full mx-auto md:px-5">
-                <div className="flex gap-5 max-lg:gap-5 justify-between items-center py-0 pr-[16px] pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
+                <div className="flex gap-5 max-lg:gap-5 justify-between items-center py-0 pr-3 pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
                     <Link
                         href="/"
                         className="relative md:w-[24px] md:w-fit p-0 mr-2"
@@ -148,7 +148,7 @@ const Header: React.FC = () => {
                         ))}
                     </nav>
                     <div className="flex items-center gap-[16px]">
-                        <CheckInButton />
+                        {/* <CheckInButton /> */}
                         <ConnectWalletButton />
                     </div>
                 </div>

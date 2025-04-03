@@ -32,6 +32,8 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { ETH_ADDRESSES } from '@/lib/constants'
+import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
+import { useAuth } from '@/context/auth-provider'
 
 interface ISupplyFluidButtonProps {
     assetDetails: any
@@ -74,6 +76,8 @@ const SupplyFluidButton = ({
         })
     const { walletAddress } = useWalletConnection()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
+    const { logUserEvent } = useLogNewUserEvent()
+    const { accessToken, getAccessTokenFromPrivy } = useAuth()
 
     // const amountBN = useMemo(() => {
     //     return amount
@@ -117,6 +121,10 @@ const SupplyFluidButton = ({
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+
+    useEffect(() => {
+        getAccessTokenFromPrivy()
+    }, [])
 
     useEffect(() => {
         if (lendTx.status === 'lend') {
@@ -181,6 +189,15 @@ const SupplyFluidButton = ({
                             ],
                         wallet_address: walletAddress,
                     })
+
+                    logUserEvent({
+                        user_address: walletAddress,
+                        event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                        platform_type: 'superlend_aggregator',
+                        protocol_identifier: assetDetails?.protocol_identifier,
+                        event_data: 'SUPPLY',
+                        authToken: accessToken || '',
+                    })
                 })
                 .catch((error) => {
                     setLendTx((prev: TLendTx) => ({
@@ -240,6 +257,15 @@ const SupplyFluidButton = ({
                                 Number(assetDetails?.chain_id) as ChainId
                             ],
                         wallet_address: walletAddress,
+                    })
+
+                    logUserEvent({
+                        user_address: walletAddress,
+                        event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                        platform_type: 'superlend_aggregator',
+                        protocol_identifier: assetDetails?.protocol_identifier,
+                        event_data: 'SUPPLY',
+                        authToken: accessToken || '',
                     })
                 })
                 .catch((error) => {

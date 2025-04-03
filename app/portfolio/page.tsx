@@ -20,6 +20,9 @@ import Loading from './loading'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import AppleFarmRewardsBanner from '@/components/AppleFarmRewardsBanner'
+import CheckInButton from '@/components/CheckInButton'
+import PointsWithCheckIn from '@/components/PointsWithCheckInCard'
+import PointsWithCheckInCard from '@/components/PointsWithCheckInCard'
 
 export default function Portfolio() {
     const { isConnectingWallet, isWalletConnected, walletAddress } =
@@ -80,10 +83,9 @@ export default function Portfolio() {
                             one place.
                         </BodyText>
                     </div>
-                    {/* <Button variant="primary" className='group uppercase py-[9px] px-[16px] flex items-center gap-[4px]'>
-                        transaction history
-                        <ArrowRightIcon width={16} height={16} weight='2' className='stroke-white group-hover:opacity-75 group-active:opacity-75' />
-                    </Button> */}
+                    <div className="flex items-center h-[80px] max-md:w-full">
+                        <PointsWithCheckInCard />
+                    </div>
                 </section>
                 <div className="flex flex-col gap-[72px]">
                     <PortfolioOverview />

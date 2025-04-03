@@ -36,6 +36,9 @@ import { ChainId } from '@/types/chain'
 import { useAssetsDataContext } from '@/context/data-provider'
 // import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
 import { TScAmount } from '@/types'
+import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { useAuth } from '@/context/auth-provider'
 
 interface ISupplyAaveButtonProps {
     assetDetails: any
@@ -68,12 +71,18 @@ const SupplyAaveButton = ({
             confirmations: 2,
             hash,
         })
-    const { address: walletAddress } = useAccount()
+    const { walletAddress } = useWalletConnection()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
+    const { logUserEvent } = useLogNewUserEvent()
+    const { accessToken, getAccessTokenFromPrivy } = useAuth()
 
     // const amountBN = useMemo(() => {
     //     return amount ? parseUnits(amount, decimals) : BigNumber.from(0)
     // }, [amount, decimals])
+
+    useEffect(() => {
+        getAccessTokenFromPrivy()
+    }, [])
 
     const txBtnStatus: Record<string, string> = {
         pending:
@@ -94,12 +103,12 @@ const SupplyAaveButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? lendTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? lendTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
@@ -153,9 +162,18 @@ const SupplyAaveButton = ({
                         platform_name: assetDetails?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
-                                Number(assetDetails?.chain_id) as ChainId
+                            Number(assetDetails?.chain_id) as ChainId
                             ],
                         wallet_address: walletAddress,
+                    })
+
+                    logUserEvent({
+                        user_address: walletAddress,
+                        event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                        platform_type: 'superlend_aggregator',
+                        protocol_identifier: assetDetails?.protocol_identifier,
+                        event_data: 'SUPPLY',
+                        authToken: accessToken || '',
                     })
                 })
                 .catch((error) => {
@@ -226,18 +244,6 @@ const SupplyAaveButton = ({
     }, [hash, lendTx.status])
 
     const onApproveSupply = async () => {
-        // if (!isConnected) {
-        //     // If not connected, prompt connection first
-        //     try {
-        //         const connector = connectors[0] // Usually metamask/injected connector
-        //         await connect({ connector })
-        //         return
-        //     } catch (error) {
-        //         console.error('Connection failed:', error)
-        //         return
-        //     }
-        // }
-
         logEvent('approve_clicked', {
             amount: amount.amountRaw,
             token_symbol: assetDetails?.asset?.token?.symbol,
