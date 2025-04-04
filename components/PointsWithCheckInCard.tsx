@@ -16,6 +16,8 @@ import InfoTooltip from './tooltips/InfoTooltip'
 import Link from 'next/link'
 import ImageWithDefault from './ImageWithDefault'
 import { Badge } from './ui/badge'
+import { motion, AnimatePresence } from 'framer-motion'
+import { abbreviateNumber } from '@/lib/utils'
 
 // Compact version of CheckInButton specifically for this component
 function CompactCheckInButton() {
@@ -142,10 +144,34 @@ function CompactCheckInButton() {
   )
 }
 
+// Animated number component for the timer
+const AnimatedNumber = ({ value, label }: { value: string, label: string }) => {
+  return (
+    <div className="flex items-end justify-end gap-0.5">
+      <div className="relative h-5 w-fit overflow-hidden">
+        <AnimatePresence mode="popLayout">
+          <motion.div
+            key={value}
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -10, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex justify-end items-center font-medium text-sm text-gray-500"
+          >
+            {value}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      <span className="text-sm text-gray-500">{label}</span>
+    </div>
+  );
+};
+
 export default function PointsWithCheckInCard() {
   const { isWalletConnected, walletAddress } = useWalletConnection()
   const { accessToken } = useAuth()
   const [isCheckedInWithin24Hours, setIsCheckedInWithin24Hours] = useState(false)
+  const [timeRemaining, setTimeRemaining] = useState({ hours: 0, minutes: 0, seconds: 0 })
 
   const {
     data: userDetails,
@@ -166,8 +192,8 @@ export default function PointsWithCheckInCard() {
     }
   }, [userDetails])
 
-  // Calculate next epoch date - 24 hours after last check in
-  const calculateNextEpochDate = () => {
+  // Memoize the next epoch date to prevent recalculations on each render
+  const nextEpochDate = React.useMemo(() => {
     try {
       if (userDetails && 'last_check_in_timestamp' in userDetails && userDetails.last_check_in_timestamp) {
         const lastCheckInTime = new Date(userDetails.last_check_in_timestamp).getTime();
@@ -181,62 +207,82 @@ export default function PointsWithCheckInCard() {
       console.error("Error calculating next epoch date:", error);
       return new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
-  }
+  }, [userDetails]);
 
   const userPoints = 'total_points' in userDetails ? userDetails.total_points : 0
-  const nextEpochDate = calculateNextEpochDate()
-
-  if (!isWalletConnected) return null
 
   // Calculate hours and minutes until next check-in
-  const calculateTimeRemaining = () => {
+  const calculateTimeRemaining = React.useCallback(() => {
     try {
       if (!nextEpochDate || isNaN(nextEpochDate.getTime())) {
-        return { hours: 0, minutes: 0 };
+        return { hours: 0, minutes: 0, seconds: 0 };
       }
 
       const now = new Date();
       const diffMs = nextEpochDate.getTime() - now.getTime();
 
-      if (diffMs <= 0) return { hours: 0, minutes: 0 };
+      if (diffMs <= 0) return { hours: 0, minutes: 0, seconds: 0 };
 
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
-      return { hours, minutes };
+      return { hours, minutes, seconds };
     } catch (error) {
       console.error("Error calculating time remaining:", error);
-      return { hours: 0, minutes: 0 };
+      return { hours: 0, minutes: 0, seconds: 0 };
     }
-  };
+  }, [nextEpochDate]);
 
-  const { hours, minutes } = calculateTimeRemaining();
-  const formattedTimeRemaining = `T-${hours}h ${minutes}m`;
+  // Update time remaining every second
+  useEffect(() => {
+    if (!isCheckedInWithin24Hours) return;
+
+    // Initial calculation
+    setTimeRemaining(calculateTimeRemaining());
+
+    // Set up interval to update every second
+    const interval = setInterval(() => {
+      setTimeRemaining(calculateTimeRemaining());
+    }, 1000);
+
+    // Clean up interval on component unmount
+    return () => clearInterval(interval);
+  }, [isCheckedInWithin24Hours, calculateTimeRemaining]);
+
+  if (!isWalletConnected) return null
 
   return (
     <Card className="max-w-full md:max-w-[380px] w-full overflow-visible">
-      <CardContent className="p-4 flex flex-col gap-3 bg-white relative rounded-6 ring-1 ring-secondary-100 ring-inset">
-        <Badge className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+      <CardContent className="p-4 flex flex-col gap-3 bg-white relative rounded-6">
+        {/* <Badge className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold px-2 py-0.5 rounded-full">
           New
-        </Badge>
+        </Badge> */}
         {/* Top: Trophy icon and Points */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1">
             <TrophyIcon className="w-4 h-4 text-primary" />
             <HeadingText level="h4" weight="semibold" className="text-primary leading-none">
-              {userPoints}
+              {abbreviateNumber(userPoints, 0)}
             </HeadingText>
             <HeadingText level="h5" weight="medium" className="text-gray-800">
               Points
             </HeadingText>
           </div>
-          <div className="rounded-full bg-gray-400 w-1 h-1" />
+          <div className="max-md:hidden rounded-full bg-gray-400 w-1 h-1" />
           {isCheckedInWithin24Hours && (
             <div className="flex items-center gap-1 flex-shrink-0">
               {/* <Clock className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" /> */}
-              <BodyText level="body2" className="text-gray-500 whitespace-nowrap">
-                Next Check In: {formattedTimeRemaining}
+              <BodyText level="body2" className="text-gray-500">
+                Next Check In:
               </BodyText>
+              <div className="flex items-center space-x-0.5">
+                <AnimatedNumber value={timeRemaining.hours.toString().padStart(2, '0')} label="h" />
+                <span className="text-gray-400 flex items-center -mt-0.5">:</span>
+                <AnimatedNumber value={timeRemaining.minutes.toString().padStart(2, '0')} label="m" />
+                <span className="text-gray-400 flex items-center -mt-0.5">:</span>
+                <AnimatedNumber value={timeRemaining.seconds.toString().padStart(2, '0')} label="s" />
+              </div>
             </div>
           )}
         </div>

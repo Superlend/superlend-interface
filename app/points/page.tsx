@@ -124,12 +124,12 @@ export default function PointsPage() {
               className="stroke-gray-800"
             />
           </Button>
-          <div className="flex flex-col gap-[4px]">
+          <div className="flex flex-col">
             <HeadingText level="h4" weight="medium" className="text-gray-800">
               Points Program
             </HeadingText>
             <BodyText level="body1" className="text-gray-600">
-              Earn points for your activity at the end of each epoch.
+              Use Superlend and earn points.
             </BodyText>
           </div>
         </div>
@@ -142,218 +142,46 @@ export default function PointsPage() {
           <Card className="overflow-hidden">
             <CardHeader className="bg-gray-100 border-b border-gray-200 pb-4">
               <div className="flex justify-between items-center">
-                <CardTitle className="flex items-center gap-2">
-                  {/* <TrophyIcon className="w-5 h-5 text-primary" /> */}
+                <HeadingText level="h4" weight="medium" className="text-gray-800 flex items-center gap-2">
                   <InfoIcon key="info" className="w-5 h-5 text-primary" />
                   How it works
-                  {/* <Badge variant="blue" className="ml-2">Beta</Badge> */}
-                </CardTitle>
-                {/* <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-white border-secondary-300 text-secondary-500 flex items-center gap-1">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    Epoch Ends In: {formatTimeRemaining(mockPointsData.epochEndTime)}
-                  </Badge>
-                </div> */}
+                </HeadingText>
               </div>
             </CardHeader>
 
             <CardContent className="p-6">
-              <div className="grid md:grid-cols-3 gap-6">
-                {/* Points and Level */}
-                <div className="space-y-6">
-                  <div className="flex flex-col gap-1">
-                    {/* <div className="flex items-center justify-between">
-                      <Label size="medium" className="text-gray-600">Your Points</Label>
-                      <Badge variant="outline" className="bg-white">Level {isLoading ? '-' : mockPointsData.level}</Badge>
-                    </div> */}
-
-                    {/* {isLoading ? (
-                      <Skeleton className="h-12 w-24 my-1" />
-                    ) : (
-                      <HeadingText level="h2" weight="semibold" className="text-primary">
-                        {mockPointsData.totalPoints}
-                      </HeadingText>
-                    )} */}
-
-                    {/* <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span>Level {mockPointsData.level}</span>
-                        <span>Level {mockPointsData.level + 1}</span>
-                      </div>
-                      
-                      {isLoading ? (
-                        <Skeleton className="h-2 w-full" />
-                      ) : (
-                        <Progress 
-                          value={(mockPointsData.totalPoints / mockPointsData.nextLevelThreshold) * 100} 
-                          className="h-2 bg-gray-200" 
-                        />
-                      )}
-                      
-                      <BodyText level="body2" className="text-gray-500">
-                        {isLoading ? 
-                          <Skeleton className="h-4 w-32 inline-block" /> : 
-                          `${mockPointsData.nextLevelThreshold - mockPointsData.totalPoints} points until next level`
-                        }
-                      </BodyText>
-                    </div> */}
-                  </div>
-
-                  {/* <div className="p-4 rounded-md bg-gray-50 border border-gray-100">
-                    <div className="flex items-center justify-between mb-2">
-                      <Label size="medium" className="text-gray-600 flex items-center gap-1">
-                        Your Rank
-                        <InfoTooltip content="Your position on the global leaderboard" side="top" />
-                      </Label>
-                    </div>
-                    
-                    {isLoading ? (
-                      <Skeleton className="h-8 w-36" />
-                    ) : (
-                      <HeadingText level="h3" weight="semibold" className="text-gray-800">
-                        #{mockPointsData.rank.toLocaleString()}
-                      </HeadingText>
-                    )}
-                  </div> */}
-                </div>
-
-                {/* Points History & Info */}
-                {/* <div className="md:col-span-2"> */}
-                {/* <PointsTabs> */}
-                {/* Points History Content */}
-                {/* {isLoading ? (
-                      <>
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                      </>
-                    ) : (
-                      <div className="overflow-y-auto max-h-[300px] pr-2">
-                        <table className="w-full">
-                          <thead className="border-b border-gray-200">
-                            <tr>
-                              <th className="text-left py-2 font-medium text-gray-600">Date</th>
-                              <th className="text-left py-2 font-medium text-gray-600">Activity</th>
-                              <th className="text-right py-2 font-medium text-gray-600">Points</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {mockPointsData.pointsHistory.map((item, i) => (
-                              <tr key={i} className="border-b border-gray-100">
-                                <td className="py-3 text-gray-800">{item.date}</td>
-                                <td className="py-3 text-gray-800">{item.reason}</td>
-                                <td className="py-3 text-right font-medium text-primary">+{item.amount}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )} */}
-
-                {/* Leaderboard Content */}
-                {/* {isLoading ? (
-                      <>
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                      </>
-                    ) : (
-                      <div className="overflow-y-auto max-h-[300px] pr-2">
-                        <table className="w-full">
-                          <thead className="border-b border-gray-200">
-                            <tr>
-                              <th className="text-left py-2 font-medium text-gray-600">Rank</th>
-                              <th className="text-left py-2 font-medium text-gray-600">Address</th>
-                              <th className="text-right py-2 font-medium text-gray-600">Points</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {mockPointsData.leaderboard.map((item, i) => (
-                              <tr key={i} className={`border-b border-gray-100 ${item.address === walletAddress ? 'bg-gray-50' : ''}`}>
-                                <td className="py-3 text-gray-800">#{item.rank}</td>
-                                <td className="py-3 text-gray-800">{truncateAddress(item.address)}</td>
-                                <td className="py-3 text-right font-medium text-primary">{item.points}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )} */}
-
-                {/* How It Works Content */}
-                {/* <div className="space-y-4">
-                      <div>
-                        <HeadingText level="h5" weight="medium" className="mb-2 flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-primary" />
-                          What are Superlend Points?
-                        </HeadingText>
-                        <BodyText level="body1" className="text-gray-600">
-                          Superlend Points are rewards earned for participating in the protocol. Points can be earned through various activities such as daily check-ins, lending, borrowing, and more.
-                        </BodyText>
-                      </div>
-                      
-                      <div>
-                        <HeadingText level="h5" weight="medium" className="mb-2 flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-primary" />
-                          What happens after an epoch?
-                        </HeadingText>
-                        <BodyText level="body1" className="text-gray-600">
-                          At the end of each epoch, points are tallied and users receive rewards based on their point total and rank. Higher ranks earn greater rewards.
-                        </BodyText>
-                      </div>
-                      
-                      <div>
-                        <HeadingText level="h5" weight="medium" className="mb-2 flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-primary" />
-                          How do we get these points redeemed?
-                        </HeadingText>
-                        <BodyText level="body1" className="text-gray-600">
-                          Points are automatically redeemed at the end of each epoch. Rewards are distributed directly to your wallet within 48 hours after the epoch ends.
-                        </BodyText>
-                      </div>
-                    </div> */}
-                {/* </PointsTabs> */}
-                {/* </div> */}
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
                 <div>
                   <HeadingText level="h5" weight="medium" className="mb-2 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
                     What are Superlend Points?
                   </HeadingText>
-                  <BodyText level="body1" className="text-gray-600">
-                    Superlend Points are earned for participating in the protocol. Points can be earned through various activities such as daily check-ins, lending, borrowing, and more.
+                  <BodyText level="body2" className="text-gray-600">
+                    SuperLend Points is a rewards system that gives users points for interacting with the SuperLend aggregator. The more you engage—by performing actions like lending, borrowing, withdrawing, repaying, or exploring the Discover and Portfolio pages—the more points you earn.
                   </BodyText>
                 </div>
 
                 <div>
                   <HeadingText level="h5" weight="medium" className="mb-2 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
-                    What happens after an epoch?
+                    What are daily check-ins?
                   </HeadingText>
-                  <BodyText level="body1" className="text-gray-600">
-                    At the end of each epoch, points are tallied and users receive points based on their point total.
+                  <BodyText level="body2" className="text-gray-600">
+                    You can earn points by visiting the SuperLend aggregator and clicking the ‘Check-in’ button once every 24 hours. Check-in is seamless and happens through a gasless signature, so no transaction fees are required.
                   </BodyText>
                 </div>
 
                 <div>
                   <HeadingText level="h5" weight="medium" className="mb-2 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
-                    How do we get these points redeemed?
+                    When are points updated?
                   </HeadingText>
-                  <BodyText level="body1" className="text-gray-600">
-                    Points are automatically redeemed at the end of each epoch. Points are distributed directly to your wallet within 48 hours after the epoch ends.
+                  <BodyText level="body2" className="text-gray-600">
+                    Points are updated every Sunday based on your activity on SuperLend during the week.
                   </BodyText>
                 </div>
               </div>
             </CardContent>
-
-            {/* <CardFooter className="bg-gray-50 py-4 px-6 border-t border-gray-100">
-              <BodyText level="body2" className="text-gray-500">
-                Points Program is currently in beta. Your feedback helps us improve!
-              </BodyText>
-            </CardFooter> */}
           </Card>
         </section>
 
@@ -361,11 +189,10 @@ export default function PointsPage() {
         <section className="px-5 mb-6">
           <Card>
             <CardHeader className="bg-gray-100 border-b border-gray-200 pb-4">
-              <CardTitle className="flex items-center gap-2">
-                {/* <CheckCircle2 className="w-5 h-5 text-primary" /> */}
-                <RewardsIcon className="w-5 h-5 stroke-primary" />
+              <HeadingText level="h4" weight="medium" className="text-gray-800 flex items-center gap-2">
+                <TrophyIcon className="w-5 h-5 stroke-primary" />
                 Ways to Earn Points
-              </CardTitle>
+              </HeadingText>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -428,18 +255,6 @@ export default function PointsPage() {
                     Earn points based on your repayments activity and volume.
                   </BodyText>
                 </div>
-
-                {/* <div className="p-4 rounded-md border border-gray-100 hover:border-primary hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-primary">
-                      <TrophyIcon className="w-4 h-4" />
-                    </div>
-                    <HeadingText level="h5" weight="medium">Referrals</HeadingText>
-                  </div>
-                  <BodyText level="body2" className="text-gray-600">
-                    Invite friends and earn points when they join.
-                  </BodyText>
-                </div> */}
 
                 <div className="p-4 rounded-md border border-gray-100 hover:border-primary hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-2 mb-2">

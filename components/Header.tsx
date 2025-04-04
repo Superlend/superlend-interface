@@ -8,7 +8,7 @@ import CompassIcon from './icons/compass-icon'
 import PieChartIcon from './icons/pie-chart-icon'
 import RewardsIcon from './icons/rewards-icon'
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet'
-import { Menu, X } from 'lucide-react'
+import { Menu, TrophyIcon, X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ConnectWalletButton from './ConnectWalletButton'
 import CheckInButton from './CheckInButton'
@@ -73,7 +73,7 @@ const Header: React.FC = () => {
     }
 
     const BUTTON_DEFAULT_DESKTOP_STYLES =
-        'group self-stretch p-0 rounded-[14px] uppercase hover:text-primary'
+        'group relative self-stretch p-0 rounded-[14px] uppercase hover:text-primary'
     const BUTTON_INACTIVE_DESKTOP_STYLES = `${BUTTON_DEFAULT_DESKTOP_STYLES} opacity-50 hover:opacity-100`
     const BUTTON_ACTIVE_DESKTOP_STYLES = `${BUTTON_DEFAULT_DESKTOP_STYLES}`
 
@@ -134,6 +134,14 @@ const Header: React.FC = () => {
                                 size="lg"
                                 className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`}
                             >
+                                {tab.id === 3 &&
+                                    <Badge className="absolute -top-2 -right-2 bg-secondary-100 w-6 h-6 text-white text-[11px] font-bold rounded-full overflow-hidden pointer-events-none">
+                                        <div className="absolute inset-0 pointer-events-none">
+                                            <div className="absolute inset-0 animate-shine bg-gradient-to-br from-white/0 via-white/70 to-white/0 -translate-x-full" />
+                                        </div>
+                                        <TrophyIcon className="w-5 h-5 stroke-white relative z-10 ignore-group" />
+                                    </Badge>
+                                }
                                 <Link
                                     onClick={() => handleTabClick(tab)}
                                     href={tab.href}
