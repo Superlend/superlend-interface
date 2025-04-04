@@ -26,6 +26,7 @@ import { http } from 'wagmi'
 import { AnalyticsProvider } from './analytics-provider'
 import { PageVisitTracker } from '@/components/analytics/PageVisitTracker'
 import { ShowAllMarketsProvider } from './show-all-markets-provider'
+import { AuthProvider } from './auth-provider'
 
 // Set up queryClient
 const queryClient = new QueryClient()
@@ -113,7 +114,9 @@ function ContextProvider({ children }: { children: ReactNode }) {
                         <AssetsDataProvider>
                             <UserTokenBalancesProvider>
                                 <ShowAllMarketsProvider>
-                                    {children}
+                                    <AuthProvider>
+                                        {children}
+                                    </AuthProvider>
                                 </ShowAllMarketsProvider>
                             </UserTokenBalancesProvider>
                         </AssetsDataProvider>

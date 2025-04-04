@@ -45,6 +45,8 @@ import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { BigNumber } from 'ethers'
 import { TScAmount } from '@/types'
+import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
+import { useAuth } from '@/context/auth-provider'
 
 interface IWithdrawButtonProps {
     disabled: boolean
@@ -68,6 +70,8 @@ const WithdrawButton = ({
     } = useWriteContract()
     const { walletAddress } = useWalletConnection()
     const { withdrawTx, setWithdrawTx } = useTxContext() as TTxContext
+    const { logUserEvent } = useLogNewUserEvent()
+    const { accessToken, getAccessTokenFromPrivy } = useAuth()
     // Protocol types
     const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
     const isAave = assetDetails?.protocol_type === PlatformType.AAVE
@@ -90,6 +94,10 @@ const WithdrawButton = ({
         useWaitForTransactionReceipt({
             hash,
         })
+
+    useEffect(() => {
+        getAccessTokenFromPrivy()
+    }, [])
 
     useEffect(() => {
         if (withdrawTx.status === 'withdraw' && isMorphoVault) {
@@ -124,6 +132,15 @@ const WithdrawButton = ({
                     CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
+
+            logUserEvent({
+                user_address: walletAddress,
+                event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                platform_type: 'superlend_aggregator',
+                protocol_identifier: assetDetails?.protocol_identifier,
+                event_data: 'WITHDRAW',
+                authToken: accessToken || '',
+            })
         }
     }, [hash, isConfirmed])
 
@@ -140,20 +157,20 @@ const WithdrawButton = ({
 
     const txBtnText =
         txBtnStatus[
-            isConfirming
-                ? 'confirming'
-                : isConfirmed
-                  ? withdrawTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
+        isConfirming
+            ? 'confirming'
+            : isConfirmed
+                ? withdrawTx.status === 'view'
+                    ? 'success'
+                    : 'default'
+                : isPending
                     ? 'pending'
                     : !isPending &&
                         !isConfirming &&
                         !isConfirmed &&
                         withdrawTx.status === 'view'
-                      ? 'error'
-                      : 'default'
+                        ? 'error'
+                        : 'default'
         ]
 
     // const withdrawCompound = useCallback(
@@ -190,7 +207,7 @@ const WithdrawButton = ({
                     platform_name: assetDetails?.name,
                     chain_name:
                         CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                        Number(assetDetails?.chain_id) as ChainId
                         ],
                     wallet_address: walletAddress,
                 })
@@ -246,7 +263,7 @@ const WithdrawButton = ({
                     platform_name: assetDetails?.name,
                     chain_name:
                         CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                        Number(assetDetails?.chain_id) as ChainId
                         ],
                     wallet_address: walletAddress,
                 })

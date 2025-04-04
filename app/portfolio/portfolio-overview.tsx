@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { UserPositionsByPlatform } from '@/components/charts/user-positions-pie-chart'
 import { PortfolioContext } from '@/context/portfolio-provider'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
+import PointsWithCheckInCard from '@/components/PointsWithCheckInCard'
 
 export default function PortfolioOverview() {
     const { portfolioData, isLoadingPortfolioData, isErrorPortfolioData } =
@@ -80,22 +81,27 @@ export default function PortfolioOverview() {
             <article>
                 <Card className="h-full">
                     <div className="positions-net-worth-block h-full px-[24px] md:px-[32px] pt-[28px] flex flex-col items-start justify-between gap-[29px] pb-[24px]">
-                        <div className="shrink-0">
-                            {isLoadingPortfolioData && (
-                                <Skeleton className="h-10 w-[75%] bg-gray-400 rounded-3" />
-                            )}
-                            {!isLoadingPortfolioData && (
-                                <HeadingText
-                                    level="h2"
-                                    weight="medium"
-                                    className="text-gray-800"
-                                >
-                                    {NET_WORTH}
-                                </HeadingText>
-                            )}
-                            <BodyText level="body1" className="text-gray-600">
-                                Your Positions Net worth
-                            </BodyText>
+                        <div className="flex flex-wrap justify-between w-full gap-4">
+                            <div className="shrink-0">
+                                {isLoadingPortfolioData && (
+                                    <Skeleton className="h-10 w-[75%] bg-gray-400 rounded-3" />
+                                )}
+                                {!isLoadingPortfolioData && (
+                                    <HeadingText
+                                        level="h2"
+                                        weight="medium"
+                                        className="text-gray-800"
+                                    >
+                                        {NET_WORTH}
+                                    </HeadingText>
+                                )}
+                                <BodyText level="body1" className="text-gray-600">
+                                    Your Positions Net worth
+                                </BodyText>
+                            </div>
+                            <div className="flex items-center max-md:w-full">
+                                <PointsWithCheckInCard />
+                            </div>
                         </div>
                         <Card className="w-full">
                             <CardContent className="bg-white py-[25px] sm:px-[44px] flex flex-col md:flex-row sm:items-center justify-between gap-[20px]">

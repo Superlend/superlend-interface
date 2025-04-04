@@ -31,6 +31,7 @@ type TProps = {
     iconHeight?: number
     side?: 'top' | 'bottom' | 'left' | 'right'
     className?: string
+    classNameLabel?: string
 }
 
 const sizes: any = {
@@ -48,6 +49,7 @@ export default function InfoTooltip({
     iconHeight = 16,
     side,
     className,
+    classNameLabel,
 }: TProps) {
     const [open, setOpen] = useState<boolean>(false)
     const { width: screenWidth } = useDimensions()
@@ -84,7 +86,7 @@ export default function InfoTooltip({
                             onClick={() => setOpen(true)}
                             onMouseEnter={handleMouseEnter}
                             onMouseLeave={handleMouseLeave}
-                            className="w-fit inline-block shrink-0"
+                            className={`w-fit inline-block shrink-0 ${classNameLabel}`}
                         >
                             {!label && (
                                 <InfoCircleIcon
@@ -127,7 +129,7 @@ export default function InfoTooltip({
             <DrawerTrigger asChild>
                 <span
                     onClick={() => setOpen(true)}
-                    className="w-fit inline-block shrink-0"
+                    className={`w-fit inline-block shrink-0 ${classNameLabel}`}
                 >
                     {!label && (
                         <InfoCircleIcon

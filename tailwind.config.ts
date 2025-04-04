@@ -159,20 +159,20 @@ const config = {
                     '100%': { transform: 'translateX(200%) skewX(-20deg)' },
                 },
                 rain: {
-                    '0%': { 
+                    '0%': {
                         transform: 'translate3d(0, -20px, 0) rotate(0deg)',
                         opacity: '1'
                     },
                     '50%': {
                         opacity: '1'
                     },
-                    '100%': { 
+                    '100%': {
                         transform: 'translate3d(30px, 120vh, 0) rotate(60deg)',
                         opacity: '1'
                     }
                 },
                 fall: {
-                    '0%': { 
+                    '0%': {
                         transform: 'translate3d(0, -100px, 0)',
                         opacity: '0'
                     },
@@ -184,7 +184,7 @@ const config = {
                         transform: 'translate3d(0, 100vh, 0)',
                         opacity: '1'
                     },
-                    '100%': { 
+                    '100%': {
                         transform: 'translate3d(0, 120vh, 0)',
                         opacity: '0'
                     }
@@ -195,6 +195,20 @@ const config = {
                     },
                     '100%': {
                         transform: 'rotate(360deg)'
+                    }
+                },
+                shine: {
+                    '0%': {
+                        transform: 'translateX(-100%) skewX(0deg)',
+                        backgroundSize: '200% 200%'
+                    },
+                    '50%': {
+                        transform: 'translateX(100%) skewX(60deg)',
+                        backgroundSize: '200% 200%'
+                    },
+                    '100%': {
+                        transform: 'translateX(150%) skewX(0deg)',
+                        backgroundSize: '200% 200%'
                     }
                 }
             },
@@ -207,6 +221,7 @@ const config = {
                 'rain': 'rain 3s linear infinite',
                 'fall': 'fall 5s cubic-bezier(0.4, 0, 0.2, 1) forwards',
                 'spin': 'spin 2s linear infinite',
+                shine: 'shine 2s infinite ease-in-out',
             },
         },
     },

@@ -42,6 +42,8 @@ import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { TScAmount } from '@/types'
+import { useAuth } from '@/context/auth-provider'
+import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
 
 interface IRepayButtonProps {
     assetDetails: any
@@ -76,6 +78,8 @@ const RepayButton = ({
         })
     const { walletAddress } = useWalletConnection()
     const { repayTx, setRepayTx } = useTxContext() as TTxContext
+    const { logUserEvent } = useLogNewUserEvent()
+    const { accessToken, getAccessTokenFromPrivy } = useAuth()
 
     // const amountBN = useMemo(() => {
     //     return amount ? BigNumber.from(amount.amountRaw) : BigNumber.from(0)
@@ -101,16 +105,20 @@ const RepayButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? repayTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? repayTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+
+    useEffect(() => {
+        getAccessTokenFromPrivy()
+    }, [])
 
     useEffect(() => {
         if (repayTx.status === 'repay' && !ETH_ADDRESSES.includes(underlyingAssetAdress)) {
@@ -153,7 +161,7 @@ const RepayButton = ({
                     platform_name: assetDetails?.name,
                     chain_name:
                         CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                        Number(assetDetails?.chain_id) as ChainId
                         ],
                     wallet_address: walletAddress,
                 })
@@ -190,9 +198,18 @@ const RepayButton = ({
                             platform_name: assetDetails?.name,
                             chain_name:
                                 CHAIN_ID_MAPPER[
-                                    Number(assetDetails?.chain_id) as ChainId
+                                Number(assetDetails?.chain_id) as ChainId
                                 ],
                             wallet_address: walletAddress,
+                        })
+
+                        logUserEvent({
+                            user_address: walletAddress,
+                            event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                            platform_type: 'superlend_aggregator',
+                            protocol_identifier: assetDetails?.protocol_identifier,
+                            event_data: 'REPAY',
+                            authToken: accessToken || '',
                         })
                     })
                     .catch((error) => {
@@ -270,9 +287,18 @@ const RepayButton = ({
                         platform_name: assetDetails?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
-                                Number(assetDetails?.chain_id) as ChainId
+                            Number(assetDetails?.chain_id) as ChainId
                             ],
                         wallet_address: walletAddress,
+                    })
+
+                    logUserEvent({
+                        user_address: walletAddress,
+                        event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                        platform_type: 'superlend_aggregator',
+                        protocol_identifier: assetDetails?.protocol_identifier,
+                        event_data: 'REPAY',
+                        authToken: accessToken || '',
                     })
                 })
                 .catch((error) => {
@@ -345,9 +371,18 @@ const RepayButton = ({
                         platform_name: assetDetails?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
-                                Number(assetDetails?.chain_id) as ChainId
+                            Number(assetDetails?.chain_id) as ChainId
                             ],
                         wallet_address: walletAddress,
+                    })
+
+                    logUserEvent({
+                        user_address: walletAddress,
+                        event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                        platform_type: 'superlend_aggregator',
+                        protocol_identifier: assetDetails?.protocol_identifier,
+                        event_data: 'REPAY',
+                        authToken: accessToken || '',
                     })
                 })
                 .catch((error) => {
