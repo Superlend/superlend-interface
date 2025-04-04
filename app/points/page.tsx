@@ -157,7 +157,7 @@ export default function PointsPage() {
                     What are Superlend Points?
                   </HeadingText>
                   <BodyText level="body2" className="text-gray-600">
-                    SuperLend Points is a rewards system that gives users points for interacting with the SuperLend aggregator. The more you engage—by performing actions like lending, borrowing, withdrawing, repaying, or exploring the Discover and Portfolio pages—the more points you earn.
+                    Superlend Points is a rewards system that gives users points for interacting with the Superlend aggregator. The more you engage—by performing actions like lending, borrowing, withdrawing, repaying, or exploring the Discover and Portfolio pages—the more points you earn.
                   </BodyText>
                 </div>
 
@@ -167,7 +167,7 @@ export default function PointsPage() {
                     What are daily check-ins?
                   </HeadingText>
                   <BodyText level="body2" className="text-gray-600">
-                    You can earn points by visiting the SuperLend aggregator and clicking the ‘Check-in’ button once every 24 hours. Check-in is seamless and happens through a gasless signature, so no transaction fees are required.
+                    You can earn points by visiting the Superlend aggregator and clicking the ‘Check-in’ button once every 24 hours. Check-in is seamless and happens through a gasless signature, so no transaction fees are required.
                   </BodyText>
                 </div>
 
@@ -177,7 +177,7 @@ export default function PointsPage() {
                     When are points updated?
                   </HeadingText>
                   <BodyText level="body2" className="text-gray-600">
-                    Points are updated every Sunday based on your activity on SuperLend during the week.
+                    Points are updated every Sunday based on your activity on Superlend during the week.
                   </BodyText>
                 </div>
               </div>
