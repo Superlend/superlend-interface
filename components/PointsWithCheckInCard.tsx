@@ -45,10 +45,12 @@ function CompactCheckInButton() {
 
   // Update checked-in status based on user details
   useEffect(() => {
-    if (userDetails && 'last_check_in_timestamp' in userDetails) {
-      const lastCheckInDate = new Date(userDetails.last_check_in_timestamp).toDateString()
-      const today = new Date().toDateString()
-      setIsCheckedIn(lastCheckInDate === today)
+    if (userDetails && 'last_check_in_timestamp' in userDetails && userDetails.last_check_in_timestamp) {
+      const lastCheckInTime = new Date(userDetails.last_check_in_timestamp).getTime();
+      const now = new Date().getTime();
+      const hoursSinceLastCheckIn = (now - lastCheckInTime) / (1000 * 60 * 60);
+      // User has checked in if the last check-in was less than 24 hours ago
+      setIsCheckedIn(hoursSinceLastCheckIn < 24);
     }
   }, [userDetails])
 
@@ -97,13 +99,14 @@ function CompactCheckInButton() {
 
   return (
     <InfoTooltip
+      classNameLabel="w-full"
       label={
         <Button
           onClick={handleCheckIn}
           disabled={isCheckedIn || isLoading || isCheckInPending}
           variant={isCheckedIn ? "outline" : "default"}
           size="sm"
-          className={`h-7 px-2 text-xs flex items-center gap-1 ${isCheckedIn ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-50' : 'bg-primary text-white hover:bg-primary/90'}`}
+          className={`w-full h-7 px-2 text-xs flex items-center gap-1 disabled:opacity-100 ${isCheckedIn ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-50' : 'bg-primary text-white hover:bg-primary/90'}`}
         >
           {isLoading || isCheckInPending ? (
             <span className="flex items-center">
@@ -114,7 +117,7 @@ function CompactCheckInButton() {
               {isCheckedIn ? (
                 <>
                   <CheckCircle className="w-3 h-3" />
-                  <span>Checked</span>
+                  <span>Checked In</span>
                 </>
               ) : (
                 <>
@@ -141,6 +144,7 @@ function CompactCheckInButton() {
 export default function PointsWithCheckInCard() {
   const { isWalletConnected, walletAddress } = useWalletConnection()
   const { accessToken } = useAuth()
+  const [isCheckedInWithin24Hours, setIsCheckedInWithin24Hours] = useState(false)
 
   const {
     data: userDetails,
@@ -151,20 +155,30 @@ export default function PointsWithCheckInCard() {
     authToken: accessToken || undefined
   })
 
+  // Check if user has checked in within 24 hours
+  useEffect(() => {
+    if (userDetails && 'last_check_in_timestamp' in userDetails && userDetails.last_check_in_timestamp) {
+      const lastCheckInTime = new Date(userDetails.last_check_in_timestamp).getTime();
+      const now = new Date().getTime();
+      const hoursSinceLastCheckIn = (now - lastCheckInTime) / (1000 * 60 * 60);
+      setIsCheckedInWithin24Hours(hoursSinceLastCheckIn < 24);
+    }
+  }, [userDetails])
+
   // Calculate next epoch date - 24 hours after last check in
   const calculateNextEpochDate = () => {
     try {
       if (userDetails && 'last_check_in_timestamp' in userDetails && userDetails.last_check_in_timestamp) {
-        const lastCheckInTime = new Date(userDetails.last_check_in_timestamp).getTime()
+        const lastCheckInTime = new Date(userDetails.last_check_in_timestamp).getTime();
         if (!isNaN(lastCheckInTime)) {
-          return new Date(lastCheckInTime + 24 * 60 * 60 * 1000) // 24 hours after last check in
+          return new Date(lastCheckInTime + 24 * 60 * 60 * 1000); // 24 hours after last check in
         }
       }
       // Default fallback if no timestamp available or invalid
-      return new Date(Date.now() + 24 * 60 * 60 * 1000)
+      return new Date(Date.now() + 24 * 60 * 60 * 1000);
     } catch (error) {
-      console.error("Error calculating next epoch date:", error)
-      return new Date(Date.now() + 24 * 60 * 60 * 1000)
+      console.error("Error calculating next epoch date:", error);
+      return new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
   }
 
@@ -173,75 +187,71 @@ export default function PointsWithCheckInCard() {
 
   if (!isWalletConnected) return null
 
-  // Format the time until next epoch
-  const timeUntilNextEpoch: string = (() => {
+  // Calculate hours and minutes until next check-in
+  const calculateTimeRemaining = () => {
     try {
       if (!nextEpochDate || isNaN(nextEpochDate.getTime())) {
-        return "soon";
+        return { hours: 0, minutes: 0 };
       }
-      const formatted = formatDistanceToNow(nextEpochDate, { addSuffix: false });
-      return formatted.split(' ').slice(1).join(' ');
+
+      const now = new Date();
+      const diffMs = nextEpochDate.getTime() - now.getTime();
+
+      if (diffMs <= 0) return { hours: 0, minutes: 0 };
+
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+      return { hours, minutes };
     } catch (error) {
-      console.error("Error formatting time until next epoch:", error);
-      return "soon";
+      console.error("Error calculating time remaining:", error);
+      return { hours: 0, minutes: 0 };
     }
-  })();
+  };
+
+  const { hours, minutes } = calculateTimeRemaining();
+  const formattedTimeRemaining = `T-${hours}h ${minutes}m`;
 
   return (
     <Card className="max-w-full md:max-w-[380px] w-full">
-      <CardContent className="p-3 flex max-md:flex-wrap items-center h-full max-md:gap-5 gap-12">
-        {/* Left side: Trophy icon and Points */}
-        <div className="flex flex-col gap-2.5 flex-shrink-0">
-          <div className="flex items-center gap-1.5">
-            <TrophyIcon className="w-3.5 h-3.5 text-primary" />
-            <HeadingText level="h5" weight="medium" className="text-gray-800">
-              Points
-            </HeadingText>
-            <BodyText level="body2" weight="medium" className="text-secondary-500 underline hover:no-underline">
-              <Link href="/rewards">
-                How it works?
-              </Link>
-            </BodyText>
-          </div>
-          <div className="flex items-center gap-2">
+      <CardContent className="p-4 flex flex-col gap-3 bg-white">
+        {/* Top: Trophy icon and Points */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <TrophyIcon className="w-4 h-4 text-primary" />
             <HeadingText level="h4" weight="semibold" className="text-primary leading-none">
               {userPoints}
             </HeadingText>
-            <div className="rounded-full bg-white p-1 w-5 h-5">
-              <ImageWithDefault
-                src="/images/logos/favicon-32x32.png"
-                alt="Points"
-                width={14}
-                height={14}
-                className="w-3 h-3"
-              />
-            </div>
-            {/* <Link href="/rewards">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-6 px-2 text-xs font-medium"
-              >
-                View
-                <ArrowRightIcon className="w-3 h-3 ml-1" />
-              </Button>
-            </Link> */}
+            <HeadingText level="h5" weight="medium" className="text-gray-800">
+              Points
+            </HeadingText>
           </div>
-        </div>
-
-        {/* Right: Buttons */}
-        <div className="flex items-center gap-2 md:ml-auto">
-          <div className="flex flex-col md:items-end justify-end gap-1">
-            {/* Epoch time */}
+          <div className="rounded-full bg-gray-400 w-1 h-1" />
+          {isCheckedInWithin24Hours && (
             <div className="flex items-center gap-1 flex-shrink-0">
-              <Clock className="w-3 h-3 text-gray-500 flex-shrink-0" />
-              <BodyText level="body3" className="text-gray-500 whitespace-nowrap">
-                {true ? "Next Check In:" : "Check In:"} {timeUntilNextEpoch}
+              {/* <Clock className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" /> */}
+              <BodyText level="body2" className="text-gray-500 whitespace-nowrap">
+                Next Check In: {formattedTimeRemaining}
               </BodyText>
             </div>
-            {/* Check in button */}
+          )}
+        </div>
+
+        {/* Bottom: Check-in time and buttons */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1">
             <CompactCheckInButton />
           </div>
+
+          <Link href="/points" className="flex-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-3 text-xs font-medium w-full"
+            >
+              How it works?
+            </Button>
+          </Link>
         </div>
       </CardContent>
     </Card>

@@ -18,6 +18,8 @@ import { ArrowRightIcon, InfoIcon, TrophyIcon, CheckCircle2, Calendar, History, 
 import { useEffect } from 'react'
 import PointsTabs from './PointsTabs'
 import RewardsIcon from '@/components/icons/rewards-icon'
+import ArrowLeftIcon from '@/components/icons/arrow-left-icon'
+import { useRouter } from 'next/navigation'
 
 // Mock data for demonstration - replace with actual API data
 const mockPointsData = {
@@ -43,10 +45,11 @@ const mockPointsData = {
   ]
 }
 
-export default function RewardsPage() {
+export default function PointsPage() {
   const { isWalletConnected, walletAddress, isConnectingWallet } = useWalletConnection()
   const { logEvent } = useAnalytics()
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     // Simulate loading data
@@ -55,7 +58,7 @@ export default function RewardsPage() {
     }, 1000)
 
     if (isWalletConnected && !isConnectingWallet) {
-      logEvent('rewards_page_opened', {
+      logEvent('points_page_opened', {
         wallet_address: walletAddress,
       })
     }
@@ -86,7 +89,7 @@ export default function RewardsPage() {
           image={'/images/connect-wallet-banner.webp'}
           title={'Connect Wallet'}
           description={
-            'Connect your wallet to view and manage your rewards.'
+            'Connect your wallet to view and manage your points.'
           }
           ctaButton={<ConnectWalletButton />}
         />
@@ -110,13 +113,25 @@ export default function RewardsPage() {
     <MainContainer className="px-0 flex flex-col gap-6">
       {/* Page Header */}
       <section className="px-5 mb-4">
-        <div className="flex flex-col gap-[4px]">
-          <HeadingText level="h4" weight="medium" className="text-gray-800">
-            Rewards Program
-          </HeadingText>
-          <BodyText level="body1" className="text-gray-600">
-            Earn points for your activity and get rewarded at the end of each epoch.
-          </BodyText>
+        <div className="flex items-start gap-[24px]">
+          <Button
+            className="py-[8px] px-[12px] rounded-3"
+            onClick={() => router.push("/portfolio")}
+          >
+            <ArrowLeftIcon
+              width={16}
+              height={16}
+              className="stroke-gray-800"
+            />
+          </Button>
+          <div className="flex flex-col gap-[4px]">
+            <HeadingText level="h4" weight="medium" className="text-gray-800">
+              Points Program
+            </HeadingText>
+            <BodyText level="body1" className="text-gray-600">
+              Earn points for your activity at the end of each epoch.
+            </BodyText>
+          </div>
         </div>
       </section>
 
@@ -308,7 +323,7 @@ export default function RewardsPage() {
                     What are Superlend Points?
                   </HeadingText>
                   <BodyText level="body1" className="text-gray-600">
-                    Superlend Points are rewards earned for participating in the protocol. Points can be earned through various activities such as daily check-ins, lending, borrowing, and more.
+                    Superlend Points are earned for participating in the protocol. Points can be earned through various activities such as daily check-ins, lending, borrowing, and more.
                   </BodyText>
                 </div>
 
@@ -318,7 +333,7 @@ export default function RewardsPage() {
                     What happens after an epoch?
                   </HeadingText>
                   <BodyText level="body1" className="text-gray-600">
-                    At the end of each epoch, points are tallied and users receive rewards based on their point total and rank. Higher ranks earn greater rewards.
+                    At the end of each epoch, points are tallied and users receive points based on their point total.
                   </BodyText>
                 </div>
 
@@ -328,7 +343,7 @@ export default function RewardsPage() {
                     How do we get these points redeemed?
                   </HeadingText>
                   <BodyText level="body1" className="text-gray-600">
-                    Points are automatically redeemed at the end of each epoch. Rewards are distributed directly to your wallet within 48 hours after the epoch ends.
+                    Points are automatically redeemed at the end of each epoch. Points are distributed directly to your wallet within 48 hours after the epoch ends.
                   </BodyText>
                 </div>
               </div>

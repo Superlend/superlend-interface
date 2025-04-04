@@ -22,7 +22,7 @@ export default function PointsIndicator() {
   if (!isWalletConnected) return null
   
   return (
-    <Link href="/rewards">
+    <Link href="/points">
       <Card className="w-full hover:shadow-md transition-shadow duration-200 cursor-pointer overflow-hidden group">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">

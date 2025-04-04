@@ -27,7 +27,7 @@ const Header: React.FC = () => {
         { id: 1, name: 'Home', href: '/', icon: HomeIcon },
         { id: 2, name: 'Discover', href: getRedirectionLink('/discover'), icon: CompassIcon },
         { id: 3, name: 'Portfolio', href: '/portfolio', icon: PieChartIcon },
-        // { id: 4, name: 'Rewards', href: '/rewards', icon: RewardsIcon },
+        // { id: 4, name: 'Points', href: '/points', icon: RewardsIcon },
     ]
 
     const activeTabInitialValue = (pathname: string) => {
