@@ -15,6 +15,7 @@ import useCheckInUser from '@/hooks/points/useCheckInUser'
 import InfoTooltip from './tooltips/InfoTooltip'
 import Link from 'next/link'
 import ImageWithDefault from './ImageWithDefault'
+import { Badge } from './ui/badge'
 
 // Compact version of CheckInButton specifically for this component
 function CompactCheckInButton() {
@@ -213,8 +214,11 @@ export default function PointsWithCheckInCard() {
   const formattedTimeRemaining = `T-${hours}h ${minutes}m`;
 
   return (
-    <Card className="max-w-full md:max-w-[380px] w-full">
-      <CardContent className="p-4 flex flex-col gap-3 bg-white">
+    <Card className="max-w-full md:max-w-[380px] w-full overflow-visible">
+      <CardContent className="p-4 flex flex-col gap-3 bg-white relative rounded-6 ring-1 ring-secondary-100 ring-inset">
+        <Badge className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+          New
+        </Badge>
         {/* Top: Trophy icon and Points */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
