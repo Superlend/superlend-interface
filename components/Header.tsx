@@ -52,13 +52,13 @@ const Header: React.FC = () => {
         if (href === '/discover') {
             // Check if we're in a browser environment before accessing localStorage
             if (typeof window !== 'undefined') {
-                // Get the initial state from localStorage, default to false if not set
+                // Get the initial state from localStorage, default to true if not set
                 const stored = localStorage.getItem('show_all_markets')
-                const showAllMarkets = stored !== null ? stored === 'true' : false
+                const showAllMarkets = stored !== null ? stored === 'true' : true
 
                 // Set the initial value in localStorage if not set
                 if (stored === null) {
-                    localStorage.setItem('show_all_markets', 'false')
+                    localStorage.setItem('show_all_markets', 'true')
                 }
 
                 // Always navigate to the correct route based on the localStorage value
