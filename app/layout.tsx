@@ -11,6 +11,7 @@ import { Toaster } from 'react-hot-toast'
 import EasterEgg from '@/components/EasterEgg'
 import { ShowAllMarketsProvider } from '@/context/show-all-markets-provider'
 import MarketsBanner from '@/components/MarketsBanner'
+import Script from 'next/script'
 // import { Inter } from "next/font/google";
 
 // const inter = Inter({ subsets: ["latin"] });
@@ -78,6 +79,17 @@ export default function RootLayout({
                 <ScrollToTop />
                 <GoogleTagManager gtmId={GTM_ID} />
                 <GoogleAnalytics gaId={GA_ID} />
+                
+                {/* Zoho SalesIQ Integration */}
+                <Script id="zoho-salesiq-setup" strategy="afterInteractive">
+                    {`window.$zoho=window.$zoho || {};$zoho.salesiq=$zoho.salesiq||{ready:function(){}}`}
+                </Script>
+                <Script 
+                    id="zsiqscript" 
+                    src="https://salesiq.zohopublic.in/widget?wc=siq13bbfecd288b79f4b1f8f420e104879a33497d7b38eeeaf9861740a9e168479d" 
+                    strategy="afterInteractive"
+                />
+                
                 <ContextProvider>
                     <Toaster />
                     <EasterEgg />
