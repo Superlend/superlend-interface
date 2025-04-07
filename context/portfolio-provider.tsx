@@ -1,9 +1,9 @@
 'use client'
 
-import useGetPortfolioData from '@/hooks/useGetPortfolioData'
+import { getPortfolioData } from '@/queries/portfolio-api'
 import { TPortfolio } from '@/types/queries/portfolio'
-import { createContext, useContext, useEffect } from 'react'
-// import { useActiveAccount } from 'thirdweb/react'
+import { createContext, useContext, useMemo } from 'react'
+import { useQueries } from '@tanstack/react-query'
 import { useAccount } from 'wagmi'
 
 export type TPortfolioContext = {
@@ -30,14 +30,55 @@ export default function PortfolioProvider({
     children: React.ReactNode
 }) {
     const { address: walletAddress } = useAccount()
-
-    const {
-        data: portfolioData,
-        isLoading: isLoadingPortfolioData,
-        isError: isErrorPortfolioData,
-    } = useGetPortfolioData({
-        user_address: walletAddress as `0x${string}` | undefined,
+    
+    // Define chain IDs to query in parallel
+    const chainIds = ['1', '137', '10', '42161', '8453', '56', '43114', '534352', '1088', '100']
+    
+    // Use useQueries for parallel data fetching across multiple chains
+    const chainQueries = useQueries({
+        queries: chainIds.map((chainId) => ({
+            queryKey: ['portfolio', chainId, walletAddress],
+            queryFn: async () => getPortfolioData({
+                user_address: walletAddress as `0x${string}` | undefined,
+                chain_id: [chainId]
+            }),
+            enabled: !!walletAddress,
+            staleTime: 60000,
+        })),
     })
+    
+    // Combine results from all completed queries, allowing partial data display
+    const portfolioData = useMemo(() => {
+        // Get data from all successful queries, even if some are still loading
+        const completedQueries = chainQueries.filter(query => !query.isLoading && !query.isError && query.data)
+        
+        // If we have no completed queries yet, return initial state
+        if (completedQueries.length === 0) {
+            return PortfolioDataInit
+        }
+        
+        // Combine data from all completed queries
+        const allPlatforms = completedQueries
+            .flatMap(query => query.data?.platforms || [])
+            
+        const totalBorrowed = completedQueries
+            .reduce((sum, query) => sum + (query.data?.total_borrowed || 0), 0)
+            
+        const totalSupplied = completedQueries
+            .reduce((sum, query) => sum + (query.data?.total_supplied || 0), 0)
+            
+        return {
+            platforms: allPlatforms,
+            total_borrowed: totalBorrowed,
+            total_supplied: totalSupplied
+        }
+    }, [chainQueries])
+    
+    // Consider loading only if ALL queries are loading OR we have no completed queries yet
+    const isLoadingPortfolioData = chainQueries.every(query => query.isLoading) || 
+                                  chainQueries.filter(query => !query.isLoading && !query.isError).length === 0
+                                  
+    const isErrorPortfolioData = chainQueries.every(query => query.isError)
 
     return (
         <PortfolioContext.Provider
