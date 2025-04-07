@@ -23,6 +23,7 @@ type TPosition = {
     initial_amount: number
     apy: number
     liquidation_threshold: number
+    protocol_identifier?: string
 }
 
 type TPlatform = {

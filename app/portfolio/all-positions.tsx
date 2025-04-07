@@ -21,6 +21,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { useDebounce } from '@/hooks/useDebounce'
+import { PortfolioContext } from '@/context/portfolio-provider'
 
 export default function AllPositions() {
     const router = useRouter()
@@ -46,14 +47,8 @@ export default function AllPositions() {
         borrows: false,
     })
     const { allChainsData } = useContext(AssetsDataContext)
-
-    const {
-        data: portfolioData,
-        isLoading: isLoadingPortfolioData,
-        isError: isErrorPortfolioData,
-    } = useGetPortfolioData({
-        user_address: walletAddress as `0x${string}` | undefined,
-    })
+    const { portfolioData, isLoadingPortfolioData, isErrorPortfolioData } =
+    useContext(PortfolioContext)
 
     useEffect(() => {
         setColumnVisibility(() => {
@@ -81,7 +76,9 @@ export default function AllPositions() {
 
     const POSITIONS = portfolioData?.platforms
         ?.flatMap((platform) => {
-            return platform.positions.map((position) => {
+            return platform.positions
+            .filter((position) => !(platform.protocol_type === 'euler' && !position.protocol_identifier))
+            .map((position) => {
                 const chainDetails = allChainsData.find(
                     (chain) =>
                         Number(chain.chain_id) === Number(platform.chain_id)
