@@ -112,12 +112,12 @@ export default function AllPositionsFiltersDropdown() {
         {
             logo: PlatformLogo.SUPERLEND,
             name: 'SUPERLEND',
-            protocol_id: 'SUPERLEND',
+            platform_id: 'SUPERLEND',
         },
         {
             logo: PlatformLogo.EULER,
             name: 'EULER',
-            protocol_id: 'EULER',
+            platform_id: 'EULER',
         },
     ]
 
