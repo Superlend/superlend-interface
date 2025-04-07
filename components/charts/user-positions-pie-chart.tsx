@@ -33,7 +33,7 @@ import AvatarCircles from '../ui/avatar-circles'
 import ImageWithDefault from '../ImageWithDefault'
 import { BodyText, Label } from '../ui/typography'
 import { Badge } from '../ui/badge'
-import { ChartPie } from 'lucide-react'
+import { ChartPie, LoaderCircle } from 'lucide-react'
 import AnimatedNumber from '../ui/animated-number'
 import DigitAnimatedNumber from '../ui/digit-animated-number'
 
@@ -72,6 +72,7 @@ const chartConfig = {
 
 function CustomToolTip(payload: any) {
     const { platform, chain, lend, borrow } = payload.payload
+    const { isAnimating } = payload.payload
 
     function hasLowestValuePrefix(value: number) {
         return isLowestValue(Number(value)) ? '< ' : ''
@@ -106,10 +107,15 @@ function CustomToolTip(payload: any) {
                     </BodyText>
                 </div>
                 <Badge variant="blue" size="sm" className="w-fit flex items-center gap-1 shrink-0">
-                    <DigitAnimatedNumber 
-                        value={totalPositionsPerPlatform} 
-                        digitClassName="font-medium"
-                    />
+                    <div className="flex items-center">
+                        <DigitAnimatedNumber 
+                            value={totalPositionsPerPlatform} 
+                            digitClassName="font-medium"
+                        />
+                        {isAnimating && (
+                            <LoaderCircle className="ml-1 h-3 w-3 text-primary animate-spin" />
+                        )}
+                    </div>
                     {' '}position{totalPositionsPerPlatform > 1 ? 's' : ''}
                 </Badge>
             </div>
@@ -117,13 +123,18 @@ function CustomToolTip(payload: any) {
                 <div className="flex items-center justify-between">
                     <Label> Borrow </Label>
                     <div className="flex items-center gap-[4px]">
-                        <BodyText level="body2" weight="medium">
-                            {hasLowestValuePrefix(borrow?.amount)} $
-                            <DigitAnimatedNumber 
-                                value={borrowAmount} 
-                                digitClassName="font-medium"
-                            />
-                        </BodyText>
+                        <div className="flex items-center">
+                            <BodyText level="body2" weight="medium">
+                                {hasLowestValuePrefix(borrow?.amount)} $
+                                <DigitAnimatedNumber 
+                                    value={borrowAmount} 
+                                    digitClassName="font-medium"
+                                />
+                            </BodyText>
+                            {isAnimating && (
+                                <LoaderCircle className="ml-1 h-3 w-3 text-primary animate-spin" />
+                            )}
+                        </div>
                         <AvatarCircles
                             avatarUrls={borrow.tokens.map(
                                 (token: any) => token.logo
@@ -134,13 +145,18 @@ function CustomToolTip(payload: any) {
                 <div className="flex items-center justify-between">
                     <Label> Lend </Label>
                     <div className="flex items-center gap-[4px]">
-                        <BodyText level="body2" weight="medium">
-                            {hasLowestValuePrefix(lend?.amount)} $
-                            <DigitAnimatedNumber 
-                                value={lendAmount} 
-                                digitClassName="font-medium"
-                            />
-                        </BodyText>
+                        <div className="flex items-center">
+                            <BodyText level="body2" weight="medium">
+                                {hasLowestValuePrefix(lend?.amount)} $
+                                <DigitAnimatedNumber 
+                                    value={lendAmount} 
+                                    digitClassName="font-medium"
+                                />
+                            </BodyText>
+                            {isAnimating && (
+                                <LoaderCircle className="ml-1 h-3 w-3 text-primary animate-spin" />
+                            )}
+                        </div>
                         <AvatarCircles
                             avatarUrls={lend.tokens.map(
                                 (token: any) => token.logo
@@ -171,9 +187,11 @@ function CustomToolTip(payload: any) {
 export function UserPositionsByPlatform({
     data,
     isLoading,
+    isAnimating = false,
 }: {
     data: TPortfolio
     isLoading: boolean
+    isAnimating?: boolean
 }) {
     const { allChainsData } = React.useContext(AssetsDataContext)
     const [animatedCount, setAnimatedCount] = useState(0)
@@ -228,6 +246,7 @@ export function UserPositionsByPlatform({
                     : platform.pnl
             ),
             fill: `var(--color-${platform.platform_name.split('-')[0].toLowerCase()})`,
+            isAnimating,
         }
     })
 
@@ -311,33 +330,45 @@ export function UserPositionsByPlatform({
                                                 'cy' in viewBox
                                             ) {
                                                 return (
-                                                    <text
-                                                        x={viewBox.cx}
-                                                        y={viewBox.cy}
-                                                        textAnchor="middle"
-                                                        dominantBaseline="middle"
-                                                    >
-                                                        <tspan
+                                                    <g>
+                                                        <text
                                                             x={viewBox.cx}
-                                                            y={
-                                                                (viewBox.cy || 0) -
-                                                                5
-                                                            }
-                                                            className="fill-foreground text-3xl font-bold"
+                                                            y={viewBox.cy}
+                                                            textAnchor="middle"
+                                                            dominantBaseline="middle"
                                                         >
-                                                            {openPositionsCount.toLocaleString()}
-                                                        </tspan>
-                                                        <tspan
-                                                            x={viewBox.cx}
-                                                            y={
-                                                                (viewBox.cy || 0) +
-                                                                24
-                                                            }
-                                                            className="fill-gray-600 font-medium text-[14px] capitalize"
-                                                        >
-                                                            Positions open
-                                                        </tspan>
-                                                    </text>
+                                                            <tspan
+                                                                x={viewBox.cx}
+                                                                y={
+                                                                    (viewBox.cy || 0) -
+                                                                    5
+                                                                }
+                                                                className="fill-foreground text-3xl font-bold"
+                                                            >
+                                                                {openPositionsCount.toLocaleString()}
+                                                            </tspan>
+                                                            <tspan
+                                                                x={viewBox.cx}
+                                                                y={
+                                                                    (viewBox.cy || 0) +
+                                                                    24
+                                                                }
+                                                                className="fill-gray-600 font-medium text-[14px] capitalize"
+                                                            >
+                                                                Positions open
+                                                            </tspan>
+                                                        </text>
+                                                        {isAnimating && (
+                                                            <foreignObject
+                                                                x={(viewBox.cx || 0) + 35}
+                                                                y={(viewBox.cy || 0) - 10}
+                                                                width="20"
+                                                                height="20"
+                                                            >
+                                                                <LoaderCircle className="h-5 w-5 text-primary animate-spin" />
+                                                            </foreignObject>
+                                                        )}
+                                                    </g>
                                                 )
                                             }
                                         }}
@@ -345,18 +376,6 @@ export function UserPositionsByPlatform({
                                 </Pie>
                             </PieChart>
                         </ChartContainer>
-                        {/* Center text overlay */}
-                        {/* <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <div className="text-3xl font-bold text-foreground">
-                                <DigitAnimatedNumber 
-                                    value={openPositionsCount}
-                                    digitClassName="text-3xl font-bold"
-                                />
-                            </div>
-                            <div className="text-gray-600 font-medium text-[14px] capitalize mt-3">
-                                Positions open
-                            </div>
-                        </div> */}
                     </>
                 )}
             </CardContent>
@@ -375,11 +394,17 @@ export function UserPositionsByPlatform({
                                     maxItemsToShow={6}
                                 />
                             )}
-                            Spread across <DigitAnimatedNumber 
-                                value={totalMarketsCount}
-                                digitClassName="font-medium"
-                            /> market
-                            {totalMarketsCount > 1 ? 's' : ''}
+                            <div className="flex items-center">
+                                Spread across <DigitAnimatedNumber 
+                                    value={totalMarketsCount}
+                                    digitClassName="font-medium"
+                                />
+                                {isAnimating && (
+                                    <LoaderCircle className="ml-1 h-4 w-4 text-primary animate-spin" />
+                                )}
+                                {" "}market
+                                {totalMarketsCount > 1 ? 's' : ''}
+                            </div>
                         </div>
                     )}
                 </CardFooter>

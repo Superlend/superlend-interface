@@ -107,7 +107,7 @@ const Header: React.FC = () => {
     return (
         <>
             <header className="z-50 sticky top-0 md:top-5 left-0 max-w-[1200px] w-full mx-auto md:px-5">
-                <div className="flex gap-5 max-lg:gap-5 justify-between items-center py-0 pr-3 pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
+                <div className="flex gap-5 max-lg:gap-5 justify-between items-center py-0 pr-2 pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
                     <Link
                         href="/"
                         className="relative md:w-[24px] md:w-fit p-0 mr-2"

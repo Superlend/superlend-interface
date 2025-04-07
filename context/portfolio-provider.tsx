@@ -4,7 +4,7 @@ import { getPortfolioData } from '@/queries/portfolio-api'
 import { TPortfolio } from '@/types/queries/portfolio'
 import { createContext, useContext, useMemo } from 'react'
 import { useQueries } from '@tanstack/react-query'
-import { useAccount } from 'wagmi'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 
 export type TPortfolioContext = {
     portfolioData: TPortfolio
@@ -29,7 +29,7 @@ export default function PortfolioProvider({
 }: {
     children: React.ReactNode
 }) {
-    const { address: walletAddress } = useAccount()
+    const { walletAddress } = useWalletConnection()
     
     // Define chain IDs to query in parallel
     const chainIds = ['1', '137', '10', '42161', '8453', '56', '43114', '534352', '1088', '100']

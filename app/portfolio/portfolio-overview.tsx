@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
-import React, { useContext } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import {
     abbreviateNumber,
     containsNegativeInteger,
@@ -16,10 +16,23 @@ import { PortfolioContext } from '@/context/portfolio-provider'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import PointsWithCheckInCard from '@/components/PointsWithCheckInCard'
 import DigitAnimatedNumber from '@/components/ui/digit-animated-number'
+import { LoaderCircle } from 'lucide-react'
 
 export default function PortfolioOverview() {
     const { portfolioData, isLoadingPortfolioData, isErrorPortfolioData } =
         useContext(PortfolioContext)
+    const [isAnimating, setIsAnimating] = useState(true)
+
+    // Set animation state for loaders
+    useEffect(() => {
+        if (!isLoadingPortfolioData) {
+            setIsAnimating(true);
+            const timer = setTimeout(() => {
+                setIsAnimating(false);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [portfolioData, isLoadingPortfolioData]);
 
     const COLLATERAL = getStatDisplayValue(portfolioData?.total_supplied)
     const BORROWINGS = getStatDisplayValue(portfolioData?.total_borrowed)
@@ -88,18 +101,23 @@ export default function PortfolioOverview() {
                                     <Skeleton className="h-10 w-[75%] bg-gray-400 rounded-3" />
                                 )}
                                 {!isLoadingPortfolioData && (
-                                    <HeadingText
-                                        level="h2"
-                                        weight="medium"
-                                        className="text-gray-800"
-                                    >
-                                        <DigitAnimatedNumber 
-                                            value={NET_WORTH.replace(/[<$]/g, '')} 
-                                            prefix="$" 
-                                            hasLowestValuePrefix={NET_WORTH.includes('<')}
-                                            digitClassName="h2 font-medium"
-                                        />
-                                    </HeadingText>
+                                    <div className="flex items-center">
+                                        <HeadingText
+                                            level="h2"
+                                            weight="medium"
+                                            className="text-gray-800"
+                                        >
+                                            <DigitAnimatedNumber 
+                                                value={NET_WORTH.replace(/[<$]/g, '')} 
+                                                prefix="$" 
+                                                hasLowestValuePrefix={NET_WORTH.includes('<')}
+                                                digitClassName="h2 font-medium"
+                                            />
+                                        </HeadingText>
+                                        {isAnimating && (
+                                            <LoaderCircle className="ml-2 h-5 w-5 text-primary animate-spin" />
+                                        )}
+                                    </div>
                                 )}
                                 <BodyText level="body1" className="text-gray-600">
                                     Your Positions Net worth
@@ -135,6 +153,9 @@ export default function PortfolioOverview() {
                                                                     digitClassName="font-medium"
                                                                 />
                                                             </BodyText>
+                                                            {isAnimating && (
+                                                                <LoaderCircle className="ml-1 h-4 w-4 text-primary animate-spin" />
+                                                            )}
                                                             {position.valueTooltip && (
                                                                 <InfoTooltip
                                                                     side="bottom"
@@ -180,6 +201,7 @@ export default function PortfolioOverview() {
                 <UserPositionsByPlatform
                     data={portfolioData}
                     isLoading={isLoadingPortfolioData}
+                    isAnimating={isAnimating}
                 />
             </article>
         </section>
