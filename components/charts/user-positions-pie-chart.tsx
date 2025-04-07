@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { Label as RechartsLabel, Pie, PieChart } from 'recharts'
+import { useState } from 'react'
 
 import {
     Card,
@@ -33,6 +34,8 @@ import ImageWithDefault from '../ImageWithDefault'
 import { BodyText, Label } from '../ui/typography'
 import { Badge } from '../ui/badge'
 import { ChartPie } from 'lucide-react'
+import AnimatedNumber from '../ui/animated-number'
+import DigitAnimatedNumber from '../ui/digit-animated-number'
 
 export const description = 'A donut chart with text'
 
@@ -102,9 +105,12 @@ function CustomToolTip(payload: any) {
                         {platform?.id?.split('-')[0]}
                     </BodyText>
                 </div>
-                <Badge variant="blue" size="sm" className="w-fit shrink-0">
-                    {totalPositionsPerPlatform.toLocaleString()} position
-                    {totalPositionsPerPlatform > 1 ? 's' : ''}
+                <Badge variant="blue" size="sm" className="w-fit flex items-center gap-1 shrink-0">
+                    <DigitAnimatedNumber 
+                        value={totalPositionsPerPlatform} 
+                        digitClassName="font-medium"
+                    />
+                    {' '}position{totalPositionsPerPlatform > 1 ? 's' : ''}
                 </Badge>
             </div>
             <div className="details-block flex flex-col gap-[13px] pt-[12px]">
@@ -113,7 +119,10 @@ function CustomToolTip(payload: any) {
                     <div className="flex items-center gap-[4px]">
                         <BodyText level="body2" weight="medium">
                             {hasLowestValuePrefix(borrow?.amount)} $
-                            {borrowAmount}
+                            <DigitAnimatedNumber 
+                                value={borrowAmount} 
+                                digitClassName="font-medium"
+                            />
                         </BodyText>
                         <AvatarCircles
                             avatarUrls={borrow.tokens.map(
@@ -126,7 +135,11 @@ function CustomToolTip(payload: any) {
                     <Label> Lend </Label>
                     <div className="flex items-center gap-[4px]">
                         <BodyText level="body2" weight="medium">
-                            {hasLowestValuePrefix(lend?.amount)} ${lendAmount}
+                            {hasLowestValuePrefix(lend?.amount)} $
+                            <DigitAnimatedNumber 
+                                value={lendAmount} 
+                                digitClassName="font-medium"
+                            />
                         </BodyText>
                         <AvatarCircles
                             avatarUrls={lend.tokens.map(
@@ -163,6 +176,7 @@ export function UserPositionsByPlatform({
     isLoading: boolean
 }) {
     const { allChainsData } = React.useContext(AssetsDataContext)
+    const [animatedCount, setAnimatedCount] = useState(0)
 
     const PLATFORMS_WITH_POSITIONS = data.platforms.filter(
         (platform) => platform.positions.length > 0
@@ -237,7 +251,7 @@ export function UserPositionsByPlatform({
 
     return (
         <Card className="flex flex-col h-full">
-            <CardContent className="flex-1 p-0">
+            <CardContent className="flex-1 p-0 relative">
                 {isLoading && (
                     <Skeleton className="mx-auto aspect-square w-full max-w-[200px] rounded-full my-8 bg-gray-400" />
                 )}
@@ -257,77 +271,93 @@ export function UserPositionsByPlatform({
                     </div>
                 )}
                 {!isLoading && chartData.length > 0 && (
-                    <ChartContainer
-                        config={chartConfig}
-                        className="mx-auto aspect-square max-h-[250px]"
-                    >
-                        <PieChart>
-                            <ChartTooltip
-                                cursor={false}
-                                content={
-                                    <ChartTooltipContent
-                                        hideIndicator
-                                        className="rounded-6"
-                                        labelFormatter={(label, payload) => (
-                                            <CustomToolTip
-                                                payload={payload[0].payload}
-                                            />
-                                        )}
-                                    />
-                                }
-                            />
-                            <Pie
-                                data={chartData}
-                                dataKey="chartValue"
-                                nameKey="chartKey"
-                                innerRadius={78}
-                                // strokeWidth={30}
-                                stroke="#fff"
-                                cornerRadius={12}
-                                paddingAngle={1}
-                            >
-                                <RechartsLabel
-                                    content={({ viewBox }) => {
-                                        if (
-                                            viewBox &&
-                                            'cx' in viewBox &&
-                                            'cy' in viewBox
-                                        ) {
-                                            return (
-                                                <text
-                                                    x={viewBox.cx}
-                                                    y={viewBox.cy}
-                                                    textAnchor="middle"
-                                                    dominantBaseline="middle"
-                                                >
-                                                    <tspan
-                                                        x={viewBox.cx}
-                                                        y={
-                                                            (viewBox.cy || 0) -
-                                                            5
-                                                        }
-                                                        className="fill-foreground text-3xl font-bold"
-                                                    >
-                                                        {openPositionsCount.toLocaleString()}
-                                                    </tspan>
-                                                    <tspan
-                                                        x={viewBox.cx}
-                                                        y={
-                                                            (viewBox.cy || 0) +
-                                                            24
-                                                        }
-                                                        className="fill-gray-600 font-medium text-[14px] capitalize"
-                                                    >
-                                                        Positions open
-                                                    </tspan>
-                                                </text>
-                                            )
-                                        }
-                                    }}
+                    <>
+                        <ChartContainer
+                            config={chartConfig}
+                            className="mx-auto aspect-square max-h-[250px]"
+                        >
+                            <PieChart>
+                                <ChartTooltip
+                                    cursor={false}
+                                    content={
+                                        <ChartTooltipContent
+                                            hideIndicator
+                                            className="rounded-6"
+                                            labelFormatter={(label, payload) => (
+                                                <CustomToolTip
+                                                    payload={payload[0].payload}
+                                                />
+                                            )}
+                                        />
+                                    }
                                 />
-                            </Pie>
-                        </PieChart>
-                    </ChartContainer>
+                                <Pie
+                                    data={chartData}
+                                    dataKey="chartValue"
+                                    nameKey="chartKey"
+                                    innerRadius={78}
+                                    // strokeWidth={30}
+                                    stroke="#fff"
+                                    cornerRadius={12}
+                                    paddingAngle={1}
+                                >
+                                    {/* Empty label since we'll use overlay div */}
+                                    <RechartsLabel
+                                        // content={() => null}
+                                        content={({ viewBox }) => {
+                                            if (
+                                                viewBox &&
+                                                'cx' in viewBox &&
+                                                'cy' in viewBox
+                                            ) {
+                                                return (
+                                                    <text
+                                                        x={viewBox.cx}
+                                                        y={viewBox.cy}
+                                                        textAnchor="middle"
+                                                        dominantBaseline="middle"
+                                                    >
+                                                        <tspan
+                                                            x={viewBox.cx}
+                                                            y={
+                                                                (viewBox.cy || 0) -
+                                                                5
+                                                            }
+                                                            className="fill-foreground text-3xl font-bold"
+                                                        >
+                                                            {openPositionsCount.toLocaleString()}
+                                                        </tspan>
+                                                        <tspan
+                                                            x={viewBox.cx}
+                                                            y={
+                                                                (viewBox.cy || 0) +
+                                                                24
+                                                            }
+                                                            className="fill-gray-600 font-medium text-[14px] capitalize"
+                                                        >
+                                                            Positions open
+                                                        </tspan>
+                                                    </text>
+                                                )
+                                            }
+                                        }}
+                                    />
+                                </Pie>
+                            </PieChart>
+                        </ChartContainer>
+                        {/* Center text overlay */}
+                        {/* <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <div className="text-3xl font-bold text-foreground">
+                                <DigitAnimatedNumber 
+                                    value={openPositionsCount}
+                                    digitClassName="text-3xl font-bold"
+                                />
+                            </div>
+                            <div className="text-gray-600 font-medium text-[14px] capitalize mt-3">
+                                Positions open
+                            </div>
+                        </div> */}
+                    </>
                 )}
             </CardContent>
             {!!totalMarketsCount && (
@@ -345,7 +375,10 @@ export function UserPositionsByPlatform({
                                     maxItemsToShow={6}
                                 />
                             )}
-                            Spread across {totalMarketsCount} market
+                            Spread across <DigitAnimatedNumber 
+                                value={totalMarketsCount}
+                                digitClassName="font-medium"
+                            /> market
                             {totalMarketsCount > 1 ? 's' : ''}
                         </div>
                     )}

@@ -15,6 +15,7 @@ import { UserPositionsByPlatform } from '@/components/charts/user-positions-pie-
 import { PortfolioContext } from '@/context/portfolio-provider'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import PointsWithCheckInCard from '@/components/PointsWithCheckInCard'
+import DigitAnimatedNumber from '@/components/ui/digit-animated-number'
 
 export default function PortfolioOverview() {
     const { portfolioData, isLoadingPortfolioData, isErrorPortfolioData } =
@@ -92,7 +93,12 @@ export default function PortfolioOverview() {
                                         weight="medium"
                                         className="text-gray-800"
                                     >
-                                        {NET_WORTH}
+                                        <DigitAnimatedNumber 
+                                            value={NET_WORTH.replace(/[<$]/g, '')} 
+                                            prefix="$" 
+                                            hasLowestValuePrefix={NET_WORTH.includes('<')}
+                                            digitClassName="h2 font-medium"
+                                        />
                                     </HeadingText>
                                 )}
                                 <BodyText level="body1" className="text-gray-600">
@@ -122,7 +128,12 @@ export default function PortfolioOverview() {
                                                                 weight="medium"
                                                                 className="leading-none text-gray-800"
                                                             >
-                                                                {position.data}
+                                                                <DigitAnimatedNumber 
+                                                                    value={position.data.replace(/[<$]/g, '')} 
+                                                                    prefix="$" 
+                                                                    hasLowestValuePrefix={position.data.includes('<')}
+                                                                    digitClassName="font-medium"
+                                                                />
                                                             </BodyText>
                                                             {position.valueTooltip && (
                                                                 <InfoTooltip
