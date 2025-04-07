@@ -350,7 +350,7 @@ export default function YourPositionsAtRiskCarousel() {
                                                             {
                                                                 position
                                                                     .positionOn
-                                                                    .platformName
+                                                                    .platformName.split('-')[0]
                                                             }
                                                         </BodyText>
                                                     </div>
