@@ -81,14 +81,14 @@ export default function RootLayout({
                 <GoogleAnalytics gaId={GA_ID} />
                 
                 {/* Zoho SalesIQ Integration */}
-                {/* <Script id="zoho-salesiq-setup" strategy="afterInteractive">
+                <Script id="zoho-salesiq-setup" strategy="afterInteractive">
                     {`window.$zoho=window.$zoho || {};$zoho.salesiq=$zoho.salesiq||{ready:function(){}}`}
                 </Script>
                 <Script 
                     id="zsiqscript" 
                     src="https://salesiq.zohopublic.in/widget?wc=siq13bbfecd288b79f4b1f8f420e104879a33497d7b38eeeaf9861740a9e168479d" 
                     strategy="afterInteractive"
-                /> */}
+                />
                 
                 <ContextProvider>
                     <Toaster />
