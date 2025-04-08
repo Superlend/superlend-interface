@@ -112,9 +112,6 @@ function CustomToolTip(payload: any) {
                             value={totalPositionsPerPlatform} 
                             digitClassName="font-medium"
                         />
-                        {isAnimating && (
-                            <LoaderCircle className="ml-1 h-3 w-3 text-primary animate-spin" />
-                        )}
                     </div>
                     {' '}position{totalPositionsPerPlatform > 1 ? 's' : ''}
                 </Badge>
@@ -131,9 +128,6 @@ function CustomToolTip(payload: any) {
                                     digitClassName="font-medium"
                                 />
                             </BodyText>
-                            {isAnimating && (
-                                <LoaderCircle className="ml-1 h-3 w-3 text-primary animate-spin" />
-                            )}
                         </div>
                         <AvatarCircles
                             avatarUrls={borrow.tokens.map(
@@ -153,9 +147,6 @@ function CustomToolTip(payload: any) {
                                     digitClassName="font-medium"
                                 />
                             </BodyText>
-                            {isAnimating && (
-                                <LoaderCircle className="ml-1 h-3 w-3 text-primary animate-spin" />
-                            )}
                         </div>
                         <AvatarCircles
                             avatarUrls={lend.tokens.map(
@@ -360,8 +351,8 @@ export function UserPositionsByPlatform({
                                                         </text>
                                                         {isAnimating && (
                                                             <foreignObject
-                                                                x={(viewBox.cx || 0) + 35}
-                                                                y={(viewBox.cy || 0) - 10}
+                                                                x={(viewBox.cx || 0) + 20}
+                                                                y={(viewBox.cy || 0) - 20}
                                                                 width="20"
                                                                 height="20"
                                                             >
@@ -394,7 +385,7 @@ export function UserPositionsByPlatform({
                                     maxItemsToShow={6}
                                 />
                             )}
-                            <div className="flex items-center">
+                            <div className="flex items-center gap-1">
                                 Spread across <DigitAnimatedNumber 
                                     value={totalMarketsCount}
                                     digitClassName="font-medium"
