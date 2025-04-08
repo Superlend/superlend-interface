@@ -107,11 +107,8 @@ export default function PortfolioOverview() {
                                             weight="medium"
                                             className="text-gray-800"
                                         >
-                                            <DigitAnimatedNumber 
-                                                value={NET_WORTH.replace(/[<$]/g, '')} 
-                                                prefix="$" 
-                                                hasLowestValuePrefix={NET_WORTH.includes('<')}
-                                                digitClassName="h2 font-medium"
+                                            <DigitAnimatedNumber
+                                                value={NET_WORTH}
                                             />
                                         </HeadingText>
                                         {isAnimating && (
@@ -146,11 +143,8 @@ export default function PortfolioOverview() {
                                                                 weight="medium"
                                                                 className="leading-none text-gray-800"
                                                             >
-                                                                <DigitAnimatedNumber 
-                                                                    value={position.data.replace(/[<$]/g, '')} 
-                                                                    prefix="$" 
-                                                                    hasLowestValuePrefix={position.data.includes('<')}
-                                                                    digitClassName="font-medium"
+                                                                <DigitAnimatedNumber
+                                                                    value={position.data}
                                                                 />
                                                             </BodyText>
                                                             {isAnimating && (

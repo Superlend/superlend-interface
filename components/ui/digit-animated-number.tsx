@@ -90,27 +90,46 @@ const DigitContainer = ({ children, isSymbol = false }: { children: React.ReactN
 export default function DigitAnimatedNumber({
   value,
   className = '',
-  prefix = '',
-  suffix = '',
+  prefix: propPrefix = '',
+  suffix: propSuffix = '',
   hasLowestValuePrefix = false,
   digitClassName = ''
 }: DigitAnimatedNumberProps) {
   const [currentValue, setCurrentValue] = useState<string>('0')
   const [prevValue, setPrevValue] = useState<string>('0')
+  const [extractedPrefix, setExtractedPrefix] = useState<string>('')
+  const [extractedSuffix, setExtractedSuffix] = useState<string>('')
   
   // Format the number and update it when the value changes
   useEffect(() => {
     setPrevValue(currentValue)
     
-    let formattedValue: string
-    if (typeof value === 'number') {
-      formattedValue = value.toLocaleString('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      })
-    } else {
-      // Convert string value to number and format it
-      const numericValue = parseFloat(value.replace(/[^\d.-]/g, ''))
+    // Handle string values with prefixes and suffixes
+    if (typeof value === 'string') {
+      // Extract prefix (like $ or < $)
+      let formattedValue = value.toString();
+      let valuePrefix = '';
+      let valueSuffix = '';
+      
+      // Extract prefix (usually $ or < $)
+      const prefixMatch = formattedValue.match(/^[^0-9]*/)
+      if (prefixMatch && prefixMatch[0]) {
+        valuePrefix = prefixMatch[0];
+        formattedValue = formattedValue.substring(valuePrefix.length);
+      }
+      
+      // Extract suffix (like K, M, B)
+      const suffixMatch = formattedValue.match(/[A-Za-z]+$/)
+      if (suffixMatch && suffixMatch[0]) {
+        valueSuffix = suffixMatch[0];
+        formattedValue = formattedValue.substring(0, formattedValue.length - valueSuffix.length);
+      }
+      
+      setExtractedPrefix(valuePrefix);
+      setExtractedSuffix(valueSuffix);
+      
+      // Parse the numeric part
+      const numericValue = parseFloat(formattedValue.replace(/[^\d.-]/g, ''))
       if (!isNaN(numericValue)) {
         formattedValue = numericValue.toLocaleString('en-US', {
           minimumFractionDigits: 0,
@@ -119,18 +138,32 @@ export default function DigitAnimatedNumber({
       } else {
         formattedValue = '0'
       }
+      
+      setCurrentValue(formattedValue)
+    } else {
+      // Number value
+      const formattedValue = value.toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      })
+      setCurrentValue(formattedValue)
+      setExtractedPrefix(propPrefix)
+      setExtractedSuffix(propSuffix)
     }
-    
-    setCurrentValue(formattedValue)
-  }, [value])
+  }, [value, propPrefix, propSuffix])
 
   // Split the value into individual characters (digits, commas, decimals)
   const characters = currentValue.split('')
   
+  // Use extracted prefix if available, otherwise use prop prefix
+  const displayPrefix = extractedPrefix || propPrefix
+  // Use extracted suffix if available, otherwise use prop suffix
+  const displaySuffix = extractedSuffix || propSuffix
+  
   return (
     <span className={`inline-flex items-baseline ${className}`}>
       {hasLowestValuePrefix && <span style={{ marginRight: '0.15em' }}>{'<'}</span>}
-      {prefix && <span style={{ marginRight: '0.05em' }}>{prefix}</span>}
+      {displayPrefix && <span style={{ marginRight: '0.05em' }}>{displayPrefix}</span>}
       
       <span className="inline-flex">
         {characters.map((char, index) => {
@@ -147,7 +180,7 @@ export default function DigitAnimatedNumber({
               ) : (
                 // Render symbols without animation
                 <span className={digitClassName}>
-                  {char}
+                   {char}
                 </span>
               )}
             </DigitContainer>
@@ -155,7 +188,7 @@ export default function DigitAnimatedNumber({
         })}
       </span>
       
-      {suffix && <span style={{ marginLeft: '0.05em' }}>{suffix}</span>}
+      {displaySuffix && <span className="inline-block ml-0.5">{displaySuffix}</span>}
     </span>
   )
 } 
