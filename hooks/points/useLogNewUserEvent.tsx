@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { requestPoints } from '@/queries/request'
+import { useAuthRequest } from '@/hooks/useAuthRequest'
 import { TAddress } from '@/types'
 
 export type TEventType = 'SUPERLEND_AGGREGATOR_TRANSACTION'
@@ -26,6 +26,7 @@ export type TLogNewUserEventResponse = {
 
 export default function useLogNewUserEvent() {
   const queryClient = useQueryClient()
+  const { makeRequest } = useAuthRequest()
 
   const { mutate, isPending, isError, isSuccess, data, error } = useMutation<
     TLogNewUserEventResponse,
@@ -49,7 +50,7 @@ export default function useLogNewUserEvent() {
       }
 
       try {
-        const responseData = await requestPoints<TLogNewUserEventResponse>({
+        return await makeRequest<TLogNewUserEventResponse>({
           method: 'POST',
           path: '/user/new_event',
           query: {
@@ -58,7 +59,6 @@ export default function useLogNewUserEvent() {
           body,
           headers,
         })
-        return responseData
       } catch (error) {
         console.error('New event logging error => ', error)
         throw error

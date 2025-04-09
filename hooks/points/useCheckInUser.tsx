@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { requestPoints } from '@/queries/request'
+import { useAuthRequest } from '@/hooks/useAuthRequest'
 
 export type TCheckInUserParams = {
   user_address: string
@@ -19,6 +19,7 @@ export type TCheckInResponse = {
 
 export default function useCheckInUser() {
   const queryClient = useQueryClient()
+  const { makeRequest } = useAuthRequest()
 
   const { mutate, isPending, isError, isSuccess, data, error } = useMutation<
     TCheckInResponse,
@@ -33,7 +34,7 @@ export default function useCheckInUser() {
         headers.Authorization = `Bearer ${authToken}`
       }
 
-      const responseData = await requestPoints<TCheckInResponse>({
+      return await makeRequest<TCheckInResponse>({
         method: 'POST',
         path: '/user/check-in',
         body: {
@@ -44,8 +45,6 @@ export default function useCheckInUser() {
         },
         headers,
       })
-
-      return responseData
     },
     onSuccess: () => {
       // Invalidate user details query to refresh data after successful check-in
