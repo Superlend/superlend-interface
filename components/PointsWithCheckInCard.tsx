@@ -54,11 +54,20 @@ function CompactCheckInButton() {
       const lastCheckInTime = new Date(userDetails.last_check_in_timestamp).getTime();
       const now = new Date().getTime();
       const hoursSinceLastCheckIn = (now - lastCheckInTime) / (1000 * 60 * 60);
+      
       // User has checked in if the last check-in was less than 24 hours ago
-      setIsCheckedIn(hoursSinceLastCheckIn < 24);
+      const newCheckedInStatus = hoursSinceLastCheckIn < 24;
+      setIsCheckedIn(newCheckedInStatus);
+
+      // If status changed from checked-in to not checked-in, refetch user details
+      if (isCheckedIn && !newCheckedInStatus) {
+        refetchUserDetails();
+      }
+    } else {
+      setIsCheckedIn(false);
     }
-    setIsLoading(false)
-  }, [userDetails])
+    setIsLoading(false);
+  }, [userDetails, refetchUserDetails, isCheckedIn]);
 
   // Handle check-in success
   useEffect(() => {
@@ -109,10 +118,10 @@ function CompactCheckInButton() {
       label={
         <Button
           onClick={handleCheckIn}
-          disabled={isCheckedIn || isLoading || isCheckInPending}
+          disabled={isCheckedIn || isLoading || isCheckInPending || isUserDetailsLoading}
           variant={isCheckedIn ? "outline" : "default"}
           size="sm"
-          className={`w-full h-7 px-2 text-xs flex items-center gap-1 disabled:opacity-100 ${isCheckedIn ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-50' : 'bg-primary text-white hover:bg-primary/90'}`}
+          className={`w-full h-7 px-2 text-xs flex items-center gap-1 disabled:opacity-100 ${(isUserDetailsLoading || isLoading || isCheckInPending) ? 'bg-gray-200 text-gray-500 border-gray-200 hover:bg-gray-200' : isCheckedIn ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-50' : 'bg-primary text-white hover:bg-primary/90'}`}
         >
           {(isLoading || isCheckInPending) ? (
             <span className="flex items-center">
@@ -242,11 +251,25 @@ export default function PointsWithCheckInCard() {
     if (!isCheckedInWithin24Hours) return;
 
     // Initial calculation
-    setTimeRemaining(calculateTimeRemaining());
+    const initialTime = calculateTimeRemaining();
+    setTimeRemaining(initialTime);
+
+    // If initial time is already zero, update check-in status
+    if (initialTime.hours === 0 && initialTime.minutes === 0 && initialTime.seconds === 0) {
+      setIsCheckedInWithin24Hours(false);
+      return;
+    }
 
     // Set up interval to update every second
     const interval = setInterval(() => {
-      setTimeRemaining(calculateTimeRemaining());
+      const newTime = calculateTimeRemaining();
+      setTimeRemaining(newTime);
+
+      // Check if timer has reached zero
+      if (newTime.hours === 0 && newTime.minutes === 0 && newTime.seconds === 0) {
+        setIsCheckedInWithin24Hours(false);
+        clearInterval(interval);
+      }
     }, 1000);
 
     // Clean up interval on component unmount
@@ -291,7 +314,6 @@ export default function PointsWithCheckInCard() {
           )}
           {isCheckedInWithin24Hours && (
             <div className="flex items-center gap-1 flex-shrink-0">
-              {/* <Clock className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" /> */}
               <BodyText level="body2" className="text-gray-500">
                 Next Check In:
               </BodyText>
@@ -309,7 +331,8 @@ export default function PointsWithCheckInCard() {
         {/* Bottom: Check-in time and buttons */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1">
-            <CompactCheckInButton />
+            {isUserDetailsLoading && <Skeleton className="w-24 h-7 rounded-4" />}
+            {!isUserDetailsLoading && <CompactCheckInButton />}
           </div>
 
           <Link href="/points" className="flex-1">
