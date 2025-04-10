@@ -35,9 +35,9 @@ export const metadata: Metadata = {
         'Borrow USDC',
         'Earn USDC',
     ],
-    title: 'Superlend - Lend & Borrow Aggregator',
+    title: 'Superlend | Lending & Borrowing Aggregator for Maximum Yield',
     description:
-        'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.',
+        'Lend, Borrow, and Earn across 150+ DeFi markets with Superlend — the top aggregator for Lending & Borrowing.',
     icons: [
         { url: '/images/logos/favicon-16x16.png', sizes: '16x16' },
         { url: '/images/logos/favicon-32x32.png', sizes: '32x32' },
@@ -47,16 +47,16 @@ export const metadata: Metadata = {
     openGraph: {
         type: 'website',
         url: 'https://app.superlend.xyz/',
-        title: 'Superlend - Lend & Borrow Aggregator',
+        title: 'Superlend | Lending & Borrowing Aggregator for Maximum Yield',
         description:
-            'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.',
-        siteName: 'Superlend - Lend & Borrow Aggregator',
+            'Lend, Borrow, and Earn across 150+ DeFi markets with Superlend — the top aggregator for Lending & Borrowing.',
+        siteName: 'Superlend | Lending & Borrowing Aggregator for Maximum Yield',
         images: 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png',
     },
     twitter: {
-        title: 'Superlend - Lend & Borrow Aggregator',
+        title: 'Superlend | Lending & Borrowing Aggregator for Maximum Yield',
         description:
-            'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.',
+            'Lend, Borrow, and Earn across 150+ DeFi markets with Superlend — the top aggregator for Lending & Borrowing.',
         images: 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png',
     },
     verification: {
