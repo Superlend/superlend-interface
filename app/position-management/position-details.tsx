@@ -136,6 +136,7 @@ export default function PositionDetails() {
                 const chainDetails = allChainsData.find(
                     (chain) => chain.chain_id === platform.chain_id
                 )
+                
                 const isEulerProtocol = platform?.protocol_type?.toLowerCase() === PlatformType.EULER
                 const totalLendAmountForEulerProtocol = lendPositions.reduce((acc, curr) => acc + curr.amount, 0)
                 const totalBorrowAmountForEulerProtocol = borrowPositions.reduce((acc, curr) => acc + curr.amount, 0)
