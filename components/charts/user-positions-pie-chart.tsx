@@ -68,6 +68,10 @@ const chartConfig = {
         label: 'Superlend',
         color: 'hsl(var(--chart-superlend))',
     },
+    euler: {
+        label: 'Euler',
+        color: 'hsl(var(--chart-euler))',
+    },
 } satisfies ChartConfig
 
 function CustomToolTip(payload: any) {
