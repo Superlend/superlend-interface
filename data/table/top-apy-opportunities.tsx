@@ -327,9 +327,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
             const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
             const eligibleAppleFarmRewards = [
+                "0x2c03058c8afc06713be23e58d2febc8337dbfe6a",
+                "0x796ea11fa2dd751ed01b53c372ffdb4aaa8f00f9",
+                "0xc9b53ab2679f573e480d01e0f49e2b5cfb7a3eab",
+                "0xbfc94cd2b1e55999cfc7347a9313e88702b83d0f",
                 "0x2247b5a46bb79421a314ab0f0b67ffd11dd37ee4",
                 "0xdd629e5241cbc5919847783e6c96b2de4754e438",
-                "0xc9b53ab2679f573e480d01e0f49e2b5cfb7a3eab"
             ]
             const hasAppleFarmRewards = eligibleAppleFarmRewards.includes(row.original.tokenAddress) && positionTypeParam === 'lend'
             const mBasisOpportunityData = row.original.merkl_opportunity_data?.mBasis_apr
@@ -938,11 +941,11 @@ function getAppleFarmRewardsTooltipContent(score: string) {
                     weight="medium"
                     className="text-gray-800/75"
                 >
-                    Score:
+                    APR:
                 </BodyText>
                 <div className="flex items-center gap-1">
                     <BodyText level="body2" weight="medium" className="text-gray-800">
-                        {score}
+                        {score}%
                     </BodyText>
                     <ImageWithDefault
                         src="/images/apple-farm-favicon.ico"
@@ -954,7 +957,7 @@ function getAppleFarmRewardsTooltipContent(score: string) {
                 </div>
             </div>
             <BodyText level="body3" weight="medium" className="text-gray-800 pt-2">
-                The Score factor indicates the proportion of daily Apples you receive relative to your contribution.
+                The APR factor indicates the proportion of daily rewards you receive relative to your contribution.
                 <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                     <ExternalLink
                         href="https://app.applefarm.xyz/"
