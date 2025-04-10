@@ -74,7 +74,7 @@ function CompactCheckInButton() {
     if (isCheckInSuccess && checkInData) {
       setIsCheckedIn(true)
       logEvent('daily_checkin_success', { wallet_address: walletAddress })
-      toast.success(`🎉 Checked in for the day! +1 point`)
+      toast.success(`🎉 Checked in for the day! +10 points`)
     }
   }, [isCheckInSuccess, checkInData, walletAddress, logEvent])
 
@@ -149,7 +149,7 @@ function CompactCheckInButton() {
           <BodyText level="body2" weight="medium">
             {isCheckedIn ? "You've already checked in today!" : "Check in daily to earn points!"}
           </BodyText>
-          <BodyText level="body2" className="text-gray-500">Earn 1 point each day you check in</BodyText>
+          <BodyText level="body2" className="text-gray-500">Earn 10 points each day you check in</BodyText>
         </>
       }
     />
