@@ -145,6 +145,9 @@ export type TOpportunityTable = {
         mBasis_apr?: number
         mTBill_apr?: number
         xtz_apr?: number
+        usdc_apr?: number
+        wbtc_apr?: number
+        usdt_apr?: number
     }
 }
 
