@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from './ui/card'
 import { BodyText, HeadingText } from './ui/typography'
-import { ArrowRightIcon, TrophyIcon, Clock, CheckCircle } from 'lucide-react'
+import { ArrowRightIcon, TrophyIcon, Clock, CheckCircle, Loader2 } from 'lucide-react'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { formatDistanceToNow } from 'date-fns'
 import { Button } from './ui/button'
@@ -18,13 +18,15 @@ import ImageWithDefault from './ImageWithDefault'
 import { Badge } from './ui/badge'
 import { motion, AnimatePresence } from 'framer-motion'
 import { abbreviateNumber } from '@/lib/utils'
+import { Skeleton } from './ui/skeleton'
+import TooltipText from './tooltips/TooltipText'
 
 // Compact version of CheckInButton specifically for this component
 function CompactCheckInButton() {
   const { isWalletConnected, walletAddress } = useWalletConnection()
   const { logEvent } = useAnalytics()
   const [isCheckedIn, setIsCheckedIn] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const { accessToken } = useAuth()
 
   const {
@@ -52,17 +54,27 @@ function CompactCheckInButton() {
       const lastCheckInTime = new Date(userDetails.last_check_in_timestamp).getTime();
       const now = new Date().getTime();
       const hoursSinceLastCheckIn = (now - lastCheckInTime) / (1000 * 60 * 60);
+      
       // User has checked in if the last check-in was less than 24 hours ago
-      setIsCheckedIn(hoursSinceLastCheckIn < 24);
+      const newCheckedInStatus = hoursSinceLastCheckIn < 24;
+      setIsCheckedIn(newCheckedInStatus);
+
+      // If status changed from checked-in to not checked-in, refetch user details
+      if (isCheckedIn && !newCheckedInStatus) {
+        refetchUserDetails();
+      }
+    } else {
+      setIsCheckedIn(false);
     }
-  }, [userDetails])
+    setIsLoading(false);
+  }, [userDetails, refetchUserDetails, isCheckedIn]);
 
   // Handle check-in success
   useEffect(() => {
     if (isCheckInSuccess && checkInData) {
       setIsCheckedIn(true)
       logEvent('daily_checkin_success', { wallet_address: walletAddress })
-      toast.success(`🎉 Checked in for the day! +1 point`)
+      toast.success(`🎉 Checked in for the day! +10 points`)
     }
   }, [isCheckInSuccess, checkInData, walletAddress, logEvent])
 
@@ -106,14 +118,14 @@ function CompactCheckInButton() {
       label={
         <Button
           onClick={handleCheckIn}
-          disabled={isCheckedIn || isLoading || isCheckInPending}
+          disabled={isCheckedIn || isLoading || isCheckInPending || isUserDetailsLoading}
           variant={isCheckedIn ? "outline" : "default"}
           size="sm"
-          className={`w-full h-7 px-2 text-xs flex items-center gap-1 disabled:opacity-100 ${isCheckedIn ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-50' : 'bg-primary text-white hover:bg-primary/90'}`}
+          className={`w-full h-7 px-2 text-xs flex items-center gap-1 disabled:opacity-100 ${(isUserDetailsLoading || isLoading || isCheckInPending) ? 'bg-gray-200 text-gray-500 border-gray-200 hover:bg-gray-200' : isCheckedIn ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-50' : 'bg-primary text-white hover:bg-primary/90'}`}
         >
-          {isLoading || isCheckInPending ? (
+          {(isLoading || isCheckInPending) ? (
             <span className="flex items-center">
-              <span className="animate-spin mr-1">⟳</span> Checking in...
+              <Loader2 className="w-3 h-3 animate-spin mr-1" /> Checking in...
             </span>
           ) : (
             <>
@@ -137,7 +149,7 @@ function CompactCheckInButton() {
           <BodyText level="body2" weight="medium">
             {isCheckedIn ? "You've already checked in today!" : "Check in daily to earn points!"}
           </BodyText>
-          <BodyText level="body2" className="text-gray-500">Earn 1 point each day you check in</BodyText>
+          <BodyText level="body2" className="text-gray-500">Earn 10 points each day you check in</BodyText>
         </>
       }
     />
@@ -239,11 +251,25 @@ export default function PointsWithCheckInCard() {
     if (!isCheckedInWithin24Hours) return;
 
     // Initial calculation
-    setTimeRemaining(calculateTimeRemaining());
+    const initialTime = calculateTimeRemaining();
+    setTimeRemaining(initialTime);
+
+    // If initial time is already zero, update check-in status
+    if (initialTime.hours === 0 && initialTime.minutes === 0 && initialTime.seconds === 0) {
+      setIsCheckedInWithin24Hours(false);
+      return;
+    }
 
     // Set up interval to update every second
     const interval = setInterval(() => {
-      setTimeRemaining(calculateTimeRemaining());
+      const newTime = calculateTimeRemaining();
+      setTimeRemaining(newTime);
+
+      // Check if timer has reached zero
+      if (newTime.hours === 0 && newTime.minutes === 0 && newTime.seconds === 0) {
+        setIsCheckedInWithin24Hours(false);
+        clearInterval(interval);
+      }
     }, 1000);
 
     // Clean up interval on component unmount
@@ -265,14 +291,29 @@ export default function PointsWithCheckInCard() {
             <HeadingText level="h4" weight="semibold" className="text-primary leading-none">
               {abbreviateNumber(userPoints, 0)}
             </HeadingText>
-            <HeadingText level="h5" weight="medium" className="text-gray-800">
-              Points
-            </HeadingText>
+            <InfoTooltip
+              label={
+                <HeadingText level="h5" weight="medium" className="text-gray-800">
+                  <TooltipText>
+                    Points
+                  </TooltipText>
+                </HeadingText>
+              }
+              content={
+                <BodyText level="body3" className="text-gray-600">
+                  Points are updated every Sunday based on your activity on Superlend during the week.
+                </BodyText>
+              }
+            />
           </div>
-          <div className="max-md:hidden rounded-full bg-gray-400 w-1 h-1" />
+          {isUserDetailsLoading && (
+            <Skeleton className="w-24 h-4 rounded-4" />
+          )}
+          {isCheckedInWithin24Hours && (
+            <div className="max-md:hidden rounded-full bg-gray-400 w-1 h-1" />
+          )}
           {isCheckedInWithin24Hours && (
             <div className="flex items-center gap-1 flex-shrink-0">
-              {/* <Clock className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" /> */}
               <BodyText level="body2" className="text-gray-500">
                 Next Check In:
               </BodyText>
@@ -290,7 +331,8 @@ export default function PointsWithCheckInCard() {
         {/* Bottom: Check-in time and buttons */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1">
-            <CompactCheckInButton />
+            {isUserDetailsLoading && <Skeleton className="w-24 h-7 rounded-4" />}
+            {!isUserDetailsLoading && <CompactCheckInButton />}
           </div>
 
           <Link href="/points" className="flex-1">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { requestPoints } from '@/queries/request'
+import { useAuthRequest } from '@/hooks/useAuthRequest'
 
 export type TUserDetails = {
   user_address: string
@@ -19,6 +19,7 @@ export type TGetUserDetailsParams = {
 
 export default function useGetUserDetails(params: TGetUserDetailsParams) {
   const { user_address, authToken } = params
+  const { makeRequest } = useAuthRequest()
 
   const { data, isLoading, isError, refetch } = useQuery<TUserDetails, Error>({
     queryKey: ['user-details', user_address],
@@ -30,7 +31,7 @@ export default function useGetUserDetails(params: TGetUserDetailsParams) {
           headers.Authorization = `Bearer ${authToken}`
         }
 
-        const responseData = await requestPoints<TUserDetails>({
+        return await makeRequest<TUserDetails>({
           method: 'GET',
           path: '/user',
           query: {
@@ -39,8 +40,6 @@ export default function useGetUserDetails(params: TGetUserDetailsParams) {
           },
           headers,
         })
-
-        return responseData
       } catch (error) {
         throw new Error('There was an error while fetching user details')
       }

@@ -175,7 +175,7 @@ export async function getMerklOpportunitiesData({
         query: {
             campaignId: campaignId,
             chainId: 42793,
-            point: true,
+            // point: true,
             withOpportunity: true,
         },
     })

@@ -1,6 +1,7 @@
 import { TrophyIcon } from "lucide-react"
 import { Card, CardContent } from "./ui/card"
 import { BodyText } from "./ui/typography"
+import Link from "next/link"
 
 export default function TxPointsEarnedBanner() {
     return (
@@ -16,6 +17,7 @@ export default function TxPointsEarnedBanner() {
                         </BodyText>
                         <BodyText level="body3" weight="normal">
                             Your superxp points will appear after the current epoch ends.
+                            <Link href="/points" className="text-secondary-500 ml-1">Learn more</Link>
                         </BodyText>
                     </div>
                 </div>

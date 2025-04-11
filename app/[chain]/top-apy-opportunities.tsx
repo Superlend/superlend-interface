@@ -79,15 +79,27 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         })
     const { data: mBasisOpportunityData, isLoading: isLoadingMBasisOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0x39b5121a483f8dc07e5f43c6a33e6d2f5ed98ae474f640aa8d98c5239d4c00a2',
+            campaignId: '0xb3509a79b1715bc7666666fc9c27eb77762436648de827a5c5817371593aefd0',
         })
     const { data: mTBillOpportunityData, isLoading: isLoadingMTBillOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0xd0aea857cb16a8a83d7c3b5cc99d7a826f8ce4b19e685f0582b3598fe6887818',
+            campaignId: '0xd8d0ad6579284bcb4dbc3fb1e40f4596c788e4508daf9cfd010459ce86832850',
         })
     const { data: xtzOpportunityData, isLoading: isLoadingXTZOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0x6645ea6142d6532339c87a5bde9d589bc9556ade3dc0598b6582bf8a6dc2c628',
+            campaignId: '0x898a135c2bceffdae7618b1e2266108d154dfeab75a373b3eb3641ca31647e6a',
+        })
+    const { data: usdcOpportunityData, isLoading: isLoadingUSDCOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0x1bd8c05ef0d7b581826288a6b28a33eee2d95caa68c7f4b23dc7c5f32704b8ad',
+        })
+    const { data: wbtcOpportunityData, isLoading: isLoadingWBTCCOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0xc85b1c610c3ae5058cc69e04d87239c2af3cefb0c2fbdfcccffa5fb23d9f1cd7',
+        })
+    const { data: usdtOpportunityData, isLoading: isLoadingUSDTCOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0x691135dbaf8ce8bcc7aace2468be9b499834308362e1194a4246014ff74163a1',
         })
     const { allChainsData } = useContext<any>(AssetsDataContext)
     const [showRainingApples, setShowRainingApples] = useState(false)
@@ -325,6 +337,9 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                 mBasis_apr: mBasisOpportunityData?.[0]?.Opportunity?.apr,
                 mTBill_apr: mTBillOpportunityData?.[0]?.Opportunity?.apr,
                 xtz_apr: xtzOpportunityData?.[0]?.Opportunity?.apr,
+                usdc_apr: usdcOpportunityData?.[0]?.Opportunity?.apr,
+                wbtc_apr: wbtcOpportunityData?.[0]?.Opportunity?.apr,
+                usdt_apr: usdtOpportunityData?.[0]?.Opportunity?.apr,
             },
         }
     })
