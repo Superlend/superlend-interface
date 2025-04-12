@@ -356,6 +356,30 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const apyCurrent = Number(row.getValue('apy_current'))
             const apyCurrentFormatted = (apyCurrent > 0 && apyCurrent < 0.01) ? '<0.01' : abbreviateNumber(apyCurrent)
 
+            const appleFarmBaseRate = Number(row.original.apy_current)
+            const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
+                ? '<0.01'
+                : appleFarmBaseRate.toFixed(2)
+            const netAppleFarmAPY = Number(row.original.apy_current) + merklOpportunityData
+            const netAppleFarmAPYFormatted = netAppleFarmAPY > 0 && netAppleFarmAPY < 0.01
+                ? '<0.01'
+                : netAppleFarmAPY.toFixed(2)
+
+            const appleFarmRewards = [
+                {
+                    asset: {
+                        address: row.original.tokenAddress as `0x${string}`,
+                        name: "APR",
+                        symbol: row.original.tokenSymbol,
+                        logo: '/images/apple-farm-favicon.ico',
+                        decimals: 0,
+                        price_usd: 0,
+                    },
+                    supply_apy: merklOpportunityData,
+                    borrow_apy: 0,
+                }
+            ]
+
             if (hasRewards) {
                 // Update rewards grouped by asset address
                 rewards = getRewardsGroupedByAsset(row.original?.rewards)
@@ -399,7 +423,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-1">
                     <BodyText level={'body2'} weight={'medium'}>
-                        {`${apyCurrentFormatted}%`}
+                        {`${(isEtherlinkChain && hasAppleFarmRewards) ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
                     </BodyText>
                     {/* REWARDS */}
                     {hasRewards && (
@@ -424,7 +448,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         />
                     )}
                     {/* APPLE FARM REWARDS */}
-                    {isEtherlinkChain && merklOpportunityDataList[row.original.tokenAddress] && (
+                    {(isEtherlinkChain && hasAppleFarmRewards) && (
                         <InfoTooltip
                             label={
                                 <motion.div
@@ -442,7 +466,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                     />
                                 </motion.div>
                             }
-                            content={getAppleFarmRewardsTooltipContent(merklOpportunityDataFormatted)}
+                            content={getRewardsTooltipContent({
+                                baseRateFormatted: appleFarmBaseRateFormatted || '',
+                                rewards: appleFarmRewards || [],
+                                apyCurrent: netAppleFarmAPY || 0,
+                                positionTypeParam,
+                                netApyIcon: '/images/apple-farm-favicon.ico',
+                            })}
                         />
                     )}
                 </span>
