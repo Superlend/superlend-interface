@@ -15,13 +15,16 @@ import PositionDetails from './position-details'
 import PositionManagementProvider from '@/context/position-management-provider'
 import TxProvider from '@/context/tx-provider'
 import { AssetTxWidget } from './tx-widgets'
+import { AppleFarmRewardsProvider } from '@/context/apple-farm-rewards-provider'
 
 export default function PositionManagementPage() {
     return (
         <PositionManagementProvider>
             <TxProvider>
                 <MainContainer className="flex flex-col gap-[40px]">
-                    <PageHeader />
+                    <AppleFarmRewardsProvider>
+                        <PageHeader />
+                    </AppleFarmRewardsProvider>
                     <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-[16px]">
                         <div className="flex flex-col gap-[16px] order-last xl:order-first">
                             <PositionDetails />

@@ -302,3 +302,12 @@ export const CHAIN_ID_MAPPER: { [key in ChainId]: ChainName } = {
 export const FLUID_MAX_VALUE = "-57896044618658097711785492504343953926634992332820282019728792003956564819968";
 
 export const SLIPPAGE_PERCENTAGE = 0.995;
+
+export const ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS = {
+    mBasis: "0x2247b5a46bb79421a314ab0f0b67ffd11dd37ee4",
+    mTBill: "0xdd629e5241cbc5919847783e6c96b2de4754e438",
+    xtz: "0xc9b53ab2679f573e480d01e0f49e2b5cfb7a3eab",
+    usdc: "0x796ea11fa2dd751ed01b53c372ffdb4aaa8f00f9",
+    wbtc: "0xbfc94cd2b1e55999cfc7347a9313e88702b83d0f",
+    usdt: "0x2c03058c8afc06713be23e58d2febc8337dbfe6a",
+}

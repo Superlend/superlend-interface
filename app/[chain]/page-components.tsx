@@ -6,6 +6,7 @@ import TopApyOpportunities from './top-apy-opportunities'
 import OpportunitiesProvider from '@/context/opportunities-provider'
 import DiscoverOpportunities from './discover-opportunities'
 import AppleFarmBanner from './apple-farm-banner'
+import { AppleFarmRewardsProvider } from '@/context/apple-farm-rewards-provider'
 
 interface DiscoverPageComponentsProps {
     chain: string;
@@ -25,9 +26,13 @@ export default async function DiscoverPageComponents({ chain }: DiscoverPageComp
             )}
 
             {/* Common components for all chains */}
-            <DiscoverOpportunities chain={chain} />
+            <AppleFarmRewardsProvider>
+                <DiscoverOpportunities chain={chain} />
+            </AppleFarmRewardsProvider>
             <OpportunitiesProvider>
-                <TopApyOpportunities chain={chain} />
+                <AppleFarmRewardsProvider>
+                    <TopApyOpportunities chain={chain} />
+                </AppleFarmRewardsProvider>
             </OpportunitiesProvider>
 
             {/* 

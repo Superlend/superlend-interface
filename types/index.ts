@@ -141,14 +141,8 @@ export type TOpportunityTable = {
     collateral_exposure: `0x${string}`[]
     collateral_tokens: `0x${string}`[]
     available_liquidity: number
-    merkl_opportunity_data?: {
-        mBasis_apr?: number
-        mTBill_apr?: number
-        xtz_apr?: number
-        usdc_apr?: number
-        wbtc_apr?: number
-        usdt_apr?: number
-    }
+    apple_farm_apr: number
+    has_apple_farm_rewards: boolean
 }
 
 // Platform
