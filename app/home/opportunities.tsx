@@ -105,7 +105,7 @@ export default function Opportunities({
             collateral_tokens: item.platform.collateral_tokens,
             available_liquidity: item.platform.available_liquidity,
             apple_farm_apr: appleFarmRewardsAprs[item.token.address] ?? 0,
-            has_apple_farm_rewards: hasAppleFarmRewards(item.token.address),
+            has_apple_farm_rewards: hasAppleFarmRewards(item.token.address) && positionType === 'lend',
         }
     })
 

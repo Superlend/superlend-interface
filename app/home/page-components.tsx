@@ -21,6 +21,7 @@ import { useUserTokenBalancesContext } from '@/context/user-token-balances-provi
 import { TChain } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import MarketsExplorerBanner from '@/components/MarketsExplorerBanner'
+import { AppleFarmRewardsProvider } from '@/context/apple-farm-rewards-provider'
 
 interface ISelectedToken {
     address: string
@@ -208,15 +209,17 @@ export default function HomePageComponents() {
                                 }}
                                 className="w-full lg:max-w-[600px] xl:max-w-[750px]"
                             >
-                                <Opportunities
-                                    positionType={positionType}
-                                    opportunitiesData={
-                                        filteredOpportunitiesData
-                                    }
-                                    isLoadingOpportunitiesData={
-                                        isLoadingOpportunitiesData
-                                    }
-                                />
+                                <AppleFarmRewardsProvider>
+                                    <Opportunities
+                                        positionType={positionType}
+                                        opportunitiesData={
+                                            filteredOpportunitiesData
+                                        }
+                                        isLoadingOpportunitiesData={
+                                            isLoadingOpportunitiesData
+                                        }
+                                    />
+                                </AppleFarmRewardsProvider>
                             </motion.div>
                         ) : null}
                     </AnimatePresence>
