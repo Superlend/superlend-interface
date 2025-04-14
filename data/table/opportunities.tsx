@@ -16,8 +16,10 @@ import {
     getPlatformVersion,
 } from '@/lib/utils'
 import { TOpportunityTable, TReward } from '@/types'
+import { ChainId } from '@/types/chain'
 import { PlatformType } from '@/types/platform'
 import { ColumnDef } from '@tanstack/react-table'
+import { motion } from 'framer-motion'
 import { ChartNoAxesColumnIncreasing, ShieldAlertIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -141,7 +143,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     },
     {
         accessorKey: 'apy_current',
-        accessorFn: (item) => Number(item.apy_current),
+        accessorFn: (item) => Number(item.apy_current) + Number(item.apple_farm_apr),
         header: () => {
             const searchParams = useSearchParams()
             const positionTypeParam =
@@ -178,6 +180,34 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
+
+            const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
+            const appleFarmApr = Number(row.original.apple_farm_apr)
+            const hasAppleFarmRewards = row.original.has_apple_farm_rewards
+
+            const appleFarmBaseRate = Number(row.original.apy_current)
+            const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
+                ? '<0.01'
+                : appleFarmBaseRate.toFixed(2)
+            const netAppleFarmAPY = Number(row.original.apy_current) + appleFarmApr
+            const netAppleFarmAPYFormatted = netAppleFarmAPY > 0 && netAppleFarmAPY < 0.01
+                ? '<0.01'
+                : netAppleFarmAPY.toFixed(2)
+
+            const appleFarmRewards = [
+                {
+                    asset: {
+                        address: row.original.tokenAddress as `0x${string}`,
+                        name: "APR",
+                        symbol: row.original.tokenSymbol,
+                        logo: '/images/apple-farm-favicon.ico',
+                        decimals: 0,
+                        price_usd: 0,
+                    },
+                    supply_apy: appleFarmApr,
+                    borrow_apy: 0,
+                }
+            ]
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -222,7 +252,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-1">
                     <BodyText level={'body2'} weight={'medium'}>
-                        {`${apyCurrentFormatted}%`}
+                        {`${(isEtherlinkChain && hasAppleFarmRewards) ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
                     </BodyText>
                     {hasRewards && (
                         <InfoTooltip
@@ -240,6 +270,34 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 rewards: rewards || [],
                                 apyCurrent: apyCurrent || 0,
                                 positionTypeParam,
+                            })}
+                        />
+                    )}
+                    {/* APPLE FARM REWARDS */}
+                    {(isEtherlinkChain && hasAppleFarmRewards) && (
+                        <InfoTooltip
+                            label={
+                                <motion.div
+                                    initial={{ rotate: 0 }}
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
+                                    whileHover={{ rotate: -360 }}
+                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                >
+                                    <ImageWithDefault
+                                        src="/images/apple-farm-favicon.ico"
+                                        alt="Etherlink Rewards"
+                                        width={16}
+                                        height={16}
+                                    />
+                                </motion.div>
+                            }
+                            content={getRewardsTooltipContent({
+                                baseRateFormatted: appleFarmBaseRateFormatted || '',
+                                rewards: appleFarmRewards || [],
+                                apyCurrent: netAppleFarmAPY || 0,
+                                positionTypeParam,
+                                netApyIcon: '/images/apple-farm-favicon.ico',
                             })}
                         />
                     )}
@@ -503,11 +561,13 @@ function getRewardsTooltipContent({
     rewards,
     apyCurrent,
     positionTypeParam,
+    netApyIcon,
 }: {
     baseRateFormatted: string
     rewards: TReward[]
     apyCurrent: number
     positionTypeParam: string
+    netApyIcon?: string
 }) {
     const baseRateOperator = positionTypeParam === 'lend' ? '+' : '-'
     const isLend = positionTypeParam === 'lend'
@@ -577,7 +637,7 @@ function getRewardsTooltipContent({
             >
                 <div className="flex items-center gap-1">
                     <ImageWithDefault
-                        src="/icons/sparkles.svg"
+                        src={netApyIcon || '/icons/sparkles.svg'}
                         alt="Net APY"
                         width={16}
                         height={16}

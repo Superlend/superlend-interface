@@ -290,7 +290,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     },
     {
         accessorKey: 'apy_current',
-        accessorFn: (item) => Number(item.apy_current),
+        accessorFn: (item) => Number(item.apy_current) + Number(item.apple_farm_apr),
         header: () => {
             const searchParams = useSearchParams()
             const positionTypeParam =
@@ -326,33 +326,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
             const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
-            const eligibleTokensForAppleFarmRewards = {
-                mBasis: "0x2247b5a46bb79421a314ab0f0b67ffd11dd37ee4",
-                mTBill: "0xdd629e5241cbc5919847783e6c96b2de4754e438",
-                xtz: "0xc9b53ab2679f573e480d01e0f49e2b5cfb7a3eab",
-                usdc: "0x796ea11fa2dd751ed01b53c372ffdb4aaa8f00f9",
-                wbtc: "0xbfc94cd2b1e55999cfc7347a9313e88702b83d0f",
-                usdt: "0x2c03058c8afc06713be23e58d2febc8337dbfe6a",
-            }
-            const hasAppleFarmRewards = Object.values(eligibleTokensForAppleFarmRewards).includes(row.original.tokenAddress) && positionTypeParam === 'lend'
-            const mBasisOpportunityData = row.original.merkl_opportunity_data?.mBasis_apr
-            const mTBillOpportunityData = row.original.merkl_opportunity_data?.mTBill_apr
-            const xtzOpportunityData = row.original.merkl_opportunity_data?.xtz_apr
-            const usdcOpportunityData = row.original.merkl_opportunity_data?.usdc_apr
-            const wbtcOpportunityData = row.original.merkl_opportunity_data?.wbtc_apr
-            const usdtOpportunityData = row.original.merkl_opportunity_data?.usdt_apr
-            const merklOpportunityDataList = {
-                [eligibleTokensForAppleFarmRewards['mBasis']]: mBasisOpportunityData,
-                [eligibleTokensForAppleFarmRewards['mTBill']]: mTBillOpportunityData,
-                [eligibleTokensForAppleFarmRewards['xtz']]: xtzOpportunityData,
-                [eligibleTokensForAppleFarmRewards['usdc']]: usdcOpportunityData,
-                [eligibleTokensForAppleFarmRewards['wbtc']]: wbtcOpportunityData,
-                [eligibleTokensForAppleFarmRewards['usdt']]: usdtOpportunityData,
-            }
-            const merklOpportunityData = (merklOpportunityDataList[row.original.tokenAddress] ?? 0)
-            const merklOpportunityDataFormatted = merklOpportunityData < 0.01 && merklOpportunityData > 0
-                ? '<0.01'
-                : merklOpportunityData.toFixed(2)
+            const appleFarmApr = Number(row.original.apple_farm_apr)
+            const hasAppleFarmRewards = row.original.has_apple_farm_rewards
+
             const apyCurrent = Number(row.getValue('apy_current'))
             const apyCurrentFormatted = (apyCurrent > 0 && apyCurrent < 0.01) ? '<0.01' : abbreviateNumber(apyCurrent)
 
@@ -360,7 +336,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
                 ? '<0.01'
                 : appleFarmBaseRate.toFixed(2)
-            const netAppleFarmAPY = Number(row.original.apy_current) + merklOpportunityData
+            const netAppleFarmAPY = Number(row.original.apy_current) + appleFarmApr
             const netAppleFarmAPYFormatted = netAppleFarmAPY > 0 && netAppleFarmAPY < 0.01
                 ? '<0.01'
                 : netAppleFarmAPY.toFixed(2)
@@ -375,7 +351,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         decimals: 0,
                         price_usd: 0,
                     },
-                    supply_apy: merklOpportunityData,
+                    supply_apy: appleFarmApr,
                     borrow_apy: 0,
                 }
             ]

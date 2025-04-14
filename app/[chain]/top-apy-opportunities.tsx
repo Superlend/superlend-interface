@@ -30,11 +30,12 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
-import { CHAIN_ID_MAPPER } from '@/constants'
+import { CHAIN_ID_MAPPER, ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS } from '@/constants'
 import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
 import useIsClient from '@/hooks/useIsClient'
 import RainingApples from '@/components/animations/RainingApples'
 import { useShowAllMarkets } from '@/context/show-all-markets-provider'
+import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -106,6 +107,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const hasShownAnimation = useRef(false)
     const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
     const pathname = usePathname()
+    const { appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards, hasAppleFarmRewards } = useAppleFarmRewards()
 
     // Add this ref at component level
     const prevParamsRef = useRef(searchParams.toString())
@@ -302,6 +304,8 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             availableLiquidity = (Number(item.platform.liquidity) * Number(item.platform.collateral_token_price)) - borrowsInUSD
         }
 
+        const tokenHasAppleFarmRewards = hasAppleFarmRewards(item.token.address) && positionTypeParam === 'lend'
+
         return {
             tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,
@@ -333,14 +337,8 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             collateral_exposure: item.platform.collateral_exposure,
             collateral_tokens: item.platform.collateral_tokens,
             available_liquidity: availableLiquidity,
-            merkl_opportunity_data: {
-                mBasis_apr: mBasisOpportunityData?.[0]?.Opportunity?.apr,
-                mTBill_apr: mTBillOpportunityData?.[0]?.Opportunity?.apr,
-                xtz_apr: xtzOpportunityData?.[0]?.Opportunity?.apr,
-                usdc_apr: usdcOpportunityData?.[0]?.Opportunity?.apr,
-                wbtc_apr: wbtcOpportunityData?.[0]?.Opportunity?.apr,
-                usdt_apr: usdtOpportunityData?.[0]?.Opportunity?.apr,
-            },
+            apple_farm_apr: appleFarmRewardsAprs[item.token.address] ?? 0,
+            has_apple_farm_rewards: tokenHasAppleFarmRewards,
         }
     })
 

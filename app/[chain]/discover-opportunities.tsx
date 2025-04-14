@@ -17,6 +17,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import Image from 'next/image';
 import { useShowAllMarkets } from '@/context/show-all-markets-provider'
+import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
+import { abbreviateNumber } from '@/lib/utils'
+import { TReward } from '@/types'
+import { ChartNoAxesColumnIncreasing } from 'lucide-react'
 const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
 const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 
@@ -38,6 +43,7 @@ const opportunity3ProtocolIdentifier = "0x87eb69182347a95a4a9be4d83afdf0af705a0d
 export default function DiscoverOpportunities({ chain }: { chain: string }) {
     const { logEvent } = useAnalytics()
     const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
+    const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
     // Platform Data
     const { data: opportunity1PlatformData, isLoading: isLoading1 } =
         useGetPlatformData({
@@ -65,63 +71,97 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
         return null
     }
 
-    // Borrow Rate
-    const asset1LendRate = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)?.supply_apy
+    const asset1Data = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)
+    const asset1AppleFarmRewardsApr = appleFarmRewardsAprs[opportunity1TokenAddress]
+    const asset1LendRate = Number(asset1Data?.supply_apy) + (asset1AppleFarmRewardsApr ?? 0)
+    const asset1DataSupplyApy = Number(asset1Data?.supply_apy)
     // Description
     const description1 = `${asset1LendRate?.toFixed(2)}% APY`
     const description2 = `Upto ${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.supply_apy?.toFixed(2)}% APY`
     // const description3 = opportunity3PlatformData?.apy
 
     // Opportunities
-    const opportunities = [
+    const opportunities: {
+        id: number,
+        label: string,
+        tokenSymbol: string,
+        platformName: string,
+        chainName: string,
+        description: string,
+        tokenImage: string,
+        platformImage: string,
+        link: string,
+        hasAppleFarmRewards?: boolean,
+    }[] = [
+            {
+                id: 1,
+                label: 'Etherlink Apple Farm',
+                tokenSymbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token.symbol,
+                platformName: 'Superlend',
+                chainName: 'Etherlink',
+                description: description1,
+                tokenImage: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token.logo,
+                platformImage: `${imageBaseUrl}/superlend.svg`,
+                link: getRedirectLink(
+                    opportunity1TokenAddress,
+                    opportunity1ProtocolIdentifier,
+                    opportunity1ChainId,
+                    'borrow'
+                ),
+                hasAppleFarmRewards: hasAppleFarmRewards(opportunity1TokenAddress),
+            },
+            {
+                id: 2,
+                label: "Automated Strategy",
+                tokenSymbol: `Seamless ${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol}`,
+                platformName: "Morpho",
+                chainName: "Base",
+                description: description2,
+                tokenImage: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.logo,
+                platformImage: `${imageBaseUrl}/morpho-logo.svg`,
+                link: getRedirectLink(
+                    opportunity2TokenAddress,
+                    opportunity2ProtocolIdentifier,
+                    opportunity2ChainId,
+                    'lend'
+                ),
+            },
+            {
+                id: 3,
+                label: 'Assured Airdrop',
+                tokenSymbol: 'Coinshift Vault',
+                platformName: 'Morpho',
+                chainName: 'Ethereum',
+                description: '+ 25% APY in SHIFT tokens',
+                tokenImage: `${morphoImageBaseUrl}/wusdl.svg`,
+                platformImage: `${imageBaseUrl}/morpho-logo.svg`,
+                link: getRedirectLink(
+                    opportunity3TokenAddress,
+                    opportunity3ProtocolIdentifier,
+                    opportunity3ChainId,
+                    'lend'
+                ),
+            },
+        ]
+
+    const appleFarmBaseRate = asset1DataSupplyApy
+    const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
+        ? '<0.01'
+        : appleFarmBaseRate.toFixed(2)
+
+    const appleFarmRewards = [
         {
-            id: 1,
-            label: 'Etherlink Apple Farm',
-            tokenSymbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token.symbol,
-            platformName: 'Superlend',
-            chainName: 'Etherlink',
-            description: description1,
-            tokenImage: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token.logo,
-            platformImage: `${imageBaseUrl}/superlend.svg`,
-            link: getRedirectLink(
-                opportunity1TokenAddress,
-                opportunity1ProtocolIdentifier,
-                opportunity1ChainId,
-                'borrow'
-            ),
-        },
-        {
-            id: 2,
-            label: "Automated Strategy",
-            tokenSymbol: `Seamless ${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol}`,
-            platformName: "Morpho",
-            chainName: "Base",
-            description: description2,
-            tokenImage: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.logo,
-            platformImage: `${imageBaseUrl}/morpho-logo.svg`,
-            link: getRedirectLink(
-                opportunity2TokenAddress,
-                opportunity2ProtocolIdentifier,
-                opportunity2ChainId,
-                'lend'
-            ),
-        },
-        {
-            id: 3,
-            label: 'Assured Airdrop',
-            tokenSymbol: 'Coinshift Vault',
-            platformName: 'Morpho',
-            chainName: 'Ethereum',
-            description: '+ 25% APY in SHIFT tokens',
-            tokenImage: `${morphoImageBaseUrl}/wusdl.svg`,
-            platformImage: `${imageBaseUrl}/morpho-logo.svg`,
-            link: getRedirectLink(
-                opportunity3TokenAddress,
-                opportunity3ProtocolIdentifier,
-                opportunity3ChainId,
-                'lend'
-            ),
-        },
+            asset: {
+                address: opportunity1TokenAddress as `0x${string}`,
+                name: "APR",
+                symbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token.symbol,
+                logo: '/images/apple-farm-favicon.ico',
+                decimals: 0,
+                price_usd: 0,
+            },
+            supply_apy: appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0,
+            borrow_apy: 0,
+        }
     ]
 
     const isLoading: { [key: number]: boolean } = {
@@ -199,12 +239,34 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
                                                         </Label>
                                                     </Badge>
                                                 </div>
-                                                <Label
-                                                    weight="medium"
-                                                    className="text-gray-600"
-                                                >
-                                                    {opportunity.description}
-                                                </Label>
+                                                <div className="flex items-center gap-1">
+                                                    <Label
+                                                        weight="medium"
+                                                        className="text-gray-600"
+                                                    >
+                                                        {opportunity.description}
+                                                    </Label>
+                                                    {opportunity.hasAppleFarmRewards &&
+                                                        <InfoTooltip
+                                                            label={
+                                                                <ImageWithDefault
+                                                                    src={'/images/logos/apple-green.png'}
+                                                                    alt={'apple icon'}
+                                                                    width={18}
+                                                                    height={18}
+                                                                    className="object-contain"
+                                                                />
+                                                            }
+                                                            content={getRewardsTooltipContent({
+                                                                baseRateFormatted: appleFarmBaseRateFormatted || '',
+                                                                rewards: appleFarmRewards || [],
+                                                                apyCurrent: asset1LendRate || 0,
+                                                                positionTypeParam: 'lend',
+                                                                netApyIcon: '/images/apple-farm-favicon.ico',
+                                                            })}
+                                                        />
+                                                    }
+                                                </div>
                                             </div>
                                         </div>)
                                     }
@@ -287,5 +349,115 @@ const RainingApples = () => {
             ))}
         </div>
     );
-}; 
+};
+
+/**
+ * Get rewards tooltip content
+ * @param baseRateFormatted
+ * @param rewards
+ * @param apyCurrent
+ * @returns rewards tooltip content
+ */
+function getRewardsTooltipContent({
+    baseRateFormatted,
+    rewards,
+    apyCurrent,
+    positionTypeParam,
+    netApyIcon,
+}: {
+    baseRateFormatted: string
+    rewards: TReward[]
+    apyCurrent: number
+    positionTypeParam: string
+    netApyIcon?: string
+}) {
+    const baseRateOperator = positionTypeParam === 'lend' ? '+' : '-'
+    const isLend = positionTypeParam === 'lend'
+
+    return (
+        <div className="flex flex-col divide-y divide-gray-400">
+            <BodyText
+                level="body1"
+                weight="medium"
+                className="py-2 text-gray-800/75"
+            >
+                Rate & Rewards
+            </BodyText>
+            <div
+                className="flex items-center justify-between gap-[70px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <ChartNoAxesColumnIncreasing className="w-[16px] h-[16px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">
+                        Base rate
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    {baseRateFormatted}%
+                </BodyText>
+            </div>
+            {rewards?.map((reward: TReward) => (
+                <div
+                    key={reward.asset.address}
+                    className="flex items-center justify-between gap-[100px] py-2"
+                    style={{ gap: '70px' }}
+                >
+                    <div className="flex items-center gap-1">
+                        <ImageWithDefault
+                            src={reward?.asset?.logo || ''}
+                            width={16}
+                            height={16}
+                            alt={reward?.asset?.name || ''}
+                            className="inline-block rounded-full object-contain"
+                        />
+                        <Label
+                            weight="medium"
+                            className="truncate text-gray-800 max-w-[100px] truncate"
+                            title={reward?.asset?.name || ''}
+                        >
+                            {reward?.asset?.name || ''}
+                        </Label>
+                    </div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-800"
+                    >
+                        {baseRateOperator}{' '}
+                        {`${(Math.floor(Number(isLend ? reward.supply_apy : reward.borrow_apy) * 100) / 100).toFixed(2)}%`}
+                    </BodyText>
+                </div>
+            ))}
+            <div
+                className="flex items-center justify-between gap-[100px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <ImageWithDefault
+                        src={netApyIcon || '/icons/sparkles.svg'}
+                        alt="Net APY"
+                        width={16}
+                        height={16}
+                        className="inline-block"
+                    />
+                    <Label weight="medium" className="text-gray-800">
+                        Net APY
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    = {abbreviateNumber(apyCurrent)}%
+                </BodyText>
+            </div>
+        </div>
+    )
+}
 

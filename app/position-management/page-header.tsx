@@ -25,6 +25,7 @@ import { TPlatform, TPlatformAsset } from '@/types/platform'
 import ArrowRightIcon from '@/components/icons/arrow-right-icon'
 import {
     chainNamesBasedOnAaveMarkets,
+    ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS,
     MORPHO_ETHERSCAN_TUTORIAL_LINK,
     PAIR_BASED_PROTOCOLS,
     platformWebsiteLinks,
@@ -38,6 +39,8 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import DangerSquare from '@/components/icons/danger-square'
 import { PlatformType } from '@/types/platform'
 import CustomAlert from '@/components/alerts/CustomAlert'
+import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
+import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 
 type TTokenDetails = {
     address: string
@@ -54,6 +57,7 @@ export default function PageHeader() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionTypeParam = searchParams.get('position_type') || 'lend'
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
+    const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
 
     // [API_CALL: GET] - Get Platform data
     const {
@@ -203,6 +207,8 @@ export default function PageHeader() {
         tokenAddress: isDisplayOneToken ? [tokenDetails?.address] : [collateralTokenDetails?.address, loanTokenDetails?.address],
         platformData: platformData as TPlatform,
     })
+
+    const formattedSupplyAPY = Number(pageHeaderStats?.supply_apy) + Number(appleFarmRewardsAprs[tokenDetails?.address] ?? 0)
 
     const formattedBorrowRate = (isMorphoVault || isFluidLend)
         ? 'N/A'
@@ -431,21 +437,21 @@ export default function PageHeader() {
                                                 >
                                                     {isLowestValue(
                                                         Number(
-                                                            pageHeaderStats?.supply_apy ?? 0
+                                                            formattedSupplyAPY
                                                         )
                                                     )
                                                         ? `${hasLowestDisplayValuePrefix(
                                                             Number(
-                                                                pageHeaderStats?.supply_apy ?? 0
+                                                                formattedSupplyAPY
                                                             )
                                                         )}${getLowestDisplayValue(
                                                             Number(
-                                                                pageHeaderStats?.supply_apy ?? 0
+                                                                formattedSupplyAPY
                                                             )
                                                         )}`
                                                         : abbreviateNumber(
                                                             Number(
-                                                                pageHeaderStats?.supply_apy ?? 0
+                                                                formattedSupplyAPY
                                                             ),
                                                             2
                                                         )}%
