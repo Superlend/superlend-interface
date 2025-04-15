@@ -160,7 +160,8 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             const platformName: string = row.getValue('platformName')
             const platformId: string = row.original.platform_id
             const platformWithMarketName: string = row.original.platformWithMarketName
-            const formattedPlatformWithMarketName: string = platformWithMarketName.split(' ').slice(1).join(' ')
+            const formattedPlatformWithMarketName: string = 
+                platformWithMarketName.includes("/") && !platformWithMarketName.split(' ')[0].toLowerCase().includes(platformId.split('-')[0].toLowerCase()) ? platformWithMarketName : platformWithMarketName.split(' ').slice(1).join(' ')
             const isMorpho =
                 platformId.split('-')[0].toLowerCase() === PlatformType.MORPHO
             const isVault = row.original.isVault

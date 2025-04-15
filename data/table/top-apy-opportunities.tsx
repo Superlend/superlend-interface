@@ -240,7 +240,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const platformWithMarketName: string =
                 row.original.platformWithMarketName
             const formattedPlatformWithMarketName: string =
-                platformWithMarketName.split(' ').slice(1).join(' ')
+                platformWithMarketName.includes("/") && !platformWithMarketName.split(' ')[0].toLowerCase().includes(platformId.split('-')[0].toLowerCase()) ? platformWithMarketName : platformWithMarketName.split(' ').slice(1).join(' ')
             const platformLogo = row.original.platformLogo
             const isMorpho =
                 row.original.platformId.split('-')[0].toLowerCase() ===

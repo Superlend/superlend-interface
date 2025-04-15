@@ -160,6 +160,7 @@ export default function WithdrawAndRepayActionButton({
     })
 
     const isLoading = isLoadingPortfolioData || isLoadingPlatformData
+    const isPolygonChain = Number(chain_id) === ChainId.Polygon
 
     const isMorphoProtocol =
         platformData?.platform?.protocol_type === PlatformType.MORPHO
@@ -178,13 +179,13 @@ export default function WithdrawAndRepayActionButton({
     const vaultData = getVaultData({
         vaultId: platformData?.platform?.core_contract as `0x${string}`,
         chainId: Number(chain_id),
-        enabled: isMorphoVaultsProtocol,
+        enabled: isMorphoVaultsProtocol && !isPolygonChain,
     })
 
     const morphoMarketData = getMarketData({
         marketId: platformData?.platform?.morpho_market_id as MarketId,
         chainId: Number(chain_id),
-        enabled: isMorphoMarketsProtocol,
+        enabled: isMorphoMarketsProtocol && !isPolygonChain,
         walletAddress: walletAddress as `0x${string}`,
     })
 
