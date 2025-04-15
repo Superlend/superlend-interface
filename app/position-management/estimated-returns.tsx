@@ -354,8 +354,6 @@ export function EstimatedReturns({
     const borrowAPY = isMorpho
         ? !isMorphoVault && positionType === 'borrow'
             ? Number(borrowAssetDetails?.variable_borrow_apy ?? 0)
-            : isMorphoVault && isPolygonChain
-            ? Number(lendAssetDetails?.supply_apy ?? 0)
             : -(borrowAssetDetails?.supply_apy ?? 0)
         : isAaveV3 && positionType === 'lend'
           ? selectedStableTokenDetails?.variable_borrow_apy || 0
@@ -410,8 +408,8 @@ export function EstimatedReturns({
             id: 2,
             key: 'borrow',
             title: isMorpho && positionType === 'lend' ? 'Supply' : 'Borrowing',
-            logo: (isMorphoVault && isPolygonChain) ? lendTokenDetails?.token.logo : borrowTokenDetails?.token.logo,
-            selectedLabel: isMorphoVault && isPolygonChain ? lendTokenDetails?.token.symbol : borrowTokenDetails?.token.symbol,
+            logo: borrowTokenDetails?.token.logo,
+            selectedLabel: borrowTokenDetails?.token.symbol,
             selectedValue: selectedValue.borrow,
             hasSelectedValue: !(stableBorrowAssetsList.length > 0),
             totalValue:
@@ -448,13 +446,6 @@ export function EstimatedReturns({
             amountBorrowed,
             duration,
         })
-    console.log('supplyAPY', supplyAPY)
-    console.log('borrowAPY', borrowAPY)
-    console.log('amountSupplied', amountSupplied)
-    console.log('amountBorrowed', amountBorrowed)
-    console.log('duration', duration)
-    // console.log('interestGain', interestGain)
-    // console.log('interestLoss', interestLoss)
 
     const lendTokenPrice =
         positionType === 'lend'
