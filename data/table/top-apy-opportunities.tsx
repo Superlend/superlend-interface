@@ -53,7 +53,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         <Label>Token</Label>
                         <span className="flex items-center gap-[8px]">
                             <ImageWithDefault
-                                alt={tokenSymbol}
+                                alt={`${tokenSymbol} token logo`}
                                 src={tokenLogo || ''}
                                 width={24}
                                 height={24}
@@ -68,7 +68,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         <Label>Chain</Label>
                         <span className="flex items-center gap-[8px]">
                             <ImageWithDefault
-                                alt={chainName}
+                                alt={`${chainName} chain logo`}
                                 src={chainLogo || ''}
                                 width={24}
                                 height={24}
@@ -90,8 +90,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             <ImageWithBadge
                                 mainImg={tokenLogo || ''}
                                 badgeImg={chainLogo || ''}
-                                mainImgAlt={tokenSymbol}
-                                badgeImgAlt={chainName}
+                                mainImgAlt={`${tokenSymbol} token logo`}
+                                badgeImgAlt={`${chainName} chain logo`}
                             />
                         }
                         content={tooltipContent}
@@ -202,7 +202,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                                     src={token.logo}
                                                     width={16}
                                                     height={16}
-                                                    alt={token.name}
+                                                    alt={`${token.name} token logo`}
                                                     className="rounded-full shrink-0"
                                                 />
                                                 <BodyText level="body2" weight="medium">
