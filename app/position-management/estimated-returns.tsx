@@ -352,7 +352,7 @@ export function EstimatedReturns({
     const borrowAPY = isMorpho
         ? !isMorphoVault && positionType === 'borrow'
             ? Number(borrowAssetDetails?.variable_borrow_apy ?? 0)
-            : -borrowAssetDetails?.supply_apy
+            : -(borrowAssetDetails?.supply_apy ?? 0)
         : isAaveV3 && positionType === 'lend'
           ? selectedStableTokenDetails?.variable_borrow_apy || 0
           : borrowAssetDetails?.variable_borrow_apy || 0
