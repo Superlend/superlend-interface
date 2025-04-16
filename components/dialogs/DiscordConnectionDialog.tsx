@@ -346,7 +346,7 @@ export function DiscordConnectionDialog({
         return (
             <AnimatePresence mode="wait">
                 {open && (
-                    <Dialog open={open} onOpenChange={handleOpenChange} modal={true}>
+                    <Dialog open={open} modal={true}>
                         <motion.div
                             className="fixed inset-0 bg-black/50 z-50"
                             initial="hidden"
@@ -384,7 +384,7 @@ export function DiscordConnectionDialog({
     return (
         <AnimatePresence mode="wait">
             {open && (
-                <Drawer open={open} onOpenChange={handleOpenChange} dismissible={false}>
+                <Drawer open={open} dismissible={false}>
                     <motion.div
                         className="fixed inset-0 bg-black/25 z-50"
                         initial="hidden"
