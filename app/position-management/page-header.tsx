@@ -11,6 +11,7 @@ import {
     getPlatformVersion,
     getPlatformWebsiteLink,
     getTokenLogo,
+    hasLowestDisplayValuePrefix,
     isLowestValue,
 } from '@/lib/utils'
 import ImageWithDefault from '@/components/ImageWithDefault'
@@ -24,6 +25,7 @@ import { TPlatform, TPlatformAsset } from '@/types/platform'
 import ArrowRightIcon from '@/components/icons/arrow-right-icon'
 import {
     chainNamesBasedOnAaveMarkets,
+    ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS,
     MORPHO_ETHERSCAN_TUTORIAL_LINK,
     PAIR_BASED_PROTOCOLS,
     platformWebsiteLinks,
@@ -37,6 +39,8 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import DangerSquare from '@/components/icons/danger-square'
 import { PlatformType } from '@/types/platform'
 import CustomAlert from '@/components/alerts/CustomAlert'
+import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
+import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 
 type TTokenDetails = {
     address: string
@@ -53,6 +57,7 @@ export default function PageHeader() {
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const positionTypeParam = searchParams.get('position_type') || 'lend'
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
+    const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
 
     // [API_CALL: GET] - Get Platform data
     const {
@@ -117,10 +122,11 @@ export default function PageHeader() {
     const isMorphoVault =
         platformData?.platform?.protocol_type === PlatformType.MORPHO &&
         platformData?.platform?.isVault
+    const isEulerProtocol = platformData?.platform?.protocol_type === PlatformType.EULER
     const platformWebsiteLink = getPlatformWebsiteLink({
         platformId,
         chainName,
-        tokenAddress: tokenDetails?.address,
+        tokenAddress: isEulerProtocol ? core_contract : tokenDetails?.address,
         chainId: chain_id,
         vaultId,
         isFluidVault,
@@ -183,11 +189,14 @@ export default function PageHeader() {
     const isDisplayOneToken =
         hasPoolBasedTokens ||
         (isFluidPlatform && !isFluidVault) ||
-        (isMorpho && isMorphoVault)
+        (isMorpho && isMorphoVault) || 
+        isEulerProtocol
+
     const isDisplayTwoTokens = !(
         hasPoolBasedTokens ||
         (isFluidPlatform && !isFluidVault) ||
-        (isMorpho && isMorphoVault)
+        (isMorpho && isMorphoVault) ||
+        isEulerProtocol
     )
 
     const tokensToDisplayOnTooltip = isDisplayOneToken
@@ -199,6 +208,8 @@ export default function PageHeader() {
         platformData: platformData as TPlatform,
     })
 
+    const formattedSupplyAPY = Number(pageHeaderStats?.supply_apy) + Number(appleFarmRewardsAprs[tokenDetails?.address] ?? 0)
+
     const formattedBorrowRate = (isMorphoVault || isFluidLend)
         ? 'N/A'
         : (
@@ -208,11 +219,15 @@ export default function PageHeader() {
                         pageHeaderStats?.borrow_rate ?? 0
                     )
                 )
-                    ? getLowestDisplayValue(
+                    ? `${hasLowestDisplayValuePrefix(
                         Number(
                             pageHeaderStats?.borrow_rate ?? 0
                         )
-                    )
+                    )}${getLowestDisplayValue(
+                        Number(
+                            pageHeaderStats?.borrow_rate ?? 0
+                        )
+                    )}`
                     : abbreviateNumber(
                         Number(
                             pageHeaderStats?.borrow_rate ?? 0
@@ -422,17 +437,21 @@ export default function PageHeader() {
                                                 >
                                                     {isLowestValue(
                                                         Number(
-                                                            pageHeaderStats?.supply_apy ?? 0
+                                                            formattedSupplyAPY
                                                         )
                                                     )
-                                                        ? getLowestDisplayValue(
+                                                        ? `${hasLowestDisplayValuePrefix(
                                                             Number(
-                                                                pageHeaderStats?.supply_apy ?? 0
+                                                                formattedSupplyAPY
                                                             )
-                                                        )
+                                                        )}${getLowestDisplayValue(
+                                                            Number(
+                                                                formattedSupplyAPY
+                                                            )
+                                                        )}`
                                                         : abbreviateNumber(
                                                             Number(
-                                                                pageHeaderStats?.supply_apy ?? 0
+                                                                formattedSupplyAPY
                                                             ),
                                                             2
                                                         )}%
@@ -490,8 +509,8 @@ function getPageHeaderStats({
             } else if (item.borrow_enabled && array.length > 1) {
                 acc.borrow_rate = item.variable_borrow_apy
             } else {
-                acc.supply_apy = abbreviateNumber(item.supply_apy, 2)
-                acc.borrow_rate = abbreviateNumber(item.variable_borrow_apy, 2)
+                acc.supply_apy = item.supply_apy
+                acc.borrow_rate = item.variable_borrow_apy
             }
             return acc
         }, {})

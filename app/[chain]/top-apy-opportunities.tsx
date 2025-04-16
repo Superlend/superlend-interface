@@ -30,17 +30,24 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
-import { CHAIN_ID_MAPPER } from '@/constants'
+import { CHAIN_ID_MAPPER, ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS } from '@/constants'
+import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
+import useIsClient from '@/hooks/useIsClient'
+import RainingApples from '@/components/animations/RainingApples'
+import { useShowAllMarkets } from '@/context/show-all-markets-provider'
+import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
     columns: ColumnDef<TOpportunityTable>[]
+    chain: string
 }
 
 const EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL =
     '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed'
 
-export default function TopApyOpportunities() {
+export default function TopApyOpportunities({ chain }: { chain: string }) {
+    const isClient = useIsClient()
     const router = useRouter()
     const { logEvent } = useAnalytics()
     const { walletAddress } = useWalletConnection()
@@ -54,7 +61,7 @@ export default function TopApyOpportunities() {
     const pageParam = searchParams.get('page')
     const sortingParam = searchParams.get('sort')?.split(',') || []
     const excludeRiskyMarketsFlag =
-        typeof window !== 'undefined' &&
+        isClient && typeof window !== 'undefined' &&
         localStorage.getItem('exclude_risky_markets') === 'true'
     const [keywords, setKeywords] = useState<string>(keywordsParam)
     const debouncedKeywords = useDebounce(keywords, 300)
@@ -70,10 +77,37 @@ export default function TopApyOpportunities() {
     const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData } =
         useGetOpportunitiesData({
             type: positionTypeParam as TPositionType,
-            chain_ids: chainIdsParam.map((id) => Number(id)),
-            tokens: tokenIdsParam,
+        })
+    const { data: mBasisOpportunityData, isLoading: isLoadingMBasisOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0xb3509a79b1715bc7666666fc9c27eb77762436648de827a5c5817371593aefd0',
+        })
+    const { data: mTBillOpportunityData, isLoading: isLoadingMTBillOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0xd8d0ad6579284bcb4dbc3fb1e40f4596c788e4508daf9cfd010459ce86832850',
+        })
+    const { data: xtzOpportunityData, isLoading: isLoadingXTZOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0x898a135c2bceffdae7618b1e2266108d154dfeab75a373b3eb3641ca31647e6a',
+        })
+    const { data: usdcOpportunityData, isLoading: isLoadingUSDCOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0x1bd8c05ef0d7b581826288a6b28a33eee2d95caa68c7f4b23dc7c5f32704b8ad',
+        })
+    const { data: wbtcOpportunityData, isLoading: isLoadingWBTCCOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0xc85b1c610c3ae5058cc69e04d87239c2af3cefb0c2fbdfcccffa5fb23d9f1cd7',
+        })
+    const { data: usdtOpportunityData, isLoading: isLoadingUSDTCOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0x691135dbaf8ce8bcc7aace2468be9b499834308362e1194a4246014ff74163a1',
         })
     const { allChainsData } = useContext<any>(AssetsDataContext)
+    const [showRainingApples, setShowRainingApples] = useState(false)
+    const hasShownAnimation = useRef(false)
+    const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
+    const pathname = usePathname()
+    const { appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards, hasAppleFarmRewards } = useAppleFarmRewards()
 
     // Add this ref at component level
     const prevParamsRef = useRef(searchParams.toString())
@@ -117,11 +151,10 @@ export default function TopApyOpportunities() {
             return {
                 deposits: positionTypeParam === 'lend',
                 borrows: positionTypeParam === 'borrow',
-                // max_ltv: positionTypeParam === 'borrow',
                 collateral_exposure: positionTypeParam === 'lend',
                 collateral_tokens: positionTypeParam === 'borrow',
                 available_liquidity: positionTypeParam === 'borrow',
-                apy_avg_7days: positionTypeParam === 'borrow',
+                apy_avg_7days: positionTypeParam === 'lend',
             }
         })
         setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])
@@ -228,18 +261,40 @@ export default function TopApyOpportunities() {
         })
     }, [excludeRiskyMarketsFlag])
 
+    useEffect(() => {
+        const hasShownAnimation = sessionStorage.getItem('has_shown_apple_animation');
+        if (!hasShownAnimation && chainIdsParam.includes('42793')) {
+            setShowRainingApples(true);
+            sessionStorage.setItem('has_shown_apple_animation', 'true');
+
+            const timer = setTimeout(() => {
+                setShowRainingApples(false);
+            }, 10000);
+
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
+    useEffect(() => {
+        if ((pathname === '/etherlink' || pathname.endsWith('/etherlink')) && chainIdsParam.length === 0) {
+            updateSearchParams({ chain_ids: '42793' });
+        }
+    }, [pathname, chainIdsParam.length, updateSearchParams]);
+
     const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
-        const platformName = item.platform.platform_name.split('-')[0].toLowerCase()
+        const platformName = item.platform.platform_name?.split('-')[0]?.toLowerCase()
         const isAaveV3 = PlatformType.AAVE.includes(platformName)
         const isCompound = PlatformType.COMPOUND.includes(platformName)
         const isMorpho = PlatformType.MORPHO.includes(platformName)
         const isFluid = PlatformType.FLUID.includes(platformName)
+        const isSuperlend = PlatformType.SUPERLEND.includes(platformName)
+        const isEuler = PlatformType.EULER.includes(platformName)
 
         const liquidityInUSD = Number(item.platform.liquidity) * Number(item.token.price_usd)
         const borrowsInUSD = Number(item.platform.borrows) * Number(item.token.price_usd)
 
         let availableLiquidity = 0;
-        if (isAaveV3) {
+        if (isAaveV3 || isSuperlend || isEuler) {
             availableLiquidity = liquidityInUSD - borrowsInUSD
         } else if (isCompound) {
             availableLiquidity = liquidityInUSD - borrowsInUSD
@@ -248,6 +303,8 @@ export default function TopApyOpportunities() {
         } else if (isFluid) {
             availableLiquidity = (Number(item.platform.liquidity) * Number(item.platform.collateral_token_price)) - borrowsInUSD
         }
+
+        const tokenHasAppleFarmRewards = hasAppleFarmRewards(item.token.address) && positionTypeParam === 'lend'
 
         return {
             tokenAddress: item.token.address,
@@ -280,6 +337,8 @@ export default function TopApyOpportunities() {
             collateral_exposure: item.platform.collateral_exposure,
             collateral_tokens: item.platform.collateral_tokens,
             available_liquidity: availableLiquidity,
+            apple_farm_apr: appleFarmRewardsAprs[item.token.address] ?? 0,
+            has_apple_farm_rewards: tokenHasAppleFarmRewards,
         }
     })
 
@@ -288,7 +347,7 @@ export default function TopApyOpportunities() {
     ) {
         const isVault = opportunity.isVault
         const isMorpho =
-            opportunity.platformId.split('-')[0].toLowerCase() ===
+            opportunity.platformId?.split('-')[0]?.toLowerCase() ===
             PlatformType.MORPHO
         const morphoSuffix = isVault ? 'VAULTS' : 'MARKETS'
 
@@ -331,7 +390,7 @@ export default function TopApyOpportunities() {
     ) {
         const isVault = opportunity.isVault
         const isMorpho =
-            opportunity.platformId.split('-')[0].toLowerCase() ===
+            opportunity.platformId?.split('-')[0]?.toLowerCase() ===
             PlatformType.MORPHO
 
         return excludeRiskyMarketsFlag ? !(isMorpho && !isVault) : true
@@ -342,20 +401,27 @@ export default function TopApyOpportunities() {
     ) {
         const isVault = opportunity.isVault
         const isMorpho =
-            opportunity.platformId.split('-')[0].toLowerCase() ===
+            opportunity.platformId?.split('-')[0]?.toLowerCase() ===
             PlatformType.MORPHO
 
         return positionTypeParam === 'borrow' ? !(isMorpho && isVault) : true
     }
 
     function handleFilterTableRows(opportunity: TOpportunityTable) {
+        const matchesChainId = chainIdsParam.length === 0 || chainIdsParam.includes(opportunity.chain_id.toString())
+        const matchesToken = tokenIdsParam.length === 0 || tokenIdsParam.includes(opportunity.tokenSymbol)
+
         return positionTypeParam === 'borrow'
             ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity)
+            handleFilterTableRowsByPlatformIds(opportunity) &&
+            matchesChainId &&
+            matchesToken
             : handleExcludeMorphoMarketsByParamFlag(opportunity) &&
-                  handleFilterTableRowsByPlatformIds(opportunity) &&
-                  opportunity.protocol_identifier !==
-                      EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL
+            handleFilterTableRowsByPlatformIds(opportunity) &&
+            opportunity.protocol_identifier !==
+            EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL &&
+            matchesChainId &&
+            matchesToken
     }
 
     function handleRowClick(rowData: any) {
@@ -403,11 +469,22 @@ export default function TopApyOpportunities() {
         setKeywords('')
     }
 
+    // Don't render anything while loading
+    if (isStateLoading || isLoadingOpportunitiesData) {
+        return <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
+    }
+
+    // Only render for discover route when showing all markets
+    if ((pathname === '/etherlink' && showAllMarkets) || (pathname === '/discover' && !showAllMarkets)) {
+        return null
+    }
+
     return (
         <section
             id="top-apy-opportunities"
             className="top-apy-opportunities-container flex flex-col gap-[24px] px-5"
         >
+            {showRainingApples && <RainingApples />}
             <div className="top-apy-opportunities-header flex items-end lg:items-center justify-between gap-[12px]">
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                     <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
@@ -423,7 +500,7 @@ export default function TopApyOpportunities() {
                         </div>
                         {/* Filter button for Tablet and below screens */}
                         <div className="block lg:hidden">
-                            <DiscoverFiltersDropdown />
+                            <DiscoverFiltersDropdown chain={chain} />
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
@@ -456,7 +533,7 @@ export default function TopApyOpportunities() {
                 {/* Filter buttons for Desktop and above screens */}
                 <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
                     {/* <ChainSelectorDropdown /> */}
-                    <DiscoverFiltersDropdown />
+                    <DiscoverFiltersDropdown chain={chain} />
                 </div>
             </div>
             <div className="top-apy-opportunities-content">

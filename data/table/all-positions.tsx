@@ -227,17 +227,17 @@ export const columns: ColumnDef<TPositionsTable>[] = [
                 ? '<0.01'
                 : getSanitizedValue(Number(apy))
 
-            if (`${apy.toFixed(2)}` === '0.00') {
-                return (
-                    <InfoTooltip
-                        side="bottom"
-                        label={
-                            <TooltipText>{`${apy.toFixed(2)}%`}</TooltipText>
-                        }
-                        content={'This asset is non-borrowable'}
-                    />
-                )
-            }
+            // if (`${apy.toFixed(2)}` === '0.00') {
+            //     return (
+            //         <InfoTooltip
+            //             side="bottom"
+            //             label={
+            //                 <TooltipText>{`${apy.toFixed(2)}%`}</TooltipText>
+            //             }
+            //             content={'This asset is non-borrowable'}
+            //         />
+            //     )
+            // }
 
             function getSanitizedValue(value: string | number) {
                 if (containsNegativeInteger(value)) {

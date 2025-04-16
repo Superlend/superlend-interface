@@ -23,12 +23,13 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { ChevronDownIcon } from 'lucide-react'
+import { ChevronDownIcon, MinusIcon, PlusIcon } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { usePositionManagementContext } from '@/context/position-management-provider'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { POOL_BASED_PROTOCOLS } from '@/constants'
 import { PlatformType } from '@/types/platform'
+import { Input } from '@/components/ui/input'
 
 type TRow = {
     id: number
@@ -49,6 +50,194 @@ const DEFAULT_SELECTED_VALUES = {
     lend: 0,
     borrow: 0,
     duration: 1,
+}
+
+// Add SliderControls component before the export function
+function SliderControls({
+    value,
+    max,
+    step,
+    onChange,
+    disabled,
+    decimalPlaces = 2
+}: {
+    value: number
+    max: number
+    step: number
+    onChange: (value: number) => void
+    disabled?: boolean
+    decimalPlaces?: number
+}) {
+    const [inputValue, setInputValue] = useState(value.toString())
+
+    useEffect(() => {
+        setInputValue(value.toFixed(decimalPlaces))
+    }, [value, decimalPlaces])
+
+    const handleIncrement = () => {
+        const newValue = Math.min(value + step, max)
+        onChange(newValue)
+    }
+
+    const handleDecrement = () => {
+        const newValue = Math.max(value - step, 0)
+        onChange(newValue)
+    }
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInputValue(e.target.value)
+    }
+
+    const handleInputBlur = () => {
+        let newValue = parseFloat(inputValue)
+        if (isNaN(newValue)) {
+            newValue = 0
+        }
+        newValue = Math.max(0, Math.min(newValue, max))
+        onChange(newValue)
+        setInputValue(newValue.toFixed(decimalPlaces))
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleInputBlur()
+        }
+    }
+
+    return (
+        <div className="flex items-center justify-center w-full gap-2 my-3">
+            <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-full"
+                onClick={handleDecrement}
+                disabled={disabled || value <= 0}
+            >
+                <MinusIcon className="h-3 w-3" />
+            </Button>
+            <Input
+                type="text"
+                value={inputValue}
+                onChange={handleInputChange}
+                onBlur={handleInputBlur}
+                onKeyDown={handleKeyDown}
+                className="h-8 w-24 text-center"
+                disabled={disabled}
+            />
+            <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-full"
+                onClick={handleIncrement}
+                disabled={disabled || value >= max}
+            >
+                <PlusIcon className="h-3 w-3" />
+            </Button>
+        </div>
+    )
+}
+
+// Add DecimalInput component
+function DecimalInput({
+    value,
+    onChange,
+    min = 0,
+    max = 100,
+    step = 1,
+    isInteger = false,
+    disabled = false
+}: {
+    value: number
+    onChange: (value: number) => void
+    min?: number
+    max?: number
+    step?: number
+    isInteger?: boolean
+    disabled?: boolean
+}) {
+    // Store the raw input string to allow for intermediate states like "5."
+    const [inputValue, setInputValue] = useState<string>('')
+    
+    // Update the input value when the external value changes
+    useEffect(() => {
+        if (isInteger) {
+            setInputValue(value.toString());
+        } else if (Number.isInteger(value)) {
+            setInputValue(value.toString());
+        } else {
+            setInputValue(value.toFixed(2));
+        }
+    }, [value, isInteger]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value;
+        
+        // Allow empty input, decimal points, and numbers
+        if (newValue === '' || newValue === '.' || /^[0-9]*\.?[0-9]*$/.test(newValue)) {
+            setInputValue(newValue);
+            
+            // If it's a valid number, update the parent state
+            if (newValue !== '' && newValue !== '.') {
+                const numValue = parseFloat(newValue);
+                if (!isNaN(numValue)) {
+                    // Only update parent if it's within bounds
+                    if (numValue >= min && numValue <= max) {
+                        onChange(numValue);
+                    }
+                }
+            } else if (newValue === '') {
+                // Handle empty input as 0
+                onChange(0);
+            }
+        }
+    };
+
+    const handleBlur = () => {
+        let numValue: number;
+        
+        // Handle any cleaning up when focus leaves the input
+        if (inputValue === '' || inputValue === '.') {
+            numValue = 0;
+        } else {
+            numValue = parseFloat(inputValue);
+            if (isNaN(numValue)) {
+                numValue = 0;
+            }
+        }
+        
+        // Ensure the value is within bounds
+        numValue = Math.max(min, Math.min(numValue, max));
+        
+        // Update parent and formatted display
+        onChange(numValue);
+        
+        // Format the display value properly
+        if (isInteger) {
+            setInputValue(numValue.toString());
+        } else if (Number.isInteger(numValue)) {
+            setInputValue(numValue.toString());
+        } else {
+            setInputValue(numValue.toFixed(2));
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleBlur();
+        }
+    };
+
+    return (
+        <Input
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            className="h-6 w-20 text-center mx-0.5 px-1 truncate"
+            disabled={disabled}
+        />
+    );
 }
 
 export function EstimatedReturns({
@@ -530,22 +719,52 @@ export function EstimatedReturns({
                                             <div className="flex items-center gap-[6px]">
                                                 {!isAssetNotAvailable(row) && (
                                                     <>
-                                                        <HeadingText
-                                                            level="h5"
-                                                            weight="medium"
-                                                            className="text-gray-800"
-                                                        >
-                                                            {getDisplayedValuePrefix(
-                                                                row.key
-                                                            )}
-                                                            {abbreviateNumber(
-                                                                row.selectedValue,
-                                                                row.key ===
-                                                                    'duration'
-                                                                    ? 0
-                                                                    : 2
-                                                            )}
-                                                        </HeadingText>
+                                                        <div className="flex items-center">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="icon"
+                                                                className="h-6 w-6 rounded-full bg-gray-100 border-gray-200"
+                                                                onClick={() => handleSelectedValueChange(
+                                                                    Math.max(0, row.selectedValue - 1),
+                                                                    row.key
+                                                                )}
+                                                                disabled={
+                                                                    isAssetNotAvailable(row) ||
+                                                                    (row.key === 'borrow' && row.totalValue === 0) ||
+                                                                    row.selectedValue <= 0
+                                                                }
+                                                            >
+                                                                <MinusIcon className="h-3 w-3" />
+                                                            </Button>
+                                                            <DecimalInput 
+                                                                value={row.selectedValue}
+                                                                onChange={(value) => handleSelectedValueChange(value, row.key)}
+                                                                min={0}
+                                                                max={row.totalValue}
+                                                                step={row.step}
+                                                                isInteger={row.key === 'duration'}
+                                                                disabled={
+                                                                    isAssetNotAvailable(row) ||
+                                                                    (row.key === 'borrow' && row.totalValue === 0)
+                                                                }
+                                                            />
+                                                            <Button
+                                                                variant="outline"
+                                                                size="icon"
+                                                                className="h-6 w-6 rounded-full bg-gray-100 border-gray-200"
+                                                                onClick={() => handleSelectedValueChange(
+                                                                    Math.min(row.totalValue, row.selectedValue + 1),
+                                                                    row.key
+                                                                )}
+                                                                disabled={
+                                                                    isAssetNotAvailable(row) ||
+                                                                    (row.key === 'borrow' && row.totalValue === 0) ||
+                                                                    row.selectedValue >= row.totalValue
+                                                                }
+                                                            >
+                                                                <PlusIcon className="h-3 w-3" />
+                                                            </Button>
+                                                        </div>
                                                         {row.hasSelectedValue && (
                                                             <div className="flex items-center gap-[6px]">
                                                                 {row.logo && (

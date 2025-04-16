@@ -3,6 +3,7 @@ import { Period } from './periodButtons'
 
 export type TPositionType = 'lend' | 'borrow'
 export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay'
+export type TAddress = `0x${string}`
 
 export type TScAmount = {
     amountRaw: string
@@ -140,6 +141,8 @@ export type TOpportunityTable = {
     collateral_exposure: `0x${string}`[]
     collateral_tokens: `0x${string}`[]
     available_liquidity: number
+    apple_farm_apr: number
+    has_apple_farm_rewards: boolean
 }
 
 // Platform
@@ -172,8 +175,7 @@ export type TPlatform = {
         name: string
         platform_name: string
         protocol_identifier: string
-        // protocol_type: "aaveV3" | "compoundV2" | "morpho" | "fluid";
-        protocol_type: 'aaveV3' | 'compoundV2' | 'morpho' | 'fluid'
+        protocol_type: 'aaveV3' | 'compoundV2' | 'morpho' | 'fluid' | 'euler'
         logo: string
         chain_id: number
         vaultId: string

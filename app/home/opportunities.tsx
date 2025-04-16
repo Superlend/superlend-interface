@@ -31,6 +31,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -58,6 +59,7 @@ export default function Opportunities({
     const [isTableLoading, setIsTableLoading] = useState(false)
     const { allChainsData } = useContext<any>(AssetsDataContext)
     const { walletAddress } = useWalletConnection()
+    const { appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards, hasAppleFarmRewards } = useAppleFarmRewards()
 
     useEffect(() => {
         setColumnVisibility(() => {
@@ -102,6 +104,8 @@ export default function Opportunities({
             collateral_exposure: item.platform.collateral_exposure,
             collateral_tokens: item.platform.collateral_tokens,
             available_liquidity: item.platform.available_liquidity,
+            apple_farm_apr: appleFarmRewardsAprs[item.token.address] ?? 0,
+            has_apple_farm_rewards: hasAppleFarmRewards(item.token.address) && positionType === 'lend',
         }
     })
 

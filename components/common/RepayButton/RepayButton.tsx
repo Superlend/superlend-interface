@@ -42,6 +42,8 @@ import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { TScAmount } from '@/types'
+import { useAuth } from '@/context/auth-provider'
+import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
 
 interface IRepayButtonProps {
     assetDetails: any
@@ -76,6 +78,8 @@ const RepayButton = ({
         })
     const { walletAddress } = useWalletConnection()
     const { repayTx, setRepayTx } = useTxContext() as TTxContext
+    const { logUserEvent } = useLogNewUserEvent()
+    const { accessToken, getAccessTokenFromPrivy } = useAuth()
 
     // const amountBN = useMemo(() => {
     //     return amount ? BigNumber.from(amount.amountRaw) : BigNumber.from(0)
@@ -101,19 +105,23 @@ const RepayButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? repayTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? repayTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
 
     useEffect(() => {
-        if (repayTx.status === 'repay') {
+        getAccessTokenFromPrivy()
+    }, [])
+
+    useEffect(() => {
+        if (repayTx.status === 'repay' && !ETH_ADDRESSES.includes(underlyingAssetAdress)) {
             repay()
         }
     }, [repayTx.status])
@@ -153,7 +161,7 @@ const RepayButton = ({
                     platform_name: assetDetails?.name,
                     chain_name:
                         CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                        Number(assetDetails?.chain_id) as ChainId
                         ],
                     wallet_address: walletAddress,
                 })
@@ -190,9 +198,18 @@ const RepayButton = ({
                             platform_name: assetDetails?.name,
                             chain_name:
                                 CHAIN_ID_MAPPER[
-                                    Number(assetDetails?.chain_id) as ChainId
+                                Number(assetDetails?.chain_id) as ChainId
                                 ],
                             wallet_address: walletAddress,
+                        })
+
+                        logUserEvent({
+                            user_address: walletAddress,
+                            event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                            platform_type: 'superlend_aggregator',
+                            protocol_identifier: assetDetails?.protocol_identifier,
+                            event_data: 'REPAY',
+                            authToken: accessToken || '',
                         })
                     })
                     .catch((error) => {
@@ -220,7 +237,7 @@ const RepayButton = ({
     )
 
     const repayFluidVault = useCallback(async () => {
-        let amountToRepay =  amount.scValue
+        let amountToRepay = amount.scValue
         //  parseUnits(
         //     `${-Number(amount)}`,
         //     assetDetails.asset.token.decimals
@@ -253,10 +270,9 @@ const RepayButton = ({
                     BigInt(amountToRepay.toString()),
                     walletAddress,
                 ],
-                value:
-                    underlyingAssetAdress === ETH_ADDRESSES[0]
-                        ? BigInt(amount.amountParsed.toString())
-                        : BigInt('0'),
+                value: ETH_ADDRESSES.includes(underlyingAssetAdress)
+                    ? BigInt(amount.amountParsed.toString())
+                    : BigInt('0'),
             })
                 .then((data) => {
                     setRepayTx((prev: TRepayTx) => ({
@@ -271,9 +287,18 @@ const RepayButton = ({
                         platform_name: assetDetails?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
-                                Number(assetDetails?.chain_id) as ChainId
+                            Number(assetDetails?.chain_id) as ChainId
                             ],
                         wallet_address: walletAddress,
+                    })
+
+                    logUserEvent({
+                        user_address: walletAddress,
+                        event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                        platform_type: 'superlend_aggregator',
+                        protocol_identifier: assetDetails?.protocol_identifier,
+                        event_data: 'REPAY',
+                        authToken: accessToken || '',
                     })
                 })
                 .catch((error) => {
@@ -346,9 +371,18 @@ const RepayButton = ({
                         platform_name: assetDetails?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
-                                Number(assetDetails?.chain_id) as ChainId
+                            Number(assetDetails?.chain_id) as ChainId
                             ],
                         wallet_address: walletAddress,
+                    })
+
+                    logUserEvent({
+                        user_address: walletAddress,
+                        event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                        platform_type: 'superlend_aggregator',
+                        protocol_identifier: assetDetails?.protocol_identifier,
+                        event_data: 'REPAY',
+                        authToken: accessToken || '',
                     })
                 })
                 .catch((error) => {
@@ -389,32 +423,32 @@ const RepayButton = ({
         }))
     }, [isPending, isConfirming, isConfirmed])
 
-    useEffect(() => {
-        if (repayTx.status === 'view') return
+    // useEffect(() => {
+    //     if (repayTx.status === 'view') return
 
-        if (
-            !repayTx.isConfirmed &&
-            !repayTx.isPending &&
-            !repayTx.isConfirming &&
-            Number(amount.amountParsed) > 0
-        ) {
-            if (repayTx.allowanceBN.gte(amount.amountParsed)) {
-                setRepayTx((prev: TRepayTx) => ({
-                    ...prev,
-                    status: 'repay',
-                    hash: '',
-                    errorMessage: '',
-                }))
-            } else {
-                setRepayTx((prev: TRepayTx) => ({
-                    ...prev,
-                    status: 'approve',
-                    hash: '',
-                    errorMessage: '',
-                }))
-            }
-        }
-    }, [repayTx.allowanceBN])
+    //     if (
+    //         !repayTx.isConfirmed &&
+    //         !repayTx.isPending &&
+    //         !repayTx.isConfirming &&
+    //         Number(amount.amountParsed) > 0
+    //     ) {
+    //         if (repayTx.allowanceBN.gte(amount.amountParsed)) {
+    //             setRepayTx((prev: TRepayTx) => ({
+    //                 ...prev,
+    //                 status: 'repay',
+    //                 hash: '',
+    //                 errorMessage: '',
+    //             }))
+    //         } else {
+    //             setRepayTx((prev: TRepayTx) => ({
+    //                 ...prev,
+    //                 status: 'approve',
+    //                 hash: '',
+    //                 errorMessage: '',
+    //             }))
+    //         }
+    //     }
+    // }, [repayTx.allowanceBN])
 
     useEffect(() => {
         if (

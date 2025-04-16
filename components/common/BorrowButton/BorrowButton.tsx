@@ -41,6 +41,9 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { BigNumber } from 'ethers'
 import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { TScAmount } from '@/types'
+import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
+import { useAuth } from '@/context/auth-provider'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 interface IBorrowButtonProps {
     disabled: boolean
     assetDetails: any
@@ -68,9 +71,10 @@ const BorrowButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    const { address: walletAddress } = useAccount()
+    const { walletAddress } = useWalletConnection()
     const { borrowTx, setBorrowTx } = useTxContext() as TTxContext
-
+    const { logUserEvent } = useLogNewUserEvent()
+    const { accessToken, getAccessTokenFromPrivy } = useAuth()
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
             hash,
@@ -85,6 +89,10 @@ const BorrowButton = ({
     const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
     const isFluidVault = isFluid && assetDetails?.isVault
     const isFluidLend = isFluid && !assetDetails?.isVault
+
+    useEffect(() => {
+        getAccessTokenFromPrivy()
+    }, [])
 
     useEffect(() => {
         if (hash) {
@@ -109,6 +117,14 @@ const BorrowButton = ({
                 chain_name:
                     CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
+            })
+            logUserEvent({
+                user_address: walletAddress,
+                event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                platform_type: 'superlend_aggregator',
+                protocol_identifier: assetDetails?.protocol_identifier,
+                event_data: 'BORROW',
+                authToken: accessToken || '',
             })
         }
     }, [hash, isConfirmed])

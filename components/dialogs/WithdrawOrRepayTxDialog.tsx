@@ -35,7 +35,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { TX_EXPLORER_LINKS } from '@/constants'
+import { SLIPPAGE_PERCENTAGE, TX_EXPLORER_LINKS } from '@/constants'
 import ActionButton from '@/components/common/ActionButton'
 import {
     TRepayTx,
@@ -66,6 +66,9 @@ import { getChainDetails } from '@/app/position-management/helper-functions'
 import { useAssetsDataContext } from '@/context/data-provider'
 import ExternalLink from '@/components/ExternalLink'
 import { parseUnits } from 'ethers/lib/utils'
+import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { ETH_ADDRESSES } from '@/lib/constants'
+import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
 
 export function WithdrawOrRepayTxDialog({
     isOpen,
@@ -109,44 +112,13 @@ export function WithdrawOrRepayTxDialog({
     positionAmount: string | number | undefined
     errorMessage: string | null
 }) {
-    const getActionButtonAmount = () => {
-        const amountWithSlippage = (Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)
-        if (actionType === 'repay') {
-            const amountParsed = parseUnits(
-                amount === '' ? '0' : amountWithSlippage,
-                assetDetails?.asset?.token?.decimals ?? 0
-            ).toString()
-            return {
-                amountRaw: amountWithSlippage,
-                amountParsed,
-                scValue:
-                    amountParsed === maxRepayAmount.maxToRepay
-                        ? maxRepayAmount.maxToRepaySCValue
-                        : '-' + amountParsed.toString(),
-            }
-        }
-        if (actionType === 'withdraw') {
-            const amountParsed = parseUnits(
-                amount === '' ? '0' : amountWithSlippage,
-                assetDetails?.asset?.token?.decimals ?? 0
-            ).toString()
-            const v = {
-                amountRaw: amountWithSlippage,
-                amountParsed,
-                scValue:
-                    amountParsed === maxWithdrawAmount.maxToWithdraw
-                        ? maxWithdrawAmount.maxToWithdrawSCValue
-                        : '-' + amountParsed.toString(),
-            }
-
-            return v
-        }
-        return { amountRaw: '0', scValue: '0', amountParsed: '0' }
-    }
-
     const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
         useTxContext() as TTxContext
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
+    const [localAssetDetails, setLocalAssetDetails] = useState(assetDetails)
+    const [localPositionAmount, setLocalPositionAmount] = useState(positionAmount)
+    const [localMaxWithdrawAmount, setLocalMaxWithdrawAmount] = useState(maxWithdrawAmount)
+    const [localMaxRepayAmount, setLocalMaxRepayAmount] = useState(maxRepayAmount)
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
     const { width: screenWidth } = useDimensions()
@@ -161,11 +133,26 @@ export function WithdrawOrRepayTxDialog({
     const { allChainsData } = useAssetsDataContext()
     const chainDetails = getChainDetails({
         allChainsData,
-        chainIdToMatch: assetDetails?.chain_id,
+        chainIdToMatch: localAssetDetails?.chain_id,
     })
+    const {
+        erc20TokensBalanceData,
+        isLoading: isLoadingErc20TokensBalanceData,
+        // isRefreshing: isRefreshingErc20TokensBalanceData,
+        setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
+    } = useUserTokenBalancesContext()
 
-    const isMorphoVaultsProtocol = !!assetDetails?.vault
+    const currentTokenBalanceInWallet = (
+        erc20TokensBalanceData[Number(chain_id)]?.[localAssetDetails?.asset?.token?.address.toLowerCase()]
+            ?.balanceFormatted ?? 0
+    ).toString()
+
+    const isMorphoVaultsProtocol = !!localAssetDetails?.vault
     // const isMorphoMarketProtocol = !!assetDetails?.market
+    
+    const withdrawTxCompleted = withdrawTx.isConfirmed && withdrawTx.hash && withdrawTx.status === 'view'
+    const repayTxCompleted = repayTx.isConfirmed && repayTx.hash && repayTx.status === 'view'
+    const showPointsEarnedBanner = withdrawTxCompleted || repayTxCompleted
 
     useEffect(() => {
         if (isWithdrawAction && !isMorphoVaultsProtocol) {
@@ -192,13 +179,17 @@ export function WithdrawOrRepayTxDialog({
         setHasAcknowledgedRisk(false)
 
         if (isOpen) {
+            // Update local states when dialog opens
+            setLocalAssetDetails(assetDetails)
+            setLocalPositionAmount(positionAmount)
+            setLocalMaxWithdrawAmount(maxWithdrawAmount)
+            setLocalMaxRepayAmount(maxRepayAmount)
             // Switch chain when the dialog is opened
             if (!!walletAddress) {
-                // modal.switchNetwork(CHAIN_ID_MAPPER[Number(chain_id) as ChainId])
                 handleSwitchChain(Number(chain_id))
             }
         }
-    }, [isOpen, chain_id])
+    }, [isOpen, chain_id, maxWithdrawAmount, maxRepayAmount, assetDetails, positionAmount])
 
     function resetLendwithdrawTx() {
         setRepayTx((prev: TRepayTx) => ({
@@ -238,7 +229,7 @@ export function WithdrawOrRepayTxDialog({
     }
 
     const inputUsdAmount =
-        Number(amount) * Number(assetDetails?.asset?.token?.price_usd)
+        Number(amount) * Number(localAssetDetails?.asset?.token?.price_usd)
 
     function handleInputUsdAmount(amount: string) {
         const amountFormatted = hasExponent(amount)
@@ -268,19 +259,23 @@ export function WithdrawOrRepayTxDialog({
 
     const canDisplayExplorerLinkWhileLoading = isWithdrawAction
         ? withdrawTx.hash.length > 0 &&
-          (withdrawTx.isConfirming || withdrawTx.isPending)
+        (withdrawTx.isConfirming || withdrawTx.isPending)
         : repayTx.hash.length > 0 && (repayTx.isConfirming || repayTx.isPending)
 
     function getNewHfColor() {
         const newHF = Number(healthFactorValues.newHealthFactor.toString())
         const HF = Number(healthFactorValues.healthFactor.toString())
 
-        if (newHF < HF) {
+        // if (newHF < HF) {
+        //     return 'text-danger-500'
+        // } else if (newHF > HF) {
+        //     return 'text-success-500'
+        // } else {
+        //     return 'text-warning-500'
+        // }
+
+        if (newHF < 2) {
             return 'text-danger-500'
-        } else if (newHF > HF) {
-            return 'text-success-500'
-        } else {
-            return 'text-warning-500'
         }
     }
 
@@ -290,8 +285,8 @@ export function WithdrawOrRepayTxDialog({
         )
     }
 
-    const currentPositionAmount = Number(positionAmount) // In Dollar Value
-    const inputAmountInDollar = (Number(amount) * Number(assetDetails?.asset?.token?.price_usd))
+    const currentPositionAmount = Number(localPositionAmount) // In Dollar Value
+    const inputAmountInDollar = (Number(amount) * Number(localAssetDetails?.asset?.token?.price_usd))
     const newPositionAmount = currentPositionAmount - inputAmountInDollar
 
     const disableActionButton = disabled || isTxInProgress
@@ -302,7 +297,7 @@ export function WithdrawOrRepayTxDialog({
             return (
                 !isWalletConnected ||
                 Number(amount) ===
-                    Number(maxWithdrawAmount.maxToWithdrawFormatted) ||
+                Number(localMaxWithdrawAmount.maxToWithdrawFormatted) ||
                 isLoadingMaxAmount
             )
         }
@@ -349,10 +344,10 @@ export function WithdrawOrRepayTxDialog({
             >
                 {getTxInProgressText({
                     amount,
-                    tokenName: assetDetails?.asset?.token?.symbol,
+                    tokenName: localAssetDetails?.asset?.token?.symbol,
                     txStatus: isWithdrawAction ? withdrawTx : repayTx,
                     actionType,
-                    isMorphoVaults: !!assetDetails?.vault,
+                    isMorphoVaults: !!localAssetDetails?.vault,
                 })}
             </BodyText>
             {canDisplayExplorerLinkWhileLoading && (
@@ -375,8 +370,8 @@ export function WithdrawOrRepayTxDialog({
                                     isWithdrawAction
                                         ? withdrawTx.hash
                                         : repayTx.hash,
-                                    assetDetails?.chain_id ||
-                                        assetDetails?.platform?.chain_id
+                                    localAssetDetails?.chain_id ||
+                                    localAssetDetails?.platform?.chain_id
                                 )}
                                 target="_blank"
                                 rel="noreferrer"
@@ -407,82 +402,82 @@ export function WithdrawOrRepayTxDialog({
                 repay: true,
                 withdraw: true,
             }) && (
-                // <DialogTitle asChild>
-                <HeadingText
-                    level="h4"
-                    weight="medium"
-                    className="text-gray-800 text-center capitalize"
-                >
-                    {isWithdrawAction ? 'Withdraw Token' : `Repay Borrowing`}
-                </HeadingText>
-                // </DialogTitle>
-            )}
+                    // <DialogTitle asChild>
+                    <HeadingText
+                        level="h4"
+                        weight="medium"
+                        className="text-gray-800 text-center capitalize"
+                    >
+                        {isWithdrawAction ? 'Withdraw Token' : `Repay Borrowing`}
+                    </HeadingText>
+                    // </DialogTitle>
+                )}
             {/* Confirmation details UI */}
             {isShowBlock({
                 repay: false,
                 withdraw: false,
             }) && (
-                <div className="flex flex-col items-center justify-center gap-[6px]">
-                    <ImageWithDefault
-                        src={assetDetails?.asset?.token?.logo}
-                        alt={assetDetails?.asset?.token?.symbol}
-                        width={40}
-                        height={40}
-                        className="rounded-full max-w-[40px] max-h-[40px]"
-                    />
-                    <HeadingText
-                        level="h3"
-                        weight="medium"
-                        className="text-gray-800 truncate max-w-[200px]"
-                    >
-                        {amount} {assetDetails?.asset?.token?.symbol}
-                    </HeadingText>
-                    {isShowBlock({
-                        repay: false,
-                        withdraw: false,
-                    }) && (
-                        <Badge
-                            variant={isTxFailed ? 'destructive' : 'green'}
-                            className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
+                    <div className="flex flex-col items-center justify-center gap-[6px]">
+                        <ImageWithDefault
+                            src={localAssetDetails?.asset?.token?.logo}
+                            alt={localAssetDetails?.asset?.token?.symbol}
+                            width={40}
+                            height={40}
+                            className="rounded-full max-w-[40px] max-h-[40px]"
+                        />
+                        <HeadingText
+                            level="h3"
+                            weight="medium"
+                            className="text-gray-800 truncate max-w-[200px]"
                         >
-                            {isWithdrawAction && withdrawTx.status === 'view'
-                                ? 'Withdraw'
-                                : 'Repay'}{' '}
-                            {isTxFailed ? 'Failed' : 'Successful'}
-                            {!isTxFailed && (
-                                <CircleCheckIcon
-                                    width={16}
-                                    height={16}
-                                    className="stroke-[#00AD31]"
-                                />
+                            {amount} {localAssetDetails?.asset?.token?.symbol}
+                        </HeadingText>
+                        {isShowBlock({
+                            repay: false,
+                            withdraw: false,
+                        }) && (
+                                <Badge
+                                    variant={isTxFailed ? 'destructive' : 'green'}
+                                    className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
+                                >
+                                    {isWithdrawAction && withdrawTx.status === 'view'
+                                        ? 'Withdraw'
+                                        : 'Repay'}{' '}
+                                    {isTxFailed ? 'Failed' : 'Successful'}
+                                    {!isTxFailed && (
+                                        <CircleCheckIcon
+                                            width={16}
+                                            height={16}
+                                            className="stroke-[#00AD31]"
+                                        />
+                                    )}
+                                    {isTxFailed && (
+                                        <CircleXIcon
+                                            width={16}
+                                            height={16}
+                                            className="stroke-danger-500"
+                                        />
+                                    )}
+                                </Badge>
                             )}
-                            {isTxFailed && (
-                                <CircleXIcon
-                                    width={16}
-                                    height={16}
-                                    className="stroke-danger-500"
-                                />
+                        {isShowBlock({
+                            repay: false,
+                            withdraw: false,
+                        }) && (
+                                <Badge
+                                    variant="green"
+                                    className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
+                                >
+                                    Token approved
+                                    <CircleCheckIcon
+                                        width={16}
+                                        height={16}
+                                        className="stroke-[#00AD31]"
+                                    />
+                                </Badge>
                             )}
-                        </Badge>
-                    )}
-                    {isShowBlock({
-                        repay: false,
-                        withdraw: false,
-                    }) && (
-                        <Badge
-                            variant="green"
-                            className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
-                        >
-                            Token approved
-                            <CircleCheckIcon
-                                width={16}
-                                height={16}
-                                className="stroke-[#00AD31]"
-                            />
-                        </Badge>
-                    )}
-                </div>
-            )}
+                    </div>
+                )}
         </>
     )
 
@@ -492,241 +487,248 @@ export function WithdrawOrRepayTxDialog({
             <div className="flex flex-col gap-[12px] max-w-full overflow-hidden">
                 {/* Edit amount block when approving repay or withdraw - Block 1*/}
                 {isShowBlock({
-                    repay: repayTx.status === 'approve',
+                    repay: repayTx.status === 'approve' || (repayTx.status === 'repay' && ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? '')),
                     withdraw:
                         withdrawTx.status === 'approve' ||
                         (!isMorphoVaultsProtocol &&
                             withdrawTx.status === 'withdraw'),
                 }) && (
-                    <div className="flex items-center gap-2 px-6 py-3 bg-gray-200 lg:bg-white rounded-5 w-full ring-1 ring-inset ring-secondary-300">
-                        <ImageWithDefault
-                            src={assetDetails?.asset?.token?.logo}
-                            alt={assetDetails?.asset?.token?.symbol}
-                            width={24}
-                            height={24}
-                            className="rounded-full max-w-6 max-h-6"
-                        />
-                        <div className="flex flex-wrap items-center justify-between gap-1 w-full">
-                            <div className="flex-1">
-                                <CustomNumberInput
-                                    key={actionType}
-                                    amount={amount}
-                                    setAmount={(amount) => setAmount(amount)}
-                                />
-                            </div>
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                {handleInputUsdAmount(
-                                    inputUsdAmount.toString()
-                                )}
-                            </BodyText>
-                        </div>
-                        <Button
-                            variant="link"
-                            className="uppercase text-[14px] font-medium w-fit p-0 ml-1"
-                            onClick={() =>
-                                setAmount(
-                                    isWithdrawAction
-                                        ? (maxWithdrawAmount.maxToWithdrawFormatted ??
-                                              '0')
-                                        : (maxRepayAmount.maxToRepayFormatted ??
-                                              '0')
-                                )
-                            }
-                            disabled={isDisabledMaxBtn()}
-                        >
-                            max
-                        </Button>
-                    </div>
-                )}
-                {/* Display the token details after amount is set - Block 2 */}
-                {isShowBlock({
-                    repay:
-                        repayTx.status === 'repay' || repayTx.status === 'view',
-                    withdraw:
-                        (isMorphoVaultsProtocol &&
-                            withdrawTx.status === 'withdraw') ||
-                        withdrawTx.status === 'view',
-                }) && (
-                    <div className="flex items-center gap-2 px-6 py-2 bg-gray-200 lg:bg-white rounded-5 w-full">
-                        <InfoTooltip
-                            label={
-                                <ImageWithBadge
-                                    mainImg={
-                                        assetDetails?.asset?.token?.logo || ''
-                                    }
-                                    badgeImg={chainDetails?.logo || ''}
-                                    mainImgAlt={
-                                        assetDetails?.asset?.token?.symbol
-                                    }
-                                    badgeImgAlt={chainDetails?.name}
-                                    mainImgWidth={'32'}
-                                    mainImgHeight={'32'}
-                                    badgeImgWidth={'12'}
-                                    badgeImgHeight={'12'}
-                                    badgeCustomClass={
-                                        'bottom-[-2px] right-[1px]'
-                                    }
-                                />
-                            }
-                            content={getTooltipContent({
-                                tokenSymbol: assetDetails?.asset?.token?.symbol,
-                                tokenLogo: assetDetails?.asset?.token?.logo,
-                                tokenName: assetDetails?.asset?.token?.name,
-                                chainName: chainDetails?.name || '',
-                                chainLogo: chainDetails?.logo || '',
-                            })}
-                        />
-                        <div className="flex flex-col items-start gap-0 w-fit">
-                            <HeadingText
-                                level="h3"
-                                weight="medium"
-                                className="text-gray-800 flex items-center gap-1"
-                            >
-                                <span
-                                    className="inline-block truncate max-w-[200px]"
-                                    title={amount}
-                                >
-                                    {(Number(amount) * 0.995).toFixed(assetDetails?.asset?.token?.decimals)}
-                                </span>
-                                <span
-                                    className="inline-block truncate max-w-[100px]"
-                                    title={assetDetails?.asset?.token?.symbol}
-                                >
-                                    {assetDetails?.asset?.token?.symbol}
-                                </span>
-                            </HeadingText>
-                            <div className="flex items-center justify-start gap-1">
+                        <div className="flex items-center gap-2 px-6 py-3 bg-gray-200 lg:bg-white rounded-5 w-full ring-1 ring-inset ring-secondary-300">
+                            <ImageWithDefault
+                                src={localAssetDetails?.asset?.token?.logo}
+                                alt={localAssetDetails?.asset?.token?.symbol}
+                                width={24}
+                                height={24}
+                                className="rounded-full max-w-6 max-h-6"
+                            />
+                            <div className="flex flex-wrap items-center justify-between gap-1 w-full">
+                                <div className="flex-1">
+                                    <CustomNumberInput
+                                        key={actionType}
+                                        amount={amount}
+                                        setAmount={(amount) => setAmount(amount)}
+                                    />
+                                </div>
                                 <BodyText
-                                    level="body3"
-                                    weight="medium"
+                                    level="body2"
+                                    weight="normal"
                                     className="text-gray-600"
                                 >
                                     {handleInputUsdAmount(
                                         inputUsdAmount.toString()
                                     )}
                                 </BodyText>
-                                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-                                <BodyText
-                                    level="body3"
+                            </div>
+                            <Button
+                                variant="link"
+                                className="uppercase text-[14px] font-medium w-fit p-0 ml-1"
+                                onClick={() =>
+                                    setAmount(
+                                        isWithdrawAction
+                                            ? ((Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
+                                                '0')
+                                            : ((Number(localMaxRepayAmount.maxToRepayFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
+                                                '0')
+                                    )
+                                }
+                                disabled={isDisabledMaxBtn()}
+                            >
+                                max
+                            </Button>
+                        </div>
+                    )}
+                {/* Display the token details after amount is set - Block 2 */}
+                {isShowBlock({
+                    repay:
+                        (repayTx.status === 'repay' && !ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? '')) || repayTx.status === 'view',
+                    withdraw:
+                        (isMorphoVaultsProtocol &&
+                            withdrawTx.status === 'withdraw') ||
+                        withdrawTx.status === 'view',
+                }) && (
+                        <div className="flex items-center gap-2 px-6 py-2 bg-gray-200 lg:bg-white rounded-5 w-full">
+                            <InfoTooltip
+                                label={
+                                    <ImageWithBadge
+                                        mainImg={
+                                            localAssetDetails?.asset?.token?.logo || ''
+                                        }
+                                        badgeImg={chainDetails?.logo || ''}
+                                        mainImgAlt={
+                                            localAssetDetails?.asset?.token?.symbol
+                                        }
+                                        badgeImgAlt={chainDetails?.name}
+                                        mainImgWidth={'32'}
+                                        mainImgHeight={'32'}
+                                        badgeImgWidth={'12'}
+                                        badgeImgHeight={'12'}
+                                        badgeCustomClass={
+                                            'bottom-[-2px] right-[1px]'
+                                        }
+                                    />
+                                }
+                                content={getTooltipContent({
+                                    tokenSymbol: localAssetDetails?.asset?.token?.symbol,
+                                    tokenLogo: localAssetDetails?.asset?.token?.logo,
+                                    tokenName: localAssetDetails?.asset?.token?.name,
+                                    chainName: chainDetails?.name || '',
+                                    chainLogo: chainDetails?.logo || '',
+                                })}
+                            />
+                            <div className="flex flex-col items-start gap-0 w-fit">
+                                <HeadingText
+                                    level="h3"
                                     weight="medium"
-                                    className="text-gray-600 flex items-center gap-1"
+                                    className="text-gray-800 flex items-center gap-1"
                                 >
                                     <span
-                                        className="inline-block truncate max-w-full"
-                                        title={capitalizeText(
-                                            chainDetails?.name ?? ''
-                                        )}
+                                        className="inline-block truncate max-w-[200px]"
+                                        title={amount}
                                     >
-                                        {capitalizeText(
-                                            chainDetails?.name ?? ''
-                                        )}
+                                        {amount}
                                     </span>
-                                </BodyText>
-                                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-                                <BodyText
-                                    level="body3"
-                                    weight="medium"
-                                    className="text-gray-600 truncate max-w-full"
-                                >
-                                    {
-                                        PlatformTypeMap[
-                                            assetDetails?.protocol_type as keyof typeof PlatformTypeMap
-                                        ]
-                                    }
-                                </BodyText>
+                                    <span
+                                        className="inline-block truncate max-w-[100px]"
+                                        title={localAssetDetails?.asset?.token?.symbol}
+                                    >
+                                        {localAssetDetails?.asset?.token?.symbol}
+                                    </span>
+                                </HeadingText>
+                                <div className="flex items-center justify-start gap-1">
+                                    <BodyText
+                                        level="body3"
+                                        weight="medium"
+                                        className="text-gray-600"
+                                    >
+                                        {handleInputUsdAmount(
+                                            inputUsdAmount.toString()
+                                        )}
+                                    </BodyText>
+                                    <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                                    <BodyText
+                                        level="body3"
+                                        weight="medium"
+                                        className="text-gray-600 flex items-center gap-1"
+                                    >
+                                        <span
+                                            className="inline-block truncate max-w-full"
+                                            title={capitalizeText(
+                                                chainDetails?.name ?? ''
+                                            )}
+                                        >
+                                            {capitalizeText(
+                                                chainDetails?.name ?? ''
+                                            )}
+                                        </span>
+                                    </BodyText>
+                                    <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                                    <BodyText
+                                        level="body3"
+                                        weight="medium"
+                                        className="text-gray-600 truncate max-w-full"
+                                    >
+                                        {
+                                            PlatformTypeMap[
+                                            localAssetDetails?.protocol_type as keyof typeof PlatformTypeMap
+                                            ]
+                                        }
+                                    </BodyText>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
                 {/* Block 3 */}
                 <div className="flex flex-col items-center justify-between px-6 bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
                     {isShowBlock({
                         repay: true,
-                        withdraw: true,
+                        withdraw: false,
                     }) && (
-                        <div
-                            className={`flex items-center justify-between w-full py-3`}
-                        >
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
+                            <div
+                                className={`flex items-center justify-between w-full py-3`}
                             >
-                                {isWithdrawAction
-                                    ? 'Withdraw limit:'
-                                    : 'Borrowed:'}
-                            </BodyText>
-                            {isLoadingMaxAmount ? (
-                                <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
-                            ) : (
                                 <BodyText
                                     level="body2"
                                     weight="normal"
-                                    className="text-gray-800"
-                            >
-                                {handleSmallestValue(
-                                    isWithdrawAction
-                                        ? maxWithdrawAmount.maxToWithdrawFormatted
-                                        : (positionAmount ?? 0).toString()
-                                )}{' '}
-                                    {assetDetails?.asset?.token?.symbol ??
-                                        assetDetails?.token?.symbol}
+                                    className="text-gray-600"
+                                >
+                                    Balance
                                 </BodyText>
-                            )}
-                        </div>
-                    )}
+                                {isLoadingErc20TokensBalanceData ? (
+                                    <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
+                                ) : (
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="text-gray-800"
+                                    >
+                                        {handleSmallestValue(currentTokenBalanceInWallet)}{" "}
+                                        {localAssetDetails?.asset?.token?.symbol}
+                                    </BodyText>
+                                )}
+                            </div>
+                        )}
                     {isShowBlock({
                         repay: true,
                         withdraw: true,
                     }) && (
-                        <div className="flex items-center justify-between w-full py-3">
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
+                            <div
+                                className={`flex items-center justify-between w-full py-3`}
                             >
-                                Remaining {isWithdrawAction ? 'supply' : 'debt'}
-                            </BodyText>
-                            <div className="flex flex-col items-end justify-end gap-2">
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-1">
-                                        <BodyText
-                                            level="body2"
-                                            weight="normal"
-                                            className={`text-gray-800`}
-                                        >
-                                             {hasLowestDisplayValuePrefix(currentPositionAmount)}
-                                             ${isLowestValue(currentPositionAmount)
-                                                ? getLowestDisplayValue(currentPositionAmount)
-                                                : abbreviateNumber(currentPositionAmount)}
-                                        </BodyText>
-                                        {!(
-                                            currentPositionAmount !==
-                                                newPositionAmount &&
-                                            !errorMessage
-                                        ) && (
-                                            <ImageWithDefault
-                                                src={
-                                                    assetDetails?.asset?.token
-                                                        ?.logo
-                                                }
-                                                alt={
-                                                    assetDetails?.asset?.token
-                                                        ?.symbol
-                                                }
-                                                width={16}
-                                                height={16}
-                                                className="rounded-full max-w-[16px] max-h-[16px]"
-                                            />
-                                        )}
-                                    </div>
-                                    {currentPositionAmount !==
-                                        newPositionAmount &&
-                                        !errorMessage && (
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-gray-600"
+                                >
+                                    {isWithdrawAction
+                                        ? 'Withdraw limit'
+                                        : 'Borrowed'}
+                                </BodyText>
+                                {isLoadingMaxAmount ? (
+                                    <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
+                                ) : (
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="text-gray-800"
+                                    >
+                                        {handleSmallestValue(
+                                            isWithdrawAction
+                                                ? localMaxWithdrawAmount.maxToWithdrawFormatted
+                                                : (localPositionAmount ?? 0).toString()
+                                        )}{' '}
+                                        {localAssetDetails?.asset?.token?.symbol ??
+                                            localAssetDetails?.token?.symbol}
+                                    </BodyText>
+                                )}
+                            </div>
+                        )}
+                    {isShowBlock({
+                        repay: true,
+                        withdraw: true,
+                    }) && (
+                            <div className="flex items-center justify-between w-full py-3">
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-gray-600"
+                                >
+                                    Remaining {isWithdrawAction ? 'supply' : 'debt'}
+                                </BodyText>
+                                <div className="flex flex-col items-end justify-end gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1">
+                                            <BodyText
+                                                level="body2"
+                                                weight="normal"
+                                                className={`text-gray-800`}
+                                            >
+                                                {hasLowestDisplayValuePrefix(currentPositionAmount)}
+                                                ${isLowestValue(currentPositionAmount)
+                                                    ? getLowestDisplayValue(currentPositionAmount)
+                                                    : abbreviateNumber(currentPositionAmount)}
+                                            </BodyText>
+                                        </div>
+                                        {(currentPositionAmount !== newPositionAmount || withdrawTx.status === 'view' || repayTx.status === 'view') && (
                                             <>
                                                 <ArrowRightIcon
                                                     width={16}
@@ -745,116 +747,103 @@ export function WithdrawOrRepayTxDialog({
                                                             ? getLowestDisplayValue(newPositionAmount)
                                                             : abbreviateNumber(newPositionAmount)}
                                                     </BodyText>
-                                                    {/* <ImageWithDefault
-                                                        src={
-                                                            assetDetails?.asset
-                                                                ?.token?.logo
-                                                        }
-                                                        alt={
-                                                            assetDetails?.asset
-                                                                ?.token?.symbol
-                                                        }
-                                                        width={16}
-                                                        height={16}
-                                                        className="rounded-full max-w-[16px] max-h-[16px]"
-                                                    /> */}
                                                 </div>
                                             </>
                                         )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
                     {isShowBlock({
                         repay: !!Number(healthFactorValues.newHealthFactor),
                         withdraw: !!Number(healthFactorValues.newHealthFactor),
                     }) && (
-                        <div className="flex items-center justify-between w-full py-3">
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                Health factor
-                            </BodyText>
-                            <div className="flex flex-col items-end justify-end gap-2">
-                                <div className="flex items-center gap-2">
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className={`text-gray-800`}
-                                    >
-                                        {healthFactorValues.healthFactor.toFixed(
-                                            2
-                                        )}
-                                    </BodyText>
-                                    <ArrowRightIcon
-                                        width={16}
-                                        height={16}
-                                        className="stroke-gray-800"
-                                        strokeWidth={2.5}
-                                    />
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className={getNewHfColor()}
-                                    >
-                                        {healthFactorValues.newHealthFactor.toFixed(
-                                            2
-                                        )}
-                                    </BodyText>
+                            <div className="flex items-center justify-between w-full py-3">
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-gray-600"
+                                >
+                                    Health factor
+                                </BodyText>
+                                <div className="flex flex-col items-end justify-end gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <BodyText
+                                            level="body2"
+                                            weight="normal"
+                                            className={`text-gray-800`}
+                                        >
+                                            {healthFactorValues.healthFactor.toFixed(
+                                                2
+                                            )}
+                                        </BodyText>
+                                        <ArrowRightIcon
+                                            width={16}
+                                            height={16}
+                                            className="stroke-gray-800"
+                                            strokeWidth={2.5}
+                                        />
+                                        <BodyText
+                                            level="body2"
+                                            weight="normal"
+                                            className={getNewHfColor()}
+                                        >
+                                            {healthFactorValues.newHealthFactor.toFixed(
+                                                2
+                                            )}
+                                        </BodyText>
+                                    </div>
+                                    <Label size="small" className="text-gray-600">
+                                        Liquidation at &lt;1.0
+                                    </Label>
                                 </div>
-                                <Label size="small" className="text-gray-600">
-                                    Liquidation at &lt;1.0
-                                </Label>
                             </div>
-                        </div>
-                    )}
+                        )}
                     {isShowBlock({
                         repay: false,
                         withdraw: false,
                     }) && (
-                        <div className="flex items-center justify-between w-full py-3">
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                View on explorer
-                            </BodyText>
-                            <div className="flex items-center gap-[4px]">
+                            <div className="flex items-center justify-between w-full py-3">
                                 <BodyText
                                     level="body2"
-                                    weight="medium"
-                                    className="text-gray-800 flex items-center gap-[4px]"
+                                    weight="normal"
+                                    className="text-gray-600"
                                 >
-                                    <a
-                                        href={getExplorerLink(
-                                            isWithdrawAction
-                                                ? withdrawTx.hash
-                                                : repayTx.hash,
-                                            assetDetails?.chain_id ||
-                                                assetDetails?.platform?.chain_id
-                                        )}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-secondary-500"
-                                    >
-                                        {getTruncatedTxHash(
-                                            isWithdrawAction
-                                                ? withdrawTx.hash
-                                                : repayTx.hash
-                                        )}
-                                    </a>
-                                    <ArrowUpRightIcon
-                                        width={16}
-                                        height={16}
-                                        className="stroke-secondary-500"
-                                    />
+                                    View on explorer
                                 </BodyText>
+                                <div className="flex items-center gap-[4px]">
+                                    <BodyText
+                                        level="body2"
+                                        weight="medium"
+                                        className="text-gray-800 flex items-center gap-[4px]"
+                                    >
+                                        <a
+                                            href={getExplorerLink(
+                                                isWithdrawAction
+                                                    ? withdrawTx.hash
+                                                    : repayTx.hash,
+                                                localAssetDetails?.chain_id ||
+                                                localAssetDetails?.platform?.chain_id
+                                            )}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-secondary-500"
+                                        >
+                                            {getTruncatedTxHash(
+                                                isWithdrawAction
+                                                    ? withdrawTx.hash
+                                                    : repayTx.hash
+                                            )}
+                                        </a>
+                                        <ArrowUpRightIcon
+                                            width={16}
+                                            height={16}
+                                            className="stroke-secondary-500"
+                                        />
+                                    </BodyText>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
                     {/* <div className="flex items-center justify-between w-full py-[16px]">
                                 <BodyText level="body2" weight="normal" className="text-gray-600">
                                     View on explorer
@@ -874,28 +863,28 @@ export function WithdrawOrRepayTxDialog({
                     // !isWithdrawTxInProgress &&
                     // isHfLow(),
                 }) && (
-                    <div className="flex flex-col items-center justify-center">
-                        <CustomAlert description="Borrowing this amount is not advisable, as the heath factor is close to 1, posing a risk of liquidation." />
-                        <div
-                            className="flex items-center gap-2 w-fit my-5"
-                            onClick={() =>
-                                setHasAcknowledgedRisk(!hasAcknowledgedRisk)
-                            }
-                        >
-                            <Checkbox
-                                id="terms"
-                                checked={hasAcknowledgedRisk}
-                            />
-                            <Label
-                                size="medium"
-                                className="text-gray-800"
-                                id="terms"
+                        <div className="flex flex-col items-center justify-center">
+                            <CustomAlert description="Borrowing this amount is not advisable, as the heath factor is close to 1, posing a risk of liquidation." />
+                            <div
+                                className="flex items-center gap-2 w-fit my-5"
+                                onClick={() =>
+                                    setHasAcknowledgedRisk(!hasAcknowledgedRisk)
+                                }
                             >
-                                I acknowledge the risks involved.
-                            </Label>
+                                <Checkbox
+                                    id="terms"
+                                    checked={hasAcknowledgedRisk}
+                                />
+                                <Label
+                                    size="medium"
+                                    className="text-gray-800"
+                                    id="terms"
+                                >
+                                    I acknowledge the risks involved.
+                                </Label>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
                 {/* Approve Loading & Confirmation status block */}
                 {isShowBlock({
                     repay:
@@ -914,102 +903,103 @@ export function WithdrawOrRepayTxDialog({
                             withdrawTx.status === 'withdraw' ||
                             withdrawTx.status === 'view'),
                 }) && (
-                    <div className="py-1">
-                        {((isRepayTxInProgress &&
-                            repayTx.status === 'approve') ||
-                            (isWithdrawTxInProgress &&
-                                withdrawTx.status === 'approve')) && (
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center justify-start gap-2">
-                                    <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className="text-gray-600"
-                                    >
-                                        {(repayTx.isPending ||
-                                            withdrawTx.isPending) &&
-                                            'Waiting for confirmation...'}
-                                        {(repayTx.isConfirming ||
-                                            withdrawTx.isConfirming) &&
-                                            'Approving...'}
-                                    </BodyText>
-                                </div>
-                                {repayTx.hash &&
-                                    repayTx.status === 'approve' && (
-                                        <ExternalLink
-                                            href={getExplorerLink(
-                                                isWithdrawAction
-                                                    ? withdrawTx.hash
-                                                    : repayTx.hash,
-                                                assetDetails?.chain_id ||
-                                                    assetDetails?.platform
-                                                        ?.chain_id
-                                            )}
-                                        >
+                        <div className="py-1">
+                            {((isRepayTxInProgress &&
+                                repayTx.status === 'approve') ||
+                                (isWithdrawTxInProgress &&
+                                    withdrawTx.status === 'approve')) && (
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center justify-start gap-2">
+                                            <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
                                             <BodyText
                                                 level="body2"
                                                 weight="normal"
-                                                className="text-inherit"
+                                                className="text-gray-600"
                                             >
-                                                View on explorer
+                                                {(repayTx.isPending ||
+                                                    withdrawTx.isPending) &&
+                                                    'Waiting for confirmation...'}
+                                                {(repayTx.isConfirming ||
+                                                    withdrawTx.isConfirming) &&
+                                                    'Approving...'}
                                             </BodyText>
-                                        </ExternalLink>
-                                    )}
-                            </div>
-                        )}
-                        {((!isRepayTxInProgress && repayTx.isConfirmed) ||
-                            repayTx.status === 'repay' ||
-                            repayTx.status === 'view' ||
-                            (!isWithdrawTxInProgress &&
-                                withdrawTx.isConfirmed) ||
-                            withdrawTx.status === 'withdraw' ||
-                            withdrawTx.status === 'view') && (
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center justify-start gap-2">
-                                    <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                        <Check
-                                            className="w-5 h-5 stroke-[#013220]/75"
-                                            strokeWidth={1.5}
-                                        />
-                                    </div>
-                                    <BodyText
-                                        level="body2"
-                                        weight="medium"
-                                        className="text-gray-800"
-                                    >
-                                        Token approved
-                                    </BodyText>
-                                </div>
-                                {(repayTx.hash &&
-                                    (repayTx.isConfirming ||
-                                        repayTx.isConfirmed)) ||
-                                    (withdrawTx.hash &&
-                                        (withdrawTx.isConfirming ||
-                                            withdrawTx.isConfirmed) && (
-                                            <ExternalLink
-                                                href={getExplorerLink(
-                                                    isWithdrawAction
-                                                        ? withdrawTx.hash
-                                                        : repayTx.hash,
-                                                    assetDetails?.chain_id ||
-                                                        assetDetails?.platform
+                                        </div>
+                                        {repayTx.hash &&
+                                            repayTx.status === 'approve' && (
+                                                <ExternalLink
+                                                    href={getExplorerLink(
+                                                        isWithdrawAction
+                                                            ? withdrawTx.hash
+                                                            : repayTx.hash,
+                                                        localAssetDetails?.chain_id ||
+                                                        localAssetDetails?.platform
                                                             ?.chain_id
-                                                )}
-                                            >
-                                                <BodyText
-                                                    level="body2"
-                                                    weight="normal"
-                                                    className="text-inherit"
+                                                    )}
                                                 >
-                                                    View on explorer
-                                                </BodyText>
-                                            </ExternalLink>
-                                        ))}
-                            </div>
-                        )}
-                    </div>
-                )}
+                                                    <BodyText
+                                                        level="body2"
+                                                        weight="normal"
+                                                        className="text-inherit"
+                                                    >
+                                                        View on explorer
+                                                    </BodyText>
+                                                </ExternalLink>
+                                            )}
+                                    </div>
+                                )}
+                            {((!isRepayTxInProgress && repayTx.isConfirmed) ||
+                                repayTx.status === 'repay' ||
+                                repayTx.status === 'view' ||
+                                (!isWithdrawTxInProgress &&
+                                    withdrawTx.isConfirmed) ||
+                                withdrawTx.status === 'withdraw' ||
+                                withdrawTx.status === 'view') &&
+                                (!ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? '')) && (
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center justify-start gap-2">
+                                            <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                                <Check
+                                                    className="w-5 h-5 stroke-[#013220]/75"
+                                                    strokeWidth={1.5}
+                                                />
+                                            </div>
+                                            <BodyText
+                                                level="body2"
+                                                weight="medium"
+                                                className="text-gray-800"
+                                            >
+                                                Token approved
+                                            </BodyText>
+                                        </div>
+                                        {(repayTx.hash &&
+                                            (repayTx.isConfirming ||
+                                                repayTx.isConfirmed)) ||
+                                            (withdrawTx.hash &&
+                                                (withdrawTx.isConfirming ||
+                                                    withdrawTx.isConfirmed) && (
+                                                    <ExternalLink
+                                                        href={getExplorerLink(
+                                                            isWithdrawAction
+                                                                ? withdrawTx.hash
+                                                                : repayTx.hash,
+                                                            localAssetDetails?.chain_id ||
+                                                            localAssetDetails?.platform
+                                                                ?.chain_id
+                                                        )}
+                                                    >
+                                                        <BodyText
+                                                            level="body2"
+                                                            weight="normal"
+                                                            className="text-inherit"
+                                                        >
+                                                            View on explorer
+                                                        </BodyText>
+                                                    </ExternalLink>
+                                                ))}
+                                    </div>
+                                )}
+                        </div>
+                    )}
                 {/* Withdraw/Repay Loading & Confirmation status block */}
                 {isShowBlock({
                     repay:
@@ -1023,113 +1013,123 @@ export function WithdrawOrRepayTxDialog({
                             withdrawTx.isConfirmed) ||
                         isWithdrawTxInProgress,
                 }) && (
-                    <div className="py-1">
-                        {(isRepayTxInProgress ||
-                            (isWithdrawTxInProgress &&
-                                (withdrawTx.status === 'withdraw' ||
-                                    withdrawTx.status === 'view'))) && (
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center justify-start gap-2">
-                                    <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className="text-gray-600"
-                                    >
-                                        {(withdrawTx.isPending ||
-                                            repayTx.isPending) &&
-                                            `Waiting for confirmation...`}
-                                        {(withdrawTx.isConfirming ||
-                                            repayTx.isConfirming) &&
-                                            `${actionType === 'withdraw' ? 'Withdrawing' : 'Repaying'}...`}
-                                    </BodyText>
-                                </div>
-                                {(repayTx.hash &&
-                                    (repayTx.isConfirming ||
-                                        repayTx.isConfirmed)) ||
-                                    (withdrawTx.hash &&
-                                        (withdrawTx.isConfirming ||
-                                            withdrawTx.isConfirmed) && (
-                                            <ExternalLink
-                                                href={getExplorerLink(
-                                                    isWithdrawAction
-                                                        ? withdrawTx.hash
-                                                        : repayTx.hash,
-                                                    assetDetails?.chain_id ||
-                                                        assetDetails?.platform
-                                                            ?.chain_id
-                                                )}
+                        <div className="py-1">
+                            {(isRepayTxInProgress ||
+                                (isWithdrawTxInProgress &&
+                                    (withdrawTx.status === 'withdraw' ||
+                                        withdrawTx.status === 'view'))) && (
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center justify-start gap-2">
+                                            <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
+                                            <BodyText
+                                                level="body2"
+                                                weight="normal"
+                                                className="text-gray-600"
                                             >
-                                                <BodyText
-                                                    level="body2"
-                                                    weight="normal"
-                                                    className="text-inherit"
-                                                >
-                                                    View on explorer
-                                                </BodyText>
-                                            </ExternalLink>
-                                        ))}
-                            </div>
-                        )}
-                        {((withdrawTx.status === 'view' &&
-                            withdrawTx.isConfirmed) ||
-                            (repayTx.status === 'view' &&
-                                repayTx.isConfirmed)) && (
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center justify-start gap-2">
-                                    <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                        <Check
-                                            className="w-5 h-5 stroke-[#013220]/75"
-                                            strokeWidth={1.5}
-                                        />
+                                                {(withdrawTx.isPending ||
+                                                    repayTx.isPending) &&
+                                                    `Waiting for confirmation...`}
+                                                {(withdrawTx.isConfirming ||
+                                                    repayTx.isConfirming) &&
+                                                    `${actionType === 'withdraw' ? 'Withdrawing' : 'Repaying'}...`}
+                                            </BodyText>
+                                        </div>
+                                        {(repayTx.hash &&
+                                            (repayTx.isConfirming ||
+                                                repayTx.isConfirmed)) ||
+                                            (withdrawTx.hash &&
+                                                (withdrawTx.isConfirming ||
+                                                    withdrawTx.isConfirmed) && (
+                                                    <ExternalLink
+                                                        href={getExplorerLink(
+                                                            isWithdrawAction
+                                                                ? withdrawTx.hash
+                                                                : repayTx.hash,
+                                                            localAssetDetails?.chain_id ||
+                                                            localAssetDetails?.platform
+                                                                ?.chain_id
+                                                        )}
+                                                    >
+                                                        <BodyText
+                                                            level="body2"
+                                                            weight="normal"
+                                                            className="text-inherit"
+                                                        >
+                                                            View on explorer
+                                                        </BodyText>
+                                                    </ExternalLink>
+                                                ))}
                                     </div>
-                                    <BodyText
-                                        level="body2"
-                                        weight="medium"
-                                        className="text-gray-800"
-                                    >
-                                        {actionType === 'withdraw'
-                                            ? 'Withdraw successful'
-                                            : 'Repay successful'}
-                                    </BodyText>
-                                </div>
-                                {(repayTx.hash &&
-                                    (repayTx.isConfirming ||
-                                        repayTx.isConfirmed)) ||
-                                    (withdrawTx.hash &&
-                                        (withdrawTx.isConfirming ||
-                                            withdrawTx.isConfirmed) && (
-                                            <ExternalLink
-                                                href={getExplorerLink(
-                                                    isWithdrawAction
-                                                        ? withdrawTx.hash
-                                                        : repayTx.hash,
-                                                    assetDetails?.chain_id ||
-                                                        assetDetails?.platform
-                                                            ?.chain_id
-                                                )}
+                                )}
+                            {((withdrawTx.status === 'view' &&
+                                withdrawTx.isConfirmed) ||
+                                (repayTx.status === 'view' &&
+                                    repayTx.isConfirmed)) && (
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center justify-start gap-2">
+                                            <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                                <Check
+                                                    className="w-5 h-5 stroke-[#013220]/75"
+                                                    strokeWidth={1.5}
+                                                />
+                                            </div>
+                                            <BodyText
+                                                level="body2"
+                                                weight="medium"
+                                                className="text-gray-800"
                                             >
-                                                <BodyText
-                                                    level="body2"
-                                                    weight="normal"
-                                                    className="text-inherit"
-                                                >
-                                                    View on explorer
-                                                </BodyText>
-                                            </ExternalLink>
-                                        ))}
-                            </div>
-                        )}
-                    </div>
-                )}
+                                                {actionType === 'withdraw'
+                                                    ? 'Withdraw successful'
+                                                    : 'Repay successful'}
+                                            </BodyText>
+                                        </div>
+                                        {(repayTx.hash &&
+                                            (repayTx.isConfirming ||
+                                                repayTx.isConfirmed)) ||
+                                            (withdrawTx.hash &&
+                                                (withdrawTx.isConfirming ||
+                                                    withdrawTx.isConfirmed) && (
+                                                    <ExternalLink
+                                                        href={getExplorerLink(
+                                                            isWithdrawAction
+                                                                ? withdrawTx.hash
+                                                                : repayTx.hash,
+                                                            localAssetDetails?.chain_id ||
+                                                            localAssetDetails?.platform
+                                                                ?.chain_id
+                                                        )}
+                                                    >
+                                                        <BodyText
+                                                            level="body2"
+                                                            weight="normal"
+                                                            className="text-inherit"
+                                                        >
+                                                            View on explorer
+                                                        </BodyText>
+                                                    </ExternalLink>
+                                                ))}
+                                    </div>
+                                )}
+                        </div>
+                    )}
                 {/* Error Message */}
-                {errorMessage && <CustomAlert description={errorMessage} />}
+                {
+                    (errorMessage && withdrawTx.status !== 'view' && repayTx.status !== 'view') &&
+                    <CustomAlert description={errorMessage} />
+                }
+                {showPointsEarnedBanner && <TxPointsEarnedBanner />}
                 {/* Block 4 */}
                 <ActionButton
                     disabled={disableActionButton}
                     handleCloseModal={handleOpenChange}
-                    asset={assetDetails}
-                    amount={getActionButtonAmount()}
+                    asset={localAssetDetails}
+                    amount={getActionButtonAmount({
+                        amount,
+                        actionType,
+                        assetDetails: localAssetDetails,
+                        maxRepayAmount: localMaxRepayAmount,
+                        maxWithdrawAmount: localMaxWithdrawAmount,
+                    })}
                     actionType={actionType}
                 />
             </div>
@@ -1229,4 +1229,51 @@ function handleSmallestValue(amount: string, maxDecimalsToDisplay: number = 2) {
         ? Math.abs(Number(amount)).toFixed(10)
         : amount.toString()
     return `${hasLowestDisplayValuePrefix(Number(amountFormatted), maxDecimalsToDisplay)} ${getLowestDisplayValue(Number(amountFormatted), maxDecimalsToDisplay)}`
+}
+
+const getActionButtonAmount = ({
+    amount,
+    actionType,
+    assetDetails,
+    maxRepayAmount,
+    maxWithdrawAmount,
+}: {
+    amount: string
+    actionType: TActionType
+    assetDetails: any
+    maxRepayAmount: any
+    maxWithdrawAmount: any
+}) => {
+    const amountWithSlippage = (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
+    if (actionType === 'repay') {
+        const amountParsed = parseUnits(
+            amount === '' ? '0' : amountWithSlippage,
+            assetDetails?.asset?.token?.decimals ?? 0
+        ).toString()
+        return {
+            amountRaw: amountWithSlippage,
+            amountParsed,
+            scValue:
+                amountParsed === maxRepayAmount.maxToRepay
+                    ? maxRepayAmount.maxToRepaySCValue
+                    : '-' + amountParsed.toString(),
+        }
+    }
+    if (actionType === 'withdraw') {
+        const amountParsed = parseUnits(
+            amount === '' ? '0' : amountWithSlippage,
+            assetDetails?.asset?.token?.decimals ?? 0
+        ).toString()
+        const v = {
+            amountRaw: amountWithSlippage,
+            amountParsed,
+            scValue:
+                amountParsed === maxWithdrawAmount.maxToWithdraw
+                    ? maxWithdrawAmount.maxToWithdrawSCValue
+                    : '-' + amountParsed.toString(),
+        }
+
+        return v
+    }
+    return { amountRaw: '0', scValue: '0', amountParsed: '0' }
 }

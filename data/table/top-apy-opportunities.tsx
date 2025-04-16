@@ -1,5 +1,6 @@
 'use client'
 
+import ExternalLink from '@/components/ExternalLink'
 import ImageWithBadge from '@/components/ImageWithBadge'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
@@ -18,8 +19,10 @@ import {
     getPlatformVersion,
 } from '@/lib/utils'
 import { TOpportunityTable, TReward } from '@/types'
+import { ChainId } from '@/types/chain'
 import { PlatformType } from '@/types/platform'
 import { ColumnDef } from '@tanstack/react-table'
+import { motion } from 'framer-motion'
 import { ChartNoAxesColumnIncreasing, ShieldAlertIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -287,7 +290,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     },
     {
         accessorKey: 'apy_current',
-        accessorFn: (item) => Number(item.apy_current),
+        accessorFn: (item) => Number(item.apy_current) + Number(item.apple_farm_apr),
         header: () => {
             const searchParams = useSearchParams()
             const positionTypeParam =
@@ -313,8 +316,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
-            const apyCurrent = Number(row.getValue('apy_current'))
-            const apyCurrentFormatted = apyCurrent.toFixed(2)
             const hasRewards =
                 row.original?.additional_rewards &&
                 row.original?.rewards.length > 0
@@ -324,6 +325,36 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
+            const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
+            const appleFarmApr = Number(row.original.apple_farm_apr)
+            const hasAppleFarmRewards = row.original.has_apple_farm_rewards
+
+            const apyCurrent = Number(row.getValue('apy_current'))
+            const apyCurrentFormatted = (apyCurrent > 0 && apyCurrent < 0.01) ? '<0.01' : abbreviateNumber(apyCurrent)
+
+            const appleFarmBaseRate = Number(row.original.apy_current)
+            const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
+                ? '<0.01'
+                : appleFarmBaseRate.toFixed(2)
+            const netAppleFarmAPY = Number(row.original.apy_current) + appleFarmApr
+            const netAppleFarmAPYFormatted = netAppleFarmAPY > 0 && netAppleFarmAPY < 0.01
+                ? '<0.01'
+                : netAppleFarmAPY.toFixed(2)
+
+            const appleFarmRewards = [
+                {
+                    asset: {
+                        address: row.original.tokenAddress as `0x${string}`,
+                        name: "APR",
+                        symbol: row.original.tokenSymbol,
+                        logo: '/images/apple-farm-favicon.ico',
+                        decimals: 0,
+                        price_usd: 0,
+                    },
+                    supply_apy: appleFarmApr,
+                    borrow_apy: 0,
+                }
+            ]
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -343,7 +374,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 baseRateFormatted =
                     baseRate < 0.01 && baseRate > 0
                         ? '<0.01'
-                        : getFormattedBaseRate(baseRate)
+                        : baseRate.toFixed(2)
             }
 
             if (
@@ -368,24 +399,55 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-1">
                     <BodyText level={'body2'} weight={'medium'}>
-                        {`${apyCurrentFormatted}%`}
+                        {`${(isEtherlinkChain && hasAppleFarmRewards) ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
                     </BodyText>
+                    {/* REWARDS */}
                     {hasRewards && (
                         <InfoTooltip
                             label={
-                                <ImageWithDefault
-                                    src="/icons/sparkles.svg"
-                                    alt="Rewards"
-                                    width={22}
-                                    height={22}
-                                    className="cursor-pointer hover:scale-110"
-                                />
+                                <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                                    <ImageWithDefault
+                                        src="/icons/sparkles.svg"
+                                        alt="Rewards"
+                                        width={22}
+                                        height={22}
+                                        className="cursor-pointer hover:scale-110"
+                                    />
+                                </span>
                             }
                             content={getRewardsTooltipContent({
                                 baseRateFormatted: baseRateFormatted || '',
                                 rewards: rewards || [],
                                 apyCurrent: apyCurrent || 0,
                                 positionTypeParam,
+                            })}
+                        />
+                    )}
+                    {/* APPLE FARM REWARDS */}
+                    {(isEtherlinkChain && hasAppleFarmRewards) && (
+                        <InfoTooltip
+                            label={
+                                <motion.div
+                                    initial={{ rotate: 0 }}
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
+                                    whileHover={{ rotate: -360 }}
+                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                >
+                                    <ImageWithDefault
+                                        src="/images/apple-farm-favicon.ico"
+                                        alt="Etherlink Rewards"
+                                        width={16}
+                                        height={16}
+                                    />
+                                </motion.div>
+                            }
+                            content={getRewardsTooltipContent({
+                                baseRateFormatted: appleFarmBaseRateFormatted || '',
+                                rewards: appleFarmRewards || [],
+                                apyCurrent: netAppleFarmAPY || 0,
+                                positionTypeParam,
+                                netApyIcon: '/images/apple-farm-favicon.ico',
                             })}
                         />
                     )}
@@ -402,9 +464,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
             const lendTooltipContent =
-                '% 7 day average interest you earn on deposits over a year. This includes compounding.'
+                '% 7 day average interest you earn on deposits over a year. This exludes rewards.'
             const borrowTooltipContent =
-                '% 7 day average interest you pay for your borrows over a year. This includes compunding.'
+                '% 7 day average interest you pay for your borrows over a year. This exludes rewards.'
             const tooltipContent =
                 positionTypeParam === 'lend'
                     ? lendTooltipContent
@@ -413,94 +475,19 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <InfoTooltip
                     side="bottom"
-                    label={<TooltipText>7D Avg APY</TooltipText>}
+                    label={<TooltipText>7D Base APY</TooltipText>}
                     content={tooltipContent}
                 />
             )
         },
         cell: ({ row }) => {
-            const searchParams = useSearchParams()
-            const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
             const apy7DayAvg = Number(row.getValue('apy_avg_7days'))
-            const apy7DayAvgFormatted = apy7DayAvg.toFixed(2)
-            const hasRewards =
-                row.original?.additional_rewards &&
-                row.original?.rewards.length > 0
-            // Declare tooltip content related variables
-            let baseRate, baseRateFormatted, rewards, totalRewards
-            const isLend = positionTypeParam === 'lend'
-            const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
-                row.original?.platformId.split('-')[0].toLowerCase()
-            )
-            const isFluidProtocol = row.original.platformId.split('-')[0].toLowerCase() === PlatformType.FLUID
-
-
-            if (hasRewards) {
-                // Update rewards grouped by asset address
-                rewards = getRewardsGroupedByAsset(row.original?.rewards)
-                // Get total rewards
-                totalRewards = rewards.reduce(
-                    (acc, curr) =>
-                        acc +
-                        Number(isLend ? curr.supply_apy : curr.borrow_apy),
-                    0
-                )
-                // Lend base rate = APY - Asset Total Rewards
-                const lendBaseRate = apy7DayAvg - totalRewards
-                // Borrow base rate = APY + Asset Total Rewards
-                const borrowBaseRate = apy7DayAvg + totalRewards
-                baseRate = Number(isLend ? lendBaseRate : borrowBaseRate)
-                baseRateFormatted =
-                    baseRate < 0.01 && baseRate > 0
-                        ? '<0.01'
-                        : getFormattedBaseRate(baseRate)
-            }
-
-            if (
-                apy7DayAvgFormatted === '0.00' &&
-                !isPairBasedProtocol &&
-                !isLend
-            ) {
-                return (
-                    <InfoTooltip
-                        label={
-                            <TooltipText>
-                                <BodyText level={'body2'} weight={'medium'}>
-                                    {`${apy7DayAvgFormatted}%`}
-                                </BodyText>
-                            </TooltipText>
-                        }
-                        content={'This asset is non-borrowable'}
-                    />
-                )
-            }
+            const apy7DayAvgFormatted = abbreviateNumber(apy7DayAvg)
 
             return (
-                <span className="flex items-center gap-1">
-                    <BodyText level={'body2'} weight={'medium'}>
-                        {`${apy7DayAvgFormatted}%`}
-                    </BodyText>
-                    {(hasRewards && !isFluidProtocol) && (
-                        <InfoTooltip
-                            label={
-                                <ImageWithDefault
-                                    src="/icons/sparkles.svg"
-                                    alt="Rewards"
-                                    width={22}
-                                    height={22}
-                                    className="cursor-pointer hover:scale-110"
-                                />
-                            }
-                            content={getRewardsTooltipContent({
-                                baseRateFormatted: baseRateFormatted || '',
-                                rewards: rewards || [],
-                                apyCurrent: apy7DayAvg || 0,
-                                positionTypeParam,
-                            })}
-                        />
-                    )}
-                </span>
+                <BodyText level={'body2'} weight={'medium'}>
+                    {`${apy7DayAvgFormatted}%`}
+                </BodyText>
             )
         },
         enableGlobalFilter: false,
@@ -833,11 +820,13 @@ function getRewardsTooltipContent({
     rewards,
     apyCurrent,
     positionTypeParam,
+    netApyIcon,
 }: {
     baseRateFormatted: string
     rewards: TReward[]
     apyCurrent: number
     positionTypeParam: string
+    netApyIcon?: string
 }) {
     const baseRateOperator = positionTypeParam === 'lend' ? '+' : '-'
     const isLend = positionTypeParam === 'lend'
@@ -907,7 +896,7 @@ function getRewardsTooltipContent({
             >
                 <div className="flex items-center gap-1">
                     <ImageWithDefault
-                        src="/icons/sparkles.svg"
+                        src={netApyIcon || '/icons/sparkles.svg'}
                         alt="Net APY"
                         width={16}
                         height={16}
@@ -925,6 +914,50 @@ function getRewardsTooltipContent({
                     = {abbreviateNumber(apyCurrent)}%
                 </BodyText>
             </div>
+        </div>
+    )
+}
+
+/**
+ * Get apple rewards tooltip content
+ * @param score
+ * @returns apple rewards tooltip content
+ */
+function getAppleFarmRewardsTooltipContent(score: string) {
+    return (
+        <div className="flex flex-col divide-y divide-gray-800 max-w-[220px]">
+            <div className="flex items-end justify-between gap-2 pb-2">
+                <BodyText
+                    level="body2"
+                    weight="medium"
+                    className="text-gray-800/75"
+                >
+                    APR:
+                </BodyText>
+                <div className="flex items-center gap-1">
+                    <BodyText level="body2" weight="medium" className="text-gray-800">
+                        {score}%
+                    </BodyText>
+                    <ImageWithDefault
+                        src="/images/apple-farm-favicon.ico"
+                        width={16}
+                        height={16}
+                        alt="Apple Farm"
+                        className="inline-block"
+                    />
+                </div>
+            </div>
+            <BodyText level="body3" weight="medium" className="text-gray-800 pt-2">
+                The APR factor indicates the proportion of daily rewards you receive relative to your contribution.
+                <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                    <ExternalLink
+                        href="https://app.applefarm.xyz/"
+                        className='pl-1'
+                    >
+                        Know more
+                    </ExternalLink>
+                </span>
+            </BodyText>
         </div>
     )
 }

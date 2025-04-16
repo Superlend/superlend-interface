@@ -36,6 +36,8 @@ import { PlatformType } from '@/types/platform'
 import { TPositionType, TScAmount } from '@/types'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import { useAuth } from '@/context/auth-provider'
+import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
 
 interface ISupplyMorphoButtonProps {
     disabled: boolean
@@ -59,6 +61,8 @@ const SupplyMorphoButton = ({
     const isMorphoMarkets = isMorpho && !assetDetails?.isVault
     const isMorphoVault = isMorpho && assetDetails?.isVault
     const { logEvent } = useAnalytics()
+    const { logUserEvent } = useLogNewUserEvent()
+    const { accessToken, getAccessTokenFromPrivy } = useAuth()
 
     const {
         writeContractAsync,
@@ -117,6 +121,10 @@ const SupplyMorphoButton = ({
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+
+    useEffect(() => {
+        getAccessTokenFromPrivy()
+    }, [])
 
     useEffect(() => {
         if (lendTx.status === 'lend') {
@@ -201,6 +209,15 @@ const SupplyMorphoButton = ({
                                     Number(assetDetails?.chain_id) as ChainId
                                 ],
                             wallet_address: walletAddress,
+                        })
+
+                        logUserEvent({
+                            user_address: walletAddress,
+                            event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                            platform_type: 'superlend_aggregator',
+                            protocol_identifier: assetDetails?.protocol_identifier,
+                            event_data: 'SUPPLY',
+                            authToken: accessToken || '',
                         })
                     })
                     .catch((error) => {

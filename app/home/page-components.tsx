@@ -5,7 +5,7 @@ import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
 import SelectTokeWidget from '@/components/SelectTokeWidget'
 import MainContainer from '@/components/MainContainer'
 import TokenRates from '@/components/TokenRates'
-import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
+import { SelectTokenByChain as SelectTokenByChainDialog } from '@/components/dialogs/SelectTokenByChain'
 import { usePositionsContext } from '@/context/positions-provider'
 import { useAssetsDataContext } from '@/context/data-provider'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
@@ -20,6 +20,8 @@ import { useSearchParams } from 'next/navigation'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 import { TChain } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import MarketsExplorerBanner from '@/components/MarketsExplorerBanner'
+import { AppleFarmRewardsProvider } from '@/context/apple-farm-rewards-provider'
 
 interface ISelectedToken {
     address: string
@@ -207,20 +209,22 @@ export default function HomePageComponents() {
                                 }}
                                 className="w-full lg:max-w-[600px] xl:max-w-[750px]"
                             >
-                                <Opportunities
-                                    positionType={positionType}
-                                    opportunitiesData={
-                                        filteredOpportunitiesData
-                                    }
-                                    isLoadingOpportunitiesData={
-                                        isLoadingOpportunitiesData
-                                    }
-                                />
+                                <AppleFarmRewardsProvider>
+                                    <Opportunities
+                                        positionType={positionType}
+                                        opportunitiesData={
+                                            filteredOpportunitiesData
+                                        }
+                                        isLoadingOpportunitiesData={
+                                            isLoadingOpportunitiesData
+                                        }
+                                    />
+                                </AppleFarmRewardsProvider>
                             </motion.div>
                         ) : null}
                     </AnimatePresence>
                 </div>
-                <SelectTokenByChain
+                <SelectTokenByChainDialog
                     open={openSelectTokenDialog}
                     setOpen={setOpenSelectTokenDialog}
                     tokens={formattedTokensList}
@@ -229,6 +233,11 @@ export default function HomePageComponents() {
                         isLoadingErc20TokensBalanceData || isConnectingWallet
                     }
                 />
+                {!showOpportunitiesTable && (
+                    <div className="w-full max-w-[400px] mt-5">
+                        <MarketsExplorerBanner />
+                    </div>
+                )}
             </div>
         </MainContainer>
     )

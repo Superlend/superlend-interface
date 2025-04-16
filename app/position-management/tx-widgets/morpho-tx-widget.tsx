@@ -509,7 +509,7 @@ function MorphoMarkets({
                     setPositionType(positionType === 'tab1' ? 'lend' : 'borrow')
                 }}
                 title={{
-                    tab1: isMorphoProtocol ? 'Add Collateral' : 'Lend',
+                    tab1: isMorphoProtocol ? 'Add Collateral' : 'Earn',
                 }}
             />
             <Card className="flex flex-col gap-[12px] p-[16px]">

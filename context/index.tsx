@@ -20,10 +20,13 @@ import {
     scroll,
     metis,
     linea,
+    sonic,
 } from 'viem/chains'
 import { http } from 'wagmi'
 import { AnalyticsProvider } from './analytics-provider'
 import { PageVisitTracker } from '@/components/analytics/PageVisitTracker'
+import { ShowAllMarketsProvider } from './show-all-markets-provider'
+import { AuthProvider } from './auth-provider'
 
 // Set up queryClient
 const queryClient = new QueryClient()
@@ -44,6 +47,7 @@ export const config = createConfig({
         etherlink,
         metis,
         linea,
+        sonic,
     ], // Pass your required chains as an array
     transports: {
         [mainnet.id]: http(),
@@ -58,6 +62,7 @@ export const config = createConfig({
         [arbitrum.id]: http(),
         [etherlink.id]: http(),
         [linea.id]: http(),
+        [sonic.id]: http(),
     },
 })
 
@@ -92,6 +97,7 @@ const privyConfig = {
         etherlink,
         metis,
         linea,
+        sonic,
     ],
 }
 
@@ -107,7 +113,11 @@ function ContextProvider({ children }: { children: ReactNode }) {
                     <WagmiProvider config={config}>
                         <AssetsDataProvider>
                             <UserTokenBalancesProvider>
-                                {children}
+                                <ShowAllMarketsProvider>
+                                    <AuthProvider>
+                                        {children}
+                                    </AuthProvider>
+                                </ShowAllMarketsProvider>
                             </UserTokenBalancesProvider>
                         </AssetsDataProvider>
                     </WagmiProvider>

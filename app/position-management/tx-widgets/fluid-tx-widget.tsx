@@ -46,6 +46,7 @@ import { TLendTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { TPortfolio } from '../../../types/queries/portfolio'
 import { formatUnits, parseUnits } from 'ethers/lib/utils'
+import { ETH_ADDRESSES } from '@/lib/constants'
 
 export default function MorphoTxWidget({
     isLoading: isLoadingPlatformData,
@@ -241,7 +242,7 @@ function FluidLend({
                         weight="medium"
                         className="capitalize text-black/90"
                     >
-                        Lend
+                        Earn
                     </BodyText>
                     {isWalletConnected && (
                         <BodyText
@@ -434,6 +435,23 @@ function FluidVaults({
         )
     }, [portfolioData?.platforms])
 
+
+    // Handle the case where the user is supplying ETH to the vault
+    useEffect(() => {
+        if (
+            lendTx.status === 'approve' && 
+            ETH_ADDRESSES.includes(fluidLendTokenDetails?.token.address?.toLowerCase() ?? '') &&
+            isLendBorrowTxDialogOpen
+        ) {
+            setLendTx((prev: any) => ({
+                ...prev,
+                status: 'lend',
+                hash: '',
+                errorMessage: '',
+            }))
+        }
+    }, [isLendBorrowTxDialogOpen])
+
     useEffect(() => {
         if (lendTx.status === 'approve' && lendTx.isConfirmed) {
             setLendTx((prev: TLendTx) => ({
@@ -563,7 +581,7 @@ function FluidVaults({
                 (lendPosition.token.price_usd ?? 0) *
                 (lendToken.ltv ?? 0)) /
                 100 -
-            ((borrowPosition?.amount ?? 0) * (borrowToken.token.price_usd ?? 0))
+            (borrowPosition?.amount ?? 0) * (borrowToken.token.price_usd ?? 0)
         const maxBorrowToken = (
             maxBorrowUsd / borrowToken.token.price_usd
         ).toFixed(borrowToken.token.decimals)
@@ -743,7 +761,7 @@ function FluidVaults({
                         className="text-gray-600"
                     >
                         {isLendPositionType(positionType)
-                            ? 'Lend'
+                            ? 'Earn'
                             : `Borrow ${fluidBorrowTokenDetails?.token?.symbol || ''}`}
                     </BodyText>
 
@@ -921,7 +939,8 @@ function FluidVaults({
                                 // TODO: Get max borrow amount
                                 maxBorrowAmount={{
                                     maxToBorrow: maxBorrowAmount.maxToBorrow,
-                                    maxToBorrowFormatted: maxBorrowAmount.maxToBorrowFormatted,
+                                    maxToBorrowFormatted:
+                                        maxBorrowAmount.maxToBorrowFormatted,
                                     maxToBorrowSCValue: '0',
                                     user: {},
                                 }}

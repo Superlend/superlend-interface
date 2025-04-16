@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import {
     Dialog,
     DialogContent,
@@ -32,7 +32,7 @@ import ImageWithBadge from '../ImageWithBadge'
 import { Skeleton } from '../ui/skeleton'
 import { useAssetsDataContext } from '@/context/data-provider'
 import ImageWithDefault from '../ImageWithDefault'
-import { ArrowLeft, SearchX, X } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronRight, SearchX, X } from 'lucide-react'
 import SearchInput from '../inputs/SearchInput'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { Badge } from '../ui/badge'
@@ -49,6 +49,15 @@ interface TokenDetails {
     chain_id?: number
     chain_logo?: string
     chain_name?: string
+    balance?: string
+}
+
+interface TokenGroup {
+    mainnetAddress: string
+    symbol: string
+    logo: string
+    tokenCount: number
+    tokens: TokenDetails[]
 }
 
 interface NetworkDetails {
@@ -88,13 +97,84 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     const [selectedChains, setSelectedChains] = useState<string[]>([])
     const [showAllChains, setShowAllChains] = useState(false)
     const [keywords, setKeywords] = useState<string>('')
+    const [expandedTokens, setExpandedTokens] = useState<Set<string>>(new Set())
     const { isWalletConnected } = useWalletConnection()
+
+    // Helper function to get canonical identifier for a token
+    function getTokenIdentifier(token: TokenDetails): string {
+        // Use the token symbol as the identifier for all tokens
+        // This will group all tokens with the same symbol across different chains
+        return token.symbol.toLowerCase();
+    }
+
+    // Function to group tokens by their canonical identity
+    function groupTokensByIdentity(tokens: TokenDetails[]): TokenGroup[] {
+        // First, create a mapping of token identities to their instances
+        const groupedByIdentity = tokens.reduce((acc, token) => {
+            const identifier = getTokenIdentifier(token);
+            
+            if (!acc[identifier]) {
+                acc[identifier] = [];
+            }
+            acc[identifier].push(token);
+            return acc;
+        }, {} as Record<string, TokenDetails[]>);
+        
+        // Convert to array format for easier rendering
+        return Object.entries(groupedByIdentity).map(([identifier, tokens]) => {
+            // Use the Ethereum mainnet token as the primary token if available
+            const primaryToken = tokens.find(t => t.chain_id === 1) || tokens[0];
+            
+            return {
+                mainnetAddress: identifier, // Using the symbol as the group identifier
+                symbol: primaryToken.symbol,
+                logo: primaryToken.logo,
+                tokenCount: tokens.length,
+                tokens: tokens.sort((a, b) => {
+                    // Sort by chain ID to ensure consistent ordering
+                    if (a.chain_id === 1) return -1;
+                    if (b.chain_id === 1) return 1;
+                    return sortTokensByBalance(a, b);
+                })
+            };
+        }).sort((a, b) => {
+            // Sort groups to show stablecoins first, then by token count
+            const aIsStablecoin = STABLECOINS_NAMES_LIST.includes(a.symbol);
+            const bIsStablecoin = STABLECOINS_NAMES_LIST.includes(b.symbol);
+            
+            if (aIsStablecoin && !bIsStablecoin) return -1;
+            if (!aIsStablecoin && bIsStablecoin) return 1;
+            if (aIsStablecoin && bIsStablecoin) {
+                return STABLECOINS_NAMES_LIST.indexOf(a.symbol) - STABLECOINS_NAMES_LIST.indexOf(b.symbol);
+            }
+            
+            // For non-stablecoins, sort by token count (most chains first)
+            return b.tokenCount - a.tokenCount;
+        });
+    }
+
+    function toggleTokenExpansion(address: string) {
+        setExpandedTokens(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(address)) {
+                newSet.delete(address);
+            } else {
+                newSet.add(address);
+            }
+            return newSet;
+        });
+    }
+
+    function isTokenExpanded(address: string) {
+        return expandedTokens.has(address);
+    }
 
     useEffect(() => {
         if (open) {
             setKeywords('')
             setSelectedChains([])
             setShowAllChains(false)
+            setExpandedTokens(new Set())
         }
     }, [open])
 
@@ -161,19 +241,21 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
 
     const filteredTokens = (
         selectedChains.length > 0 && filterByChain
-            ? tokens
-                  .filter(
-                      (token: any) =>
-                          selectedChains.includes(token.chain_id.toString()) &&
-                          token?.symbol
-                              ?.toLowerCase()
-                              .includes(keywords.toLowerCase())
-                  )
-                  .sort(sortTokensByBalance)
-            : tokens.filter((token: any) =>
-                  token?.symbol?.toLowerCase().includes(keywords.toLowerCase())
-              )
-    ).sort(sortTokensByBalance)
+            ? tokens.filter((token: TokenDetails) => {
+                const matchesChain = selectedChains.includes(token.chain_id?.toString() || '');
+                const matchesSearch = 
+                    token?.symbol?.toLowerCase().includes(keywords.toLowerCase()) ||
+                    token?.address?.toLowerCase().includes(keywords.toLowerCase());
+                return matchesChain && matchesSearch;
+            })
+            : tokens.filter((token: TokenDetails) => 
+                token?.symbol?.toLowerCase().includes(keywords.toLowerCase()) ||
+                token?.address?.toLowerCase().includes(keywords.toLowerCase())
+            )
+    ).sort(sortTokensByBalance);
+
+    // Group tokens by identity after filtering
+    const groupedTokens = groupTokensByIdentity(filteredTokens);
 
     const filteredChains = chains?.filter((chain: any) =>
         chain.name.toLowerCase().includes(keywords.toLowerCase())
@@ -181,7 +263,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
 
     const noFilteredChainsFound = filteredChains?.length === 0
     const noFilteredTokensFound =
-        tokens.length === 0 || filteredTokens?.length === 0
+        tokens.length === 0 || groupedTokens.length === 0
 
     // SUB_COMPONENT: Close button to close the dialog
     const closeContentButton = (
@@ -215,7 +297,6 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     }, 0)
 
     // SUB_COMPONENT: Content
-
     const content = (
         <Card
             className={`w-full py-2 border-0 shadow-none bg-white bg-opacity-100 ${showAllChains ? '' : 'divide-y divide-gray-200'}`}
@@ -305,29 +386,29 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                         )}
                     {/* Tokens List */}
                     {!isLoading &&
-                        filteredTokens.length > 0 &&
-                        !showAllChains &&
-                        filteredTokens.map((token: any, index: number) => (
+                        groupedTokens.length > 0 &&
+                        !showAllChains && (
+                        selectedChains.length > 0 || isWalletConnected
+                        ? // When specific chains are selected or wallet is connected, show expanded tokens
+                          filteredTokens.map((token) => (
                             <div
-                                key={index}
+                                key={`${token.address}-${token.chain_id}`}
                                 className="flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4"
                                 onClick={() => onSelectToken(token)}
                             >
                                 <div className="flex items-center gap-1 select-none">
-                                    <div
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center`}
-                                    >
-                                        {showChainBadge && (
+                                    <div className="w-8 h-8 rounded-full flex items-center justify-center">
+                                        {showChainBadge && token.chain_logo && (
                                             <ImageWithBadge
-                                                mainImg={token.logo}
+                                                mainImg={token.logo || ''}
                                                 badgeImg={token.chain_logo}
                                                 mainImgAlt={token.symbol}
-                                                badgeImgAlt={token.chain_id}
+                                                badgeImgAlt={token.chain_id?.toString()}
                                             />
                                         )}
-                                        {!showChainBadge && (
+                                        {(showChainBadge && !token.chain_logo) || !showChainBadge && (
                                             <Image
-                                                src={token.logo}
+                                                src={token.logo || ''}
                                                 alt={token.symbol}
                                                 width={28}
                                                 height={28}
@@ -336,23 +417,194 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                         )}
                                     </div>
                                     <div className="flex flex-col gap-0">
-                                        <BodyText level="body2" weight="medium">
-                                            {token.symbol}
-                                        </BodyText>
-                                        <Label className="text-gray-700">{`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}</Label>
+                                        <div className="flex items-center gap-1">
+                                            <BodyText level="body2" weight="medium" className="max-w-[120px] truncate">
+                                                {token.symbol}
+                                            </BodyText>
+                                            <Label className="text-gray-500">
+                                                on {token.chain_name}
+                                            </Label>
+                                        </div>
+                                        <Label className="text-gray-700">
+                                            {`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}
+                                        </Label>
                                     </div>
                                 </div>
                                 {isWalletConnected && (
                                     <div className="text-right select-none flex flex-col gap-0">
-                                        <BodyText
-                                            level="body2"
-                                            weight="medium"
-                                        >{`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount))} ${formatAmountToDisplay(token.balance ?? token.amount)}`}</BodyText>
-                                        <Label className="text-gray-700">{`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.amount) * Number(token.price_usd)).toString())}`}</Label>
+                                        <BodyText level="body2" weight="medium">
+                                            {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount))} ${formatAmountToDisplay(token.balance ?? token.amount)}`}
+                                        </BodyText>
+                                        <Label className="text-gray-700">
+                                            {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.amount) * Number(token.price_usd)).toString())}`}
+                                        </Label>
                                     </div>
                                 )}
                             </div>
-                        ))}
+                        ))
+                        : // When no chains are selected (All Chains) and wallet is not connected, show grouped tokens
+                          groupedTokens.map((group) => {
+                            // If token exists only on one chain, show expanded view directly
+                            if (group.tokenCount === 1) {
+                                const token = group.tokens[0];
+                                return (
+                                    <div
+                                        key={`${token.address}-${token.chain_id}`}
+                                        className="flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4"
+                                        onClick={() => onSelectToken(token)}
+                                    >
+                                        <div className="flex items-center gap-1 select-none">
+                                            <div className="w-8 h-8 rounded-full flex items-center justify-center">
+                                                {showChainBadge && token.chain_logo && (
+                                                    <ImageWithBadge
+                                                        mainImg={token.logo || ''}
+                                                        badgeImg={token.chain_logo}
+                                                        mainImgAlt={token.symbol}
+                                                        badgeImgAlt={token.chain_id?.toString()}
+                                                    />
+                                                )}
+                                                {(showChainBadge && !token.chain_logo) || !showChainBadge && (
+                                                    <Image
+                                                        src={token.logo || ''}
+                                                        alt={token.symbol}
+                                                        width={28}
+                                                        height={28}
+                                                        className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
+                                                    />
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col gap-0">
+                                                <div className="flex items-center gap-1">
+                                                    <BodyText level="body2" weight="medium" className="max-w-[120px] truncate">
+                                                        {token.symbol}
+                                                    </BodyText>
+                                                    <Label className="text-gray-500">
+                                                        on {token.chain_name}
+                                                    </Label>
+                                                </div>
+                                                <Label className="text-gray-700">
+                                                    {`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}
+                                                </Label>
+                                            </div>
+                                        </div>
+                                        {isWalletConnected && (
+                                            <div className="text-right select-none flex flex-col gap-0">
+                                                <BodyText level="body2" weight="medium">
+                                                    {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount))} ${formatAmountToDisplay(token.balance ?? token.amount)}`}
+                                                </BodyText>
+                                                <Label className="text-gray-700">
+                                                    {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.amount) * Number(token.price_usd)).toString())}`}
+                                                </Label>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            }
+
+                            // For tokens with multiple chains, show group header with expand/collapse
+                            if (isTokenExpanded(group.mainnetAddress)) {
+                                return (
+                                    <div 
+                                        key={`${group.mainnetAddress}-expanded`}
+                                        className="overflow-hidden transition-all duration-300 ease-in-out"
+                                    >
+                                        <div className="animate-in fade-in duration-500">
+                                            {group.tokens.map((token, index) => (
+                                                <div
+                                                    key={`${token.address}-${token.chain_id}`}
+                                                    className={`flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4
+                                                        animate-in slide-in-from-left-4 duration-500
+                                                        ${index === 0 ? 'delay-0' : `delay-[${index * 75}ms]`}`}
+                                                    style={{
+                                                        animationDelay: `${index * 75}ms`,
+                                                        animationFillMode: 'both'
+                                                    }}
+                                                    onClick={() => onSelectToken(token)}
+                                                >
+                                                    <div className="flex items-center gap-1 select-none">
+                                                        <div className="w-8 h-8 rounded-full flex items-center justify-center">
+                                                            {showChainBadge && token.chain_logo && (
+                                                                <ImageWithBadge
+                                                                    mainImg={token.logo || ''}
+                                                                    badgeImg={token.chain_logo}
+                                                                    mainImgAlt={token.symbol}
+                                                                    badgeImgAlt={token.chain_id?.toString()}
+                                                                />
+                                                            )}
+                                                            {(showChainBadge && !token.chain_logo) || !showChainBadge && (
+                                                                <Image
+                                                                    src={token.logo || ''}
+                                                                    alt={token.symbol}
+                                                                    width={28}
+                                                                    height={28}
+                                                                    className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
+                                                                />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col gap-0">
+                                                            <div className="flex items-center gap-1">
+                                                                <BodyText level="body2" weight="medium" className="max-w-[120px] truncate">
+                                                                    {token.symbol}
+                                                                </BodyText>
+                                                                <Label className="text-gray-500">
+                                                                    on {token.chain_name}
+                                                                </Label>
+                                                            </div>
+                                                            <Label className="text-gray-700">
+                                                                {`${token.address.slice(0, 6)}...${token.address.slice(-4)}`}
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                    {isWalletConnected && (
+                                                        <div className="text-right select-none flex flex-col gap-0">
+                                                            <BodyText level="body2" weight="medium">
+                                                                {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount))} ${formatAmountToDisplay(token.balance ?? token.amount)}`}
+                                                            </BodyText>
+                                                            <Label className="text-gray-700">
+                                                                {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.amount) * Number(token.price_usd)).toString())}`}
+                                                            </Label>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            // If not expanded, show the group header
+                            return (
+                                <div
+                                    key={group.mainnetAddress}
+                                    className={`flex items-center justify-between py-2 pl-2 pr-6 cursor-pointer hover:bg-gray-200 active:bg-gray-300 hover:rounded-4 active:rounded-4 transition-all duration-300 ease-in-out ${isTokenExpanded(group.mainnetAddress) ? 'bg-gray-100' : ''}`}
+                                    onClick={() => toggleTokenExpansion(group.mainnetAddress)}
+                                >
+                                    <div className="flex items-center gap-1 select-none">
+                                        <div className="w-8 h-8 rounded-full flex items-center justify-center">
+                                            <Image
+                                                src={group.logo}
+                                                alt={group.symbol}
+                                                width={28}
+                                                height={28}
+                                                className="rounded-full h-[28px] w-[28px] max-w-[28px] max-h-[28px]"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-0">
+                                            <BodyText level="body2" weight="medium" className="max-w-[120px] truncate">
+                                                {group.symbol}
+                                            </BodyText>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="outline" className="rounded-full">
+                                            {group.tokenCount} {group.tokenCount === 1 ? 'chain' : 'chains'}
+                                        </Badge>
+                                        <ChevronRight className={`h-4 w-4 transition-transform duration-300 ease-in-out ${isTokenExpanded(group.mainnetAddress) ? 'rotate-90' : ''}`} />
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
                     {/* Chains List */}
                     {!isLoading &&
                         filterByChain &&
@@ -383,34 +635,29 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
         </Card>
     )
 
-    if (isDesktop) {
-        return (
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="max-w-[436px] w-full pt-4 pb-2 px-2">
-                    <DialogHeader className="pt-2 select-none">
-                        <HeadingText
-                            level="h5"
-                            weight="medium"
-                            className={`text-center`}
-                        >
-                            Select {showAllChains ? 'Chain' : 'Token'}
-                        </HeadingText>
-                        <VisuallyHidden.Root asChild>
-                            <DialogDescription>
-                                Select a token by chain
-                            </DialogDescription>
-                        </VisuallyHidden.Root>
-                    </DialogHeader>
-                    {content}
-                </DialogContent>
-            </Dialog>
-        )
-    }
-
-    return (
+    return isDesktop ? (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent className="max-w-[436px] w-full pt-4 pb-2 px-2">
+                <DialogHeader className="pt-2 select-none">
+                    <HeadingText
+                        level="h5"
+                        weight="medium"
+                        className={`text-center`}
+                    >
+                        Select {showAllChains ? 'Chain' : 'Token'}
+                    </HeadingText>
+                    <VisuallyHidden.Root asChild>
+                        <DialogDescription>
+                            Select a token by chain
+                        </DialogDescription>
+                    </VisuallyHidden.Root>
+                </DialogHeader>
+                {content}
+            </DialogContent>
+        </Dialog>
+    ) : (
         <Drawer open={open} onOpenChange={setOpen}>
             <DrawerContent className="dismissible-false">
-                {/* X Icon to close the dialog */}
                 {closeContentButton}
                 <DrawerHeader className="pt-6">
                     <DrawerTitle asChild>

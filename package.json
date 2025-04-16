@@ -13,6 +13,7 @@
         "@aave/contract-helpers": "^1.32.1",
         "@aave/math-utils": "^1.32.1",
         "@amplitude/analytics-browser": "^2.11.11",
+        "@amplitude/engagement-browser": "^0.0.5",
         "@amplitude/plugin-session-replay-browser": "^1.13.2",
         "@morpho-org/blue-sdk": "^2.1.1",
         "@morpho-org/blue-sdk-wagmi": "^2.0.1",

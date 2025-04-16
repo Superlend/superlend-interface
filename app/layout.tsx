@@ -7,7 +7,10 @@ import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
 import ScrollToTop from '@/components/ScrollToTop'
 import { Toaster } from 'react-hot-toast'
 import EasterEgg from '@/components/EasterEgg'
-import { DebugPortfolioTools } from '@/components/debug/DebugPortfolioTools'
+// import { DebugPortfolioTools } from '@/components/debug/DebugPortfolioTools'
+// import { ShowAllMarketsProvider } from '@/context/show-all-markets-provider'
+import MarketsBanner from '@/components/MarketsBanner'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://app.superlend.xyz'),
@@ -28,9 +31,9 @@ export const metadata: Metadata = {
         'Borrow USDC',
         'Earn USDC',
     ],
-    title: 'Superlend - Lend & Borrow Aggregator',
+    title: 'Superlend | Lending & Borrowing Aggregator for Maximum Yield',
     description:
-        'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.',
+        'Lend, Borrow, and Earn across 150+ DeFi markets with Superlend — the top aggregator for Lending & Borrowing.',
     icons: [
         { url: '/images/logos/favicon-16x16.png', sizes: '16x16' },
         { url: '/images/logos/favicon-32x32.png', sizes: '32x32' },
@@ -40,16 +43,16 @@ export const metadata: Metadata = {
     openGraph: {
         type: 'website',
         url: 'https://app.superlend.xyz/',
-        title: 'Superlend - Lend & Borrow Aggregator',
+        title: 'Superlend | Lending & Borrowing Aggregator for Maximum Yield',
         description:
-            'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.',
-        siteName: 'Superlend - Lend & Borrow Aggregator',
+            'Lend, Borrow, and Earn across 150+ DeFi markets with Superlend — the top aggregator for Lending & Borrowing.',
+        siteName: 'Superlend | Lending & Borrowing Aggregator for Maximum Yield',
         images: 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png',
     },
     twitter: {
-        title: 'Superlend - Lend & Borrow Aggregator',
+        title: 'Superlend | Lending & Borrowing Aggregator for Maximum Yield',
         description:
-            'Lend, Borrow, Earn & level up your DeFi experience with best lending & borrowing aggregator with over 100+ markets.',
+            'Lend, Borrow, and Earn across 150+ DeFi markets with Superlend — the top aggregator for Lending & Borrowing.',
         images: 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png',
     },
     verification: {
@@ -72,10 +75,22 @@ export default function RootLayout({
                 <ScrollToTop />
                 <GoogleTagManager gtmId={GTM_ID} />
                 <GoogleAnalytics gaId={GA_ID} />
+                
+                {/* Zoho SalesIQ Integration */}
+                <Script id="zoho-salesiq-setup" strategy="afterInteractive">
+                    {`window.$zoho=window.$zoho || {};$zoho.salesiq=$zoho.salesiq||{ready:function(){}}`}
+                </Script>
+                <Script 
+                    id="zsiqscript" 
+                    src="https://salesiq.zohopublic.in/widget?wc=siq13bbfecd288b79f4b1f8f420e104879a33497d7b38eeeaf9861740a9e168479d" 
+                    strategy="afterInteractive"
+                />
+                
                 <ContextProvider>
                     <Toaster />
                     <EasterEgg />
                     <Header />
+                    <MarketsBanner />
                     {children}
                     {/* <Footer /> */}
                     {/* <DebugPortfolioTools /> */}

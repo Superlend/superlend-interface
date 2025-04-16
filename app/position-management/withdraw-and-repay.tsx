@@ -37,7 +37,7 @@ import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
 import { useMorphoVaultData } from '@/hooks/protocols/useMorphoVaultData'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
-import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
+import { BUNDLER_ADDRESS_MORPHO, ETH_ADDRESSES } from '@/lib/constants'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useERC20Balance } from '../../hooks/useERC20Balance'
 import { WithdrawOrRepayTxDialog } from '@/components/dialogs/WithdrawOrRepayTxDialog'
@@ -841,6 +841,22 @@ export default function WithdrawAndRepayActionButton({
         hasSingleToken ? tokenDetails[0] : selectedTokenDetails
     )
 
+    // Handle the case where the user is supplying ETH to the vault
+    useEffect(() => {
+        if (
+            repayTx.status === 'approve' &&
+            ETH_ADDRESSES.includes(hasSingleToken ? tokenDetails[0].address : selectedTokenDetails?.address ?? '') &&
+            isWithdrawRepayTxDialogOpen
+        ) {
+            setRepayTx((prev: any) => ({
+                ...prev,
+                status: 'repay',
+                hash: '',
+                errorMessage: '',
+            }))
+        }
+    }, [isWithdrawRepayTxDialogOpen])
+
     function getMaxWithdrawAmountForTx() {
         const isMorphoVaultsProtocol =
             assetDetailsForTx.protocol_type === PlatformType.MORPHO &&
@@ -959,15 +975,16 @@ export default function WithdrawAndRepayActionButton({
 
     const disabledButton: boolean = useMemo(
         () =>
-            Number(amount) >
+        (isWithdrawAction ? (withdrawTx.status === 'view') : (repayTx.status === 'view')) ? false :
+            (Number(amount) >
                 Number(
                     isWithdrawAction
                         ? maxWithdrawAmountForTx.maxToWithdrawFormatted
                         : maxRepayAmountForTx.maxToRepayFormatted
                 ) ||
             Number(amount) <= 0 ||
-            toManyDecimals,
-        [amount, maxWithdrawAmountForTx, toManyDecimals, isWithdrawAction]
+            toManyDecimals),
+        [amount, maxWithdrawAmountForTx, toManyDecimals, isWithdrawAction, withdrawTx.status, repayTx.status]
     )
 
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'

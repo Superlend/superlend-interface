@@ -81,6 +81,10 @@ export default function YourPositionsAtRiskCarousel() {
                 (chain) => chain.chain_id === platform.chain_id
             )
 
+            const isEulerProtocol = platform?.protocol_type?.toLowerCase() === PlatformType.EULER
+            const totalLendAmountForEulerProtocol = lendPositions.reduce((acc, curr) => acc + curr.amount, 0)
+            const totalBorrowAmountForEulerProtocol = borrowPositions.reduce((acc, curr) => acc + curr.amount, 0)
+
             function getSanitizedValue(value: number) {
                 const normalValue = Number(convertScientificToNormal(value))
                 return isLowestValue(normalValue)
@@ -88,8 +92,8 @@ export default function YourPositionsAtRiskCarousel() {
                     : normalValue
             }
 
-            const lendAmount = getSanitizedValue(platform?.total_liquidity)
-            const borrowAmount = getSanitizedValue(platform?.total_borrow)
+            const lendAmount = getSanitizedValue(isEulerProtocol ? totalLendAmountForEulerProtocol : platform?.total_liquidity)
+            const borrowAmount = getSanitizedValue(isEulerProtocol ? totalBorrowAmountForEulerProtocol : platform?.total_borrow)
 
             const isMorpho =
                 platform?.platform_name?.split('-')[0]?.toLowerCase() ===
@@ -224,14 +228,7 @@ export default function YourPositionsAtRiskCarousel() {
             {
                 // positions at risk
                 !isLoadingPortfolioData && POSITIONS_AT_RISK.length > 0 && (
-                    <Carousel
-                        setApi={setApi}
-                        // className={
-                        //     current === count
-                        //         ? BLUR_ON_LEFT_END_STYLES
-                        //         : BLUR_ON_RIGHT_END_STYLES
-                        // }
-                    >
+                    <Carousel setApi={setApi}>
                         <CarouselContent className="pl-5 cursor-grabbing">
                             {POSITIONS_AT_RISK.map((position, index) => (
                                 <CarouselItem
@@ -350,7 +347,7 @@ export default function YourPositionsAtRiskCarousel() {
                                                             {
                                                                 position
                                                                     .positionOn
-                                                                    .platformName
+                                                                    .platformName.split('-')[0]
                                                             }
                                                         </BodyText>
                                                     </div>
@@ -387,9 +384,9 @@ export default function YourPositionsAtRiskCarousel() {
                                                         variant={
                                                             position.riskFactor
                                                                 .theme as
-                                                                | 'destructive'
-                                                                | 'green'
-                                                                | 'yellow'
+                                                            | 'destructive'
+                                                            | 'green'
+                                                            | 'yellow'
                                                         }
                                                     >
                                                         {
@@ -416,9 +413,9 @@ export default function YourPositionsAtRiskCarousel() {
                                                 <a
                                                     href={
                                                         platformWebsiteLinks[
-                                                            position.positionOn.platformName
-                                                                .split('-')[0]
-                                                                .toLowerCase() as keyof typeof platformWebsiteLinks
+                                                        position.positionOn.platformName
+                                                            .split('-')[0]
+                                                            .toLowerCase() as keyof typeof platformWebsiteLinks
                                                         ]
                                                     }
                                                     target="_blank"
@@ -472,18 +469,18 @@ export default function YourPositionsAtRiskCarousel() {
                             {
                                 // positions at risk
                                 POSITIONS_AT_RISK.length === 0 &&
-                                    portfolioData?.platforms?.length > 0 && (
-                                        <>
-                                            <ShieldCheck className="w-5 h-5 text-secondary-800" />
-                                            <BodyText
-                                                level="body1"
-                                                weight="normal"
-                                                className="text-secondary-800"
-                                            >
-                                                You have no positions at risk
-                                            </BodyText>
-                                        </>
-                                    )
+                                portfolioData?.platforms?.length > 0 && (
+                                    <>
+                                        <ShieldCheck className="w-5 h-5 text-secondary-800" />
+                                        <BodyText
+                                            level="body1"
+                                            weight="normal"
+                                            className="text-secondary-800"
+                                        >
+                                            You have no positions at risk
+                                        </BodyText>
+                                    </>
+                                )
                             }
                             {
                                 // no positions

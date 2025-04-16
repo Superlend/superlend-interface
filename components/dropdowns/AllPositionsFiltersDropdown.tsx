@@ -32,24 +32,31 @@ import {
 } from '@/context/positions-provider'
 import { PlatformLogo } from '@/types/platform'
 import { motion } from 'framer-motion'
+import { useSearchParams } from 'next/navigation'
+import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 
 export default function AllPositionsFiltersDropdown() {
     const [isOpen, setIsOpen] = React.useState<boolean>(false)
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext)
-    const { filters, setFilters } =
-        useContext<TPositionsContext>(PositionsContext)
+    const { filters, setFilters } = useContext<TPositionsContext>(PositionsContext)
     const [isStablecoinsSelected, setIsStablecoinsSelected] = useState(false)
     const { width: screenWidth } = useDimensions()
     const isDesktop = useMemo(() => screenWidth > 768, [screenWidth])
+    const searchParams = useSearchParams()
+    const updateSearchParams = useUpdateSearchParams()
+
+    const tokenIdsParam = searchParams.get('token_ids')?.split(',') || []
+    const chainIdsParam = searchParams.get('chain_ids')?.split(',') || []
+    const platformIdsParam = searchParams.get('protocol_ids')?.split(',') || []
 
     const hasActiveFilters =
-        !!filters?.token_ids?.length ||
-        !!filters?.chain_ids?.length ||
-        !!filters?.platform_ids?.length
+        !!filters.token_ids?.length ||
+        !!filters.chain_ids?.length ||
+        !!filters.platform_ids?.length
     const activeFiltersTotalCount =
-        filters?.token_ids?.length +
-        filters?.chain_ids?.length +
-        filters?.platform_ids?.length
+        (filters.token_ids?.length || 0) +
+        (filters.chain_ids?.length || 0) +
+        (filters.platform_ids?.length || 0)
     const getActiveFiltersCountByCategory = (
         filterName: keyof TPositionsFilters
     ) => filters[filterName]?.length ?? 0
@@ -105,7 +112,12 @@ export default function AllPositionsFiltersDropdown() {
         {
             logo: PlatformLogo.SUPERLEND,
             name: 'SUPERLEND',
-            protocol_id: 'SUPERLEND',
+            platform_id: 'SUPERLEND',
+        },
+        {
+            logo: PlatformLogo.EULER,
+            name: 'EULER',
+            platform_id: 'EULER',
         },
     ]
 
@@ -172,8 +184,55 @@ export default function AllPositionsFiltersDropdown() {
             token_ids: [],
             chain_ids: [],
             platform_ids: [],
+            protocol_identifier: [],
         })
         setIsStablecoinsSelected(false)
+    }
+
+    const handleSelection = (id: number | string | null, filterType: string) => {
+        if (id === null) return;
+        
+        let currentIds: string[] = []
+        switch (filterType) {
+            case 'token':
+                currentIds = filters.token_ids
+                break
+            case 'chain':
+                currentIds = filters.chain_ids
+                break
+            case 'platform':
+                currentIds = filters.platform_ids
+                break
+        }
+
+        const newIds = currentIds.includes(id.toString())
+            ? currentIds.filter((item) => item !== id.toString())
+            : [...currentIds, id.toString()]
+
+        switch (filterType) {
+            case 'token':
+                setFilters(prev => ({ ...prev, token_ids: newIds }))
+                break
+            case 'chain':
+                setFilters(prev => ({ ...prev, chain_ids: newIds }))
+                break
+            case 'platform':
+                setFilters(prev => ({ ...prev, platform_ids: newIds }))
+                break
+        }
+    }
+
+    const isSelected = (id: number | string, filterType: string) => {
+        switch (filterType) {
+            case 'token':
+                return filters.token_ids.includes(id.toString())
+            case 'chain':
+                return filters.chain_ids.includes(id.toString())
+            case 'platform':
+                return filters.platform_ids.includes(id.toString())
+            default:
+                return false
+        }
     }
 
     const filterCardHeaderProps = {

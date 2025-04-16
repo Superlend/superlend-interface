@@ -32,6 +32,8 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { ETH_ADDRESSES } from '@/lib/constants'
+import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
+import { useAuth } from '@/context/auth-provider'
 
 interface ISupplyFluidButtonProps {
     assetDetails: any
@@ -74,6 +76,8 @@ const SupplyFluidButton = ({
         })
     const { walletAddress } = useWalletConnection()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
+    const { logUserEvent } = useLogNewUserEvent()
+    const { accessToken, getAccessTokenFromPrivy } = useAuth()
 
     // const amountBN = useMemo(() => {
     //     return amount
@@ -93,9 +97,9 @@ const SupplyFluidButton = ({
                 ? isFluidVaults
                     ? 'Start earning'
                     : 'Start supplying'
-                :isFluidLend
-                        ? 'Supply to vault'
-                        : 'Earn',
+                : isFluidLend
+                  ? 'Supply to vault'
+                  : 'Earn',
     }
 
     const getTxButtonText = (
@@ -107,16 +111,20 @@ const SupplyFluidButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                    ? lendTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
-                        ? 'pending'
-                        : 'default'
+                  ? lendTx.status === 'view'
+                      ? 'success'
+                      : 'default'
+                  : isPending
+                    ? 'pending'
+                    : 'default'
         ]
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+
+    useEffect(() => {
+        getAccessTokenFromPrivy()
+    }, [])
 
     useEffect(() => {
         if (lendTx.status === 'lend') {
@@ -160,7 +168,9 @@ const SupplyFluidButton = ({
                     0,
                     walletAddress,
                 ],
-                value: underlyingAssetAdress === ETH_ADDRESSES[0] ? BigInt(amount.amountParsed) : BigInt('0'),
+                value: ETH_ADDRESSES.includes(underlyingAssetAdress)
+                    ? BigInt(amount.amountParsed)
+                    : BigInt('0'),
             })
                 .then((data) => {
                     setLendTx((prev: TLendTx) => ({
@@ -175,9 +185,18 @@ const SupplyFluidButton = ({
                         platform_name: assetDetails?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                                Number(assetDetails?.chain_id) as ChainId
                             ],
                         wallet_address: walletAddress,
+                    })
+
+                    logUserEvent({
+                        user_address: walletAddress,
+                        event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                        platform_type: 'superlend_aggregator',
+                        protocol_identifier: assetDetails?.protocol_identifier,
+                        event_data: 'SUPPLY',
+                        authToken: accessToken || '',
                     })
                 })
                 .catch((error) => {
@@ -235,9 +254,18 @@ const SupplyFluidButton = ({
                         platform_name: assetDetails?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
+                                Number(assetDetails?.chain_id) as ChainId
                             ],
                         wallet_address: walletAddress,
+                    })
+
+                    logUserEvent({
+                        user_address: walletAddress,
+                        event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                        platform_type: 'superlend_aggregator',
+                        protocol_identifier: assetDetails?.protocol_identifier,
+                        event_data: 'SUPPLY',
+                        authToken: accessToken || '',
                     })
                 })
                 .catch((error) => {
@@ -262,27 +290,27 @@ const SupplyFluidButton = ({
         }))
     }, [isPending, isConfirming, isConfirmed])
 
-    useEffect(() => {
-        if (lendTx.status === 'view') return
+    // useEffect(() => {
+    //     if (lendTx.status === 'view') return
 
-        if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
-            if (lendTx.allowanceBN.gte(amount.amountParsed)) {
-                setLendTx((prev: any) => ({
-                    ...prev,
-                    status: 'lend',
-                    hash: '',
-                    errorMessage: '',
-                }))
-            } else {
-                setLendTx((prev: any) => ({
-                    ...prev,
-                    status: 'approve',
-                    hash: '',
-                    errorMessage: '',
-                }))
-            }
-        }
-    }, [lendTx.allowanceBN])
+    //     if (!lendTx.isConfirmed && !lendTx.isPending && !lendTx.isConfirming) {
+    //         if (lendTx.allowanceBN.gte(amount.amountParsed)) {
+    //             setLendTx((prev: any) => ({
+    //                 ...prev,
+    //                 status: 'lend',
+    //                 hash: '',
+    //                 errorMessage: '',
+    //             }))
+    //         } else {
+    //             setLendTx((prev: any) => ({
+    //                 ...prev,
+    //                 status: 'approve',
+    //                 hash: '',
+    //                 errorMessage: '',
+    //             }))
+    //         }
+    //     }
+    // }, [lendTx.allowanceBN])
 
     useEffect(() => {
         if ((lendTx.status === 'approve' || lendTx.status === 'lend') && hash) {
@@ -322,15 +350,14 @@ const SupplyFluidButton = ({
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
                 args: [poolContractAddress, amount.amountParsed],
+            }).catch((error) => {
+                console.log(error)
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                }))
             })
-                .catch((error) => {
-                    console.log(error)
-                    setLendTx((prev: TLendTx) => ({
-                        ...prev,
-                        isPending: false,
-                        isConfirming: false,
-                    }))
-                })
         } catch (error) {
             error
         }
@@ -373,7 +400,7 @@ const SupplyFluidButton = ({
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button
-                disabled={(isPending || isConfirming || disabled)}
+                disabled={isPending || isConfirming || disabled}
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()

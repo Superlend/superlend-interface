@@ -25,7 +25,7 @@ export type TPlatform = {
         name: string
         platform_name: string
         protocol_identifier: string
-        protocol_type: 'aaveV3' | 'compoundV2' | 'morpho' | 'fluid'
+        protocol_type: 'aaveV3' | 'compoundV2' | 'morpho' | 'fluid' | 'euler'
         logo: string
         chain_id: number
         vaultId: string
@@ -120,6 +120,7 @@ export enum PlatformWebsiteLink {
     FLUID = 'https://fluid.io',
     MORPHO = 'https://app.morpho.org',
     SUPERLEND = 'https://markets.superlend.xyz',
+    EULER = 'https://app.euler.finance',
 }
 
 export enum ProtocolIdentifier {
@@ -135,6 +136,7 @@ export enum PlatformLogo {
     FLUID = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/fluid_logo.png',
     MORPHO = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/morpho-logo.svg',
     SUPERLEND = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend.svg',
+    EULER = 'https://superlend-assets.s3.ap-south-1.amazonaws.com/euler_logo.png',
 }
 
 export enum PlatformType {
@@ -142,6 +144,8 @@ export enum PlatformType {
     COMPOUND = 'compoundV2',
     FLUID = 'fluid',
     MORPHO = 'morpho',
+    SUPERLEND = 'superlend',
+    EULER = 'euler',
 }
 
 export enum PlatformTypeMap {
@@ -149,4 +153,5 @@ export enum PlatformTypeMap {
     compoundV2 = 'Compound V2',
     morpho = 'Morpho',
     fluid = 'Fluid',
+    euler = 'Euler',
 }

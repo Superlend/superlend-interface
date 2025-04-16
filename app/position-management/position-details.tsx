@@ -136,6 +136,10 @@ export default function PositionDetails() {
                 const chainDetails = allChainsData.find(
                     (chain) => chain.chain_id === platform.chain_id
                 )
+                
+                const isEulerProtocol = platform?.protocol_type?.toLowerCase() === PlatformType.EULER
+                const totalLendAmountForEulerProtocol = lendPositions.reduce((acc, curr) => acc + curr.amount, 0)
+                const totalBorrowAmountForEulerProtocol = borrowPositions.reduce((acc, curr) => acc + curr.amount, 0)
 
                 function getSanitizedValue(value: number) {
                     const normalValue = Number(convertScientificToNormal(value))
@@ -144,8 +148,8 @@ export default function PositionDetails() {
                         : normalValue
                 }
 
-                const lendAmount = getSanitizedValue(platform?.total_liquidity)
-                const borrowAmount = getSanitizedValue(platform?.total_borrow)
+                const lendAmount = getSanitizedValue(isEulerProtocol ? totalLendAmountForEulerProtocol : platform?.total_liquidity)
+                const borrowAmount = getSanitizedValue(isEulerProtocol ? totalBorrowAmountForEulerProtocol : platform?.total_borrow)
 
                 return {
                     lendAsset: {

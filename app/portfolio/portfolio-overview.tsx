@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
-import React, { useContext } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import {
     abbreviateNumber,
     containsNegativeInteger,
@@ -13,16 +13,32 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { UserPositionsByPlatform } from '@/components/charts/user-positions-pie-chart'
 import { PortfolioContext } from '@/context/portfolio-provider'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
+import PointsWithCheckInCard from '@/components/PointsWithCheckInCard'
+import DigitAnimatedNumber from '@/components/ui/digit-animated-number'
+import { LoaderCircle } from 'lucide-react'
 
 export default function PortfolioOverview() {
     const { portfolioData, isLoadingPortfolioData, isErrorPortfolioData } =
         useContext(PortfolioContext)
+    const [isAnimating, setIsAnimating] = useState(true)
+
+    // Set animation state for loaders
+    useEffect(() => {
+        if (!isLoadingPortfolioData) {
+            setIsAnimating(true);
+            const timer = setTimeout(() => {
+                setIsAnimating(false);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [portfolioData, isLoadingPortfolioData]);
 
     const COLLATERAL = getStatDisplayValue(portfolioData?.total_supplied)
     const BORROWINGS = getStatDisplayValue(portfolioData?.total_borrowed)
     const NET_WORTH = getStatDisplayValue(
         Number(portfolioData?.total_supplied ?? 0) -
-            Number(portfolioData?.total_borrowed ?? 0)
+        Number(portfolioData?.total_borrowed ?? 0)
     )
     const EARNINGS = getStatDisplayValue(
         portfolioData?.platforms.reduce(
@@ -67,6 +83,7 @@ export default function PortfolioOverview() {
                     className="w-6 h-6"
                 />
             ),
+            valueTooltip: 'Your earnings from Aave V3 positions only',
         },
     ]
 
@@ -78,22 +95,34 @@ export default function PortfolioOverview() {
             <article>
                 <Card className="h-full">
                     <div className="positions-net-worth-block h-full px-[24px] md:px-[32px] pt-[28px] flex flex-col items-start justify-between gap-[29px] pb-[24px]">
-                        <div className="shrink-0">
-                            {isLoadingPortfolioData && (
-                                <Skeleton className="h-10 w-[75%] bg-gray-400 rounded-3" />
-                            )}
-                            {!isLoadingPortfolioData && (
-                                <HeadingText
-                                    level="h2"
-                                    weight="medium"
-                                    className="text-gray-800"
-                                >
-                                    {NET_WORTH}
-                                </HeadingText>
-                            )}
-                            <BodyText level="body1" className="text-gray-600">
-                                Your Positions Net worth
-                            </BodyText>
+                        <div className="flex flex-wrap justify-between w-full gap-4">
+                            <div className="shrink-0">
+                                {isLoadingPortfolioData && (
+                                    <Skeleton className="h-10 w-[75%] bg-gray-400 rounded-3" />
+                                )}
+                                {!isLoadingPortfolioData && (
+                                    <div className="flex items-center">
+                                        <HeadingText
+                                            level="h2"
+                                            weight="medium"
+                                            className="text-gray-800"
+                                        >
+                                            <DigitAnimatedNumber
+                                                value={NET_WORTH}
+                                            />
+                                        </HeadingText>
+                                        {isAnimating && (
+                                            <LoaderCircle className="ml-2 h-5 w-5 text-primary animate-spin" />
+                                        )}
+                                    </div>
+                                )}
+                                <BodyText level="body1" className="text-gray-600">
+                                    Your Positions Net worth
+                                </BodyText>
+                            </div>
+                            <div className="flex items-center max-md:w-full">
+                                <PointsWithCheckInCard />
+                            </div>
                         </div>
                         <Card className="w-full">
                             <CardContent className="bg-white py-[25px] sm:px-[44px] flex flex-col md:flex-row sm:items-center justify-between gap-[20px]">
@@ -108,13 +137,26 @@ export default function PortfolioOverview() {
                                                     {!isLoadingPortfolioData &&
                                                         position.icon}
                                                     {!isLoadingPortfolioData && (
-                                                        <BodyText
-                                                            level="body1"
-                                                            weight="medium"
-                                                            className="leading-none text-gray-800 mt-2"
-                                                        >
-                                                            {position.data}
-                                                        </BodyText>
+                                                        <div className="flex items-center gap-1 mt-2">
+                                                            <BodyText
+                                                                level="body1"
+                                                                weight="medium"
+                                                                className="leading-none text-gray-800"
+                                                            >
+                                                                <DigitAnimatedNumber
+                                                                    value={position.data}
+                                                                />
+                                                            </BodyText>
+                                                            {isAnimating && (
+                                                                <LoaderCircle className="ml-1 h-4 w-4 text-primary animate-spin" />
+                                                            )}
+                                                            {position.valueTooltip && (
+                                                                <InfoTooltip
+                                                                    side="bottom"
+                                                                    content={position.valueTooltip}
+                                                                />
+                                                            )}
+                                                        </div>
                                                     )}
                                                     <Label className="text-gray-600 capitalize">
                                                         Your {position.label}
@@ -153,6 +195,7 @@ export default function PortfolioOverview() {
                 <UserPositionsByPlatform
                     data={portfolioData}
                     isLoading={isLoadingPortfolioData}
+                    isAnimating={isAnimating}
                 />
             </article>
         </section>
