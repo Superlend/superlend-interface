@@ -5,6 +5,9 @@ const nextConfig = {
             {
                 hostname: 'superlend-assets.s3.ap-south-1.amazonaws.com',
             },
+            {
+                hostname: 'superlend-public-assets.s3.ap-south-1.amazonaws.com',
+            },
         ],
     },
     webpack: (config) => {

@@ -15,6 +15,7 @@ import PositionDetails from './position-details'
 import PositionManagementProvider from '@/context/position-management-provider'
 import TxProvider from '@/context/tx-provider'
 import { AssetTxWidget } from './tx-widgets'
+import PortfolioProvider from '@/context/portfolio-provider'
 
 export default function PositionManagementPage() {
     return (
@@ -28,7 +29,9 @@ export default function PositionManagementPage() {
                             <AssetHistory />
                         </div>
                         <div className="order-first xl:order-last">
-                            <AssetTxWidget />
+                            <PortfolioProvider>
+                                <AssetTxWidget />
+                            </PortfolioProvider>
                         </div>
                         {/* <BlogCard /> */}
                     </div>
