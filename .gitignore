@@ -42,3 +42,8 @@ next-env.d.ts
 yarn.lock
 package-lock.json
 .qodo
+
+# Add to existing .gitignore file
+/functions/_private/
+.env.local
+.env.*.local
