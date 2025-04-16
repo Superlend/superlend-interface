@@ -160,7 +160,7 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
 
         // Remove Chain and Platforms filter categories when on etherlink route
         if (chain === 'etherlink' || chain === 'polygon') {
-            return categories.filter(category => category.value === 'token')
+            return categories.filter(category => category.value !== 'chain')
         }
 
         return categories
