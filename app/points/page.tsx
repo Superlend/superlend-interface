@@ -204,7 +204,7 @@ export default function PointsPage() {
                     <HeadingText level="h5" weight="medium">Daily Check-in</HeadingText>
                   </div>
                   <BodyText level="body2" className="text-gray-600">
-                    Check in daily to earn 10 point per day.
+                    Check in daily to earn 10 points per day.
                   </BodyText>
                 </div>
 
