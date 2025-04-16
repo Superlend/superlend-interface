@@ -174,7 +174,7 @@ export function DiscordConnectionDialog({
                             weight="medium"
                             className="text-gray-800"
                         >
-                            Thank you! We'll connect with you soon.
+                            Thank you! We&apos;ll connect with you soon.
                         </BodyText>
                     </div>
                 </Card>
@@ -186,7 +186,7 @@ export function DiscordConnectionDialog({
                         weight="normal"
                         className="text-gray-700 text-center"
                     >
-                        Hope you've been enjoying using Superlend.
+                        Hope you&apos;ve been enjoying using Superlend.
                         Our Product Manager would like to connect with you.
                         We would like to chat with you and see how well we can help in your DeFi journey.
                         Can we connect on discord?
@@ -226,7 +226,7 @@ export function DiscordConnectionDialog({
                                             <li className="text-gray-700 text-sm">Open Discord</li>
                                             <li className="text-gray-700 text-sm">Settings &gt; Advanced &gt; Enable Developer Mode</li>
                                             <li className="text-gray-700 text-sm">Go back to Discord settings and click on three dots on the right of your username</li>
-                                            <li className="text-gray-700 text-sm">Select "Copy ID"</li>
+                                            <li className="text-gray-700 text-sm">Select &quot;Copy ID&quot;</li>
                                         </ol>
                                     </div>
                                 }

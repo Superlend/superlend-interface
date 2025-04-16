@@ -60,7 +60,7 @@ export function DebugPortfolioTools() {
             variant="outline" 
             size="sm"
           >
-            Reset "Seen Dialog" State
+            Reset &quot;Seen Dialog&quot; State
           </Button>
         </div>
         
