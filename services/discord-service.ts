@@ -24,8 +24,8 @@ export async function submitDiscordId({
   portfolioValue,
 }: SubmitDiscordIdParams): Promise<SubmitDiscordIdResponse> {
   try {
-    // Use Netlify function to submit the Discord ID
-    const response = await fetch('/.netlify/functions/discord-connect', {
+    // Use Next.js API route to submit the Discord ID
+    const response = await fetch('/api/discord-connect', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ discordId, walletAddress, portfolioValue }),

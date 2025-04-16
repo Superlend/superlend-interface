@@ -22,6 +22,54 @@ import { submitDiscordId, validateDiscordId } from '@/services/discord-service'
 import { getFormattedPortfolioValue } from '@/lib/portfolio-utils'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
+import { motion, AnimatePresence } from 'framer-motion'
+
+// Animation variants for dialog
+const backdropVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.3 } }
+};
+
+const dialogVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { 
+        opacity: 1, 
+        y: 0, 
+        transition: { 
+            type: "spring", 
+            damping: 25, 
+            stiffness: 300 
+        } 
+    },
+    exit: { 
+        opacity: 0, 
+        y: 50, 
+        transition: { 
+            duration: 0.2,
+            ease: "easeOut" 
+        } 
+    }
+};
+
+// Animation variants for drawer
+const drawerVariants = {
+    hidden: { y: "100%" },
+    visible: { 
+        y: 0, 
+        transition: { 
+            type: "spring", 
+            damping: 25, 
+            stiffness: 300 
+        } 
+    },
+    exit: { 
+        y: "100%", 
+        transition: { 
+            duration: 0.3,
+            ease: "easeInOut" 
+        } 
+    }
+};
 
 interface IDiscordConnectionDialogProps {
     open: boolean
@@ -296,29 +344,73 @@ export function DiscordConnectionDialog({
     // Desktop UI
     if (isDesktop) {
         return (
-            <Dialog open={open}>
-                <DialogContent
-                    aria-describedby={undefined}
-                    className="pt-[25px] max-w-[450px]"
-                    showCloseButton={false}
-                >
-                    {closeContentButton}
-                    <DialogHeader>{contentHeader}</DialogHeader>
-                    {contentBody}
-                </DialogContent>
-            </Dialog>
+            <AnimatePresence mode="wait">
+                {open && (
+                    <Dialog open={open} onOpenChange={handleOpenChange} modal={true}>
+                        <motion.div
+                            className="fixed inset-0 bg-black/50 z-50"
+                            initial="hidden"
+                            animate="visible"
+                            exit="hidden"
+                            variants={backdropVariants}
+                        >
+                            <div className="flex min-h-full items-center justify-center p-4 text-center">
+                                <motion.div
+                                    initial="hidden"
+                                    animate="visible" 
+                                    exit="exit"
+                                    variants={dialogVariants}
+                                    className="relative"
+                                >
+                                    <DialogContent
+                                        aria-describedby={undefined}
+                                        className="pt-[25px] max-w-[450px] rounded-md"
+                                        showCloseButton={false}
+                                    >
+                                        {closeContentButton}
+                                        <DialogHeader>{contentHeader}</DialogHeader>
+                                        {contentBody}
+                                    </DialogContent>
+                                </motion.div>
+                            </div>
+                        </motion.div>
+                    </Dialog>
+                )}
+            </AnimatePresence>
         )
     }
 
     // Mobile UI
     return (
-        <Drawer open={open} onOpenChange={handleOpenChange} dismissible={false}>
-            <DrawerContent className="w-full p-5 pt-2 dismissible-false">
-                {closeContentButton}
-                <DrawerHeader>{contentHeader}</DrawerHeader>
-                {contentBody}
-            </DrawerContent>
-        </Drawer>
+        <AnimatePresence mode="wait">
+            {open && (
+                <Drawer open={open} onOpenChange={handleOpenChange} dismissible={false}>
+                    <motion.div
+                        className="fixed inset-0 bg-black/25 z-50"
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        variants={backdropVariants}
+                    >
+                        <div className="fixed inset-x-0 bottom-0 flex justify-center">
+                            <motion.div
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                variants={drawerVariants}
+                                className="w-full"
+                            >
+                                <DrawerContent className="w-full p-5 pt-2 dismissible-false rounded-t-[20px]">
+                                    {closeContentButton}
+                                    <DrawerHeader>{contentHeader}</DrawerHeader>
+                                    {contentBody}
+                                </DrawerContent>
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                </Drawer>
+            )}
+        </AnimatePresence>
     )
 }
 

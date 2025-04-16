@@ -1,9 +1,0 @@
-{
-  "name": "superlend-netlify-functions",
-  "version": "1.0.0",
-  "description": "Netlify functions for Superlend",
-  "dependencies": {
-    "google-spreadsheet": "^4.1.0", 
-    "google-auth-library": "^9.0.0"
-  }
-} 

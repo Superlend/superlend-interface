@@ -31,18 +31,18 @@ export function useDiscordDialog({
   const [hasSeenDialog, setHasSeenDialog] = useState(false);
   
   // Check local storage on mount to see if user has seen the dialog before
-  useEffect(() => {
-    const hasSeenBefore = localStorage.getItem(DISCORD_DIALOG_SHOWN_KEY) === 'true';
-    setHasSeenDialog(hasSeenBefore);
-  }, []);
+  // useEffect(() => {
+  //   const hasSeenBefore = localStorage.getItem(DISCORD_DIALOG_SHOWN_KEY) === 'true';
+  //   setHasSeenDialog(hasSeenBefore);
+  // }, []);
   
   // Update local storage when dialog is shown
-  useEffect(() => {
-    if (showDiscordDialog) {
-      localStorage.setItem(DISCORD_DIALOG_SHOWN_KEY, 'true');
-      setHasSeenDialog(true);
-    }
-  }, [showDiscordDialog]);
+  // useEffect(() => {
+  //   if (showDiscordDialog) {
+  //     localStorage.setItem(DISCORD_DIALOG_SHOWN_KEY, 'true');
+  //     setHasSeenDialog(true);
+  //   }
+  // }, [showDiscordDialog]);
   
   // Determine if we should show the dialog based on transaction state and portfolio value
   useEffect(() => {

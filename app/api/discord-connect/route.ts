@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { addDiscordSubmission } from '@/lib/google-sheets';
 import { validateDiscordId } from '@/services/discord-service';
+import { supabaseServer, type DiscordUser } from '@/lib/supabase-client';
 
 /**
  * API route for handling Discord ID submissions (Next.js App Router format)
@@ -20,15 +20,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // Add to Google Sheet
-    const added = await addDiscordSubmission({
-      discordId,
-      walletAddress,
-      portfolioValue
-    });
+    // Add to Supabase
+    const { error } = await supabaseServer
+      .from('discord_users')
+      .insert({
+        discord_id: discordId,
+        wallet_address: walletAddress || null,
+        portfolio_value: portfolioValue,
+      } as DiscordUser);
 
-    if (!added) {
-      throw new Error('Failed to add to Google Sheet');
+    if (error) {
+      console.error('Supabase error:', error);
+      throw new Error('Failed to store data in database');
     }
 
     // Log for debugging
