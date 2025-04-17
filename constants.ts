@@ -23,6 +23,7 @@ import {
 export type TPlatformWebsiteLinks = {
     aave: PlatformWebsiteLink.AAVE
     compound: PlatformWebsiteLink.COMPOUND
+    compoundBlue: PlatformWebsiteLink.COMPOUND_BLUE
     fluid: PlatformWebsiteLink.FLUID
     morpho: PlatformWebsiteLink.MORPHO
     superlend: PlatformWebsiteLink.SUPERLEND
@@ -124,6 +125,7 @@ export const STABLECOINS_NAMES_LIST = [
 export const platformWebsiteLinks: TPlatformWebsiteLinks = {
     aave: PlatformWebsiteLink.AAVE,
     compound: PlatformWebsiteLink.COMPOUND,
+    compoundBlue: PlatformWebsiteLink.COMPOUND_BLUE,
     fluid: PlatformWebsiteLink.FLUID,
     morpho: PlatformWebsiteLink.MORPHO,
     superlend: PlatformWebsiteLink.SUPERLEND,

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import DiscoverPageComponents from './page-components'
 
 // Validate allowed chain values
-const VALID_CHAINS = ['discover', 'etherlink', 'polygon']
+const VALID_CHAINS = ['discover', 'etherlink']
 
 export default async function ChainPage({ params }: { params: { chain: string } }) {
     const { chain } = params
