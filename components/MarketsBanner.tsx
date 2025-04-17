@@ -35,13 +35,13 @@ export default function MarketsBanner() {
             isActive: activeMarket === 'etherlink',
             icon: <Image src="/images/logos/apple-green.png" alt="Etherlink chain logo" width={16} height={16} />
         },
-        {
-            id: 'polygon',
-            title: 'Polygon Only',
-            stats: ['100+ Markets'],
-            isActive: activeMarket === 'polygon',
-            icon: <Image src="https://superlend-assets.s3.ap-south-1.amazonaws.com/polygon.svg" alt="Polygon chain logo" width={16} height={16} className="rotate-[30deg] mt-0.5" />
-        }
+        // {
+        //     id: 'polygon',
+        //     title: 'Polygon Only',
+        //     stats: ['100+ Markets'],
+        //     isActive: activeMarket === 'polygon',
+        //     icon: <Image src="https://superlend-assets.s3.ap-south-1.amazonaws.com/polygon.svg" alt="Polygon chain logo" width={16} height={16} className="rotate-[30deg] mt-0.5" />
+        // }
     ]
 
     const activeTab = tabs.find(tab => tab.isActive) || tabs[0]
