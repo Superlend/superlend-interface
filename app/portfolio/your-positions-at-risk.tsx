@@ -228,7 +228,7 @@ export default function YourPositionsAtRiskCarousel() {
             {
                 // positions at risk
                 !isLoadingPortfolioData && POSITIONS_AT_RISK.length > 0 && (
-                    <Carousel setApi={setApi}>
+                    <Carousel setApi={setApi} className="overflow-hidden pr-4">
                         <CarouselContent className="pl-5 cursor-grabbing">
                             {POSITIONS_AT_RISK.map((position, index) => (
                                 <CarouselItem
