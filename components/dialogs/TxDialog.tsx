@@ -137,26 +137,14 @@ export function ConfirmationDialog({
     const isFluidVault = isFluid && assetDetails?.isVault
     const { walletAddress, handleSwitchChain } = useWalletConnection()
     const { allChainsData } = useAssetsDataContext()
-    const { portfolioData } = useContext(PortfolioContext)
     const chainDetails = getChainDetails({
         allChainsData,
         chainIdToMatch: assetDetails?.chain_id,
     })
 
-    // Calculate portfolio value (collateral - borrowed)
-    const portfolioValue = Number(portfolioData?.total_supplied || 0) - 
-                           Number(portfolioData?.total_borrowed || 0)
-
     // Get Discord dialog state
     const lendTxCompleted: boolean = (lendTx.isConfirmed && !!lendTx.hash && lendTx.status === 'view')
     const borrowTxCompleted: boolean = (borrowTx.isConfirmed && !!borrowTx.hash && borrowTx.status === 'view')
-    const { 
-        showDiscordDialog, 
-        setShowDiscordDialog
-    } = useDiscordDialog({
-        portfolioValue,
-        lendTxCompleted,
-    })
 
     useEffect(() => {
         setHasAcknowledgedRisk(false)
@@ -229,9 +217,9 @@ export function ConfirmationDialog({
             (lendTx.status !== 'approve' || borrowTx.status !== 'borrow')
         ) {
             setAmount('')
-            setTimeout(() => {
-                resetLendBorrowTx()
-            }, 1000)
+            // setTimeout(() => {
+            //     resetLendBorrowTx()
+            // }, 1000)
         }
     }
 
@@ -1177,13 +1165,6 @@ export function ConfirmationDialog({
                         {contentBody}
                     </DialogContent>
                 </Dialog>
-                
-                {/* Add Discord Connection Dialog */}
-                <DiscordConnectionDialog 
-                    open={showDiscordDialog}
-                    setOpen={setShowDiscordDialog}
-                    portfolioValue={portfolioValue}
-                />
             </>
         )
     }
@@ -1208,13 +1189,6 @@ export function ConfirmationDialog({
                     {contentBody}
                 </DrawerContent>
             </Drawer>
-            
-            {/* Add Discord Connection Dialog */}
-            <DiscordConnectionDialog 
-                open={showDiscordDialog}
-                setOpen={setShowDiscordDialog}
-                portfolioValue={portfolioValue}
-            />
         </>
     )
 }

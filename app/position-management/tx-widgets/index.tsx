@@ -1,7 +1,7 @@
 'use client'
 
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
-import { FC } from 'react'
+import { FC, useContext } from 'react'
 import { PlatformType } from '@/types/platform'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import { useSearchParams } from 'next/navigation'
@@ -11,8 +11,14 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 import AaveV3TxWidget from './aave-tx-widget'
 import MorphoTxWidget from './morpho-tx-widget'
 import FluidTxWidget from './fluid-tx-widget'
+import { useTxContext } from '@/context/tx-provider'
+import { TTxContext } from '@/context/tx-provider'
+import { useDiscordDialog } from '@/hooks/useDiscordDialog'
+import { PortfolioContext } from '@/context/portfolio-provider'
+import { DiscordConnectionDialog } from '@/components/dialogs/DiscordConnectionDialog'
 
 export const AssetTxWidget: FC = () => {
+    const { portfolioData: portfolioContextData } = useContext(PortfolioContext)
     const searchParams = useSearchParams()
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
@@ -25,6 +31,22 @@ export const AssetTxWidget: FC = () => {
         isWalletConnected,
         isConnectingWallet,
     } = useWalletConnection()
+    const {
+        lendTx,
+        isLendBorrowTxDialogOpen,
+    } = useTxContext() as TTxContext
+
+    const lendTxCompleted: boolean = (lendTx.isConfirmed && !!lendTx.hash && lendTx.status === 'view')
+    const isLendTxCompletedAndDialogClosed: boolean = (lendTxCompleted && !isLendBorrowTxDialogOpen)
+    const portfolioValue = Number(portfolioContextData?.total_supplied || 0) - Number(portfolioContextData?.total_borrowed || 0)
+
+    const {
+        showDiscordDialog,
+        setShowDiscordDialog
+    } = useDiscordDialog({
+        portfolioValue,
+        lendTxCompleted: isLendTxCompletedAndDialogClosed,
+    })
 
     // [API_CALL: GET] - Get Platform data
     const {
@@ -62,30 +84,51 @@ export const AssetTxWidget: FC = () => {
 
     if (isAaveV3Protocol) {
         return (
-            <AaveV3TxWidget
-                isLoading={isLoading}
-                platformData={platformData}
-                portfolioData={portfolioData}
-            />
+            <>
+                <AaveV3TxWidget
+                    isLoading={isLoading}
+                    platformData={platformData}
+                    portfolioData={portfolioData}
+                />
+                <DiscordConnectionDialog
+                    open={showDiscordDialog}
+                    setOpen={setShowDiscordDialog}
+                    portfolioValue={portfolioValue}
+                />
+            </>
         )
     }
 
     if (isMorphoProtocol) {
         return (
-            <MorphoTxWidget
-                isLoading={isLoadingPlatformData}
-                platformData={platformData}
-            />
+            <>
+                <MorphoTxWidget
+                    isLoading={isLoadingPlatformData}
+                    platformData={platformData}
+                />
+                <DiscordConnectionDialog
+                    open={showDiscordDialog}
+                    setOpen={setShowDiscordDialog}
+                    portfolioValue={portfolioValue}
+                />
+            </>
         )
     }
 
     if (isFluidProtocol) {
         return (
-            <FluidTxWidget
-                isLoading={isLoadingPlatformData}
-                platformData={platformData}
-                portfolioData={portfolioData}
-            />
+            <>
+                <FluidTxWidget
+                    isLoading={isLoadingPlatformData}
+                    platformData={platformData}
+                    portfolioData={portfolioData}
+                />
+                <DiscordConnectionDialog
+                    open={showDiscordDialog}
+                    setOpen={setShowDiscordDialog}
+                    portfolioValue={portfolioValue}
+                />
+            </>
         )
     }
 

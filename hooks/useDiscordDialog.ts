@@ -54,7 +54,7 @@ export function useDiscordDialog({
       // Add a slight delay to show the dialog after transaction completes
       const timer = setTimeout(() => {
         setShowDiscordDialog(true);
-      }, 1500);
+      }, 5000);
       
       return () => clearTimeout(timer);
     }

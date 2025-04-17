@@ -27,11 +27,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 // Animation variants for dialog
 const backdropVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.3 } }
+    visible: { opacity: 1, transition: { duration: 0.5 } }
 };
 
 const dialogVariants = {
-    hidden: { opacity: 0, y: 50 },
+    hidden: { opacity: 0, y: 500 },
     visible: { 
         opacity: 1, 
         y: 0, 
@@ -43,7 +43,7 @@ const dialogVariants = {
     },
     exit: { 
         opacity: 0, 
-        y: 50, 
+        y: 500, 
         transition: { 
             duration: 0.2,
             ease: "easeOut" 
@@ -348,7 +348,7 @@ export function DiscordConnectionDialog({
                 {open && (
                     <Dialog open={open} modal={true}>
                         <motion.div
-                            className="fixed inset-0 bg-black/50 z-50"
+                            className="fixed inset-0 z-50"
                             initial="hidden"
                             animate="visible"
                             exit="hidden"
