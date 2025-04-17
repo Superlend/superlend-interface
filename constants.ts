@@ -265,7 +265,7 @@ export const TX_EXPLORER_LINKS: { [key in ChainId]: string } = {
     [ChainId.Optimism]: 'https://optimistic.etherscan.io',
     [ChainId.Polygon]: 'https://polygonscan.com',
     [ChainId.Scroll]: 'https://scrollscan.io',
-    [ChainId.Etherlink]: 'https://etherscan.io',
+    [ChainId.Etherlink]: 'https://explorer.etherlink.com',
     [ChainId.Linea]: 'https://lineascan.build',
     [ChainId.Sonic]: 'https://sonicscan.org',
 }
