@@ -127,7 +127,7 @@ export default function MarketsBanner() {
                                                 : "bg-white bg-opacity-0 hover:bg-opacity-40"
                                         )}
                                     >
-                                        <div className="flex items-center justify-center gap-2">
+                                        <div className="flex items-center justify-center gap-1">
                                             <span className={cn(
                                                 "transition-colors duration-300",
                                                 tab.isActive ? "text-white" : "text-gray-600 group-hover:text-gray-700 grayscale group-hover:grayscale-0"

@@ -121,7 +121,7 @@ function CompactCheckInButton() {
           disabled={isCheckedIn || isLoading || isCheckInPending || isUserDetailsLoading}
           variant={isCheckedIn ? "outline" : "default"}
           size="sm"
-          className={`w-full h-7 px-2 text-xs flex items-center gap-1 disabled:opacity-100 ${(isUserDetailsLoading || isLoading || isCheckInPending) ? 'bg-gray-200 text-gray-500 border-gray-200 hover:bg-gray-200' : isCheckedIn ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-50' : 'bg-primary text-white hover:bg-primary/90'}`}
+          className={`w-[158px] h-7 px-2 text-xs flex items-center gap-1 disabled:opacity-100 ${(isUserDetailsLoading || isLoading || isCheckInPending) ? 'bg-gray-200 text-gray-500 border-gray-200 hover:bg-gray-200' : isCheckedIn ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-50' : 'bg-primary text-white hover:bg-primary/90'}`}
         >
           {(isLoading || isCheckInPending) ? (
             <span className="flex items-center">
