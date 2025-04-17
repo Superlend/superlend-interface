@@ -10,7 +10,7 @@
  */
 export function isPortfolioAboveThreshold(
   portfolioValue: number, 
-  threshold: number = 10
+  threshold: number = 500
 ): boolean {
   return portfolioValue >= threshold;
 }

@@ -32,42 +32,42 @@ const backdropVariants = {
 
 const dialogVariants = {
     hidden: { opacity: 0, y: 500 },
-    visible: { 
-        opacity: 1, 
-        y: 0, 
-        transition: { 
-            type: "spring", 
-            damping: 25, 
-            stiffness: 300 
-        } 
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            type: "spring",
+            damping: 25,
+            stiffness: 300
+        }
     },
-    exit: { 
-        opacity: 0, 
-        y: 500, 
-        transition: { 
+    exit: {
+        opacity: 0,
+        y: 500,
+        transition: {
             duration: 0.2,
-            ease: "easeOut" 
-        } 
+            ease: "easeOut"
+        }
     }
 };
 
 // Animation variants for drawer
 const drawerVariants = {
     hidden: { y: "100%" },
-    visible: { 
-        y: 0, 
-        transition: { 
-            type: "spring", 
-            damping: 25, 
-            stiffness: 300 
-        } 
+    visible: {
+        y: 0,
+        transition: {
+            type: "spring",
+            damping: 25,
+            stiffness: 300
+        }
     },
-    exit: { 
-        y: "100%", 
-        transition: { 
+    exit: {
+        y: "100%",
+        transition: {
             duration: 0.3,
-            ease: "easeInOut" 
-        } 
+            ease: "easeInOut"
+        }
     }
 };
 
@@ -200,7 +200,7 @@ export function DiscordConnectionDialog({
             weight="medium"
             className="text-gray-800 text-center"
         >
-            Connect with our Product Manager
+            We need your inputs!
         </HeadingText>
     )
 
@@ -232,12 +232,19 @@ export function DiscordConnectionDialog({
                     <BodyText
                         level="body2"
                         weight="normal"
-                        className="text-gray-700 text-center"
+                        className="text-gray-800"
                     >
-                        Hope you&apos;ve been enjoying using Superlend.
-                        Our Product Manager would like to connect with you.
-                        We would like to chat with you and see how well we can help in your DeFi journey.
-                        Can we connect on discord?
+                        Hope you&apos;ve been enjoying Superlend. 
+                        Our product manager would like to have a chat with you and ask you a few questions to understand how best we can add value to you.
+                        This will help us build the best DeFi products for you.
+                    </BodyText>
+
+                    <BodyText
+                        level="body2"
+                        weight="normal"
+                        className="text-gray-800"
+                    >
+                        Do drop-in your Discord ID, and our PM will reach out in the next 24-48 hours
                     </BodyText>
 
                     {/* Portfolio value context */}
@@ -284,7 +291,7 @@ export function DiscordConnectionDialog({
                             id="discord-id"
                             value={discordId}
                             onChange={handleIdChange}
-                            placeholder="Enter your Discord username"
+                            placeholder="Enter your Discord ID"
                             className={`rounded-5 border ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                         />
                         {error && (
@@ -300,7 +307,7 @@ export function DiscordConnectionDialog({
                         <BodyText
                             level="body3"
                             weight="normal"
-                            className="text-gray-500"
+                            className="text-gray-600"
                         >
                             Your information will only be used for product improvement purposes.
                         </BodyText>
@@ -357,7 +364,7 @@ export function DiscordConnectionDialog({
                             <div className="flex min-h-full items-center justify-center p-4 text-center">
                                 <motion.div
                                     initial="hidden"
-                                    animate="visible" 
+                                    animate="visible"
                                     exit="exit"
                                     variants={dialogVariants}
                                     className="relative"

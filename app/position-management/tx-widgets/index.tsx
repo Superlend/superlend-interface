@@ -46,6 +46,7 @@ export const AssetTxWidget: FC = () => {
     } = useDiscordDialog({
         portfolioValue,
         lendTxCompleted: isLendTxCompletedAndDialogClosed,
+        walletAddress,
     })
 
     // [API_CALL: GET] - Get Platform data

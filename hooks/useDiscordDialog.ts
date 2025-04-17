@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { isPortfolioAboveThreshold } from '@/lib/portfolio-utils';
+import { checkDiscordIdSubmitted } from '@/services/discord-service';
 
 const DISCORD_DIALOG_SHOWN_KEY = 'superlend_discord_dialog_shown';
 
 interface UseDiscordDialogProps {
   portfolioValue: number;
   lendTxCompleted: boolean;
+  walletAddress?: string; // Add wallet address as a prop
 }
 
 interface UseDiscordDialogReturn {
@@ -21,14 +23,17 @@ interface UseDiscordDialogReturn {
  * 
  * @param portfolioValue The user's current portfolio value
  * @param lendTxCompleted Whether a lend transaction has just completed successfully
+ * @param walletAddress The user's connected wallet address
  * @returns Object containing dialog state and management functions
  */
 export function useDiscordDialog({
   portfolioValue,
-  lendTxCompleted
+  lendTxCompleted,
+  walletAddress
 }: UseDiscordDialogProps): UseDiscordDialogReturn {
   const [showDiscordDialog, setShowDiscordDialog] = useState(false);
   const [hasSeenDialog, setHasSeenDialog] = useState(false);
+  const [hasSubmittedDiscord, setHasSubmittedDiscord] = useState(false);
   
   // Check local storage on mount to see if user has seen the dialog before
   // useEffect(() => {
@@ -43,22 +48,35 @@ export function useDiscordDialog({
   //     setHasSeenDialog(true);
   //   }
   // }, [showDiscordDialog]);
+
+  // Check if user has already submitted Discord ID when wallet address changes
+  useEffect(() => {
+    if (!walletAddress) return;
+    
+    const checkPreviousSubmission = async () => {
+      try {
+        const hasSubmitted = await checkDiscordIdSubmitted(walletAddress);
+        setHasSubmittedDiscord(hasSubmitted);
+      } catch (error) {
+        console.error("Error checking Discord submission status:", error);
+      }
+    };
+    
+    checkPreviousSubmission();
+  }, [walletAddress]);
   
   // Determine if we should show the dialog based on transaction state and portfolio value
   useEffect(() => {
     if (
       lendTxCompleted && 
-      isPortfolioAboveThreshold(portfolioValue) && 
-      !hasSeenDialog
+      isPortfolioAboveThreshold(portfolioValue, 500) && 
+      !hasSeenDialog &&
+      !hasSubmittedDiscord &&
+      walletAddress
     ) {
-      // Add a slight delay to show the dialog after transaction completes
-      const timer = setTimeout(() => {
-        setShowDiscordDialog(true);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
+      setShowDiscordDialog(true);
     }
-  }, [lendTxCompleted, portfolioValue, hasSeenDialog]);
+  }, [lendTxCompleted, portfolioValue, hasSeenDialog, hasSubmittedDiscord, walletAddress]);
   
   // For testing - allows resetting the "seen" state
   const resetDialogShownState = () => {
@@ -69,7 +87,7 @@ export function useDiscordDialog({
   return {
     showDiscordDialog,
     setShowDiscordDialog,
-    shouldPromptForDiscord: isPortfolioAboveThreshold(portfolioValue) && !hasSeenDialog,
+    shouldPromptForDiscord: isPortfolioAboveThreshold(portfolioValue) && !hasSeenDialog && !hasSubmittedDiscord,
     hasSeenDialog,
     resetDialogShownState,
   };

@@ -14,6 +14,34 @@ interface SubmitDiscordIdResponse {
 }
 
 /**
+ * Checks if a user has already submitted their Discord ID
+ * @param walletAddress The wallet address to check
+ * @returns Promise<boolean> True if the user has already submitted their Discord ID
+ */
+export async function checkDiscordIdSubmitted(walletAddress: string): Promise<boolean> {
+  if (!walletAddress) return false;
+  
+  try {
+    // Use Next.js API route to check if Discord ID exists
+    const response = await fetch(`/api/discord-check?wallet=${walletAddress}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    
+    if (!response.ok) {
+      console.error('Error checking Discord ID:', response.statusText);
+      return false;
+    }
+    
+    const data = await response.json();
+    return data.exists;
+  } catch (error) {
+    console.error('Error checking Discord ID submission:', error);
+    return false; // Default to false on error
+  }
+}
+
+/**
  * Submit a user's Discord ID to the backend
  * @param params Object containing Discord ID and additional user context
  * @returns Promise resolving to the API response

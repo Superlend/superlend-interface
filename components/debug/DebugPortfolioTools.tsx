@@ -5,6 +5,7 @@ import { Button } from '../ui/button'
 import { Label } from '../ui/typography'
 import { Input } from '../ui/input'
 import { useDiscordDialog } from '@/hooks/useDiscordDialog'
+import { useWalletConnection } from '@/hooks/useWalletConnection'
 import DiscordConnectionDialog from '../dialogs/DiscordConnectionDialog'
 
 /**
@@ -14,6 +15,7 @@ import DiscordConnectionDialog from '../dialogs/DiscordConnectionDialog'
 export function DebugPortfolioTools() {
   const [portfolioValue, setPortfolioValue] = useState(1500)
   const [showDialog, setShowDialog] = useState(false)
+  const { walletAddress } = useWalletConnection()
 
   // Setup Discord dialog hook
   const { 
@@ -22,7 +24,8 @@ export function DebugPortfolioTools() {
     resetDialogShownState
   } = useDiscordDialog({
     portfolioValue,
-    lendTxCompleted: showDialog
+    lendTxCompleted: showDialog,
+    walletAddress
   })
 
   // Only render in development
