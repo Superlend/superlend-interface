@@ -290,7 +290,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     },
     {
         accessorKey: 'apy_current',
-        accessorFn: (item) => Number(item.apy_current) + Number(item.apple_farm_apr),
+        accessorFn: (item) => Number(item.apy_current) + (item.has_apple_farm_rewards ? Number(item.apple_farm_apr) : 0),
         header: () => {
             const searchParams = useSearchParams()
             const positionTypeParam =
@@ -399,7 +399,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-1">
                     <BodyText level={'body2'} weight={'medium'}>
-                        {`${(isEtherlinkChain && hasAppleFarmRewards) ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
+                        {`${(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend') ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
                     </BodyText>
                     {/* REWARDS */}
                     {hasRewards && (
@@ -424,7 +424,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         />
                     )}
                     {/* APPLE FARM REWARDS */}
-                    {(isEtherlinkChain && hasAppleFarmRewards) && (
+                    {(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend') && (
                         <InfoTooltip
                             label={
                                 <motion.div
