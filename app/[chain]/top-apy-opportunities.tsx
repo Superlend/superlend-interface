@@ -78,33 +78,8 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         useGetOpportunitiesData({
             type: positionTypeParam as TPositionType,
         })
-    const { data: mBasisOpportunityData, isLoading: isLoadingMBasisOpportunityData } =
-        useGetMerklOpportunitiesData({
-            campaignId: '0xb3509a79b1715bc7666666fc9c27eb77762436648de827a5c5817371593aefd0',
-        })
-    const { data: mTBillOpportunityData, isLoading: isLoadingMTBillOpportunityData } =
-        useGetMerklOpportunitiesData({
-            campaignId: '0xd8d0ad6579284bcb4dbc3fb1e40f4596c788e4508daf9cfd010459ce86832850',
-        })
-    const { data: xtzOpportunityData, isLoading: isLoadingXTZOpportunityData } =
-        useGetMerklOpportunitiesData({
-            campaignId: '0x898a135c2bceffdae7618b1e2266108d154dfeab75a373b3eb3641ca31647e6a',
-        })
-    const { data: usdcOpportunityData, isLoading: isLoadingUSDCOpportunityData } =
-        useGetMerklOpportunitiesData({
-            campaignId: '0x1bd8c05ef0d7b581826288a6b28a33eee2d95caa68c7f4b23dc7c5f32704b8ad',
-        })
-    const { data: wbtcOpportunityData, isLoading: isLoadingWBTCCOpportunityData } =
-        useGetMerklOpportunitiesData({
-            campaignId: '0xc85b1c610c3ae5058cc69e04d87239c2af3cefb0c2fbdfcccffa5fb23d9f1cd7',
-        })
-    const { data: usdtOpportunityData, isLoading: isLoadingUSDTCOpportunityData } =
-        useGetMerklOpportunitiesData({
-            campaignId: '0x691135dbaf8ce8bcc7aace2468be9b499834308362e1194a4246014ff74163a1',
-        })
     const { allChainsData } = useContext<any>(AssetsDataContext)
     const [showRainingApples, setShowRainingApples] = useState(false)
-    const hasShownAnimation = useRef(false)
     const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
     const pathname = usePathname()
     const { appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards, hasAppleFarmRewards } = useAppleFarmRewards()
@@ -278,6 +253,9 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     useEffect(() => {
         if ((pathname === '/etherlink' || pathname.endsWith('/etherlink')) && chainIdsParam.length === 0) {
             updateSearchParams({ chain_ids: '42793' });
+        }
+        if ((pathname === '/polygon' || pathname.endsWith('/polygon')) && chainIdsParam.length === 0) {
+            updateSearchParams({ chain_ids: '137' });
         }
     }, [pathname, chainIdsParam.length, updateSearchParams]);
 
@@ -472,11 +450,6 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     // Don't render anything while loading
     if (isStateLoading || isLoadingOpportunitiesData) {
         return <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
-    }
-
-    // Only render for discover route when showing all markets
-    if ((pathname === '/etherlink' && showAllMarkets) || (pathname === '/discover' && !showAllMarkets)) {
-        return null
     }
 
     return (

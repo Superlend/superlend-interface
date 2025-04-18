@@ -72,11 +72,11 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
 
     const hasActiveFilters =
         !!filters.token_ids.length ||
-        (pathname === '/etherlink' ? false : !!filters.chain_ids.length) ||
+        ((pathname === '/etherlink' || pathname === '/polygon') ? false : !!filters.chain_ids.length) ||
         !!filters.protocol_ids.length
     const activeFiltersTotalCount =
         filters.token_ids.length +
-        (pathname === '/etherlink' ? 0 : filters.chain_ids.length) +
+        ((pathname === '/etherlink' || pathname === '/polygon') ? 0 : filters.chain_ids.length) +
         filters.protocol_ids.length
     const getActiveFiltersCountByCategory = (
         filterName: keyof typeof filters
@@ -159,8 +159,8 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
         ]
 
         // Remove Chain and Platforms filter categories when on etherlink route
-        if (chain === 'etherlink') {
-            return categories.filter(category => category.value === 'token')
+        if (chain === 'etherlink' || chain === 'polygon') {
+            return categories.filter(category => category.value !== 'chain')
         }
 
         return categories

@@ -30,6 +30,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { POOL_BASED_PROTOCOLS } from '@/constants'
 import { PlatformType } from '@/types/platform'
 import { Input } from '@/components/ui/input'
+import { ChainId } from '@/types/chain'
 
 type TRow = {
     id: number
@@ -269,6 +270,7 @@ export function EstimatedReturns({
     const isFluid =
         platformDetails?.platform.protocol_type === PlatformType.FLUID
     const isFluidVault = isFluid && platformDetails?.platform.isVault
+    const isPolygonChain = platformDetails?.platform.chain_id === ChainId.Polygon
 
     useEffect(() => {
         /*
@@ -352,7 +354,7 @@ export function EstimatedReturns({
     const borrowAPY = isMorpho
         ? !isMorphoVault && positionType === 'borrow'
             ? Number(borrowAssetDetails?.variable_borrow_apy ?? 0)
-            : -borrowAssetDetails?.supply_apy
+            : -(borrowAssetDetails?.supply_apy ?? 0)
         : isAaveV3 && positionType === 'lend'
           ? selectedStableTokenDetails?.variable_borrow_apy || 0
           : borrowAssetDetails?.variable_borrow_apy || 0
@@ -407,7 +409,7 @@ export function EstimatedReturns({
             key: 'borrow',
             title: isMorpho && positionType === 'lend' ? 'Supply' : 'Borrowing',
             logo: borrowTokenDetails?.token.logo,
-            selectedLabel: borrowTokenDetails?.token.symbol || '',
+            selectedLabel: borrowTokenDetails?.token.symbol,
             selectedValue: selectedValue.borrow,
             hasSelectedValue: !(stableBorrowAssetsList.length > 0),
             totalValue:

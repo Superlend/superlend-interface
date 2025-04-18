@@ -14,6 +14,7 @@ import ConnectWalletButton from './ConnectWalletButton'
 import CheckInButton from './CheckInButton'
 import Link from 'next/link'
 import { Badge } from './ui/badge'
+import { ChainId } from '@/types/chain'
 
 type TTab = {
     id: number
@@ -54,6 +55,7 @@ const Header: React.FC = () => {
             if (typeof window !== 'undefined') {
                 // Get the initial state from localStorage, default to true if not set
                 const stored = localStorage.getItem('show_all_markets')
+                const activeMarket = localStorage.getItem('active_market') || 'all-markets'
                 const showAllMarkets = stored !== null ? stored === 'true' : true
 
                 // Set the initial value in localStorage if not set
@@ -61,12 +63,20 @@ const Header: React.FC = () => {
                     localStorage.setItem('show_all_markets', 'true')
                 }
 
-                // Always navigate to the correct route based on the localStorage value
-                const targetPath = showAllMarkets ? '/discover' : '/etherlink?chain_ids=42793'
-                return targetPath
+                // Always navigate to the correct route based on the localStorage values
+                if (showAllMarkets) {
+                    return '/discover'
+                } else {
+                    // Route based on active market
+                    if (activeMarket === 'polygon') {
+                        return `/polygon?chain_ids=${ChainId.Polygon}`
+                    } else {
+                        return `/etherlink?chain_ids=${ChainId.Etherlink}`
+                    }
+                }
             }
             // Default path for server-side rendering
-            return '/etherlink?chain_ids=42793'
+            return `/etherlink?chain_ids=${ChainId.Etherlink}`
         }
 
         return href

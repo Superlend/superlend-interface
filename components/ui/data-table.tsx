@@ -319,6 +319,7 @@ export function DataTable<TData, TValue>({
                             size="sm"
                             onClick={handleFirstPage}
                             disabled={pagination.pageIndex === 0}
+                            aria-label="First Page"
                         >
                             <ChevronsLeft className="w-5 h-5" />
                         </Button>
@@ -327,6 +328,7 @@ export function DataTable<TData, TValue>({
                             size="sm"
                             onClick={handlePreviousPage}
                             disabled={pagination.pageIndex === 0}
+                            aria-label="Previous Page"
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </Button>
@@ -337,6 +339,7 @@ export function DataTable<TData, TValue>({
                             disabled={
                                 pagination.pageIndex >= calculatedPages - 1
                             }
+                            aria-label="Next Page"
                         >
                             <ChevronRight className="w-5 h-5" />
                         </Button>
@@ -347,6 +350,7 @@ export function DataTable<TData, TValue>({
                             disabled={
                                 pagination.pageIndex >= calculatedPages - 1
                             }
+                            aria-label="Last Page"
                         >
                             <ChevronsRight className="w-5 h-5" />
                         </Button>

@@ -11,6 +11,7 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 import AaveV3TxWidget from './aave-tx-widget'
 import MorphoTxWidget from './morpho-tx-widget'
 import FluidTxWidget from './fluid-tx-widget'
+import { ChainId } from '@/types/chain'
 import { useTxContext } from '@/context/tx-provider'
 import { TTxContext } from '@/context/tx-provider'
 import { useDiscordDialog } from '@/hooks/useDiscordDialog'
@@ -23,8 +24,6 @@ export const AssetTxWidget: FC = () => {
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
-    const positionTypeParam: TPositionType =
-        (searchParams.get('position_type') as TPositionType) || 'lend'
     const {
         walletAddress,
         handleSwitchChain,
@@ -78,6 +77,7 @@ export const AssetTxWidget: FC = () => {
         platformData?.platform?.protocol_type === PlatformType.MORPHO
     const isFluidProtocol =
         platformData?.platform?.protocol_type === PlatformType.FLUID
+    const isPolygonChain = Number(chain_id) === ChainId.Polygon
 
     if (isLoading && (isAaveV3Protocol || isMorphoProtocol)) {
         return <LoadingSectionSkeleton className="h-[300px] w-full" />
@@ -100,7 +100,7 @@ export const AssetTxWidget: FC = () => {
         )
     }
 
-    if (isMorphoProtocol) {
+    if (isMorphoProtocol && !isPolygonChain) {
         return (
             <>
                 <MorphoTxWidget

@@ -384,10 +384,11 @@ export function getPlatformWebsiteLink({
     network_name?: string
     core_contract?: string
 }) {
+    const isPolygonChain = network_name?.toLowerCase() === 'polygon'
     const platformNameId = platformId?.split('-')[0].toLowerCase()
     const baseUrl =
         platformWebsiteLinks[
-            platformNameId as keyof typeof platformWebsiteLinks
+        (((isMorphoVault || morpho_market_id) && isPolygonChain) ? 'compoundBlue' : platformNameId) as keyof typeof platformWebsiteLinks
         ]
 
     const formattedNetworkName =
@@ -404,8 +405,12 @@ export function getPlatformWebsiteLink({
             ? `/stats/${chainId}/vaults#${vaultId}`
             : `/lending/${chainId}`,
         morpho: isMorphoVault
-            ? `/vault?vault=${core_contract}&network=${formattedNetworkName}`
-            : `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
+            ? isPolygonChain
+                ? `/${core_contract}`
+                : `/vault?vault=${core_contract}&network=${formattedNetworkName}`
+            : isPolygonChain
+                ? `/borrow/${morpho_market_id}`
+                : `/market?id=${morpho_market_id}&network=${formattedNetworkName}`,
         superlend: `/reserve-overview/?underlyingAsset=${tokenAddress}&marketName=etherlink`,
         euler: `/vault/${tokenAddress}/?network=ethereum`,
     }
