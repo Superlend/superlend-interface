@@ -18,7 +18,7 @@ import {
     X,
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useContext } from 'react'
 import { useSwitchChain } from 'wagmi'
 import {
     abbreviateNumber,
@@ -72,6 +72,10 @@ import ExternalLink from '../ExternalLink'
 import { parseUnits } from 'ethers/lib/utils'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import { Card, CardContent } from '../ui/card'
+// import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
+import DiscordConnectionDialog from './DiscordConnectionDialog'
+import { useDiscordDialog } from '@/hooks/useDiscordDialog'
+import { PortfolioContext } from '@/context/portfolio-provider'
 import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
 
 // TYPES
@@ -138,12 +142,9 @@ export function ConfirmationDialog({
         chainIdToMatch: assetDetails?.chain_id,
     })
 
-    // useEffect(() => {
-    //     // Reset the tx status when the dialog is closed
-    //     return () => {
-    //         resetLendBorrowTx()
-    //     }
-    // }, [])
+    // Get Discord dialog state
+    const lendTxCompleted: boolean = (lendTx.isConfirmed && !!lendTx.hash && lendTx.status === 'view')
+    const borrowTxCompleted: boolean = (borrowTx.isConfirmed && !!borrowTx.hash && borrowTx.status === 'view')
 
     useEffect(() => {
         setHasAcknowledgedRisk(false)
@@ -216,9 +217,9 @@ export function ConfirmationDialog({
             (lendTx.status !== 'approve' || borrowTx.status !== 'borrow')
         ) {
             setAmount('')
-            setTimeout(() => {
-                resetLendBorrowTx()
-            }, 1000)
+            // setTimeout(() => {
+            //     resetLendBorrowTx()
+            // }, 1000)
         }
     }
 
@@ -320,9 +321,7 @@ export function ConfirmationDialog({
             }
         )
     }
-
-    const lendTxCompleted = lendTx.isConfirmed && lendTx.hash && lendTx.status === 'view'
-    const borrowTxCompleted = borrowTx.isConfirmed && borrowTx.hash && borrowTx.status === 'view'
+    
     const showPointsEarnedBanner = lendTxCompleted || borrowTxCompleted
 
     // SUB_COMPONENT: Trigger button to open the dialog
@@ -1148,45 +1147,49 @@ export function ConfirmationDialog({
     // Desktop UI
     if (isDesktop) {
         return (
-            <Dialog open={open}>
-                <DialogTrigger asChild>{triggerButton}</DialogTrigger>
-                <DialogContent
-                    aria-describedby={undefined}
-                    className="pt-[25px] max-w-[450px]"
-                    showCloseButton={false}
-                >
-                    {/* X Icon to close the dialog */}
-                    {closeContentButton}
-                    {/* Tx in progress - Loading state UI */}
-                    {/* {txInProgressLoadingState} */}
-                    {/* Initial Confirmation UI */}
-                    <DialogHeader>{contentHeader}</DialogHeader>
+            <>
+                <Dialog open={open}>
+                    <DialogTrigger asChild>{triggerButton}</DialogTrigger>
+                    <DialogContent
+                        aria-describedby={undefined}
+                        className="pt-[25px] max-w-[450px]"
+                        showCloseButton={false}
+                    >
+                        {/* X Icon to close the dialog */}
+                        {closeContentButton}
+                        {/* Tx in progress - Loading state UI */}
+                        {/* {txInProgressLoadingState} */}
+                        {/* Initial Confirmation UI */}
+                        <DialogHeader>{contentHeader}</DialogHeader>
 
-                    {contentBody}
-                </DialogContent>
-            </Dialog>
+                        {contentBody}
+                    </DialogContent>
+                </Dialog>
+            </>
         )
     }
 
     // Mobile UI
     return (
-        <Drawer open={open} dismissible={false}>
-            <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
-            <DrawerContent className="w-full p-5 pt-2 dismissible-false">
-                {/* X Icon to close the drawer */}
-                {closeContentButton}
-                {/* Tx in progress - Loading state UI */}
-                {/* {txInProgressLoadingState} */}
-                <DrawerHeader>{contentHeader}</DrawerHeader>
-                {/* <DrawerFooter>
-                    <Button>Submit</Button>
-                    <DrawerClose>
-                        <Button variant="outline">Cancel</Button>
-                    </DrawerClose>
-                </DrawerFooter> */}
-                {contentBody}
-            </DrawerContent>
-        </Drawer>
+        <>
+            <Drawer open={open} dismissible={false}>
+                <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
+                <DrawerContent className="w-full p-5 pt-2 dismissible-false">
+                    {/* X Icon to close the drawer */}
+                    {closeContentButton}
+                    {/* Tx in progress - Loading state UI */}
+                    {/* {txInProgressLoadingState} */}
+                    <DrawerHeader>{contentHeader}</DrawerHeader>
+                    {/* <DrawerFooter>
+                        <Button>Submit</Button>
+                        <DrawerClose>
+                            <Button variant="outline">Cancel</Button>
+                        </DrawerClose>
+                    </DrawerFooter> */}
+                    {contentBody}
+                </DrawerContent>
+            </Drawer>
+        </>
     )
 }
 

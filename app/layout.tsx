@@ -3,18 +3,15 @@ import { headers } from 'next/headers'
 import './globals.css'
 import Header from '@/components/Header'
 import ContextProvider from '@/context'
-import Footer from '@/components/Footer'
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
 import ScrollToTop from '@/components/ScrollToTop'
-import { Meta } from '@/components/Meta'
 import { Toaster } from 'react-hot-toast'
 import EasterEgg from '@/components/EasterEgg'
-import { ShowAllMarketsProvider } from '@/context/show-all-markets-provider'
+// import { DebugPortfolioTools } from '@/components/debug/DebugPortfolioTools'
+// import { ShowAllMarketsProvider } from '@/context/show-all-markets-provider'
 import MarketsBanner from '@/components/MarketsBanner'
 import Script from 'next/script'
-// import { Inter } from "next/font/google";
-
-// const inter = Inter({ subsets: ["latin"] });
+import { DebugPortfolioTools } from '@/components/debug/DebugPortfolioTools'
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://app.superlend.xyz'),
@@ -97,6 +94,7 @@ export default function RootLayout({
                     <MarketsBanner />
                     {children}
                     {/* <Footer /> */}
+                    {/* <DebugPortfolioTools /> */}
                 </ContextProvider>
             </body>
         </html>
