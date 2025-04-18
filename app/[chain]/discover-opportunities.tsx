@@ -22,22 +22,23 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { abbreviateNumber } from '@/lib/utils'
 import { TReward } from '@/types'
 import { ChartNoAxesColumnIncreasing } from 'lucide-react'
+import { CHAIN_ID_MAPPER } from '@/constants'
 const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
 const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 
 // Token Addresses
 const opportunity1TokenAddress = "0x2c03058c8afc06713be23e58d2febc8337dbfe6a";
-const opportunity2TokenAddress = "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf";
+const opportunity2TokenAddress = "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f";
 const opportunity3TokenAddress = "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
 
 // Chain IDs
 const opportunity1ChainId = 42793;
-const opportunity2ChainId = 8453;
+const opportunity2ChainId = 1;
 const opportunity3ChainId = 1;
 
 // Protocol Identifiers
 const opportunity1ProtocolIdentifier = "0xd68cf3aa73c75811ca1665efe01a10524ed5adcba0f412df44d78f04f1c902bf";
-const opportunity2ProtocolIdentifier = "0x2a2ef6e5ef864ff2361fb1aff63df8f60d12a43c704c8453ef76d9ea7d3edc81";
+const opportunity2ProtocolIdentifier = "0x36015e6d9a714a91078f6c479b6ff9ce197a1137779118c91f9acb35668129a9";
 const opportunity3ProtocolIdentifier = "0x87eb69182347a95a4a9be4d83afdf0af705a0d7dd3e7d19f22e5cf34090f1d22";
 
 export default function DiscoverOpportunities({ chain }: { chain: string }) {
@@ -79,6 +80,8 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
     const description1 = `${asset1LendRate?.toFixed(2)}% APY`
     const description2 = `Upto ${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.supply_apy?.toFixed(2)}% APY`
     // const description3 = opportunity3PlatformData?.apy
+    const asset1ChainName = CHAIN_ID_MAPPER[opportunity1PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER]
+    const asset2ChainName = CHAIN_ID_MAPPER[opportunity2PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER]
 
     // Opportunities
     const opportunities: {
@@ -98,7 +101,7 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
                 label: 'Etherlink Apple Farm',
                 tokenSymbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token.symbol,
                 platformName: 'Superlend',
-                chainName: 'Etherlink',
+                chainName: asset1ChainName,
                 description: description1,
                 tokenImage: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token.logo,
                 platformImage: `${imageBaseUrl}/superlend.svg`,
@@ -113,12 +116,12 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
             {
                 id: 2,
                 label: "Automated Strategy",
-                tokenSymbol: `Seamless ${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol}`,
+                tokenSymbol: `${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol}`,
                 platformName: "Morpho",
-                chainName: "Base",
+                chainName: asset2ChainName,
                 description: description2,
                 tokenImage: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.logo,
-                platformImage: `${imageBaseUrl}/morpho-logo.svg`,
+                platformImage: `${imageBaseUrl}/fluid_logo.png`,
                 link: getRedirectLink(
                     opportunity2TokenAddress,
                     opportunity2ProtocolIdentifier,
