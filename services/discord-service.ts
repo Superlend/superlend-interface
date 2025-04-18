@@ -102,7 +102,7 @@ export function validateDiscordId(discordId: string): string {
   
   // Check for maximum length (Discord usernames can't exceed 32 characters)
   if (trimmedId.length > 37) { // 32 + # + 4 digits
-    return 'Discord ID is too long (maximum 32 characters)';
+    return 'Discord ID is too long (maximum 37 characters, including # and 4 digits for classic format)';
   }
   
   // Check for classic Discord format (username#discriminator)
