@@ -237,15 +237,18 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const platformName: string = row.getValue('platformName')
             const platformId: string = row.original.platformId
-            const platformWithMarketName: string =
-                row.original.platformWithMarketName
-            const formattedPlatformWithMarketName: string =
-                platformWithMarketName.includes("/") && !platformWithMarketName.split(' ')[0].toLowerCase().includes(platformId.split('-')[0].toLowerCase()) ? platformWithMarketName : platformWithMarketName.split(' ').slice(1).join(' ')
-            const platformLogo = row.original.platformLogo
             const isMorpho =
                 row.original.platformId.split('-')[0].toLowerCase() ===
                 PlatformType.MORPHO
             const isVault = row.original.isVault
+            const platformWithMarketName: string =
+                row.original.platformWithMarketName
+            const formattedPlatformWithMarketName: string = (isMorpho && isVault && row.original.chainName.toLowerCase() === 'polygon')
+                ? "Compound Morpho Vaults"
+                : (platformWithMarketName.includes("/") && !platformWithMarketName.split(' ')[0].toLowerCase().includes(platformId.split('-')[0].toLowerCase()))
+                    ? platformWithMarketName
+                    : platformWithMarketName.split(' ').slice(1).join(' ')
+            const platformLogo = row.original.platformLogo
             const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams.get('position_type') || 'lend'
@@ -265,7 +268,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         width={20}
                         height={20}
                     />
-                    <div className="flex flex-col gap-[0px]">
+                    <div className="flex flex-col gap-[0px] truncate">
                         <BodyText
                             level={'body2'}
                             weight={'medium'}
@@ -274,7 +277,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             {platformDisplayName}
                         </BodyText>
                         {showPlatformCuratorName && (
-                            <Label title={formattedPlatformWithMarketName} className="text-gray-800 inline-block leading-0 truncate max-w-[100px]">
+                            <Label title={formattedPlatformWithMarketName} className="text-gray-800 inline-block leading-0 truncate">
                                 {formattedPlatformWithMarketName}
                             </Label>
                         )}

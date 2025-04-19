@@ -43,8 +43,14 @@ type TTopApyOpportunitiesProps = {
     chain: string
 }
 
-const EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL =
-    '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed'
+const EXCLUDEED_TOKENS_LIST = [
+    '0x89c31867c878e4268c65de3cdf8ea201310c5851',
+]
+
+const EXCLUDEED_PROTOCOLS_LIST = [
+    '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed',
+    '0xe75f6fff3eec59db6ac1df4fcccf63b72cc053f78e3156b9eb78d12f5ac47367',
+]
 
 export default function TopApyOpportunities({ chain }: { chain: string }) {
     const isClient = useIsClient()
@@ -393,13 +399,15 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
             handleFilterTableRowsByPlatformIds(opportunity) &&
             matchesChainId &&
-            matchesToken
+            matchesToken &&
+            !EXCLUDEED_PROTOCOLS_LIST.includes(opportunity.protocol_identifier) &&
+            !EXCLUDEED_TOKENS_LIST.includes(opportunity.tokenAddress)
             : handleExcludeMorphoMarketsByParamFlag(opportunity) &&
             handleFilterTableRowsByPlatformIds(opportunity) &&
-            opportunity.protocol_identifier !==
-            EXCLUDE_DEPRICATED_MORPHO_ASSET_BY_PROTOCOL &&
             matchesChainId &&
-            matchesToken
+            matchesToken &&
+            !EXCLUDEED_PROTOCOLS_LIST.includes(opportunity.protocol_identifier) &&
+            !EXCLUDEED_TOKENS_LIST.includes(opportunity.tokenAddress)
     }
 
     function handleRowClick(rowData: any) {
