@@ -34,6 +34,7 @@ import { CHAIN_ID_MAPPER, ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS } from '@/const
 import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
 import useIsClient from '@/hooks/useIsClient'
 import RainingApples from '@/components/animations/RainingApples'
+import RainingPolygons from '@/components/animations/RainingPolygons'
 import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 
@@ -86,6 +87,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         })
     const { allChainsData } = useContext<any>(AssetsDataContext)
     const [showRainingApples, setShowRainingApples] = useState(false)
+    const [showRainingPolygons, setShowRainingPolygons] = useState(false)
     const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
     const pathname = usePathname()
     const { appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards, hasAppleFarmRewards } = useAppleFarmRewards()
@@ -255,6 +257,20 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             return () => clearTimeout(timer);
         }
     }, []);
+
+    useEffect(() => {
+        const hasShownPolygonAnimation = sessionStorage.getItem('has_shown_polygon_animation');
+        if (!hasShownPolygonAnimation && chainIdsParam.includes('137')) {
+            setShowRainingPolygons(true);
+            sessionStorage.setItem('has_shown_polygon_animation', 'true');
+
+            const timer = setTimeout(() => {
+                setShowRainingPolygons(false);
+            }, 3000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [chainIdsParam]);
 
     useEffect(() => {
         if ((pathname === '/etherlink' || pathname.endsWith('/etherlink')) && chainIdsParam.length === 0) {
@@ -466,6 +482,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             className="top-apy-opportunities-container flex flex-col gap-[24px] px-5"
         >
             {showRainingApples && <RainingApples />}
+            {showRainingPolygons && <RainingPolygons />}
             <div className="top-apy-opportunities-header flex items-end lg:items-center justify-between gap-[12px]">
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                     <div className="flex items-center justify-between gap-[12px] max-lg:w-full">

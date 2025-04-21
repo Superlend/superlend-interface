@@ -100,7 +100,7 @@ export default function YourPositionsAtRiskCarousel() {
                 PlatformType.MORPHO
             const isVault = platform?.isVault
             const morphoLabel =
-                isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
+                isMorpho && isVault ? 'Morpho-Vaults' : 'Morpho-Markets'
             const formattedPlatformName = isMorpho
                 ? morphoLabel
                 : platform?.platform_name
