@@ -13,6 +13,8 @@ interface ShowAllMarketsContextType {
     setActiveMarket: (market: 'all-markets' | 'etherlink' | 'polygon') => void
 }
 
+export type Market = 'all-markets' | 'etherlink' | 'polygon'
+
 const ShowAllMarketsContext = createContext<ShowAllMarketsContextType | undefined>(undefined)
 
 export function ShowAllMarketsProvider({ children }: { children: React.ReactNode }) {
@@ -20,7 +22,7 @@ export function ShowAllMarketsProvider({ children }: { children: React.ReactNode
     const pathname = usePathname()
     const [isLoading, setIsLoading] = useState(true)
     const [showAllMarkets, setShowAllMarkets] = useState(false)
-    const [activeMarket, setActiveMarket] = useState<'all-markets' | 'etherlink' | 'polygon'>('all-markets')
+    const [activeMarket, setActiveMarket] = useState<Market>('all-markets')
 
     // Initialize state from localStorage on mount
     useEffect(() => {
@@ -32,7 +34,7 @@ export function ShowAllMarketsProvider({ children }: { children: React.ReactNode
         }
 
         if (storedMarket !== null && (storedMarket === 'all-markets' || storedMarket === 'etherlink' || storedMarket === 'polygon')) {
-            setActiveMarket(storedMarket as 'all-markets' | 'etherlink' | 'polygon')
+            setActiveMarket(storedMarket as Market)
         }
         setIsLoading(false)
     }, [])
@@ -41,7 +43,7 @@ export function ShowAllMarketsProvider({ children }: { children: React.ReactNode
     useEffect(() => {
         if (!isLoading && (pathname === '/discover' || pathname === '/etherlink' || pathname === '/polygon')) {
             // Update state and localStorage to match the URL pathname
-            const currentPath = pathname === '/discover' ? 'all-markets' : pathname.substring(1) as 'etherlink' | 'polygon'
+            const currentPath = pathname === '/discover' ? 'all-markets' : pathname.substring(1) as Market
 
             setActiveMarket(currentPath)
             localStorage.setItem('active_market', currentPath)
@@ -53,7 +55,7 @@ export function ShowAllMarketsProvider({ children }: { children: React.ReactNode
         }
     }, [pathname, isLoading])
 
-    const toggleShowAllMarkets = (checked: boolean, marketId?: 'all-markets' | 'etherlink' | 'polygon') => {
+    const toggleShowAllMarkets = (checked: boolean, marketId?: Market) => {
         // Calculate the new values first, then update state and localStorage
         const newShowAllMarkets = checked;
         const newMarket = checked ? 'all-markets' : marketId || (activeMarket === 'all-markets' ? 'etherlink' : activeMarket);
