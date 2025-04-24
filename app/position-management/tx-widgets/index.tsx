@@ -95,6 +95,7 @@ export const AssetTxWidget: FC = () => {
                     open={showTelegramDialog}
                     setOpen={setShowTelegramDialog}
                     portfolioValue={portfolioValue}
+                    website="AGGREGATOR"
                 />
             </>
         )
@@ -111,6 +112,7 @@ export const AssetTxWidget: FC = () => {
                     open={showTelegramDialog}
                     setOpen={setShowTelegramDialog}
                     portfolioValue={portfolioValue}
+                    website="AGGREGATOR"
                 />
             </>
         )
@@ -128,6 +130,7 @@ export const AssetTxWidget: FC = () => {
                     open={showTelegramDialog}
                     setOpen={setShowTelegramDialog}
                     portfolioValue={portfolioValue}
+                    website="AGGREGATOR"
                 />
             </>
         )

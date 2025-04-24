@@ -38,5 +38,6 @@ export type TelegramUser = {
   telegram_username: string;
   wallet_address?: string;
   portfolio_value: number;
+  website: 'AGGREGATOR' | 'MARKETS';
   created_at?: string;
 } 

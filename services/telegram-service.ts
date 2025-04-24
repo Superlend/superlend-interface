@@ -6,6 +6,7 @@ interface SubmitTelegramUsernameParams {
   telegramUsername: string;
   walletAddress?: string;
   portfolioValue: number;
+  website?: 'AGGREGATOR' | 'MARKETS';
 }
 
 interface SubmitTelegramUsernameResponse {
@@ -50,13 +51,14 @@ export async function submitTelegramUsername({
   telegramUsername,
   walletAddress,
   portfolioValue,
+  website = 'AGGREGATOR',
 }: SubmitTelegramUsernameParams): Promise<SubmitTelegramUsernameResponse> {
   try {
     // Use Next.js API route to submit the Telegram username
     const response = await fetch('/api/telegram-connect', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ telegramUsername, walletAddress, portfolioValue }),
+      body: JSON.stringify({ telegramUsername, walletAddress, portfolioValue, website }),
     });
     
     // If the API call fails, throw an error

@@ -77,6 +77,7 @@ export function DebugPortfolioTools() {
         open={showTelegramDialog}
         setOpen={setShowTelegramDialog}
         portfolioValue={portfolioValue}
+        website="AGGREGATOR"
       />
     </div>
   )

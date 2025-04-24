@@ -75,12 +75,14 @@ interface ITelegramConnectionDialogProps {
     open: boolean
     setOpen: (open: boolean) => void
     portfolioValue: number
+    website?: 'AGGREGATOR' | 'MARKETS'
 }
 
 export function TelegramConnectionDialog({
     open,
     setOpen,
-    portfolioValue
+    portfolioValue,
+    website = 'AGGREGATOR'
 }: ITelegramConnectionDialogProps) {
     const { logEvent } = useAnalytics()
     const { walletAddress } = useWalletConnection()
@@ -144,7 +146,8 @@ export function TelegramConnectionDialog({
             const response = await submitTelegramUsername({
                 telegramUsername,
                 walletAddress,
-                portfolioValue
+                portfolioValue,
+                website
             })
 
             if (response.success) {

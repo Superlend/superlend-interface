@@ -10,6 +10,7 @@ interface TelegramUser {
   telegram_username: string;
   wallet_address?: string;
   portfolio_value: number;
+  website: 'AGGREGATOR' | 'MARKETS';
   created_at?: string;
 }
 
@@ -44,13 +45,21 @@ export async function POST(request: Request) {
   try {
     // Parse the request body
     const body = await request.json();
-    const { telegramUsername, walletAddress, portfolioValue } = body;
+    const { telegramUsername, walletAddress, portfolioValue, website = 'AGGREGATOR' } = body;
 
     // Validate Telegram username format
     const validationError = validateTelegramUsername(telegramUsername);
     if (validationError) {
       return NextResponse.json(
         { success: false, message: validationError },
+        { status: 400 }
+      );
+    }
+
+    // Validate website value
+    if (website !== 'AGGREGATOR' && website !== 'MARKETS') {
+      return NextResponse.json(
+        { success: false, message: 'Invalid website value. Must be either AGGREGATOR or MARKETS' },
         { status: 400 }
       );
     }
@@ -67,6 +76,7 @@ export async function POST(request: Request) {
         telegram_username: formattedUsername,
         wallet_address: walletAddress || null,
         portfolio_value: portfolioValue,
+        website: website,
       } as TelegramUser);
 
     if (error) {
@@ -83,6 +93,7 @@ export async function POST(request: Request) {
       telegramUsername: formattedUsername,
       walletAddress,
       portfolioValue,
+      website,
       timestamp: new Date().toISOString()
     });
 
