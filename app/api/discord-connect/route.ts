@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { validateDiscordId } from '@/services/discord-service';
 import { supabaseServer, type DiscordUser } from '@/lib/supabase-client';
+import { validateRequestCsrfToken } from '@/lib/csrf-protection';
+import { applyRateLimit, getClientIp } from '@/lib/rate-limiter';
 
 /**
  * Helper function to get a user-friendly error message
@@ -31,6 +33,40 @@ function getErrorMessage(error: any): string {
  */
 export async function POST(request: Request) {
   try {
+    // 1. Check CSRF token
+    if (!validateRequestCsrfToken(request)) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid or missing CSRF token' },
+        { status: 403 }
+      );
+    }
+    
+    // 2. Apply rate limiting
+    const rateLimit = await applyRateLimit(
+      request, 
+      undefined, // Use IP as identifier
+      5,        // 5 requests per window
+      60000     // 1 minute window
+    );
+    
+    if (rateLimit) {
+      return rateLimit; // Return rate limit response if limit exceeded
+    }
+    
+    // 3. Check Referer header
+    const referer = request.headers.get('referer');
+    const origin = request.headers.get('origin');
+    if (
+      (!referer || (!referer.includes('superlend.xyz') && !referer.includes('localhost'))) &&
+      (!origin || (!origin.includes('superlend.xyz') && !origin.includes('localhost')))
+    ) {
+      console.log(`Suspicious request with referer: ${referer}, origin: ${origin}`);
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized request source' },
+        { status: 403 }
+      );
+    }
+
     // Parse the request body
     const body = await request.json();
     const { discordId, walletAddress, portfolioValue } = body;
@@ -67,7 +103,8 @@ export async function POST(request: Request) {
       discordId,
       walletAddress,
       portfolioValue,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      ip: getClientIp(request)
     });
 
     // Send success response

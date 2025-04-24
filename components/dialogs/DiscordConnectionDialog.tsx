@@ -225,6 +225,30 @@ export function DiscordConnectionDialog({
                             Thank you! We&apos;ll connect with you soon.
                         </BodyText>
                     </div>
+                    
+                    {/* Join Discord button */}
+                    <div className="mt-4">
+                        <Button
+                            variant="outline"
+                            className="w-full py-[13px] rounded-5 border-blue-500 text-blue-600 hover:bg-blue-50"
+                            onClick={() => {
+                                window.open('https://discord.gg/superlend', '_blank');
+                                logEvent('discord_join_discord_clicked', {
+                                    portfolio_value: portfolioValue,
+                                    wallet_address: walletAddress
+                                });
+                            }}
+                        >
+                            Join our Discord Community
+                        </Button>
+                        <BodyText
+                            level="body3"
+                            weight="normal"
+                            className="text-gray-600 text-center mt-2"
+                        >
+                            Join our active community for the latest updates and support
+                        </BodyText>
+                    </div>
                 </Card>
             ) : (
                 <>

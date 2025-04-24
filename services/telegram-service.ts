@@ -43,6 +43,29 @@ export async function checkTelegramUsernameSubmitted(walletAddress: string): Pro
 }
 
 /**
+ * Gets a CSRF token from the server
+ * @returns A promise that resolves to a CSRF token
+ */
+export async function getCsrfToken(): Promise<string> {
+  try {
+    const response = await fetch('/api/csrf-token', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get CSRF token: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.token;
+  } catch (error) {
+    console.error('Error getting CSRF token:', error);
+    throw error;
+  }
+}
+
+/**
  * Submit a user's Telegram username to the backend
  * @param params Object containing Telegram username and additional user context
  * @returns Promise resolving to the API response
@@ -54,10 +77,16 @@ export async function submitTelegramUsername({
   website = 'AGGREGATOR',
 }: SubmitTelegramUsernameParams): Promise<SubmitTelegramUsernameResponse> {
   try {
+    // Get a CSRF token
+    const csrfToken = await getCsrfToken();
+    
     // Use Next.js API route to submit the Telegram username
     const response = await fetch('/api/telegram-connect', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
       body: JSON.stringify({ telegramUsername, walletAddress, portfolioValue, website }),
     });
     
