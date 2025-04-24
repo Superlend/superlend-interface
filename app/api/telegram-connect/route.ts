@@ -100,10 +100,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Format username (remove @ if present)
-    const formattedUsername = telegramUsername.startsWith('@') 
-      ? telegramUsername.substring(1) 
-      : telegramUsername;
+    // Ensure the username starts with @ before storing
+    let formattedUsername = telegramUsername.trim();
+    if (!formattedUsername.startsWith('@')) {
+      formattedUsername = '@' + formattedUsername;
+    }
 
     // Add to Supabase
     const { error } = await supabaseServer

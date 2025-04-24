@@ -310,6 +310,9 @@ export function TelegramConnectionDialog({
                                             <li className="text-gray-700 text-sm">Tap on your profile</li>
                                             <li className="text-gray-700 text-sm">Your username will be listed as @username</li>
                                         </ol>
+                                        <BodyText level="body2" weight="normal" className="text-gray-600 mt-2">
+                                            Don't worry about adding the @ symbol - we'll add it automatically if needed!
+                                        </BodyText>
                                     </div>
                                 }
                             />
@@ -318,7 +321,7 @@ export function TelegramConnectionDialog({
                             id="telegram-username"
                             value={telegramUsername}
                             onChange={handleUsernameChange}
-                            placeholder="Enter your Telegram username (e.g. @username)"
+                            placeholder="Enter your Telegram username"
                             className={`rounded-5 border ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                         />
                         {error && (

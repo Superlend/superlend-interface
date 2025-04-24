@@ -125,10 +125,15 @@ export function validateTelegramUsername(telegramUsername: string): string {
     return 'Telegram username is required';
   }
   
-  // Remove @ symbol if present
+  // Remove @ symbol if present, for validation purposes
   const usernameWithoutAt = trimmedUsername.startsWith('@') 
     ? trimmedUsername.substring(1) 
     : trimmedUsername;
+  
+  // Check if there's any content after removing potential @ symbol
+  if (!usernameWithoutAt) {
+    return 'Telegram username must contain characters';
+  }
   
   // Check length requirements (5-32 characters)
   if (usernameWithoutAt.length < 5) {
