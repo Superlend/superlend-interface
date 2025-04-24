@@ -14,5 +14,34 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
+    // Define allowed origins
+    const allowedOrigins = ['https://app.superlend.xyz'];
+    
+    // In development mode, allow localhost
+    if (process.env.NODE_ENV === 'development') {
+        allowedOrigins.push('http://localhost:3000');
+    }
+    
+    const origin = request.headers.get('origin');
+    
+    // Check if the request is from an allowed origin
+    if (origin && !allowedOrigins.includes(origin)) {
+        console.log(`Blocked request from unauthorized origin: ${origin}`);
+        return new NextResponse(
+            JSON.stringify({ success: false, message: 'Unauthorized origin' }),
+            {
+                status: 403,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+    }
+
     return NextResponse.next()
 }
+
+// Specify which routes this middleware applies to
+export const config = {
+    matcher: ['/api/telegram-connect', '/api/telegram-check', '/api/discord-connect', '/api/discord-check'],
+};

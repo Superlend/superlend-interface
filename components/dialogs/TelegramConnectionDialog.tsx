@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import useDimensions from '@/hooks/useDimensions'
 import { Card } from '../ui/card'
-import { submitDiscordId, validateDiscordId } from '@/services/discord-service'
+import { submitTelegramUsername, validateTelegramUsername } from '@/services/telegram-service'
 import { getFormattedPortfolioValue } from '@/lib/portfolio-utils'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
@@ -71,20 +71,22 @@ const drawerVariants = {
     }
 };
 
-interface IDiscordConnectionDialogProps {
+interface ITelegramConnectionDialogProps {
     open: boolean
     setOpen: (open: boolean) => void
     portfolioValue: number
+    website?: 'AGGREGATOR' | 'MARKETS'
 }
 
-export function DiscordConnectionDialog({
+export function TelegramConnectionDialog({
     open,
     setOpen,
-    portfolioValue
-}: IDiscordConnectionDialogProps) {
+    portfolioValue,
+    website = 'AGGREGATOR'
+}: ITelegramConnectionDialogProps) {
     const { logEvent } = useAnalytics()
     const { walletAddress } = useWalletConnection()
-    const [discordId, setDiscordId] = useState('')
+    const [telegramUsername, setTelegramUsername] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isSubmitted, setIsSubmitted] = useState(false)
     const [error, setError] = useState('')
@@ -95,7 +97,7 @@ export function DiscordConnectionDialog({
     useEffect(() => {
         if (open) {
             // Log event when dialog is opened
-            logEvent('discord_connection_dialog_opened', {
+            logEvent('telegram_connection_dialog_opened', {
                 portfolio_value: portfolioValue,
                 wallet_address: walletAddress
             })
@@ -107,23 +109,23 @@ export function DiscordConnectionDialog({
         if (!open) {
             // Reset state when dialog is closed
             setTimeout(() => {
-                setDiscordId('')
+                setTelegramUsername('')
                 setIsSubmitted(false)
                 setError('')
             }, 300)
         }
     }
 
-    function handleIdChange(e: React.ChangeEvent<HTMLInputElement>) {
+    function handleUsernameChange(e: React.ChangeEvent<HTMLInputElement>) {
         const value = e.target.value;
-        setDiscordId(value);
+        setTelegramUsername(value);
 
         // Clear error when user starts typing
         if (error) setError('');
 
         // Real-time validation (optional but only if value is not empty)
         if (value.trim().length > 0) {
-            const validationError = validateDiscordId(value);
+            const validationError = validateTelegramUsername(value);
             if (validationError) {
                 setError(validationError);
             }
@@ -131,7 +133,7 @@ export function DiscordConnectionDialog({
     }
 
     async function handleSubmit() {
-        const validationError = validateDiscordId(discordId)
+        const validationError = validateTelegramUsername(telegramUsername)
         if (validationError) {
             setError(validationError)
             return
@@ -141,21 +143,22 @@ export function DiscordConnectionDialog({
         setError('')
 
         try {
-            const response = await submitDiscordId({
-                discordId,
+            const response = await submitTelegramUsername({
+                telegramUsername,
                 walletAddress,
-                portfolioValue
+                portfolioValue,
+                website
             })
 
             if (response.success) {
                 setIsSubmitted(true)
-                logEvent('discord_id_submitted', {
+                logEvent('telegram_username_submitted', {
                     portfolio_value: portfolioValue,
                     wallet_address: walletAddress
                 })
             } else {
                 setError(response.message || 'Failed to submit. Please try again.')
-                logEvent('discord_id_submission_failed', {
+                logEvent('telegram_username_submission_failed', {
                     portfolio_value: portfolioValue,
                     wallet_address: walletAddress,
                     error: response.message
@@ -163,7 +166,7 @@ export function DiscordConnectionDialog({
             }
         } catch (err) {
             setError('Failed to submit. Please try again.')
-            logEvent('discord_id_submission_failed', {
+            logEvent('telegram_username_submission_failed', {
                 portfolio_value: portfolioValue,
                 wallet_address: walletAddress,
                 error: err instanceof Error ? err.message : String(err)
@@ -174,7 +177,7 @@ export function DiscordConnectionDialog({
     }
 
     function handleSkip() {
-        logEvent('discord_connection_skipped', {
+        logEvent('telegram_connection_skipped', {
             portfolio_value: portfolioValue,
             wallet_address: walletAddress
         })
@@ -233,7 +236,7 @@ export function DiscordConnectionDialog({
                             className="w-full py-[13px] rounded-5 border-blue-500 text-blue-600 hover:bg-blue-50"
                             onClick={() => {
                                 window.open('https://discord.gg/superlend', '_blank');
-                                logEvent('discord_join_discord_clicked', {
+                                logEvent('telegram_join_discord_clicked', {
                                     portfolio_value: portfolioValue,
                                     wallet_address: walletAddress
                                 });
@@ -268,7 +271,7 @@ export function DiscordConnectionDialog({
                         weight="normal"
                         className="text-gray-800"
                     >
-                        Do drop-in your Discord ID, and our PM will reach out in the next 24-48 hours
+                        Do drop-in your Telegram username, and our PM will reach out in the next 24-48 hours
                     </BodyText>
 
                     {/* Portfolio value context */}
@@ -290,32 +293,32 @@ export function DiscordConnectionDialog({
                     {/* Input field */}
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
-                            <Label htmlFor="discord-id" size="medium">Your Discord ID</Label>
+                            <Label htmlFor="telegram-username" size="medium">Your Telegram Username</Label>
                             <InfoTooltip
                                 content={
                                     <div className="space-y-2 max-w-xs">
                                         <BodyText level="body2" weight="normal" className="text-gray-700">
-                                            A Discord ID is a unique 17 or 18-digit number, which can be found next to your username.
+                                            Your Telegram username can be found in your Telegram profile settings.
                                         </BodyText>
                                         <div className="h-[1px] bg-gray-400" />
                                         <BodyText level="body2" weight="normal" className="text-gray-700">
-                                            To get your Discord ID:
+                                            To get your Telegram username:
                                         </BodyText>
                                         <ol className="pl-4 list-decimal space-y-1">
-                                            <li className="text-gray-700 text-sm">Open Discord</li>
-                                            <li className="text-gray-700 text-sm">Settings &gt; Advanced &gt; Enable Developer Mode</li>
-                                            <li className="text-gray-700 text-sm">Go back to Discord settings and click on three dots on the right of your username</li>
-                                            <li className="text-gray-700 text-sm">Select &quot;Copy ID&quot;</li>
+                                            <li className="text-gray-700 text-sm">Open Telegram</li>
+                                            <li className="text-gray-700 text-sm">Go to Settings</li>
+                                            <li className="text-gray-700 text-sm">Tap on your profile</li>
+                                            <li className="text-gray-700 text-sm">Your username will be listed as @username</li>
                                         </ol>
                                     </div>
                                 }
                             />
                         </div>
                         <Input
-                            id="discord-id"
-                            value={discordId}
-                            onChange={handleIdChange}
-                            placeholder="Enter your Discord ID"
+                            id="telegram-username"
+                            value={telegramUsername}
+                            onChange={handleUsernameChange}
+                            placeholder="Enter your Telegram username"
                             className={`rounded-5 border ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                         />
                         {error && (
@@ -341,7 +344,7 @@ export function DiscordConnectionDialog({
                     <div className="flex flex-col sm:flex-row gap-2 pt-2">
                         <Button
                             onClick={handleSubmit}
-                            disabled={isSubmitting || !discordId.trim()}
+                            disabled={isSubmitting || !telegramUsername.trim()}
                             variant="primary"
                             className="group flex items-center gap-[4px] py-[13px] w-full rounded-5"
                         >
@@ -445,4 +448,4 @@ export function DiscordConnectionDialog({
     )
 }
 
-export default DiscordConnectionDialog 
+export default TelegramConnectionDialog 

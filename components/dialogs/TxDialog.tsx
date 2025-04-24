@@ -71,11 +71,6 @@ import ImageWithBadge from '../ImageWithBadge'
 import ExternalLink from '../ExternalLink'
 import { parseUnits } from 'ethers/lib/utils'
 import { ETH_ADDRESSES } from '@/lib/constants'
-import { Card, CardContent } from '../ui/card'
-// import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
-import DiscordConnectionDialog from './DiscordConnectionDialog'
-import { useDiscordDialog } from '@/hooks/useDiscordDialog'
-import { PortfolioContext } from '@/context/portfolio-provider'
 import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
 
 // TYPES

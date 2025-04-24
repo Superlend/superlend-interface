@@ -4,12 +4,12 @@ import { useState } from 'react'
 import { Button } from '../ui/button'
 import { Label } from '../ui/typography'
 import { Input } from '../ui/input'
-import { useDiscordDialog } from '@/hooks/useDiscordDialog'
+import { useTelegramDialog } from '@/hooks/useTelegramDialog'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
-import DiscordConnectionDialog from '../dialogs/DiscordConnectionDialog'
+import TelegramConnectionDialog from '../dialogs/TelegramConnectionDialog'
 
 /**
- * Debug component for testing Discord dialog functionality
+ * Debug component for testing Telegram dialog functionality
  * Only visible in development mode
  */
 export function DebugPortfolioTools() {
@@ -17,12 +17,12 @@ export function DebugPortfolioTools() {
   const [showDialog, setShowDialog] = useState(false)
   const { walletAddress } = useWalletConnection()
 
-  // Setup Discord dialog hook
+  // Setup Telegram dialog hook
   const { 
-    showDiscordDialog,
-    setShowDiscordDialog,
+    showTelegramDialog,
+    setShowTelegramDialog,
     resetDialogShownState
-  } = useDiscordDialog({
+  } = useTelegramDialog({
     portfolioValue,
     lendTxCompleted: showDialog,
     walletAddress
@@ -35,7 +35,7 @@ export function DebugPortfolioTools() {
 
   return (
     <div className="fixed bottom-4 right-4 p-4 bg-gray-100 border border-gray-300 rounded-md shadow-md z-50 w-80">
-      <h3 className="font-medium text-gray-800 mb-2">Discord Dialog Debug</h3>
+      <h3 className="font-medium text-gray-800 mb-2">Telegram Dialog Debug</h3>
       
       <div className="space-y-3">
         <div>
@@ -68,15 +68,16 @@ export function DebugPortfolioTools() {
         </div>
         
         <div className="text-xs text-gray-500 mt-2">
-          Current state: {showDiscordDialog ? 'Dialog showing' : 'Dialog hidden'}
+          Current state: {showTelegramDialog ? 'Dialog showing' : 'Dialog hidden'}
         </div>
       </div>
 
-      {/* The Discord dialog component */}
-      <DiscordConnectionDialog
-        open={showDiscordDialog}
-        setOpen={setShowDiscordDialog}
+      {/* The Telegram dialog component */}
+      <TelegramConnectionDialog
+        open={showTelegramDialog}
+        setOpen={setShowTelegramDialog}
         portfolioValue={portfolioValue}
+        website="AGGREGATOR"
       />
     </div>
   )

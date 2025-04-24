@@ -1,8 +1,20 @@
 import { NextResponse } from 'next/server';
-import { validateDiscordId } from '@/services/discord-service';
-import { supabaseServer, type DiscordUser } from '@/lib/supabase-client';
+import { validateTelegramUsername } from '@/services/telegram-service';
+import { supabaseServer } from '@/lib/supabase-client';
 import { validateRequestCsrfToken } from '@/lib/csrf-protection';
 import { applyRateLimit, getClientIp } from '@/lib/rate-limiter';
+
+/**
+ * Interface for the Telegram user in Supabase
+ */
+interface TelegramUser {
+  id?: string;
+  telegram_username: string;
+  wallet_address?: string;
+  portfolio_value: number;
+  website: 'AGGREGATOR' | 'MARKETS';
+  created_at?: string;
+}
 
 /**
  * Helper function to get a user-friendly error message
@@ -11,10 +23,10 @@ function getErrorMessage(error: any): string {
   // Handle specific error codes
   if (error.code === '23505') { // Unique constraint violation
     if (error.details?.includes('wallet_address')) {
-      return 'This wallet has already submitted a Discord ID';
+      return 'This wallet has already submitted a Telegram username';
     }
-    if (error.details?.includes('discord_id')) {
-      return 'This Discord ID has already been registered';
+    if (error.details?.includes('telegram_username')) {
+      return 'This Telegram username has already been registered';
     }
     return 'This record already exists in our database';
   }
@@ -29,7 +41,7 @@ function getErrorMessage(error: any): string {
 }
 
 /**
- * API route for handling Discord ID submissions (Next.js App Router format)
+ * API route for handling Telegram username submissions (Next.js App Router format)
  */
 export async function POST(request: Request) {
   try {
@@ -69,10 +81,10 @@ export async function POST(request: Request) {
 
     // Parse the request body
     const body = await request.json();
-    const { discordId, walletAddress, portfolioValue } = body;
+    const { telegramUsername, walletAddress, portfolioValue, website = 'AGGREGATOR' } = body;
 
-    // Validate Discord ID format
-    const validationError = validateDiscordId(discordId);
+    // Validate Telegram username format
+    const validationError = validateTelegramUsername(telegramUsername);
     if (validationError) {
       return NextResponse.json(
         { success: false, message: validationError },
@@ -80,14 +92,29 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate website value
+    if (website !== 'AGGREGATOR' && website !== 'MARKETS') {
+      return NextResponse.json(
+        { success: false, message: 'Invalid website value. Must be either AGGREGATOR or MARKETS' },
+        { status: 400 }
+      );
+    }
+
+    // Ensure the username starts with @ before storing
+    let formattedUsername = telegramUsername.trim();
+    if (!formattedUsername.startsWith('@')) {
+      formattedUsername = '@' + formattedUsername;
+    }
+
     // Add to Supabase
     const { error } = await supabaseServer
-      .from('discord_users')
+      .from('telegram_users')
       .insert({
-        discord_id: discordId,
+        telegram_username: formattedUsername,
         wallet_address: walletAddress || null,
         portfolio_value: portfolioValue,
-      } as DiscordUser);
+        website: website,
+      } as TelegramUser);
 
     if (error) {
       console.error('Supabase error:', error);
@@ -99,10 +126,11 @@ export async function POST(request: Request) {
     }
 
     // Log for debugging
-    console.log('Discord ID submission saved:', {
-      discordId,
+    console.log('Telegram username submission saved:', {
+      telegramUsername: formattedUsername,
       walletAddress,
       portfolioValue,
+      website,
       timestamp: new Date().toISOString(),
       ip: getClientIp(request)
     });
@@ -110,11 +138,11 @@ export async function POST(request: Request) {
     // Send success response
     return NextResponse.json({
       success: true,
-      message: 'Successfully saved Discord ID'
+      message: 'Successfully saved Telegram username'
     });
   } catch (error) {
-    console.error('Error in discord-connect API:', error);
-    let message = 'Failed to save Discord ID';
+    console.error('Error in telegram-connect API:', error);
+    let message = 'Failed to save Telegram username';
     if (error instanceof Error) {
       message = error.message;
     } else if (typeof error === 'object' && error !== null) {

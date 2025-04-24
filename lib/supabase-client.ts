@@ -30,4 +30,14 @@ export type DiscordUser = {
   wallet_address?: string;
   portfolio_value: number;
   created_at?: string;
+}
+
+// Type definition for the telegram_users table
+export type TelegramUser = {
+  id?: string;
+  telegram_username: string;
+  wallet_address?: string;
+  portfolio_value: number;
+  website: 'AGGREGATOR' | 'MARKETS';
+  created_at?: string;
 } 

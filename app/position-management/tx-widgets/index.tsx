@@ -15,9 +15,9 @@ import ExposureAdjustmentWidget from './exposure-adjustment-widget'
 import { ChainId } from '@/types/chain'
 import { useTxContext } from '@/context/tx-provider'
 import { TTxContext } from '@/context/tx-provider'
-import { useDiscordDialog } from '@/hooks/useDiscordDialog'
+import { useTelegramDialog } from '@/hooks/useTelegramDialog'
 import { PortfolioContext } from '@/context/portfolio-provider'
-import { DiscordConnectionDialog } from '@/components/dialogs/DiscordConnectionDialog'
+import { TelegramConnectionDialog } from '@/components/dialogs/TelegramConnectionDialog'
 
 export const AssetTxWidget: FC = () => {
     const { portfolioData: portfolioContextData } = useContext(PortfolioContext)
@@ -42,9 +42,9 @@ export const AssetTxWidget: FC = () => {
     const portfolioValue = Number(portfolioContextData?.total_supplied || 0) - Number(portfolioContextData?.total_borrowed || 0)
 
     const {
-        showDiscordDialog,
-        setShowDiscordDialog
-    } = useDiscordDialog({
+        showTelegramDialog,
+        setShowTelegramDialog
+    } = useTelegramDialog({
         portfolioValue,
         lendTxCompleted: isLendTxCompletedAndDialogClosed,
         walletAddress,
@@ -100,10 +100,11 @@ export const AssetTxWidget: FC = () => {
                         portfolioData={portfolioData}
                     />
                 }
-                <DiscordConnectionDialog
-                    open={showDiscordDialog}
-                    setOpen={setShowDiscordDialog}
+                <TelegramConnectionDialog
+                    open={showTelegramDialog}
+                    setOpen={setShowTelegramDialog}
                     portfolioValue={portfolioValue}
+                    website="AGGREGATOR"
                 />
             </WidgetContainer>
         )
@@ -123,10 +124,11 @@ export const AssetTxWidget: FC = () => {
                         portfolioData={portfolioData}
                     />
                 }
-                <DiscordConnectionDialog
-                    open={showDiscordDialog}
-                    setOpen={setShowDiscordDialog}
+                <TelegramConnectionDialog
+                    open={showTelegramDialog}
+                    setOpen={setShowTelegramDialog}
                     portfolioValue={portfolioValue}
+                    website="AGGREGATOR"
                 />
             </WidgetContainer>
         )
@@ -147,10 +149,11 @@ export const AssetTxWidget: FC = () => {
                         portfolioData={portfolioData}
                     />
                 }
-                <DiscordConnectionDialog
-                    open={showDiscordDialog}
-                    setOpen={setShowDiscordDialog}
+                <TelegramConnectionDialog
+                    open={showTelegramDialog}
+                    setOpen={setShowTelegramDialog}
                     portfolioValue={portfolioValue}
+                    website="AGGREGATOR"
                 />
             </WidgetContainer>
         )
