@@ -11,7 +11,7 @@ import EasterEgg from '@/components/EasterEgg'
 // import { ShowAllMarketsProvider } from '@/context/show-all-markets-provider'
 import MarketsBanner from '@/components/MarketsBanner'
 import Script from 'next/script'
-import { DebugPortfolioTools } from '@/components/debug/DebugPortfolioTools'
+// import { DebugPortfolioTools } from '@/components/debug/DebugPortfolioTools'
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://app.superlend.xyz'),
