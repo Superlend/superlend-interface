@@ -310,9 +310,6 @@ export function TelegramConnectionDialog({
                                             <li className="text-gray-700 text-sm">Tap on your profile</li>
                                             <li className="text-gray-700 text-sm">Your username will be listed as @username</li>
                                         </ol>
-                                        <BodyText level="body2" weight="normal" className="text-gray-600 mt-2">
-                                            Don't worry about adding the @ symbol - we'll add it automatically if needed!
-                                        </BodyText>
                                     </div>
                                 }
                             />
