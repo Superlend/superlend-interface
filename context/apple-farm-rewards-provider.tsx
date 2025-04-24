@@ -41,6 +41,10 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
         useGetMerklOpportunitiesData({
             campaignId: '0x691135dbaf8ce8bcc7aace2468be9b499834308362e1194a4246014ff74163a1', // usdt
         });
+    const { data: wethOpportunityData, isLoading: isLoadingWETHOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: '0x03457302c5da09f3415010aa5be76e6533dc016ce80ba641f8151e13fc0e5a21', // weth
+        });
 
     const isLoading =
         isLoadingMBasisOpportunityData ||
@@ -48,7 +52,8 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
         isLoadingXTZOpportunityData ||
         isLoadingUSDCOpportunityData ||
         isLoadingWBTCCOpportunityData ||
-        isLoadingUSDTCOpportunityData;
+        isLoadingUSDTCOpportunityData ||
+        isLoadingWETHOpportunityData;
 
     const appleFarmRewardsAprs = useMemo(() => {
         return {
@@ -58,6 +63,7 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
             [ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS['usdc']]: usdcOpportunityData?.[0]?.Opportunity?.apr,
             [ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS['wbtc']]: wbtcOpportunityData?.[0]?.Opportunity?.apr,
             [ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS['usdt']]: usdtOpportunityData?.[0]?.Opportunity?.apr,
+            [ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS['weth']]: wethOpportunityData?.[0]?.Opportunity?.apr,
         };
     }, [
         mBasisOpportunityData,
@@ -66,6 +72,7 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
         usdcOpportunityData,
         wbtcOpportunityData,
         usdtOpportunityData,
+        wethOpportunityData,
     ]);
 
     const hasAppleFarmRewards = (tokenAddress: string) => Object.values(ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS).includes(tokenAddress)
