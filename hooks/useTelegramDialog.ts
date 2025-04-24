@@ -55,7 +55,7 @@ export function useTelegramDialog({
   useEffect(() => {
     if (
       lendTxCompleted && 
-      isPortfolioAboveThreshold(portfolioValue, 500) && 
+      isPortfolioAboveThreshold(portfolioValue) && 
       !hasSeenDialog &&
       !hasSubmittedTelegram &&
       walletAddress
