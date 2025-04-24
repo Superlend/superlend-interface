@@ -11,6 +11,7 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 import AaveV3TxWidget from './aave-tx-widget'
 import MorphoTxWidget from './morpho-tx-widget'
 import FluidTxWidget from './fluid-tx-widget'
+import ExposureAdjustmentWidget from './exposure-adjustment-widget'
 import { ChainId } from '@/types/chain'
 import { useTxContext } from '@/context/tx-provider'
 import { TTxContext } from '@/context/tx-provider'
@@ -24,6 +25,7 @@ export const AssetTxWidget: FC = () => {
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
+    const exposure_widget = searchParams.get('exposure_widget') === 'true'
     const {
         walletAddress,
         handleSwitchChain,
@@ -85,53 +87,82 @@ export const AssetTxWidget: FC = () => {
 
     if (isAaveV3Protocol) {
         return (
-            <>
+            <WidgetContainer>
                 <AaveV3TxWidget
                     isLoading={isLoading}
                     platformData={platformData}
                     portfolioData={portfolioData}
                 />
+                {exposure_widget &&
+                    <ExposureAdjustmentWidget
+                        isLoading={isLoading}
+                        platformData={platformData}
+                        portfolioData={portfolioData}
+                    />
+                }
                 <DiscordConnectionDialog
                     open={showDiscordDialog}
                     setOpen={setShowDiscordDialog}
                     portfolioValue={portfolioValue}
                 />
-            </>
+            </WidgetContainer>
         )
     }
 
     if (isMorphoProtocol && !isPolygonChain) {
         return (
-            <>
+            <WidgetContainer>
                 <MorphoTxWidget
                     isLoading={isLoadingPlatformData}
                     platformData={platformData}
                 />
+                {exposure_widget &&
+                    <ExposureAdjustmentWidget
+                        isLoading={isLoading}
+                        platformData={platformData}
+                        portfolioData={portfolioData}
+                    />
+                }
                 <DiscordConnectionDialog
                     open={showDiscordDialog}
                     setOpen={setShowDiscordDialog}
                     portfolioValue={portfolioValue}
                 />
-            </>
+            </WidgetContainer>
         )
     }
 
     if (isFluidProtocol) {
         return (
-            <>
+            <WidgetContainer>
                 <FluidTxWidget
                     isLoading={isLoadingPlatformData}
                     platformData={platformData}
                     portfolioData={portfolioData}
                 />
+                {exposure_widget &&
+                    <ExposureAdjustmentWidget
+                        isLoading={isLoading}
+                        platformData={platformData}
+                        portfolioData={portfolioData}
+                    />
+                }
                 <DiscordConnectionDialog
                     open={showDiscordDialog}
                     setOpen={setShowDiscordDialog}
                     portfolioValue={portfolioValue}
                 />
-            </>
+            </WidgetContainer>
         )
     }
 
     return null
+}
+
+const WidgetContainer: FC<{ children: React.ReactNode }> = ({ children }) => {
+    return (
+        <div className="flex flex-col gap-4">
+            {children}
+        </div>
+    )
 }

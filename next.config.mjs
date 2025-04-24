@@ -23,6 +23,9 @@ const nextConfig = {
             {
                 hostname: 'cdn.whisk.so',
             },
+            {
+                hostname: 'cryptologos.cc',
+            },
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'attachment',
