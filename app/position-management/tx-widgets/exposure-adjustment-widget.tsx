@@ -61,14 +61,14 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
-    
+
     const {
         walletAddress,
         handleSwitchChain,
         isWalletConnected,
         isConnectingWallet,
     } = useWalletConnection()
-    
+
     const {
         lendTx,
         isLendBorrowTxDialogOpen,
@@ -81,7 +81,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
     const [longAmount, setLongAmount] = useState<string>('')
     const [leverage, setLeverage] = useState<number>(1)
     const [healthFactor, setHealthFactor] = useState<number>(0)
-    
+
     // Token balances
     const {
         erc20TokensBalanceData,
@@ -94,10 +94,10 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
             const tokens = platformData.assets.map((asset: any) => asset.token)
             setAvailableTokens(tokens)
             // Select the first token by default or the one from URL
-            const defaultToken = tokens.find((token: Token) => 
+            const defaultToken = tokens.find((token: Token) =>
                 token.address.toLowerCase() === tokenAddress.toLowerCase()
             ) || tokens[0]
-            
+
             setSelectedLongToken(defaultToken)
         }
     }, [platformData, tokenAddress])
@@ -163,7 +163,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                     price_usd: 15.89
                 }
             ];
-            
+
             setAvailableTokens(mockTokens);
             setSelectedLongToken(mockTokens[0]); // Set XTZ as default
         }
@@ -184,7 +184,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
     // Get balance for selected token
     const getTokenBalance = (token: Token | null) => {
         if (!token || !isWalletConnected) return '0'
-        
+
         return (
             erc20TokensBalanceData[Number(chain_id)]?.[token.address.toLowerCase()]
                 ?.balanceFormatted ?? '0'
@@ -226,11 +226,11 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
     }
 
     // Check if button should be disabled
-    const isButtonDisabled = !isWalletConnected || 
-                            !selectedLongToken || 
-                            !longAmount || 
-                            Number(longAmount) <= 0 || 
-                            Number(longAmount) > Number(selectedTokenBalance)
+    const isButtonDisabled = !isWalletConnected ||
+        !selectedLongToken ||
+        !longAmount ||
+        Number(longAmount) <= 0 ||
+        Number(longAmount) > Number(selectedTokenBalance)
 
     return (
         <section className="exposure-adjustment-widget flex flex-col gap-3">
@@ -238,7 +238,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                 <CardHeader className="p-0 pl-3">
                     <CardTitle className="text-lg font-medium text-gray-800">Adjust Exposure</CardTitle>
                 </CardHeader>
-                
+
                 <CardContent className="p-0 space-y-6">
                     {/* Long Position Section */}
                     <div className="space-y-1">
@@ -259,7 +259,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                                 )}
                             </BodyText>
                         </div>
-                        
+
                         <div className="border rounded-5 border-gray-200 py-2 px-4 flex items-center gap-3 bg-gray-100">
                             {/* Token Dropdown */}
                             <div className="flex items-center gap-1">
@@ -276,7 +276,6 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                                             size="sm"
                                             variant="ghost"
                                             className="group flex items-center gap-1 text-gray-800 p-0 h-auto"
-                                            disabled={!isWalletConnected}
                                         >
                                             <span>{selectedLongToken?.symbol || 'Select'}</span>
                                             <ChevronDownIcon className="w-4 h-4 text-gray-600 transition-all duration-300 group-data-[state=open]:rotate-180" />
@@ -313,7 +312,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
-                            
+
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -321,7 +320,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             >
                                 |
                             </BodyText>
-                            
+
                             {/* Amount Input */}
                             <div className="flex flex-col flex-1 gap-[4px]">
                                 <CustomNumberInput
@@ -330,7 +329,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                                     maxDecimals={selectedLongToken?.decimals || 18}
                                 />
                             </div>
-                            
+
                             {/* Max Button */}
                             <Button
                                 variant="link"
@@ -342,7 +341,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             </Button>
                         </div>
                     </div>
-                    
+
                     {/* Short Position Section */}
                     <div className="space-y-1">
                         <div className="flex justify-between items-center mb-1 px-4">
@@ -355,7 +354,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                                 Balance: 0
                             </BodyText>
                         </div>
-                        
+
                         <div className="border rounded-5 border-gray-200 py-3 px-4 flex items-center gap-3 bg-gray-100">
                             <div className="flex items-center gap-1">
                                 <ImageWithDefault
@@ -367,7 +366,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                                 />
                                 <span>{selectedLongToken?.symbol || 'Select token'}</span>
                             </div>
-                            
+
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -375,7 +374,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             >
                                 |
                             </BodyText>
-                            
+
                             <div className="flex flex-col flex-1 gap-[4px]">
                                 <BodyText
                                     level="body1"
@@ -387,7 +386,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             </div>
                         </div>
                     </div>
-                    
+
                     {/* Leverage Slider */}
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
@@ -396,7 +395,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                                 {leverage}x
                             </Badge>
                         </div>
-                        
+
                         <div className="px-2">
                             <Slider
                                 value={[leverage]}
@@ -424,7 +423,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             </div>
                         </div>
                     </div>
-                    
+
                     {/* Health Factor */}
                     <div className="flex items-center justify-between px-6 py-4 bg-gray-200 lg:bg-white rounded-5">
                         <BodyText
@@ -432,7 +431,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             weight="normal"
                             className="text-gray-600"
                         >
-                            HF: Health Factor
+                            Health Factor
                         </BodyText>
                         <BodyText
                             level="body2"
@@ -445,7 +444,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             {getHealthFactorDisplay()}
                         </BodyText>
                     </div>
-                    
+
                     {/* USD Information */}
                     {/* <div className="flex items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5">
                         <div className="flex items-center gap-2">
@@ -465,7 +464,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             ${selectedLongToken && longAmount ? (Number(longAmount) * selectedLongToken.price_usd).toFixed(2) : '0.00'}
                         </BodyText>
                     </div> */}
-                    
+
                     {/* <div className="flex items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5">
                         <div className="flex items-center gap-2">
                             <BodyText
@@ -485,7 +484,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                         </BodyText>
                     </div> */}
                 </CardContent>
-                
+
                 <CardFooter className="p-0 pt-2">
                     {!isWalletConnected ? (
                         <ConnectWalletButton />
@@ -501,7 +500,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                     )}
                 </CardFooter>
             </Card>
-            
+
             {/* Confirmation Dialog */}
             {/* {selectedLongToken && (
                 <ConfirmationDialog

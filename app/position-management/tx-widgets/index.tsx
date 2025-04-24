@@ -2,7 +2,7 @@
 
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { FC, useContext } from 'react'
-import { PlatformType } from '@/types/platform'
+import { PlatformType, TPlatform } from '@/types/platform'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import { useSearchParams } from 'next/navigation'
 import { TPositionType } from '@/types'
@@ -18,6 +18,7 @@ import { TTxContext } from '@/context/tx-provider'
 import { useTelegramDialog } from '@/hooks/useTelegramDialog'
 import { PortfolioContext } from '@/context/portfolio-provider'
 import { TelegramConnectionDialog } from '@/components/dialogs/TelegramConnectionDialog'
+import { TPortfolio } from '@/types/queries/portfolio'
 
 export const AssetTxWidget: FC = () => {
     const { portfolioData: portfolioContextData } = useContext(PortfolioContext)
@@ -87,19 +88,12 @@ export const AssetTxWidget: FC = () => {
 
     if (isAaveV3Protocol) {
         return (
-            <WidgetContainer>
+            <WidgetContainer isLoading={isLoading} platformData={platformData} portfolioData={portfolioData}>
                 <AaveV3TxWidget
                     isLoading={isLoading}
                     platformData={platformData}
                     portfolioData={portfolioData}
                 />
-                {exposure_widget &&
-                    <ExposureAdjustmentWidget
-                        isLoading={isLoading}
-                        platformData={platformData}
-                        portfolioData={portfolioData}
-                    />
-                }
                 <TelegramConnectionDialog
                     open={showTelegramDialog}
                     setOpen={setShowTelegramDialog}
@@ -112,18 +106,11 @@ export const AssetTxWidget: FC = () => {
 
     if (isMorphoProtocol && !isPolygonChain) {
         return (
-            <WidgetContainer>
+            <WidgetContainer isLoading={isLoading} platformData={platformData} portfolioData={portfolioData}>
                 <MorphoTxWidget
                     isLoading={isLoadingPlatformData}
                     platformData={platformData}
                 />
-                {exposure_widget &&
-                    <ExposureAdjustmentWidget
-                        isLoading={isLoading}
-                        platformData={platformData}
-                        portfolioData={portfolioData}
-                    />
-                }
                 <TelegramConnectionDialog
                     open={showTelegramDialog}
                     setOpen={setShowTelegramDialog}
@@ -136,19 +123,12 @@ export const AssetTxWidget: FC = () => {
 
     if (isFluidProtocol) {
         return (
-            <WidgetContainer>
+            <WidgetContainer isLoading={isLoading} platformData={platformData} portfolioData={portfolioData}>
                 <FluidTxWidget
                     isLoading={isLoadingPlatformData}
                     platformData={platformData}
                     portfolioData={portfolioData}
                 />
-                {exposure_widget &&
-                    <ExposureAdjustmentWidget
-                        isLoading={isLoading}
-                        platformData={platformData}
-                        portfolioData={portfolioData}
-                    />
-                }
                 <TelegramConnectionDialog
                     open={showTelegramDialog}
                     setOpen={setShowTelegramDialog}
@@ -162,10 +142,15 @@ export const AssetTxWidget: FC = () => {
     return null
 }
 
-const WidgetContainer: FC<{ children: React.ReactNode }> = ({ children }) => {
+const WidgetContainer: FC<{ children: React.ReactNode, isLoading: boolean, platformData: TPlatform, portfolioData: TPortfolio }> = ({ children, isLoading, platformData, portfolioData }) => {
     return (
         <div className="flex flex-col gap-4">
             {children}
+            <ExposureAdjustmentWidget
+                isLoading={isLoading}
+                platformData={platformData}
+                portfolioData={portfolioData}
+            />
         </div>
     )
 }
