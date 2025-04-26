@@ -21,14 +21,19 @@ import { Button } from '@/components/ui/button'
 import { ArrowRightIcon } from 'lucide-react'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { TTxContext, TLendTx, useTxContext } from '@/context/tx-provider'
-import { BigNumber } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
 import { getErrorText } from '@/lib/getErrorText'
 import { BodyText } from '@/components/ui/typography'
 import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
-import { Market, Vault } from '@morpho-org/blue-sdk'
+import GENERAL_ADAPTER_ABI from '@/data/abi/morphoGeneralAdapterABI.json'
+import { DEFAULT_SLIPPAGE_TOLERANCE, Market, Vault } from '@morpho-org/blue-sdk'
 import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
 import MORPHO_BUNDLER_ABI from '@/data/abi/morphoBundlerABI.json'
-import { BUNDLER_ADDRESS_MORPHO } from '@/lib/constants'
+import {
+    BUNDLER_ADDRESS_MORPHO,
+    GENERAL_ADAPTER_ADDRESS,
+    MORPHO_BLUE_API_CHAINIDS,
+} from '@/lib/constants'
 
 import { BundlerAction } from '@morpho-org/morpho-blue-bundlers/pkg'
 import ExternalLink from '@/components/ExternalLink'
@@ -38,7 +43,9 @@ import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useAuth } from '@/context/auth-provider'
 import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
-
+import { MathLib } from '@morpho-org/blue-sdk'
+import { zeroHash } from 'viem'
+import MORPHO_BUNDLER3_ABI from '@/data/abi/morphoBundler3ABI.json'
 interface ISupplyMorphoButtonProps {
     disabled: boolean
     assetDetails: any // Replace with proper type
@@ -148,85 +155,14 @@ const SupplyMorphoButton = ({
             const isVault = assetDetails.isVault
 
             if (isVault) {
-                const vault = morphoMarketData as Vault
-                // const newAmount = parseUnits(
-                //     amount,
-                //     tokenDetails.token.decimals
-                // )
-                const shares = vault.toShares(BigInt(amount.amountParsed))
-
-                // minAmount of share will be 0.99% of the shares
-                const minAmount = BigNumber.from(shares)
-                    .mul(99)
-                    .div(100)
-                    .toBigInt()
-
-                const calls = [
-                    BundlerAction.erc20TransferFrom(
-                        vault.asset,
-                        BigInt(amount.amountParsed)
-                    ),
-                    BundlerAction.erc4626Deposit(
-                        vault.address,
-                        BigInt(amount.amountParsed),
-                        minAmount,
-                        walletAddress
-                    ),
-                ]
-
-                logEvent('lend_initiated', {
-                    amount: amount.amountRaw,
-                    token_symbol: assetDetails?.asset?.token?.symbol,
-                    platform_name: assetDetails?.name,
-                    chain_name:
-                        CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
-                        ],
-                    wallet_address: walletAddress,
-                })
-
-                writeContractAsync({
-                    address: BUNDLER_ADDRESS_MORPHO[
+                if (!MORPHO_BLUE_API_CHAINIDS.includes(assetDetails.chain_id)) {
+                    await handleMorphoVaultSupply(
+                        walletAddress,
                         assetDetails.chain_id
-                    ] as `0x${string}`,
-                    abi: MORPHO_BUNDLER_ABI,
-                    functionName: 'multicall',
-                    args: [calls],
-                })
-                    .then((data) => {
-                        setLendTx((prev: TLendTx) => ({
-                            ...prev,
-                            status: 'view',
-                            errorMessage: '',
-                        }))
-
-                        logEvent('lend_completed', {
-                            amount: amount.amountRaw,
-                            token_symbol: assetDetails?.asset?.token?.symbol,
-                            platform_name: assetDetails?.name,
-                            chain_name:
-                                CHAIN_ID_MAPPER[
-                                    Number(assetDetails?.chain_id) as ChainId
-                                ],
-                            wallet_address: walletAddress,
-                        })
-
-                        logUserEvent({
-                            user_address: walletAddress,
-                            event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
-                            platform_type: 'superlend_aggregator',
-                            protocol_identifier: assetDetails?.protocol_identifier,
-                            event_data: 'SUPPLY',
-                            authToken: accessToken || '',
-                        })
-                    })
-                    .catch((error) => {
-                        setLendTx((prev: TLendTx) => ({
-                            ...prev,
-                            isPending: false,
-                            isConfirming: false,
-                        }))
-                    })
+                    )
+                } else {
+                    await handleMorphoVaultSupplyLegacy(walletAddress)
+                }
             } else {
                 //  check if asset is collateral or borrow
                 // If collateral, supplyCollateral if borrowSupply supply
@@ -450,7 +386,11 @@ const SupplyMorphoButton = ({
                 functionName: 'approve',
                 args: [
                     assetDetails.isVault
-                        ? BUNDLER_ADDRESS_MORPHO[assetDetails.chain_id]
+                        ? !MORPHO_BLUE_API_CHAINIDS.includes(
+                              assetDetails.chain_id
+                          )
+                            ? GENERAL_ADAPTER_ADDRESS[assetDetails.chain_id]
+                            : BUNDLER_ADDRESS_MORPHO[assetDetails.chain_id]
                         : platform.core_contract,
                     amount.amountParsed,
                 ],
@@ -460,6 +400,178 @@ const SupplyMorphoButton = ({
         } catch (error) {
             error
         }
+    }
+
+    const handleMorphoVaultSupplyLegacy = async (
+        walletAddress: `0x${string}`
+    ) => {
+        const vault = morphoMarketData as Vault
+        const shares = vault.toShares(BigInt(amount.amountParsed))
+
+        const minAmount = BigNumber.from(shares).mul(99).div(100).toBigInt()
+
+        const calls = [
+            BundlerAction.erc20TransferFrom(
+                vault.asset,
+                BigInt(amount.amountParsed)
+            ),
+            BundlerAction.erc4626Deposit(
+                vault.address,
+                BigInt(amount.amountParsed),
+                minAmount,
+                walletAddress
+            ),
+        ]
+
+        logEvent('lend_initiated', {
+            amount: amount.amountRaw,
+            token_symbol: assetDetails?.asset?.token?.symbol,
+            platform_name: assetDetails?.name,
+            chain_name:
+                CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+            wallet_address: walletAddress,
+        })
+
+        writeContractAsync({
+            address: BUNDLER_ADDRESS_MORPHO[
+                assetDetails.chain_id
+            ] as `0x${string}`,
+            abi: MORPHO_BUNDLER_ABI,
+            functionName: 'multicall',
+            args: [calls],
+        })
+            .then((data) => {
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    status: 'view',
+                    errorMessage: '',
+                }))
+
+                logEvent('lend_completed', {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[
+                            Number(assetDetails?.chain_id) as ChainId
+                        ],
+                    wallet_address: walletAddress,
+                })
+
+                logUserEvent({
+                    user_address: walletAddress,
+                    event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                    platform_type: 'superlend_aggregator',
+                    protocol_identifier: assetDetails?.protocol_identifier,
+                    event_data: 'SUPPLY',
+                    authToken: accessToken || '',
+                })
+            })
+            .catch((error) => {
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                }))
+            })
+    }
+
+    const handleMorphoVaultSupply = async (
+        walletAddress: `0x${string}`,
+        chainId: number
+    ) => {
+        const vault = morphoMarketData as Vault
+        const maxSharePriceE27 = vault.toAssets(
+            (MathLib.WAD + DEFAULT_SLIPPAGE_TOLERANCE) * BigInt(10 ** 9)
+        )
+
+        const genAdapterInterface = new ethers.utils.Interface(
+            GENERAL_ADAPTER_ABI
+        )
+        const generalAdapter = GENERAL_ADAPTER_ADDRESS[chainId]
+
+        const tokenTransferCall = genAdapterInterface.encodeFunctionData(
+            'erc20TransferFrom',
+            [vault.asset, generalAdapter, BigInt(amount.amountParsed)]
+        )
+        const depositCall = genAdapterInterface.encodeFunctionData(
+            'erc4626Deposit',
+            [
+                vault.address,
+                BigInt(amount.amountParsed),
+                maxSharePriceE27,
+                walletAddress,
+            ]
+        )
+
+        const calls = [
+            {
+                to: generalAdapter,
+                data: tokenTransferCall,
+                value: BigInt(0),
+                skipRevert: false,
+                callbackHash: zeroHash,
+            },
+            {
+                to: generalAdapter,
+                data: depositCall,
+                value: BigInt(0),
+                skipRevert: false,
+                callbackHash: zeroHash,
+            },
+        ]
+
+        logEvent('lend_initiated', {
+            amount: amount.amountRaw,
+            token_symbol: assetDetails?.asset?.token?.symbol,
+            platform_name: assetDetails?.name,
+            chain_name:
+                CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+            wallet_address: walletAddress,
+        })
+
+        writeContractAsync({
+            address: BUNDLER_ADDRESS_MORPHO[
+                assetDetails.chain_id
+            ] as `0x${string}`,
+            abi: MORPHO_BUNDLER3_ABI,
+            functionName: 'multicall',
+            args: [calls],
+        })
+            .then((data) => {
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    status: 'view',
+                    errorMessage: '',
+                }))
+
+                logEvent('lend_completed', {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[
+                            Number(assetDetails?.chain_id) as ChainId
+                        ],
+                    wallet_address: walletAddress,
+                })
+
+                logUserEvent({
+                    user_address: walletAddress,
+                    event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                    platform_type: 'superlend_aggregator',
+                    protocol_identifier: assetDetails?.protocol_identifier,
+                    event_data: 'SUPPLY',
+                    authToken: accessToken || '',
+                })
+            })
+            .catch((error) => {
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                }))
+            })
     }
 
     return (

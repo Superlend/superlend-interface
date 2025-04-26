@@ -30,7 +30,7 @@ export const useAaveV3Data = () => {
     // const activeAccount = useActiveAccount()
     // const walletAddress = activeAccount?.address
     const { address: walletAddress } = useAccount()
-    const { providers } = useEthersMulticall(walletAddress)
+    const { providers } = useEthersMulticall()
     const [providerStatus, setProviderStatus] = useState({
         isReady: false,
         isInitializing: true,

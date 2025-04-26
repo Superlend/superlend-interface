@@ -10,7 +10,7 @@ import { ETH_ADDRESSES, ETH_DECIMALS } from '../lib/constants'
 
 export const useERC20Balance = (address: string | undefined) => {
     const { allTokensData, allChainsData } = useAssetsDataContext()
-    const { ethMulticall, fetchNativeBalance } = useEthersMulticall(address)
+    const { ethMulticall, fetchNativeBalance } = useEthersMulticall()
     const tokenList = allTokensData as unknown as Record<number, TToken[]>
     const chainList: string[] = allChainsData.map((chain) =>
         chain.chain_id.toString()

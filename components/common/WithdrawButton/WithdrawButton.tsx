@@ -325,6 +325,7 @@ const WithdrawButton = ({
         //     assetDetails.asset.token.decimals
         // )
         // //  convert asset to share
+        // TODO - Priyam: replicate this function somehow
         let shareAmount = await vault.toShares(
             BigNumber.from(amountToWithdraw).toBigInt()
         )
@@ -342,7 +343,7 @@ const WithdrawButton = ({
         })
 
         writeContractAsync({
-            address: vault.address,
+            address: vault.address, // TODO - Priyam: get this from other sources
             abi: AAVE_APPROVE_ABI,
             functionName: 'approve',
             args: [bunder_address as `0x${string}`, shareAmount],
@@ -363,6 +364,7 @@ const WithdrawButton = ({
             // )
 
             // //  convert asset to share
+            // TODO - Priyam: replicate this function somehow
             let shareAmount = vault.toShares(amountToWithdraw.toBigInt())
 
             // calculate 0.5% of the shareAmount
@@ -381,7 +383,7 @@ const WithdrawButton = ({
                 // ),
 
                 BundlerAction.erc4626Withdraw(
-                    vault.address,
+                    vault.address, // TODO - Priyam: get this from other sources0x23055618898e202386e6c13955a58D3C68200BFB
                     amountToWithdraw.toString(),
                     shareAmount.toString(),
                     walletAddress as string,
