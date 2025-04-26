@@ -6,6 +6,7 @@ import VaultABI from '@/data/abi/erc4626ABI.json'
 import { useEthersMulticall } from '../useEthereumMulticall'
 import { BigNumber } from 'ethers'
 import { Multicall } from 'ethereum-multicall'
+import { MORPHO_BLUE_API_CHAINIDS } from '@/lib/constants'
 
 export const useMorphoVaultData = () => {
     const { ethMulticall } = useEthersMulticall()
@@ -93,6 +94,11 @@ export const useMorphoVaultData = () => {
         enabled: boolean
         walletAddress: `0x${string}`
     }) {
+        const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(chainId)
+        if (!isSupported) {
+            return { marketData: null, position: null }
+        }
+
         const { data: marketData } = useMarket({
             marketId,
             chainId,
@@ -122,6 +128,11 @@ export const useMorphoVaultData = () => {
         chainId: number
         enabled: boolean
     }) {
+        const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(chainId)
+        if (!isSupported) {
+            return undefined
+        }
+
         const { data: vaultData } = useVault({
             vault: vaultId as `0x${string}`,
             chainId: Number(chainId),

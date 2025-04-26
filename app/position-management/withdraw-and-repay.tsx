@@ -62,6 +62,23 @@ interface ITokenDetails {
     positionAmount?: string | number
 }
 
+function useSafeVault(params: {
+    vault: `0x${string}` | undefined;
+    chainId: number;
+}) {
+    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId);
+    
+    // Only call the real hook if chain is supported and vault address exists
+    // Otherwise return undefined data with empty object structure
+    return useVault({
+        vault: isSupported && params.vault ? params.vault : '0x1111111111111111111111111111111111111111' as `0x${string}`,
+        chainId: isSupported ? params.chainId : 1, // Use mainnet as fallback for unsupported chains
+        query: {
+            enabled: isSupported && !!params.vault,
+        },
+    });
+}
+
 export default function WithdrawAndRepayActionButton({
     actionType,
     tokenDetails,
@@ -184,10 +201,11 @@ export default function WithdrawAndRepayActionButton({
     const isFluidLendProtocol =
         isFluidProtocol && !platformData?.platform?.isVault
 
-    const { data: _vaultData } = useVault({
+    // Only use the Morpho hook when we're on a supported chain
+    const { data: _vaultData } = useSafeVault({
         vault: platformData?.platform?.core_contract as `0x${string}`,
         chainId: Number(chain_id),
-    })
+    });
 
     const morphoMarketData = getMarketData({
         marketId: platformData?.platform?.morpho_market_id as MarketId,

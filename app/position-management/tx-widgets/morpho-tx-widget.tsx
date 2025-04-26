@@ -50,6 +50,24 @@ import { useEthersMulticall } from '../../../hooks/useEthereumMulticall'
 import { Multicall } from 'ethereum-multicall'
 import { MORPHO_BLUE_API_CHAINIDS } from '../../../lib/constants'
 
+// Safe wrapper for useVault to handle unsupported chains
+function useSafeVault(params: {
+    vault: `0x${string}` | undefined;
+    chainId: number;
+}) {
+    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId);
+    
+    // Only call the real hook if chain is supported and vault address exists
+    // Otherwise return undefined data with empty object structure
+    return useVault({
+        vault: isSupported && params.vault ? params.vault : '0x1111111111111111111111111111111111111111' as `0x${string}`,
+        chainId: isSupported ? params.chainId : 1, // Use mainnet as fallback for unsupported chains
+        query: {
+            enabled: isSupported && !!params.vault,
+        },
+    });
+}
+
 export default function MorphoTxWidget({
     isLoading: isLoadingPlatformData,
     platformData,
@@ -836,17 +854,18 @@ function MorphoVaults({
         }
     }, [lendTx.status, borrowTx.status, isLendBorrowTxDialogOpen])
 
-    const { data: _vaultData } = useVault({
-        vault: platformData?.platform?.core_contract as `0x${string}`,
-        chainId: Number(chain_id),
-    })
-
     const fetchVaultData = async (multicall?: Multicall) => {
         return await getVaultDataFromPlatformData({
             platformData,
             multicall,
         })
     }
+
+    // Only use the Morpho hook when we're on a supported chain
+    const { data: _vaultData } = useSafeVault({
+        vault: platformData?.platform?.core_contract as `0x${string}`,
+        chainId: Number(chain_id),
+    });
 
     useEffect(() => {
         if (
