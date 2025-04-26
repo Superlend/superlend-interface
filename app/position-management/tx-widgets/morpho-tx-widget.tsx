@@ -788,7 +788,7 @@ function MorphoVaults({
 }) {
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || '1'
-    const { getVaultDataFromPlatformData, getVaultData } = useMorphoVaultData()
+    const { getVaultDataFromPlatformData } = useMorphoVaultData()
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [vaultData, setVaultData] = useState<Vault | undefined>(undefined)
     const { multicall } = useEthersMulticall()

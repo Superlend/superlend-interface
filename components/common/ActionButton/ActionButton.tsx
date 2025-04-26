@@ -125,20 +125,7 @@ const ActionButton = ({
             />
         )
     }
-    return null;
-    // return (
-    //     <SupplyERC20CompoundButton
-    //         disabled={disabled}
-    //         handleCloseModal={handleCloseModal}
-    //         underlyingToken={asset.asset.token.address}
-    //         cTokenAddress={asset.core_contract}
-    //         amount={amount}
-    //         decimals={countCompoundDecimals(
-    //             asset.asset.token.decimals,
-    //             asset.asset.token.decimals
-    //         )}
-    //     />
-    // )
+    return null
 }
 
 export default ActionButton
