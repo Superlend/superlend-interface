@@ -93,7 +93,6 @@ export const useMorphoVaultData = () => {
         enabled: boolean
         walletAddress: `0x${string}`
     }) {
-        if (!enabled) return null
         const { data: marketData } = useMarket({
             marketId,
             chainId,
@@ -123,7 +122,6 @@ export const useMorphoVaultData = () => {
         chainId: number
         enabled: boolean
     }) {
-        if (!enabled) return null
         const { data: vaultData } = useVault({
             vault: vaultId as `0x${string}`,
             chainId: Number(chainId),

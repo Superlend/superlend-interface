@@ -93,18 +93,18 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = ({
                                     badgeImg={selectedToken.chain_logo}
                                     mainImgAlt={selectedToken.symbol}
                                     badgeImgAlt={selectedToken.chain_id}
-                                    mainImgWidth="32"
-                                    badgeImgWidth="16"
-                                    mainImgHeight="32"
-                                    badgeImgHeight="16"
+                                    mainImgWidth={32}
+                                    badgeImgWidth={16}
+                                    mainImgHeight={32}
+                                    badgeImgHeight={16}
                                 />
                             )}
                             {!selectedToken.chain_logo && (
                                 <ImageWithDefault
                                     src={selectedToken.logo}
                                     alt={selectedToken.symbol}
-                                    width="32"
-                                    height="32"
+                                    width={32}
+                                    height={32}
                                 />
                             )}
                             <HeadingText level="h4" weight="medium" className="truncate max-w-full" title={selectedToken.symbol}>
