@@ -184,14 +184,10 @@ export default function WithdrawAndRepayActionButton({
     const isFluidLendProtocol =
         isFluidProtocol && !platformData?.platform?.isVault
 
-    const { data: _vaultData } = MORPHO_BLUE_API_CHAINIDS.includes(
-        Number(chain_id)
-    )
-        ? useVault({
-              vault: platformData?.platform?.core_contract as `0x${string}`,
-              chainId: Number(chain_id),
-          })
-        : { data: undefined }
+    const { data: _vaultData } = useVault({
+        vault: platformData?.platform?.core_contract as `0x${string}`,
+        chainId: Number(chain_id),
+    })
 
     const morphoMarketData = getMarketData({
         marketId: platformData?.platform?.morpho_market_id as MarketId,
@@ -223,6 +219,10 @@ export default function WithdrawAndRepayActionButton({
     useEffect(() => {
         if (MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id)) && _vaultData) {
             setMorphoVault(_vaultData as Vault)
+        } else {
+            setMorphoVault({
+                data: undefined,
+            })
         }
     }, [_vaultData])
 

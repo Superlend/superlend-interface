@@ -836,14 +836,10 @@ function MorphoVaults({
         }
     }, [lendTx.status, borrowTx.status, isLendBorrowTxDialogOpen])
 
-    const { data: _vaultData } = MORPHO_BLUE_API_CHAINIDS.includes(
-        Number(chain_id)
-    )
-        ? useVault({
-              vault: platformData?.platform?.core_contract as `0x${string}`,
-              chainId: Number(chain_id),
-          })
-        : { data: undefined }
+    const { data: _vaultData } = useVault({
+        vault: platformData?.platform?.core_contract as `0x${string}`,
+        chainId: Number(chain_id),
+    })
 
     const fetchVaultData = async (multicall?: Multicall) => {
         return await getVaultDataFromPlatformData({
@@ -866,6 +862,8 @@ function MorphoVaults({
     useEffect(() => {
         if (MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id)) && _vaultData) {
             setVaultData(_vaultData as Vault)
+        } else {
+            setVaultData(undefined)
         }
     }, [_vaultData])
 
