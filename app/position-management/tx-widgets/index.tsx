@@ -17,6 +17,7 @@ import { TTxContext } from '@/context/tx-provider'
 import { useTelegramDialog } from '@/hooks/useTelegramDialog'
 import { PortfolioContext } from '@/context/portfolio-provider'
 import { TelegramConnectionDialog } from '@/components/dialogs/TelegramConnectionDialog'
+import { MORPHO_BLUE_API_CHAINIDS } from '../../../lib/constants'
 
 export const AssetTxWidget: FC = () => {
     const { portfolioData: portfolioContextData } = useContext(PortfolioContext)
@@ -30,19 +31,17 @@ export const AssetTxWidget: FC = () => {
         isWalletConnected,
         isConnectingWallet,
     } = useWalletConnection()
-    const {
-        lendTx,
-        isLendBorrowTxDialogOpen,
-    } = useTxContext() as TTxContext
+    const { lendTx, isLendBorrowTxDialogOpen } = useTxContext() as TTxContext
 
-    const lendTxCompleted: boolean = (lendTx.isConfirmed && !!lendTx.hash && lendTx.status === 'view')
-    const isLendTxCompletedAndDialogClosed: boolean = (lendTxCompleted && !isLendBorrowTxDialogOpen)
-    const portfolioValue = Number(portfolioContextData?.total_supplied || 0) - Number(portfolioContextData?.total_borrowed || 0)
+    const lendTxCompleted: boolean =
+        lendTx.isConfirmed && !!lendTx.hash && lendTx.status === 'view'
+    const isLendTxCompletedAndDialogClosed: boolean =
+        lendTxCompleted && !isLendBorrowTxDialogOpen
+    const portfolioValue =
+        Number(portfolioContextData?.total_supplied || 0) -
+        Number(portfolioContextData?.total_borrowed || 0)
 
-    const {
-        showTelegramDialog,
-        setShowTelegramDialog
-    } = useTelegramDialog({
+    const { showTelegramDialog, setShowTelegramDialog } = useTelegramDialog({
         portfolioValue,
         lendTxCompleted: isLendTxCompletedAndDialogClosed,
         walletAddress,
@@ -75,9 +74,9 @@ export const AssetTxWidget: FC = () => {
         platformData?.platform?.protocol_type === PlatformType.AAVE
     const isMorphoProtocol =
         platformData?.platform?.protocol_type === PlatformType.MORPHO
+    const isMorphoMarket = isMorphoProtocol && !platformData?.platform?.isVault
     const isFluidProtocol =
         platformData?.platform?.protocol_type === PlatformType.FLUID
-    const isPolygonChain = Number(chain_id) === ChainId.Polygon
 
     if (isLoading && (isAaveV3Protocol || isMorphoProtocol)) {
         return <LoadingSectionSkeleton className="h-[300px] w-full" />
@@ -101,7 +100,12 @@ export const AssetTxWidget: FC = () => {
         )
     }
 
-    if (isMorphoProtocol && !isPolygonChain) {
+    if (isMorphoProtocol) {
+        if (
+            isMorphoMarket &&
+            !MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))
+        )
+            return null
         return (
             <>
                 <MorphoTxWidget

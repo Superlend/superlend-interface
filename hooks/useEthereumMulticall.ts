@@ -7,7 +7,7 @@ import {
 } from 'ethereum-multicall'
 import { MULTICALL_ADDRESSES } from '../lib/constants'
 
-export const useEthersMulticall = (walletAddress: string | undefined) => {
+export const useEthersMulticall = () => {
     const [providers, setProviders] = useState<
         Record<number, ethersProviders.JsonRpcProvider>
     >({})
@@ -75,6 +75,8 @@ export const useEthersMulticall = (walletAddress: string | undefined) => {
             setMulticall(_multicall)
             setProviders(_providers)
             setIsLoading(false)
+
+            return _multicall
         } catch (error) {
             console.log(error)
             setIsError(true)
@@ -84,10 +86,13 @@ export const useEthersMulticall = (walletAddress: string | undefined) => {
 
     const ethMulticall = (
         calldata: ContractCallContext[],
-        chainId: number
+        chainId: number,
+        _multicall?: Multicall
     ): Promise<ContractCallResults> => {
-        const multicallProvider = multicall[chainId]
-        if (!multicallProvider) return undefined as any
+        let multicallProvider: Multicall = _multicall || multicall[chainId]
+        if (!multicallProvider) {
+            return undefined as any
+        }
         return new Promise(async (resolve, reject) => {
             try {
                 const result = await multicallProvider.call(calldata)
@@ -128,5 +133,6 @@ export const useEthersMulticall = (walletAddress: string | undefined) => {
         setMulticall,
         ethMulticall,
         fetchNativeBalance,
+        initalizeEthMulticall,
     }
 }
