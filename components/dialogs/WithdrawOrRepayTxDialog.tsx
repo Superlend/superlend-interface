@@ -558,10 +558,10 @@ export function WithdrawOrRepayTxDialog({
                                             localAssetDetails?.asset?.token?.symbol
                                         }
                                         badgeImgAlt={chainDetails?.name}
-                                        mainImgWidth={'32'}
-                                        mainImgHeight={'32'}
-                                        badgeImgWidth={'12'}
-                                        badgeImgHeight={'12'}
+                                        mainImgWidth={32}
+                                        mainImgHeight={32}
+                                        badgeImgWidth={12}
+                                        badgeImgHeight={12}
                                         badgeCustomClass={
                                             'bottom-[-2px] right-[1px]'
                                         }

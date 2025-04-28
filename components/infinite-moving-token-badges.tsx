@@ -178,14 +178,14 @@ export const InfiniteMovingTokenBadges = ({
                                                         (chain) =>
                                                             chain.chain_id ===
                                                             opportunity.chain_id
-                                                    )?.logo
+                                                    )?.logo || ''
                                                 }
                                                 alt={
                                                     allChainsData.find(
                                                         (chain) =>
                                                             chain.chain_id ===
                                                             opportunity.chain_id
-                                                    )?.name
+                                                    )?.name || ''
                                                 }
                                                 width={14}
                                                 height={14}

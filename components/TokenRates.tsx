@@ -129,10 +129,10 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
                                                         opportunity?.chain_id?.toString() ||
                                                         ''
                                                     }
-                                                    mainImgWidth="24"
-                                                    badgeImgWidth="10"
-                                                    mainImgHeight="24"
-                                                    badgeImgHeight="10"
+                                                    mainImgWidth={24}
+                                                    badgeImgWidth={10}
+                                                    mainImgHeight={24}
+                                                    badgeImgHeight={10}
                                                     badgeCustomClass="bottom-[0px] right-[1px]"
                                                 />
                                                 <BodyText
@@ -219,12 +219,12 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
                                                         chain_id:
                                                             opportunity.chain_id.toString(),
                                                         allChainsData,
-                                                    })}
+                                                    }) || ''}
                                                     alt={getChainName({
                                                         chain_id:
                                                             opportunity.chain_id.toString(),
                                                         allChainsData,
-                                                    })}
+                                                    }) || ''}
                                                     width={14}
                                                     height={14}
                                                     className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
