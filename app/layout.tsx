@@ -7,6 +7,8 @@ import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google'
 import ScrollToTop from '@/components/ScrollToTop'
 import { Toaster } from 'react-hot-toast'
 import EasterEgg from '@/components/EasterEgg'
+import { BlockchainDataPrefetcher } from '@/components/BlockchainDataPrefetcher'
+import { CsrfInitializer } from '@/components/CsrfInitializer'
 // import { DebugPortfolioTools } from '@/components/debug/DebugPortfolioTools'
 // import { ShowAllMarketsProvider } from '@/context/show-all-markets-provider'
 import MarketsBanner from '@/components/MarketsBanner'
@@ -89,6 +91,10 @@ export default function RootLayout({
                 
                 <ContextProvider>
                     <Toaster />
+                    {/* Security and optimization components */}
+                    <CsrfInitializer />
+                    <BlockchainDataPrefetcher />
+                    
                     <EasterEgg />
                     <Header />
                     <MarketsBanner />
