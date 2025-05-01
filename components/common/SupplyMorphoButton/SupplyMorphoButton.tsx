@@ -172,7 +172,7 @@ const SupplyMorphoButton = ({
                     logEvent('add_collateral_initiated', {
                         amount: amount.amountRaw,
                         token_symbol: assetDetails?.asset?.token?.symbol,
-                        platform_name: assetDetails?.name,
+                        platform_name: assetDetails?.name ?? assetDetails?.platform?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
                                 Number(assetDetails?.chain_id) as ChainId
@@ -214,7 +214,7 @@ const SupplyMorphoButton = ({
                                 amount: amount.amountRaw,
                                 token_symbol:
                                     assetDetails?.asset?.token?.symbol,
-                                platform_name: assetDetails?.name,
+                                platform_name: assetDetails?.name ?? assetDetails?.platform?.name,
                                 chain_name:
                                     CHAIN_ID_MAPPER[
                                         Number(
@@ -235,7 +235,7 @@ const SupplyMorphoButton = ({
                     logEvent('lend_initiated', {
                         amount: amount.amountRaw,
                         token_symbol: assetDetails?.asset?.token?.symbol,
-                        platform_name: assetDetails?.name,
+                        platform_name: assetDetails?.name ?? assetDetails?.platform?.name,
                         chain_name:
                             CHAIN_ID_MAPPER[
                                 Number(assetDetails?.chain_id) as ChainId
@@ -274,7 +274,7 @@ const SupplyMorphoButton = ({
                                 amount: amount.amountRaw,
                                 token_symbol:
                                     assetDetails?.asset?.token?.symbol,
-                                platform_name: assetDetails?.name,
+                                platform_name: assetDetails?.name ?? assetDetails?.platform?.name,
                                 chain_name:
                                     CHAIN_ID_MAPPER[
                                         Number(
@@ -372,7 +372,7 @@ const SupplyMorphoButton = ({
             logEvent('approve_initiated', {
                 amount: amount.amountRaw,
                 token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.name,
+                platform_name: assetDetails?.name ?? assetDetails?.platform?.name,
                 chain_name:
                     CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
@@ -426,7 +426,7 @@ const SupplyMorphoButton = ({
         logEvent('lend_initiated', {
             amount: amount.amountRaw,
             token_symbol: assetDetails?.asset?.token?.symbol,
-            platform_name: assetDetails?.name,
+            platform_name: assetDetails?.name ?? assetDetails?.platform?.name,
             chain_name:
                 CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
             wallet_address: walletAddress,
@@ -450,7 +450,7 @@ const SupplyMorphoButton = ({
                 logEvent('lend_completed', {
                     amount: amount.amountRaw,
                     token_symbol: assetDetails?.asset?.token?.symbol,
-                    platform_name: assetDetails?.name,
+                    platform_name: assetDetails?.name ?? assetDetails?.platform?.name,
                     chain_name:
                         CHAIN_ID_MAPPER[
                             Number(assetDetails?.chain_id) as ChainId
@@ -462,7 +462,7 @@ const SupplyMorphoButton = ({
                     user_address: walletAddress,
                     event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
                     platform_type: 'superlend_aggregator',
-                    protocol_identifier: assetDetails?.protocol_identifier,
+                    protocol_identifier: assetDetails?.protocol_identifier ?? assetDetails?.platform?.protocol_identifier,
                     event_data: 'SUPPLY',
                     authToken: accessToken || '',
                 })
@@ -524,7 +524,7 @@ const SupplyMorphoButton = ({
         logEvent('lend_initiated', {
             amount: amount.amountRaw,
             token_symbol: assetDetails?.asset?.token?.symbol,
-            platform_name: assetDetails?.name,
+            platform_name: assetDetails?.name ?? assetDetails?.platform?.name,
             chain_name:
                 CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
             wallet_address: walletAddress,
@@ -548,7 +548,7 @@ const SupplyMorphoButton = ({
                 logEvent('lend_completed', {
                     amount: amount.amountRaw,
                     token_symbol: assetDetails?.asset?.token?.symbol,
-                    platform_name: assetDetails?.name,
+                    platform_name: assetDetails?.name ?? assetDetails?.platform?.name,
                     chain_name:
                         CHAIN_ID_MAPPER[
                             Number(assetDetails?.chain_id) as ChainId
@@ -560,7 +560,7 @@ const SupplyMorphoButton = ({
                     user_address: walletAddress,
                     event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
                     platform_type: 'superlend_aggregator',
-                    protocol_identifier: assetDetails?.protocol_identifier,
+                    protocol_identifier: assetDetails?.protocol_identifier ?? assetDetails?.platform?.protocol_identifier,
                     event_data: 'SUPPLY',
                     authToken: accessToken || '',
                 })
