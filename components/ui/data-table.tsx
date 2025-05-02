@@ -311,8 +311,8 @@ export function DataTable<TData, TValue>({
                             weight="medium"
                             className="hidden lg:block shrink-0 text-gray-700"
                         >
-                            {pagination.pageSize} of{' '}
-                            {totalRowCount.toLocaleString()} rows
+                            Showing {pagination.pageIndex * pagination.pageSize + 1} to{' '}
+                            {Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalRowCount)} {' '}rows
                         </Label>
                         <Button
                             variant="outline"
