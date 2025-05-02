@@ -15,6 +15,7 @@ import {
     abbreviateNumber,
     capitalizeText,
     containsNegativeInteger,
+    convertAPRtoAPY,
     convertNegativeToPositive,
     getPlatformVersion,
 } from '@/lib/utils'
@@ -23,7 +24,7 @@ import { ChainId } from '@/types/chain'
 import { PlatformType } from '@/types/platform'
 import { ColumnDef } from '@tanstack/react-table'
 import { motion } from 'framer-motion'
-import { ChartNoAxesColumnIncreasing, ShieldAlertIcon } from 'lucide-react'
+import { ChartNoAxesColumnIncreasing, Percent, ShieldAlertIcon, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
@@ -329,7 +330,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
             const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
-            const appleFarmApr = Number(row.original.apple_farm_apr)
+            const appleFarmApr = Number(row.original.apple_farm_apr) / 100
             const hasAppleFarmRewards = row.original.has_apple_farm_rewards
 
             const apyCurrent = Number(row.getValue('apy_current'))
@@ -339,7 +340,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
                 ? '<0.01'
                 : appleFarmBaseRate.toFixed(2)
-            const netAppleFarmAPY = Number(row.original.apy_current) + appleFarmApr
+            const netAppleFarmAPY = Number(row.original.apy_current) + convertAPRtoAPY(appleFarmApr)
             const netAppleFarmAPYFormatted = netAppleFarmAPY > 0 && netAppleFarmAPY < 0.01
                 ? '<0.01'
                 : netAppleFarmAPY.toFixed(2)
@@ -348,13 +349,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 {
                     asset: {
                         address: row.original.tokenAddress as `0x${string}`,
-                        name: "APR",
+                        name: "APY",
                         symbol: row.original.tokenSymbol,
                         logo: '/images/apple-farm-favicon.ico',
                         decimals: 0,
                         price_usd: 0,
                     },
-                    supply_apy: appleFarmApr,
+                    supply_apy: convertAPRtoAPY(appleFarmApr),
                     borrow_apy: 0,
                 }
             ]
@@ -617,21 +618,21 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const MAX_ITEMS_TO_SHOW = 5
             const collateralExposureData = row.original.collateral_exposure ?? [];
             const filteredCollateralExposureData = collateralExposureData?.filter((tokenAddress: `0x${string}`) => {
-                const token = allTokensData[row.original.chain_id].find(
+                const token = allTokensData[row.original.chain_id]?.find(
                     (asset: any) =>
                         asset.address.toLowerCase() ===
                         tokenAddress.toLowerCase()
-                )
+                ) ?? null
                 return !!token?.name
             })
 
             const tokenImages = filteredCollateralExposureData?.map(
                 (tokenAddress: `0x${string}`) =>
-                    allTokensData[row.original.chain_id].find(
+                    allTokensData[row.original.chain_id]?.find(
                         (asset: any) =>
                             asset.address.toLowerCase() ===
                             tokenAddress.toLowerCase()
-                    )?.logo
+                    )?.logo ?? null
             )
 
             const tokenDetails = filteredCollateralExposureData?.map(
@@ -839,7 +840,7 @@ function getRewardsTooltipContent({
             <BodyText
                 level="body1"
                 weight="medium"
-                className="py-2 text-gray-800/75"
+                className="py-2 text-gray-800"
             >
                 Rate & Rewards
             </BodyText>
@@ -848,7 +849,7 @@ function getRewardsTooltipContent({
                 style={{ gap: '70px' }}
             >
                 <div className="flex items-center gap-1">
-                    <ChartNoAxesColumnIncreasing className="w-[16px] h-[16px] text-gray-800" />
+                    <Percent className="w-[14px] h-[14px] text-gray-800" />
                     <Label weight="medium" className="text-gray-800">
                         Base rate
                     </Label>
@@ -870,8 +871,8 @@ function getRewardsTooltipContent({
                     <div className="flex items-center gap-1">
                         <ImageWithDefault
                             src={reward?.asset?.logo || ''}
-                            width={16}
-                            height={16}
+                            width={14}
+                            height={14}
                             alt={reward?.asset?.name || ''}
                             className="inline-block rounded-full object-contain"
                         />
@@ -898,13 +899,7 @@ function getRewardsTooltipContent({
                 style={{ gap: '70px' }}
             >
                 <div className="flex items-center gap-1">
-                    <ImageWithDefault
-                        src={netApyIcon || '/icons/sparkles.svg'}
-                        alt="Net APY"
-                        width={16}
-                        height={16}
-                        className="inline-block"
-                    />
+                    <TrendingUp className="w-[14px] h-[14px] text-gray-800" />
                     <Label weight="medium" className="text-gray-800">
                         Net APY
                     </Label>

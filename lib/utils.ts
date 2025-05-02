@@ -2,6 +2,7 @@ import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants'
 import { Period } from '@/types/periodButtons'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+export const SEC_IN_YEAR = 31536000;
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -564,3 +565,9 @@ export const IsAaveV3Legacy = (chainId: number) => {
     ]
     return legacyChainIds.includes(chainId)
 }
+
+export const convertAPRtoAPY = (apr: number) => {
+  if (!apr) return 0;
+  const apy = ((1 + apr / SEC_IN_YEAR) ** SEC_IN_YEAR - 1) * 100;
+  return apy < 0.01 && apy > 0 ? 0.01 : apy;
+};
