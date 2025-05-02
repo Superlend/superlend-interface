@@ -593,12 +593,12 @@ export function ConfirmationDialog({
                                     weight="medium"
                                     className="text-gray-600 truncate max-w-full"
                                     title={PlatformTypeMap[
-                                        assetDetails?.protocol_type as keyof typeof PlatformTypeMap
+                                        (assetDetails?.name.toLowerCase() ?? assetDetails?.protocol_type) as keyof typeof PlatformTypeMap
                                     ]}
                                 >
                                     {
                                         PlatformTypeMap[
-                                        assetDetails?.protocol_type as keyof typeof PlatformTypeMap
+                                        (assetDetails?.name.toLowerCase() ?? assetDetails?.protocol_type) as keyof typeof PlatformTypeMap
                                         ]
                                     }
                                 </BodyText>

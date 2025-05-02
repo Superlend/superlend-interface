@@ -155,4 +155,5 @@ export enum PlatformTypeMap {
     morpho = 'Morpho',
     fluid = 'Fluid',
     euler = 'Euler',
+    superlend = 'Superlend',
 }
