@@ -7,6 +7,7 @@ import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import { Badge } from '@/components/ui/badge'
 import {
     abbreviateNumber,
+    convertAPRtoAPY,
     getLowestDisplayValue,
     getPlatformVersion,
     getPlatformWebsiteLink,
@@ -189,7 +190,7 @@ export default function PageHeader() {
     const isDisplayOneToken =
         hasPoolBasedTokens ||
         (isFluidPlatform && !isFluidVault) ||
-        (isMorpho && isMorphoVault) || 
+        (isMorpho && isMorphoVault) ||
         isEulerProtocol
 
     const isDisplayTwoTokens = !(
@@ -208,7 +209,7 @@ export default function PageHeader() {
         platformData: platformData as TPlatform,
     })
 
-    const formattedSupplyAPY = Number(pageHeaderStats?.supply_apy) + Number(appleFarmRewardsAprs[tokenDetails?.address] ?? 0)
+    const formattedSupplyAPY = Number(pageHeaderStats?.supply_apy) + Number(convertAPRtoAPY((appleFarmRewardsAprs?.[tokenDetails?.address] ?? 0) / 100))
 
     const formattedBorrowRate = (isMorphoVault || isFluidLend)
         ? 'N/A'
