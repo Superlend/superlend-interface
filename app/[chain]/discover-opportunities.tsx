@@ -19,9 +19,9 @@ import Image from 'next/image';
 import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
-import { abbreviateNumber } from '@/lib/utils'
+import { abbreviateNumber, convertAPRtoAPY } from '@/lib/utils'
 import { TReward } from '@/types'
-import { ChartNoAxesColumnIncreasing } from 'lucide-react'
+import { ChartNoAxesColumnIncreasing, TrendingUp } from 'lucide-react'
 import { CHAIN_ID_MAPPER } from '@/constants'
 const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
 const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
@@ -73,8 +73,8 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
     }
 
     const asset1Data = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)
-    const asset1AppleFarmRewardsApr = appleFarmRewardsAprs[opportunity1TokenAddress]
-    const asset1LendRate = Number(asset1Data?.supply_apy) + (asset1AppleFarmRewardsApr ?? 0)
+    const asset1AppleFarmRewardsApy = convertAPRtoAPY((appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0) / 100)
+    const asset1LendRate = Number(asset1Data?.supply_apy) + (asset1AppleFarmRewardsApy ?? 0)
     const asset1DataSupplyApy = Number(asset1Data?.supply_apy)
     // Description
     const description1 = `${asset1LendRate?.toFixed(2)}% APY`
@@ -156,13 +156,13 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
         {
             asset: {
                 address: opportunity1TokenAddress as `0x${string}`,
-                name: "APR",
+                name: "APY",
                 symbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token.symbol,
                 logo: '/images/apple-farm-favicon.ico',
                 decimals: 0,
                 price_usd: 0,
             },
-            supply_apy: appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0,
+            supply_apy: convertAPRtoAPY((appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0) / 100),
             borrow_apy: 0,
         }
     ]
@@ -441,13 +441,7 @@ function getRewardsTooltipContent({
                 style={{ gap: '70px' }}
             >
                 <div className="flex items-center gap-1">
-                    <ImageWithDefault
-                        src={netApyIcon || '/icons/sparkles.svg'}
-                        alt="Net APY"
-                        width={16}
-                        height={16}
-                        className="inline-block"
-                    />
+                    <TrendingUp className="w-[14px] h-[14px] text-gray-800" />
                     <Label weight="medium" className="text-gray-800">
                         Net APY
                     </Label>
