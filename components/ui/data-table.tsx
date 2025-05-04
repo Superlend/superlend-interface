@@ -253,7 +253,17 @@ export function DataTable<TData, TValue>({
                                     onClick={
                                         !handleRowClick || screenWidth < 768
                                             ? undefined
-                                            : () => handleRowClick(row.original)
+                                            : () => {
+                                                try {
+                                                    if (!row.original) {
+                                                        console.warn('Row original data is undefined');
+                                                        return;
+                                                    }
+                                                    handleRowClick(row.original);
+                                                } catch (error) {
+                                                    console.error('Error in handleRowClick:', error);
+                                                }
+                                            }
                                     }
                                 >
                                     {row.getVisibleCells().map((cell) => {

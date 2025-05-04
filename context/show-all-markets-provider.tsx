@@ -56,36 +56,42 @@ export function ShowAllMarketsProvider({ children }: { children: React.ReactNode
     }, [pathname, isLoading])
 
     const toggleShowAllMarkets = (checked: boolean, marketId?: Market) => {
-        // Calculate the new values first, then update state and localStorage
-        const newShowAllMarkets = checked;
-        const newMarket = checked ? 'all-markets' : marketId || (activeMarket === 'all-markets' ? 'etherlink' : activeMarket);
+        try {
+            // Calculate the new values first, then update state and localStorage
+            const newShowAllMarkets = checked;
+            const newMarket = checked ? 'all-markets' : marketId || (activeMarket === 'all-markets' ? 'etherlink' : activeMarket);
 
-        // Check if state actually needs to be updated
-        if (showAllMarkets !== newShowAllMarkets || activeMarket !== newMarket) {
-            // Batch state updates
-            setShowAllMarkets(newShowAllMarkets);
-            setActiveMarket(newMarket);
+            // Check if state actually needs to be updated
+            if (showAllMarkets !== newShowAllMarkets || activeMarket !== newMarket) {
+                // Batch state updates
+                setShowAllMarkets(newShowAllMarkets);
+                setActiveMarket(newMarket);
 
-            // Update localStorage
-            localStorage.setItem('show_all_markets', newShowAllMarkets.toString());
-            localStorage.setItem('active_market', newMarket);
+                // Update localStorage
+                localStorage.setItem('show_all_markets', newShowAllMarkets.toString());
+                localStorage.setItem('active_market', newMarket);
 
-            // Determine route
-            let targetRoute = '/discover';
-            let queryParams = '';
+                // Determine route
+                let targetRoute = '/discover';
+                let queryParams = '';
 
-            if (!newShowAllMarkets) {
-                if (newMarket === 'polygon') {
-                    targetRoute = '/polygon';
-                    queryParams = `?chain_ids=${ChainId.Polygon}`;
-                } else {
-                    targetRoute = '/etherlink';
-                    queryParams = `?chain_ids=${ChainId.Etherlink}`;
+                if (!newShowAllMarkets) {
+                    if (newMarket === 'polygon') {
+                        targetRoute = '/polygon';
+                        queryParams = `?chain_ids=${ChainId.Polygon}`;
+                    } else {
+                        targetRoute = '/etherlink';
+                        queryParams = `?chain_ids=${ChainId.Etherlink}`;
+                    }
                 }
-            }
 
-            // Navigate
-            router.replace(targetRoute + queryParams);
+                // Navigate
+                router.replace(targetRoute + queryParams);
+            }
+        } catch (error) {
+            console.error('Error in toggleShowAllMarkets:', error);
+            // Default fallback
+            router.replace('/discover');
         }
     }
 
