@@ -253,7 +253,17 @@ export function DataTable<TData, TValue>({
                                     onClick={
                                         !handleRowClick || screenWidth < 768
                                             ? undefined
-                                            : () => handleRowClick(row.original)
+                                            : () => {
+                                                try {
+                                                    if (!row.original) {
+                                                        console.warn('Row original data is undefined');
+                                                        return;
+                                                    }
+                                                    handleRowClick(row.original);
+                                                } catch (error) {
+                                                    console.error('Error in handleRowClick:', error);
+                                                }
+                                            }
                                     }
                                 >
                                     {row.getVisibleCells().map((cell) => {
@@ -315,8 +325,7 @@ export function DataTable<TData, TValue>({
                             weight="medium"
                             className="hidden lg:block shrink-0 text-gray-700"
                         >
-                            Showing {pagination?.pageIndex !== undefined ? pagination.pageIndex * (pagination?.pageSize || 10) + 1 : 1} to{' '}
-                            {Math.min(((pagination?.pageIndex !== undefined ? pagination.pageIndex : 0) + 1) * (pagination?.pageSize || 10), totalRowCount)} {' '}rows
+                            Showing {rows.length} row{rows.length > 1 ? 's' : ''}
                         </Label>
                         <Button
                             variant="outline"

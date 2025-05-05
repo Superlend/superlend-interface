@@ -72,16 +72,27 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
         return null
     }
 
-    const asset1Data = opportunity1PlatformData.assets.find((asset: any) => asset.token.address === opportunity1TokenAddress)
-    const asset1AppleFarmRewardsApy = convertAPRtoAPY((appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0) / 100)
-    const asset1LendRate = Number(asset1Data?.supply_apy) + (asset1AppleFarmRewardsApy ?? 0)
-    const asset1DataSupplyApy = Number(asset1Data?.supply_apy)
+    // Add checks for platform data existence
+    if (!opportunity1PlatformData?.assets || !opportunity2PlatformData?.assets || !opportunity3PlatformData) {
+        return <div className="p-5"><CardDetailsSkeleton /></div>
+    }
+
+    const asset1Data = opportunity1PlatformData?.assets?.find((asset: any) => 
+        asset?.token?.address === opportunity1TokenAddress
+    )
+    const asset1AppleFarmRewardsApy = appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0
+    const asset1LendRate = Number(asset1Data?.supply_apy || 0) + (asset1AppleFarmRewardsApy ?? 0)
+    const asset1DataSupplyApy = Number(asset1Data?.supply_apy || 0)
     // Description
-    const description1 = `${asset1LendRate?.toFixed(2)}% APY`
-    const description2 = `Upto ${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.supply_apy?.toFixed(2)}% APY`
+    const description1 = `${abbreviateNumber(asset1LendRate)}% APY`
+    const description2 = `Upto ${abbreviateNumber(getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.supply_apy || "0.00")}% APY`
     // const description3 = opportunity3PlatformData?.apy
-    const asset1ChainName = CHAIN_ID_MAPPER[opportunity1PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER]
-    const asset2ChainName = CHAIN_ID_MAPPER[opportunity2PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER]
+    const asset1ChainName = opportunity1PlatformData?.platform?.chain_id 
+        ? CHAIN_ID_MAPPER[opportunity1PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER] 
+        : "Unknown"
+    const asset2ChainName = opportunity2PlatformData?.platform?.chain_id 
+        ? CHAIN_ID_MAPPER[opportunity2PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER]
+        : "Unknown"
 
     // Opportunities
     const opportunities: {
@@ -99,11 +110,11 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
             {
                 id: 1,
                 label: 'Etherlink Apple Farm',
-                tokenSymbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token.symbol,
+                tokenSymbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token?.symbol || "TEZOS",
                 platformName: 'Superlend',
-                chainName: asset1ChainName,
-                description: description1,
-                tokenImage: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token.logo,
+                chainName: asset1ChainName || 'Etherlink',
+                description: description1 || "0.00% APY",
+                tokenImage: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token?.logo || "",
                 platformImage: `${imageBaseUrl}/superlend.svg`,
                 link: getRedirectLink(
                     opportunity1TokenAddress,
@@ -116,11 +127,11 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
             {
                 id: 2,
                 label: "Automated Strategy",
-                tokenSymbol: `${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.symbol}`,
+                tokenSymbol: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token?.symbol || "wstETH",
                 platformName: "Morpho",
-                chainName: asset2ChainName,
-                description: description2,
-                tokenImage: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token.logo,
+                chainName: asset2ChainName || 'Ethereum',
+                description: description2 || "0.00% APY",
+                tokenImage: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token?.logo || "",
                 platformImage: `${imageBaseUrl}/fluid_logo.png`,
                 link: getRedirectLink(
                     opportunity2TokenAddress,
@@ -156,13 +167,13 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
         {
             asset: {
                 address: opportunity1TokenAddress as `0x${string}`,
-                name: "APY",
-                symbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token.symbol,
+                name: "APR",
+                symbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token?.symbol || "",
                 logo: '/images/apple-farm-favicon.ico',
                 decimals: 0,
                 price_usd: 0,
             },
-            supply_apy: convertAPRtoAPY((appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0) / 100),
+            supply_apy: appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0,
             borrow_apy: 0,
         }
     ]
@@ -313,7 +324,10 @@ function CardDetailsSkeleton() {
 
 // Helper Functions
 function getAssetDetails(platformData: any, tokenAddress: string) {
-    return platformData.assets.find((asset: any) => asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase())
+    if (!platformData?.assets || !tokenAddress) return null;
+    return platformData.assets.find((asset: any) => 
+        asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
+    );
 }
 function getRedirectLink(tokenAddress: string, protocolIdentifier: string, chainId: number, positionType: string) {
     return `/position-management?token=${tokenAddress}&protocol_identifier=${protocolIdentifier}&chain_id=${chainId}&position_type=${positionType}`

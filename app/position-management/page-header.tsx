@@ -209,7 +209,7 @@ export default function PageHeader() {
         platformData: platformData as TPlatform,
     })
 
-    const formattedSupplyAPY = Number(pageHeaderStats?.supply_apy) + Number(convertAPRtoAPY((appleFarmRewardsAprs?.[tokenDetails?.address] ?? 0) / 100))
+    const formattedSupplyAPY = Number(pageHeaderStats?.supply_apy || 0) + Number((appleFarmRewardsAprs?.[tokenDetails?.address] ?? 0))
 
     const formattedBorrowRate = (isMorphoVault || isFluidLend)
         ? 'N/A'
