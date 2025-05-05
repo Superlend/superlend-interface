@@ -80,12 +80,12 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
     const asset1Data = opportunity1PlatformData?.assets?.find((asset: any) => 
         asset?.token?.address === opportunity1TokenAddress
     )
-    const asset1AppleFarmRewardsApy = convertAPRtoAPY((appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0) / 100)
+    const asset1AppleFarmRewardsApy = appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0
     const asset1LendRate = Number(asset1Data?.supply_apy || 0) + (asset1AppleFarmRewardsApy ?? 0)
     const asset1DataSupplyApy = Number(asset1Data?.supply_apy || 0)
     // Description
-    const description1 = `${asset1LendRate?.toFixed(2)}% APY`
-    const description2 = `Upto ${getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.supply_apy?.toFixed(2) || "0.00"}% APY`
+    const description1 = `${abbreviateNumber(asset1LendRate)}% APY`
+    const description2 = `Upto ${abbreviateNumber(getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.supply_apy || "0.00")}% APY`
     // const description3 = opportunity3PlatformData?.apy
     const asset1ChainName = opportunity1PlatformData?.platform?.chain_id 
         ? CHAIN_ID_MAPPER[opportunity1PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER] 
@@ -167,13 +167,13 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
         {
             asset: {
                 address: opportunity1TokenAddress as `0x${string}`,
-                name: "APY",
+                name: "APR",
                 symbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token?.symbol || "",
                 logo: '/images/apple-farm-favicon.ico',
                 decimals: 0,
                 price_usd: 0,
             },
-            supply_apy: convertAPRtoAPY((appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0) / 100),
+            supply_apy: appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0,
             borrow_apy: 0,
         }
     ]

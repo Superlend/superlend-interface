@@ -15,7 +15,7 @@ import {
     abbreviateNumber,
     capitalizeText,
     containsNegativeInteger,
-    convertAPRtoAPY,
+    // convertAPRtoAPY,
     convertNegativeToPositive,
     getPlatformVersion,
 } from '@/lib/utils'
@@ -330,7 +330,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
             const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
-            const appleFarmApr = Number(row.original.apple_farm_apr) / 100
+            const appleFarmApr = Number(row.original.apple_farm_apr)
             const hasAppleFarmRewards = row.original.has_apple_farm_rewards
 
             const apyCurrent = Number(row.getValue('apy_current'))
@@ -339,23 +339,23 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const appleFarmBaseRate = Number(row.original.apy_current)
             const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
                 ? '<0.01'
-                : appleFarmBaseRate.toFixed(2)
-            const netAppleFarmAPY = Number(row.original.apy_current) + convertAPRtoAPY(appleFarmApr)
+                : abbreviateNumber(appleFarmBaseRate)
+            const netAppleFarmAPY = Number(row.original.apy_current) + Number(appleFarmApr ?? 0)
             const netAppleFarmAPYFormatted = netAppleFarmAPY > 0 && netAppleFarmAPY < 0.01
                 ? '<0.01'
-                : netAppleFarmAPY.toFixed(2)
+                : abbreviateNumber(netAppleFarmAPY)
 
             const appleFarmRewards = [
                 {
                     asset: {
                         address: row.original.tokenAddress as `0x${string}`,
-                        name: "APY",
+                        name: "APR",
                         symbol: row.original.tokenSymbol,
                         logo: '/images/apple-farm-favicon.ico',
                         decimals: 0,
                         price_usd: 0,
                     },
-                    supply_apy: convertAPRtoAPY(appleFarmApr),
+                    supply_apy: appleFarmApr,
                     borrow_apy: 0,
                 }
             ]
@@ -378,7 +378,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 baseRateFormatted =
                     baseRate < 0.01 && baseRate > 0
                         ? '<0.01'
-                        : baseRate.toFixed(2)
+                        : abbreviateNumber(baseRate)
             }
 
             if (
