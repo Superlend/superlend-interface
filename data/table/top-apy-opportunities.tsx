@@ -147,8 +147,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const filteredCollateralTokensData = collateralTokensData.filter((tokenAddress: `0x${string}`) => {
                 const token = allTokensData[row.original.chain_id].find(
                     (asset: any) =>
-                        asset.address.toLowerCase() ===
-                        tokenAddress.toLowerCase()
+                        asset?.address?.toLowerCase() ===
+                        tokenAddress?.toLowerCase()
                 )
                 return !!token?.name
             })
@@ -157,8 +157,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 (tokenAddress: `0x${string}`) =>
                     allTokensData[row.original.chain_id].find(
                         (asset: any) =>
-                            asset.address.toLowerCase() ===
-                            tokenAddress.toLowerCase()
+                            asset?.address?.toLowerCase() ===
+                            tokenAddress?.toLowerCase()
                     )?.logo
             )
 
@@ -166,8 +166,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 (tokenAddress: `0x${string}`) => {
                     const token = allTokensData[row.original.chain_id].find(
                         (asset: any) =>
-                            asset.address.toLowerCase() ===
-                            tokenAddress.toLowerCase()
+                            asset?.address?.toLowerCase() ===
+                            tokenAddress?.toLowerCase()
                     )
                     return {
                         name: token?.name,
@@ -620,8 +620,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const filteredCollateralExposureData = collateralExposureData?.filter((tokenAddress: `0x${string}`) => {
                 const token = allTokensData[row.original.chain_id]?.find(
                     (asset: any) =>
-                        asset.address.toLowerCase() ===
-                        tokenAddress.toLowerCase()
+                        asset?.address?.toLowerCase() ===
+                        tokenAddress?.toLowerCase()
                 ) ?? null
                 return !!token?.name
             })
@@ -630,8 +630,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 (tokenAddress: `0x${string}`) =>
                     allTokensData[row.original.chain_id]?.find(
                         (asset: any) =>
-                            asset.address.toLowerCase() ===
-                            tokenAddress.toLowerCase()
+                            asset?.address?.toLowerCase() ===
+                            tokenAddress?.toLowerCase()
                     )?.logo ?? null
             )
 
@@ -639,8 +639,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 (tokenAddress: `0x${string}`) => {
                     const token = allTokensData[row.original.chain_id]?.find(
                         (asset: any) =>
-                            asset.address.toLowerCase() ===
-                            tokenAddress.toLowerCase()
+                            asset?.address?.toLowerCase() ===
+                            tokenAddress?.toLowerCase()
                     )
                     return {
                         name: token?.name,
