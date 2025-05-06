@@ -101,14 +101,16 @@ export function DataTable<TData, TValue>({
     })
 
     const rows = table.getRowModel().rows
-    const totalRowCount = table.getFilteredRowModel().rows.length
-    const calculatedPages = Math.ceil(totalRowCount / pagination.pageSize)
+    const totalRowCount = table.getFilteredRowModel()?.rows?.length || 0
+    const calculatedPages = pagination?.pageSize ? Math.ceil(totalRowCount / pagination.pageSize) : 0
 
     const handleFirstPage = () => {
+        if (!pagination) return;
         setPagination({ ...pagination, pageIndex: 0 })
     }
 
     const handlePreviousPage = () => {
+        if (!pagination) return;
         setPagination({
             ...pagination,
             pageIndex: Math.max(0, pagination.pageIndex - 1),
@@ -116,14 +118,16 @@ export function DataTable<TData, TValue>({
     }
 
     const handleNextPage = () => {
+        if (!pagination) return;
         setPagination({
             ...pagination,
-            pageIndex: Math.min(totalPages - 1, pagination.pageIndex + 1),
+            pageIndex: Math.min((totalPages || 1) - 1, pagination.pageIndex + 1),
         })
     }
 
     const handleLastPage = () => {
-        setPagination({ ...pagination, pageIndex: totalPages - 1 })
+        if (!pagination) return;
+        setPagination({ ...pagination, pageIndex: (totalPages || 1) - 1 })
     }
 
     const getCommonPinningStyles = (
@@ -249,7 +253,17 @@ export function DataTable<TData, TValue>({
                                     onClick={
                                         !handleRowClick || screenWidth < 768
                                             ? undefined
-                                            : () => handleRowClick(row.original)
+                                            : () => {
+                                                try {
+                                                    if (!row.original) {
+                                                        console.warn('Row original data is undefined');
+                                                        return;
+                                                    }
+                                                    handleRowClick(row.original);
+                                                } catch (error) {
+                                                    console.error('Error in handleRowClick:', error);
+                                                }
+                                            }
                                     }
                                 >
                                     {row.getVisibleCells().map((cell) => {
@@ -302,7 +316,7 @@ export function DataTable<TData, TValue>({
                             weight="medium"
                             className="text-gray-700"
                         >
-                            Page {pagination.pageIndex + 1} of {calculatedPages}
+                            Page {pagination?.pageIndex !== undefined ? pagination.pageIndex + 1 : 1} of {calculatedPages || 1}
                         </Label>
                     </div>
                     <div className="pagination-controls flex items-center justify-end space-x-2 flex-1 shrink-0 ml-16">
@@ -311,14 +325,13 @@ export function DataTable<TData, TValue>({
                             weight="medium"
                             className="hidden lg:block shrink-0 text-gray-700"
                         >
-                            {pagination.pageSize} of{' '}
-                            {totalRowCount.toLocaleString()} rows
+                            Showing {rows.length} row{rows.length > 1 ? 's' : ''}
                         </Label>
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={handleFirstPage}
-                            disabled={pagination.pageIndex === 0}
+                            disabled={pagination?.pageIndex === undefined || pagination.pageIndex === 0}
                             aria-label="First Page"
                         >
                             <ChevronsLeft className="w-5 h-5" />
@@ -327,7 +340,7 @@ export function DataTable<TData, TValue>({
                             variant="outline"
                             size="sm"
                             onClick={handlePreviousPage}
-                            disabled={pagination.pageIndex === 0}
+                            disabled={pagination?.pageIndex === undefined || pagination.pageIndex === 0}
                             aria-label="Previous Page"
                         >
                             <ChevronLeft className="w-5 h-5" />
@@ -337,7 +350,7 @@ export function DataTable<TData, TValue>({
                             size="sm"
                             onClick={handleNextPage}
                             disabled={
-                                pagination.pageIndex >= calculatedPages - 1
+                                pagination?.pageIndex === undefined || pagination.pageIndex >= (calculatedPages - 1 || 0)
                             }
                             aria-label="Next Page"
                         >
@@ -348,7 +361,7 @@ export function DataTable<TData, TValue>({
                             size="sm"
                             onClick={handleLastPage}
                             disabled={
-                                pagination.pageIndex >= calculatedPages - 1
+                                pagination?.pageIndex === undefined || pagination.pageIndex >= (calculatedPages - 1 || 0)
                             }
                             aria-label="Last Page"
                         >

@@ -629,7 +629,7 @@ export function WithdrawOrRepayTxDialog({
                                     >
                                         {
                                             PlatformTypeMap[
-                                            localAssetDetails?.protocol_type as keyof typeof PlatformTypeMap
+                                            (localAssetDetails?.name.toLowerCase() ?? localAssetDetails?.protocol_type) as keyof typeof PlatformTypeMap
                                             ]
                                         }
                                     </BodyText>

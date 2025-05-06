@@ -167,11 +167,11 @@ export function DataTable<TData, TValue>({
                                                     {header.isPlaceholder
                                                         ? null
                                                         : flexRender(
-                                                              header.column
-                                                                  .columnDef
-                                                                  .header,
-                                                              header.getContext()
-                                                          )}
+                                                            header.column
+                                                                .columnDef
+                                                                .header,
+                                                            header.getContext()
+                                                        )}
                                                 </BodyText>
                                                 {header.column.getCanSort() && (
                                                     <ChevronsUpDown
@@ -185,7 +185,7 @@ export function DataTable<TData, TValue>({
                                                         side="bottom"
                                                         label={
                                                             header.column.getIsSorted() ===
-                                                            'asc' ? (
+                                                                'asc' ? (
                                                                 <ArrowUpWideNarrow className="w-4 h-4" />
                                                             ) : (
                                                                 <ArrowDownWideNarrow className="w-4 h-4" />
@@ -193,7 +193,7 @@ export function DataTable<TData, TValue>({
                                                         }
                                                         content={
                                                             header.column.getIsSorted() ===
-                                                            'asc'
+                                                                'asc'
                                                                 ? 'Lowest to Highest'
                                                                 : 'Highest to Lowest'
                                                         }
@@ -281,8 +281,7 @@ export function DataTable<TData, TValue>({
                             weight="medium"
                             className="hidden xs:block shrink-0 text-gray-700"
                         >
-                            {table.getRowModel().rows.length.toLocaleString()}{' '}
-                            of {table.getRowCount().toLocaleString()} rows
+                            Showing {table.getRowModel().rows.length} row{table.getRowModel().rows.length > 1 ? 's' : ''}
                         </Label>
                         <Button
                             variant="outline"
