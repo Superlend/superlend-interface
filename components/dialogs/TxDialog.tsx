@@ -305,7 +305,7 @@ export function ConfirmationDialog({
     function handleActionButtonClick() {
         handleOpenChange(true)
         logEvent(
-            `${getTriggerButtonText().toLowerCase().split(' ').join('_')}_clicked`,
+            `${getTriggerButtonText()?.toLowerCase().split(' ').join('_')}_clicked`,
             {
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
@@ -316,7 +316,7 @@ export function ConfirmationDialog({
             }
         )
     }
-    
+
     const showPointsEarnedBanner = lendTxCompleted || borrowTxCompleted
 
     // SUB_COMPONENT: Trigger button to open the dialog
@@ -593,12 +593,12 @@ export function ConfirmationDialog({
                                     weight="medium"
                                     className="text-gray-600 truncate max-w-full"
                                     title={PlatformTypeMap[
-                                        (assetDetails?.name.toLowerCase() ?? assetDetails?.protocol_type) as keyof typeof PlatformTypeMap
+                                        (assetDetails?.protocol_type) as keyof typeof PlatformTypeMap
                                     ]}
                                 >
                                     {
                                         PlatformTypeMap[
-                                        (assetDetails?.name.toLowerCase() ?? assetDetails?.protocol_type) as keyof typeof PlatformTypeMap
+                                        (assetDetails?.protocol_type) as keyof typeof PlatformTypeMap
                                         ]
                                     }
                                 </BodyText>
@@ -1297,7 +1297,7 @@ export function getTooltipContent({
                     />
                     <BodyText level="body2" weight="medium">
                         {chainName[0]}
-                        {chainName.toLowerCase().slice(1)}
+                        {chainName?.toLowerCase().slice(1)}
                     </BodyText>
                 </span>
             </span>

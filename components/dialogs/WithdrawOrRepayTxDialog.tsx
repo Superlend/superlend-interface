@@ -149,7 +149,7 @@ export function WithdrawOrRepayTxDialog({
 
     const isMorphoVaultsProtocol = !!localAssetDetails?.vault
     // const isMorphoMarketProtocol = !!assetDetails?.market
-    
+
     const withdrawTxCompleted = withdrawTx.isConfirmed && withdrawTx.hash && withdrawTx.status === 'view'
     const repayTxCompleted = repayTx.isConfirmed && repayTx.hash && repayTx.status === 'view'
     const showPointsEarnedBanner = withdrawTxCompleted || repayTxCompleted
@@ -487,11 +487,13 @@ export function WithdrawOrRepayTxDialog({
             <div className="flex flex-col gap-[12px] max-w-full overflow-hidden">
                 {/* Edit amount block when approving repay or withdraw - Block 1*/}
                 {isShowBlock({
-                    repay: repayTx.status === 'approve' || (repayTx.status === 'repay' && ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? '')),
+                    repay: (!repayTx.isPending && !repayTx.isConfirming) && (repayTx.status === 'approve' || (repayTx.status === 'repay' && ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? ''))),
                     withdraw:
-                        withdrawTx.status === 'approve' ||
-                        (!isMorphoVaultsProtocol &&
-                            withdrawTx.status === 'withdraw'),
+                        !withdrawTx.isPending && !withdrawTx.isConfirming &&
+                        (withdrawTx.status === 'approve' ||
+                            (!isMorphoVaultsProtocol &&
+                                withdrawTx.status === 'withdraw'
+                            )),
                 }) && (
                         <div className="flex items-center gap-2 px-6 py-3 bg-gray-200 lg:bg-white rounded-5 w-full ring-1 ring-inset ring-secondary-300">
                             <ImageWithDefault
@@ -539,12 +541,14 @@ export function WithdrawOrRepayTxDialog({
                     )}
                 {/* Display the token details after amount is set - Block 2 */}
                 {isShowBlock({
-                    repay:
+                    repay: repayTx.isPending || repayTx.isConfirming ||
                         (repayTx.status === 'repay' && !ETH_ADDRESSES.includes(localAssetDetails?.asset?.token?.address ?? '')) || repayTx.status === 'view',
                     withdraw:
                         (isMorphoVaultsProtocol &&
                             withdrawTx.status === 'withdraw') ||
-                        withdrawTx.status === 'view',
+                        withdrawTx.status === 'view' ||
+                        withdrawTx.isPending ||
+                        withdrawTx.isConfirming,
                 }) && (
                         <div className="flex items-center gap-2 px-6 py-2 bg-gray-200 lg:bg-white rounded-5 w-full">
                             <InfoTooltip
@@ -629,7 +633,7 @@ export function WithdrawOrRepayTxDialog({
                                     >
                                         {
                                             PlatformTypeMap[
-                                            (localAssetDetails?.name.toLowerCase() ?? localAssetDetails?.protocol_type) as keyof typeof PlatformTypeMap
+                                            (localAssetDetails?.protocol_type) as keyof typeof PlatformTypeMap
                                             ]
                                         }
                                     </BodyText>
@@ -971,10 +975,10 @@ export function WithdrawOrRepayTxDialog({
                                                 Token approved
                                             </BodyText>
                                         </div>
-                                        {(repayTx.hash &&
+                                        {(repayTx.hash && !isMorphoVaultsProtocol &&
                                             (repayTx.isConfirming ||
                                                 repayTx.isConfirmed)) ||
-                                            (withdrawTx.hash &&
+                                            (withdrawTx.hash && !isMorphoVaultsProtocol &&
                                                 (withdrawTx.isConfirming ||
                                                     withdrawTx.isConfirmed) && (
                                                     <ExternalLink
@@ -995,7 +999,8 @@ export function WithdrawOrRepayTxDialog({
                                                             View on explorer
                                                         </BodyText>
                                                     </ExternalLink>
-                                                ))}
+                                                ))
+                                        }
                                     </div>
                                 )}
                         </div>
@@ -1034,31 +1039,27 @@ export function WithdrawOrRepayTxDialog({
                                                     `${actionType === 'withdraw' ? 'Withdrawing' : 'Repaying'}...`}
                                             </BodyText>
                                         </div>
-                                        {(repayTx.hash &&
-                                            (repayTx.isConfirming ||
-                                                repayTx.isConfirmed)) ||
-                                            (withdrawTx.hash &&
-                                                (withdrawTx.isConfirming ||
-                                                    withdrawTx.isConfirmed) && (
-                                                    <ExternalLink
-                                                        href={getExplorerLink(
-                                                            isWithdrawAction
-                                                                ? withdrawTx.hash
-                                                                : repayTx.hash,
-                                                            localAssetDetails?.chain_id ||
-                                                            localAssetDetails?.platform
-                                                                ?.chain_id
-                                                        )}
+                                        {((repayTx.hash && (repayTx.isConfirming || repayTx.isConfirmed)) ||
+                                            (withdrawTx.hash && (withdrawTx.isConfirming || withdrawTx.isConfirmed))) && (
+                                                <ExternalLink
+                                                    href={getExplorerLink(
+                                                        isWithdrawAction
+                                                            ? withdrawTx.hash
+                                                            : repayTx.hash,
+                                                        localAssetDetails?.chain_id ||
+                                                        localAssetDetails?.platform
+                                                            ?.chain_id
+                                                    )}
+                                                >
+                                                    <BodyText
+                                                        level="body2"
+                                                        weight="normal"
+                                                        className="text-inherit"
                                                     >
-                                                        <BodyText
-                                                            level="body2"
-                                                            weight="normal"
-                                                            className="text-inherit"
-                                                        >
-                                                            View on explorer
-                                                        </BodyText>
-                                                    </ExternalLink>
-                                                ))}
+                                                        View on explorer
+                                                    </BodyText>
+                                                </ExternalLink>
+                                            )}
                                     </div>
                                 )}
                             {((withdrawTx.status === 'view' &&
@@ -1083,31 +1084,27 @@ export function WithdrawOrRepayTxDialog({
                                                     : 'Repay successful'}
                                             </BodyText>
                                         </div>
-                                        {(repayTx.hash &&
-                                            (repayTx.isConfirming ||
-                                                repayTx.isConfirmed)) ||
-                                            (withdrawTx.hash &&
-                                                (withdrawTx.isConfirming ||
-                                                    withdrawTx.isConfirmed) && (
-                                                    <ExternalLink
-                                                        href={getExplorerLink(
-                                                            isWithdrawAction
-                                                                ? withdrawTx.hash
-                                                                : repayTx.hash,
-                                                            localAssetDetails?.chain_id ||
-                                                            localAssetDetails?.platform
-                                                                ?.chain_id
-                                                        )}
+                                        {((repayTx.hash && (repayTx.isConfirming || repayTx.isConfirmed)) ||
+                                            (withdrawTx.hash && (withdrawTx.isConfirming || withdrawTx.isConfirmed))) && (
+                                                <ExternalLink
+                                                    href={getExplorerLink(
+                                                        isWithdrawAction
+                                                            ? withdrawTx.hash
+                                                            : repayTx.hash,
+                                                        localAssetDetails?.chain_id ||
+                                                        localAssetDetails?.platform
+                                                            ?.chain_id
+                                                    )}
+                                                >
+                                                    <BodyText
+                                                        level="body2"
+                                                        weight="normal"
+                                                        className="text-inherit"
                                                     >
-                                                        <BodyText
-                                                            level="body2"
-                                                            weight="normal"
-                                                            className="text-inherit"
-                                                        >
-                                                            View on explorer
-                                                        </BodyText>
-                                                    </ExternalLink>
-                                                ))}
+                                                        View on explorer
+                                                    </BodyText>
+                                                </ExternalLink>
+                                            )}
                                     </div>
                                 )}
                         </div>

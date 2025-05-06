@@ -556,11 +556,6 @@ const WithdrawButton = ({
         //     await withdrawCompound(assetDetails?.asset?.token?.address, amount)
         //     return
         // }
-        console.log('isaave', isAave)
-        console.log('isMorphoVault', isMorphoVault)
-        console.log('isMorphoMarket', isMorphoMarket)
-        console.log('isFluidLend', isFluidLend)
-        console.log('isFluidVault', isFluidVault)
         if (isAave) {
             await withdrawAave(
                 assetDetails,
@@ -609,7 +604,6 @@ const WithdrawButton = ({
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
                 disabled={isPending || isConfirming || disabled}
                 onClick={() => {
-                    console.log('withdrawTx.status', withdrawTx.status)
                     if (withdrawTx.status === 'approve') {
                         onApproveWithdrawMorphoVault(assetDetails, amount)
                     } else if (withdrawTx.status === 'withdraw') {
