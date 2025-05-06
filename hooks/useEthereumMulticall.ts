@@ -9,7 +9,7 @@ import { MULTICALL_ADDRESSES } from '../lib/constants'
 import { ProxyProvider } from '@/lib/proxy-provider'
 
 // Override Multicall to optimize RPC calls
-class OptimizedMulticall extends Multicall {
+export class OptimizedMulticall extends Multicall {
   async call(contractCallContexts: ContractCallContext[]): Promise<ContractCallResults> {
     // Use the original call method for small batches
     if (contractCallContexts.length <= 5) {
