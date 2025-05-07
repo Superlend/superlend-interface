@@ -592,14 +592,10 @@ export function ConfirmationDialog({
                                     level="body3"
                                     weight="medium"
                                     className="text-gray-600 truncate max-w-full"
-                                    title={PlatformTypeMap[
-                                        (assetDetails?.protocol_type) as keyof typeof PlatformTypeMap
-                                    ]}
+                                    title={assetDetails?.name ?? ''}
                                 >
                                     {
-                                        PlatformTypeMap[
-                                        (assetDetails?.protocol_type) as keyof typeof PlatformTypeMap
-                                        ]
+                                        assetDetails?.name ?? ''
                                     }
                                 </BodyText>
                             </div>

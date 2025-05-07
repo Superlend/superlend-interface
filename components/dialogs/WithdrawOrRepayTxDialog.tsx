@@ -630,11 +630,10 @@ export function WithdrawOrRepayTxDialog({
                                         level="body3"
                                         weight="medium"
                                         className="text-gray-600 truncate max-w-full"
+                                        title={localAssetDetails?.name ?? ''}
                                     >
                                         {
-                                            PlatformTypeMap[
-                                            (localAssetDetails?.protocol_type) as keyof typeof PlatformTypeMap
-                                            ]
+                                            localAssetDetails?.name ?? ''
                                         }
                                     </BodyText>
                                 </div>
