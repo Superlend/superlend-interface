@@ -305,18 +305,18 @@ export function ConfirmationDialog({
     function handleActionButtonClick() {
         handleOpenChange(true)
         logEvent(
-            `${getTriggerButtonText().toLowerCase().split(' ').join('_')}_clicked`,
+            `${getTriggerButtonText()?.toLowerCase().split(' ').join('_')}_clicked`,
             {
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.name,
+                platform_name: assetDetails?.platform?.name,
                 chain_name:
                     CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             }
         )
     }
-    
+
     const showPointsEarnedBanner = lendTxCompleted || borrowTxCompleted
 
     // SUB_COMPONENT: Trigger button to open the dialog
@@ -592,14 +592,10 @@ export function ConfirmationDialog({
                                     level="body3"
                                     weight="medium"
                                     className="text-gray-600 truncate max-w-full"
-                                    title={PlatformTypeMap[
-                                        (assetDetails?.name.toLowerCase() ?? assetDetails?.protocol_type) as keyof typeof PlatformTypeMap
-                                    ]}
+                                    title={assetDetails?.platform?.name ?? ''}
                                 >
                                     {
-                                        PlatformTypeMap[
-                                        (assetDetails?.name.toLowerCase() ?? assetDetails?.protocol_type) as keyof typeof PlatformTypeMap
-                                        ]
+                                        assetDetails?.platform?.name ?? ''
                                     }
                                 </BodyText>
                             </div>
@@ -1297,7 +1293,7 @@ export function getTooltipContent({
                     />
                     <BodyText level="body2" weight="medium">
                         {chainName[0]}
-                        {chainName.toLowerCase().slice(1)}
+                        {chainName?.toLowerCase().slice(1)}
                     </BodyText>
                 </span>
             </span>

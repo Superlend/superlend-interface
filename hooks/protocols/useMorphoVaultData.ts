@@ -3,9 +3,8 @@ import { useMarket, usePosition, useVault } from '@morpho-org/blue-sdk-wagmi'
 import { TPlatform } from '../../types'
 import { ContractCallContext } from 'ethereum-multicall'
 import VaultABI from '@/data/abi/erc4626ABI.json'
-import { useEthersMulticall } from '../useEthereumMulticall'
+import { OptimizedMulticall, useEthersMulticall } from '../useEthereumMulticall'
 import { BigNumber } from 'ethers'
-import { Multicall } from 'ethereum-multicall'
 import { MORPHO_BLUE_API_CHAINIDS } from '@/lib/constants'
 
 export const useMorphoVaultData = () => {
@@ -16,7 +15,7 @@ export const useMorphoVaultData = () => {
         multicall,
     }: {
         platformData: TPlatform
-        multicall?: Multicall
+        multicall?: OptimizedMulticall
     }): Promise<Vault> {
         try {
             const chainId = platformData?.platform?.chain_id

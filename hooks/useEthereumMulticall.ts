@@ -1,4 +1,4 @@
-import { BigNumber, providers as ethersProviders } from 'ethers'
+import { BigNumber } from 'ethers'
 import { useEffect, useState } from 'react'
 import {
     ContractCallContext,
@@ -6,12 +6,64 @@ import {
     Multicall,
 } from 'ethereum-multicall'
 import { MULTICALL_ADDRESSES } from '../lib/constants'
+import { ProxyProvider } from '@/lib/proxy-provider'
+import { SUPPORTED_CHAIN_IDS } from '@/constants'
+
+// Override Multicall to optimize RPC calls
+export class OptimizedMulticall extends Multicall {
+  async call(contractCallContexts: ContractCallContext[]): Promise<ContractCallResults> {
+    // Use the original call method for small batches
+    if (contractCallContexts.length <= 5) {
+      return super.call(contractCallContexts);
+    }
+    
+    // For larger batches, split into chunks to avoid rate limiting
+    const chunks = this.chunkArray(contractCallContexts, 5);
+    const results: ContractCallResults[] = [];
+    
+    for (const chunk of chunks) {
+      // Add a small delay between chunks to avoid rate limiting
+      if (results.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
+      const result = await super.call(chunk);
+      results.push(result);
+    }
+    
+    // Merge results
+    return this.mergeResults(results);
+  }
+  
+  private chunkArray<T>(array: T[], chunkSize: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunks.push(array.slice(i, i + chunkSize));
+    }
+    return chunks;
+  }
+  
+  private mergeResults(results: ContractCallResults[]): ContractCallResults {
+    // Use the blockNumber from the first result or default to 0
+    const blockNumber = results.length > 0 ? results[0].blockNumber : 0;
+    const merged: ContractCallResults = { 
+      results: {},
+      blockNumber 
+    };
+    
+    for (const result of results) {
+      merged.results = { ...merged.results, ...result.results };
+    }
+    
+    return merged;
+  }
+}
 
 export const useEthersMulticall = () => {
     const [providers, setProviders] = useState<
-        Record<number, ethersProviders.JsonRpcProvider>
+        Record<number, ProxyProvider>
     >({})
-    const [multicall, setMulticall] = useState<Record<number, Multicall>>({})
+    const [multicall, setMulticall] = useState<Record<number, OptimizedMulticall>>({})
     const [isLoading, setIsLoading] = useState<Boolean>(false)
     const [isError, setIsError] = useState(false)
 
@@ -19,53 +71,19 @@ export const useEthersMulticall = () => {
         try {
             // if (isLoading) return
             setIsLoading(true)
-            const _providers: Record<number, ethersProviders.JsonRpcProvider> =
-                {
-                    1: new ethersProviders.JsonRpcProvider(
-                        `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                    10: new ethersProviders.JsonRpcProvider(
-                        `https://opt-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                    56: new ethersProviders.JsonRpcProvider(
-                        `https://bnb-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                    100: new ethersProviders.JsonRpcProvider(
-                        `https://gnosis-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                    137: new ethersProviders.JsonRpcProvider(
-                        `https://polygon-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                    1088: new ethersProviders.JsonRpcProvider(
-                        `https://metis-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                    8453: new ethersProviders.JsonRpcProvider(
-                        `https://base-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                    42161: new ethersProviders.JsonRpcProvider(
-                        `https://arb-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                    42793: new ethersProviders.JsonRpcProvider(
-                        `https://plend-etherlink-mainnet-djs2w.zeeve.net/TuychDxGCScIED1nCk0m/rpc`
-                    ),
-                    43114: new ethersProviders.JsonRpcProvider(
-                        `https://avax-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                    534352: new ethersProviders.JsonRpcProvider(
-                        `https://scroll-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                    59144: new ethersProviders.JsonRpcProvider(
-                        `https://linea-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                    146: new ethersProviders.JsonRpcProvider(
-                        `https://sonic-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-                    ),
-                }
+            
+            // Create providers using our secure proxy
+            const chainIds = SUPPORTED_CHAIN_IDS;
+            const _providers: Record<number, ProxyProvider> = {};
+            
+            for (const chainId of chainIds) {
+                _providers[chainId] = new ProxyProvider(chainId);
+            }
 
-            const _multicall: Record<number, Multicall> = {}
+            const _multicall: Record<number, OptimizedMulticall> = {}
             for (const chain of Object.keys(_providers)) {
                 const chainId = Number(chain)
-                _multicall[chainId] = new Multicall({
+                _multicall[chainId] = new OptimizedMulticall({
                     ethersProvider: _providers[chainId],
                     tryAggregate: true,
                     multicallCustomContractAddress:
@@ -87,9 +105,9 @@ export const useEthersMulticall = () => {
     const ethMulticall = (
         calldata: ContractCallContext[],
         chainId: number,
-        _multicall?: Multicall
+        _multicall?: OptimizedMulticall
     ): Promise<ContractCallResults> => {
-        let multicallProvider: Multicall = _multicall || multicall[chainId]
+        let multicallProvider: OptimizedMulticall = _multicall || multicall[chainId]
         if (!multicallProvider) {
             return undefined as any
         }

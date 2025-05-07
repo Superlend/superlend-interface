@@ -46,8 +46,7 @@ import ExternalLink from '@/components/ExternalLink'
 import { TTxContext, useTxContext } from '@/context/tx-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { useMorphoVaultData } from '../../../hooks/protocols/useMorphoVaultData'
-import { useEthersMulticall } from '../../../hooks/useEthereumMulticall'
-import { Multicall } from 'ethereum-multicall'
+import { useEthersMulticall, OptimizedMulticall } from '../../../hooks/useEthereumMulticall'
 import { MORPHO_BLUE_API_CHAINIDS } from '../../../lib/constants'
 
 // Safe wrapper for useVault to handle unsupported chains
@@ -854,7 +853,7 @@ function MorphoVaults({
         }
     }, [lendTx.status, borrowTx.status, isLendBorrowTxDialogOpen])
 
-    const fetchVaultData = async (multicall?: Multicall) => {
+    const fetchVaultData = async (multicall?: OptimizedMulticall) => {
         return await getVaultDataFromPlatformData({
             platformData,
             multicall,

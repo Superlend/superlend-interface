@@ -46,7 +46,7 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useERC20Balance } from '../../hooks/useERC20Balance'
 import { WithdrawOrRepayTxDialog } from '@/components/dialogs/WithdrawOrRepayTxDialog'
 import { Multicall } from 'ethereum-multicall'
-import { useEthersMulticall } from '../../hooks/useEthereumMulticall'
+import { OptimizedMulticall, useEthersMulticall } from '../../hooks/useEthereumMulticall'
 import { useVault } from '@morpho-org/blue-sdk-wagmi'
 
 interface ITokenDetails {
@@ -216,7 +216,7 @@ export default function WithdrawAndRepayActionButton({
 
     const hasSingleToken = tokenDetails.length === 1
 
-    const fetchVaultData = async (multicall?: Multicall) => {
+    const fetchVaultData = async (multicall?: OptimizedMulticall) => {
         return await getVaultDataFromPlatformData({
             platformData,
             multicall,
