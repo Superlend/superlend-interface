@@ -309,7 +309,7 @@ export function ConfirmationDialog({
             {
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.name,
+                platform_name: assetDetails?.platform?.name,
                 chain_name:
                     CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
@@ -592,10 +592,10 @@ export function ConfirmationDialog({
                                     level="body3"
                                     weight="medium"
                                     className="text-gray-600 truncate max-w-full"
-                                    title={assetDetails?.name ?? ''}
+                                    title={assetDetails?.platform?.name ?? ''}
                                 >
                                     {
-                                        assetDetails?.name ?? ''
+                                        assetDetails?.platform?.name ?? ''
                                     }
                                 </BodyText>
                             </div>
