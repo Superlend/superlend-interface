@@ -30,6 +30,54 @@ const CACHE_TTL: Record<string, number> = {
 // Global request cache shared across provider instances
 const requestCache: Record<string, CacheEntry> = {};
 
+// Periodic cleanup of expired cache entries
+function cleanupExpiredCacheEntries() {
+  try {
+    const now = Date.now();
+    
+    // Methods that need fresh data but can still be cached briefly
+    const shortCacheMethods = [
+      'eth_call',
+      'eth_getTransactionCount',
+      'eth_gasPrice',
+      'eth_getTransactionReceipt',
+    ];
+    
+    for (const [key, entry] of Object.entries(requestCache)) {
+      try {
+        // Extract method from the cache key (format: chainId:method:params)
+        const keyParts = key.split(':');
+        if (keyParts.length < 2) continue; // Skip invalid keys
+        
+        const method = keyParts[1];
+        
+        // Use the same TTL logic as in the send method
+        const ttl = shortCacheMethods.includes(method)
+          ? 5000 // Short cache for methods needing fresher data
+          : (CACHE_TTL[method] || CACHE_TTL.default);
+        
+        if (now - entry.timestamp > ttl) {
+          delete requestCache[key];
+        }
+      } catch (innerError) {
+        console.warn('Error processing cache entry:', innerError);
+        // Skip this entry but continue with others
+      }
+    }
+  } catch (error) {
+    console.error('Cache cleanup failed:', error);
+    // Error during cleanup shouldn't crash the application
+  }
+}
+
+// Store cleanup interval reference for potential cleanup
+const cleanupInterval = setInterval(cleanupExpiredCacheEntries, 60000);
+
+// Expose cleanup function for manual triggering if needed
+export function forceCacheCleanup() {
+  cleanupExpiredCacheEntries();
+}
+
 // In-memory request queue to prevent concurrent similar requests
 const pendingRequests: Record<string, Promise<any>> = {};
 

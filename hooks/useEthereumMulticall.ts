@@ -7,6 +7,7 @@ import {
 } from 'ethereum-multicall'
 import { MULTICALL_ADDRESSES } from '../lib/constants'
 import { ProxyProvider } from '@/lib/proxy-provider'
+import { SUPPORTED_CHAIN_IDS } from '@/constants'
 
 // Override Multicall to optimize RPC calls
 export class OptimizedMulticall extends Multicall {
@@ -72,7 +73,7 @@ export const useEthersMulticall = () => {
             setIsLoading(true)
             
             // Create providers using our secure proxy
-            const chainIds = [1, 10, 56, 100, 137, 1088, 8453, 42161, 42793, 43114, 534352, 59144, 146];
+            const chainIds = SUPPORTED_CHAIN_IDS;
             const _providers: Record<number, ProxyProvider> = {};
             
             for (const chainId of chainIds) {

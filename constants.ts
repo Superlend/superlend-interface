@@ -7,18 +7,52 @@ import {
     PlatformWebsiteLink,
 } from './types/platform'
 import {
+    base,
     mainnet,
-    arbitrum,
     polygon,
+    avalanche,
+    optimism,
+    gnosis,
+    arbitrum,
+    etherlink,
+    bsc,
+    scroll,
+    metis,
+    linea,
+    sonic,
+} from 'viem/chains'
+
+export const SUPPORTED_CHAINS = [
+    mainnet,
+    polygon,
+    base,
+    scroll,
+    avalanche,
+    optimism,
     bsc,
     gnosis,
-    base,
-    optimism,
-    avalanche,
-    scroll,
-    AppKitNetwork,
+    arbitrum,
     etherlink,
-} from '@reown/appkit/networks'
+    metis,
+    linea,
+    sonic,
+]
+
+export const SUPPORTED_CHAIN_IDS = [
+    mainnet.id,
+    polygon.id,
+    base.id,
+    scroll.id,
+    avalanche.id,
+    optimism.id,
+    bsc.id,
+    gnosis.id,
+    arbitrum.id,
+    etherlink.id,
+    metis.id,
+    linea.id,
+    sonic.id,
+]
 
 export type TPlatformWebsiteLinks = {
     aave: PlatformWebsiteLink.AAVE
