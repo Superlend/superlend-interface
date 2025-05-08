@@ -111,7 +111,7 @@ export function getCsrfToken(existingToken?: string | null): string {
  * @param request Request object
  * @returns Boolean indicating if token is valid
  */
-export function validateRequestCsrfToken(request: Request): boolean {
+export function validateRequestCsrfToken(request: Request | { headers: { get(name: string): string | null } }): boolean {
   const token = request.headers.get('X-CSRF-Token');
   return validateCsrfToken(token);
 } 
