@@ -11,7 +11,26 @@ const CSRF_TOKEN_KEY = 'csrf_token';
  */
 export function getStoredCsrfToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem(CSRF_TOKEN_KEY);
+  
+  try {
+    // Try localStorage first
+    let token = localStorage.getItem(CSRF_TOKEN_KEY);
+    
+    // If not in localStorage, try sessionStorage as fallback
+    if (!token) {
+      token = sessionStorage.getItem(CSRF_TOKEN_KEY);
+      
+      // If found in sessionStorage but not localStorage, restore to localStorage
+      if (token) {
+        localStorage.setItem(CSRF_TOKEN_KEY, token);
+      }
+    }
+    
+    return token;
+  } catch (error) {
+    console.error('Failed to retrieve CSRF token:', error);
+    return null;
+  }
 }
 
 /**
@@ -20,7 +39,22 @@ export function getStoredCsrfToken(): string | null {
  */
 export function storeCsrfToken(token: string): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(CSRF_TOKEN_KEY, token);
+  
+  try {
+    // Store in localStorage
+    localStorage.setItem(CSRF_TOKEN_KEY, token);
+    
+    // Also store in sessionStorage as a fallback
+    sessionStorage.setItem(CSRF_TOKEN_KEY, token);
+    
+    // For debugging in production
+    const isProduction = window.location.hostname !== 'localhost';
+    if (isProduction) {
+      console.log(`CSRF token stored (${token.substring(0, 10)}...)`);
+    }
+  } catch (error) {
+    console.error('Failed to store CSRF token:', error);
+  }
 }
 
 /**
@@ -37,7 +71,23 @@ export function clearCsrfToken(): void {
  */
 export async function fetchCsrfToken(): Promise<string | null> {
   try {
-    const response = await fetch('/api/csrf-token');
+    const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+    const startTime = Date.now();
+    
+    const response = await fetch('/api/csrf-token', {
+      // Add cache control headers to avoid cached responses
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
+    
+    const responseTime = Date.now() - startTime;
+    if (isProduction && responseTime > 1000) {
+      console.warn(`CSRF token fetch took ${responseTime}ms`);
+    }
+    
     const data = await response.json();
     
     if (data.success && data.token) {
@@ -45,6 +95,7 @@ export async function fetchCsrfToken(): Promise<string | null> {
       return data.token;
     }
     
+    console.error('CSRF token response missing success or token:', data);
     return null;
   } catch (error) {
     console.error('Failed to fetch CSRF token:', error);

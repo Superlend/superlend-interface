@@ -62,7 +62,10 @@ export function generateCsrfToken(): string {
  * @returns Boolean indicating if the token is valid
  */
 export function validateCsrfToken(token: string | null): boolean {
-  if (!token) return false;
+  if (!token) {
+    console.debug('CSRF validation failed: No token provided');
+    return false;
+  }
   
   try {
     // Decode the token
@@ -70,6 +73,7 @@ export function validateCsrfToken(token: string | null): boolean {
     const [timestampStr, randomValue, hmac] = decoded.split(':');
     
     if (!timestampStr || !randomValue || !hmac) {
+      console.debug('CSRF validation failed: Token format invalid');
       return false;
     }
     
@@ -77,6 +81,7 @@ export function validateCsrfToken(token: string | null): boolean {
     const timestamp = parseInt(timestampStr, 10);
     const now = Math.floor(Date.now() / 1000);
     if (isNaN(timestamp) || timestamp < now) {
+      console.debug(`CSRF validation failed: Token expired (timestamp: ${timestamp}, now: ${now})`);
       return false;
     }
     
@@ -87,7 +92,12 @@ export function validateCsrfToken(token: string | null): boolean {
       .update(payload)
       .digest('hex');
     
-    return hmac === expectedHmac;
+    const isValid = hmac === expectedHmac;
+    if (!isValid) {
+      console.debug('CSRF validation failed: Invalid HMAC');
+    }
+    
+    return isValid;
   } catch (error) {
     console.error('Error validating CSRF token:', error);
     return false;
@@ -112,6 +122,21 @@ export function getCsrfToken(existingToken?: string | null): string {
  * @returns Boolean indicating if token is valid
  */
 export function validateRequestCsrfToken(request: Request | { headers: { get(name: string): string | null } }): boolean {
-  const token = request.headers.get('X-CSRF-Token');
-  return validateCsrfToken(token);
+  try {
+    const token = request.headers.get('X-CSRF-Token');
+    const isValid = validateCsrfToken(token);
+    
+    // In production, we want to debug these failures
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && !isValid && token) {
+      // Log partial token to help debug without exposing full token
+      const partialToken = token.substring(0, 10) + '...';
+      console.error(`CSRF validation failed for token: ${partialToken}`);
+    }
+    
+    return isValid;
+  } catch (error) {
+    console.error('Error in validateRequestCsrfToken:', error);
+    return false;
+  }
 } 
