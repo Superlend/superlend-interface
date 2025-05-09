@@ -43,5 +43,5 @@ export function middleware(request: NextRequest) {
 
 // Specify which routes this middleware applies to
 export const config = {
-    matcher: ['/api/telegram-connect', '/api/telegram-check', '/api/discord-connect', '/api/discord-check'],
+    matcher: ['/api/telegram-connect', '/api/telegram-check', '/api/discord-connect', '/api/discord-check', '/api/rpc-proxy', '/api/csrf-token'],
 };

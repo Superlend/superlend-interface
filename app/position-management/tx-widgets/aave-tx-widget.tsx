@@ -873,8 +873,8 @@ function SelectTokensDropdown({
                     className="group flex items-center gap-1 text-gray-800 px-0"
                 >
                     <ImageWithDefault
-                        src={selectedItemDetails?.token?.logo}
-                        alt={selectedItemDetails?.token?.symbol}
+                        src={selectedItemDetails?.token?.logo || ''}
+                        alt={selectedItemDetails?.token?.symbol || ''}
                         width={24}
                         height={24}
                         className="rounded-full max-w-[24px] max-h-[24px]"

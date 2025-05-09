@@ -4,10 +4,10 @@ import ImageWithDefault from './ImageWithDefault'
 interface IProps {
     mainImg: string
     badgeImg: string
-    mainImgWidth?: string
-    badgeImgWidth?: string
-    mainImgHeight?: string
-    badgeImgHeight?: string
+    mainImgWidth?: number
+    badgeImgWidth?: number
+    mainImgHeight?: number
+    badgeImgHeight?: number
     mainImgAlt?: string
     badgeImgAlt?: string
     badgeCustomClass?: string

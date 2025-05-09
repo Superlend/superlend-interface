@@ -48,15 +48,26 @@ export default function MarketsBanner() {
     const activeTab = tabs.find(tab => tab.isActive) || tabs[0]
 
     const handleTabSelection = (tabId: string) => {
-        if (tabId === activeTab.id) return;
+        try {
+            if (!tabId) {
+                console.warn('Tab ID is undefined in handleTabSelection');
+                return;
+            }
+            
+            if (tabId === activeTab?.id) return;
 
-        if (tabId === 'all-markets') {
-            toggleShowAllMarkets(true)
-        } else {
-            toggleShowAllMarkets(false, tabId as 'etherlink' | 'polygon')
+            if (tabId === 'all-markets') {
+                toggleShowAllMarkets(true)
+            } else {
+                toggleShowAllMarkets(false, tabId as 'etherlink' | 'polygon')
+            }
+
+            setIsDropdownOpen(false)
+        } catch (error) {
+            console.error('Error in tab selection:', error);
+            // Fallback - try to recover
+            setIsDropdownOpen(false);
         }
-
-        setIsDropdownOpen(false)
     }
 
     return (
@@ -135,11 +146,11 @@ export default function MarketsBanner() {
                                                         )}>
                                                             {tab.icon}
                                                         </span>
-                                                        <span className="ml-1">{tab.title}</span>
+                                                        <span className="ml-1">{tab.title || ""}</span>
                                                     </div>
 
                                                     {/* Stats - only on larger desktops */}
-                                                    {tab.stats.length > 0 && (
+                                                    {tab.stats && tab.stats.length > 0 && (
                                                         <div className="hidden lg:flex items-center justify-center gap-1">
                                                             {tab.stats.map((stat, i) => (
                                                                 <React.Fragment key={i}>
@@ -150,7 +161,7 @@ export default function MarketsBanner() {
                                                                         )}
                                                                         weight="medium"
                                                                     >
-                                                                        {stat}
+                                                                        {stat || ""}
                                                                     </Label>
                                                                     {i < tab.stats.length - 1 && (
                                                                         <span className={`w-1 h-1 rounded-full ${tab.isActive ? "bg-secondary-500" : "bg-gray-500"} mx-0.5`} />

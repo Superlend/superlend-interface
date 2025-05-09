@@ -36,11 +36,18 @@ import { ChainId } from '@/types/chain'
 import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
 import { useMorphoVaultData } from '@/hooks/protocols/useMorphoVaultData'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
-import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
-import { BUNDLER_ADDRESS_MORPHO, ETH_ADDRESSES } from '@/lib/constants'
+import { AccrualPosition, MarketId, Vault } from '@morpho-org/blue-sdk'
+import {
+    BUNDLER_ADDRESS_MORPHO,
+    ETH_ADDRESSES,
+    MORPHO_BLUE_API_CHAINIDS,
+} from '@/lib/constants'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useERC20Balance } from '../../hooks/useERC20Balance'
 import { WithdrawOrRepayTxDialog } from '@/components/dialogs/WithdrawOrRepayTxDialog'
+import { Multicall } from 'ethereum-multicall'
+import { OptimizedMulticall, useEthersMulticall } from '../../hooks/useEthereumMulticall'
+import { useVault } from '@morpho-org/blue-sdk-wagmi'
 
 interface ITokenDetails {
     address: string
@@ -53,6 +60,23 @@ interface ITokenDetails {
     apy: number
     price_usd: number
     positionAmount?: string | number
+}
+
+function useSafeVault(params: {
+    vault: `0x${string}` | undefined;
+    chainId: number;
+}) {
+    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId);
+    
+    // Only call the real hook if chain is supported and vault address exists
+    // Otherwise return undefined data with empty object structure
+    return useVault({
+        vault: isSupported && params.vault ? params.vault : '0x1111111111111111111111111111111111111111' as `0x${string}`,
+        chainId: isSupported ? params.chainId : 1, // Use mainnet as fallback for unsupported chains
+        query: {
+            enabled: isSupported && !!params.vault,
+        },
+    });
 }
 
 export default function WithdrawAndRepayActionButton({
@@ -69,7 +93,9 @@ export default function WithdrawAndRepayActionButton({
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
     } = useUserTokenBalancesContext()
-    const { getVaultData, getMarketData } = useMorphoVaultData()
+    const { getVaultDataFromPlatformData, getMarketData } = useMorphoVaultData()
+    const { multicall } = useEthersMulticall()
+
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [amount, setAmount] = useState('')
     // Morpho vault when the user is withdrawing from morpho vaults
@@ -78,8 +104,7 @@ export default function WithdrawAndRepayActionButton({
     // Morpho vault when the user is withdrawing from morpho vaults
     const [morphoVault, setMorphoVault] = useState<any>(null)
 
-    const [isLoadingMaxAmount, setIsLoadingMaxAmount] =
-        useState(false)
+    const [isLoadingMaxAmount, setIsLoadingMaxAmount] = useState(false)
     const [borrowTokensDetails, setBorrowTokensDetails] = useState<
         TPlatformAsset[]
     >([])
@@ -176,11 +201,11 @@ export default function WithdrawAndRepayActionButton({
     const isFluidLendProtocol =
         isFluidProtocol && !platformData?.platform?.isVault
 
-    const vaultData = getVaultData({
-        vaultId: platformData?.platform?.core_contract as `0x${string}`,
+    // Only use the Morpho hook when we're on a supported chain
+    const { data: _vaultData } = useSafeVault({
+        vault: platformData?.platform?.core_contract as `0x${string}`,
         chainId: Number(chain_id),
-        enabled: isMorphoVaultsProtocol && !isPolygonChain,
-    })
+    });
 
     const morphoMarketData = getMarketData({
         marketId: platformData?.platform?.morpho_market_id as MarketId,
@@ -191,10 +216,37 @@ export default function WithdrawAndRepayActionButton({
 
     const hasSingleToken = tokenDetails.length === 1
 
+    const fetchVaultData = async (multicall?: OptimizedMulticall) => {
+        return await getVaultDataFromPlatformData({
+            platformData,
+            multicall,
+        })
+    }
+
+    useEffect(() => {
+        if (
+            !multicall[Number(chain_id)] ||
+            MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))
+        )
+            return
+        fetchVaultData(multicall[Number(chain_id)]).then((vaultData) => {
+            setMorphoVault(vaultData as Vault)
+        })
+    }, [platformData, multicall])
+
+    useEffect(() => {
+        if (MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id)) && _vaultData) {
+            setMorphoVault(_vaultData as Vault)
+        } else {
+            setMorphoVault({
+                data: undefined,
+            })
+        }
+    }, [_vaultData])
+
     // Get max withdraw amount for morpho
     useEffect(() => {
-        if (vaultData) {
-            setMorphoVault(vaultData)
+        if (morphoVault) {
             let currentVaultPosition = portfolioData.platforms.find(
                 (platform) =>
                     platform.protocol_identifier ===
@@ -276,7 +328,7 @@ export default function WithdrawAndRepayActionButton({
                 })
             }
         }
-    }, [isMorphoVaultsProtocol, vaultData, morphoMarketData, portfolioData])
+    }, [isMorphoVaultsProtocol, morphoVault, morphoMarketData, portfolioData])
 
     // Switch chain
     useEffect(() => {
@@ -444,7 +496,7 @@ export default function WithdrawAndRepayActionButton({
                         (
                             lendPositionDetails.amount - collatRequiredInToken
                         ).toFixed(lendTokenDetails?.token?.decimals ?? 0),
-                        (lendTokenDetails?.token?.decimals ?? 0)
+                        lendTokenDetails?.token?.decimals ?? 0
                     ).toString()
 
                     const amountToWithdrawFluid =
@@ -455,7 +507,7 @@ export default function WithdrawAndRepayActionButton({
                         maxToWithdraw: amountToWithdraw,
                         maxToWithdrawFormatted: formatUnits(
                             amountToWithdraw,
-                            (lendTokenDetails?.token?.decimals ?? 0)
+                            lendTokenDetails?.token?.decimals ?? 0
                         ),
                         maxToWithdrawSCValue: amountToWithdrawFluid,
                         user: {},
@@ -476,7 +528,9 @@ export default function WithdrawAndRepayActionButton({
                     if (actionType !== 'repay') continue
                     const repayTokenAddress = repayToken?.address.toLowerCase()
                     const maxDebt = parseUnits(
-                        normalizeScientificNotation(repayToken?.tokenAmount?.toString() ?? '0'),
+                        normalizeScientificNotation(
+                            repayToken?.tokenAmount?.toString() ?? '0'
+                        ),
                         repayToken.decimals
                     )
                     const balance = BigNumber.from(
@@ -846,7 +900,11 @@ export default function WithdrawAndRepayActionButton({
     useEffect(() => {
         if (
             repayTx.status === 'approve' &&
-            ETH_ADDRESSES.includes(hasSingleToken ? tokenDetails[0].address : selectedTokenDetails?.address ?? '') &&
+            ETH_ADDRESSES.includes(
+                hasSingleToken
+                    ? tokenDetails[0].address
+                    : (selectedTokenDetails?.address ?? '')
+            ) &&
             isWithdrawRepayTxDialogOpen
         ) {
             setRepayTx((prev: any) => ({
@@ -867,33 +925,31 @@ export default function WithdrawAndRepayActionButton({
             !assetDetailsForTx.isVault
 
         if (isMorphoVaultsProtocol) {
-            const maxToWithdraw = (Number(tokenDetails[0]?.tokenAmount) * 0.999)
-            .toFixed(tokenDetails[0]?.decimals)
-            .toString() ?? '0'
+            const maxToWithdraw =
+                (Number(tokenDetails[0]?.tokenAmount) * 0.999)
+                    .toFixed(tokenDetails[0]?.decimals)
+                    .toString() ?? '0'
 
-            return (
-                {
-                    maxToWithdraw: maxToWithdraw,
-                    maxToWithdrawFormatted: maxToWithdraw,
-                    maxToWithdrawSCValue: '0',
-                    user: {},
-                }
-            )
+            return {
+                maxToWithdraw: maxToWithdraw,
+                maxToWithdrawFormatted: maxToWithdraw,
+                maxToWithdrawSCValue: '0',
+                user: {},
+            }
         }
 
         if (isFluidLendProtocol) {
-            const maxToWithdraw = Number(tokenDetails[0]?.tokenAmount)
-            .toFixed(tokenDetails[0]?.decimals)
-            .toString() ?? '0'
+            const maxToWithdraw =
+                Number(tokenDetails[0]?.tokenAmount)
+                    .toFixed(tokenDetails[0]?.decimals)
+                    .toString() ?? '0'
 
-            return (
-                {
-                    maxToWithdraw: maxToWithdraw,
-                    maxToWithdrawFormatted: maxToWithdraw,
-                    maxToWithdrawSCValue: '0',
-                    user: {},
-                }
-            )
+            return {
+                maxToWithdraw: maxToWithdraw,
+                maxToWithdrawFormatted: maxToWithdraw,
+                maxToWithdrawSCValue: '0',
+                user: {},
+            }
         }
 
         return (
@@ -915,9 +971,10 @@ export default function WithdrawAndRepayActionButton({
             assetDetailsForTx.protocol_type === PlatformType.MORPHO &&
             assetDetailsForTx.isVault
 
-        const maxToRepay = Number(tokenDetails[0]?.amount)
-            .toFixed(tokenDetails[0]?.decimals)
-            .toString() ?? '0'
+        const maxToRepay =
+            Number(tokenDetails[0]?.amount)
+                .toFixed(tokenDetails[0]?.decimals)
+                .toString() ?? '0'
 
         if (isMorphoVaultsProtocol) {
             return {
@@ -951,7 +1008,10 @@ export default function WithdrawAndRepayActionButton({
         : (selectedTokenDetails?.amount ?? 0)
 
     const withdrawErrorMessage = useMemo(() => {
-        if (Number(amount) > Number(maxWithdrawAmountForTx.maxToWithdrawFormatted)) {
+        if (
+            Number(amount) >
+            Number(maxWithdrawAmountForTx.maxToWithdrawFormatted)
+        ) {
             return 'You do not have enough withdraw limit'
         } else if (toManyDecimals) {
             return TOO_MANY_DECIMALS_VALIDATIONS_TEXT
@@ -976,16 +1036,28 @@ export default function WithdrawAndRepayActionButton({
 
     const disabledButton: boolean = useMemo(
         () =>
-        (isWithdrawAction ? (withdrawTx.status === 'view') : (repayTx.status === 'view')) ? false :
-            (Number(amount) >
-                Number(
-                    isWithdrawAction
-                        ? maxWithdrawAmountForTx.maxToWithdrawFormatted
-                        : maxRepayAmountForTx.maxToRepayFormatted
-                ) ||
-            Number(amount) <= 0 ||
-            toManyDecimals),
-        [amount, maxWithdrawAmountForTx, toManyDecimals, isWithdrawAction, withdrawTx.status, repayTx.status]
+            (
+                isWithdrawAction
+                    ? withdrawTx.status === 'view'
+                    : repayTx.status === 'view'
+            )
+                ? false
+                : Number(amount) >
+                      Number(
+                          isWithdrawAction
+                              ? maxWithdrawAmountForTx.maxToWithdrawFormatted
+                              : maxRepayAmountForTx.maxToRepayFormatted
+                      ) ||
+                  Number(amount) <= 0 ||
+                  toManyDecimals,
+        [
+            amount,
+            maxWithdrawAmountForTx,
+            toManyDecimals,
+            isWithdrawAction,
+            withdrawTx.status,
+            repayTx.status,
+        ]
     )
 
     const isAaveV3Protocol = platformData?.platform?.protocol_type === 'aaveV3'
@@ -1023,7 +1095,7 @@ export default function WithdrawAndRepayActionButton({
     const assetDetails = isMorphoProtocol
         ? {
               ...assetDetailsForTx,
-              vault: !vaultData ? null : vaultData,
+              vault: !morphoVault ? null : morphoVault,
               market: !morphoMarketData ? null : morphoMarketData.marketData,
           }
         : isFluidVaultsProtocol

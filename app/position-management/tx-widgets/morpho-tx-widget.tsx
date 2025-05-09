@@ -31,7 +31,7 @@ import {
 } from '@/constants'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 
-import { AccrualPosition, MarketId } from '@morpho-org/blue-sdk'
+import { AccrualPosition, MarketId, Pending, Vault } from '@morpho-org/blue-sdk'
 import {
     useHolding,
     useMarket,
@@ -45,6 +45,27 @@ import CustomAlert from '@/components/alerts/CustomAlert'
 import ExternalLink from '@/components/ExternalLink'
 import { TTxContext, useTxContext } from '@/context/tx-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { useMorphoVaultData } from '../../../hooks/protocols/useMorphoVaultData'
+import { useEthersMulticall, OptimizedMulticall } from '../../../hooks/useEthereumMulticall'
+import { MORPHO_BLUE_API_CHAINIDS } from '../../../lib/constants'
+
+// Safe wrapper for useVault to handle unsupported chains
+function useSafeVault(params: {
+    vault: `0x${string}` | undefined;
+    chainId: number;
+}) {
+    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId);
+    
+    // Only call the real hook if chain is supported and vault address exists
+    // Otherwise return undefined data with empty object structure
+    return useVault({
+        vault: isSupported && params.vault ? params.vault : '0x1111111111111111111111111111111111111111' as `0x${string}`,
+        chainId: isSupported ? params.chainId : 1, // Use mainnet as fallback for unsupported chains
+        query: {
+            enabled: isSupported && !!params.vault,
+        },
+    });
+}
 
 export default function MorphoTxWidget({
     isLoading: isLoadingPlatformData,
@@ -784,7 +805,10 @@ function MorphoVaults({
 }) {
     const searchParams = useSearchParams()
     const chain_id = searchParams.get('chain_id') || '1'
+    const { getVaultDataFromPlatformData } = useMorphoVaultData()
     const [positionType, setPositionType] = useState<TPositionType>('lend')
+    const [vaultData, setVaultData] = useState<Vault | undefined>(undefined)
+    const { multicall } = useEthersMulticall()
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
     const {
@@ -829,11 +853,37 @@ function MorphoVaults({
         }
     }, [lendTx.status, borrowTx.status, isLendBorrowTxDialogOpen])
 
-    // fetch vault data
-    const { data: vaultData } = useVault({
+    const fetchVaultData = async (multicall?: OptimizedMulticall) => {
+        return await getVaultDataFromPlatformData({
+            platformData,
+            multicall,
+        })
+    }
+
+    // Only use the Morpho hook when we're on a supported chain
+    const { data: _vaultData } = useSafeVault({
         vault: platformData?.platform?.core_contract as `0x${string}`,
         chainId: Number(chain_id),
-    })
+    });
+
+    useEffect(() => {
+        if (
+            !multicall[Number(chain_id)] ||
+            MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))
+        )
+            return
+        fetchVaultData(multicall[Number(chain_id)]).then((vaultData) => {
+            setVaultData(vaultData as Vault)
+        })
+    }, [platformData, multicall])
+
+    useEffect(() => {
+        if (MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id)) && _vaultData) {
+            setVaultData(_vaultData as Vault)
+        } else {
+            setVaultData(undefined)
+        }
+    }, [_vaultData])
 
     const vaultAssetAddress = vaultData?.asset
 
