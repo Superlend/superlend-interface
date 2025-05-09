@@ -8,13 +8,16 @@ import {
     ReservesDataHumanized as ReservesDataHumanizedLegacy,
     UserReserveDataHumanized as UserReserveDataHumanizedLegacy,
     UiPoolDataProvider as UiPoolDataProviderLegacy,
+    ReserveDataHumanized,
 } from 'aave-contract-helpers-legacy'
 import { useEthersMulticall } from '../useEthereumMulticall'
 import { useState, useEffect } from 'react'
 import { formatReserves, formatUserSummary } from '@aave/math-utils'
 import {
+    calculateHealthFactorFromBalancesBigUnits,
     formatReserves as formatReservesLegacy,
     formatUserSummary as formatUserSummaryLegacy,
+    valueToBigNumber,
 } from 'aave-math-util-legacy'
 import { formatUnits, getAddress, parseUnits } from 'ethers/lib/utils'
 import { getMaxAmountAvailableToBorrow } from '../../lib/getMaxAmountAvailableToBorrow'
@@ -25,6 +28,7 @@ import { BigNumber } from 'ethers'
 import { useAccount } from 'wagmi'
 import { useERC20Balance } from '../useERC20Balance'
 import { useUserTokenBalancesContext } from '../../context/user-token-balances-provider'
+import { etherlink } from 'viem/chains'
 
 export const useAaveV3Data = () => {
     // const activeAccount = useActiveAccount()
@@ -101,6 +105,31 @@ export const useAaveV3Data = () => {
         initializeProviders()
     }, [providers])
 
+    useEffect(() => {
+        if (providerStatus.isReady) {
+            getMaxLeverage(
+                42793,
+                '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
+                '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec'
+            ).then((results) => {
+                setMaxLeverage(results as any)
+            })
+
+            getBorrowTokenAmountForLeverage(
+                42793,
+                '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
+                '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec',
+                '0xc9B53AB2679f573e480d01e0f49e2B5CFB7a3EAb', // WXTZ
+                BigNumber.from('1').mul(BigNumber.from(10).pow(18)).toString(),
+                2.1,
+                '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9', // USDC
+                '0x0e9852b16ae49c99b84b0241e3c6f4a5692c6b05' // some random wallet address with money
+            ).then((result) => {
+                setBorrowTokenAmountForLeverage(result)
+            })
+        }
+    }, [providerStatus.isReady])
+
     const [reserveData, setReserveData] = useState<
         void | ReservesDataHumanized | ReservesDataHumanizedLegacy
     >()
@@ -115,6 +144,20 @@ export const useAaveV3Data = () => {
               userEmodeCategoryId: number
           }
     >()
+    const [maxLeverage, setMaxLeverage] = useState<Record<
+        string,
+        Record<string, number>
+    > | null>(null)
+    const [borrowTokenAmountForLeverage, setBorrowTokenAmountForLeverage] =
+        useState<{
+            amount: string
+            amountFormatted: string
+            healthFactor: string
+        }>({
+            amount: '0',
+            amountFormatted: '0',
+            healthFactor: '0',
+        })
 
     const fetchReservesData = async (
         chainId: number,
@@ -178,7 +221,8 @@ export const useAaveV3Data = () => {
     const fetchUserData = async (
         chainId: number,
         uiPoolDataProviderAddress: string,
-        lendingPoolAddressProvider: string
+        lendingPoolAddressProvider: string,
+        _walletAddress?: string
     ) => {
         if (!providerStatus.isReady || !providers || !providers[chainId]) {
             console.log('Provider not ready for fetchUserData', {
@@ -222,7 +266,7 @@ export const useAaveV3Data = () => {
                     lendingPoolAddressProvider: getAddress(
                         lendingPoolAddressProvider
                     ),
-                    user: getAddress(walletAddress),
+                    user: getAddress(_walletAddress || walletAddress),
                 })
             setUserData(result)
             return result
@@ -680,6 +724,200 @@ export const useAaveV3Data = () => {
         }
     }
 
+    const getMaxLeverage = async (
+        chainId: number,
+        uiPoolDataProviderAddress: string,
+        lendingPoolAddressProvider: string
+    ) => {
+        if (chainId !== etherlink.id) return
+
+        // TODO: Add error handling for this
+        const reservesResult = (await fetchReservesData(
+            chainId,
+            uiPoolDataProviderAddress,
+            lendingPoolAddressProvider
+        )) as ReservesDataHumanizedLegacy
+        const reserves = reservesResult.reservesData
+
+        const reservesMap: Record<string, ReserveDataHumanized> = {}
+        reserves.forEach(
+            (r) => (reservesMap[r.underlyingAsset.toLowerCase()] = r)
+        )
+
+        // Shreyas: Object: LendTokenAddress -> BorrowTokenAddress -> MaxLeverage
+        const results: Record<string, Record<string, number>> = {}
+
+        for (const reserve of reserves) {
+            results[reserve.underlyingAsset.toLowerCase()] = {}
+            for (const _reserve of reserves) {
+                if (!_reserve.borrowingEnabled) continue
+                const ltv = Number(reserve.baseLTVasCollateral) / 10000
+                const maxLeverage = 1 / (1 - ltv)
+                results[reserve.underlyingAsset.toLowerCase()][
+                    _reserve.underlyingAsset.toLowerCase()
+                ] = maxLeverage
+            }
+        }
+
+        return results
+    }
+
+    const getBorrowTokenAmountForLeverage = async (
+        chainId: number,
+        uiPoolDataProviderAddress: string,
+        lendingPoolAddressProvider: string,
+        supplyToken: string, // address
+        supplyTokenAmount: string, // amount in bignumber ie. with full precision. Eg. 1 ETH = 10^18
+        leverage: number, // leverage in number
+        borrowToken: string, // address
+        _walletAddress?: string
+    ) => {
+        try {
+            if (chainId !== etherlink.id)
+                return {
+                    amount: '0',
+                    amountFormatted: '0',
+                    healthFactor: '0',
+                } // TODO: handle this gracefully
+            const reservesData = (await fetchReservesData(
+                chainId,
+                uiPoolDataProviderAddress,
+                lendingPoolAddressProvider
+            )) as ReservesDataHumanizedLegacy
+
+            const additionalSupplyTokenAmount = BigNumber.from(
+                supplyTokenAmount
+            )
+                .mul(BigNumber.from(leverage * 100).sub(BigNumber.from(100)))
+                .div(100)
+            const flashLoanPremium = 50 // => 0.05 // TODO: get this from the protocol
+            const additionalSupplyTokenAmountToRepay =
+                additionalSupplyTokenAmount.add(
+                    additionalSupplyTokenAmount.mul(flashLoanPremium).div(10000)
+                )
+
+            const supplyTokenReserve = reservesData.reservesData.find(
+                (r) =>
+                    r.underlyingAsset.toLowerCase() ===
+                    supplyToken.toLowerCase()
+            )
+            const borrowTokenReserve = reservesData.reservesData.find(
+                (r) =>
+                    r.underlyingAsset.toLowerCase() ===
+                    borrowToken.toLowerCase()
+            )
+
+            // conver this supply token to USD using USD price of the token from reserveData
+            const supplyTokenAmountInUSD = BigNumber.from(
+                Number(
+                    formatUnits(
+                        additionalSupplyTokenAmountToRepay.mul(
+                            supplyTokenReserve?.priceInMarketReferenceCurrency.toString() ??
+                                '0'
+                        ),
+                        supplyTokenReserve?.decimals ?? 0
+                    )
+                )
+                    .toFixed(0)
+                    .toString()
+            )
+
+            // Conver this USD value to Borrow token amount + 0.05% buffer, return the borrow amount
+            const borrowTokenAmount = supplyTokenAmountInUSD
+                .mul(BigNumber.from(10).pow(borrowTokenReserve?.decimals ?? 0))
+                .div(
+                    BigNumber.from(
+                        borrowTokenReserve?.priceInMarketReferenceCurrency.toString() ??
+                            '1'
+                    )
+                )
+
+            const borrowTokenAmountFormatted = formatUnits(
+                borrowTokenAmount,
+                borrowTokenReserve?.decimals ?? 0
+            )
+
+            // --------- Calculate health factor ---------
+
+            const currentTimestamp = Math.floor(Date.now() / 1000)
+            const _userData = (await fetchUserData(
+                chainId,
+                uiPoolDataProviderAddress,
+                lendingPoolAddressProvider,
+                _walletAddress || walletAddress
+            )) as any
+            const formattedPoolReserves = formatReservesLegacy({
+                reserves: reservesData.reservesData as any,
+                currentTimestamp,
+                marketReferenceCurrencyDecimals:
+                    reservesData.baseCurrencyData
+                        .marketReferenceCurrencyDecimals,
+                marketReferencePriceInUsd:
+                    reservesData.baseCurrencyData
+                        .marketReferenceCurrencyPriceInUsd,
+            }).map((r) => ({
+                ...r,
+                isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                isWrappedBaseAsset: false,
+            }))
+
+            const baseCurrencyData = reservesData.baseCurrencyData
+            const user = formatUserSummaryLegacy({
+                currentTimestamp: currentTimestamp,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                userReserves:
+                    _userData.userReserves as UserReserveDataHumanizedLegacy[],
+                formattedReserves: formattedPoolReserves as any,
+                userEmodeCategoryId: _userData.userEmodeCategoryId,
+            })
+
+            const supplyUsdAmount = formatUnits(
+                additionalSupplyTokenAmount
+                    .add(BigNumber.from(supplyTokenAmount))
+                    .mul(
+                        BigNumber.from(
+                            supplyTokenReserve?.priceInMarketReferenceCurrency.toString() ??
+                                '0'
+                        )
+                    ),
+                (supplyTokenReserve?.decimals ?? 0) + 8
+            )
+
+            const healthFactor = calculateHealthFactorFromBalancesBigUnits({
+                collateralBalanceMarketReferenceCurrency: valueToBigNumber(
+                    user.totalCollateralUSD
+                ).plus(valueToBigNumber(supplyUsdAmount)),
+                borrowBalanceMarketReferenceCurrency: valueToBigNumber(
+                    user.totalBorrowsUSD
+                ).plus(
+                    valueToBigNumber(
+                        Number(
+                            formatUnits(supplyTokenAmountInUSD.toString(), 8)
+                        )
+                    )
+                ),
+                currentLiquidationThreshold:
+                    user.currentLiquidationThreshold ?? 0,
+            })
+
+            return {
+                amount: borrowTokenAmount.toString(),
+                amountFormatted: borrowTokenAmountFormatted,
+                healthFactor: healthFactor.toString(),
+            }
+        } catch (error) {
+            console.error('Error in getBorrowTokenAmountForLeverage', error)
+            return {
+                amount: '0',
+                amountFormatted: '0',
+                healthFactor: '0',
+            }
+        }
+    }
+
     return {
         reserveData,
         userData,
@@ -689,5 +927,9 @@ export const useAaveV3Data = () => {
         getMaxWithdrawAmount,
         getMaxRepayAmount,
         providerStatus,
+        getMaxLeverage,
+        maxLeverage,
+        getBorrowTokenAmountForLeverage,
+        borrowTokenAmountForLeverage,
     }
 }
