@@ -3,7 +3,7 @@ import { BodyText, HeadingText } from '@/components/ui/typography'
 import { Card } from '@/components/ui/card'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import Link from 'next/link'
-import { ArrowRightIcon } from 'lucide-react'
+import { ArrowRightIcon, InfoIcon } from 'lucide-react'
 
 export default function AppleFarmBanner() {
   return (
@@ -26,7 +26,8 @@ export default function AppleFarmBanner() {
             <BodyText level="body2" weight="normal" className="text-gray-600 max-w-[600px]">
               An onchain incentive platform that rewards users who provide liquidity for key token pairs, supply to lending markets, and trade on selected DeFi protocols.
             </BodyText>
-            <BodyText level="body2" weight="normal" className="text-gray-600 max-w-[600px]">
+            <BodyText level="body2" weight="normal" className="text-gray-600 flex items-center gap-1 max-w-[600px]">
+              <InfoIcon className="w-4 h-4 text-secondary-500 -ml-0.5" />
               Note: Direct looping strategies are not eligible for Apple rewards.
             </BodyText>
             <div className="flex items-center gap-2 text-emerald-600 font-medium mt-1">
