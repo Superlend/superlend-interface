@@ -1,4 +1,3 @@
-// import { useActiveAccount } from 'thirdweb/react'
 import {
     ReservesDataHumanized,
     UiPoolDataProvider,
@@ -26,13 +25,10 @@ import { erc20Abi } from 'viem'
 import { Contract } from 'ethers'
 import { BigNumber } from 'ethers'
 import { useAccount } from 'wagmi'
-import { useERC20Balance } from '../useERC20Balance'
 import { useUserTokenBalancesContext } from '../../context/user-token-balances-provider'
 import { etherlink } from 'viem/chains'
 
 export const useAaveV3Data = () => {
-    // const activeAccount = useActiveAccount()
-    // const walletAddress = activeAccount?.address
     const { address: walletAddress } = useAccount()
     const { providers } = useEthersMulticall()
     const [providerStatus, setProviderStatus] = useState({
@@ -40,6 +36,34 @@ export const useAaveV3Data = () => {
         isInitializing: true,
         error: null as string | null,
     })
+    const [reserveData, setReserveData] = useState<
+        void | ReservesDataHumanized | ReservesDataHumanizedLegacy
+    >()
+    const [userData, setUserData] = useState<
+        | void
+        | {
+              userReserves: UserReserveDataHumanized[]
+              userEmodeCategoryId: number
+          }
+        | {
+              userReserves: UserReserveDataHumanizedLegacy[]
+              userEmodeCategoryId: number
+          }
+    >()
+    const [maxLeverage, setMaxLeverage] = useState<Record<
+        string,
+        Record<string, number>
+    > | null>(null)
+    const [borrowTokenAmountForLeverage, setBorrowTokenAmountForLeverage] =
+        useState<{
+            amount: string
+            amountFormatted: string
+            healthFactor: string
+        }>({
+            amount: '0',
+            amountFormatted: '0',
+            healthFactor: '0',
+        })
     const {
         erc20TokensBalanceData,
         isLoading: isLoadingErc20TokensBalanceData,
@@ -105,59 +129,30 @@ export const useAaveV3Data = () => {
         initializeProviders()
     }, [providers])
 
-    useEffect(() => {
-        if (providerStatus.isReady) {
-            getMaxLeverage(
-                42793,
-                '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
-                '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec'
-            ).then((results) => {
-                setMaxLeverage(results as any)
-            })
+    // useEffect(() => {
+    //     if (providerStatus.isReady) {
+    //         getMaxLeverage(
+    //             42793,
+    //             '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
+    //             '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec'
+    //         ).then((results) => {
+    //             setMaxLeverage(results as any)
+    //         })
 
-            getBorrowTokenAmountForLeverage(
-                42793,
-                '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
-                '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec',
-                '0xc9B53AB2679f573e480d01e0f49e2B5CFB7a3EAb', // WXTZ
-                BigNumber.from('1').mul(BigNumber.from(10).pow(18)).toString(),
-                2.1,
-                '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9', // USDC
-                '0x0e9852b16ae49c99b84b0241e3c6f4a5692c6b05' // some random wallet address with money
-            ).then((result) => {
-                setBorrowTokenAmountForLeverage(result)
-            })
-        }
-    }, [providerStatus.isReady])
-
-    const [reserveData, setReserveData] = useState<
-        void | ReservesDataHumanized | ReservesDataHumanizedLegacy
-    >()
-    const [userData, setUserData] = useState<
-        | void
-        | {
-              userReserves: UserReserveDataHumanized[]
-              userEmodeCategoryId: number
-          }
-        | {
-              userReserves: UserReserveDataHumanizedLegacy[]
-              userEmodeCategoryId: number
-          }
-    >()
-    const [maxLeverage, setMaxLeverage] = useState<Record<
-        string,
-        Record<string, number>
-    > | null>(null)
-    const [borrowTokenAmountForLeverage, setBorrowTokenAmountForLeverage] =
-        useState<{
-            amount: string
-            amountFormatted: string
-            healthFactor: string
-        }>({
-            amount: '0',
-            amountFormatted: '0',
-            healthFactor: '0',
-        })
+    //         getBorrowTokenAmountForLeverage(
+    //             42793,
+    //             '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
+    //             '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec',
+    //             '0xc9B53AB2679f573e480d01e0f49e2B5CFB7a3EAb', // WXTZ
+    //             BigNumber.from('1').mul(BigNumber.from(10).pow(18)).toString(),
+    //             2.1,
+    //             '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9', // USDC
+    //             '0x0e9852b16ae49c99b84b0241e3c6f4a5692c6b05' // some random wallet address with money
+    //         ).then((result) => {
+    //             setBorrowTokenAmountForLeverage(result)
+    //         })
+    //     }
+    // }, [providerStatus.isReady])
 
     const fetchReservesData = async (
         chainId: number,

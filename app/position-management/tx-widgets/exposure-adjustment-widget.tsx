@@ -6,7 +6,6 @@ import { useTxContext } from '@/context/tx-provider'
 import { TTxContext } from '@/context/tx-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { useDiscordDialog } from '@/hooks/useDiscordDialog'
-import { PortfolioContext } from '@/context/portfolio-provider'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import {
@@ -40,10 +39,9 @@ import {
     handleSmallestValue,
 } from '@/components/dialogs/TxDialog'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
-import useGetPlatformData from '@/hooks/useGetPlatformData'
-import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 import { useAaveV3Data } from '../../../hooks/protocols/useAaveV3Data'
+import { BigNumber } from 'ethers'
 
 // Define token type
 interface Token {
@@ -66,7 +64,6 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
     platformData,
     portfolioData,
 }) => {
-    const { portfolioData: portfolioContextData } = useContext(PortfolioContext)
     const searchParams = useSearchParams()
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
@@ -82,18 +79,40 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
     const { lendTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } =
         useTxContext() as TTxContext
 
-    const [availableTokens, setAvailableTokens] = useState<Token[]>([])
+    const [availableLongTokens, setAvailableLongTokens] = useState<Token[]>([])
+    const [availableShortTokens, setAvailableShortTokens] = useState<Token[]>([])
     const [selectedLongToken, setSelectedLongToken] = useState<Token>(
-        availableTokens[0]
+        availableLongTokens[0]
     )
     const [selectedShortToken, setSelectedShortToken] = useState<Token>(
-        availableTokens[0]
+        availableShortTokens[0]
     )
     const [longAmount, setLongAmount] = useState<string>('')
     const [shortAmount, setShortAmount] = useState<string>('0.00')
     const [leverage, setLeverage] = useState<number>(1)
     const [healthFactor, setHealthFactor] = useState<number>(0)
-    const { borrowTokenAmountForLeverage } = useAaveV3Data()
+    const {
+        getMaxLeverage,
+        getBorrowTokenAmountForLeverage,
+        providerStatus,
+    } = useAaveV3Data()
+    const [maxLeverage, setMaxLeverage] = useState<Record<
+        string,
+        Record<string, number>
+    > | null>(null)
+    // console.log('selectedLongToken', selectedLongToken)
+    // console.log('selectedShortToken', selectedShortToken)
+    // console.log('maxLeverage', maxLeverage?.[selectedLongToken?.address]?.[selectedShortToken?.address])
+    const [borrowTokenAmountForLeverage, setBorrowTokenAmountForLeverage] =
+        useState<{
+            amount: string
+            amountFormatted: string
+            healthFactor: string
+        }>({
+            amount: '0',
+            amountFormatted: '0',
+            healthFactor: '0',
+        })
 
     // Token balances
     const {
@@ -104,99 +123,63 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
     // Setup tokens when platform data is available
     useEffect(() => {
         if (platformData?.assets?.length > 0) {
-            const tokens = platformData.assets.map((asset: any) => asset.token)
-            setAvailableTokens(tokens)
-            // Select the first token by default or the one from URL
-            const defaultToken =
-                tokens.find(
+            const longTokens = platformData.assets.filter((asset: any) => !asset.borrow_enabled).map((asset: any) => asset.token)
+            const shortTokens = platformData.assets.filter((asset: any) => asset.borrow_enabled).map((asset: any) => asset.token)
+            // Select the first token by default
+            const defaultLongToken =
+                longTokens.find(
                     (token: Token) =>
                         token.address.toLowerCase() ===
                         tokenAddress.toLowerCase()
-                ) || tokens[0]
+                ) || longTokens[0]
 
-            setSelectedLongToken(defaultToken)
-            setSelectedShortToken(defaultToken)
+            const defaultShortToken =
+                shortTokens.find(
+                    (token: Token) =>
+                        token.address.toLowerCase() ===
+                        tokenAddress.toLowerCase()
+                ) || shortTokens[0]
+
+            setAvailableLongTokens(longTokens)
+            setAvailableShortTokens(shortTokens)
+            setSelectedLongToken(defaultLongToken)
+            setSelectedShortToken(defaultShortToken)
         }
     }, [platformData, tokenAddress])
-    console.log('borrowTokenAmountForLeverage ', borrowTokenAmountForLeverage)
-    // Add mock tokens if no tokens are available from platformData
-    // useEffect(() => {
-    //     if (!availableTokens.length) {
-    //         const mockTokens: Token[] = [
-    //             {
-    //                 address: '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39',
-    //                 symbol: 'XTZ',
-    //                 logo: 'https://cryptologos.cc/logos/tezos-xtz-logo.png',
-    //                 name: 'Tezos',
-    //                 decimals: 18,
-    //                 price_usd: 1.05
-    //             },
-    //             {
-    //                 address: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
-    //                 symbol: 'BTC',
-    //                 logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
-    //                 name: 'Bitcoin',
-    //                 decimals: 8,
-    //                 price_usd: 68250.43
-    //             },
-    //             {
-    //                 address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    //                 symbol: 'ETH',
-    //                 logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
-    //                 name: 'Ethereum',
-    //                 decimals: 18,
-    //                 price_usd: 3468.92
-    //             },
-    //             {
-    //                 address: '0x7dff46370e9ea5f0bad3c4e29711ad50062ea7a4',
-    //                 symbol: 'SOL',
-    //                 logo: 'https://cryptologos.cc/logos/solana-sol-logo.png',
-    //                 name: 'Solana',
-    //                 decimals: 9,
-    //                 price_usd: 145.78
-    //             },
-    //             {
-    //                 address: '0x7083609fce4d1d8dc0c979aab8c869ea2c873402',
-    //                 symbol: 'DOT',
-    //                 logo: 'https://cryptologos.cc/logos/polkadot-new-dot-logo.png',
-    //                 name: 'Polkadot',
-    //                 decimals: 10,
-    //                 price_usd: 6.23
-    //             },
-    //             {
-    //                 address: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
-    //                 symbol: 'UNI',
-    //                 logo: 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
-    //                 name: 'Uniswap',
-    //                 decimals: 18,
-    //                 price_usd: 10.57
-    //             },
-    //             {
-    //                 address: '0x514910771af9ca656af840dff83e8264ecf986ca',
-    //                 symbol: 'LINK',
-    //                 logo: 'https://cryptologos.cc/logos/chainlink-link-logo.png',
-    //                 name: 'Chainlink',
-    //                 decimals: 18,
-    //                 price_usd: 15.89
-    //             }
-    //         ];
-
-    //         setAvailableTokens(mockTokens);
-    //         setSelectedLongToken(mockTokens[0]); // Set XTZ as default
-    //     }
-    // }, [availableTokens.length]);
 
     // Calculate health factor whenever long amount or leverage changes
+    // useEffect(() => {
+    //     if (selectedLongToken && longAmount && Number(longAmount) > 0) {
+    //         setHealthFactor(Math.max(0.5, Math.min(10, 0)))
+    //     } else {
+    //         setHealthFactor(0)
+    //     }
+    // }, [selectedLongToken, longAmount, leverage])
+
     useEffect(() => {
-        if (selectedLongToken && longAmount && Number(longAmount) > 0) {
-            // This is a simplified calculation - in a real app, you'd use a more complex formula
-            // based on actual protocol risk parameters
-            const calculatedHF = 10 / ((Number(longAmount) * leverage) / 100)
-            setHealthFactor(Math.max(0.5, Math.min(10, calculatedHF)))
-        } else {
-            setHealthFactor(0)
+        if (providerStatus.isReady) {
+            getMaxLeverage(
+                42793,
+                '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
+                '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec'
+            ).then((results) => {
+                setMaxLeverage(results as any)
+            })
+
+            getBorrowTokenAmountForLeverage(
+                42793,
+                '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
+                '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec',
+                '0xc9B53AB2679f573e480d01e0f49e2B5CFB7a3EAb', // WXTZ
+                BigNumber.from('1').mul(BigNumber.from(10).pow(18)).toString(),
+                2.1,
+                '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9', // USDC
+                '0x0e9852b16ae49c99b84b0241e3c6f4a5692c6b05' // some random wallet address with money
+            ).then((result) => {
+                setBorrowTokenAmountForLeverage(result)
+            })
         }
-    }, [selectedLongToken, longAmount, leverage])
+    }, [providerStatus.isReady])
 
     // Get balance for selected token
     const getTokenBalance = (token: Token | null) => {
@@ -283,8 +266,8 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                                         selectedLongTokenBalance,
                                         selectedLongToken
                                             ? getMaxDecimalsToDisplay(
-                                                  selectedLongToken.symbol
-                                              )
+                                                selectedLongToken.symbol
+                                            )
                                             : 2
                                     )
                                 )}
@@ -295,7 +278,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             {/* Token Dropdown */}
                             <TokenSelector
                                 selectedToken={selectedLongToken}
-                                availableTokens={availableTokens}
+                                availableTokens={availableLongTokens}
                                 handleTokenSelect={handleLongTokenSelect}
                             />
 
@@ -352,8 +335,8 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                                         selectedShortTokenBalance,
                                         selectedShortToken
                                             ? getMaxDecimalsToDisplay(
-                                                  selectedShortToken.symbol
-                                              )
+                                                selectedShortToken.symbol
+                                            )
                                             : 2
                                     )
                                 )}
@@ -381,7 +364,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             {/* Token Selector */}
                             <TokenSelector
                                 selectedToken={selectedShortToken}
-                                availableTokens={availableTokens}
+                                availableTokens={availableShortTokens}
                                 handleTokenSelect={handleShortTokenSelect}
                             />
 
@@ -416,7 +399,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             <Slider
                                 value={[leverage]}
                                 min={1}
-                                max={10}
+                                max={maxLeverage?.[selectedLongToken?.address]?.maxLeverage || 10}
                                 step={0.1}
                                 onValueChange={(values) =>
                                     setLeverage(values[0])
@@ -598,7 +581,7 @@ function TokenSelector({
                             className={cn(
                                 'flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4',
                                 selectedToken?.address === token.address &&
-                                    'bg-gray-400'
+                                'bg-gray-400'
                             )}
                         >
                             <ImageWithDefault
