@@ -76,6 +76,7 @@ const privyConfig = {
         loginMessage: 'Select wallet to continue',
         showWalletLoginFirst: true,
         walletList: [
+            'detected_ethereum_wallets',
             'binance',
             'metamask',
             'coinbase_wallet',
