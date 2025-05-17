@@ -27,23 +27,23 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
         });
     const { data: xtzOpportunityData, isLoading: isLoadingXTZOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0x898a135c2bceffdae7618b1e2266108d154dfeab75a373b3eb3641ca31647e6a', // xtz
+            campaignId: '0x2bd98414a5af5dae4a8370a2d59869ce4c1b204a9bd4236d3007617f93625303', // xtz
         });
     const { data: usdcOpportunityData, isLoading: isLoadingUSDCOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0x1bd8c05ef0d7b581826288a6b28a33eee2d95caa68c7f4b23dc7c5f32704b8ad', // usdc
+            campaignId: '0xb41a8ffef4c790d0f25c55a15f29b81b2c9fff9c07fd4999854ccb7fb3301d6b', // usdc
         });
     const { data: wbtcOpportunityData, isLoading: isLoadingWBTCCOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0xc85b1c610c3ae5058cc69e04d87239c2af3cefb0c2fbdfcccffa5fb23d9f1cd7', // wbtc
+            campaignId: '0x3e262731bc9ef328fd1222b1164ff27f4fa46c02dde254257e0ae1164ebe1acd', // wbtc
         });
     const { data: usdtOpportunityData, isLoading: isLoadingUSDTCOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0x691135dbaf8ce8bcc7aace2468be9b499834308362e1194a4246014ff74163a1', // usdt
+            campaignId: '0x4dd6b7595b1612465e25a8a5ec8ce7c9750f5211f0ebe120ffad71ada8a9b3e9', // usdt
         });
     const { data: wethOpportunityData, isLoading: isLoadingWETHOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0x03457302c5da09f3415010aa5be76e6533dc016ce80ba641f8151e13fc0e5a21', // weth
+            campaignId: '0x5571b243f36c4320559aaf8c61e116d8271060b8db28cb90871c5ec8ed665ab0', // weth
         });
 
     const isLoading =

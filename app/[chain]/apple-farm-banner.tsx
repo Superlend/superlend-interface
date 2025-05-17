@@ -3,7 +3,7 @@ import { BodyText, HeadingText } from '@/components/ui/typography'
 import { Card } from '@/components/ui/card'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import Link from 'next/link'
-import { ArrowRightIcon } from 'lucide-react'
+import { ArrowRightIcon, InfoIcon } from 'lucide-react'
 
 export default function AppleFarmBanner() {
   return (
@@ -23,21 +23,25 @@ export default function AppleFarmBanner() {
                 Apple Farm is Live on Etherlink!
               </HeadingText>
             </div>
-            <BodyText level="body2" className="text-gray-600 max-w-[600px]">
+            <BodyText level="body2" weight="normal" className="text-gray-600 max-w-[600px]">
               An onchain incentive platform that rewards users who provide liquidity for key token pairs, supply to lending markets, and trade on selected DeFi protocols.
+            </BodyText>
+            <BodyText level="body2" weight="normal" className="text-gray-600 flex items-center gap-1 max-w-[600px]">
+              <InfoIcon className="w-4 h-4 text-secondary-500 -ml-0.5" />
+              Note: Direct looping strategies are not eligible for Apple rewards.
             </BodyText>
             <div className="flex items-center gap-2 text-emerald-600 font-medium mt-1">
               Season One Rewards: $3,000,000
               <ArrowRightIcon className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </div>
           </div>
-          
+
           <ImageWithDefault
             src="https://www.etherlink.com/logo-desktop.svg"
             alt="Etherlink"
             width={200}
             height={60}
-            className="md:block hidden object-contain opacity-75 absolute right-8 top-1/2 -translate-y-1/2 brightness-125"
+            className="md:block hidden object-contain absolute right-8 top-1/2 -translate-y-1/2 brightness-125"
           />
         </div>
       </Card>
