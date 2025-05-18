@@ -826,7 +826,7 @@ export default function AaveV3TxWidget({
                                 positionType={positionType}
                                 assetDetails={
                                     isLendPositionType(positionType)
-                                        ? assetDetailsForLendBorrowTx
+                                        ? assetDetails
                                         : selectedBorrowTokenDetailsFormatted
                                 }
                                 amount={amount}
