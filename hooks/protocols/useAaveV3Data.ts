@@ -719,11 +719,15 @@ export const useAaveV3Data = () => {
         }
     }
 
-    const getMaxLeverage = async (
-        chainId: number,
-        uiPoolDataProviderAddress: string,
+    const getMaxLeverage = async ({
+        chainId,
+        uiPoolDataProviderAddress,
+        lendingPoolAddressProvider,
+    }: {
+        chainId: number
+        uiPoolDataProviderAddress: string
         lendingPoolAddressProvider: string
-    ) => {
+    }) => {
         if (chainId !== etherlink.id) return
 
         // TODO: Add error handling for this
@@ -757,7 +761,16 @@ export const useAaveV3Data = () => {
         return results
     }
 
-    const getBorrowTokenAmountForLeverage = async (
+    const getBorrowTokenAmountForLeverage = async ({
+        chainId,
+        uiPoolDataProviderAddress,
+        lendingPoolAddressProvider,
+        supplyToken,
+        supplyTokenAmount,
+        leverage,
+        borrowToken,
+        _walletAddress
+    } : {
         chainId: number,
         uiPoolDataProviderAddress: string,
         lendingPoolAddressProvider: string,
@@ -766,7 +779,7 @@ export const useAaveV3Data = () => {
         leverage: number, // leverage in number
         borrowToken: string, // address
         _walletAddress?: string
-    ) => {
+    }) => {
         try {
             if (chainId !== etherlink.id)
                 return {

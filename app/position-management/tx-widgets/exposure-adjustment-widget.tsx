@@ -42,6 +42,7 @@ import ConnectWalletButton from '@/components/ConnectWalletButton'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 import { useAaveV3Data } from '../../../hooks/protocols/useAaveV3Data'
 import { BigNumber } from 'ethers'
+import { ChainId } from '@/types/chain'
 
 // Define token type
 interface Token {
@@ -100,9 +101,6 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
         string,
         Record<string, number>
     > | null>(null)
-    // console.log('selectedLongToken', selectedLongToken)
-    // console.log('selectedShortToken', selectedShortToken)
-    // console.log('maxLeverage', maxLeverage?.[selectedLongToken?.address]?.[selectedShortToken?.address])
     const [borrowTokenAmountForLeverage, setBorrowTokenAmountForLeverage] =
         useState<{
             amount: string
@@ -158,28 +156,37 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
 
     useEffect(() => {
         if (providerStatus.isReady) {
-            getMaxLeverage(
-                42793,
-                '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
-                '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec'
-            ).then((results) => {
+            getMaxLeverage({
+                chainId: ChainId.Etherlink,
+                uiPoolDataProviderAddress: '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
+                lendingPoolAddressProvider: '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec',
+            }).then((results) => {
                 setMaxLeverage(results as any)
             })
 
-            getBorrowTokenAmountForLeverage(
-                42793,
-                '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
-                '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec',
-                '0xc9B53AB2679f573e480d01e0f49e2B5CFB7a3EAb', // WXTZ
-                BigNumber.from('1').mul(BigNumber.from(10).pow(18)).toString(),
-                2.1,
-                '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9', // USDC
-                '0x0e9852b16ae49c99b84b0241e3c6f4a5692c6b05' // some random wallet address with money
-            ).then((result) => {
+            getBorrowTokenAmountForLeverage({
+                chainId: ChainId.Etherlink,
+                uiPoolDataProviderAddress: '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
+                lendingPoolAddressProvider: '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec',
+                supplyToken: '0xc9B53AB2679f573e480d01e0f49e2B5CFB7a3EAb', // WXTZ
+                supplyTokenAmount: BigNumber.from('1').mul(BigNumber.from(10).pow(18)).toString(),
+                leverage: leverage,
+                borrowToken: '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9', // USDC
+                _walletAddress: '0x0e9852b16ae49c99b84b0241e3c6f4a5692c6b05' // some random wallet address with money
+            }).then((result) => {
                 setBorrowTokenAmountForLeverage(result)
+                setHealthFactor(Number(result?.healthFactor ?? 0))
+                setShortAmount(result.amountFormatted)
             })
         }
     }, [providerStatus.isReady])
+
+    // console.log('selectedLongToken', selectedLongToken)
+    // console.log('selectedLongTokenAmount', longAmount)
+    // console.log('selectedShortToken', selectedShortToken)
+    // console.log('selectedShortTokenAmount', shortAmount)
+    // console.log('maxLeverage', maxLeverage?.[selectedLongToken?.address]?.[selectedShortToken?.address])
+    // console.log('Health Factor', healthFactor)
 
     // Get balance for selected token
     const getTokenBalance = (token: Token | null) => {
@@ -380,7 +387,10 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                                 <BodyText
                                     level="custom"
                                     weight="medium"
-                                    className="text-gray-400 text-[24px]"
+                                    className={cn(
+                                        'text-[24px] cursor-not-allowed hover:text-gray-500 select-none',
+                                        shortAmount === '0.00' ? 'text-gray-500' : 'text-gray-800'
+                                    )}
                                 >
                                     {shortAmount}
                                 </BodyText>
@@ -399,12 +409,12 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                             <Slider
                                 value={[leverage]}
                                 min={1}
-                                max={maxLeverage?.[selectedLongToken?.address]?.maxLeverage || 10}
+                                max={Number(abbreviateNumber(maxLeverage?.[selectedLongToken?.address]?.[selectedShortToken?.address] ?? 1, 1)) || 1}
                                 step={0.1}
                                 onValueChange={(values) =>
                                     setLeverage(values[0])
                                 }
-                                disabled={!isWalletConnected}
+                                disabled={!isWalletConnected || Number(longAmount) <= 0 || (maxLeverage?.[selectedLongToken?.address]?.[selectedShortToken?.address] ?? 0) <= 1}
                             />
                             <div className="flex justify-between mt-3">
                                 <BodyText
@@ -419,7 +429,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                                     weight="normal"
                                     className="text-gray-600"
                                 >
-                                    10x
+                                    {abbreviateNumber(maxLeverage?.[selectedLongToken?.address]?.[selectedShortToken?.address] ?? 1, 1)}x
                                 </BodyText>
                             </div>
                         </div>
