@@ -11,7 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { TPlatform, TPositionType } from '@/types'
+import { TAssetDetails, TPlatform, TPositionType } from '@/types'
 import { PlatformType, TPlatformAsset } from '@/types/platform'
 import { LoaderCircle, X } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
@@ -374,7 +374,7 @@ export default function AaveV3TxWidget({
                 amount: null,
             },
             ...platformData?.platform,
-        }
+        } as TAssetDetails
     }
 
     function formatSelectedBorrowTokenDetails(tokenAddress: string) {
@@ -388,7 +388,7 @@ export default function AaveV3TxWidget({
                 amount: null,
             },
             ...platformData?.platform,
-        }
+        } as TAssetDetails
     }
 
     const assetDetails: any = getFormattedAssetDetails(tokenAddress)

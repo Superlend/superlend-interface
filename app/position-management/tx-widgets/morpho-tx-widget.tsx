@@ -11,7 +11,7 @@ import {
     cn,
     getLowestDisplayValue,
 } from '@/lib/utils'
-import { TPlatform, TPositionType } from '@/types'
+import { TAssetDetails, TPlatform, TPositionType } from '@/types'
 import { PlatformType, TPlatformAsset } from '@/types/platform'
 import { LoaderCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
@@ -764,7 +764,7 @@ function MorphoMarkets({
                                         platformData?.platform?.protocol_type,
                                     morphoMarketData: morphoMarketData,
                                     chain_id: Number(chain_id),
-                                }}
+                                } as unknown as TAssetDetails}
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount
@@ -1081,7 +1081,7 @@ function MorphoVaults({
                                     morphoMarketData: vaultData,
                                     chain_id: Number(chain_id),
                                     isVault: true,
-                                }}
+                                } as unknown as TAssetDetails}
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount
