@@ -11,7 +11,7 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 import AaveV3TxWidget from './aave-tx-widget'
 import MorphoTxWidget from './morpho-tx-widget'
 import FluidTxWidget from './fluid-tx-widget'
-import ExposureAdjustmentWidget from './exposure-adjustment-widget'
+import LoopingWidget from './looping-widget'
 import { ChainId } from '@/types/chain'
 import { useTxContext } from '@/context/tx-provider'
 import { TTxContext } from '@/context/tx-provider'
@@ -150,7 +150,7 @@ const WidgetContainer: FC<{ children: React.ReactNode, isLoading: boolean, platf
     return (
         <div className="flex flex-col gap-4">
             {children}
-            <ExposureAdjustmentWidget
+            <LoopingWidget
                 isLoading={isLoading}
                 platformData={platformData}
                 portfolioData={portfolioData}

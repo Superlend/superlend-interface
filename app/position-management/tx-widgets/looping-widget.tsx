@@ -43,24 +43,15 @@ import { useUserTokenBalancesContext } from '@/context/user-token-balances-provi
 import { useAaveV3Data } from '../../../hooks/protocols/useAaveV3Data'
 import { BigNumber } from 'ethers'
 import { ChainId } from '@/types/chain'
+import { TToken } from '@/types'
 
-// Define token type
-interface Token {
-    address: string
-    symbol: string
-    logo: string
-    name: string
-    decimals: number
-    price_usd: number
-}
-
-interface ExposureAdjustmentWidgetProps {
+interface LoopingWidgetProps {
     isLoading?: boolean
     platformData?: any
     portfolioData?: any
 }
 
-const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
+const LoopingWidget: FC<LoopingWidgetProps> = ({
     isLoading = false,
     platformData,
     portfolioData,
@@ -69,6 +60,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
     const tokenAddress = searchParams.get('token') || ''
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
+    const [isLoopTxDialogOpen, setIsLoopTxDialogOpen] = useState(false)
 
     const {
         walletAddress,
@@ -77,15 +69,15 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
         isConnectingWallet,
     } = useWalletConnection()
 
-    const { lendTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } =
-        useTxContext() as TTxContext
+    // const { lendTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } =
+    //     useTxContext() as TTxContext
 
-    const [availableLongTokens, setAvailableLongTokens] = useState<Token[]>([])
-    const [availableShortTokens, setAvailableShortTokens] = useState<Token[]>([])
-    const [selectedLongToken, setSelectedLongToken] = useState<Token>(
+    const [availableLongTokens, setAvailableLongTokens] = useState<TToken[]>([])
+    const [availableShortTokens, setAvailableShortTokens] = useState<TToken[]>([])
+    const [selectedLongToken, setSelectedLongToken] = useState<TToken>(
         availableLongTokens[0]
     )
-    const [selectedShortToken, setSelectedShortToken] = useState<Token>(
+    const [selectedShortToken, setSelectedShortToken] = useState<TToken>(
         availableShortTokens[0]
     )
     const [longAmount, setLongAmount] = useState<string>('')
@@ -126,14 +118,14 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
             // Select the first token by default
             const defaultLongToken =
                 longTokens.find(
-                    (token: Token) =>
+                    (token: TToken) =>
                         token.address.toLowerCase() ===
                         tokenAddress.toLowerCase()
                 ) || longTokens[0]
 
             const defaultShortToken =
                 shortTokens.find(
-                    (token: Token) =>
+                    (token: TToken) =>
                         token.address.toLowerCase() ===
                         tokenAddress.toLowerCase()
                 ) || shortTokens[0]
@@ -189,7 +181,7 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
     // console.log('Health Factor', healthFactor)
 
     // Get balance for selected token
-    const getTokenBalance = (token: Token | null) => {
+    const getTokenBalance = (token: TToken | null) => {
         if (!token || !isWalletConnected) return '0'
 
         return (
@@ -223,19 +215,14 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
         }
     }
 
-    const handleLongTokenSelect = (token: Token) => {
+    const handleLongTokenSelect = (token: TToken) => {
         setSelectedLongToken(token)
         setLongAmount('')
     }
 
-    const handleShortTokenSelect = (token: Token) => {
+    const handleShortTokenSelect = (token: TToken) => {
         setSelectedShortToken(token)
         setShortAmount('0.00')
-    }
-
-    // Handle adjust exposure button click
-    const handleAdjustExposure = () => {
-        setIsLendBorrowTxDialogOpen(true)
     }
 
     // Check if button should be disabled
@@ -246,8 +233,9 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
         Number(longAmount) <= 0 ||
         Number(longAmount) > Number(selectedLongTokenBalance)
 
+    // looping-widget
     return (
-        <section className="exposure-adjustment-widget flex flex-col gap-3">
+        <section className="looping-widget flex flex-col gap-3">
             <Card className="flex flex-col gap-3 p-4">
                 <CardHeader className="p-0 pl-3">
                     <CardTitle className="text-lg font-medium text-gray-800">
@@ -500,48 +488,49 @@ const ExposureAdjustmentWidget: FC<ExposureAdjustmentWidgetProps> = ({
                     {!isWalletConnected ? (
                         <ConnectWalletButton />
                     ) : (
-                        <Button
-                            onClick={handleAdjustExposure}
-                            disabled={isButtonDisabled}
-                            variant="primary"
-                            className="w-full py-3 rounded-4"
-                        >
-                            Adjust Exposure
-                        </Button>
+                        <ConfirmationDialog
+                            disabled={!isButtonDisabled}
+                            positionType="loop"
+                            loopAssetDetails={{
+                                supplyAsset: {
+                                    token: selectedLongToken,
+                                    borrow_enabled: false,
+                                    ltv: 0,
+                                    remaining_borrow_cap: 0,
+                                    remaining_supply_cap: 0,
+                                    stable_borrow_apy: 0,
+                                    supply_apy: 0,
+                                    variable_borrow_apy: 0,
+                                },
+                                borrowAsset: {
+                                    token: selectedShortToken,
+                                    borrow_enabled: true,
+                                    ltv: 0,
+                                    remaining_borrow_cap: 0,
+                                    remaining_supply_cap: 0,
+                                },
+                                ...platformData?.platform
+                            }}
+                            amount={longAmount}
+                            balance={selectedLongTokenBalance}
+                            maxBorrowAmount={{
+                                maxToBorrow: '0',
+                                maxToBorrowFormatted: '0',
+                                maxToBorrowSCValue: '0',
+                                user: {},
+                            }}
+                            setAmount={setLongAmount}
+                            healthFactorValues={{
+                                healthFactor: 0,
+                                newHealthFactor: healthFactor,
+                            }}
+                            open={isLoopTxDialogOpen}
+                            setOpen={setIsLoopTxDialogOpen}
+                            leverage={leverage}
+                        />
                     )}
                 </CardFooter>
             </Card>
-
-            {/* Confirmation Dialog */}
-            {/* {selectedLongToken && (
-                <ConfirmationDialog
-                    disabled={isButtonDisabled}
-                    positionType="lend"
-                    assetDetails={{
-                        asset: {
-                            token: selectedLongToken,
-                        },
-                        protocol_type: platformData?.platform?.protocol_type,
-                        name: platformData?.platform?.name,
-                        chain_id: chain_id,
-                    }}
-                    amount={longAmount}
-                    balance={selectedTokenBalance}
-                    maxBorrowAmount={{
-                        maxToBorrow: '0',
-                        maxToBorrowFormatted: '0',
-                        maxToBorrowSCValue: '0',
-                        user: {},
-                    }}
-                    setAmount={setLongAmount}
-                    healthFactorValues={{
-                        healthFactor: healthFactor,
-                        newHealthFactor: healthFactor,
-                    }}
-                    open={isLendBorrowTxDialogOpen}
-                    setOpen={setIsLendBorrowTxDialogOpen}
-                />
-            )} */}
         </section>
     )
 }
@@ -551,9 +540,9 @@ function TokenSelector({
     availableTokens,
     handleTokenSelect,
 }: {
-    selectedToken: Token
-    availableTokens: Token[]
-    handleTokenSelect: (token: Token) => void
+    selectedToken: TToken
+    availableTokens: TToken[]
+    handleTokenSelect: (token: TToken) => void
 }) {
     return (
         <DropdownMenu>
@@ -584,7 +573,7 @@ function TokenSelector({
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-0 rounded-[16px] border-none bg-white bg-opacity-40 backdrop-blur-md overflow-hidden">
                 <div className="h-full max-h-[200px] overflow-y-auto">
-                    {availableTokens.map((token: Token) => (
+                    {availableTokens.map((token: TToken) => (
                         <DropdownMenuItem
                             key={token.address}
                             onClick={() => handleTokenSelect(token)}
@@ -616,4 +605,4 @@ function TokenSelector({
     )
 }
 
-export default ExposureAdjustmentWidget
+export default LoopingWidget

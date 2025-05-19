@@ -2,24 +2,20 @@
 
 import ImageWithDefault from '@/components/ImageWithDefault'
 import { Button } from '@/components/ui/button'
-import { TPositionType } from '@/types'
-import { PlatformType, PlatformTypeMap } from '@/types/platform'
+import { TPositionType, TAssetDetails, TChain } from '@/types'
+import { PlatformType } from '@/types/platform'
 import {
     ArrowRightIcon,
     ArrowUpRightIcon,
     Check,
-    CircleCheck,
     CircleCheckIcon,
     CircleXIcon,
     InfinityIcon,
-    Loader,
     LoaderCircle,
-    TrophyIcon,
     X,
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useMemo, useState, useEffect, useContext } from 'react'
-import { useSwitchChain } from 'wagmi'
 import {
     abbreviateNumber,
     capitalizeText,
@@ -46,6 +42,7 @@ import {
     TTxContext,
     useTxContext,
     TBorrowTx,
+    TLoopTx,
 } from '@/context/tx-provider'
 import { BigNumber } from 'ethers'
 import CustomAlert from '@/components/alerts/CustomAlert'
@@ -73,11 +70,17 @@ import { parseUnits } from 'ethers/lib/utils'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
 
+type TLoopAssetDetails = Omit<TAssetDetails, 'asset'> & {
+    supplyAsset: TAssetDetails['asset']
+    borrowAsset: TAssetDetails['asset']
+}
+
 // TYPES
 interface IConfirmationDialogProps {
     disabled: boolean
     positionType: TPositionType
-    assetDetails: any
+    assetDetails?: TAssetDetails
+    loopAssetDetails?: TLoopAssetDetails
     amount: string
     balance: string
     maxBorrowAmount: {
@@ -95,6 +98,7 @@ interface IConfirmationDialogProps {
     open: boolean
     setOpen: (open: boolean) => void
     setActionType?: (actionType: TPositionType) => void
+    leverage?: number
 }
 
 // MAIN COMPONENT
@@ -102,6 +106,7 @@ export function ConfirmationDialog({
     disabled,
     positionType,
     assetDetails,
+    loopAssetDetails,
     amount,
     setAmount,
     balance,
@@ -111,9 +116,15 @@ export function ConfirmationDialog({
     open,
     setOpen,
     setActionType,
+    leverage,
 }: IConfirmationDialogProps) {
-    const { lendTx, setLendTx, borrowTx, setBorrowTx, withdrawTx, repayTx } =
+    const { lendTx, setLendTx, borrowTx, setBorrowTx, withdrawTx, repayTx, loopTx, setLoopTx } =
         useTxContext() as TTxContext
+    const positionTypeTxStatusMap: Record<TPositionType, TLendTx | TBorrowTx | TLoopTx> = {
+        'lend': lendTx,
+        'borrow': borrowTx,
+        'loop': loopTx,
+    }
     const { logEvent } = useAnalytics()
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
     const searchParams = useSearchParams()
@@ -121,9 +132,7 @@ export function ConfirmationDialog({
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
     const isLendPositionType = positionType === 'lend'
-    const isTxFailed = isLendPositionType
-        ? lendTx.errorMessage.length > 0
-        : borrowTx.errorMessage.length > 0
+    const isTxFailed = positionTypeTxStatusMap[positionType].errorMessage.length > 0
     const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
     const isMorphoMarkets = isMorpho && !assetDetails?.isVault
     const isMorphoVault = isMorpho && assetDetails?.isVault
@@ -134,7 +143,7 @@ export function ConfirmationDialog({
     const { allChainsData } = useAssetsDataContext()
     const chainDetails = getChainDetails({
         allChainsData,
-        chainIdToMatch: assetDetails?.chain_id,
+        chainIdToMatch: assetDetails?.chain_id ?? 1,
     })
 
     // Get Discord dialog state
@@ -205,35 +214,21 @@ export function ConfirmationDialog({
         setOpen(open)
         // When closing the dialog, reset the amount and the tx status
         if (open) {
-            // setAmount('')
             resetLendBorrowTx()
         } else if (
             !open &&
             (lendTx.status !== 'approve' || borrowTx.status !== 'borrow')
         ) {
             setAmount('')
-            // setTimeout(() => {
-            //     resetLendBorrowTx()
-            // }, 1000)
         }
     }
 
-    function isShowBlock(status: { lend: boolean; borrow: boolean }) {
-        return isLendPositionType ? status.lend : status.borrow
+    function isShowBlock(action: { lend?: boolean; borrow?: boolean; loop?: boolean }) {
+        return action[positionType]
     }
 
     const inputUsdAmount =
-        Number(amount) * Number(assetDetails?.asset?.token?.price_usd)
-
-    function handleInputUsdAmount(amount: string) {
-        const amountFormatted = hasExponent(amount)
-            ? Math.abs(Number(amount)).toFixed(10)
-            : amount.toString()
-        const amountFormattedForLowestValue = getLowestDisplayValue(
-            Number(amountFormatted)
-        )
-        return `${hasLowestDisplayValuePrefix(Number(amountFormatted))}$${amountFormattedForLowestValue}`
-    }
+        Number(amount) * Number(assetDetails?.asset?.token?.price_usd || loopAssetDetails?.supplyAsset?.token?.price_usd)
 
     const isLendTxInProgress = lendTx.isPending || lendTx.isConfirming
     const isBorrowTxInProgress = borrowTx.isPending || borrowTx.isConfirming
@@ -246,14 +241,8 @@ export function ConfirmationDialog({
     const borrowTxSpinnerColor = borrowTx.isPending
         ? 'text-secondary-500'
         : 'text-primary'
-    const txSpinnerColor = isLendPositionType
-        ? lendTxSpinnerColor
-        : borrowTxSpinnerColor
 
-    const canDisplayExplorerLinkWhileLoading = isLendPositionType
-        ? lendTx.hash.length > 0 && (lendTx.isConfirming || lendTx.isPending)
-        : borrowTx.hash.length > 0 &&
-        (borrowTx.isConfirming || borrowTx.isPending)
+    const canDisplayExplorerLinkWhileLoading = positionTypeTxStatusMap[positionType].hash.length > 0 && (positionTypeTxStatusMap[positionType].isConfirming || positionTypeTxStatusMap[positionType].isPending)
 
     function getNewHfColor() {
         const newHF = Number(healthFactorValues.newHealthFactor.toString())
@@ -289,6 +278,7 @@ export function ConfirmationDialog({
             'morpho-vault': 'Supply to vault',
             default: 'Earn',
             borrow: 'Borrow',
+            loop: 'Loop',
         }
 
         const key = isLendPositionType
@@ -298,7 +288,9 @@ export function ConfirmationDialog({
                     ? 'morpho-vault'
                     : 'default'
             }`
-            : 'borrow'
+            : positionType === 'loop'
+                ? 'loop'
+                : 'borrow'
         return buttonTextMap[key]
     }
 
@@ -308,10 +300,10 @@ export function ConfirmationDialog({
             `${getTriggerButtonText()?.toLowerCase().split(' ').join('_')}_clicked`,
             {
                 amount,
-                token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.platform?.name,
+                token_symbol: assetDetails?.asset?.token?.symbol || loopAssetDetails?.supplyAsset?.token?.symbol,
+                platform_name: assetDetails?.name || loopAssetDetails?.name,
                 chain_name:
-                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id || loopAssetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             }
         )
@@ -364,8 +356,8 @@ export function ConfirmationDialog({
             >
                 {getTxInProgressText({
                     amount,
-                    tokenName: assetDetails?.asset?.token?.symbol,
-                    txStatus: isLendPositionType ? lendTx : borrowTx,
+                    tokenName: assetDetails?.asset?.token?.symbol ?? '',
+                    txStatus: positionTypeTxStatusMap[positionType],
                     positionType,
                     actionTitle: isLendPositionType
                         ? isMorphoMarkets || isMorphoVault
@@ -391,20 +383,15 @@ export function ConfirmationDialog({
                         >
                             <a
                                 href={getExplorerLink(
-                                    isLendPositionType
-                                        ? lendTx.hash
-                                        : borrowTx.hash,
-                                    assetDetails?.chain_id ||
-                                    assetDetails?.platform?.chain_id
+                                    positionTypeTxStatusMap[positionType].hash,
+                                    assetDetails?.chain_id ?? 1
                                 )}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="text-secondary-500"
                             >
                                 {getTruncatedTxHash(
-                                    isLendPositionType
-                                        ? lendTx.hash
-                                        : borrowTx.hash
+                                    positionTypeTxStatusMap[positionType].hash
                                 )}
                             </a>
                             <ArrowUpRightIcon
@@ -419,12 +406,26 @@ export function ConfirmationDialog({
         </div>
     ) : null
 
+    function getHeaderText() {
+        if (positionType === 'loop') {
+            return 'Review Loop'
+        }
+        return isLendPositionType
+            ? isMorphoMarkets
+                ? 'Add Collateral'
+                : isMorphoVault
+                    ? 'Supply to vault'
+                    : 'Review Lend'
+            : `Review Borrow`
+    }
+
     // SUB_COMPONENT: Content header UI
     const contentHeader = (
         <>
             {isShowBlock({
                 lend: true,
                 borrow: true,
+                loop: true,
             }) && (
                     // <DialogTitle asChild>
                     <HeadingText
@@ -432,13 +433,7 @@ export function ConfirmationDialog({
                         weight="medium"
                         className="text-gray-800 text-center capitalize"
                     >
-                        {isLendPositionType
-                            ? isMorphoMarkets
-                                ? 'Add Collateral'
-                                : isMorphoVault
-                                    ? 'Supply to vault'
-                                    : 'Review Lend'
-                            : `Review Borrow`}
+                        {getHeaderText()}
                     </HeadingText>
                     // </DialogTitle>
                 )}
@@ -522,88 +517,38 @@ export function ConfirmationDialog({
             {isShowBlock({
                 lend: true,
                 borrow: true,
+                loop: true,
             }) && (
-                    <div className="flex items-center gap-2 px-6 py-2 bg-gray-200 lg:bg-white rounded-5 w-full">
-                        <InfoTooltip
-                            label={
-                                <ImageWithBadge
-                                    mainImg={assetDetails?.asset?.token?.logo || ''}
-                                    badgeImg={chainDetails?.logo || ''}
-                                    mainImgAlt={assetDetails?.asset?.token?.symbol}
-                                    badgeImgAlt={chainDetails?.name}
-                                    mainImgWidth={32}
-                                    mainImgHeight={32}
-                                    badgeImgWidth={12}
-                                    badgeImgHeight={12}
-                                    badgeCustomClass={'bottom-[-2px] right-[1px]'}
-                                />
-                            }
-                            content={getTooltipContent({
-                                tokenSymbol: assetDetails?.asset?.token?.symbol,
-                                tokenLogo: assetDetails?.asset?.token?.logo,
-                                tokenName: assetDetails?.asset?.token?.name,
-                                chainName: chainDetails?.name || '',
-                                chainLogo: chainDetails?.logo || '',
-                            })}
-                        />
-                        <div className="flex flex-col items-start gap-0 w-fit">
-                            <HeadingText
-                                level="h3"
-                                weight="medium"
-                                className="text-gray-800 flex items-center gap-1"
-                            >
-                                <span className="inline-block truncate max-w-[200px]" title={amount}>
-                                    {Number(amount).toFixed(decimalPlacesCount(amount))}
-                                </span>
-                                <span
-                                    className="inline-block truncate max-w-[100px]"
-                                    title={assetDetails?.asset?.token?.symbol}
-                                >
-                                    {assetDetails?.asset?.token?.symbol}
-                                </span>
-                            </HeadingText>
-                            <div className="flex items-center justify-start gap-1">
-                                <BodyText
-                                    level="body3"
-                                    weight="medium"
-                                    className="text-gray-600"
-                                >
-                                    {handleInputUsdAmount(
-                                        inputUsdAmount.toString()
-                                    )}
-                                </BodyText>
-                                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-                                <BodyText
-                                    level="body3"
-                                    weight="medium"
-                                    className="text-gray-600 flex items-center gap-1"
-                                >
-                                    <span
-                                        className="inline-block truncate max-w-full"
-                                        title={capitalizeText(
-                                            chainDetails?.name ?? ''
-                                        )}
-                                    >
-                                        {capitalizeText(chainDetails?.name ?? '')}
-                                    </span>
-                                </BodyText>
-                                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-                                <BodyText
-                                    level="body3"
-                                    weight="medium"
-                                    className="text-gray-600 truncate max-w-full"
-                                    title={assetDetails?.platform?.name ?? ''}
-                                >
-                                    {
-                                        assetDetails?.platform?.name ?? ''
-                                    }
-                                </BodyText>
-                            </div>
-                        </div>
-                    </div>
+                    getSelectedAssetDetailsUI({
+                        tokenLogo: assetDetails?.asset?.token?.logo || loopAssetDetails?.supplyAsset?.token?.logo || '',
+                        tokenName: assetDetails?.asset?.token?.name || loopAssetDetails?.supplyAsset?.token?.name || '',
+                        tokenSymbol: assetDetails?.asset?.token?.symbol || loopAssetDetails?.supplyAsset?.token?.symbol || '',
+                        chainLogo: chainDetails?.logo || '',
+                        chainName: chainDetails?.name || '',
+                        platformName: assetDetails?.name || loopAssetDetails?.name || '',
+                        tokenAmountInUsd: inputUsdAmount || 0,
+                        tokenAmount: amount,
+                    })
                 )}
-            {/* Block 2 */}
-            <div className="flex flex-col items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-300">
+            {/* Block 2 - Loop Asset Details */}
+            {isShowBlock({
+                lend: false,
+                borrow: false,
+                loop: true,
+            }) && (
+                    getSelectedAssetDetailsUI({
+                        tokenLogo: loopAssetDetails?.borrowAsset?.token?.logo || '',
+                        tokenName: loopAssetDetails?.borrowAsset?.token?.name || '',
+                        tokenSymbol: loopAssetDetails?.borrowAsset?.token?.symbol || '',
+                        chainLogo: chainDetails?.logo || '',
+                        chainName: chainDetails?.name || '',
+                        platformName: loopAssetDetails?.name || '',
+                        tokenAmountInUsd: inputUsdAmount || 0,
+                        tokenAmount: amount,
+                    })
+                )}
+            {/* Block 3 */}
+            <div className="flex flex-col items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-400">
                 {isShowBlock({
                     lend: isMorphoMarkets,
                     borrow: false,
@@ -631,6 +576,26 @@ export function ConfirmationDialog({
                         </div>
                     )}
                 {isShowBlock({
+                    lend: false,
+                    borrow: false,
+                    loop: true,
+                }) && (
+                        <div
+                            className={`flex items-center justify-between w-full py-3`}
+                        >
+                            <BodyText
+                                level="body2"
+                                weight="normal"
+                                className="text-gray-600"
+                            >
+                                Leverage
+                            </BodyText>
+                            <Badge variant="secondary">
+                                {leverage}x
+                            </Badge>
+                        </div>
+                    )}
+                {isShowBlock({
                     lend: !isMorphoMarkets,
                     borrow: true,
                 }) && (
@@ -646,16 +611,11 @@ export function ConfirmationDialog({
                                 {abbreviateNumber(
                                     isLendPositionType
                                         ? Number(
-                                            (assetDetails?.asset?.apy ||
-                                                assetDetails?.asset?.supply_apy ||
-                                                assetDetails?.supply_apy ||
-                                                assetDetails?.apy) ??
+                                            (assetDetails?.asset?.supply_apy) ??
                                             0
                                         )
                                         : Number(
-                                            (assetDetails?.asset
-                                                ?.variable_borrow_apy ||
-                                                assetDetails?.variable_borrow_apy) ??
+                                            (assetDetails?.asset?.variable_borrow_apy) ??
                                             0
                                         )
                                 )}
@@ -722,14 +682,13 @@ export function ConfirmationDialog({
                                             Number(maxBorrowAmount.maxToBorrowFormatted) - Number(amount)
                                         ).toString(),
                                         getMaxDecimalsToDisplay(
-                                            assetDetails?.asset?.token?.symbol ||
-                                            assetDetails?.token?.symbol
+                                            assetDetails?.asset?.token?.symbol ?? ''
                                         )
                                     )}
                                 </BodyText>
                                 <ImageWithDefault
-                                    src={assetDetails?.asset?.token?.logo}
-                                    alt={assetDetails?.asset?.token?.symbol}
+                                    src={assetDetails?.asset?.token?.logo ?? ''}
+                                    alt={assetDetails?.asset?.token?.symbol ?? ''}
                                     width={16}
                                     height={16}
                                     className="rounded-full max-w-[16px] max-h-[16px]"
@@ -742,6 +701,7 @@ export function ConfirmationDialog({
                     borrow:
                         borrowTx.status === 'borrow' ||
                         borrowTx.status === 'view',
+                    loop: true,
                 }) && (
                         <div className="flex items-center justify-between w-full py-2">
                             <BodyText
@@ -810,20 +770,15 @@ export function ConfirmationDialog({
                                 >
                                     <a
                                         href={getExplorerLink(
-                                            isLendPositionType
-                                                ? lendTx.hash
-                                                : borrowTx.hash,
-                                            assetDetails?.chain_id ||
-                                            assetDetails?.platform?.chain_id
+                                            positionTypeTxStatusMap[positionType].hash,
+                                            assetDetails?.chain_id ?? 1
                                         )}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="text-secondary-500"
                                     >
                                         {getTruncatedTxHash(
-                                            isLendPositionType
-                                                ? lendTx.hash
-                                                : borrowTx.hash
+                                            positionTypeTxStatusMap[positionType].hash
                                         )}
                                     </a>
                                     <ArrowUpRightIcon
@@ -899,8 +854,7 @@ export function ConfirmationDialog({
                                     <ExternalLink
                                         href={getExplorerLink(
                                             lendTx.hash,
-                                            assetDetails?.chain_id ||
-                                            assetDetails?.platform?.chain_id
+                                            assetDetails?.chain_id ?? 1
                                         )}
                                     >
                                         <BodyText
@@ -938,8 +892,7 @@ export function ConfirmationDialog({
                                         <ExternalLink
                                             href={getExplorerLink(
                                                 lendTx.hash,
-                                                assetDetails?.chain_id ||
-                                                assetDetails?.platform?.chain_id
+                                                assetDetails?.chain_id ?? 1
                                             )}
                                         >
                                             <BodyText
@@ -983,8 +936,7 @@ export function ConfirmationDialog({
                                         <ExternalLink
                                             href={getExplorerLink(
                                                 lendTx.hash,
-                                                assetDetails?.chain_id ||
-                                                assetDetails?.platform?.chain_id
+                                                assetDetails?.chain_id ?? 1
                                             )}
                                         >
                                             <BodyText
@@ -1021,8 +973,7 @@ export function ConfirmationDialog({
                                             <ExternalLink
                                                 href={getExplorerLink(
                                                     lendTx.hash,
-                                                    assetDetails?.chain_id ||
-                                                    assetDetails?.platform?.chain_id
+                                                    assetDetails?.chain_id ?? 1
                                                 )}
                                             >
                                                 <BodyText
@@ -1065,8 +1016,7 @@ export function ConfirmationDialog({
                                         <ExternalLink
                                             href={getExplorerLink(
                                                 borrowTx.hash,
-                                                assetDetails?.chain_id ||
-                                                assetDetails?.platform?.chain_id
+                                                assetDetails?.chain_id ?? 1
                                             )}
                                         >
                                             <BodyText
@@ -1103,8 +1053,7 @@ export function ConfirmationDialog({
                                         <ExternalLink
                                             href={getExplorerLink(
                                                 borrowTx.hash,
-                                                assetDetails?.chain_id ||
-                                                assetDetails?.platform?.chain_id
+                                                assetDetails?.chain_id ?? 1
                                             )}
                                         >
                                             <BodyText
@@ -1127,7 +1076,7 @@ export function ConfirmationDialog({
             <ActionButton
                 disabled={isDisableActionButton}
                 handleCloseModal={handleOpenChange}
-                asset={assetDetails}
+                asset={assetDetails || loopAssetDetails}
                 amount={getActionButtonAmount()}
                 setActionType={setActionType}
                 actionType={positionType}
@@ -1195,7 +1144,7 @@ function getTxInProgressText({
 }: {
     amount: string
     tokenName: string
-    txStatus: TLendTx | TBorrowTx
+    txStatus: TLendTx | TBorrowTx | TLoopTx
     positionType: TPositionType
     actionTitle: string
 }) {
@@ -1299,4 +1248,113 @@ export function getTooltipContent({
             </span>
         </span>
     )
+}
+
+function getSelectedAssetDetailsUI({
+    tokenLogo,
+    tokenName,
+    tokenSymbol,
+    chainLogo,
+    chainName,
+    platformName,
+    tokenAmountInUsd,
+    tokenAmount,
+}: {
+    tokenLogo: string
+    tokenName: string
+    tokenSymbol: string
+    chainLogo: string
+    chainName: string
+    platformName: string
+    tokenAmountInUsd: number
+    tokenAmount: string
+}) {
+    return (
+        <div className="flex items-center gap-2 px-6 py-2 bg-gray-200 lg:bg-white rounded-5 w-full">
+            <InfoTooltip
+                label={
+                    <ImageWithBadge
+                        mainImg={tokenLogo}
+                        badgeImg={chainLogo}
+                        mainImgAlt={tokenName}
+                        badgeImgAlt={chainName}
+                        mainImgWidth={32}
+                        mainImgHeight={32}
+                        badgeImgWidth={12}
+                        badgeImgHeight={12}
+                        badgeCustomClass={'bottom-[-2px] right-[1px]'}
+                    />
+                }
+                content={getTooltipContent({
+                    tokenSymbol,
+                    tokenLogo,
+                    tokenName,
+                    chainName,
+                    chainLogo,
+                })}
+            />
+            <div className="flex flex-col items-start gap-0 w-fit">
+                <HeadingText
+                    level="h3"
+                    weight="medium"
+                    className="text-gray-800 flex items-center gap-1"
+                >
+                    <span className="inline-block truncate max-w-[200px]" title={tokenAmount}>
+                        {Number(tokenAmount).toFixed(decimalPlacesCount(tokenAmount))}
+                    </span>
+                    <span
+                        className="inline-block truncate max-w-[100px]"
+                        title={tokenSymbol}
+                    >
+                        {tokenSymbol}
+                    </span>
+                </HeadingText>
+                <div className="flex items-center justify-start gap-1">
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-600"
+                    >
+                        {handleInputUsdAmount(
+                            tokenAmountInUsd.toString()
+                        )}
+                    </BodyText>
+                    <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-600 flex items-center gap-1"
+                    >
+                        <span
+                            className="inline-block truncate max-w-full"
+                            title={capitalizeText(
+                                chainName
+                            )}
+                        >
+                            {capitalizeText(chainName)}
+                        </span>
+                    </BodyText>
+                    <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-600 truncate max-w-full"
+                        title={platformName}
+                    >
+                        {platformName}
+                    </BodyText>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function handleInputUsdAmount(amount: string) {
+    const amountFormatted = hasExponent(amount)
+        ? Math.abs(Number(amount)).toFixed(10)
+        : amount.toString()
+    const amountFormattedForLowestValue = getLowestDisplayValue(
+        Number(amountFormatted)
+    )
+    return `${hasLowestDisplayValuePrefix(Number(amountFormatted))}$${amountFormattedForLowestValue}`
 }

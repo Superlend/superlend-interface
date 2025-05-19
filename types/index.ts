@@ -1,8 +1,9 @@
 import { WarningMessages } from '@/constants'
 import { Period } from './periodButtons'
+import { ProtocolType } from './platform'
 
-export type TPositionType = 'lend' | 'borrow'
-export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay'
+export type TPositionType = 'lend' | 'borrow' | 'loop'
+export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay' | 'collateral' | 'loop'
 export type TAddress = `0x${string}`
 
 export type TScAmount = {
@@ -24,6 +25,31 @@ export type TChain = {
     chain_id: number
     logo: string | null
     name: string
+}
+
+export type TAssetDetails = {
+    asset: {
+        borrow_enabled: boolean
+        ltv: number
+        remaining_borrow_cap: number
+        remaining_supply_cap: number
+        stable_borrow_apy: number
+        supply_apy: number
+        variable_borrow_apy: number
+        token: TToken
+    }
+    protocol_type: ProtocolType
+    chain_id: number
+    core_contract: string
+    isVault?: boolean
+    logo: string
+    morpho_market_id?: string
+    name: string
+    platform_name: string
+    poolAddressesProvider?: string
+    protocol_identifier: string
+    uiPoolDataProvider?: string
+    vaultId?: string
 }
 
 // Queries START =====================================
@@ -58,7 +84,7 @@ export type TRefreshResponse = TLoginResponse
 
 // Opportunities
 export type TGetOpportunitiesParams = {
-    type: 'lend' | 'borrow'
+    type: TPositionType
     chain_ids?: number[]
     tokens?: string[]
     trend?: boolean
@@ -175,7 +201,7 @@ export type TPlatform = {
         name: string
         platform_name: string
         protocol_identifier: string
-        protocol_type: 'aaveV3' | 'compoundV2' | 'morpho' | 'fluid' | 'euler'
+        protocol_type: ProtocolType
         logo: string
         chain_id: number
         vaultId: string
