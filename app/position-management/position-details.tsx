@@ -138,8 +138,8 @@ export default function PositionDetails() {
                 )
                 
                 const isEulerProtocol = platform?.protocol_type?.toLowerCase() === PlatformType.EULER
-                const totalLendAmountForEulerProtocol = lendPositions.reduce((acc, curr) => acc + curr.amount, 0)
-                const totalBorrowAmountForEulerProtocol = borrowPositions.reduce((acc, curr) => acc + curr.amount, 0)
+                const totalLendAmountInUSDForEulerProtocol = lendPositions.reduce((acc, curr) => acc + (curr.amount * curr.token.price_usd), 0)
+                const totalBorrowAmountInUSDForEulerProtocol = borrowPositions.reduce((acc, curr) => acc + (curr.amount * curr.token.price_usd), 0)
 
                 function getSanitizedValue(value: number) {
                     const normalValue = Number(convertScientificToNormal(value))
@@ -148,8 +148,8 @@ export default function PositionDetails() {
                         : normalValue
                 }
 
-                const lendAmount = getSanitizedValue(isEulerProtocol ? totalLendAmountForEulerProtocol : platform?.total_liquidity)
-                const borrowAmount = getSanitizedValue(isEulerProtocol ? totalBorrowAmountForEulerProtocol : platform?.total_borrow)
+                const totalLendAmountInUSD = getSanitizedValue(isEulerProtocol ? totalLendAmountInUSDForEulerProtocol : platform?.total_liquidity)
+                const totalBorrowAmountInUSD = getSanitizedValue(isEulerProtocol ? totalBorrowAmountInUSDForEulerProtocol : platform?.total_borrow)
 
                 return {
                     lendAsset: {
@@ -170,7 +170,7 @@ export default function PositionDetails() {
                             apy: position.apy,
                             decimals: position.token.decimals,
                         })),
-                        amount: lendAmount,
+                        amountInUSD: totalLendAmountInUSD,
                     },
                     borrowAsset: {
                         tokenImages: borrowPositions.map(
@@ -188,7 +188,7 @@ export default function PositionDetails() {
                             apy: position.apy,
                             decimals: position.token.decimals,
                         })),
-                        amount: borrowAmount,
+                        amountInUSD: totalBorrowAmountInUSD,
                     },
                     positionOn: {
                         platformName: capitalizeText(
@@ -518,27 +518,27 @@ export default function PositionDetails() {
                                         {hasLowestDisplayValuePrefix(
                                             Number(
                                                 formattedUserPositions
-                                                    ?.lendAsset.amount ?? 0
+                                                    ?.lendAsset.amountInUSD ?? 0
                                             )
                                         )}{' '}
                                         $
                                         {isLowestValue(
                                             Number(
                                                 formattedUserPositions
-                                                    ?.lendAsset.amount ?? 0
+                                                    ?.lendAsset.amountInUSD ?? 0
                                             )
                                         )
                                             ? getLowestDisplayValue(
                                                   Number(
                                                       formattedUserPositions
-                                                          ?.lendAsset.amount ??
+                                                          ?.lendAsset.amountInUSD ??
                                                           0
                                                   )
                                               )
                                             : abbreviateNumber(
                                                   Number(
                                                       formattedUserPositions
-                                                          ?.lendAsset.amount ??
+                                                          ?.lendAsset.amountInUSD ??
                                                           0
                                                   )
                                               )}
@@ -587,7 +587,7 @@ export default function PositionDetails() {
                                             {hasLowestDisplayValuePrefix(
                                                 Number(
                                                     formattedUserPositions
-                                                        ?.borrowAsset.amount ??
+                                                        ?.borrowAsset.amountInUSD ??
                                                         0
                                                 )
                                             )}{' '}
@@ -595,7 +595,7 @@ export default function PositionDetails() {
                                             {isLowestValue(
                                                 Number(
                                                     formattedUserPositions
-                                                        ?.borrowAsset.amount ??
+                                                        ?.borrowAsset.amountInUSD ??
                                                         0
                                                 )
                                             )
@@ -603,14 +603,14 @@ export default function PositionDetails() {
                                                       Number(
                                                           formattedUserPositions
                                                               ?.borrowAsset
-                                                              .amount ?? 0
+                                                              .amountInUSD ?? 0
                                                       )
                                                   )
                                                 : abbreviateNumber(
                                                       Number(
                                                           formattedUserPositions
                                                               ?.borrowAsset
-                                                              .amount ?? 0
+                                                              .amountInUSD ?? 0
                                                       )
                                                   )}
                                         </HeadingText>
