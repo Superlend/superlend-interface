@@ -160,7 +160,7 @@ export default function PositionDetails() {
                             address: position.token.address,
                             logo: position.token.logo,
                             symbol: position.token.symbol,
-                            amount: getSanitizedValue(
+                            amountInUSD: getSanitizedValue(
                                 position.amount * position.token.price_usd
                             ),
                             liquidation_threshold:
@@ -180,7 +180,7 @@ export default function PositionDetails() {
                             address: position.token.address,
                             logo: position.token.logo,
                             symbol: position.token.symbol,
-                            amount: getSanitizedValue(
+                            amountInUSD: getSanitizedValue(
                                 position.amount * position.token.price_usd
                             ),
                             tokenAmount: position.amount,
@@ -256,7 +256,7 @@ export default function PositionDetails() {
     function getLiquidationDetailsForPairBasedAssets() {
         const numerator =
             Number(
-                formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amount
+                formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amountInUSD
             ) || 0
         const denominator =
             Number(
@@ -269,11 +269,11 @@ export default function PositionDetails() {
         const liquidationPrice = numerator / (denominator * tokenAmount)
         const liquidationPercentage =
             (Number(
-                formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amount
+                formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amountInUSD
             ) *
                 100) /
             (Number(
-                formattedUserPositions?.lendAsset?.tokenDetails[0]?.amount
+                formattedUserPositions?.lendAsset?.tokenDetails[0]?.amountInUSD
             ) *
                 denominator)
         const assetDetails = formattedUserPositions?.lendAsset?.tokenDetails
@@ -505,7 +505,7 @@ export default function PositionDetails() {
                                         }
                                         avatarDetails={formattedUserPositions?.lendAsset?.tokenDetails?.map(
                                             (token) => ({
-                                                content: `${hasLowestDisplayValuePrefix(Number(token.amount))} $${getStatDisplayValue(token.amount, false)}`,
+                                                content: `${hasLowestDisplayValuePrefix(Number(token.amountInUSD))} $${getStatDisplayValue(token.amountInUSD, false)}`,
                                                 title: token.symbol,
                                             })
                                         )}
@@ -572,7 +572,7 @@ export default function PositionDetails() {
                                         }
                                         avatarDetails={formattedUserPositions?.borrowAsset?.tokenDetails?.map(
                                             (token) => ({
-                                                content: `${hasLowestDisplayValuePrefix(Number(token.amount))} $${getStatDisplayValue(token.amount, false)}`,
+                                                content: `${hasLowestDisplayValuePrefix(Number(token.amountInUSD))} $${getStatDisplayValue(token.amountInUSD, false)}`,
                                                 title: token.symbol,
                                             })
                                         )}

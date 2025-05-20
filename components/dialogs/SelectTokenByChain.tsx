@@ -41,7 +41,7 @@ import { STABLECOINS_NAMES_LIST } from '@/constants'
 interface TokenDetails {
     symbol: string
     address: string
-    amount: string
+    tokenAmount: string
     price_usd: string
     logo: string
     apy: number
@@ -433,10 +433,10 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                 {isWalletConnected && (
                                     <div className="text-right select-none flex flex-col gap-0">
                                         <BodyText level="body2" weight="medium">
-                                            {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount))} ${formatAmountToDisplay(token.balance ?? token.amount)}`}
+                                            {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.tokenAmount))} ${formatAmountToDisplay(token.balance ?? token.tokenAmount)}`}
                                         </BodyText>
                                         <Label className="text-gray-700">
-                                            {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.amount) * Number(token.price_usd)).toString())}`}
+                                            {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.tokenAmount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.tokenAmount) * Number(token.price_usd)).toString())}`}
                                         </Label>
                                     </div>
                                 )}
@@ -490,10 +490,10 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                         {isWalletConnected && (
                                             <div className="text-right select-none flex flex-col gap-0">
                                                 <BodyText level="body2" weight="medium">
-                                                    {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount))} ${formatAmountToDisplay(token.balance ?? token.amount)}`}
+                                                    {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.tokenAmount))} ${formatAmountToDisplay(token.balance ?? token.tokenAmount)}`}
                                                 </BodyText>
                                                 <Label className="text-gray-700">
-                                                    {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.amount) * Number(token.price_usd)).toString())}`}
+                                                    {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.tokenAmount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.tokenAmount) * Number(token.price_usd)).toString())}`}
                                                 </Label>
                                             </div>
                                         )}
@@ -558,10 +558,10 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                                     {isWalletConnected && (
                                                         <div className="text-right select-none flex flex-col gap-0">
                                                             <BodyText level="body2" weight="medium">
-                                                                {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount))} ${formatAmountToDisplay(token.balance ?? token.amount)}`}
+                                                                {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.tokenAmount))} ${formatAmountToDisplay(token.balance ?? token.tokenAmount)}`}
                                                             </BodyText>
                                                             <Label className="text-gray-700">
-                                                                {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.amount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.amount) * Number(token.price_usd)).toString())}`}
+                                                                {`${hasLowestDisplayValuePrefix(Number(token.balance ?? token.tokenAmount) * Number(token.price_usd))} $${formatAmountToDisplay((Number(token.balance ?? token.tokenAmount) * Number(token.price_usd)).toString())}`}
                                                             </Label>
                                                         </div>
                                                     )}

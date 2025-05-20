@@ -82,7 +82,7 @@ export function WithdrawOrRepayTxDialog({
     healthFactorValues,
     amount,
     setAmount,
-    positionAmount,
+    positionTokenAmount,
     errorMessage,
 }: {
     isOpen: boolean
@@ -109,14 +109,14 @@ export function WithdrawOrRepayTxDialog({
     }
     amount: string
     setAmount: (amount: string) => void
-    positionAmount: string | number | undefined
+    positionTokenAmount: string | number | undefined
     errorMessage: string | null
 }) {
     const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
         useTxContext() as TTxContext
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
     const [localAssetDetails, setLocalAssetDetails] = useState(assetDetails)
-    const [localPositionAmount, setLocalPositionAmount] = useState(positionAmount)
+    const [localPositionTokenAmount, setLocalPositionTokenAmount] = useState(positionTokenAmount)
     const [localMaxWithdrawAmount, setLocalMaxWithdrawAmount] = useState(maxWithdrawAmount)
     const [localMaxRepayAmount, setLocalMaxRepayAmount] = useState(maxRepayAmount)
     const searchParams = useSearchParams()
@@ -181,7 +181,7 @@ export function WithdrawOrRepayTxDialog({
         if (isOpen) {
             // Update local states when dialog opens
             setLocalAssetDetails(assetDetails)
-            setLocalPositionAmount(positionAmount)
+            setLocalPositionTokenAmount(positionTokenAmount)
             setLocalMaxWithdrawAmount(maxWithdrawAmount)
             setLocalMaxRepayAmount(maxRepayAmount)
             // Switch chain when the dialog is opened
@@ -189,7 +189,7 @@ export function WithdrawOrRepayTxDialog({
                 handleSwitchChain(Number(chain_id))
             }
         }
-    }, [isOpen, chain_id, maxWithdrawAmount, maxRepayAmount, assetDetails, positionAmount])
+    }, [isOpen, chain_id, maxWithdrawAmount, maxRepayAmount, assetDetails, positionTokenAmount])
 
     function resetLendwithdrawTx() {
         setRepayTx((prev: TRepayTx) => ({
@@ -285,9 +285,9 @@ export function WithdrawOrRepayTxDialog({
         )
     }
 
-    const currentPositionAmount = Number(localPositionAmount) // In Dollar Value
-    const inputAmountInDollar = (Number(amount) * Number(localAssetDetails?.asset?.token?.price_usd))
-    const newPositionAmount = currentPositionAmount - inputAmountInDollar
+    const currentPositionAmountInUSD = Number(localPositionTokenAmount) * Number(localAssetDetails?.asset?.token?.price_usd)
+    const inputAmountInUSD = (Number(amount) * Number(localAssetDetails?.asset?.token?.price_usd))
+    const newPositionAmountInUSD = currentPositionAmountInUSD - inputAmountInUSD
 
     const disableActionButton = disabled || isTxInProgress
     // || (!hasAcknowledgedRisk && !isWithdrawAction && isHfLow())
@@ -302,7 +302,7 @@ export function WithdrawOrRepayTxDialog({
             )
         }
 
-        return !isWalletConnected || newPositionAmount < 0 || currentPositionAmount === inputAmountInDollar || isLoadingMaxAmount
+        return !isWalletConnected || newPositionAmountInUSD < 0 || currentPositionAmountInUSD === inputAmountInUSD || isLoadingMaxAmount
     }
 
     // SUB_COMPONENT: Trigger button to open the dialog
@@ -697,7 +697,7 @@ export function WithdrawOrRepayTxDialog({
                                         {handleSmallestValue(
                                             isWithdrawAction
                                                 ? localMaxWithdrawAmount.maxToWithdrawFormatted
-                                                : (localPositionAmount ?? 0).toString()
+                                                : (localPositionTokenAmount ?? 0).toString()
                                         )}{' '}
                                         {localAssetDetails?.asset?.token?.symbol ??
                                             localAssetDetails?.token?.symbol}
@@ -725,13 +725,13 @@ export function WithdrawOrRepayTxDialog({
                                                 weight="normal"
                                                 className={`text-gray-800`}
                                             >
-                                                {hasLowestDisplayValuePrefix(currentPositionAmount)}
-                                                ${isLowestValue(currentPositionAmount)
-                                                    ? getLowestDisplayValue(currentPositionAmount)
-                                                    : abbreviateNumber(currentPositionAmount)}
+                                                {hasLowestDisplayValuePrefix(currentPositionAmountInUSD)}
+                                                ${isLowestValue(currentPositionAmountInUSD)
+                                                    ? getLowestDisplayValue(currentPositionAmountInUSD)
+                                                    : abbreviateNumber(currentPositionAmountInUSD)}
                                             </BodyText>
                                         </div>
-                                        {(currentPositionAmount !== newPositionAmount || withdrawTx.status === 'view' || repayTx.status === 'view') && (
+                                        {(currentPositionAmountInUSD !== newPositionAmountInUSD || withdrawTx.status === 'view' || repayTx.status === 'view') && (
                                             <>
                                                 <ArrowRightIcon
                                                     width={16}
@@ -745,10 +745,10 @@ export function WithdrawOrRepayTxDialog({
                                                         weight="normal"
                                                         className={`text-gray-800`}
                                                     >
-                                                        {hasLowestDisplayValuePrefix(newPositionAmount)}
-                                                        ${isLowestValue(newPositionAmount)
-                                                            ? getLowestDisplayValue(newPositionAmount)
-                                                            : abbreviateNumber(newPositionAmount)}
+                                                        {hasLowestDisplayValuePrefix(newPositionAmountInUSD)}
+                                                        ${isLowestValue(newPositionAmountInUSD)
+                                                            ? getLowestDisplayValue(newPositionAmountInUSD)
+                                                            : abbreviateNumber(newPositionAmountInUSD)}
                                                     </BodyText>
                                                 </div>
                                             </>
