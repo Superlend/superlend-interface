@@ -54,12 +54,13 @@ interface ITokenDetails {
     decimals: number
     logo: string
     symbol: string
-    amount: string | number
+    amountInUSD: string | number
     liquidation_threshold?: number // optional for repay
     tokenAmount: string | number
     apy: number
     price_usd: number
-    positionAmount?: string | number
+    positionTokenAmount?: string | number
+    chain_name?: string
 }
 
 function useSafeVault(params: {
@@ -972,7 +973,7 @@ export default function WithdrawAndRepayActionButton({
             assetDetailsForTx.isVault
 
         const maxToRepay =
-            Number(tokenDetails[0]?.amount)
+            Number(tokenDetails[0]?.amountInUSD)
                 .toFixed(tokenDetails[0]?.decimals)
                 .toString() ?? '0'
 
@@ -1003,9 +1004,9 @@ export default function WithdrawAndRepayActionButton({
 
     const maxRepayAmountForTx = getMaxRepayAmountForTx()
 
-    const positionAmount = hasSingleToken
-        ? tokenDetails[0]?.amount
-        : (selectedTokenDetails?.amount ?? 0)
+    const positionTokenAmount = hasSingleToken
+        ? tokenDetails[0]?.tokenAmount
+        : (selectedTokenDetails?.tokenAmount ?? 0)
 
     const withdrawErrorMessage = useMemo(() => {
         if (
@@ -1157,12 +1158,13 @@ export default function WithdrawAndRepayActionButton({
                         setOpen={setIsSelectTokenDialogOpen}
                         tokens={tokenDetails.map((token) => ({
                             address: token.address,
-                            amount: String(token.amount),
+                            tokenAmount: String(token.tokenAmount),
                             logo: token.logo,
                             symbol: token.symbol,
                             apy: token.apy,
                             price_usd: String(token.price_usd),
                             decimals: token.decimals,
+                            chain_name: token.chain_name,
                         }))}
                         onSelectToken={handleSelectToken}
                         filterByChain={false}
@@ -1184,7 +1186,7 @@ export default function WithdrawAndRepayActionButton({
                     healthFactorValues={healthFactorValues}
                     amount={amount}
                     setAmount={setAmount}
-                    positionAmount={positionAmount}
+                    positionTokenAmount={positionTokenAmount}
                     errorMessage={errorMessage}
                 />
             )}

@@ -138,8 +138,8 @@ export default function PositionDetails() {
                 )
                 
                 const isEulerProtocol = platform?.protocol_type?.toLowerCase() === PlatformType.EULER
-                const totalLendAmountForEulerProtocol = lendPositions.reduce((acc, curr) => acc + curr.amount, 0)
-                const totalBorrowAmountForEulerProtocol = borrowPositions.reduce((acc, curr) => acc + curr.amount, 0)
+                const totalLendAmountInUSDForEulerProtocol = lendPositions.reduce((acc, curr) => acc + (curr.amount * curr.token.price_usd), 0)
+                const totalBorrowAmountInUSDForEulerProtocol = borrowPositions.reduce((acc, curr) => acc + (curr.amount * curr.token.price_usd), 0)
 
                 function getSanitizedValue(value: number) {
                     const normalValue = Number(convertScientificToNormal(value))
@@ -148,8 +148,8 @@ export default function PositionDetails() {
                         : normalValue
                 }
 
-                const lendAmount = getSanitizedValue(isEulerProtocol ? totalLendAmountForEulerProtocol : platform?.total_liquidity)
-                const borrowAmount = getSanitizedValue(isEulerProtocol ? totalBorrowAmountForEulerProtocol : platform?.total_borrow)
+                const totalLendAmountInUSD = getSanitizedValue(isEulerProtocol ? totalLendAmountInUSDForEulerProtocol : platform?.total_liquidity)
+                const totalBorrowAmountInUSD = getSanitizedValue(isEulerProtocol ? totalBorrowAmountInUSDForEulerProtocol : platform?.total_borrow)
 
                 return {
                     lendAsset: {
@@ -160,7 +160,7 @@ export default function PositionDetails() {
                             address: position.token.address,
                             logo: position.token.logo,
                             symbol: position.token.symbol,
-                            amount: getSanitizedValue(
+                            amountInUSD: getSanitizedValue(
                                 position.amount * position.token.price_usd
                             ),
                             liquidation_threshold:
@@ -169,8 +169,9 @@ export default function PositionDetails() {
                             price_usd: position.token.price_usd,
                             apy: position.apy,
                             decimals: position.token.decimals,
+                            chain_name: chainDetails?.name ?? ''
                         })),
-                        amount: lendAmount,
+                        amountInUSD: totalLendAmountInUSD,
                     },
                     borrowAsset: {
                         tokenImages: borrowPositions.map(
@@ -180,15 +181,16 @@ export default function PositionDetails() {
                             address: position.token.address,
                             logo: position.token.logo,
                             symbol: position.token.symbol,
-                            amount: getSanitizedValue(
+                            amountInUSD: getSanitizedValue(
                                 position.amount * position.token.price_usd
                             ),
                             tokenAmount: position.amount,
                             price_usd: position.token.price_usd,
                             apy: position.apy,
                             decimals: position.token.decimals,
+                            chain_name: chainDetails?.name ?? ''
                         })),
-                        amount: borrowAmount,
+                        amountInUSD: totalBorrowAmountInUSD,
                     },
                     positionOn: {
                         platformName: capitalizeText(
@@ -256,7 +258,7 @@ export default function PositionDetails() {
     function getLiquidationDetailsForPairBasedAssets() {
         const numerator =
             Number(
-                formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amount
+                formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amountInUSD
             ) || 0
         const denominator =
             Number(
@@ -269,11 +271,11 @@ export default function PositionDetails() {
         const liquidationPrice = numerator / (denominator * tokenAmount)
         const liquidationPercentage =
             (Number(
-                formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amount
+                formattedUserPositions?.borrowAsset?.tokenDetails[0]?.amountInUSD
             ) *
                 100) /
             (Number(
-                formattedUserPositions?.lendAsset?.tokenDetails[0]?.amount
+                formattedUserPositions?.lendAsset?.tokenDetails[0]?.amountInUSD
             ) *
                 denominator)
         const assetDetails = formattedUserPositions?.lendAsset?.tokenDetails
@@ -505,7 +507,7 @@ export default function PositionDetails() {
                                         }
                                         avatarDetails={formattedUserPositions?.lendAsset?.tokenDetails?.map(
                                             (token) => ({
-                                                content: `${hasLowestDisplayValuePrefix(Number(token.amount))} $${getStatDisplayValue(token.amount, false)}`,
+                                                content: `${hasLowestDisplayValuePrefix(Number(token.amountInUSD))} $${getStatDisplayValue(token.amountInUSD, false)}`,
                                                 title: token.symbol,
                                             })
                                         )}
@@ -518,27 +520,27 @@ export default function PositionDetails() {
                                         {hasLowestDisplayValuePrefix(
                                             Number(
                                                 formattedUserPositions
-                                                    ?.lendAsset.amount ?? 0
+                                                    ?.lendAsset.amountInUSD ?? 0
                                             )
                                         )}{' '}
                                         $
                                         {isLowestValue(
                                             Number(
                                                 formattedUserPositions
-                                                    ?.lendAsset.amount ?? 0
+                                                    ?.lendAsset.amountInUSD ?? 0
                                             )
                                         )
                                             ? getLowestDisplayValue(
                                                   Number(
                                                       formattedUserPositions
-                                                          ?.lendAsset.amount ??
+                                                          ?.lendAsset.amountInUSD ??
                                                           0
                                                   )
                                               )
                                             : abbreviateNumber(
                                                   Number(
                                                       formattedUserPositions
-                                                          ?.lendAsset.amount ??
+                                                          ?.lendAsset.amountInUSD ??
                                                           0
                                                   )
                                               )}
@@ -572,7 +574,7 @@ export default function PositionDetails() {
                                         }
                                         avatarDetails={formattedUserPositions?.borrowAsset?.tokenDetails?.map(
                                             (token) => ({
-                                                content: `${hasLowestDisplayValuePrefix(Number(token.amount))} $${getStatDisplayValue(token.amount, false)}`,
+                                                content: `${hasLowestDisplayValuePrefix(Number(token.amountInUSD))} $${getStatDisplayValue(token.amountInUSD, false)}`,
                                                 title: token.symbol,
                                             })
                                         )}
@@ -587,7 +589,7 @@ export default function PositionDetails() {
                                             {hasLowestDisplayValuePrefix(
                                                 Number(
                                                     formattedUserPositions
-                                                        ?.borrowAsset.amount ??
+                                                        ?.borrowAsset.amountInUSD ??
                                                         0
                                                 )
                                             )}{' '}
@@ -595,7 +597,7 @@ export default function PositionDetails() {
                                             {isLowestValue(
                                                 Number(
                                                     formattedUserPositions
-                                                        ?.borrowAsset.amount ??
+                                                        ?.borrowAsset.amountInUSD ??
                                                         0
                                                 )
                                             )
@@ -603,14 +605,14 @@ export default function PositionDetails() {
                                                       Number(
                                                           formattedUserPositions
                                                               ?.borrowAsset
-                                                              .amount ?? 0
+                                                              .amountInUSD ?? 0
                                                       )
                                                   )
                                                 : abbreviateNumber(
                                                       Number(
                                                           formattedUserPositions
                                                               ?.borrowAsset
-                                                              .amount ?? 0
+                                                              .amountInUSD ?? 0
                                                       )
                                                   )}
                                         </HeadingText>
