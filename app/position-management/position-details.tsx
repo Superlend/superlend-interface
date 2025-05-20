@@ -169,6 +169,7 @@ export default function PositionDetails() {
                             price_usd: position.token.price_usd,
                             apy: position.apy,
                             decimals: position.token.decimals,
+                            chain_name: chainDetails?.name ?? ''
                         })),
                         amountInUSD: totalLendAmountInUSD,
                     },
@@ -187,6 +188,7 @@ export default function PositionDetails() {
                             price_usd: position.token.price_usd,
                             apy: position.apy,
                             decimals: position.token.decimals,
+                            chain_name: chainDetails?.name ?? ''
                         })),
                         amountInUSD: totalBorrowAmountInUSD,
                     },

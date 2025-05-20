@@ -60,6 +60,7 @@ interface ITokenDetails {
     apy: number
     price_usd: number
     positionTokenAmount?: string | number
+    chain_name?: string
 }
 
 function useSafeVault(params: {
@@ -1163,6 +1164,7 @@ export default function WithdrawAndRepayActionButton({
                             apy: token.apy,
                             price_usd: String(token.price_usd),
                             decimals: token.decimals,
+                            chain_name: token.chain_name,
                         }))}
                         onSelectToken={handleSelectToken}
                         filterByChain={false}
