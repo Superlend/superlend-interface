@@ -736,7 +736,7 @@ export const useAaveV3Data = () => {
             uiPoolDataProviderAddress,
             lendingPoolAddressProvider
         )) as ReservesDataHumanizedLegacy
-        const reserves = reservesResult.reservesData
+        const reserves = reservesResult?.reservesData
 
         const reservesMap: Record<string, ReserveDataHumanized> = {}
         reserves.forEach(

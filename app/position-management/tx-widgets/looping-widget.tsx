@@ -72,16 +72,16 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     // const { lendTx, isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen } =
     //     useTxContext() as TTxContext
 
-    const [availableLongTokens, setAvailableLongTokens] = useState<TToken[]>([])
-    const [availableShortTokens, setAvailableShortTokens] = useState<TToken[]>([])
-    const [selectedLongToken, setSelectedLongToken] = useState<TToken>(
-        availableLongTokens[0]
+    const [availableLendTokens, setAvailableLendTokens] = useState<TToken[]>([])
+    const [availableBorrowTokens, setAvailableBorrowTokens] = useState<TToken[]>([])
+    const [selectedLendToken, setSelectedLendToken] = useState<TToken>(
+        availableLendTokens[0]
     )
-    const [selectedShortToken, setSelectedShortToken] = useState<TToken>(
-        availableShortTokens[0]
+    const [selectedBorrowToken, setSelectedBorrowToken] = useState<TToken>(
+        availableBorrowTokens[0]
     )
-    const [longAmount, setLongAmount] = useState<string>('')
-    const [shortAmount, setShortAmount] = useState<string>('0.00')
+    const [lendAmount, setLendAmount] = useState<string>('')
+    const [borrowAmount, setBorrowAmount] = useState<string>('0.00')
     const [leverage, setLeverage] = useState<number>(1)
     const [healthFactor, setHealthFactor] = useState<number>(0)
     const {
@@ -93,16 +93,16 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         string,
         Record<string, number>
     > | null>(null)
-    const [borrowTokenAmountForLeverage, setBorrowTokenAmountForLeverage] =
-        useState<{
-            amount: string
-            amountFormatted: string
-            healthFactor: string
-        }>({
-            amount: '0',
-            amountFormatted: '0',
-            healthFactor: '0',
-        })
+    // const [borrowTokenAmountForLeverage, setBorrowTokenAmountForLeverage] =
+    //     useState<{
+    //         amount: string
+    //         amountFormatted: string
+    //         healthFactor: string
+    //     }>({
+    //         amount: '0',
+    //         amountFormatted: '0',
+    //         healthFactor: '0',
+    //     })
 
     // Token balances
     const {
@@ -113,38 +113,29 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     // Setup tokens when platform data is available
     useEffect(() => {
         if (platformData?.assets?.length > 0) {
-            const longTokens = platformData.assets.filter((asset: any) => !asset.borrow_enabled).map((asset: any) => asset.token)
-            const shortTokens = platformData.assets.filter((asset: any) => asset.borrow_enabled).map((asset: any) => asset.token)
+            const lendTokens = platformData.assets.filter((asset: any) => !asset.borrow_enabled).map((asset: any) => asset.token)
+            const borrowTokens = platformData.assets.filter((asset: any) => asset.borrow_enabled).map((asset: any) => asset.token)
             // Select the first token by default
-            const defaultLongToken =
-                longTokens.find(
+            const defaultLendToken =
+                lendTokens.find(
                     (token: TToken) =>
                         token.address.toLowerCase() ===
                         tokenAddress.toLowerCase()
-                ) || longTokens[0]
+                ) || lendTokens[0]
 
-            const defaultShortToken =
-                shortTokens.find(
+            const defaultBorrowToken =
+                borrowTokens.find(
                     (token: TToken) =>
                         token.address.toLowerCase() ===
                         tokenAddress.toLowerCase()
-                ) || shortTokens[0]
+                ) || borrowTokens[0]
 
-            setAvailableLongTokens(longTokens)
-            setAvailableShortTokens(shortTokens)
-            setSelectedLongToken(defaultLongToken)
-            setSelectedShortToken(defaultShortToken)
+            setAvailableLendTokens(lendTokens)
+            setAvailableBorrowTokens(borrowTokens)
+            setSelectedLendToken(defaultLendToken)
+            setSelectedBorrowToken(defaultBorrowToken)
         }
     }, [platformData, tokenAddress])
-
-    // Calculate health factor whenever long amount or leverage changes
-    // useEffect(() => {
-    //     if (selectedLongToken && longAmount && Number(longAmount) > 0) {
-    //         setHealthFactor(Math.max(0.5, Math.min(10, 0)))
-    //     } else {
-    //         setHealthFactor(0)
-    //     }
-    // }, [selectedLongToken, longAmount, leverage])
 
     useEffect(() => {
         if (providerStatus.isReady) {
@@ -166,19 +157,12 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                 borrowToken: '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9', // USDC
                 _walletAddress: '0x0e9852b16ae49c99b84b0241e3c6f4a5692c6b05' // some random wallet address with money
             }).then((result) => {
-                setBorrowTokenAmountForLeverage(result)
+                // setBorrowTokenAmountForLeverage(result)
                 setHealthFactor(Number(result?.healthFactor ?? 0))
-                setShortAmount(result.amountFormatted)
+                setBorrowAmount(result.amountFormatted)
             })
         }
     }, [providerStatus.isReady])
-
-    // console.log('selectedLongToken', selectedLongToken)
-    // console.log('selectedLongTokenAmount', longAmount)
-    // console.log('selectedShortToken', selectedShortToken)
-    // console.log('selectedShortTokenAmount', shortAmount)
-    // console.log('maxLeverage', maxLeverage?.[selectedLongToken?.address]?.[selectedShortToken?.address])
-    // console.log('Health Factor', healthFactor)
 
     // Get balance for selected token
     const getTokenBalance = (token: TToken | null) => {
@@ -191,8 +175,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         ).toString()
     }
 
-    const selectedLongTokenBalance = getTokenBalance(selectedLongToken)
-    const selectedShortTokenBalance = getTokenBalance(selectedShortToken)
+    const selectedLendTokenBalance = getTokenBalance(selectedLendToken)
+    const selectedBorrowTokenBalance = getTokenBalance(selectedBorrowToken)
 
     // Format health factor for display
     const getHealthFactorDisplay = () => {
@@ -210,28 +194,28 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
 
     // Handle max button click
     const handleMaxClick = () => {
-        if (selectedLongToken && Number(selectedLongTokenBalance) > 0) {
-            setLongAmount(selectedLongTokenBalance)
+        if (selectedLendToken && Number(selectedLendTokenBalance) > 0) {
+            setLendAmount(selectedLendTokenBalance)
         }
     }
 
-    const handleLongTokenSelect = (token: TToken) => {
-        setSelectedLongToken(token)
-        setLongAmount('')
+    const handleLendTokenSelect = (token: TToken) => {
+        setSelectedLendToken(token)
+        setLendAmount('')
     }
 
-    const handleShortTokenSelect = (token: TToken) => {
-        setSelectedShortToken(token)
-        setShortAmount('0.00')
+    const handleBorrowTokenSelect = (token: TToken) => {
+        setSelectedBorrowToken(token)
+        setBorrowAmount('0.00')
     }
 
     // Check if button should be disabled
     const isButtonDisabled =
         !isWalletConnected ||
-        !selectedLongToken ||
-        !longAmount ||
-        Number(longAmount) <= 0 ||
-        Number(longAmount) > Number(selectedLongTokenBalance)
+        !selectedLendToken ||
+        !lendAmount ||
+        Number(lendAmount) <= 0 ||
+        Number(lendAmount) > Number(selectedLendTokenBalance)
 
     // looping-widget
     return (
@@ -244,10 +228,10 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                 </CardHeader>
 
                 <CardContent className="p-0 space-y-6">
-                    {/* Long Position Section */}
+                    {/* Lend Position Section */}
                     <div className="space-y-1">
                         <div className="flex justify-between items-center mb-1 px-4">
-                            <Label size="medium">Long</Label>
+                            <Label size="medium">Lend</Label>
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -258,10 +242,10 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     <LoaderCircle className="text-primary w-4 h-4 animate-spin inline" />
                                 ) : (
                                     handleSmallestValue(
-                                        selectedLongTokenBalance,
-                                        selectedLongToken
+                                        selectedLendTokenBalance,
+                                        selectedLendToken
                                             ? getMaxDecimalsToDisplay(
-                                                selectedLongToken.symbol
+                                                selectedLendToken.symbol
                                             )
                                             : 2
                                     )
@@ -272,9 +256,9 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                         <div className="border rounded-5 border-gray-200 py-1 px-4 flex items-center gap-3 bg-gray-100">
                             {/* Token Dropdown */}
                             <TokenSelector
-                                selectedToken={selectedLongToken}
-                                availableTokens={availableLongTokens}
-                                handleTokenSelect={handleLongTokenSelect}
+                                selectedToken={selectedLendToken}
+                                availableTokens={availableLendTokens}
+                                handleTokenSelect={handleLendTokenSelect}
                             />
 
                             <BodyText
@@ -288,12 +272,12 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             {/* Amount Input */}
                             <div className="flex flex-col flex-1 gap-[4px]">
                                 <CustomNumberInput
-                                    amount={longAmount}
+                                    amount={lendAmount}
                                     setAmount={(amount) =>
-                                        setLongAmount(amount)
+                                        setLendAmount(amount)
                                     }
                                     maxDecimals={
-                                        selectedLongToken?.decimals || 18
+                                        selectedLendToken?.decimals || 18
                                     }
                                 />
                             </div>
@@ -305,7 +289,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 onClick={handleMaxClick}
                                 disabled={
                                     !isWalletConnected ||
-                                    Number(selectedLongTokenBalance) <= 0
+                                    Number(selectedLendTokenBalance) <= 0
                                 }
                             >
                                 max
@@ -313,10 +297,10 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                         </div>
                     </div>
 
-                    {/* Short Position Section */}
+                    {/* Borrow Position Section */}
                     <div className="space-y-1">
                         <div className="flex justify-between items-center mb-1 px-4">
-                            <Label size="medium">Short</Label>
+                            <Label size="medium">Borrow</Label>
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -327,10 +311,10 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     <LoaderCircle className="text-primary w-4 h-4 animate-spin inline" />
                                 ) : (
                                     handleSmallestValue(
-                                        selectedShortTokenBalance,
-                                        selectedShortToken
+                                        selectedBorrowTokenBalance,
+                                        selectedBorrowToken
                                             ? getMaxDecimalsToDisplay(
-                                                selectedShortToken.symbol
+                                                selectedBorrowToken.symbol
                                             )
                                             : 2
                                     )
@@ -342,8 +326,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             {/* Single Token */}
                             {/* <div className="flex items-center gap-1">
                                 <ImageWithDefault
-                                    src={selectedLongToken?.logo || ''}
-                                    alt={selectedLongToken?.symbol || ''}
+                                    src={selectedLendToken?.logo || ''}
+                                    alt={selectedLendToken?.symbol || ''}
                                     width={24}
                                     height={24}
                                     className="rounded-full max-w-[24px] max-h-[24px]"
@@ -353,14 +337,14 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     weight="medium"
                                     className="text-gray-800"
                                 >
-                                    {selectedLongToken?.symbol || 'Select token'}
+                                    {selectedLendToken?.symbol || 'Select token'}
                                 </BodyText>
                             </div> */}
                             {/* Token Selector */}
                             <TokenSelector
-                                selectedToken={selectedShortToken}
-                                availableTokens={availableShortTokens}
-                                handleTokenSelect={handleShortTokenSelect}
+                                selectedToken={selectedBorrowToken}
+                                availableTokens={availableBorrowTokens}
+                                handleTokenSelect={handleBorrowTokenSelect}
                             />
 
                             <BodyText
@@ -377,10 +361,10 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     weight="medium"
                                     className={cn(
                                         'text-[24px] cursor-not-allowed hover:text-gray-500 select-none',
-                                        shortAmount === '0.00' ? 'text-gray-500' : 'text-gray-800'
+                                        borrowAmount === '0.00' ? 'text-gray-500' : 'text-gray-800'
                                     )}
                                 >
-                                    {shortAmount}
+                                    {borrowAmount}
                                 </BodyText>
                             </div>
                         </div>
@@ -397,12 +381,12 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             <Slider
                                 value={[leverage]}
                                 min={1}
-                                max={Number(abbreviateNumber(maxLeverage?.[selectedLongToken?.address]?.[selectedShortToken?.address] ?? 1, 1)) || 1}
+                                max={Number(abbreviateNumber(maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 1, 1)) || 1}
                                 step={0.1}
                                 onValueChange={(values) =>
                                     setLeverage(values[0])
                                 }
-                                disabled={!isWalletConnected || Number(longAmount) <= 0 || (maxLeverage?.[selectedLongToken?.address]?.[selectedShortToken?.address] ?? 0) <= 1}
+                                disabled={!isWalletConnected || Number(lendAmount) <= 0 || (maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 0) <= 1}
                             />
                             <div className="flex justify-between mt-3">
                                 <BodyText
@@ -417,7 +401,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     weight="normal"
                                     className="text-gray-600"
                                 >
-                                    {abbreviateNumber(maxLeverage?.[selectedLongToken?.address]?.[selectedShortToken?.address] ?? 1, 1)}x
+                                    {abbreviateNumber(maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 1, 1)}x
                                 </BodyText>
                             </div>
                         </div>
@@ -437,7 +421,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             weight="medium"
                             className={cn(
                                 'text-gray-800',
-                                Number(longAmount) > 0 && getHealthFactorColor()
+                                Number(lendAmount) > 0 && getHealthFactorColor()
                             )}
                         >
                             {getHealthFactorDisplay()}
@@ -460,7 +444,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             weight="medium"
                             className="text-gray-800"
                         >
-                            ${selectedLongToken && longAmount ? (Number(longAmount) * selectedLongToken.price_usd).toFixed(2) : '0.00'}
+                            ${selectedLendToken && lendAmount ? (Number(lendAmount) * selectedLendToken.price_usd).toFixed(2) : '0.00'}
                         </BodyText>
                     </div> */}
 
@@ -479,7 +463,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             weight="medium"
                             className="text-gray-800"
                         >
-                            ${selectedLongToken && longAmount ? (Number(longAmount) * selectedLongToken.price_usd * (leverage - 1)).toFixed(2) : '0.00'}
+                            ${selectedLendToken && lendAmount ? (Number(lendAmount) * selectedLendToken.price_usd * (leverage - 1)).toFixed(2) : '0.00'}
                         </BodyText>
                     </div> */}
                 </CardContent>
@@ -493,7 +477,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             positionType="loop"
                             loopAssetDetails={{
                                 supplyAsset: {
-                                    token: selectedLongToken,
+                                    token: selectedLendToken,
                                     borrow_enabled: false,
                                     ltv: 0,
                                     remaining_borrow_cap: 0,
@@ -503,7 +487,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     variable_borrow_apy: 0,
                                 },
                                 borrowAsset: {
-                                    token: selectedShortToken,
+                                    token: selectedBorrowToken,
                                     borrow_enabled: true,
                                     ltv: 0,
                                     remaining_borrow_cap: 0,
@@ -511,15 +495,15 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 },
                                 ...platformData?.platform
                             }}
-                            amount={longAmount}
-                            balance={selectedLongTokenBalance}
+                            amount={lendAmount}
+                            balance={selectedLendTokenBalance}
                             maxBorrowAmount={{
                                 maxToBorrow: '0',
                                 maxToBorrowFormatted: '0',
                                 maxToBorrowSCValue: '0',
                                 user: {},
                             }}
-                            setAmount={setLongAmount}
+                            setAmount={setLendAmount}
                             healthFactorValues={{
                                 healthFactor: 0,
                                 newHealthFactor: healthFactor,
