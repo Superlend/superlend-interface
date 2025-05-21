@@ -326,15 +326,15 @@ export default function WithdrawAndRepayActionButton({
 
     useEffect(() => {
         if (morphoMarket)
-            setMorphoMarketData({
-                ...morphoMarketData,
+            setMorphoMarketData((prev) => ({
+                ...prev,
                 marketData: morphoMarket,
-            })
+            }))
         if (morphoPosition)
-            setMorphoMarketData({
-                ...morphoMarketData,
+            setMorphoMarketData((prev) => ({
+                ...prev,
                 position: morphoPosition,
-            })
+            }))
     }, [morphoMarket, morphoPosition])
 
     // Get max withdraw amount for morpho
