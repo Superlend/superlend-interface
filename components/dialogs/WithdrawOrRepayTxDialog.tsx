@@ -147,26 +147,27 @@ export function WithdrawOrRepayTxDialog({
             ?.balanceFormatted ?? 0
     ).toString()
 
-    const isMorphoVaultsProtocol = !!localAssetDetails?.vault
-    // const isMorphoMarketProtocol = !!assetDetails?.market
+    const isMorphoVaultsProtocol = !!localAssetDetails?.vault && !!localAssetDetails?.vault?.data
 
     const withdrawTxCompleted = withdrawTx.isConfirmed && withdrawTx.hash && withdrawTx.status === 'view'
     const repayTxCompleted = repayTx.isConfirmed && repayTx.hash && repayTx.status === 'view'
     const showPointsEarnedBanner = withdrawTxCompleted || repayTxCompleted
 
     useEffect(() => {
-        if (isWithdrawAction && !isMorphoVaultsProtocol) {
-            setWithdrawTx((prev: TWithdrawTx) => ({
-                ...prev,
-                status: 'withdraw',
-            }))
-        } else {
-            setWithdrawTx((prev: TWithdrawTx) => ({
-                ...prev,
-                status: 'approve',
-            }))
+        if (isWithdrawAction) {
+            if (isMorphoVaultsProtocol) {
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    status: 'approve',
+                }))
+            } else {
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    status: 'withdraw',
+                }))
+            }
         }
-    }, [isMorphoVaultsProtocol, isOpen])
+    }, [isMorphoVaultsProtocol, isOpen, isWithdrawAction])
 
     useEffect(() => {
         // Reset the tx status when the dialog is closed
