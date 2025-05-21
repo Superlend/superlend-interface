@@ -1010,6 +1010,12 @@ export default function WithdrawAndRepayActionButton({
     }, [isWithdrawRepayTxDialogOpen])
 
     function getMaxWithdrawAmountForTx() {
+        const fallbackMaxWithdrawAmount = {
+            maxToWithdraw: '0',
+            maxToWithdrawFormatted: '0',
+            maxToWithdrawSCValue: '0',
+            user: {},
+        }
         const isMorphoVaultsProtocol =
             assetDetailsForTx.protocol_type === PlatformType.MORPHO &&
             assetDetailsForTx.isVault
@@ -1044,22 +1050,34 @@ export default function WithdrawAndRepayActionButton({
                 user: {},
             }
         }
-
-        return (
+        const maxWithdrawAmount =
             maxWithdrawTokensAmount[
                 hasSingleToken
                     ? tokenDetails[0].address
                     : (selectedTokenDetails?.address ?? '')
-            ] ?? {
-                maxToWithdraw: '0',
-                maxToWithdrawFormatted: '0',
-                maxToWithdrawSCValue: '0',
-                user: {},
-            }
-        )
+            ] ?? fallbackMaxWithdrawAmount
+
+        const maxWithdrawAmountAfterComparingWithBalance =
+            maxWithdrawAmount.maxToWithdraw > balance
+                ? balance
+                : maxWithdrawAmount.maxToWithdraw
+
+        return {
+            maxToWithdraw: maxWithdrawAmountAfterComparingWithBalance,
+            maxToWithdrawFormatted:
+                maxWithdrawAmountAfterComparingWithBalance,
+            maxToWithdrawSCValue: '0',
+            user: {},
+        }
     }
 
     function getMaxRepayAmountForTx() {
+        const fallbackMaxRepayAmount = {
+            maxToRepay: '0',
+            maxToRepayFormatted: '0',
+            maxToRepaySCValue: '0',
+            user: {},
+        }
         const isMorphoVaultsProtocol =
             assetDetailsForTx.protocol_type === PlatformType.MORPHO &&
             assetDetailsForTx.isVault
@@ -1078,18 +1096,24 @@ export default function WithdrawAndRepayActionButton({
             }
         }
 
-        return (
-            maxRepayTokensAmount[
-                hasSingleToken
-                    ? tokenDetails[0].address
+        const maxRepayAmount =
+        maxRepayTokensAmount[
+            hasSingleToken
+                ? tokenDetails[0].address
                     : (selectedTokenDetails?.address ?? '')
-            ] ?? {
-                maxToRepay: '0',
-                maxToRepayFormatted: '0',
-                maxToRepaySCValue: '0',
-                user: {},
-            }
-        )
+            ] ?? fallbackMaxRepayAmount
+
+        const maxRepayAmountAfterComparingWithBalance =
+            maxRepayAmount.maxToRepay > balance
+                ? balance
+                : maxRepayAmount.maxToRepay
+
+        return {
+            maxToRepay: maxRepayAmountAfterComparingWithBalance,
+            maxToRepayFormatted: maxRepayAmountAfterComparingWithBalance,
+            maxToRepaySCValue: '0',
+            user: {},
+        }
     }
 
     const maxWithdrawAmountForTx = getMaxWithdrawAmountForTx()

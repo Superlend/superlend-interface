@@ -147,6 +147,12 @@ export function WithdrawOrRepayTxDialog({
             ?.balanceFormatted ?? 0
     ).toString()
 
+    const maxAmount = isWithdrawAction
+        ? ((Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
+            '0')
+        : ((Number(localMaxRepayAmount.maxToRepayFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
+            '0')
+
     const isMorphoVaultsProtocol = !!localAssetDetails?.vault && !!localAssetDetails?.vault?.data
 
     const withdrawTxCompleted = withdrawTx.isConfirmed && withdrawTx.hash && withdrawTx.status === 'view'
@@ -526,13 +532,7 @@ export function WithdrawOrRepayTxDialog({
                                 variant="link"
                                 className="uppercase text-[14px] font-medium w-fit p-0 ml-1"
                                 onClick={() =>
-                                    setAmount(
-                                        isWithdrawAction
-                                            ? ((Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
-                                                '0')
-                                            : ((Number(localMaxRepayAmount.maxToRepayFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
-                                                '0')
-                                    )
+                                    setAmount(maxAmount)
                                 }
                                 disabled={isDisabledMaxBtn()}
                             >

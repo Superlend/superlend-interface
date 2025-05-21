@@ -213,6 +213,13 @@ const RepayButton = ({
                         })
                     })
                     .catch((error) => {
+                        if (repayTx.isPending || repayTx.isConfirming || repayTx.isConfirmed) {
+                            setRepayTx((prev: TRepayTx) => ({
+                                ...prev,
+                                errorMessage: '',
+                            }))
+                            return;
+                        }
                         console.error('Repay Morpho Market error (SC catch block):\n', error)
                         setRepayTx((prev: TRepayTx) => ({
                             ...prev,
@@ -223,6 +230,13 @@ const RepayButton = ({
                         }))
                     })
             } catch (error) {
+                if (repayTx.isPending || repayTx.isConfirming || repayTx.isConfirmed) {
+                    setRepayTx((prev: TRepayTx) => ({
+                        ...prev,
+                        errorMessage: '',
+                    }))
+                    return;
+                }
                 console.error('Repay Morpho Market error (Catch block):\n', error)
                 setRepayTx((prev: TRepayTx) => ({
                     ...prev,
