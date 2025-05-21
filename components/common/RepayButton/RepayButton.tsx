@@ -179,7 +179,7 @@ const RepayButton = ({
                             irm: morphoMarketData.params.irm,
                             lltv: morphoMarketData.params.lltv,
                         },
-                        amount.amountRaw,
+                        amount.amountParsed,
                         0,
                         walletAddress,
                         '0x',
@@ -213,15 +213,24 @@ const RepayButton = ({
                         })
                     })
                     .catch((error) => {
+                        console.error('Repay Morpho Market error (SC catch block):\n', error)
                         setRepayTx((prev: TRepayTx) => ({
                             ...prev,
                             isPending: false,
                             isConfirming: false,
                             isConfirmed: false,
-                            // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+                            errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
                         }))
                     })
             } catch (error) {
+                console.error('Repay Morpho Market error (Catch block):\n', error)
+                setRepayTx((prev: TRepayTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+                }))
                 error
             }
         },
