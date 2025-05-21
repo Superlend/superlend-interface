@@ -36,7 +36,13 @@ import { ChainId } from '@/types/chain'
 import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
 import { useMorphoVaultData } from '@/hooks/protocols/useMorphoVaultData'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
-import { AccrualPosition, MarketId, Vault } from '@morpho-org/blue-sdk'
+import {
+    AccrualPosition,
+    Market,
+    MarketId,
+    Position,
+    Vault,
+} from '@morpho-org/blue-sdk'
 import {
     BUNDLER_ADDRESS_MORPHO,
     ETH_ADDRESSES,
@@ -46,8 +52,12 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useERC20Balance } from '../../hooks/useERC20Balance'
 import { WithdrawOrRepayTxDialog } from '@/components/dialogs/WithdrawOrRepayTxDialog'
 import { Multicall } from 'ethereum-multicall'
-import { OptimizedMulticall, useEthersMulticall } from '../../hooks/useEthereumMulticall'
-import { useVault } from '@morpho-org/blue-sdk-wagmi'
+import {
+    OptimizedMulticall,
+    useEthersMulticall,
+} from '../../hooks/useEthereumMulticall'
+import { useVault, useMarket, usePosition } from '@morpho-org/blue-sdk-wagmi'
+import { useMorphoMarketData } from '../../hooks/protocols/useMorphoMarketData'
 
 interface ITokenDetails {
     address: string
@@ -64,20 +74,55 @@ interface ITokenDetails {
 }
 
 function useSafeVault(params: {
-    vault: `0x${string}` | undefined;
-    chainId: number;
+    vault: `0x${string}` | undefined
+    chainId: number
 }) {
-    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId);
-    
+    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId)
+
     // Only call the real hook if chain is supported and vault address exists
     // Otherwise return undefined data with empty object structure
     return useVault({
-        vault: isSupported && params.vault ? params.vault : '0x1111111111111111111111111111111111111111' as `0x${string}`,
+        vault:
+            isSupported && params.vault
+                ? params.vault
+                : ('0x1111111111111111111111111111111111111111' as `0x${string}`),
         chainId: isSupported ? params.chainId : 1, // Use mainnet as fallback for unsupported chains
         query: {
             enabled: isSupported && !!params.vault,
         },
-    });
+    })
+}
+
+function useSafeMarket(params: { marketId: MarketId; chainId: number }) {
+    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId)
+
+    return useMarket({
+        marketId: isSupported
+            ? params.marketId
+            : ('0x1111111111111111111111111111111111111111' as MarketId),
+        chainId: isSupported ? params.chainId : 1,
+    })
+}
+
+function useSafePosition(params: {
+    walletAddress: `0x${string}`
+    marketId: MarketId
+    chainId: number
+    refresh: boolean
+}) {
+    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId)
+
+    return usePosition({
+        marketId: isSupported
+            ? params.marketId
+            : ('0x1111111111111111111111111111111111111111' as MarketId),
+        user: params.walletAddress,
+        chainId: isSupported ? params.chainId : 1,
+        query: {
+            refetchIntervalInBackground: params.refresh,
+            refetchInterval: params.refresh ? 2000 : false,
+        },
+    })
 }
 
 export default function WithdrawAndRepayActionButton({
@@ -94,7 +139,9 @@ export default function WithdrawAndRepayActionButton({
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
     } = useUserTokenBalancesContext()
-    const { getVaultDataFromPlatformData, getMarketData } = useMorphoVaultData()
+    const { getVaultDataFromPlatformData } = useMorphoVaultData()
+    const { getPositionDataFromPlatformData, getMarketDataFromPlatformData } =
+        useMorphoMarketData()
     const { multicall } = useEthersMulticall()
 
     const [positionType, setPositionType] = useState<TPositionType>('lend')
@@ -104,6 +151,16 @@ export default function WithdrawAndRepayActionButton({
         useState('0')
     // Morpho vault when the user is withdrawing from morpho vaults
     const [morphoVault, setMorphoVault] = useState<any>(null)
+    const [morphoMarket, setMorphoMarket] = useState<Market | null>(null)
+    const [morphoPosition, setMorphoPosition] = useState<Position | null>(null)
+
+    const [morphoMarketData, setMorphoMarketData] = useState<{
+        marketData: Market | null
+        position: Position | null
+    }>({
+        marketData: null,
+        position: null,
+    })
 
     const [isLoadingMaxAmount, setIsLoadingMaxAmount] = useState(false)
     const [borrowTokensDetails, setBorrowTokensDetails] = useState<
@@ -202,26 +259,37 @@ export default function WithdrawAndRepayActionButton({
     const isFluidLendProtocol =
         isFluidProtocol && !platformData?.platform?.isVault
 
-    // Only use the Morpho hook when we're on a supported chain
+    const hasSingleToken = tokenDetails.length === 1
+
+    const { data: _marketData } = useSafeMarket({
+        marketId: platformData?.platform?.morpho_market_id as MarketId,
+        chainId: Number(chain_id),
+    })
+    const { data: _positionData } = useSafePosition({
+        walletAddress: walletAddress as `0x${string}`,
+        marketId: platformData?.platform?.morpho_market_id as MarketId,
+        chainId: Number(chain_id),
+        refresh: true,
+    })
     const { data: _vaultData } = useSafeVault({
         vault: platformData?.platform?.core_contract as `0x${string}`,
         chainId: Number(chain_id),
-    });
-
-    const morphoMarketData = getMarketData({
-        marketId: platformData?.platform?.morpho_market_id as MarketId,
-        chainId: Number(chain_id),
-        enabled: isMorphoMarketsProtocol && !isPolygonChain,
-        walletAddress: walletAddress as `0x${string}`,
     })
-
-    const hasSingleToken = tokenDetails.length === 1
-
     const fetchVaultData = async (multicall?: OptimizedMulticall) => {
         return await getVaultDataFromPlatformData({
             platformData,
             multicall,
         })
+    }
+    const fetchMarketData = async (multicall?: OptimizedMulticall) => {
+        return await getMarketDataFromPlatformData(platformData, multicall)
+    }
+    const fetchPositionData = async (multicall?: OptimizedMulticall) => {
+        return await getPositionDataFromPlatformData(
+            platformData,
+            walletAddress,
+            multicall
+        )
     }
 
     useEffect(() => {
@@ -230,20 +298,44 @@ export default function WithdrawAndRepayActionButton({
             MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))
         )
             return
-        fetchVaultData(multicall[Number(chain_id)]).then((vaultData) => {
-            setMorphoVault(vaultData as Vault)
-        })
+        if (isMorphoVaultsProtocol)
+            fetchVaultData(multicall[Number(chain_id)]).then((vaultData) => {
+                setMorphoVault(vaultData as Vault)
+            })
+        else if (isMorphoMarketsProtocol) {
+            fetchMarketData(multicall[Number(chain_id)]).then((marketData) => {
+                setMorphoMarket(marketData as Market)
+            })
+            fetchPositionData(multicall[Number(chain_id)]).then((position) => {
+                setMorphoPosition(position as Position)
+            })
+        }
     }, [platformData, multicall])
 
     useEffect(() => {
-        if (MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id)) && _vaultData) {
-            setMorphoVault(_vaultData as Vault)
+        if (MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))) {
+            if (_vaultData) setMorphoVault(_vaultData as Vault)
+            if (_marketData) setMorphoMarket(_marketData as Market)
+            if (_positionData) setMorphoPosition(_positionData as Position)
         } else {
             setMorphoVault({
                 data: undefined,
             })
         }
-    }, [_vaultData])
+    }, [_vaultData, _marketData, _positionData])
+
+    useEffect(() => {
+        if (morphoMarket)
+            setMorphoMarketData({
+                ...morphoMarketData,
+                marketData: morphoMarket,
+            })
+        if (morphoPosition)
+            setMorphoMarketData({
+                ...morphoMarketData,
+                position: morphoPosition,
+            })
+    }, [morphoMarket, morphoPosition])
 
     // Get max withdraw amount for morpho
     useEffect(() => {
