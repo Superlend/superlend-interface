@@ -223,9 +223,21 @@ const config = {
                 'spin': 'spin 2s linear infinite',
                 shine: 'shine 2s infinite ease-in-out',
             },
+            transitionDuration: {
+                '400': '400ms',
+            },
+            transitionTimingFunction: {
+                'banner': 'cubic-bezier(0.32, 0.72, 0, 1)',
+            },
         },
     },
-    plugins: [require('tailwindcss-animate'), addVariablesForColors],
+    plugins: [
+        require('tailwindcss-animate'),
+        addVariablesForColors,
+        function({ addVariant }: any) {
+            addVariant('banner-visible', '.banner-visible &')
+        }
+    ],
 } satisfies Config
 
 function addVariablesForColors({ addBase, theme }: any) {
