@@ -23,7 +23,7 @@ import { getFormattedPortfolioValue } from '@/lib/portfolio-utils'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, MessageCircle } from "lucide-react";
+import { Send, MessageCircle, Mail } from "lucide-react";
 import Link from 'next/link'
 import ImageWithDefault from '../ImageWithDefault'
 
@@ -89,8 +89,8 @@ interface ButtonProps {
 }
 
 const TelegramButton = ({ logEvent, portfolioValue, walletAddress, onInteraction }: ButtonProps) => {
-    const telegramUsername = "ajitgr";
-    const prefilledText = "Hi Ajit, I found you via Superlend!";
+    const telegramUsername = "aditya_eth";
+    const prefilledText = "Hi Superlend Team, I'd love to know more about personalized support on Superlend!";
     const encodedText = encodeURIComponent(prefilledText);
     const telegramLink = `https://t.me/${telegramUsername}?text=${encodedText}`;
 
@@ -108,9 +108,9 @@ const TelegramButton = ({ logEvent, portfolioValue, walletAddress, onInteraction
                 onInteraction();
             }}
         >
-            <Button 
-            variant="outline" 
-            className={`flex items-center justify-center gap-2 w-full bg-[#0088CC]/10 border-[#0088CC]/40 hover:bg-[#0088CC]/20 text-[#0088CC] hover:py-4 transition-all duration-300 p-2`}>
+            <Button
+                variant="outline"
+                className={`flex items-center justify-center gap-2 w-full bg-[#0088CC]/10 border-[#0088CC]/40 hover:bg-[#0088CC]/20 text-[#0088CC] transition-all duration-300 rounded-4 p-2 py-3 hover:py-4`}>
                 <ImageWithDefault src="/images/logos/telegram.png" alt="Telegram" width={20} height={20} />
                 Connect on Telegram
             </Button>
@@ -120,7 +120,7 @@ const TelegramButton = ({ logEvent, portfolioValue, walletAddress, onInteraction
 
 const WhatsAppButton = ({ logEvent, portfolioValue, walletAddress, onInteraction }: ButtonProps) => {
     const phoneNumber = "8884726470";
-    const message = "Hi Ajit, I found you via Superlend!";
+    const message = "Hi Superlend Team, I'd love to know more about personalized support on Superlend!";
     const encodedMessage = encodeURIComponent(message);
     const whatsappLink = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
 
@@ -157,6 +157,10 @@ export function WhalesSupportDialog({
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
     const formattedPortfolioValue = getFormattedPortfolioValue(portfolioValue)
+    const [email, setEmail] = useState('')
+    const [emailError, setEmailError] = useState('')
+    const [isEmailSubmitted, setIsEmailSubmitted] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     useEffect(() => {
         if (open) {
@@ -170,6 +174,84 @@ export function WhalesSupportDialog({
 
     const handleInteraction = () => {
         setOpen(false);
+    };
+
+    const validateEmail = (email: string) => {
+        if (!email) {
+            return 'Email is required';
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return 'Invalid email address';
+        }
+        return '';
+    };
+
+    const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const error = validateEmail(email);
+        setEmailError(error);
+
+        if (error) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        logEvent('whales_support_email_submission_started', {
+            email,
+            portfolio_value: portfolioValue,
+            wallet_address: walletAddress,
+            website
+        });
+        try {
+            const response = await fetch('/api/submit-whale-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    walletAddress,
+                    portfolioValue,
+                    website,
+                }),
+            });
+
+            if (response.ok) {
+                setIsEmailSubmitted(true);
+                logEvent('whales_support_email_submitted', {
+                    email,
+                    portfolio_value: portfolioValue,
+                    wallet_address: walletAddress,
+                    website
+                });
+                // Optionally close the dialog after a delay or show a success message longer
+                setTimeout(() => {
+                    handleInteraction();
+                }, 3000); // Close after 3 seconds
+            } else {
+                const result = await response.json();
+                setEmailError(result.message || 'Submission failed. Please try again.');
+                logEvent('whales_support_email_submission_failed', {
+                    email,
+                    portfolio_value: portfolioValue,
+                    wallet_address: walletAddress,
+                    error: result.message,
+                    website
+                });
+            }
+        } catch (err) {
+            setEmailError('An unexpected error occurred. Please try again.');
+            logEvent('whales_support_email_submission_error', {
+                email,
+                portfolio_value: portfolioValue,
+                wallet_address: walletAddress,
+                error: err instanceof Error ? err.message : String(err),
+                website
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     // SUB_COMPONENT: Close button to close the dialog
@@ -199,7 +281,29 @@ export function WhalesSupportDialog({
     const contentBody = (
         <div className="flex flex-col gap-4 max-w-full overflow-hidden">
             {/* Success state */}
-            {(
+            {isEmailSubmitted ? (
+                <div className="flex flex-col items-center justify-center gap-6 py-10">
+                    <motion.div
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                        className="relative"
+                    >
+                        <div className="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-25"></div>
+                        <div className="relative bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full p-4 shadow-lg shadow-emerald-100/50">
+                            <Check className="w-8 h-8 text-white" strokeWidth={3} />
+                        </div>
+                    </motion.div>
+                    <div className="space-y-3 text-center">
+                        <HeadingText level="h5" weight="semibold" className="text-gray-900">
+                            Thank you!
+                        </HeadingText>
+                        <BodyText level="body2" className="text-gray-600 max-w-[280px] mx-auto">
+                            We have received your email and will get in touch with you shortly.
+                        </BodyText>
+                    </div>
+                </div>
+            ) : (
                 <>
                     {/* Portfolio value context */}
                     <Card className="p-4 bg-gradient-to-r from-blue-50 to-gray-50 border border-blue-300 rounded-5 shadow-sm">
@@ -222,7 +326,7 @@ export function WhalesSupportDialog({
                         weight="normal"
                         className="text-gray-800"
                     >
-                        Hope you&apos;ve been enjoying Superlend.
+                        Hope you've been enjoying Superlend.
                         Our product manager would like to have a chat with you and ask you a few questions to understand how best we can add value to you.
                         This will help us build the best DeFi products for you.
                     </BodyText>
@@ -235,34 +339,54 @@ export function WhalesSupportDialog({
                         Connect with our product manager, and we will get in touch with you in the next 24-48 hours
                     </BodyText>
 
-                    {/* Input field */}
-                    <div className="flex flex-col gap-2">
-                        <div className="flex flex-col items-center justify-between gap-2">
-                            <TelegramButton 
-                                logEvent={logEvent}
-                                portfolioValue={portfolioValue}
-                                walletAddress={walletAddress}
-                                onInteraction={handleInteraction}
-                            />
-                            {/* <div className="flex items-center justify-center gap-2">
-                                <div className="h-[1px] w-12 bg-gray-500/50"></div>
-                                <div className="text-gray-500 text-sm">OR</div>
-                                <div className="h-[1px] w-12 bg-gray-500/50"></div>
-                            </div> */}
-                            {/* <WhatsAppButton 
-                                logEvent={logEvent}
-                                portfolioValue={portfolioValue}
-                                walletAddress={walletAddress}
-                                onInteraction={handleInteraction}
-                            /> */}
+                    <div className="flex flex-col items-center justify-between gap-3">
+                        <TelegramButton
+                            logEvent={logEvent}
+                            portfolioValue={portfolioValue}
+                            walletAddress={walletAddress}
+                            onInteraction={handleInteraction}
+                        />
+                        <div className="flex items-center justify-center gap-2">
+                            <div className="h-[1px] w-12 bg-gray-600/50"></div>
+                            <div className="text-gray-600/50 text-sm">OR</div>
+                            <div className="h-[1px] w-12 bg-gray-600/50"></div>
                         </div>
-                        {/* <BodyText
-                            level="body3"
-                            weight="normal"
-                            className="text-gray-600"
-                        >
-                            Your information will only be used for product improvement purposes.
-                        </BodyText> */}
+                        <form onSubmit={handleEmailSubmit} className="w-full flex flex-col gap-1">
+                            <div className='w-full'>
+                                <Label htmlFor="email-input" className="text-gray-700 mb-1.5 block text-sm font-medium sr-only">Email</Label>
+                                <div className="relative flex items-center w-full bg-sky-100 border border-orange-300 rounded-4 p-1 shadow-sm">
+                                    <Mail className="absolute left-4 h-5 w-5 text-gray-500" />
+                                    <Input
+                                        id="email-input"
+                                        type="email"
+                                        placeholder="Type email here"
+                                        value={email}
+                                        onChange={(e) => {
+                                            setEmail(e.target.value);
+                                            if (emailError) setEmailError('');
+                                        }}
+                                        className={`flex-grow pl-11 pr-28 py-2.5 bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-500 text-sm focus:outline-none`}
+                                        disabled={isSubmitting}
+                                    />
+                                    <Button
+                                        type="submit"
+                                        variant="default"
+                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-[calc(100%-0.75rem)] bg-orange-500 hover:bg-orange-600 text-white rounded-full px-5 py-2 text-sm flex items-center gap-1.5 hover:shadow-md transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-75"
+                                        disabled={isSubmitting || !email}
+                                    >
+                                        {isSubmitting ? (
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                        ) : (
+                                            <>
+                                                Submit
+                                                <ArrowRightIcon className="w-4 h-4" />
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                            {emailError && <BodyText level="body3" className="text-red-500 text-xs px-2">{emailError}</BodyText>}
+                        </form>
                     </div>
                 </>
             )}
