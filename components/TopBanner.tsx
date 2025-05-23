@@ -105,7 +105,7 @@ export default function TopBanner() {
         },
         midnight: {
             container: "bg-gradient-to-r from-[#0F244B] to-[#2A2826]",
-            button: "bg-[#F9CAF4] hover:bg-opacity-90 border-0 text-[#0F244B]",
+            button: "bg-[#F9CAF4] border-0 text-[#0F244B]",
             text: "text-white",
             highlight: "text-[#F9CAF4] font-semibold"
         }
@@ -150,7 +150,7 @@ export default function TopBanner() {
                         animate={bannerAnimation.animate}
                         exit={bannerAnimation.exit}
                         transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
-                        className={`fixed top-0 left-0 w-full z-[60] overflow-hidden ${currentVariant.container}`}
+                        className={`fixed top-0 left-0 w-full z-[100] overflow-hidden ${currentVariant.container}`}
                     >
                         {/* Animated background elements */}
                         <motion.div
@@ -309,7 +309,7 @@ export default function TopBanner() {
                                             </motion.div>
                                         </span>
                                         <motion.div
-                                            className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"
+                                            className="absolute inset-0 bg-white opacity-0 group-hover:opacity-90 transition-opacity duration-300"
                                             initial={false}
                                             whileHover={{ scale: 1.2 }}
                                             transition={{ duration: 0.6 }}
