@@ -18,7 +18,8 @@ interface BannerStyle {
 
 export default function TopBanner() {
     const [isVisible, setIsVisible] = useState(false)
-    const [currentVariantIndex, setCurrentVariantIndex] = useState(0)
+    const [currentVariantIndex, setCurrentVariantIndex] = useState(BANNER_VARIANTS.length - 1)
+    const [isMobile, setIsMobile] = useState(false)
     const variant = BANNER_VARIANTS[currentVariantIndex]
 
     useEffect(() => {
@@ -28,9 +29,18 @@ export default function TopBanner() {
             document.documentElement.classList.add('banner-visible')
         }, 1000)
 
+        // Check screen size initially and on resize
+        const checkScreenSize = () => {
+            setIsMobile(window.innerWidth < 640) // Using 640px as the breakpoint (sm in Tailwind)
+        }
+
+        checkScreenSize() // Check initial screen size
+        window.addEventListener('resize', checkScreenSize)
+
         return () => {
             clearTimeout(timer)
             document.documentElement.classList.remove('banner-visible')
+            window.removeEventListener('resize', checkScreenSize)
         }
     }, [])
 
@@ -103,12 +113,25 @@ export default function TopBanner() {
 
     const currentVariant = variants[variant]
 
+    // Define the animation properties based on screen size
+    const bannerAnimation = isMobile
+        ? {
+            initial: { height: 0 },
+            animate: { height: "auto" },
+            exit: { height: 0 }
+        }
+        : {
+            initial: { height: 0 },
+            animate: { height: 44 },
+            exit: { height: 0 }
+        }
+
     return (
         <AnimatePresence>
             {isVisible && (
                 <>
                     {/* REMOVE IN PRODUCTION - Variant Toggle Button */}
-                    <div className="fixed top-2 right-2 z-[61]">
+                    {/* <div className="fixed top-2 right-2 z-[61]">
                         <Button
                             variant="outline"
                             size="sm"
@@ -120,24 +143,24 @@ export default function TopBanner() {
                                 Test Variant: {variant}
                             </span>
                         </Button>
-                    </div>
+                    </div> */}
 
                     <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: 44 }}
-                        exit={{ height: 0 }}
+                        initial={bannerAnimation.initial}
+                        animate={bannerAnimation.animate}
+                        exit={bannerAnimation.exit}
                         transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
                         className={`fixed top-0 left-0 w-full z-[60] overflow-hidden ${currentVariant.container}`}
                     >
                         {/* Animated background elements */}
-                        <motion.div 
+                        <motion.div
                             className="absolute inset-0 w-full h-full overflow-hidden"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 1 }}
                         >
                             {variant === 'gradient' && (
-                                <motion.div 
+                                <motion.div
                                     className="absolute left-0 top-0 w-full h-full bg-gradient-to-r from-secondary-500/5 via-transparent to-secondary-500/5"
                                     animate={{
                                         x: ['-100%', '100%'],
@@ -224,60 +247,59 @@ export default function TopBanner() {
                             )}
                         </motion.div>
 
-                        <motion.div 
-                            className="max-w-[1200px] h-full mx-auto px-4 flex items-center justify-between relative"
+                        <motion.div
+                            className="max-w-[1200px] mx-auto px-4 flex items-center justify-between relative py-2 sm:py-0 sm:h-[44px]"
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.3, delay: 0.1 }}
                         >
-                            <div className="flex-1 flex items-center justify-center sm:justify-start gap-2">
-                                <motion.div
-                                    animate={{ rotate: [0, 35, 50, 0] }}
-                                    transition={{ 
-                                        duration: 2,
-                                        repeat: Infinity,
-                                        repeatDelay: 2
-                                    }}
-                                    className="relative"
-                                >
-                                    {['dark', 'navy', 'forest', 'neon', 'midnight'].includes(variant) ? '⭐' : '🚀'}
+                            <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-2">
+                                <div className="flex-1 flex items-center justify-center sm:justify-start gap-2">
                                     <motion.div
-                                        className="absolute -top-1 -right-1"
-                                        animate={{
-                                            scale: [1, 1.2, 1],
-                                            opacity: [0, 1, 0]
-                                        }}
+                                        animate={{ rotate: [0, 35, 50, 0] }}
                                         transition={{
-                                            duration: 1.5,
+                                            duration: 2,
                                             repeat: Infinity,
-                                            repeatDelay: 1
+                                            repeatDelay: 2
                                         }}
+                                        className="relative"
                                     >
-                                        <Sparkles className="w-3 h-3 text-yellow-400" />
+                                        {['dark', 'navy', 'forest', 'neon', 'midnight'].includes(variant) ? '⭐' : '🚀'}
+                                        <motion.div
+                                            className="absolute -top-1 -right-1"
+                                            animate={{
+                                                scale: [1, 1.2, 1],
+                                                opacity: [0, 1, 0]
+                                            }}
+                                            transition={{
+                                                duration: 1.5,
+                                                repeat: Infinity,
+                                                repeatDelay: 1
+                                            }}
+                                        >
+                                            <Sparkles className="w-3 h-3 text-yellow-400" />
+                                        </motion.div>
                                     </motion.div>
-                                </motion.div>
-                                <BodyText level="body2" className={`${currentVariant.text} text-center sm:text-left`}>
-                                    Maximize your USDC returns with SuperFund - Earn up to <span className={currentVariant.highlight}>8% APY</span> across trusted lending protocols
-                                </BodyText>
-                            </div>
-
-                            <div className="flex items-center gap-3 ml-4">
+                                    <BodyText level="body2" className={`${currentVariant.text} text-center sm:text-left`}>
+                                        Maximize your USDC returns with SuperFund - Earn up to <span className={currentVariant.highlight}>8% APY</span> across trusted lending protocols
+                                    </BodyText>
+                                </div>
                                 <motion.div
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                 >
-                                    <Button 
-                                        variant="secondaryOutline" 
+                                    <Button
+                                        variant="secondaryOutline"
                                         size="sm"
-                                        className={`whitespace-nowrap hidden sm:flex relative group overflow-hidden ${currentVariant.button}`}
+                                        className={`whitespace-nowrap flex relative group overflow-hidden ${currentVariant.button}`}
                                         onClick={() => window.open('https://funds.superlend.xyz', '_blank')}
                                     >
                                         <span className="relative z-10 flex items-center gap-1">
                                             Launch SuperFund
                                             <motion.div
                                                 animate={{ x: [0, 4, 0] }}
-                                                transition={{ 
+                                                transition={{
                                                     duration: 1.5,
                                                     repeat: Infinity,
                                                     repeatDelay: 1
@@ -286,7 +308,7 @@ export default function TopBanner() {
                                                 <ArrowRight className="w-4 h-4" />
                                             </motion.div>
                                         </span>
-                                        <motion.div 
+                                        <motion.div
                                             className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"
                                             initial={false}
                                             whileHover={{ scale: 1.2 }}
@@ -294,6 +316,8 @@ export default function TopBanner() {
                                         />
                                     </Button>
                                 </motion.div>
+                            </div>
+                            <div className="flex items-center gap-3 ml-4">
                                 <motion.div
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
@@ -301,7 +325,7 @@ export default function TopBanner() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className={`p-1 hover:bg-white/10 rounded-full ${['dark', 'navy', 'forest', 'neon', 'midnight'].includes(variant) ? 'text-white' : 'text-gray-500'}`}
+                                        className={`p-1 hover:bg-white/10 rounded-full ${['dark', 'navy', 'forest', 'neon', 'midnight'].includes(variant) ? 'text-white hover:text-white' : 'text-gray-500 hover:text-gray-500'}`}
                                         onClick={handleClose}
                                     >
                                         <X className="h-4 w-4" />

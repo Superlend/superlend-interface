@@ -472,9 +472,9 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     }
 
     // Don't render anything while loading
-    if (isStateLoading || isLoadingOpportunitiesData) {
-        return <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
-    }
+    // if (isStateLoading || isLoadingOpportunitiesData) {
+    //     return <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
+    // }
 
     return (
         <section
