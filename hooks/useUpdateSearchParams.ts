@@ -10,7 +10,7 @@ const useUpdateSearchParams = () => {
     const searchParams = useSearchParams()
 
     const updateSearchParams = (newParams: TNewParams) => {
-        const params = new URLSearchParams(searchParams.toString())
+        const params = new URLSearchParams(searchParams?.toString() || '')
 
         // Update the parameters based on the newParams object
         Object.entries(newParams).forEach(([key, value]) => {

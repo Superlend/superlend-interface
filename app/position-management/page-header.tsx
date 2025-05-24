@@ -53,10 +53,10 @@ type TTokenDetails = {
 export default function PageHeader() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const tokenAddress = searchParams.get('token') || ''
-    const chain_id: string = searchParams.get('chain_id') || '0'
-    const protocol_identifier = searchParams.get('protocol_identifier') || ''
-    const positionTypeParam = searchParams.get('position_type') || 'lend'
+    const tokenAddress = searchParams?.get('token') || ''
+    const chain_id: string = searchParams?.get('chain_id') || '1'
+    const protocol_identifier = searchParams?.get('protocol_identifier') || ''
+    const positionTypeParam = searchParams?.get('position_type') || 'lend'
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
     const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
 

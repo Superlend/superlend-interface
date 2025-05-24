@@ -27,12 +27,12 @@ export default function AllPositions() {
     const router = useRouter()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
-    const positionTypeParam = searchParams.get('position_type') || 'lend'
-    const tokenIdsParam = searchParams.get('token_ids')?.split(',') || []
-    const chainIdsParam = searchParams.get('chain_ids')?.split(',') || []
-    const platformIdsParam = searchParams.get('protocol_ids')?.split(',') || []
-    const keywordsParam = searchParams.get('keywords') || ''
-    const sortingParam = searchParams.get('sort')?.split(',') || []
+    const positionTypeParam = searchParams?.get('position_type') || 'lend'
+    const tokenIdsParam = searchParams?.get('token_ids')?.split(',') || []
+    const chainIdsParam = searchParams?.get('chain_ids')?.split(',') || []
+    const platformIdsParam = searchParams?.get('protocol_ids')?.split(',') || []
+    const keywordsParam = searchParams?.get('keywords') || ''
+    const sortingParam = searchParams?.get('sort')?.split(',') || []
 
     const { logEvent } = useAnalytics()
     const { filters, positionType, setPositionType } = useContext(PositionsContext)

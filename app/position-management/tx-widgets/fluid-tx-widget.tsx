@@ -58,7 +58,7 @@ export default function MorphoTxWidget({
     portfolioData: TPortfolio
 }) {
     const searchParams = useSearchParams()
-    const chain_id = searchParams.get('chain_id') || 1
+    const chain_id = searchParams?.get('chain_id') || '1'
     const { walletAddress, handleSwitchChain } = useWalletConnection()
 
     const isFluidProtocol =
@@ -114,7 +114,7 @@ function FluidLend({
     walletAddress: `0x${string}`
 }) {
     const searchParams = useSearchParams()
-    const chain_id = searchParams.get('chain_id') || '1'
+    const chain_id = searchParams?.get('chain_id') || '1'
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
@@ -396,9 +396,9 @@ function FluidVaults({
     isLoadingPlatformData: boolean
 }) {
     const searchParams = useSearchParams()
-    const chain_id = searchParams.get('chain_id') || '1'
+    const chain_id = searchParams?.get('chain_id') || '1'
     const positionTypeParam: TPositionType =
-        (searchParams.get('position_type') as TPositionType) || 'lend'
+        (searchParams?.get('position_type') as TPositionType) || 'lend'
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)

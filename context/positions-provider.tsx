@@ -66,10 +66,10 @@ export default function PositionsProvider({
 }) {
     const searchParams = useSearchParams()
     const updateSearchParams = useUpdateSearchParams()
-    const positionTypeParam = searchParams.get('position_type') || 'lend'
-    const tokenIdsParam = searchParams.get('token_ids')?.split(',').filter(Boolean) || []
-    const chainIdsParam = searchParams.get('chain_ids')?.split(',').filter(Boolean) || []
-    const platformIdsParam = searchParams.get('protocol_ids')?.split(',').filter(Boolean) || []
+    const positionTypeParam = searchParams?.get('position_type') || 'lend'
+    const tokenIdsParam = searchParams?.get('token_ids')?.split(',').filter(Boolean) || []
+    const chainIdsParam = searchParams?.get('chain_ids')?.split(',').filter(Boolean) || []
+    const platformIdsParam = searchParams?.get('protocol_ids')?.split(',').filter(Boolean) || []
 
     const [positionType, setPositionType] = useState<TPositionType>(positionTypeParam as TPositionType)
     const [filters, setFilters] = useState<TPositionsFilters>({

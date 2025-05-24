@@ -48,7 +48,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const chainId = row.original.chain_id
             const chainLogo = row.original.chainLogo
             const chainName = row.original.chainName
-            const positionTypeParam = searchParams.get('position_type') || 'lend'
+            const positionTypeParam = searchParams?.get('position_type') || 'lend'
 
             const formattedPlatformWithMarketName: string = platformWithMarketName.split(' ').slice(1).join(' ')
             const platformDisplayName = `${capitalizeText(platformName.split(' ')[0])} ${getPlatformVersion(platformId)}`;
@@ -147,7 +147,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: () => {
             const searchParams = useSearchParams()
             const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
+                searchParams?.get('position_type') || 'lend'
             const lendTooltipContent =
                 '% interest you earn on deposits over a year. This includes compounding.'
             const borrowTooltipContent =
@@ -168,7 +168,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const searchParams = useSearchParams()
             const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
+                searchParams?.get('position_type') || 'lend'
             const apyCurrent = Number(row.getValue('apy_current'))
             const apyCurrentFormatted = apyCurrent.toFixed(2)
             const hasRewards =
@@ -313,7 +313,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: () => {
             const searchParams = useSearchParams()
             const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
+                searchParams?.get('position_type') || 'lend'
             const lendTooltipContent =
                 '% 7 day average interest you earn on deposits over a year. This excludes rewards.'
             const borrowTooltipContent =
@@ -334,7 +334,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const searchParams = useSearchParams()
             const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
+                searchParams?.get('position_type') || 'lend'
             const apy7DayAvg = Number(row.getValue('apy_avg_7days'))
             const apy7DayAvgFormatted = abbreviateNumber(apy7DayAvg)
 
