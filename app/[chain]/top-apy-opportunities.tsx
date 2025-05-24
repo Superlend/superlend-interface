@@ -16,22 +16,17 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { TOpportunityTable, TPositionType } from '@/types'
-import { ChainId, TChain } from '@/types/chain'
+import { TChain } from '@/types/chain'
 import { DataTable } from '@/components/ui/data-table'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
-import { OpportunitiesContext } from '@/context/opportunities-provider'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import useDimensions from '@/hooks/useDimensions'
 import DiscoverFiltersDropdown from '@/components/dropdowns/DiscoverFiltersDropdown'
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
-import { motion } from 'framer-motion'
 import { useDebounce } from '@/hooks/useDebounce'
 import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
-import { CHAIN_ID_MAPPER, ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS } from '@/constants'
-import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
 import useIsClient from '@/hooks/useIsClient'
 import RainingApples from '@/components/animations/RainingApples'
 import RainingPolygons from '@/components/animations/RainingPolygons'
@@ -60,13 +55,13 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const { walletAddress } = useWalletConnection()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
-    const positionTypeParam = searchParams.get('position_type') || 'lend'
-    const tokenIdsParam = searchParams.get('token_ids')?.split(',') || []
-    const chainIdsParam = searchParams.get('chain_ids')?.split(',') || []
-    const platformIdsParam = searchParams.get('protocol_ids')?.split(',') || []
-    const keywordsParam = searchParams.get('keywords') || ''
-    const pageParam = searchParams.get('page')
-    const sortingParam = searchParams.get('sort')?.split(',') || []
+    const positionTypeParam = searchParams?.get('position_type') || 'lend'
+    const tokenIdsParam = searchParams?.get('token_ids')?.split(',') || []
+    const chainIdsParam = searchParams?.get('chain_ids')?.split(',') || []
+    const platformIdsParam = searchParams?.get('protocol_ids')?.split(',') || []
+    const keywordsParam = searchParams?.get('keywords') || ''
+    const pageParam = searchParams?.get('page') || '0'
+    const sortingParam = searchParams?.get('sort')?.split(',') || []
     const excludeRiskyMarketsFlag =
         isClient && typeof window !== 'undefined' &&
         localStorage.getItem('exclude_risky_markets') === 'true'
@@ -89,11 +84,11 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const [showRainingApples, setShowRainingApples] = useState(false)
     const [showRainingPolygons, setShowRainingPolygons] = useState(false)
     const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
-    const pathname = usePathname()
+    const pathname = usePathname() || ''
     const { appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards, hasAppleFarmRewards } = useAppleFarmRewards()
 
     // Add this ref at component level
-    const prevParamsRef = useRef(searchParams.toString())
+    const prevParamsRef = useRef(searchParams?.toString() || '')
 
     const [sorting, setSorting] = useState<SortingState>(() => {
         if (sortingParam.length === 2) {
@@ -154,15 +149,14 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
     // Update pagination state when URL changes
     useEffect(() => {
-        const pageParam = searchParams.get('page')
-        if (pageParam !== null) {
+        const pageParam = searchParams?.get('page')
+        if (pageParam !== null && pageParam !== undefined) {
             const pageIndex = Math.max(0, parseInt(pageParam) - 1)
             setPagination((prev) => ({
                 ...prev,
                 pageIndex,
             }))
         } else {
-            // Reset to first page if no page param
             setPagination((prev) => ({
                 ...prev,
                 pageIndex: 0,
@@ -173,7 +167,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     // Add this new effect to reset pagination when other search params change
     useEffect(() => {
         // Create a new URLSearchParams object
-        const currentParams = new URLSearchParams(searchParams.toString())
+        const currentParams = new URLSearchParams(searchParams?.toString() || '')
         const pageParam = currentParams.get('page')
 
         // Only reset page if filters have changed
@@ -203,14 +197,14 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             updateSearchParams({ page: '1' })
         }
 
-        prevParamsRef.current = searchParams.toString()
+        prevParamsRef.current = searchParams?.toString() || ''
     }, [
-        searchParams.get('position_type'),
-        searchParams.get('token_ids'),
-        searchParams.get('chain_ids'),
-        searchParams.get('protocol_ids'),
-        searchParams.get('keywords'),
-        searchParams.get('sort'),
+        searchParams?.get('position_type'),
+        searchParams?.get('token_ids'),
+        searchParams?.get('chain_ids'),
+        searchParams?.get('protocol_ids'),
+        searchParams?.get('keywords'),
+        searchParams?.get('sort'),
     ])
 
     useEffect(() => {
@@ -368,7 +362,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const handlePaginationChange = useCallback(
         (updatedPagination: PaginationState) => {
             const newPage = updatedPagination.pageIndex + 1
-            const currentPage = Number(searchParams.get('page')) || 1
+            const currentPage = Number(searchParams?.get('page')) || 1
 
             // Only update if page actually changes and is within valid range
             if (

@@ -22,7 +22,7 @@ export const PageVisitTracker = () => {
             return obj
         }
         // Convert search params to object
-        const searchParamsObject = stringToObject(searchParams.toString())
+        const searchParamsObject = stringToObject(searchParams?.toString() || '')
         // Log the object
         trackEvent('page_visit', { pathname, ...searchParamsObject })
     }, [trackEvent, pathname, searchParams])

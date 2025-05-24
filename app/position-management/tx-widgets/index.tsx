@@ -21,8 +21,8 @@ export const AssetTxWidget: FC = () => {
     const { portfolioData: portfolioContextData } = useContext(PortfolioContext)
     const searchParams = useSearchParams()
     // const tokenAddress = searchParams.get('token') || ''
-    const chain_id = searchParams.get('chain_id') || 1
-    const protocol_identifier = searchParams.get('protocol_identifier') || ''
+    const chain_id = searchParams?.get('chain_id') || '1'
+    const protocol_identifier = searchParams?.get('protocol_identifier') || ''
     const {
         walletAddress,
         handleSwitchChain,

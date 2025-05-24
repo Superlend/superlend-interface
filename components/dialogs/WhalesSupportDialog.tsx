@@ -326,7 +326,7 @@ export function WhalesSupportDialog({
                         weight="normal"
                         className="text-gray-800"
                     >
-                        Hope you've been enjoying Superlend.
+                        Hope you&apos;ve been enjoying Superlend.
                         Our product manager would like to have a chat with you and ask you a few questions to understand how best we can add value to you.
                         This will help us build the best DeFi products for you.
                     </BodyText>

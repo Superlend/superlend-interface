@@ -39,11 +39,11 @@ const Header: React.FC = () => {
     }
     const pathname = usePathname()
     const [activeTab, setActiveTab] = useState<TTab | null>(
-        activeTabInitialValue(pathname)
+        activeTabInitialValue(pathname || '')
     )
 
     useEffect(() => {
-        setActiveTab(activeTabInitialValue(pathname))
+        setActiveTab(activeTabInitialValue(pathname || ''))
     }, [pathname])
 
     const handleTabClick = (tab: TTab) => {

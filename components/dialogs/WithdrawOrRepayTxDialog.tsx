@@ -120,7 +120,7 @@ export function WithdrawOrRepayTxDialog({
     const [localMaxWithdrawAmount, setLocalMaxWithdrawAmount] = useState(maxWithdrawAmount)
     const [localMaxRepayAmount, setLocalMaxRepayAmount] = useState(maxRepayAmount)
     const searchParams = useSearchParams()
-    const chain_id = searchParams.get('chain_id') || 1
+    const chain_id = searchParams?.get('chain_id') || '1'
     const { width: screenWidth } = useDimensions()
     // const [amount, setAmount] = useState('')
     const isDesktop = screenWidth > 768

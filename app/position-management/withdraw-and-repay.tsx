@@ -135,11 +135,11 @@ export default function WithdrawAndRepayActionButton({
     >({})
 
     const searchParams = useSearchParams()
-    const tokenAddress = searchParams.get('token') || ''
-    const chain_id = searchParams.get('chain_id') || 1
-    const protocol_identifier = searchParams.get('protocol_identifier') || ''
+    const tokenAddress = searchParams?.get('token') || ''
+    const chain_id = searchParams?.get('chain_id') || '1'
+    const protocol_identifier = searchParams?.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType =
-        (searchParams.get('position_type') as TPositionType) || 'lend'
+        (searchParams?.get('position_type') as TPositionType) || 'lend'
     const {
         fetchAaveV3Data,
         getMaxWithdrawAmount,
@@ -400,7 +400,7 @@ export default function WithdrawAndRepayActionButton({
                                 withdrawToken?.address.toLowerCase()
                             const _maxWithdrawValue = getMaxWithdrawAmount(
                                 withdrawTokenAddress,
-                                chain_id as number,
+                                Number(chain_id),
                                 r as any
                             )
                             maxWithdrawAmounts[withdrawTokenAddress] =
@@ -431,7 +431,7 @@ export default function WithdrawAndRepayActionButton({
                                 repayToken?.address.toLowerCase()
                             const _maxRepayValue = getMaxRepayAmount(
                                 repayTokenAddress,
-                                chain_id as number,
+                                Number(chain_id),
                                 r as any
                             )
                             maxRepayAmounts[repayTokenAddress] = _maxRepayValue
@@ -535,7 +535,7 @@ export default function WithdrawAndRepayActionButton({
                         repayToken.decimals
                     )
                     const balance = BigNumber.from(
-                        erc20Balances[chain_id as number][repayTokenAddress]
+                        erc20Balances[Number(chain_id)][repayTokenAddress]
                             .balanceRaw
                     )
                     const maxRepay = balance.lte(maxDebt) ? balance : maxDebt

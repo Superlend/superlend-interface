@@ -293,7 +293,7 @@ export default function TopBanner() {
                                         variant="secondaryOutline"
                                         size="sm"
                                         className={`whitespace-nowrap flex relative group overflow-hidden ${currentVariant.button}`}
-                                        onClick={() => window.open('https://funds.superlend.xyz', '_blank')}
+                                        onClick={() => window.open('https://funds.superlend.xyz/super-fund/base', '_blank')}
                                     >
                                         <span className="relative z-10 flex items-center gap-1">
                                             Launch SuperFund

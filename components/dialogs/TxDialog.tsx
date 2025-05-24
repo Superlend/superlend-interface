@@ -117,7 +117,7 @@ export function ConfirmationDialog({
     const { logEvent } = useAnalytics()
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
     const searchParams = useSearchParams()
-    const chain_id = searchParams.get('chain_id') || 1
+    const chain_id = searchParams?.get('chain_id') || '1'
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
     const isLendPositionType = positionType === 'lend'

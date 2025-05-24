@@ -39,7 +39,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 row.original.tokenAddress ===
                 '0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559'
             const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
+                searchParams?.get('position_type') || 'lend'
             const tokenSymbol: string = row.getValue('tokenSymbol')
             const tokenLogo = row.original.tokenLogo
             const tokenAddress = row.original.tokenAddress
@@ -252,7 +252,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const platformLogo = row.original.platformLogo
             const searchParams = useSearchParams()
             const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
+                searchParams?.get('position_type') || 'lend'
             // const morphoLabel =
             //     isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
             // const formattedPlatformName = isMorpho ? morphoLabel : platformName
@@ -298,7 +298,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: () => {
             const searchParams = useSearchParams()
             const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
+                searchParams?.get('position_type') || 'lend'
             const lendTooltipContent =
                 '% interest you earn on deposits over a year. This includes compounding.'
             const borrowTooltipContent =
@@ -319,7 +319,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const searchParams = useSearchParams()
             const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
+                searchParams?.get('position_type') || 'lend'
             const hasRewards =
                 row.original?.additional_rewards &&
                 row.original?.rewards.length > 0
@@ -466,7 +466,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         header: () => {
             const searchParams = useSearchParams()
             const positionTypeParam =
-                searchParams.get('position_type') || 'lend'
+                searchParams?.get('position_type') || 'lend'
             const lendTooltipContent =
                 '% 7 day average interest you earn on deposits over a year. This exludes rewards.'
             const borrowTooltipContent =
