@@ -850,7 +850,7 @@ function MorphoMarkets({
                                     asset: isLendPositionType(positionType)
                                         ? selectedAssetTokenDetails
                                         : morphoBorrowTokenDetails,
-                                    platform: platformData?.platform,
+                                    ...platformData?.platform,
                                     protocol_type:
                                         platformData?.platform?.protocol_type,
                                     morphoMarketData: morphoMarketData,
@@ -1166,7 +1166,7 @@ function MorphoVaults({
                                 positionType={positionType}
                                 assetDetails={{
                                     asset: selectedAssetTokenDetails,
-                                    platform: platformData?.platform,
+                                    ...platformData?.platform,
                                     protocol_type:
                                         platformData?.platform?.protocol_type,
                                     morphoMarketData: vaultData,
