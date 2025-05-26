@@ -5,7 +5,9 @@ import { X, Sparkles, ArrowRight, TestTubes } from 'lucide-react'
 import { Button } from './ui/button'
 import { BodyText } from './ui/typography'
 import { motion, AnimatePresence } from 'framer-motion'
-
+import useGetBoostRewards from '@/hooks/useGetBoostRewards'
+import { useGetEffectiveApy } from '@/hooks/useGetEffectiveApy'
+import { abbreviateNumber } from '@/lib/utils'
 const BANNER_VARIANTS = ['gradient', 'accent', 'dark', 'highlight', 'navy', 'forest', 'neon', 'pastel', 'midnight'] as const
 type BannerVariant = (typeof BANNER_VARIANTS)[number]
 
@@ -21,6 +23,17 @@ export default function TopBanner() {
     const [currentVariantIndex, setCurrentVariantIndex] = useState(BANNER_VARIANTS.length - 1)
     const [isMobile, setIsMobile] = useState(false)
     const variant = BANNER_VARIANTS[currentVariantIndex]
+    const BASE_CHAIN_ID = 8453
+    const BASE_VAULT_ADDRESS = '0x10076ed296571cE4Fde5b1FDF0eB9014a880e47B'
+    const { data: effectiveApyData, isLoading: isLoadingEffectiveApy, isError: isErrorEffectiveApy } = useGetEffectiveApy({
+        vault_address: BASE_VAULT_ADDRESS as `0x${string}`,
+        chain_id: BASE_CHAIN_ID
+    })
+    const { data: BOOST_APY, isLoading: isLoadingBoostRewards, error: errorBoostRewards } = useGetBoostRewards({
+        vaultAddress: BASE_VAULT_ADDRESS as `0x${string}`,
+        chainId: BASE_CHAIN_ID
+    })
+    const TOTAL_VAULT_APY = abbreviateNumber(Number(effectiveApyData?.total_apy ?? 0) + Number((BOOST_APY?.[0]?.boost_apy ?? 0) / 100))
 
     useEffect(() => {
         // Add initial delay before showing the banner
@@ -282,7 +295,7 @@ export default function TopBanner() {
                                         </motion.div>
                                     </motion.div>
                                     <BodyText level="body2" className={`${currentVariant.text} text-center sm:text-left`}>
-                                        Maximize your USDC returns with SuperFund - Earn up to <span className={currentVariant.highlight}>8% APY</span> across trusted lending protocols
+                                        Maximize your USDC returns with SuperFund - Earn up to <span className={currentVariant.highlight}>{TOTAL_VAULT_APY}% APY</span> across trusted lending protocols
                                     </BodyText>
                                 </div>
                                 <motion.div

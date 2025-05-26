@@ -88,7 +88,7 @@ export default function MarketsBanner() {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="w-full max-md:sticky max-md:top-20 banner-visible:max-md:top-36 max-md:z-50"
+                    className="w-full max-md:sticky max-md:top-20 banner-visible:max-md:top-40 max-md:z-50"
                 >
                     <div className="max-w-[1200px] mx-auto">
                         <div className="mx-3 md:mx-5 mb-4 md:mb-6">
