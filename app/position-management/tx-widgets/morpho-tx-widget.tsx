@@ -314,7 +314,7 @@ function MorphoMarkets({
         platformData?.platform?.protocol_type === PlatformType.MORPHO
 
     useEffect(() => {
-        if (position && morphoMarketData) {
+        if (!!position && !!morphoMarketData) {
             const accrualPosition: AccrualPosition = new AccrualPosition(
                 position,
                 morphoMarketData
@@ -474,9 +474,14 @@ function MorphoMarkets({
         (asset) => asset.borrow_enabled === false
     )
 
-    const morphoBorrowTokenDetails = platformData?.assets?.find(
+    const _morphoBorrowTokenDetails = platformData?.assets?.find(
         (asset) => asset.borrow_enabled === true
     )
+
+    const morphoBorrowTokenDetails = {
+        ..._morphoBorrowTokenDetails,
+        ltv: (morphoLendTokenDetails?.ltv ?? 0)
+    }
 
     useEffect(() => {
         if (morphoLendTokenDetails) {
