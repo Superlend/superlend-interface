@@ -39,9 +39,9 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     const searchParams = useSearchParams()
     const getFiltersFromURL = () => ({
-        token_ids: searchParams.get('token_ids')?.split(',') || [],
-        chain_ids: searchParams.get('chain_ids')?.split(',') || [],
-        protocol_ids: searchParams.get('protocol_ids')?.split(',') || [],
+        token_ids: searchParams?.get('token_ids')?.split(',') || [],
+        chain_ids: searchParams?.get('chain_ids')?.split(',') || [],
+        protocol_ids: searchParams?.get('protocol_ids')?.split(',') || [],
     })
     const filters = getFiltersFromURL()
     const [isOpen, setIsOpen] = React.useState<boolean>(false)
@@ -422,14 +422,14 @@ function FilterOptions({
     const { logEvent } = useAnalytics()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
-    const tokenSymbolParam = searchParams.get('token_ids')?.split(',') || []
-    const chainIdParam = searchParams.get('chain_ids')?.split(',') || []
-    const protocolIdParam = searchParams.get('protocol_ids')?.split(',') || []
+    const tokenSymbolParam = searchParams?.get('token_ids')?.split(',') || []
+    const chainIdParam = searchParams?.get('chain_ids')?.split(',') || []
+    const protocolIdParam = searchParams?.get('protocol_ids')?.split(',') || []
     const [searchKeyword, setSearchKeyword] = useState<string>('')
     const [isExcluded, setIsExcluded] = useState(
         localStorage.getItem('exclude_risky_markets') === 'true'
     )
-    const positionTypeParam = searchParams.get('position_type') || 'lend'
+    const positionTypeParam = searchParams?.get('position_type') || 'lend'
     const isMorphoMarketsRisky = useMemo(
         () => type === 'protocol' && positionTypeParam === 'lend',
         [type, positionTypeParam]
@@ -442,7 +442,7 @@ function FilterOptions({
     useEffect(() => {
         if (isExcluded) {
             const currentProtocolIds =
-                searchParams.get('protocol_ids')?.split(',') || []
+                searchParams?.get('protocol_ids')?.split(',') || []
             const filteredIds = currentProtocolIds.filter(
                 (id) => id !== 'MORPHO_MARKETS'
             )
@@ -472,9 +472,9 @@ function FilterOptions({
     }, [isExcluded, positionTypeParam])
 
     const getFiltersFromURL = () => ({
-        token_ids: searchParams.get('token_ids')?.split(',') || [],
-        chain_ids: searchParams.get('chain_ids')?.split(',') || [],
-        protocol_ids: searchParams.get('protocol_ids')?.split(',') || [],
+        token_ids: searchParams?.get('token_ids')?.split(',') || [],
+        chain_ids: searchParams?.get('chain_ids')?.split(',') || [],
+        protocol_ids: searchParams?.get('protocol_ids')?.split(',') || [],
     })
 
     const filters = getFiltersFromURL()

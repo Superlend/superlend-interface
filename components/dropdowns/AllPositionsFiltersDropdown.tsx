@@ -45,9 +45,9 @@ export default function AllPositionsFiltersDropdown() {
     const searchParams = useSearchParams()
     const updateSearchParams = useUpdateSearchParams()
 
-    const tokenIdsParam = searchParams.get('token_ids')?.split(',') || []
-    const chainIdsParam = searchParams.get('chain_ids')?.split(',') || []
-    const platformIdsParam = searchParams.get('protocol_ids')?.split(',') || []
+    const tokenIdsParam = searchParams?.get('token_ids')?.split(',') || []
+    const chainIdsParam = searchParams?.get('chain_ids')?.split(',') || []
+    const platformIdsParam = searchParams?.get('protocol_ids')?.split(',') || []
 
     const hasActiveFilters =
         !!filters.token_ids?.length ||

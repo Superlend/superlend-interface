@@ -42,8 +42,8 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 export default function PositionDetails() {
     const searchParams = useSearchParams()
     const { allChainsData } = useContext(AssetsDataContext)
-    const chain_id = searchParams.get('chain_id') || 0
-    const protocol_identifier = searchParams.get('protocol_identifier') || ''
+    const chain_id = searchParams?.get('chain_id') || '1'
+    const protocol_identifier = searchParams?.get('protocol_identifier') || ''
     // const { address: walletAddress } = useAccount()
     const { isWalletConnected, walletAddress, isConnectingWallet } =
         useWalletConnection()

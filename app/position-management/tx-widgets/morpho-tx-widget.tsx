@@ -121,7 +121,7 @@ export default function MorphoTxWidget({
     platformData: TPlatform
 }) {
     const searchParams = useSearchParams()
-    const chain_id = searchParams.get('chain_id') || 1
+    const chain_id = searchParams?.get('chain_id') || '1'
     const { walletAddress, handleSwitchChain } = useWalletConnection()
 
     const isMorphoProtocol =
@@ -176,9 +176,9 @@ function MorphoMarkets({
     isLoadingPlatformData: boolean
 }) {
     const searchParams = useSearchParams()
-    const chain_id = searchParams.get('chain_id') || '1'
+    const chain_id = searchParams?.get('chain_id') || '1'
     const positionTypeParam: TPositionType =
-        (searchParams.get('position_type') as TPositionType) || 'lend'
+        (searchParams?.get('position_type') as TPositionType) || 'lend'
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [selectedAssetTokenDetails, setSelectedAssetTokenDetails] =
         useState<TPlatformAsset | null>(null)
@@ -890,7 +890,7 @@ function MorphoVaults({
     walletAddress: `0x${string}`
 }) {
     const searchParams = useSearchParams()
-    const chain_id = searchParams.get('chain_id') || '1'
+    const chain_id = searchParams?.get('chain_id') || '1'
     const { getVaultDataFromPlatformData } = useMorphoVaultData()
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [vaultData, setVaultData] = useState<Vault | undefined>(undefined)

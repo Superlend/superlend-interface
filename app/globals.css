@@ -132,6 +132,11 @@
         transform: skewX(-20deg);
         animation: shimmer 1.5s infinite;
     }
+
+    /* Add banner visibility utilities */
+    .banner-visible\:pt-\[44px\] {
+        padding-top: 44px;
+    }
 }
 
 .connect-wallet-button {
