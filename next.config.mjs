@@ -23,6 +23,9 @@ const nextConfig = {
             {
                 hostname: 'cdn.whisk.so',
             },
+            {
+                hostname: 'funds.superlend.xyz',
+            },
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'attachment',
