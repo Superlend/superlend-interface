@@ -141,11 +141,11 @@ const BorrowButton = ({
 
     const txBtnText =
         txBtnStatus[
-            isConfirming
-                ? 'confirming'
-                : isConfirmed
-                  ? 'success'
-                  : isPending
+        isConfirming
+            ? 'confirming'
+            : isConfirmed
+                ? 'success'
+                : isPending
                     ? 'pending'
                     : 'default'
         ]
@@ -258,19 +258,17 @@ const BorrowButton = ({
     )
 
     const borrowMorpho = useCallback(
-        async (asset: any, amount: TScAmount) => {
-            const morphoMarketData: Market = asset?.morphoMarketData
-            const assetDetails = asset?.asset
-            const platform = asset?.platform
+        async (assetDetails: any, amount: TScAmount) => {
+            const { asset, morphoMarketData, ...platform } = assetDetails
 
             try {
                 logEvent('borrow_initiated', {
                     amount: amount.amountRaw,
-                    token_symbol: assetDetails?.asset?.token?.symbol,
-                    platform_name: assetDetails?.name,
+                    token_symbol: asset?.token?.symbol,
+                    platform_name: platform?.name,
                     chain_name:
                         CHAIN_ID_MAPPER[
-                        Number(assetDetails?.chain_id) as ChainId
+                        Number(platform?.chain_id) as ChainId
                         ],
                     wallet_address: walletAddress,
                 })

@@ -97,11 +97,11 @@ export const AssetTxWidget: FC = () => {
     }
 
     if (isMorphoProtocol) {
-        if (
-            isMorphoMarket &&
-            !MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))
-        )
-            return null
+        // if (
+        //     isMorphoMarket &&
+        //     !MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))
+        // )
+        //     return null
         return (
             <WhalesSupportDialogWrapper
                 showWhalesSupportDialog={showWhalesSupportDialog}

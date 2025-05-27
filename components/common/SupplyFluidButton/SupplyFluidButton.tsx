@@ -56,11 +56,11 @@ const SupplyFluidButton = ({
     handleCloseModal,
     setActionType,
 }: ISupplyFluidButtonProps) => {
-    const tokenDetails = assetDetails.asset
-    const platform = assetDetails.platform
-    const isFluidProtocol = assetDetails.protocol_type === PlatformType.FLUID
-    const isFluidLend = isFluidProtocol && !assetDetails?.isVault
-    const isFluidVaults = isFluidProtocol && assetDetails?.isVault
+    const { asset , ...platform } = assetDetails
+    const tokenDetails = asset
+    const isFluidProtocol = platform.protocol_type === PlatformType.FLUID
+    const isFluidLend = isFluidProtocol && !platform?.isVault
+    const isFluidVaults = isFluidProtocol && platform?.isVault
     const { logEvent } = useAnalytics()
 
     const {

@@ -3,7 +3,7 @@
 import ImageWithDefault from '@/components/ImageWithDefault'
 import { Button } from '@/components/ui/button'
 import { TPositionType } from '@/types'
-import { PlatformType, PlatformTypeMap } from '@/types/platform'
+import { PlatformType } from '@/types/platform'
 import {
     ArrowRightIcon,
     ArrowUpRightIcon,
@@ -394,8 +394,7 @@ export function ConfirmationDialog({
                                     isLendPositionType
                                         ? lendTx.hash
                                         : borrowTx.hash,
-                                    assetDetails?.chain_id ||
-                                    assetDetails?.platform?.chain_id
+                                    assetDetails?.chain_id
                                 )}
                                 target="_blank"
                                 rel="noreferrer"
@@ -813,8 +812,7 @@ export function ConfirmationDialog({
                                             isLendPositionType
                                                 ? lendTx.hash
                                                 : borrowTx.hash,
-                                            assetDetails?.chain_id ||
-                                            assetDetails?.platform?.chain_id
+                                            assetDetails?.chain_id
                                         )}
                                         target="_blank"
                                         rel="noreferrer"
@@ -899,8 +897,7 @@ export function ConfirmationDialog({
                                     <ExternalLink
                                         href={getExplorerLink(
                                             lendTx.hash,
-                                            assetDetails?.chain_id ||
-                                            assetDetails?.platform?.chain_id
+                                            assetDetails?.chain_id
                                         )}
                                     >
                                         <BodyText
@@ -938,8 +935,7 @@ export function ConfirmationDialog({
                                         <ExternalLink
                                             href={getExplorerLink(
                                                 lendTx.hash,
-                                                assetDetails?.chain_id ||
-                                                assetDetails?.platform?.chain_id
+                                                assetDetails?.chain_id
                                             )}
                                         >
                                             <BodyText
@@ -983,8 +979,7 @@ export function ConfirmationDialog({
                                         <ExternalLink
                                             href={getExplorerLink(
                                                 lendTx.hash,
-                                                assetDetails?.chain_id ||
-                                                assetDetails?.platform?.chain_id
+                                                assetDetails?.chain_id
                                             )}
                                         >
                                             <BodyText
@@ -1021,8 +1016,7 @@ export function ConfirmationDialog({
                                             <ExternalLink
                                                 href={getExplorerLink(
                                                     lendTx.hash,
-                                                    assetDetails?.chain_id ||
-                                                    assetDetails?.platform?.chain_id
+                                                    assetDetails?.chain_id
                                                 )}
                                             >
                                                 <BodyText
@@ -1065,8 +1059,7 @@ export function ConfirmationDialog({
                                         <ExternalLink
                                             href={getExplorerLink(
                                                 borrowTx.hash,
-                                                assetDetails?.chain_id ||
-                                                assetDetails?.platform?.chain_id
+                                                assetDetails?.chain_id
                                             )}
                                         >
                                             <BodyText
@@ -1103,8 +1096,7 @@ export function ConfirmationDialog({
                                         <ExternalLink
                                             href={getExplorerLink(
                                                 borrowTx.hash,
-                                                assetDetails?.chain_id ||
-                                                assetDetails?.platform?.chain_id
+                                                assetDetails?.chain_id
                                             )}
                                         >
                                             <BodyText
