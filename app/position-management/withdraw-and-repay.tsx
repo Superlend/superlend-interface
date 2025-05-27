@@ -1057,18 +1057,7 @@ export default function WithdrawAndRepayActionButton({
                     : (selectedTokenDetails?.address ?? '')
             ] ?? fallbackMaxWithdrawAmount
 
-        const maxWithdrawAmountAfterComparingWithBalance =
-            maxWithdrawAmount.maxToWithdraw > balance
-                ? balance
-                : maxWithdrawAmount.maxToWithdraw
-
-        return {
-            maxToWithdraw: maxWithdrawAmountAfterComparingWithBalance,
-            maxToWithdrawFormatted:
-                maxWithdrawAmountAfterComparingWithBalance,
-            maxToWithdrawSCValue: '0',
-            user: {},
-        }
+        return maxWithdrawAmount;
     }
 
     function getMaxRepayAmountForTx() {
@@ -1103,17 +1092,7 @@ export default function WithdrawAndRepayActionButton({
                     : (selectedTokenDetails?.address ?? '')
             ] ?? fallbackMaxRepayAmount
 
-        const maxRepayAmountAfterComparingWithBalance =
-            maxRepayAmount.maxToRepay > balance
-                ? balance
-                : maxRepayAmount.maxToRepay
-
-        return {
-            maxToRepay: maxRepayAmountAfterComparingWithBalance,
-            maxToRepayFormatted: maxRepayAmountAfterComparingWithBalance,
-            maxToRepaySCValue: '0',
-            user: {},
-        }
+        return maxRepayAmount;
     }
 
     const maxWithdrawAmountForTx = getMaxWithdrawAmountForTx()
