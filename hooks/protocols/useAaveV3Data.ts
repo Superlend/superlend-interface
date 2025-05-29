@@ -769,15 +769,15 @@ export const useAaveV3Data = () => {
         supplyTokenAmount,
         leverage,
         borrowToken,
-        _walletAddress
-    } : {
-        chainId: number,
-        uiPoolDataProviderAddress: string,
-        lendingPoolAddressProvider: string,
-        supplyToken: string, // address
-        supplyTokenAmount: string, // amount in bignumber ie. with full precision. Eg. 1 ETH = 10^18
-        leverage: number, // leverage in number
-        borrowToken: string, // address
+        _walletAddress,
+    }: {
+        chainId: number
+        uiPoolDataProviderAddress: string
+        lendingPoolAddressProvider: string
+        supplyToken: string // address
+        supplyTokenAmount: string // amount in bignumber ie. with full precision. Eg. 1 ETH = 10^18
+        leverage: number // leverage in number
+        borrowToken: string // address
         _walletAddress?: string
     }) => {
         try {
@@ -914,6 +914,11 @@ export const useAaveV3Data = () => {
             return {
                 amount: borrowTokenAmount.toString(),
                 amountFormatted: borrowTokenAmountFormatted,
+                flashLoanAmount: additionalSupplyTokenAmount.toString(),
+                flashLoanAmountFormatted: formatUnits(
+                    additionalSupplyTokenAmount,
+                    supplyTokenReserve?.decimals ?? 0
+                ),
                 healthFactor: healthFactor.toString(),
             }
         } catch (error) {
