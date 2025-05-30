@@ -144,7 +144,7 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
                 id: 2,
                 label: "Automated Strategy",
                 tokenSymbol: "USDC",
-                platformName: "SuperFund", // Rebalanced accross multiple protocols
+                platformName: "SuperFund", // Rebalanced across multiple protocols
                 chainName: 'Base',
                 description: description2 || "0.00% APY",
                 tokenImage: `/images/tokens/usdc.webp`,
