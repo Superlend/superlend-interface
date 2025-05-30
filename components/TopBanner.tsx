@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import useGetBoostRewards from '@/hooks/useGetBoostRewards'
 import { useGetEffectiveApy } from '@/hooks/useGetEffectiveApy'
 import { abbreviateNumber } from '@/lib/utils'
+import { useAnalytics } from '@/context/amplitude-analytics-provider'
 const BANNER_VARIANTS = ['gradient', 'accent', 'dark', 'highlight', 'navy', 'forest', 'neon', 'pastel', 'midnight'] as const
 type BannerVariant = (typeof BANNER_VARIANTS)[number]
 
@@ -20,6 +21,7 @@ interface BannerStyle {
 
 export default function TopBanner() {
     const [isVisible, setIsVisible] = useState(false)
+    const { logEvent } = useAnalytics()
     const [currentVariantIndex, setCurrentVariantIndex] = useState(BANNER_VARIANTS.length - 1)
     const [isMobile, setIsMobile] = useState(false)
     const variant = BANNER_VARIANTS[currentVariantIndex]
@@ -60,6 +62,11 @@ export default function TopBanner() {
     const handleClose = () => {
         setIsVisible(false)
         document.documentElement.classList.remove('banner-visible')
+    }
+
+    const handleLaunchSuperFundClick = () => {
+        logEvent('launch_superfund_banner_clicked')
+        window.open('https://funds.superlend.xyz/super-fund/base', '_blank')
     }
 
     // Testing function to cycle through variants
@@ -306,7 +313,7 @@ export default function TopBanner() {
                                         variant="secondaryOutline"
                                         size="sm"
                                         className={`whitespace-nowrap flex relative group overflow-hidden ${currentVariant.button}`}
-                                        onClick={() => window.open('https://funds.superlend.xyz/super-fund/base', '_blank')}
+                                        onClick={handleLaunchSuperFundClick}
                                     >
                                         <span className="relative z-10 flex items-center gap-1">
                                             Launch SuperFund
