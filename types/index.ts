@@ -10,6 +10,9 @@ export type TScAmount = {
     amountRaw: string
     scValue: string
     amountParsed: string
+    lendAmount?: string
+    borrowAmount?: string
+    flashLoanAmount?: string
 }
 
 export type TToken = {

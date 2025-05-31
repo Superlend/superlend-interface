@@ -8,7 +8,6 @@ import {
 } from 'wagmi'
 import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
 import AAVE_POOL_ABI from '@/data/abi/aavePoolABI.json'
-// import CustomButton from '@/components/ui/CustomButton'
 // import { getActionName } from '@/lib/getActionName'
 // import { Action } from '@/types/assetsTable'
 // import { AddressType } from '@/types/address'
@@ -22,28 +21,21 @@ import {
     SOMETHING_WENT_WRONG_MESSAGE,
     SUCCESS_MESSAGE,
 } from '@/constants'
-// import { getErrorText } from '@/lib/getErrorText'
 import { Button } from '@/components/ui/button'
-import { useSearchParams } from 'next/navigation'
-import { TLoopTx, TTxContext, useTxContext } from '@/context/tx-provider'
+import { TLendTx, TLoopTx, TTxContext, useTxContext } from '@/context/tx-provider'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { ArrowRightIcon } from 'lucide-react'
 import { BigNumber } from 'ethers'
 import { getErrorText } from '@/lib/getErrorText'
-import { BodyText } from '@/components/ui/typography'
-
-import MORPHO_MARKET_ABI from '@/data/abi/morphoMarketABI.json'
-import { PlatformType } from '@/types/platform'
-import { Market } from '@morpho-org/blue-sdk'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
-// import { useCreatePendingToast } from '@/hooks/useCreatePendingToast'
-import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { TScAmount } from '@/types'
 import { useAuth } from '@/context/auth-provider'
 import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
+import CREDIT_DELEGATION_ABI from '@/data/abi/creditDelegationABI.json'
+import LOOPING_LEVERAGE_ABI from '@/data/abi/loopingLeverageABI.json'
 
 interface ILoopButtonProps {
     assetDetails: any
@@ -80,6 +72,20 @@ const LoopButton = ({
     const { loopTx, setLoopTx } = useTxContext() as TTxContext
     const { logUserEvent } = useLogNewUserEvent()
     const { accessToken, getAccessTokenFromPrivy } = useAuth()
+    const LOOPING_SC_LEVERAGE_ADDRESS = '0x061709cf0396c598063ca80001d1aafaa7d39f2b'
+    const DEBT_TOKENS: Record<string, string> = {
+        '0x796ea11fa2dd751ed01b53c372ffdb4aaa8f00f9':
+            '0x904a51d7b418d8d5f3739e421a6ed532d653f625',
+        '0x2c03058c8afc06713be23e58d2febc8337dbfe6a':
+            '0xf9279419830016c87be66617e6c5ea42a7204460',
+        '0xbfc94cd2b1e55999cfc7347a9313e88702b83d0f':
+            '0x87c4d41c0982f335e8eb6be30fd2ae91a6de31fb',
+        '0xfc24f770f94edbca6d6f885e12d4317320bcb401':
+            '0x2bc84b1f1e1b89521de08c966be1ca498f97a493',
+        '0xc9b53ab2679f573e480d01e0f49e2b5cfb7a3eab':
+            '0x1504d006b80b1616d2651e8d15d5d25a88efef58',
+    };
+    const debtToken = DEBT_TOKENS[assetDetails.borrowAsset.token.address]
 
     // const amountBN = useMemo(() => {
     //     return amount ? BigNumber.from(amount.amountRaw) : BigNumber.from(0)
@@ -120,299 +126,17 @@ const LoopButton = ({
         getAccessTokenFromPrivy()
     }, [])
 
+    // Trigger the credit deligation or loop function based on loopTx.status
     useEffect(() => {
-        if (loopTx.status === 'loop' && !ETH_ADDRESSES.includes(underlyingAssetAdress)) {
-            loop()
+        if (loopTx.status === 'credit_deligation' && !ETH_ADDRESSES.includes(underlyingAssetAdress)) {
+            onCreditDeligation()
+        }
+        if (loopTx.status === 'loop' && ETH_ADDRESSES.includes(underlyingAssetAdress)) {
+            onLoop()
         }
     }, [loopTx.status])
 
-    const loop = useCallback(async () => {
-        const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
-        const isAave = assetDetails?.protocol_type === PlatformType.AAVE
-        const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
-        const isMorphoVault = isMorpho && assetDetails?.vault
-        const isMorphoMarket = isMorpho && assetDetails?.market
-        const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
-        const isFluidVault = isFluid && assetDetails?.isVault
-        const isFluidLend = isFluid && !assetDetails?.isVault
-
-        if (isAave) {
-            await repayAave()
-            return
-        }
-        if (isMorphoMarket && assetDetails?.market) {
-            await repayMorphoMarket(assetDetails)
-            return
-        }
-        if (isFluidVault) {
-            await repayFluidVault()
-            return
-        }
-    }, [amount])
-
-    const repayMorphoMarket = useCallback(
-        async (assetDetails: any) => {
-            try {
-                const morphoMarketData = assetDetails?.market as Market
-
-                logEvent('repay_initiated', {
-                    amount: amount.amountRaw,
-                    token_symbol: assetDetails?.asset?.token?.symbol,
-                    platform_name: assetDetails?.name,
-                    chain_name:
-                        CHAIN_ID_MAPPER[
-                        Number(assetDetails?.chain_id) as ChainId
-                        ],
-                    wallet_address: walletAddress,
-                })
-
-                writeContractAsync({
-                    address: assetDetails.core_contract as `0x${string}`,
-                    abi: MORPHO_MARKET_ABI,
-                    functionName: 'repay',
-                    args: [
-                        {
-                            loanToken: morphoMarketData.params.loanToken,
-                            collateralToken:
-                                morphoMarketData.params.collateralToken,
-                            oracle: morphoMarketData.params.oracle,
-                            irm: morphoMarketData.params.irm,
-                            lltv: morphoMarketData.params.lltv,
-                        },
-                        amount.amountRaw,
-                        0,
-                        walletAddress,
-                        '0x',
-                    ],
-                })
-                    .then((data) => {
-                        setLoopTx((prev: TLoopTx) => ({
-                            ...prev,
-                            status: 'view',
-                            errorMessage: '',
-                        }))
-
-                        logEvent('repay_completed', {
-                            amount: amount.amountRaw,
-                            token_symbol: assetDetails?.asset?.token?.symbol,
-                            platform_name: assetDetails?.name,
-                            chain_name:
-                                CHAIN_ID_MAPPER[
-                                Number(assetDetails?.chain_id) as ChainId
-                                ],
-                            wallet_address: walletAddress,
-                        })
-
-                        logUserEvent({
-                            user_address: walletAddress,
-                            event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
-                            platform_type: 'superlend_aggregator',
-                            protocol_identifier: assetDetails?.protocol_identifier,
-                            event_data: 'REPAY',
-                            authToken: accessToken || '',
-                        })
-                    })
-                    .catch((error) => {
-                        setLoopTx((prev: TLoopTx) => ({
-                            ...prev,
-                            isPending: false,
-                            isConfirming: false,
-                            isConfirmed: false,
-                            // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
-                        }))
-                    })
-            } catch (error) {
-                error
-            }
-        },
-        [
-            amount,
-            poolContractAddress,
-            underlyingAssetAdress,
-            walletAddress,
-            handleCloseModal,
-            writeContractAsync,
-            decimals,
-        ]
-    )
-
-    const repayFluidVault = useCallback(async () => {
-        let amountToRepay = amount.scValue
-        //  parseUnits(
-        //     `${-Number(amount)}`,
-        //     assetDetails.asset.token.decimals
-        // )
-
-        try {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                status: 'repay',
-                hash: '',
-                errorMessage: '',
-            }))
-
-            logEvent('repay_initiated', {
-                amount: amount.amountRaw,
-                token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.name,
-                chain_name:
-                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                wallet_address: walletAddress,
-            })
-
-            writeContractAsync({
-                address: poolContractAddress,
-                abi: FLUID_VAULTS_ABI,
-                functionName: 'operate',
-                args: [
-                    assetDetails?.fluid_vault_nftId,
-                    0,
-                    BigInt(amountToRepay.toString()),
-                    walletAddress,
-                ],
-                value: ETH_ADDRESSES.includes(underlyingAssetAdress)
-                    ? BigInt(amount.amountParsed.toString())
-                    : BigInt('0'),
-            })
-                .then((data) => {
-                    setLoopTx((prev: TLoopTx) => ({
-                        ...prev,
-                        status: 'view',
-                        errorMessage: '',
-                    }))
-
-                    logEvent('repay_completed', {
-                        amount: amount.amountRaw,
-                        token_symbol: assetDetails?.asset?.token?.symbol,
-                        platform_name: assetDetails?.name,
-                        chain_name:
-                            CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
-                            ],
-                        wallet_address: walletAddress,
-                    })
-
-                    logUserEvent({
-                        user_address: walletAddress,
-                        event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
-                        platform_type: 'superlend_aggregator',
-                        protocol_identifier: assetDetails?.protocol_identifier,
-                        event_data: 'REPAY',
-                        authToken: accessToken || '',
-                    })
-                })
-                .catch((error) => {
-                    setLoopTx((prev: TLoopTx) => ({
-                        ...prev,
-                        isPending: false,
-                        isConfirming: false,
-                        isConfirmed: false,
-                        // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
-                    }))
-                })
-        } catch (error: any) {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                isPending: false,
-                isConfirming: false,
-                isConfirmed: false,
-                // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
-            }))
-        }
-    }, [
-        amount,
-        poolContractAddress,
-        underlyingAssetAdress,
-        walletAddress,
-        handleCloseModal,
-        writeContractAsync,
-        decimals,
-    ])
-
-    const repayAave = useCallback(async () => {
-        try {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                status: 'repay',
-                hash: '',
-                errorMessage: '',
-            }))
-
-            logEvent('repay_initiated', {
-                amount: amount.amountRaw,
-                token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.name,
-                chain_name:
-                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                wallet_address: walletAddress,
-            })
-
-            writeContractAsync({
-                address: poolContractAddress,
-                abi: AAVE_POOL_ABI,
-                functionName: 'repay',
-                args: [
-                    underlyingAssetAdress,
-                    amount.amountParsed,
-                    2,
-                    walletAddress,
-                ],
-            })
-                .then((data) => {
-                    setLoopTx((prev: TLoopTx) => ({
-                        ...prev,
-                        status: 'view',
-                        errorMessage: '',
-                    }))
-
-                    logEvent('repay_completed', {
-                        amount: amount.amountRaw,
-                        token_symbol: assetDetails?.asset?.token?.symbol,
-                        platform_name: assetDetails?.name,
-                        chain_name:
-                            CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
-                            ],
-                        wallet_address: walletAddress,
-                    })
-
-                    logUserEvent({
-                        user_address: walletAddress,
-                        event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
-                        platform_type: 'superlend_aggregator',
-                        protocol_identifier: assetDetails?.protocol_identifier,
-                        event_data: 'REPAY',
-                        authToken: accessToken || '',
-                    })
-                })
-                .catch((error) => {
-                    setLoopTx((prev: TLoopTx) => ({
-                        ...prev,
-                        isPending: false,
-                        isConfirming: false,
-                        isConfirmed: false,
-                        // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
-                    }))
-                })
-        } catch (error: any) {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                isPending: false,
-                isConfirming: false,
-                isConfirmed: false,
-                // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
-            }))
-        }
-    }, [
-        amount,
-        poolContractAddress,
-        underlyingAssetAdress,
-        walletAddress,
-        handleCloseModal,
-        writeContractAsync,
-        decimals,
-    ])
-
+    // Update the loopTx state based on the transaction status
     useEffect(() => {
         setLoopTx((prev: TLoopTx) => ({
             ...prev,
@@ -423,33 +147,7 @@ const LoopButton = ({
         }))
     }, [isPending, isConfirming, isConfirmed])
 
-    // useEffect(() => {
-    //     if (loopTx.status === 'view') return
-
-    //     if (
-    //         !loopTx.isConfirmed &&
-    //         !loopTx.isPending &&
-    //         !loopTx.isConfirming &&
-    //         Number(amount.amountParsed) > 0
-    //     ) {
-    //         if (loopTx.allowanceBN.gte(amount.amountParsed)) {
-    //             setLoopTx((prev: TLoopTx) => ({
-    //                 ...prev,
-    //                 status: 'repay',
-    //                 hash: '',
-    //                 errorMessage: '',
-    //             }))
-    //         } else {
-    //             setLoopTx((prev: TLoopTx) => ({
-    //                 ...prev,
-    //                 status: 'approve',
-    //                 hash: '',
-    //                 errorMessage: '',
-    //             }))
-    //         }
-    //     }
-    // }, [loopTx.allowanceBN])
-
+    // Update the loopTx hash based on the transaction status
     useEffect(() => {
         if (
             (loopTx.status === 'approve' || loopTx.status === 'loop') &&
@@ -477,12 +175,13 @@ const LoopButton = ({
         }
     }, [hash, loopTx.status])
 
+    // Approve the supply token
     const onApproveSupply = async () => {
         try {
             logEvent('approve_loop_initiated', {
-                amount: amount.amountRaw,
-                token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.name,
+                amount: (amount?.lendAmount ?? '0'),
+                token_symbol: assetDetails?.asset?.token?.symbol ?? '',
+                platform_name: assetDetails?.name ?? '',
                 chain_name:
                     CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
@@ -499,14 +198,12 @@ const LoopButton = ({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [poolContractAddress, amount.amountParsed],
+                args: [LOOPING_SC_LEVERAGE_ADDRESS, (amount?.lendAmount ?? '0')],
             }).catch((error) => {
                 setLoopTx((prev: TLoopTx) => ({
                     ...prev,
                     isPending: false,
                     isConfirming: false,
-                    isConfirmed: false,
-                    // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
                 }))
             })
         } catch (error: any) {
@@ -520,33 +217,86 @@ const LoopButton = ({
         }
     }
 
+    // Credit deligation function
+    const onCreditDeligation = async () => {
+        try {
+            logEvent('credit_deligation_initiated', {
+                amount: (amount?.borrowAmount ?? '0'),
+                token_symbol: assetDetails?.borrowAsset?.token?.symbol ?? '',
+                platform_name: assetDetails?.name ?? '',
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
+
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                status: 'credit_deligation',
+                hash: '',
+                errorMessage: '',
+            }))
+
+            writeContractAsync({
+                address: debtToken as `0x${string}`,
+                abi: CREDIT_DELEGATION_ABI,
+                functionName: 'approveDelegation',
+                args: [LOOPING_SC_LEVERAGE_ADDRESS, (amount?.borrowAmount ?? '0')],
+            }).catch((error) => {
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                }))
+            })
+        } catch (error: any) {
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+            }))
+        }
+    }
+
+    // Loop function
+    const onLoop = async () => {
+        const supplyToken = assetDetails?.asset?.token?.address ?? ''
+        const borrowToken = assetDetails?.borrowAsset?.token?.address ?? ''
+        const supplyAmount = amount?.lendAmount ?? '0'
+        const flashLoanAmount = amount?.flashLoanAmount ?? '0'
+        const pathTokens: string[] = []
+        const pathFees: string[] = []
+
+        writeContractAsync({
+            address: LOOPING_SC_LEVERAGE_ADDRESS,
+            abi: LOOPING_LEVERAGE_ABI,
+            functionName: 'loop',
+            args: [supplyToken, borrowToken, supplyAmount, flashLoanAmount, pathTokens, pathFees],
+        }).catch((error) => {
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+            }))
+        })
+    }
+
+    // Handle the SC interaction
+    const handleSCInteraction = useCallback(() => {
+        if (loopTx.status === 'approve') {
+            onApproveSupply()
+        } else if (loopTx.status === 'credit_deligation') {
+            onCreditDeligation()
+        } else if (loopTx.status === 'loop') {
+            onLoop()
+        } else {
+            handleCloseModal(false)
+        }
+    }, [loopTx.status])
+
     return (
         <div className="flex flex-col gap-2">
-            {/* {loopTx.status === 'approve' && (
-                <CustomAlert
-                    variant="info"
-                    hasPrefixIcon={false}
-                    description={
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="text-secondary-500"
-                        >
-                            Note: You need to complete an &apos;approval
-                            transaction&apos; granting permission to move funds from your wallet as the
-                            first step before supplying the asset.
-                            <a
-                                href="https://eips.ethereum.org/EIPS/eip-2612"
-                                target="_blank"
-                                className="text-secondary-500 pb-[0.5px] border-b border-secondary-500 hover:border-secondary-200 ml-1"
-                            >
-                                Learn more
-                            </a>
-                            .
-                        </BodyText>
-                    }
-                />
-            )} */}
             {error && (
                 <CustomAlert
                     description={
@@ -561,15 +311,7 @@ const LoopButton = ({
             )}
             <Button
                 disabled={isPending || isConfirming || disabled}
-                onClick={() => {
-                    if (loopTx.status === 'approve') {
-                        onApproveSupply()
-                    } else if (loopTx.status === 'loop') {
-                        loop()
-                    } else {
-                        handleCloseModal(false)
-                    }
-                }}
+                onClick={handleSCInteraction}
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
                 variant="primary"
             >

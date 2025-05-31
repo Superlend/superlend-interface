@@ -81,7 +81,10 @@ interface IConfirmationDialogProps {
     positionType: TPositionType
     assetDetails?: TAssetDetails
     loopAssetDetails?: TLoopAssetDetails
-    amount: string
+    amount?: string
+    lendAmount?: string
+    borrowAmount?: string
+    flashLoanAmount?: string
     balance: string
     maxBorrowAmount: {
         maxToBorrow: string
@@ -107,7 +110,10 @@ export function ConfirmationDialog({
     positionType,
     assetDetails,
     loopAssetDetails,
-    amount,
+    amount = '0',
+    lendAmount = '0',
+    borrowAmount = '0',
+    flashLoanAmount = '0',
     setAmount,
     balance,
     maxBorrowAmount,
@@ -127,7 +133,7 @@ export function ConfirmationDialog({
     }
     const { logEvent } = useAnalytics()
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
-    const searchParams = useSearchParams()
+    const searchParams = useSearchParams() || new URLSearchParams()
     const chain_id = searchParams.get('chain_id') || 1
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
@@ -143,7 +149,7 @@ export function ConfirmationDialog({
     const { allChainsData } = useAssetsDataContext()
     const chainDetails = getChainDetails({
         allChainsData,
-        chainIdToMatch: assetDetails?.chain_id ?? 1,
+        chainIdToMatch: assetDetails?.chain_id ?? loopAssetDetails?.chain_id ?? 1,
     })
 
     // Get Discord dialog state
@@ -206,6 +212,20 @@ export function ConfirmationDialog({
             }
             return v
         }
+        if (positionType === 'loop') {
+            const amountParsed = parseUnits(
+                amount === '' ? '0' : amount,
+                loopAssetDetails?.borrowAsset?.token?.decimals ?? 0
+            ).toString()
+            return {
+                amountRaw: amount, 
+                scValue: amount, 
+                amountParsed,
+                lendAmount: lendAmount,
+                borrowAmount: borrowAmount,
+                flashLoanAmount: flashLoanAmount,
+            }
+        }
         return { amountRaw: '0', scValue: '0', amountParsed: '0' }
     }
 
@@ -228,7 +248,11 @@ export function ConfirmationDialog({
     }
 
     const inputUsdAmount =
-        Number(amount) * Number(assetDetails?.asset?.token?.price_usd || loopAssetDetails?.supplyAsset?.token?.price_usd)
+        Number(amount) * Number(assetDetails?.asset?.token?.price_usd ?? 0)
+    const lendInputUsdAmount =
+        Number(lendAmount) * Number(loopAssetDetails?.supplyAsset?.token?.price_usd ?? 0)
+    const borrowInputUsdAmount =
+        Number(borrowAmount) * Number(loopAssetDetails?.borrowAsset?.token?.price_usd ?? 0)
 
     const isLendTxInProgress = lendTx.isPending || lendTx.isConfirming
     const isBorrowTxInProgress = borrowTx.isPending || borrowTx.isConfirming
@@ -526,11 +550,11 @@ export function ConfirmationDialog({
                         chainLogo: chainDetails?.logo || '',
                         chainName: chainDetails?.name || '',
                         platformName: assetDetails?.name || loopAssetDetails?.name || '',
-                        tokenAmountInUsd: inputUsdAmount || 0,
-                        tokenAmount: amount,
+                        tokenAmountInUsd: positionType === 'loop' ? lendInputUsdAmount : inputUsdAmount,
+                        tokenAmount: positionType === 'loop' ? lendAmount : amount,
                     })
                 )}
-            {/* Block 2 - Loop Asset Details */}
+            {/* Block 2 - Loop Borrow Asset Details */}
             {isShowBlock({
                 lend: false,
                 borrow: false,
@@ -543,8 +567,8 @@ export function ConfirmationDialog({
                         chainLogo: chainDetails?.logo || '',
                         chainName: chainDetails?.name || '',
                         platformName: loopAssetDetails?.name || '',
-                        tokenAmountInUsd: inputUsdAmount || 0,
-                        tokenAmount: amount,
+                        tokenAmountInUsd: borrowInputUsdAmount,
+                        tokenAmount: borrowAmount,
                     })
                 )}
             {/* Block 3 */}

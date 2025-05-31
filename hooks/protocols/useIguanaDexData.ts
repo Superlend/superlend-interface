@@ -20,6 +20,7 @@ const IguanaSubgraphV2 =
 const IguanaSubgraphV3 =
     'https://api.studio.thegraph.com/query/69431/exchange-v3-etherlink/version/latest'
 
+// @Shreyas: Missing tokens
 const EtherlinkTokens: Record<string, ERC20Token> = {
     '0xc9b53ab2679f573e480d01e0f49e2b5cfb7a3eab': WXTZ[ChainId.ETHERLINK],
     '0x2c03058c8afc06713be23e58d2febc8337dbfe6a': USDT[ChainId.ETHERLINK],

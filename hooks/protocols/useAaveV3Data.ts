@@ -27,29 +27,26 @@ import { BigNumber } from 'ethers'
 import { useAccount } from 'wagmi'
 import { useUserTokenBalancesContext } from '../../context/user-token-balances-provider'
 import { etherlink } from 'viem/chains'
+import { useAaveV3DataContext, type ChainConfig } from '../../context/aave-v3-data-provider'
 
 export const useAaveV3Data = () => {
     const { address: walletAddress } = useAccount()
     const { providers } = useEthersMulticall()
-    const [providerStatus, setProviderStatus] = useState({
-        isReady: false,
-        isInitializing: true,
-        error: null as string | null,
-    })
-    const [reserveData, setReserveData] = useState<
-        void | ReservesDataHumanized | ReservesDataHumanizedLegacy
-    >()
-    const [userData, setUserData] = useState<
-        | void
-        | {
-              userReserves: UserReserveDataHumanized[]
-              userEmodeCategoryId: number
-          }
-        | {
-              userReserves: UserReserveDataHumanizedLegacy[]
-              userEmodeCategoryId: number
-          }
-    >()
+    
+    // Use the context instead of local state
+    const {
+        getReservesData,
+        getUserData,
+        getAaveData,
+        fetchData,
+        fetchReservesData,
+        fetchUserData,
+        isLoading,
+        hasError,
+        refreshData,
+        providerStatus,
+    } = useAaveV3DataContext()
+
     const [maxLeverage, setMaxLeverage] = useState<Record<
         string,
         Record<string, number>
@@ -71,204 +68,44 @@ export const useAaveV3Data = () => {
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
     } = useUserTokenBalancesContext()
 
-    // Enhanced provider readiness check
-    useEffect(() => {
-        const initializeProviders = async () => {
-            setProviderStatus((prev) => ({ ...prev, isInitializing: true }))
-
-            if (!providers || Object.keys(providers).length === 0) {
-                setProviderStatus({
-                    isReady: false,
-                    isInitializing: false,
-                    error: 'No providers available',
-                })
-                return
-            }
-
-            try {
-                // Test provider functionality
-                const chainIds = Object.keys(providers)
-                const providerTests = await Promise.all(
-                    chainIds.map(async (chainId) => {
-                        const provider = providers[Number(chainId)]
-                        if (!provider) return false
-
-                        try {
-                            // Try to get the network - a basic operation that should always work
-                            await provider.getNetwork()
-                            return true
-                        } catch {
-                            return false
-                        }
-                    })
-                )
-
-                const hasWorkingProvider = providerTests.some(
-                    (result) => result
-                )
-
-                setProviderStatus({
-                    isReady: hasWorkingProvider,
-                    isInitializing: false,
-                    error: hasWorkingProvider
-                        ? null
-                        : 'No working providers found',
-                })
-            } catch (error) {
-                setProviderStatus({
-                    isReady: false,
-                    isInitializing: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : 'Unknown error initializing providers',
-                })
-            }
-        }
-
-        initializeProviders()
-    }, [providers])
-
-    // useEffect(() => {
-    //     if (providerStatus.isReady) {
-    //         getMaxLeverage(
-    //             42793,
-    //             '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
-    //             '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec'
-    //         ).then((results) => {
-    //             setMaxLeverage(results as any)
-    //         })
-
-    //         getBorrowTokenAmountForLeverage(
-    //             42793,
-    //             '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9',
-    //             '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec',
-    //             '0xc9B53AB2679f573e480d01e0f49e2B5CFB7a3EAb', // WXTZ
-    //             BigNumber.from('1').mul(BigNumber.from(10).pow(18)).toString(),
-    //             2.1,
-    //             '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9', // USDC
-    //             '0x0e9852b16ae49c99b84b0241e3c6f4a5692c6b05' // some random wallet address with money
-    //         ).then((result) => {
-    //             setBorrowTokenAmountForLeverage(result)
-    //         })
-    //     }
-    // }, [providerStatus.isReady])
-
-    const fetchReservesData = async (
+    // Deprecated: Remove these functions in favor of context methods
+    const fetchReservesDataLegacy = async (
         chainId: number,
         uiPoolDataProviderAddress: string,
         lendingPoolAddressProvider: string
     ) => {
-        if (!providerStatus.isReady || !providers || !providers[chainId]) {
-            console.log('Provider not ready for fetchReservesData', {
-                isProvidersReady: providerStatus.isReady,
-                hasProviders: !!providers,
-                chainSupported: providers?.[chainId] ? 'yes' : 'no',
-            })
-            return Promise.resolve()
-        }
-
-        if (
-            !walletAddress ||
-            !uiPoolDataProviderAddress ||
-            !lendingPoolAddressProvider
-        ) {
-            console.log('Missing required parameters for fetchReservesData', {
-                walletAddress,
-                uiPoolDataProviderAddress,
-                lendingPoolAddressProvider,
-            })
-            return Promise.resolve()
-        }
-
-        try {
-            const isLegacyInstance = IsAaveV3Legacy(chainId)
-            const uiPoolDataProviderInstance = isLegacyInstance
-                ? new UiPoolDataProviderLegacy({
-                      uiPoolDataProviderAddress: getAddress(
-                          uiPoolDataProviderAddress
-                      ),
-                      provider: providers[chainId],
-                      chainId: chainId,
-                  })
-                : new UiPoolDataProvider({
-                      uiPoolDataProviderAddress: getAddress(
-                          uiPoolDataProviderAddress
-                      ),
-                      provider: providers[chainId],
-                      chainId: chainId,
-                  })
-
-            const result =
-                await uiPoolDataProviderInstance.getReservesHumanized({
-                    lendingPoolAddressProvider: getAddress(
-                        lendingPoolAddressProvider
-                    ),
-                })
-            setReserveData(result)
-            return result
-        } catch (error) {
-            console.error('Error in fetchReservesData:', error)
-            return Promise.resolve()
-        }
+        console.warn('fetchReservesData is deprecated. Use context.fetchReservesData instead.')
+        return fetchReservesData({
+            chainId,
+            uiPoolDataProviderAddress,
+            lendingPoolAddressProvider,
+        })
     }
 
-    const fetchUserData = async (
+    const fetchUserDataLegacy = async (
         chainId: number,
         uiPoolDataProviderAddress: string,
         lendingPoolAddressProvider: string,
         _walletAddress?: string
     ) => {
-        if (!providerStatus.isReady || !providers || !providers[chainId]) {
-            console.log('Provider not ready for fetchUserData', {
-                isProvidersReady: providerStatus.isReady,
-                hasProviders: !!providers,
-                chainSupported: providers?.[chainId] ? 'yes' : 'no',
-            })
-            return Promise.resolve()
-        }
+        console.warn('fetchUserData is deprecated. Use context.fetchUserData instead.')
+        return fetchUserData({
+            chainId,
+            uiPoolDataProviderAddress,
+            lendingPoolAddressProvider,
+        }, false, _walletAddress)
+    }
 
-        if (
-            !walletAddress ||
-            !uiPoolDataProviderAddress ||
-            !lendingPoolAddressProvider
-        ) {
-            console.log('Missing required parameters for fetchUserData')
-            return Promise.resolve()
-        }
-
-        try {
-            const isLegacyInstance = IsAaveV3Legacy(chainId)
-
-            const uiPoolDataProviderInstance = isLegacyInstance
-                ? new UiPoolDataProviderLegacy({
-                      uiPoolDataProviderAddress: getAddress(
-                          uiPoolDataProviderAddress
-                      ),
-                      provider: providers[chainId],
-                      chainId: chainId,
-                  })
-                : new UiPoolDataProvider({
-                      uiPoolDataProviderAddress: getAddress(
-                          uiPoolDataProviderAddress
-                      ),
-                      provider: providers[chainId],
-                      chainId: chainId,
-                  })
-
-            const result =
-                await uiPoolDataProviderInstance.getUserReservesHumanized({
-                    lendingPoolAddressProvider: getAddress(
-                        lendingPoolAddressProvider
-                    ),
-                    user: getAddress(_walletAddress || walletAddress),
-                })
-            setUserData(result)
-            return result
-        } catch (error) {
-            console.error('Error in fetchUserData:', error)
-            return Promise.resolve()
-        }
+    const fetchAaveV3Data = async (
+        chainId: number,
+        uiPoolDataProviderAddress: string,
+        lendingPoolAddressProvider: string
+    ) => {
+        return fetchData({
+            chainId,
+            uiPoolDataProviderAddress,
+            lendingPoolAddressProvider,
+        })
     }
 
     const getAllowance = async (
@@ -276,7 +113,7 @@ export const useAaveV3Data = () => {
         spender: string,
         token: string
     ) => {
-        if (!providerStatus.isReady || !providers[chainId]) {
+        if (!providers[chainId]) {
             console.log('Providers not ready or chain not supported')
             return BigNumber.from(0)
         }
@@ -288,36 +125,6 @@ export const useAaveV3Data = () => {
         } catch (error) {
             console.error('Error getting allowance:', error)
             return BigNumber.from(0)
-        }
-    }
-
-    const fetchAaveV3Data = async (
-        chainId: number,
-        uiPoolDataProviderAddress: string,
-        lendingPoolAddressProvider: string
-    ) => {
-        if (!providerStatus.isReady) {
-            console.log('Providers not ready for fetchAaveV3Data')
-            return Promise.resolve([undefined, undefined])
-        }
-
-        try {
-            const result = await Promise.all([
-                fetchReservesData(
-                    chainId,
-                    uiPoolDataProviderAddress,
-                    lendingPoolAddressProvider
-                ),
-                fetchUserData(
-                    chainId,
-                    uiPoolDataProviderAddress,
-                    lendingPoolAddressProvider
-                ),
-            ])
-            return result
-        } catch (error) {
-            console.error('Error in fetchAaveV3Data:', error)
-            return [undefined, undefined]
         }
     }
 
@@ -339,8 +146,11 @@ export const useAaveV3Data = () => {
         ]
     ) => {
         const isLegacyInstance = IsAaveV3Legacy(chainId)
-        const _reserveData = allData ? allData[0] : reserveData
-        const _userData = allData ? allData[1] : userData
+        
+        // Use provided data or get from context
+        const _reserveData = allData ? allData[0] : getReservesData(chainId)
+        const _userData = allData ? allData[1] : getUserData(chainId)
+        
         if (!_reserveData || !_userData) return
         const reserve = _reserveData.reservesData.find(
             (r) => r.underlyingAsset.toLowerCase() === token.toLowerCase()
@@ -517,8 +327,8 @@ export const useAaveV3Data = () => {
         ]
     ) => {
         const isLegacyInstance = IsAaveV3Legacy(chainId)
-        const _reserveData = allData ? allData[0] : reserveData
-        const _userData = allData ? allData[1] : userData
+        const _reserveData = allData ? allData[0] : getReservesData(chainId)
+        const _userData = allData ? allData[1] : getUserData(chainId)
         if (!_reserveData || !_userData) return
         const reserve = _reserveData.reservesData.find(
             (r) => r.underlyingAsset.toLowerCase() === token.toLowerCase()
@@ -625,8 +435,8 @@ export const useAaveV3Data = () => {
         ]
     ) => {
         const isLegacyInstance = IsAaveV3Legacy(chainId)
-        const _reserveData = allData ? allData[0] : reserveData
-        const _userData = allData ? allData[1] : userData
+        const _reserveData = allData ? allData[0] : getReservesData(chainId)
+        const _userData = allData ? allData[1] : getUserData(chainId)
         if (!_reserveData || !_userData) return
         const reserve = _reserveData.reservesData.find(
             (r) => r.underlyingAsset.toLowerCase() === token.toLowerCase()
@@ -731,11 +541,11 @@ export const useAaveV3Data = () => {
         if (chainId !== etherlink.id) return
 
         // TODO: Add error handling for this
-        const reservesResult = (await fetchReservesData(
+        const reservesResult = (await fetchReservesData({
             chainId,
             uiPoolDataProviderAddress,
-            lendingPoolAddressProvider
-        )) as ReservesDataHumanizedLegacy
+            lendingPoolAddressProvider,
+        })) as ReservesDataHumanizedLegacy
         const reserves = reservesResult?.reservesData
 
         const reservesMap: Record<string, ReserveDataHumanized> = {}
@@ -787,11 +597,11 @@ export const useAaveV3Data = () => {
                     amountFormatted: '0',
                     healthFactor: '0',
                 } // TODO: handle this gracefully
-            const reservesData = (await fetchReservesData(
+            const reservesData = (await fetchReservesData({
                 chainId,
                 uiPoolDataProviderAddress,
-                lendingPoolAddressProvider
-            )) as ReservesDataHumanizedLegacy
+                lendingPoolAddressProvider,
+            })) as ReservesDataHumanizedLegacy
 
             const additionalSupplyTokenAmount = BigNumber.from(
                 supplyTokenAmount
@@ -848,12 +658,11 @@ export const useAaveV3Data = () => {
             // --------- Calculate health factor ---------
 
             const currentTimestamp = Math.floor(Date.now() / 1000)
-            const _userData = (await fetchUserData(
+            const _userData = (await fetchUserData({
                 chainId,
                 uiPoolDataProviderAddress,
                 lendingPoolAddressProvider,
-                _walletAddress || walletAddress
-            )) as any
+            }, false, _walletAddress)) as any
             const formattedPoolReserves = formatReservesLegacy({
                 reserves: reservesData.reservesData as any,
                 currentTimestamp,
@@ -932,17 +741,33 @@ export const useAaveV3Data = () => {
     }
 
     return {
-        reserveData,
-        userData,
-        getAllowance,
+        // Context methods - recommended to use these
+        getReservesData,
+        getUserData,
+        getAaveData,
+        fetchData,
+        fetchReservesData,
+        fetchUserData,
+        isLoading,
+        hasError,
+        refreshData,
+        
+        // Backwards compatibility - deprecated methods
         fetchAaveV3Data,
+        
+        // Utility methods
+        getAllowance,
         getMaxBorrowAmount,
         getMaxWithdrawAmount,
         getMaxRepayAmount,
-        providerStatus,
         getMaxLeverage,
-        maxLeverage,
         getBorrowTokenAmountForLeverage,
+        
+        // Legacy state values for backwards compatibility
+        reserveData: undefined, // deprecated - use getReservesData(chainId) instead
+        userData: undefined, // deprecated - use getUserData(chainId) instead
+        providerStatus, // now returns real provider status from context
+        maxLeverage,
         borrowTokenAmountForLeverage,
     }
 }

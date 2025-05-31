@@ -27,6 +27,7 @@ import { AnalyticsProvider } from './analytics-provider'
 import { PageVisitTracker } from '@/components/analytics/PageVisitTracker'
 import { ShowAllMarketsProvider } from './show-all-markets-provider'
 import { AuthProvider } from './auth-provider'
+import { AaveV3DataProvider } from './aave-v3-data-provider'
 
 // Set up queryClient
 const queryClient = new QueryClient()
@@ -115,11 +116,13 @@ function ContextProvider({ children }: { children: ReactNode }) {
                     <WagmiProvider config={config}>
                         <AssetsDataProvider>
                             <UserTokenBalancesProvider>
-                                <ShowAllMarketsProvider>
-                                    <AuthProvider>
-                                        {children}
-                                    </AuthProvider>
-                                </ShowAllMarketsProvider>
+                                <AaveV3DataProvider>
+                                    <ShowAllMarketsProvider>
+                                        <AuthProvider>
+                                            {children}
+                                        </AuthProvider>
+                                    </ShowAllMarketsProvider>
+                                </AaveV3DataProvider>
                             </UserTokenBalancesProvider>
                         </AssetsDataProvider>
                     </WagmiProvider>
