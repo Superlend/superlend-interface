@@ -25,7 +25,6 @@ export const AssetTxWidget: FC = () => {
     const searchParams = useSearchParams()
     // const tokenAddress = searchParams.get('token') || ''
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
-    const exposure_widget = searchParams.get('exposure_widget') === 'true'
     const chain_id = searchParams?.get('chain_id') || '1'
     const {
         walletAddress,
@@ -87,6 +86,9 @@ export const AssetTxWidget: FC = () => {
     if (isAaveV3Protocol) {
         return (
             <WhalesSupportDialogWrapper
+                isLoading={isLoading}
+                platformData={platformData}
+                portfolioData={portfolioData}
                 showWhalesSupportDialog={showWhalesSupportDialog}
                 setShowWhalesSupportDialog={setShowWhalesSupportDialog}
                 portfolioValue={portfolioValue}
@@ -108,6 +110,9 @@ export const AssetTxWidget: FC = () => {
         //     return null
         return (
             <WhalesSupportDialogWrapper
+                isLoading={isLoadingPlatformData}
+                platformData={platformData}
+                portfolioData={portfolioData}
                 showWhalesSupportDialog={showWhalesSupportDialog}
                 setShowWhalesSupportDialog={setShowWhalesSupportDialog}
                 portfolioValue={portfolioValue}
@@ -123,6 +128,9 @@ export const AssetTxWidget: FC = () => {
     if (isFluidProtocol) {
         return (
             <WhalesSupportDialogWrapper
+                isLoading={isLoadingPlatformData}
+                platformData={platformData}
+                portfolioData={portfolioData}
                 showWhalesSupportDialog={showWhalesSupportDialog}
                 setShowWhalesSupportDialog={setShowWhalesSupportDialog}
                 portfolioValue={portfolioValue}
@@ -141,11 +149,17 @@ export const AssetTxWidget: FC = () => {
 
 export const WhalesSupportDialogWrapper = ({
     children,
+    isLoading,
+    platformData,
+    portfolioData,
     showWhalesSupportDialog,
     setShowWhalesSupportDialog,
     portfolioValue
 }: {
     children: React.ReactNode,
+    isLoading: boolean,
+    platformData: TPlatform,
+    portfolioData: TPortfolio,
     showWhalesSupportDialog: boolean,
     setShowWhalesSupportDialog: (show: boolean) => void,
     portfolioValue: number
@@ -153,6 +167,11 @@ export const WhalesSupportDialogWrapper = ({
     return (
         <>
             {children}
+            <LoopingWidget
+                isLoading={isLoading}
+                platformData={platformData}
+                portfolioData={portfolioData}
+            />
             <WhalesSupportDialog
                 open={showWhalesSupportDialog}
                 setOpen={setShowWhalesSupportDialog}
