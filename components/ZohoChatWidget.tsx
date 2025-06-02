@@ -23,8 +23,8 @@ export default function ZohoChatWidget() {
     const { width: screenWidth } = useDimensions()
     const isMobile = useMemo(() => screenWidth > 0 && screenWidth <= 768, [screenWidth])
     
-    // Hide chat widget if onboarding is open on mobile
-    const shouldHideChat = isOnboardingOpen && isMobile
+    // Hide chat widget if onboarding is open
+    const shouldHideChat = isOnboardingOpen
 
     useEffect(() => {
         // Control Zoho widget visibility
