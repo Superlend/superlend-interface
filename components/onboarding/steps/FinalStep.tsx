@@ -76,7 +76,7 @@ const ConfettiAnimation: React.FC = () => {
 }
 
 export const FinalStep: React.FC = () => {
-  const { selectedPath, selectedAsset, closeOnboarding } = useOnboardingContext()
+  const { selectedPath, selectedAsset, closeOnboarding, setPath, setStep } = useOnboardingContext()
   const router = useRouter()
   const [showConfetti, setShowConfetti] = React.useState(false)
   
@@ -168,6 +168,18 @@ export const FinalStep: React.FC = () => {
     router.push(url)
   }
 
+  const handleStartEarnPath = () => {
+    console.log('💰 Starting Earn Path from Learn Final Step')
+    setPath('earn')
+    setStep('earn-flow')
+  }
+
+  const handleStartBorrowPath = () => {
+    console.log('💳 Starting Borrow Path from Learn Final Step')
+    setPath('borrow')
+    setStep('borrow-flow')
+  }
+
   const getPathSpecificContent = () => {
     switch (selectedPath) {
       case 'earn':
@@ -201,13 +213,13 @@ export const FinalStep: React.FC = () => {
       case 'learn':
         return {
           title: 'Your DeFi Journey Begins!',
-          description: 'You\'ve gained valuable knowledge about decentralized finance.',
+          description: 'You\'ve gained valuable knowledge about decentralized finance and are ready to take action.',
           nextSteps: [
-            'Explore our comprehensive learning center',
-            'Start with small amounts to practice',
-            'Stay updated with weekly market insights'
+            'Start with small amounts ($10-$50) to practice safely',
+            'Choose between earning yield or borrowing against assets',
+            'Monitor your positions and learn from real experience'
           ],
-          cta: 'Visit Learning Center',
+          cta: 'Choose Your Path',
           color: 'accent-cream',
           iconBg: 'from-amber-500 to-orange-500',
           iconColor: 'text-white'
@@ -232,7 +244,7 @@ export const FinalStep: React.FC = () => {
   const content = getPathSpecificContent()
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden">
+    <div className="flex flex-col h-full overflow-x-hidden">
       {/* Confetti Animation */}
       {showConfetti && <ConfettiAnimation />}
       
@@ -300,11 +312,11 @@ export const FinalStep: React.FC = () => {
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
             {content.description}
           </p>
-          {selectedAsset && (
+          {selectedAsset && selectedPath !== 'learn' && (
             <p className="text-sm text-primary font-medium">
               You selected {selectedAsset.tokenSymbol} - great choice!
-              {selectedPath === 'earn' && " Let's start earning yield on this stable token."}
-              {selectedPath === 'borrow' && " Let's set up your borrowing position."}
+              {selectedPath === 'earn' && " Let&apos;s start earning yield on this stable token."}
+              {selectedPath === 'borrow' && " Let&apos;s set up your borrowing position."}
             </p>
           )}
         </motion.div>
@@ -317,7 +329,7 @@ export const FinalStep: React.FC = () => {
           className="w-full max-w-2xl mx-auto px-4"
         >
           <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-foreground mb-4 sm:mb-6">
-            What's Next?
+            What&apos;s Next?
           </h2>
 
           <div className="space-y-2">
@@ -359,18 +371,72 @@ export const FinalStep: React.FC = () => {
           transition={{ duration: 0.6, delay: 1.2 }}
           className="px-4"
         >
-          <button
-            onClick={handleGetStarted}
-            disabled={isLoading}
-            className="bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-8 rounded-4 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
-          >
-            {isLoading ? 'Loading...' : (
-              <>
-                {content.cta}
-                {selectedPath === 'learn' && <ExternalLinkIcon className="w-4 h-4" />}
-              </>
-            )}
-          </button>
+          {selectedPath === 'learn' ? (
+            <div className="space-y-8">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="text-center"
+              >
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Ready to Start Your DeFi Journey?</h3>
+                <p className="text-gray-600 max-w-md mx-auto">Choose your path and begin building wealth with decentralized finance</p>
+              </motion.div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
+                <motion.button
+                  onClick={handleStartEarnPath}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 group relative bg-gradient-to-r from-emerald-500/20 to-green-500/20 hover:from-emerald-500/30 hover:to-green-500/30 backdrop-blur-sm border border-emerald-200/50 text-emerald-700 hover:text-emerald-800 font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-lg">Start Earning</span>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                  </div>
+                  <p className="text-emerald-600/80 text-sm mt-1">Generate passive income</p>
+                </motion.button>
+                
+                <motion.button
+                  onClick={handleStartBorrowPath}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 group relative bg-gradient-to-r from-blue-500/20 to-indigo-500/20 hover:from-blue-500/30 hover:to-indigo-500/30 backdrop-blur-sm border border-blue-200/50 text-blue-700 hover:text-blue-800 font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-lg">Start Borrowing</span>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                  </div>
+                  <p className="text-blue-600/80 text-sm mt-1">Access instant liquidity</p>
+                </motion.button>
+              </div>
+              
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+                className="text-center"
+              >
+                <a 
+                  href="https://blog.superlend.xyz/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-gray-50"
+                >
+                  <span>Continue Learning</span>
+                  <ExternalLinkIcon className="w-4 h-4" />
+                </a>
+              </motion.div>
+            </div>
+          ) : (
+            <button
+              onClick={handleGetStarted}
+              disabled={isLoading}
+              className="bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-8 rounded-4 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+            >
+              {isLoading ? 'Loading...' : content.cta}
+            </button>
+          )}
         </motion.div>
 
         {/* Community & Support */}
@@ -381,7 +447,7 @@ export const FinalStep: React.FC = () => {
           className="w-full max-w-xl mx-auto bg-gray-50 rounded-4 p-4 sm:p-6 border border-gray-200"
         >
           <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3">
-            Need Help? We're Here for You!
+            Need Help? We&apos;re Here for You!
           </h3>
           <div className="flex flex-wrap items-center justify-center gap-6 text-xs sm:text-sm text-gray-600">
             <div className="flex items-center space-x-2">

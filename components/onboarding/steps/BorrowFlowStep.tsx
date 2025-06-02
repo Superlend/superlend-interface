@@ -83,7 +83,7 @@ export const BorrowFlowStep: React.FC = () => {
       </div>
 
       {/* Key Benefits */}
-      <motion.div
+      {/* <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.8 }}
@@ -110,7 +110,7 @@ export const BorrowFlowStep: React.FC = () => {
             <span>Your collateral can continue earning yield</span>
           </div>
         </div>
-      </motion.div>
+      </motion.div> */}
     </div>
   )
 } 

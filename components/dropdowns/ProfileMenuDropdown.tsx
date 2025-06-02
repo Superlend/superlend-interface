@@ -221,20 +221,20 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
                     Get started
                 </Button>
                 
-                <Button
-                    variant="outline"
-                    size="lg"
-                    className="rounded-4 py-3 md:py-2 capitalize w-full flex items-center justify-center gap-2 hover:border-red-500 hover:text-red-500"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                >
-                    {isLoggingOut ? 'Disconnecting...' : 'Disconnect'}
-                    {isLoggingOut ? (
-                        <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
-                    ) : (
-                        <LogOut className="w-4 h-4" />
-                    )}
-                </Button>
+            <Button
+                variant="outline"
+                size="lg"
+                className="rounded-4 py-3 md:py-2 capitalize w-full flex items-center justify-center gap-2 hover:border-red-500 hover:text-red-500"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+            >
+                {isLoggingOut ? 'Disconnecting...' : 'Disconnect'}
+                {isLoggingOut ? (
+                    <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
+                ) : (
+                    <LogOut className="w-4 h-4" />
+                )}
+            </Button>
             </div>
         </div>
     )

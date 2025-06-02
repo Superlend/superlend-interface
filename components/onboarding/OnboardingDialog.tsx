@@ -24,11 +24,13 @@ import { WelcomeStep } from './steps/WelcomeStep'
 import { ChoosePathStep } from './steps/ChoosePathStep'
 import { EarnFlowStep } from './steps/EarnFlowStep'
 import { EarnAssetsStep } from './steps/EarnAssetsStep'
-import { EarnRiskStep } from './steps/EarnRiskStep'
 import { BorrowFlowStep } from './steps/BorrowFlowStep'
 import { BorrowAssetsStep } from './steps/BorrowAssetsStep'
 import { BorrowCollateralStep } from './steps/BorrowCollateralStep'
 import { LearnFlowStep } from './steps/LearnFlowStep'
+import { LearnBasicsStep } from './steps/LearnBasicsStep'
+import { LearnStrategiesStep } from './steps/LearnStrategiesStep'
+import { LearnRiskStep } from './steps/LearnRiskStep'
 import { LearnQuizStep } from './steps/LearnQuizStep'
 import { FinalStep } from './steps/FinalStep'
 
@@ -94,8 +96,6 @@ export const OnboardingDialog: React.FC = () => {
         return <EarnFlowStep />
       case 'earn-assets':
         return <EarnAssetsStep />
-      case 'earn-risk':
-        return <EarnRiskStep />
       case 'borrow-flow':
         return <BorrowFlowStep />
       case 'borrow-assets':
@@ -104,6 +104,12 @@ export const OnboardingDialog: React.FC = () => {
         return <BorrowCollateralStep />
       case 'learn-flow':
         return <LearnFlowStep />
+      case 'learn-basics':
+        return <LearnBasicsStep />
+      case 'learn-strategies':
+        return <LearnStrategiesStep />
+      case 'learn-risk':
+        return <LearnRiskStep />
       case 'learn-quiz':
         return <LearnQuizStep />
       case 'final':
@@ -181,14 +187,14 @@ export const OnboardingDialog: React.FC = () => {
 
   // Main content area shared between desktop and mobile
   const mainContent = (
-    <div className="flex-1 overflow-y-auto mobile-onboarding-container">
+    <div className="mobile-onboarding-container">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentStep}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeInOut' }}
           className="h-full mobile-onboarding-content"
         >
           {renderStep()}
@@ -221,11 +227,11 @@ export const OnboardingDialog: React.FC = () => {
                   className="relative"
                 >
                   <DialogContent 
-                    className="max-w-6xl w-full h-[85vh] bg-background/95 backdrop-blur-xl border border-gray-200 shadow-2xl p-0 overflow-hidden"
+                    className="max-w-6xl w-full h-[95vh] bg-background backdrop-blur-xl border border-gray-200 shadow-2xl p-0 overflow-hidden"
                     showCloseButton={false}
                   >
                     {/* Header with Progress and Close */}
-                    <DialogHeader className="px-8 pt-6 pb-4 border-b border-gray-200 bg-background/50">
+                    <DialogHeader className="px-8 pt-6 pb-4 border-b border-gray-200 bg-background">
                       {headerContent}
                     </DialogHeader>
 
@@ -238,7 +244,7 @@ export const OnboardingDialog: React.FC = () => {
                     </div>
 
                     {/* Footer with Navigation */}
-                    <div className="px-8 py-4 border-t border-gray-200 bg-background/50">
+                    <div className="px-8 py-4 border-t border-gray-200 bg-background">
                       {navigationFooter}
                     </div>
                   </DialogContent>
@@ -274,7 +280,7 @@ export const OnboardingDialog: React.FC = () => {
               >
                 <DrawerContent className="w-full h-full flex flex-col p-0 dismissible-false rounded-t-0 mt-0">
                   {/* Header with Progress and Close */}
-                  <DrawerHeader className="px-4 pt-6 pb-4 border-b border-gray-200 bg-background/50 flex-shrink-0">
+                  <DrawerHeader className="px-4 pt-6 pb-4 border-b border-gray-200 bg-background flex-shrink-0">
                     {headerContent}
                   </DrawerHeader>
 
@@ -287,7 +293,7 @@ export const OnboardingDialog: React.FC = () => {
                   </div>
 
                   {/* Footer with Navigation - Enhanced for mobile */}
-                  <div className="px-4 border-t border-gray-200 bg-background/50 flex-shrink-0 safe-area-bottom mobile-onboarding-footer">
+                  <div className="px-4 border-t border-gray-200 bg-background flex-shrink-0 safe-area-bottom mobile-onboarding-footer">
                     {navigationFooter}
                   </div>
                 </DrawerContent>

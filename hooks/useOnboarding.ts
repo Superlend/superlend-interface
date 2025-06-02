@@ -6,11 +6,13 @@ export type OnboardingStep =
   | 'choose-path'
   | 'earn-flow'
   | 'earn-assets'
-  | 'earn-risk'
   | 'borrow-flow'
   | 'borrow-assets'
   | 'borrow-collateral'
   | 'learn-flow'
+  | 'learn-basics'
+  | 'learn-strategies'
+  | 'learn-risk'
   | 'learn-quiz'
   | 'final'
 
@@ -103,13 +105,15 @@ export const useOnboarding = ({
                      : prev.selectedPath === 'borrow' ? 'borrow-flow'
                      : prev.selectedPath === 'learn' ? 'learn-flow'
                      : null, // Don't allow progression without path selection
-        'earn-flow': 'earn-risk', // Risk education comes first
-        'earn-risk': 'earn-assets', // Asset selection as final CTA
+        'earn-flow': 'earn-assets',
         'earn-assets': 'final',
         'borrow-flow': 'borrow-assets',
-        'borrow-assets': 'borrow-collateral',
-        'borrow-collateral': 'final',
-        'learn-flow': 'learn-quiz',
+        'borrow-assets': 'final', // Skip borrow-collateral step and go directly to final
+        'borrow-collateral': 'final', // Keep this for backwards compatibility but shouldn't be reached
+        'learn-flow': 'learn-basics',
+        'learn-basics': 'learn-strategies',
+        'learn-strategies': 'learn-risk',
+        'learn-risk': 'learn-quiz',
         'learn-quiz': 'final',
         'final': null,
       }
@@ -134,15 +138,17 @@ export const useOnboarding = ({
         'welcome': null,
         'choose-path': 'welcome',
         'earn-flow': 'choose-path',
-        'earn-risk': 'earn-flow', // Risk comes after flow
-        'earn-assets': 'earn-risk', // Assets comes after risk
+        'earn-assets': 'earn-flow',
         'borrow-flow': 'choose-path',
         'borrow-assets': 'borrow-flow',
-        'borrow-collateral': 'borrow-assets',
+        'borrow-collateral': 'borrow-assets', // Keep this for backwards compatibility but shouldn't be reached
         'learn-flow': 'choose-path',
-        'learn-quiz': 'learn-flow',
+        'learn-basics': 'learn-flow',
+        'learn-strategies': 'learn-basics',
+        'learn-risk': 'learn-strategies',
+        'learn-quiz': 'learn-risk',
         'final': prev.selectedPath === 'earn' ? 'earn-assets'
-                : prev.selectedPath === 'borrow' ? 'borrow-collateral'
+                : prev.selectedPath === 'borrow' ? 'borrow-assets' // Go back to borrow-assets instead of borrow-collateral
                 : prev.selectedPath === 'learn' ? 'learn-quiz'
                 : 'choose-path',
       }
@@ -171,22 +177,24 @@ export const useOnboarding = ({
   }, [])
 
   const getStepProgress = useCallback(() => {
-    const totalSteps = state.selectedPath === 'earn' ? 5
-                     : state.selectedPath === 'borrow' ? 5
-                     : state.selectedPath === 'learn' ? 4
+    const totalSteps = state.selectedPath === 'earn' ? 4
+                     : state.selectedPath === 'borrow' ? 4 // Reduced from 5 to 4 steps (removed borrow-collateral)
+                     : state.selectedPath === 'learn' ? 7
                      : 2 // welcome + choose-path
 
     const stepNumbers: Record<OnboardingStep, number> = {
       'welcome': 1,
       'choose-path': 2,
       'earn-flow': 3,
-      'earn-risk': 4, // Risk is now step 4
-      'earn-assets': 5, // Assets is now step 5 (final CTA)
+      'earn-assets': 4,
       'borrow-flow': 3,
       'borrow-assets': 4,
-      'borrow-collateral': 5,
+      'borrow-collateral': 5, // Keep this but it won't be used in normal flow
       'learn-flow': 3,
-      'learn-quiz': 4,
+      'learn-basics': 4,
+      'learn-strategies': 5,
+      'learn-risk': 6,
+      'learn-quiz': 7,
       'final': totalSteps,
     }
 

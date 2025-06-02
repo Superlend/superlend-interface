@@ -310,7 +310,7 @@ export const BorrowCollateralStep: React.FC = () => {
             className="text-center"
           >
             <p className="text-sm text-primary font-medium">
-              Great choice! You've selected {selectedCollateral} as collateral. Click 'Continue' to proceed.
+              Great choice! You&apos;ve selected {selectedCollateral} as collateral. Click &quot;Next&quot; to proceed.
             </p>
           </motion.div>
         )}

@@ -41,7 +41,7 @@ export const LearnFlowStep: React.FC = () => {
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Master decentralized finance with our comprehensive educational resources. 
-          From basics to advanced strategies, we'll guide your DeFi journey.
+          From basics to advanced strategies, we&apos;ll guide your DeFi journey.
         </p>
       </motion.div>
 

@@ -149,7 +149,7 @@ export default function TopBanner() {
         }
 
     // Hide banner if onboarding is open on mobile
-    const shouldShowBanner = isVisible && !(isOnboardingOpen && isMobile)
+    const shouldShowBanner = isVisible && !isOnboardingOpen
 
     return (
         <AnimatePresence>
