@@ -185,7 +185,7 @@ export const LearnBasicsStep: React.FC = () => {
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-2xl p-6 shadow-lg">
           <h4 className="font-bold text-gray-900 mb-2">Ready to dive deeper?</h4>
           <p className="text-gray-700 text-sm">
-            Next, we'll explore specific strategies for earning and managing risk in DeFi protocols.
+            Next, we&apos;ll explore specific strategies for earning and managing risk in DeFi protocols.
           </p>
         </div>
       </motion.div>

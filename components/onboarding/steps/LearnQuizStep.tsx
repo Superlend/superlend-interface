@@ -315,7 +315,7 @@ export const LearnQuizStep: React.FC = () => {
 
             {/* Next Steps */}
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 shadow-lg">
-              <h4 className="font-bold text-gray-900 mb-4 text-center">🎯 What's Next?</h4>
+              <h4 className="font-bold text-gray-900 mb-4 text-center">🎯 What&apos;s Next?</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <motion.div 
                   whileHover={{ scale: 1.02 }}
