@@ -188,7 +188,10 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         if (!!selectedBorrowToken && !!selectedLendToken && !!borrowAmountRaw) {
             getTradePath(selectedBorrowToken?.address, selectedLendToken?.address, borrowAmountRaw)
                 .then((result: any) => {
-                    console.log('getTradePath().then()', result)
+                    const pathTokens: string[] = result.routes[0].path.map((path: any) => path.address) // [Borrow token address, Lend token address]
+                    const pathFees: string[] = result.routes[0].pools.map((pool: any) => pool.fee.toString())
+                    setPathTokens(pathTokens)
+                    setPathFees(pathFees)
                 })
         }
     }, [selectedBorrowToken?.address, selectedLendToken?.address, borrowAmountRaw])
@@ -564,6 +567,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     remaining_borrow_cap: 0,
                                     remaining_supply_cap: 0,
                                 },
+                                pathTokens,
+                                pathFees,
                                 ...platformData?.platform,
                             }}
                             lendAmount={lendAmount}

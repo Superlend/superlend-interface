@@ -126,16 +126,6 @@ const LoopButton = ({
         getAccessTokenFromPrivy()
     }, [])
 
-    // Trigger the credit deligation or loop function based on loopTx.status
-    useEffect(() => {
-        if (loopTx.status === 'credit_deligation' && !ETH_ADDRESSES.includes(underlyingAssetAdress)) {
-            onCreditDeligation()
-        }
-        if (loopTx.status === 'loop' && ETH_ADDRESSES.includes(underlyingAssetAdress)) {
-            onLoop()
-        }
-    }, [loopTx.status])
-
     // Update the loopTx state based on the transaction status
     useEffect(() => {
         setLoopTx((prev: TLoopTx) => ({
@@ -150,18 +140,30 @@ const LoopButton = ({
     // Update the loopTx hash based on the transaction status
     useEffect(() => {
         if (
-            (loopTx.status === 'approve' || loopTx.status === 'loop') &&
-            hash
+            (loopTx.status === 'approve') && hash && isConfirmed && !isPending && !isConfirming
+        ) {
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                status: 'credit_deligation',
+                hash: hash || '',
+            }))
+            return
+        }
+        if (
+            (loopTx.status === 'credit_deligation') && hash && isConfirmed && !isPending && !isConfirming
         ) {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
                 hash: hash || '',
+                status: 'loop',
             }))
+            return
         }
-        if (loopTx.status === 'view' && hash) {
+        if (loopTx.status === 'view' && hash && isConfirmed && !isPending && !isConfirming) {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
                 hash: hash || '',
+                status: 'view',
             }))
 
             logEvent('loop_completed', {
@@ -172,11 +174,27 @@ const LoopButton = ({
                     CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
+            return
         }
-    }, [hash, loopTx.status])
+    }, [hash, loopTx.status, isConfirmed, isPending, isConfirming])
+
+    // Trigger the credit deligation or loop function based on loopTx.status
+    useEffect(() => {
+        if (loopTx.status === 'credit_deligation' && !ETH_ADDRESSES.includes(underlyingAssetAdress)) {
+            onCreditDeligation()
+            return
+        }
+        if (loopTx.status === 'loop' && ETH_ADDRESSES.includes(underlyingAssetAdress)) {
+            onLoop()
+            return
+        }
+    }, [loopTx.status])
 
     // Approve the supply token
     const onApproveSupply = async () => {
+        const decimals = assetDetails?.supplyAsset?.token?.decimals ?? 18
+        const parsedLendAmount = parseUnits(amount?.lendAmount?.toString() ?? '0', decimals)
+
         try {
             logEvent('approve_loop_initiated', {
                 amount: (amount?.lendAmount ?? '0'),
@@ -198,13 +216,14 @@ const LoopButton = ({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [LOOPING_SC_LEVERAGE_ADDRESS, (amount?.lendAmount ?? '0')],
+                args: [LOOPING_SC_LEVERAGE_ADDRESS, parsedLendAmount],
             }).catch((error) => {
                 setLoopTx((prev: TLoopTx) => ({
                     ...prev,
                     isPending: false,
                     isConfirming: false,
                 }))
+                console.log('onApproveSupply .catch()error', error)
             })
         } catch (error: any) {
             setLoopTx((prev: TLoopTx) => ({
@@ -214,11 +233,15 @@ const LoopButton = ({
                 isConfirmed: false,
                 // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
             }))
+            console.log('onApproveSupply catch() error', error)
         }
     }
 
     // Credit deligation function
     const onCreditDeligation = async () => {
+        const decimals = assetDetails?.borrowAsset?.token?.decimals ?? 18
+        const parsedBorrowAmount = parseUnits(amount?.borrowAmount?.toString() ?? '0', decimals)
+
         try {
             logEvent('credit_deligation_initiated', {
                 amount: (amount?.borrowAmount ?? '0'),
@@ -240,7 +263,7 @@ const LoopButton = ({
                 address: debtToken as `0x${string}`,
                 abi: CREDIT_DELEGATION_ABI,
                 functionName: 'approveDelegation',
-                args: [LOOPING_SC_LEVERAGE_ADDRESS, (amount?.borrowAmount ?? '0')],
+                args: [LOOPING_SC_LEVERAGE_ADDRESS, parsedBorrowAmount],
             }).catch((error) => {
                 setLoopTx((prev: TLoopTx) => ({
                     ...prev,
@@ -263,10 +286,10 @@ const LoopButton = ({
     const onLoop = async () => {
         const supplyToken = assetDetails?.asset?.token?.address ?? ''
         const borrowToken = assetDetails?.borrowAsset?.token?.address ?? ''
-        const supplyAmount = amount?.lendAmount ?? '0'
+        const supplyAmount = parseUnits(amount?.lendAmount?.toString() ?? '0', decimals)
         const flashLoanAmount = amount?.flashLoanAmount ?? '0'
-        const pathTokens: string[] = []
-        const pathFees: string[] = []
+        const pathTokens: string[] = assetDetails?.pathTokens ?? []
+        const pathFees: string[] = assetDetails?.pathFees ?? []
 
         writeContractAsync({
             address: LOOPING_SC_LEVERAGE_ADDRESS,

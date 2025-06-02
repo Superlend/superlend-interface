@@ -73,6 +73,8 @@ import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
 type TLoopAssetDetails = Omit<TAssetDetails, 'asset'> & {
     supplyAsset: TAssetDetails['asset']
     borrowAsset: TAssetDetails['asset']
+    pathTokens: string[]
+    pathFees: string[]
 }
 
 // TYPES

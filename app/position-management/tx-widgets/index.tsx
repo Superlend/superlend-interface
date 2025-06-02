@@ -85,7 +85,7 @@ export const AssetTxWidget: FC = () => {
 
     if (isAaveV3Protocol) {
         return (
-            <WhalesSupportDialogWrapper
+            <WidgetWrapper
                 isLoading={isLoading}
                 platformData={platformData}
                 portfolioData={portfolioData}
@@ -98,7 +98,7 @@ export const AssetTxWidget: FC = () => {
                     platformData={platformData}
                     portfolioData={portfolioData}
                 />
-            </WhalesSupportDialogWrapper>
+            </WidgetWrapper>
         )
     }
 
@@ -109,7 +109,7 @@ export const AssetTxWidget: FC = () => {
         // )
         //     return null
         return (
-            <WhalesSupportDialogWrapper
+            <WidgetWrapper
                 isLoading={isLoadingPlatformData}
                 platformData={platformData}
                 portfolioData={portfolioData}
@@ -121,13 +121,13 @@ export const AssetTxWidget: FC = () => {
                     isLoading={isLoadingPlatformData}
                     platformData={platformData}
                 />
-            </WhalesSupportDialogWrapper>
+            </WidgetWrapper>
         )
     }
 
     if (isFluidProtocol) {
         return (
-            <WhalesSupportDialogWrapper
+            <WidgetWrapper
                 isLoading={isLoadingPlatformData}
                 platformData={platformData}
                 portfolioData={portfolioData}
@@ -140,14 +140,14 @@ export const AssetTxWidget: FC = () => {
                     platformData={platformData}
                     portfolioData={portfolioData}
                 />
-            </WhalesSupportDialogWrapper>
+            </WidgetWrapper>
         )
     }
 
     return null
 }
 
-export const WhalesSupportDialogWrapper = ({
+export const WidgetWrapper = ({
     children,
     isLoading,
     platformData,
@@ -165,7 +165,7 @@ export const WhalesSupportDialogWrapper = ({
     portfolioValue: number
 }) => {
     return (
-        <>
+        <div className="flex flex-col gap-4">
             {children}
             <LoopingWidget
                 isLoading={isLoading}
@@ -178,6 +178,6 @@ export const WhalesSupportDialogWrapper = ({
                 portfolioValue={portfolioValue}
                 website="AGGREGATOR"
             />
-        </>
+        </div>
     )
 }
