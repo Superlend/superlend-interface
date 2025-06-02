@@ -23,6 +23,8 @@ import { abbreviateNumber, convertAPRtoAPY } from '@/lib/utils'
 import { TReward } from '@/types'
 import { ChartNoAxesColumnIncreasing, TrendingUp } from 'lucide-react'
 import { CHAIN_ID_MAPPER } from '@/constants'
+import useGetBoostRewards from '@/hooks/useGetBoostRewards'
+import { useGetEffectiveApy } from '@/hooks/useGetEffectiveApy'
 const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
 const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 
@@ -45,17 +47,29 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
     const { logEvent } = useAnalytics()
     const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
     const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
+    const SUPERFUNDS_DOMAIN = 'https://funds.superlend.xyz'
+    const BASE_CHAIN_ID = 8453
+    const BASE_VAULT_ADDRESS = '0x10076ed296571cE4Fde5b1FDF0eB9014a880e47B'
+    const { data: effectiveApyData, isLoading: isLoadingEffectiveApy, isError: isErrorEffectiveApy } = useGetEffectiveApy({
+        vault_address: BASE_VAULT_ADDRESS as `0x${string}`,
+        chain_id: BASE_CHAIN_ID
+    })
+    const { data: BOOST_APY, isLoading: isLoadingBoostRewards, error: errorBoostRewards } = useGetBoostRewards({
+        vaultAddress: BASE_VAULT_ADDRESS as `0x${string}`,
+        chainId: BASE_CHAIN_ID
+    })
+    const TOTAL_VAULT_APY = abbreviateNumber(Number(effectiveApyData?.total_apy ?? 0) + Number((BOOST_APY?.[0]?.boost_apy ?? 0) / 100))
     // Platform Data
     const { data: opportunity1PlatformData, isLoading: isLoading1 } =
         useGetPlatformData({
             chain_id: opportunity1ChainId,
             protocol_identifier: opportunity1ProtocolIdentifier,
         })
-    const { data: opportunity2PlatformData, isLoading: isLoading2 } =
-        useGetPlatformData({
-            chain_id: opportunity2ChainId,
-            protocol_identifier: opportunity2ProtocolIdentifier,
-        })
+    // const { data: opportunity2PlatformData, isLoading: isLoading2 } =
+    //     useGetPlatformData({
+    //         chain_id: opportunity2ChainId,
+    //         protocol_identifier: opportunity2ProtocolIdentifier,
+    //     })
     const { data: opportunity3PlatformData, isLoading: isLoading3 } =
         useGetPlatformData({
             chain_id: opportunity3ChainId,
@@ -73,11 +87,11 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
     }
 
     // Add checks for platform data existence
-    if (!opportunity1PlatformData?.assets || !opportunity2PlatformData?.assets || !opportunity3PlatformData) {
+    if (!opportunity1PlatformData?.assets || isLoadingBoostRewards || isLoadingEffectiveApy || !opportunity3PlatformData) {
         return <div className="p-5"><CardDetailsSkeleton /></div>
     }
 
-    const asset1Data = opportunity1PlatformData?.assets?.find((asset: any) => 
+    const asset1Data = opportunity1PlatformData?.assets?.find((asset: any) =>
         asset?.token?.address === opportunity1TokenAddress
     )
     const asset1AppleFarmRewardsApy = appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0
@@ -85,13 +99,13 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
     const asset1DataSupplyApy = Number(asset1Data?.supply_apy || 0)
     // Description
     const description1 = `${abbreviateNumber(asset1LendRate)}% APY`
-    const description2 = `Upto ${abbreviateNumber(getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.supply_apy || "0.00")}% APY`
+    const description2 = `Upto ${TOTAL_VAULT_APY}% APY`
     // const description3 = opportunity3PlatformData?.apy
-    const asset1ChainName = opportunity1PlatformData?.platform?.chain_id 
-        ? CHAIN_ID_MAPPER[opportunity1PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER] 
+    const asset1ChainName = opportunity1PlatformData?.platform?.chain_id
+        ? CHAIN_ID_MAPPER[opportunity1PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER]
         : "Unknown"
-    const asset2ChainName = opportunity2PlatformData?.platform?.chain_id 
-        ? CHAIN_ID_MAPPER[opportunity2PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER]
+    const asset2ChainName = BASE_CHAIN_ID
+        ? CHAIN_ID_MAPPER[BASE_CHAIN_ID as keyof typeof CHAIN_ID_MAPPER]
         : "Unknown"
 
     // Opportunities
@@ -103,8 +117,10 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
         chainName: string,
         description: string,
         tokenImage: string,
-        platformImage: string,
+        platformImage?: string,
+        platformImages?: string[],
         link: string,
+        linkTarget?: string,
         hasAppleFarmRewards?: boolean,
     }[] = [
             {
@@ -127,18 +143,19 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
             {
                 id: 2,
                 label: "Automated Strategy",
-                tokenSymbol: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token?.symbol || "wstETH",
-                platformName: "Morpho",
-                chainName: asset2ChainName || 'Ethereum',
+                tokenSymbol: "USDC",
+                platformName: "SuperFund", // Rebalanced across multiple protocols
+                chainName: 'Base',
                 description: description2 || "0.00% APY",
-                tokenImage: getAssetDetails(opportunity2PlatformData, opportunity2TokenAddress)?.token?.logo || "",
-                platformImage: `${imageBaseUrl}/fluid_logo.png`,
-                link: getRedirectLink(
-                    opportunity2TokenAddress,
-                    opportunity2ProtocolIdentifier,
-                    opportunity2ChainId,
-                    'lend'
-                ),
+                tokenImage: `/images/tokens/usdc.webp`,
+                platformImages: [
+                    `${imageBaseUrl}/aave.svg`, 
+                    `${imageBaseUrl}/morpho-logo.svg`,
+                    `${imageBaseUrl}/fluid_logo.png`,
+                    `${SUPERFUNDS_DOMAIN}/images/logos/euler-symbol.svg`,
+                ],
+                link: `${SUPERFUNDS_DOMAIN}/super-fund/base`,
+                linkTarget: '_blank',
             },
             {
                 id: 3,
@@ -180,7 +197,7 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
 
     const isLoading: { [key: number]: boolean } = {
         1: isLoading1,
-        2: isLoading2,
+        2: (isLoadingBoostRewards || isLoadingEffectiveApy),
         3: isLoading3,
     }
 
@@ -206,6 +223,7 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
                             {index === 0 && <RainingApples />}
                             <Link
                                 href={opportunity.link}
+                                target={opportunity?.linkTarget ?? '_self'}
                                 onClick={() => {
                                     logEvent('discover_opportunity_clicked', {
                                         token: opportunity.tokenSymbol,
@@ -285,15 +303,21 @@ export default function DiscoverOpportunities({ chain }: { chain: string }) {
                                         </div>)
                                     }
                                 </div>
-                                <div className="absolute -right-5 -bottom-5 group-hover:-right-2 group-hover:-bottom-2 transition-all duration-300">
-                                    <ImageWithDefault
-                                        src={opportunity.platformImage}
-                                        alt={opportunity.platformName}
-                                        width={124}
-                                        height={136}
-                                        className="object-contain origin-center -rotate-45 opacity-15 lg:group-hover:opacity-100 transition-all duration-300"
-                                    />
-                                </div>
+                                {(!!opportunity.platformImage || !!opportunity.platformImages) && (
+                                    opportunity.platformImages ? (
+                                        <ProtocolLogosGrid images={opportunity.platformImages} />
+                                    ) : (
+                                        <div className="absolute -right-5 -bottom-5 group-hover:-right-2 group-hover:-bottom-2 transition-all duration-300">
+                                            <ImageWithDefault
+                                                src={opportunity.platformImage || ''}
+                                                alt={opportunity.platformName || ''}
+                                                width={124}
+                                                height={136}
+                                                className="object-contain origin-center -rotate-45 opacity-15 lg:group-hover:opacity-100 transition-all duration-300"
+                                            />
+                                        </div>
+                                    )
+                                )}
                             </Link>
                         </CarouselItem>
                     ))}
@@ -325,7 +349,7 @@ function CardDetailsSkeleton() {
 // Helper Functions
 function getAssetDetails(platformData: any, tokenAddress: string) {
     if (!platformData?.assets || !tokenAddress) return null;
-    return platformData.assets.find((asset: any) => 
+    return platformData.assets.find((asset: any) =>
         asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
     );
 }
@@ -363,6 +387,24 @@ const RainingApples = () => {
                         />
                     </div>
                 </div>
+            ))}
+        </div>
+    );
+};
+
+// Add this new component before the RainingApples component
+const ProtocolLogosGrid = ({ images }: { images: string[] }) => {
+    return (
+        <div className="absolute -right-4 -bottom-2 flex flex-wrap items-center justify-center gap-2 -rotate-45 p-2 bg-white/50 rounded-lg transform opacity-15 lg:group-hover:opacity-100 lg:group-hover:scale-105 lg:group-hover:-translate-y-5 lg:group-hover:bottom-0 lg:group-hover:right-1 max-w-[100px] transition-all duration-300">
+            {images.map((image, index) => (
+                <ImageWithDefault
+                    key={index}
+                    src={image}
+                    alt={`Protocol ${index + 1}`}
+                    width={32}
+                    height={32}
+                    className="object-contain"
+                />
             ))}
         </div>
     );

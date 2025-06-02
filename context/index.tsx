@@ -78,7 +78,6 @@ const privyConfig = {
         showWalletLoginFirst: true,
         walletList: [
             'detected_ethereum_wallets',
-            'binance',
             'metamask',
             'coinbase_wallet',
             'okx_wallet',

@@ -110,11 +110,11 @@ export default function AaveV3TxWidget({
     >({})
 
     const searchParams = useSearchParams()
-    const tokenAddress = searchParams.get('token') || ''
-    const chain_id = searchParams.get('chain_id') || 1
-    const protocol_identifier = searchParams.get('protocol_identifier') || ''
+    const tokenAddress = searchParams?.get('token') || ''
+    const chain_id = searchParams?.get('chain_id') || '1'
+    const protocol_identifier = searchParams?.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType =
-        (searchParams.get('position_type') as TPositionType) || 'lend'
+        (searchParams?.get('position_type') as TPositionType) || 'lend'
     const { walletAddress, handleSwitchChain, isWalletConnected } =
         useWalletConnection()
     const {
@@ -186,7 +186,7 @@ export default function AaveV3TxWidget({
                         maxBorrowAmounts[borrowTokenAddress] =
                             getMaxBorrowAmount(
                                 borrowTokenAddress,
-                                chain_id as number,
+                                Number(chain_id),
                                 r as any
                             ) ?? {
                                 maxToBorrow: '0',
@@ -826,7 +826,7 @@ export default function AaveV3TxWidget({
                                 positionType={positionType}
                                 assetDetails={
                                     isLendPositionType(positionType)
-                                        ? assetDetailsForLendBorrowTx
+                                        ? assetDetails
                                         : selectedBorrowTokenDetailsFormatted
                                 }
                                 amount={amount}

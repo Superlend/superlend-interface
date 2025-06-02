@@ -36,7 +36,13 @@ import { ChainId } from '@/types/chain'
 import { SelectTokenByChain } from '@/components/dialogs/SelectTokenByChain'
 import { useMorphoVaultData } from '@/hooks/protocols/useMorphoVaultData'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
-import { AccrualPosition, MarketId, Vault } from '@morpho-org/blue-sdk'
+import {
+    AccrualPosition,
+    Market,
+    MarketId,
+    Position,
+    Vault,
+} from '@morpho-org/blue-sdk'
 import {
     BUNDLER_ADDRESS_MORPHO,
     ETH_ADDRESSES,
@@ -46,37 +52,77 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useERC20Balance } from '../../hooks/useERC20Balance'
 import { WithdrawOrRepayTxDialog } from '@/components/dialogs/WithdrawOrRepayTxDialog'
 import { Multicall } from 'ethereum-multicall'
-import { OptimizedMulticall, useEthersMulticall } from '../../hooks/useEthereumMulticall'
-import { useVault } from '@morpho-org/blue-sdk-wagmi'
+import {
+    OptimizedMulticall,
+    useEthersMulticall,
+} from '../../hooks/useEthereumMulticall'
+import { useVault, useMarket, usePosition } from '@morpho-org/blue-sdk-wagmi'
+import { useMorphoMarketData } from '../../hooks/protocols/useMorphoMarketData'
 
 interface ITokenDetails {
     address: string
     decimals: number
     logo: string
     symbol: string
-    amount: string | number
+    amountInUSD: string | number
     liquidation_threshold?: number // optional for repay
     tokenAmount: string | number
     apy: number
     price_usd: number
-    positionAmount?: string | number
+    positionTokenAmount?: string | number
+    chain_name?: string
 }
 
 function useSafeVault(params: {
-    vault: `0x${string}` | undefined;
-    chainId: number;
+    vault: `0x${string}` | undefined
+    chainId: number
 }) {
-    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId);
-    
+    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId)
+
     // Only call the real hook if chain is supported and vault address exists
     // Otherwise return undefined data with empty object structure
     return useVault({
-        vault: isSupported && params.vault ? params.vault : '0x1111111111111111111111111111111111111111' as `0x${string}`,
+        vault:
+            isSupported && params.vault
+                ? params.vault
+                : ('0x1111111111111111111111111111111111111111' as `0x${string}`),
         chainId: isSupported ? params.chainId : 1, // Use mainnet as fallback for unsupported chains
         query: {
             enabled: isSupported && !!params.vault,
         },
-    });
+    })
+}
+
+function useSafeMarket(params: { marketId: MarketId; chainId: number }) {
+    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId)
+
+    return useMarket({
+        marketId: isSupported
+            ? params.marketId
+            : ('0x1111111111111111111111111111111111111111' as MarketId),
+        chainId: isSupported ? params.chainId : 1,
+    })
+}
+
+function useSafePosition(params: {
+    walletAddress: `0x${string}`
+    marketId: MarketId
+    chainId: number
+    refresh: boolean
+}) {
+    const isSupported = MORPHO_BLUE_API_CHAINIDS.includes(params.chainId)
+
+    return usePosition({
+        marketId: isSupported
+            ? params.marketId
+            : ('0x1111111111111111111111111111111111111111' as MarketId),
+        user: params.walletAddress,
+        chainId: isSupported ? params.chainId : 1,
+        query: {
+            refetchIntervalInBackground: params.refresh,
+            refetchInterval: params.refresh ? 2000 : false,
+        },
+    })
 }
 
 export default function WithdrawAndRepayActionButton({
@@ -93,7 +139,9 @@ export default function WithdrawAndRepayActionButton({
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
     } = useUserTokenBalancesContext()
-    const { getVaultDataFromPlatformData, getMarketData } = useMorphoVaultData()
+    const { getVaultDataFromPlatformData } = useMorphoVaultData()
+    const { getPositionDataFromPlatformData, getMarketDataFromPlatformData } =
+        useMorphoMarketData()
     const { multicall } = useEthersMulticall()
 
     const [positionType, setPositionType] = useState<TPositionType>('lend')
@@ -103,6 +151,16 @@ export default function WithdrawAndRepayActionButton({
         useState('0')
     // Morpho vault when the user is withdrawing from morpho vaults
     const [morphoVault, setMorphoVault] = useState<any>(null)
+    const [morphoMarket, setMorphoMarket] = useState<Market | null>(null)
+    const [morphoPosition, setMorphoPosition] = useState<Position | null>(null)
+
+    const [morphoMarketData, setMorphoMarketData] = useState<{
+        marketData: Market | null
+        position: Position | null
+    }>({
+        marketData: null,
+        position: null,
+    })
 
     const [isLoadingMaxAmount, setIsLoadingMaxAmount] = useState(false)
     const [borrowTokensDetails, setBorrowTokensDetails] = useState<
@@ -134,11 +192,11 @@ export default function WithdrawAndRepayActionButton({
     >({})
 
     const searchParams = useSearchParams()
-    const tokenAddress = searchParams.get('token') || ''
-    const chain_id = searchParams.get('chain_id') || 1
-    const protocol_identifier = searchParams.get('protocol_identifier') || ''
+    const tokenAddress = searchParams?.get('token') || ''
+    const chain_id = searchParams?.get('chain_id') || '1'
+    const protocol_identifier = searchParams?.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType =
-        (searchParams.get('position_type') as TPositionType) || 'lend'
+        (searchParams?.get('position_type') as TPositionType) || 'lend'
     const {
         fetchAaveV3Data,
         getMaxWithdrawAmount,
@@ -201,26 +259,37 @@ export default function WithdrawAndRepayActionButton({
     const isFluidLendProtocol =
         isFluidProtocol && !platformData?.platform?.isVault
 
-    // Only use the Morpho hook when we're on a supported chain
+    const hasSingleToken = tokenDetails.length === 1
+
+    const { data: _marketData } = useSafeMarket({
+        marketId: platformData?.platform?.morpho_market_id as MarketId,
+        chainId: Number(chain_id),
+    })
+    const { data: _positionData } = useSafePosition({
+        walletAddress: walletAddress as `0x${string}`,
+        marketId: platformData?.platform?.morpho_market_id as MarketId,
+        chainId: Number(chain_id),
+        refresh: true,
+    })
     const { data: _vaultData } = useSafeVault({
         vault: platformData?.platform?.core_contract as `0x${string}`,
         chainId: Number(chain_id),
-    });
-
-    const morphoMarketData = getMarketData({
-        marketId: platformData?.platform?.morpho_market_id as MarketId,
-        chainId: Number(chain_id),
-        enabled: isMorphoMarketsProtocol && !isPolygonChain,
-        walletAddress: walletAddress as `0x${string}`,
     })
-
-    const hasSingleToken = tokenDetails.length === 1
-
     const fetchVaultData = async (multicall?: OptimizedMulticall) => {
         return await getVaultDataFromPlatformData({
             platformData,
             multicall,
         })
+    }
+    const fetchMarketData = async (multicall?: OptimizedMulticall) => {
+        return await getMarketDataFromPlatformData(platformData, multicall)
+    }
+    const fetchPositionData = async (multicall?: OptimizedMulticall) => {
+        return await getPositionDataFromPlatformData(
+            platformData,
+            walletAddress,
+            multicall
+        )
     }
 
     useEffect(() => {
@@ -229,20 +298,44 @@ export default function WithdrawAndRepayActionButton({
             MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))
         )
             return
-        fetchVaultData(multicall[Number(chain_id)]).then((vaultData) => {
-            setMorphoVault(vaultData as Vault)
-        })
+        if (isMorphoVaultsProtocol)
+            fetchVaultData(multicall[Number(chain_id)]).then((vaultData) => {
+                setMorphoVault(vaultData as Vault)
+            })
+        else if (isMorphoMarketsProtocol) {
+            fetchMarketData(multicall[Number(chain_id)]).then((marketData) => {
+                setMorphoMarket(marketData as Market)
+            })
+            fetchPositionData(multicall[Number(chain_id)]).then((position) => {
+                setMorphoPosition(position as Position)
+            })
+        }
     }, [platformData, multicall])
 
     useEffect(() => {
-        if (MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id)) && _vaultData) {
-            setMorphoVault(_vaultData as Vault)
+        if (MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))) {
+            if (_vaultData) setMorphoVault(_vaultData as Vault)
+            if (_marketData) setMorphoMarket(_marketData as Market)
+            if (_positionData) setMorphoPosition(_positionData as Position)
         } else {
             setMorphoVault({
                 data: undefined,
             })
         }
-    }, [_vaultData])
+    }, [_vaultData, _marketData, _positionData])
+
+    useEffect(() => {
+        if (morphoMarket)
+            setMorphoMarketData((prev) => ({
+                ...prev,
+                marketData: morphoMarket,
+            }))
+        if (morphoPosition)
+            setMorphoMarketData((prev) => ({
+                ...prev,
+                position: morphoPosition,
+            }))
+    }, [morphoMarket, morphoPosition])
 
     // Get max withdraw amount for morpho
     useEffect(() => {
@@ -399,7 +492,7 @@ export default function WithdrawAndRepayActionButton({
                                 withdrawToken?.address.toLowerCase()
                             const _maxWithdrawValue = getMaxWithdrawAmount(
                                 withdrawTokenAddress,
-                                chain_id as number,
+                                Number(chain_id),
                                 r as any
                             )
                             maxWithdrawAmounts[withdrawTokenAddress] =
@@ -430,7 +523,7 @@ export default function WithdrawAndRepayActionButton({
                                 repayToken?.address.toLowerCase()
                             const _maxRepayValue = getMaxRepayAmount(
                                 repayTokenAddress,
-                                chain_id as number,
+                                Number(chain_id),
                                 r as any
                             )
                             maxRepayAmounts[repayTokenAddress] = _maxRepayValue
@@ -534,7 +627,7 @@ export default function WithdrawAndRepayActionButton({
                         repayToken.decimals
                     )
                     const balance = BigNumber.from(
-                        erc20Balances[chain_id as number][repayTokenAddress]
+                        erc20Balances[Number(chain_id)][repayTokenAddress]
                             .balanceRaw
                     )
                     const maxRepay = balance.lte(maxDebt) ? balance : maxDebt
@@ -917,6 +1010,12 @@ export default function WithdrawAndRepayActionButton({
     }, [isWithdrawRepayTxDialogOpen])
 
     function getMaxWithdrawAmountForTx() {
+        const fallbackMaxWithdrawAmount = {
+            maxToWithdraw: '0',
+            maxToWithdrawFormatted: '0',
+            maxToWithdrawSCValue: '0',
+            user: {},
+        }
         const isMorphoVaultsProtocol =
             assetDetailsForTx.protocol_type === PlatformType.MORPHO &&
             assetDetailsForTx.isVault
@@ -951,28 +1050,29 @@ export default function WithdrawAndRepayActionButton({
                 user: {},
             }
         }
-
-        return (
+        const maxWithdrawAmount =
             maxWithdrawTokensAmount[
                 hasSingleToken
                     ? tokenDetails[0].address
                     : (selectedTokenDetails?.address ?? '')
-            ] ?? {
-                maxToWithdraw: '0',
-                maxToWithdrawFormatted: '0',
-                maxToWithdrawSCValue: '0',
-                user: {},
-            }
-        )
+            ] ?? fallbackMaxWithdrawAmount
+
+        return maxWithdrawAmount;
     }
 
     function getMaxRepayAmountForTx() {
+        const fallbackMaxRepayAmount = {
+            maxToRepay: '0',
+            maxToRepayFormatted: '0',
+            maxToRepaySCValue: '0',
+            user: {},
+        }
         const isMorphoVaultsProtocol =
             assetDetailsForTx.protocol_type === PlatformType.MORPHO &&
             assetDetailsForTx.isVault
 
         const maxToRepay =
-            Number(tokenDetails[0]?.amount)
+            Number(tokenDetails[0]?.amountInUSD)
                 .toFixed(tokenDetails[0]?.decimals)
                 .toString() ?? '0'
 
@@ -985,27 +1085,23 @@ export default function WithdrawAndRepayActionButton({
             }
         }
 
-        return (
-            maxRepayTokensAmount[
-                hasSingleToken
-                    ? tokenDetails[0].address
+        const maxRepayAmount =
+        maxRepayTokensAmount[
+            hasSingleToken
+                ? tokenDetails[0].address
                     : (selectedTokenDetails?.address ?? '')
-            ] ?? {
-                maxToRepay: '0',
-                maxToRepayFormatted: '0',
-                maxToRepaySCValue: '0',
-                user: {},
-            }
-        )
+            ] ?? fallbackMaxRepayAmount
+
+        return maxRepayAmount;
     }
 
     const maxWithdrawAmountForTx = getMaxWithdrawAmountForTx()
 
     const maxRepayAmountForTx = getMaxRepayAmountForTx()
 
-    const positionAmount = hasSingleToken
-        ? tokenDetails[0]?.amount
-        : (selectedTokenDetails?.amount ?? 0)
+    const positionTokenAmount = hasSingleToken
+        ? tokenDetails[0]?.tokenAmount
+        : (selectedTokenDetails?.tokenAmount ?? 0)
 
     const withdrawErrorMessage = useMemo(() => {
         if (
@@ -1157,12 +1253,13 @@ export default function WithdrawAndRepayActionButton({
                         setOpen={setIsSelectTokenDialogOpen}
                         tokens={tokenDetails.map((token) => ({
                             address: token.address,
-                            amount: String(token.amount),
+                            tokenAmount: String(token.tokenAmount),
                             logo: token.logo,
                             symbol: token.symbol,
                             apy: token.apy,
                             price_usd: String(token.price_usd),
                             decimals: token.decimals,
+                            chain_name: token.chain_name,
                         }))}
                         onSelectToken={handleSelectToken}
                         filterByChain={false}
@@ -1184,7 +1281,7 @@ export default function WithdrawAndRepayActionButton({
                     healthFactorValues={healthFactorValues}
                     amount={amount}
                     setAmount={setAmount}
-                    positionAmount={positionAmount}
+                    positionTokenAmount={positionTokenAmount}
                     errorMessage={errorMessage}
                 />
             )}

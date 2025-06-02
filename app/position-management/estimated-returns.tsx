@@ -248,8 +248,8 @@ export function EstimatedReturns({
 }) {
     const { platformHistoryData } = usePositionManagementContext()
     const searchParams = useSearchParams()
-    const tokenAddress = searchParams.get('token') || ''
-    const positionType = searchParams.get('position_type') || 'lend'
+    const tokenAddress = searchParams?.get('token') || ''
+    const positionType = searchParams?.get('position_type') || 'lend'
     const [selectedValue, setSelectedValue] = useState(DEFAULT_SELECTED_VALUES)
     const [selectedStableTokenDetails, setSelectedStableTokenDetails] =
         useState<any>(null)

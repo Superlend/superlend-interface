@@ -15,6 +15,7 @@ import CheckInButton from './CheckInButton'
 import Link from 'next/link'
 import { Badge } from './ui/badge'
 import { ChainId } from '@/types/chain'
+import TopBanner from './TopBanner'
 
 type TTab = {
     id: number
@@ -38,11 +39,11 @@ const Header: React.FC = () => {
     }
     const pathname = usePathname()
     const [activeTab, setActiveTab] = useState<TTab | null>(
-        activeTabInitialValue(pathname)
+        activeTabInitialValue(pathname || '')
     )
 
     useEffect(() => {
-        setActiveTab(activeTabInitialValue(pathname))
+        setActiveTab(activeTabInitialValue(pathname || ''))
     }, [pathname])
 
     const handleTabClick = (tab: TTab) => {
@@ -116,7 +117,8 @@ const Header: React.FC = () => {
 
     return (
         <>
-            <header className="z-50 sticky top-0 md:top-5 left-0 max-w-[1200px] w-full mx-auto md:px-5">
+            <TopBanner />
+            <header className="z-50 sticky top-0 md:top-5 left-0 max-w-[1200px] w-full mx-auto md:px-5 transition-all duration-400 ease-banner banner-visible:pt-[100px] banner-visible:min-[425px]:pt-[85px] banner-visible:sm:pt-[40px] banner-visible:lg:pt-[35px]">
                 <div className="flex gap-5 max-lg:gap-5 justify-between items-center py-0 pr-2 pl-4 sm:pl-[20px] mb-5 md:mb-14 w-full font-semibold uppercase md:rounded-6 bg-white bg-opacity-40 backdrop-blur min-h-[56px] shadow-[0px_2px_2px_rgba(0,0,0,0.02)] max-md:max-w-full max-w-[1200px] mx-auto">
                     <Link
                         href="/"

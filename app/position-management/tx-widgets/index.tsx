@@ -5,7 +5,6 @@ import { FC, useContext } from 'react'
 import { PlatformType, TPlatform } from '@/types/platform'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import { useSearchParams } from 'next/navigation'
-import { TPositionType } from '@/types'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import AaveV3TxWidget from './aave-tx-widget'
@@ -15,19 +14,19 @@ import LoopingWidget from './looping-widget'
 import { ChainId } from '@/types/chain'
 import { useTxContext } from '@/context/tx-provider'
 import { TTxContext } from '@/context/tx-provider'
-import { useTelegramDialog } from '@/hooks/useTelegramDialog'
+import { useWhalesSupportDialog } from '@/hooks/useWhalesSupportDialog'
 import { PortfolioContext } from '@/context/portfolio-provider'
-import { TelegramConnectionDialog } from '@/components/dialogs/TelegramConnectionDialog'
 import { TPortfolio } from '@/types/queries/portfolio'
+import { WhalesSupportDialog } from '@/components/dialogs/WhalesSupportDialog'
 import { MORPHO_BLUE_API_CHAINIDS } from '../../../lib/constants'
 
 export const AssetTxWidget: FC = () => {
     const { portfolioData: portfolioContextData } = useContext(PortfolioContext)
     const searchParams = useSearchParams()
-    const tokenAddress = searchParams.get('token') || ''
-    const chain_id = searchParams.get('chain_id') || 1
+    // const tokenAddress = searchParams.get('token') || ''
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const exposure_widget = searchParams.get('exposure_widget') === 'true'
+    const chain_id = searchParams?.get('chain_id') || '1'
     const {
         walletAddress,
         handleSwitchChain,
@@ -44,7 +43,7 @@ export const AssetTxWidget: FC = () => {
         Number(portfolioContextData?.total_supplied || 0) -
         Number(portfolioContextData?.total_borrowed || 0)
 
-    const { showTelegramDialog, setShowTelegramDialog } = useTelegramDialog({
+    const { showWhalesSupportDialog, setShowWhalesSupportDialog } = useWhalesSupportDialog({
         portfolioValue,
         lendTxCompleted: isLendTxCompletedAndDialogClosed,
         walletAddress,
@@ -87,74 +86,79 @@ export const AssetTxWidget: FC = () => {
 
     if (isAaveV3Protocol) {
         return (
-            <WidgetContainer isLoading={isLoading} platformData={platformData} portfolioData={portfolioData}>
+            <WhalesSupportDialogWrapper
+                showWhalesSupportDialog={showWhalesSupportDialog}
+                setShowWhalesSupportDialog={setShowWhalesSupportDialog}
+                portfolioValue={portfolioValue}
+            >
                 <AaveV3TxWidget
                     isLoading={isLoading}
                     platformData={platformData}
                     portfolioData={portfolioData}
                 />
-                <TelegramConnectionDialog
-                    open={showTelegramDialog}
-                    setOpen={setShowTelegramDialog}
-                    portfolioValue={portfolioValue}
-                    website="AGGREGATOR"
-                />
-            </WidgetContainer>
+            </WhalesSupportDialogWrapper>
         )
     }
 
     if (isMorphoProtocol) {
-        if (
-            isMorphoMarket &&
-            !MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))
-        )
-            return null
+        // if (
+        //     isMorphoMarket &&
+        //     !MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))
+        // )
+        //     return null
         return (
-            <WidgetContainer isLoading={isLoading} platformData={platformData} portfolioData={portfolioData}>
+            <WhalesSupportDialogWrapper
+                showWhalesSupportDialog={showWhalesSupportDialog}
+                setShowWhalesSupportDialog={setShowWhalesSupportDialog}
+                portfolioValue={portfolioValue}
+            >
                 <MorphoTxWidget
                     isLoading={isLoadingPlatformData}
                     platformData={platformData}
                 />
-                <TelegramConnectionDialog
-                    open={showTelegramDialog}
-                    setOpen={setShowTelegramDialog}
-                    portfolioValue={portfolioValue}
-                    website="AGGREGATOR"
-                />
-            </WidgetContainer>
+            </WhalesSupportDialogWrapper>
         )
     }
 
     if (isFluidProtocol) {
         return (
-            <WidgetContainer isLoading={isLoading} platformData={platformData} portfolioData={portfolioData}>
+            <WhalesSupportDialogWrapper
+                showWhalesSupportDialog={showWhalesSupportDialog}
+                setShowWhalesSupportDialog={setShowWhalesSupportDialog}
+                portfolioValue={portfolioValue}
+            >
                 <FluidTxWidget
                     isLoading={isLoadingPlatformData}
                     platformData={platformData}
                     portfolioData={portfolioData}
                 />
-                <TelegramConnectionDialog
-                    open={showTelegramDialog}
-                    setOpen={setShowTelegramDialog}
-                    portfolioValue={portfolioValue}
-                    website="AGGREGATOR"
-                />
-            </WidgetContainer>
+            </WhalesSupportDialogWrapper>
         )
     }
 
     return null
 }
 
-const WidgetContainer: FC<{ children: React.ReactNode, isLoading: boolean, platformData: TPlatform, portfolioData: TPortfolio }> = ({ children, isLoading, platformData, portfolioData }) => {
+export const WhalesSupportDialogWrapper = ({
+    children,
+    showWhalesSupportDialog,
+    setShowWhalesSupportDialog,
+    portfolioValue
+}: {
+    children: React.ReactNode,
+    showWhalesSupportDialog: boolean,
+    setShowWhalesSupportDialog: (show: boolean) => void,
+    portfolioValue: number
+}) => {
     return (
-        <div className="flex flex-col gap-4">
+        <>
             {children}
-            <LoopingWidget
-                isLoading={isLoading}
-                platformData={platformData}
-                portfolioData={portfolioData}
+            <WhalesSupportDialog
+                open={showWhalesSupportDialog}
+                setOpen={setShowWhalesSupportDialog}
+                portfolioValue={portfolioValue}
+                website="AGGREGATOR"
             />
-        </div>
+        </>
     )
 }

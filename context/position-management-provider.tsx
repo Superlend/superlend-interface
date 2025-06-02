@@ -50,9 +50,9 @@ export default function PositionManagementProvider({
     children: React.ReactNode
 }) {
     const searchParams = useSearchParams()
-    const chain_id = searchParams.get('chain_id')
-    const protocol_identifier = searchParams.get('protocol_identifier') || ''
-    const tokenAddress = searchParams.get('token') || ''
+    const chain_id = searchParams?.get('chain_id') || '1'
+    const protocol_identifier = searchParams?.get('protocol_identifier') || ''
+    const tokenAddress = searchParams?.get('token') || ''
 
     // [API_CALL: GET] - Get Platform data
     const {

@@ -61,12 +61,11 @@ const SupplyMorphoButton = ({
     handleCloseModal,
     setActionType,
 }: ISupplyMorphoButtonProps) => {
-    const tokenDetails = assetDetails.asset
-    const platform = assetDetails.platform
-    const morphoMarketData = assetDetails.morphoMarketData
-    const isMorpho = assetDetails.protocol_type === PlatformType.MORPHO
-    const isMorphoMarkets = isMorpho && !assetDetails?.isVault
-    const isMorphoVault = isMorpho && assetDetails?.isVault
+    const { asset, morphoMarketData, ...platform } = assetDetails
+    const tokenDetails = asset
+    const isMorpho = platform.protocol_type === PlatformType.MORPHO
+    const isMorphoMarkets = isMorpho && !platform?.isVault
+    const isMorphoVault = isMorpho && platform?.isVault
     const { logEvent } = useAnalytics()
     const { logUserEvent } = useLogNewUserEvent()
     const { accessToken, getAccessTokenFromPrivy } = useAuth()

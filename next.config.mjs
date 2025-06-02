@@ -26,6 +26,9 @@ const nextConfig = {
             {
                 hostname: 'cryptologos.cc',
             },
+            {
+                hostname: 'funds.superlend.xyz',
+            },
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'attachment',

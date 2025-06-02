@@ -16,6 +16,16 @@ interface AppleFarmRewardsProviderProps {
     children: ReactNode;
 }
 
+const APPLE_FARM_REWARDS_CAMPAIGN_IDS = {
+    MBASIS: '0x6cf5b800dcc169a204dbe9c57473451e7932492ef33f669c6f625a8c66a7c113',
+    MTBill: '0x0c1fe667229297f48bb64b0d3c55c635cdb11219d1b13c3c86008fe533beca32',
+    XTZ: '0xaf113e08f8637ec1bc6a02e56313997122ceae1ef748e51a07fc9e5a433f8078',
+    USDC: '0x277f8148036e308edf2509097b684304adeee739c143cc5b0ecf39349c73014b',
+    WBTC: '0x95ccc4921e1144fedb0e375e1b626992808fad4e311f835ddbc8b2b74f731317',
+    USDT: '0x63dbd3b41b8bed5a4adea2667a676e8573acb404820476326f2c865102741d7c',
+    WETH: '0x6d56c14a8d440c2b77b706726514cd3d939066c416394d2bb61a0b1412159418',
+}
+
 export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> = ({ children }) => {
     const { data: mBasisOpportunityData, isLoading: isLoadingMBasisOpportunityData } =
         useGetMerklOpportunitiesData({
@@ -23,27 +33,27 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
         });
     const { data: mTBillOpportunityData, isLoading: isLoadingMTBillOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0xd8d0ad6579284bcb4dbc3fb1e40f4596c788e4508daf9cfd010459ce86832850', // mTBill
+            campaignId: APPLE_FARM_REWARDS_CAMPAIGN_IDS.MTBill,
         });
     const { data: xtzOpportunityData, isLoading: isLoadingXTZOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0x2bd98414a5af5dae4a8370a2d59869ce4c1b204a9bd4236d3007617f93625303', // xtz
+            campaignId: APPLE_FARM_REWARDS_CAMPAIGN_IDS.XTZ,
         });
     const { data: usdcOpportunityData, isLoading: isLoadingUSDCOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0xb41a8ffef4c790d0f25c55a15f29b81b2c9fff9c07fd4999854ccb7fb3301d6b', // usdc
+            campaignId: APPLE_FARM_REWARDS_CAMPAIGN_IDS.USDC,
         });
     const { data: wbtcOpportunityData, isLoading: isLoadingWBTCCOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0x3e262731bc9ef328fd1222b1164ff27f4fa46c02dde254257e0ae1164ebe1acd', // wbtc
+            campaignId: APPLE_FARM_REWARDS_CAMPAIGN_IDS.WBTC,
         });
     const { data: usdtOpportunityData, isLoading: isLoadingUSDTCOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0x4dd6b7595b1612465e25a8a5ec8ce7c9750f5211f0ebe120ffad71ada8a9b3e9', // usdt
+            campaignId: APPLE_FARM_REWARDS_CAMPAIGN_IDS.USDT,
         });
     const { data: wethOpportunityData, isLoading: isLoadingWETHOpportunityData } =
         useGetMerklOpportunitiesData({
-            campaignId: '0x5571b243f36c4320559aaf8c61e116d8271060b8db28cb90871c5ec8ed665ab0', // weth
+            campaignId: APPLE_FARM_REWARDS_CAMPAIGN_IDS.WETH,
         });
 
     const isLoading =

@@ -134,7 +134,7 @@ export function ConfirmationDialog({
     const { logEvent } = useAnalytics()
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
     const searchParams = useSearchParams() || new URLSearchParams()
-    const chain_id = searchParams.get('chain_id') || 1
+    const chain_id = searchParams.get('chain_id') || '1'
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
     const isLendPositionType = positionType === 'lend'
@@ -240,6 +240,9 @@ export function ConfirmationDialog({
             (lendTx.status !== 'approve' || borrowTx.status !== 'borrow')
         ) {
             setAmount('')
+            setTimeout(() => {
+                resetLendBorrowTx()
+            }, 5000)
         }
     }
 
