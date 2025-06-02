@@ -10,7 +10,8 @@ import EasterEgg from '@/components/EasterEgg'
 import { BlockchainDataPrefetcher } from '@/components/BlockchainDataPrefetcher'
 import { CsrfInitializer } from '@/components/CsrfInitializer'
 import MarketsBanner from '@/components/MarketsBanner'
-import Script from 'next/script'
+import { OnboardingProvider } from '@/components/providers/OnboardingProvider'
+import ZohoChatWidget from '@/components/ZohoChatWidget'
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://app.superlend.xyz'),
@@ -76,26 +77,21 @@ export default function RootLayout({
                 <GoogleTagManager gtmId={GTM_ID} />
                 <GoogleAnalytics gaId={GA_ID} />
                 
-                {/* Zoho SalesIQ Integration */}
-                <Script id="zoho-salesiq-setup" strategy="afterInteractive">
-                    {`window.$zoho=window.$zoho || {};$zoho.salesiq=$zoho.salesiq||{ready:function(){}}`}
-                </Script>
-                <Script 
-                    id="zsiqscript" 
-                    src="https://salesiq.zohopublic.in/widget?wc=siq13bbfecd288b79f4b1f8f420e104879a33497d7b38eeeaf9861740a9e168479d" 
-                    strategy="afterInteractive"
-                />
-                
                 <ContextProvider>
-                    <Toaster />
-                    {/* Security and optimization components */}
-                    <CsrfInitializer />
-                    <BlockchainDataPrefetcher />
-                    
-                    <EasterEgg />
-                    <Header />
-                    <MarketsBanner />
-                    {children}
+                    <OnboardingProvider>
+                        <Toaster />
+                        {/* Security and optimization components */}
+                        <CsrfInitializer />
+                        <BlockchainDataPrefetcher />
+                        
+                        {/* Zoho Chat Widget - Conditionally hidden during onboarding */}
+                        <ZohoChatWidget />
+                        
+                        <EasterEgg />
+                        <Header />
+                        <MarketsBanner />
+                        {children}
+                    </OnboardingProvider>
                 </ContextProvider>
             </body>
         </html>
