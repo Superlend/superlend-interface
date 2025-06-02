@@ -11,8 +11,8 @@ export const BorrowFlowStep: React.FC = () => {
     },
     {
       icon: <CreditCard className="w-6 h-6" />,
-      title: "Choose Loan Terms",
-      description: "Select your preferred asset to borrow and loan duration"
+      title: "Choose Loan Asset",
+      description: "Select your preferred asset to borrow"
     },
     {
       icon: <DollarSign className="w-6 h-6" />,

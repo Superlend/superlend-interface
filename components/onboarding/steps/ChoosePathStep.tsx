@@ -21,6 +21,7 @@ export const ChoosePathStep: React.FC = () => {
       gradient: 'bg-gradient-to-br from-green-400/20 via-emerald-400/20 to-teal-400/20',
       hoverGradient: 'bg-gradient-to-br from-green-400/40 to-teal-400/40',
       accentColor: 'bg-gradient-to-br from-green-400 to-emerald-500',
+      particleColor: 'bg-green-400',
     },
     {
       path: 'borrow' as OnboardingPath,
@@ -30,6 +31,7 @@ export const ChoosePathStep: React.FC = () => {
       gradient: 'bg-gradient-to-br from-blue-400/20 via-cyan-400/20 to-indigo-400/20',
       hoverGradient: 'bg-gradient-to-br from-blue-400/40 to-indigo-400/40',
       accentColor: 'bg-gradient-to-br from-blue-400 to-cyan-500',
+      particleColor: 'bg-blue-400',
     },
     {
       path: 'learn' as OnboardingPath,
@@ -39,6 +41,7 @@ export const ChoosePathStep: React.FC = () => {
       gradient: 'bg-gradient-to-br from-purple-400/20 via-pink-400/20 to-rose-400/20',
       hoverGradient: 'bg-gradient-to-br from-purple-400/40 to-rose-400/40',
       accentColor: 'bg-gradient-to-br from-purple-400 to-pink-500',
+      particleColor: 'bg-purple-400',
     },
   ]
 
@@ -99,42 +102,121 @@ export const ChoosePathStep: React.FC = () => {
                   }
                 `} />
 
-                {/* Animated background particles */}
+                {/* Enhanced animated background particles for selected */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  {[...Array(isSelected ? 6 : 3)].map((_, i) => (
+                  {[...Array(isSelected ? 8 : 0)].map((_, i) => (
                     <motion.div
                       key={i}
-                      className={`absolute w-1 h-1 ${pathData.accentColor} rounded-full ${isSelected ? 'opacity-20' : 'opacity-10 group-hover:opacity-15'}`}
+                      className={`absolute w-1 h-1 ${pathData.accentColor} rounded-full opacity-30`}
                       animate={{
-                        x: [0, 80, 0],
-                        y: [0, -40, 0],
-                        scale: [0, 1, 0],
+                        x: [0, 100, 0],
+                        y: [0, -60, 0],
+                        scale: [0, 1.5, 0],
+                        opacity: [0, 0.4, 0],
                       }}
                       transition={{
-                        duration: isSelected ? 3 + i : 4 + i * 0.5,
+                        duration: 3 + i * 0.3,
                         repeat: Infinity,
-                        delay: i * (isSelected ? 0.5 : 0.8),
+                        delay: i * 0.4,
                         ease: "easeInOut"
                       }}
                       style={{
-                        left: `${20 + i * 20}%`,
-                        top: `${30 + i * 15}%`,
+                        left: `${15 + i * 12}%`,
+                        top: `${25 + i * 10}%`,
                       }}
                     />
                   ))}
                 </div>
 
-                {/* Subtle floating elements for unselected cards */}
+                {/* Floating light particles for unselected cards on hover */}
+                {!isSelected && (
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {/* Constant subtle particles */}
+                    {[...Array(4)].map((_, i) => (
+                      <motion.div
+                        key={`subtle-${i}`}
+                        className={`absolute w-0.5 h-0.5 ${pathData.particleColor} rounded-full opacity-20`}
+                        animate={{
+                          x: [0, 60, 0],
+                          y: [0, -30, 0],
+                          scale: [0, 1, 0],
+                          opacity: [0, 0.3, 0],
+                        }}
+                        transition={{
+                          duration: 4 + i * 0.8,
+                          repeat: Infinity,
+                          delay: i * 1.2,
+                          ease: "easeInOut"
+                        }}
+                        style={{
+                          left: `${20 + i * 20}%`,
+                          top: `${40 + i * 15}%`,
+                        }}
+                      />
+                    ))}
+
+                    {/* Enhanced hover particles */}
+                    {[...Array(6)].map((_, i) => (
+                      <motion.div
+                        key={`hover-${i}`}
+                        className={`absolute w-1 h-1 ${pathData.particleColor} rounded-full opacity-0 group-hover:opacity-40`}
+                        animate={{
+                          x: [0, 120, 0],
+                          y: [0, -80, 0],
+                          scale: [0, 1.2, 0],
+                          rotate: [0, 360, 720],
+                        }}
+                        transition={{
+                          duration: 3.5 + i * 0.5,
+                          repeat: Infinity,
+                          delay: i * 0.6,
+                          ease: "easeInOut"
+                        }}
+                        style={{
+                          left: `${10 + i * 15}%`,
+                          top: `${30 + i * 12}%`,
+                        }}
+                      />
+                    ))}
+
+                    {/* Orbiting particles on hover */}
+                    {[...Array(3)].map((_, i) => (
+                      <motion.div
+                        key={`orbit-${i}`}
+                        className={`absolute w-1.5 h-1.5 ${pathData.particleColor} rounded-full opacity-0 group-hover:opacity-25`}
+                        animate={{
+                          rotate: [0, 360],
+                          scale: [0.8, 1.2, 0.8],
+                        }}
+                        transition={{
+                          duration: 8 + i * 2,
+                          repeat: Infinity,
+                          ease: "linear",
+                          delay: i * 1.5
+                        }}
+                        style={{
+                          left: `${50}%`,
+                          top: `${50}%`,
+                          transformOrigin: `${30 + i * 20}px ${20 + i * 15}px`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Magical floating elements for unselected cards */}
                 {!isSelected && (
                   <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                    {[...Array(2)].map((_, i) => (
+                    {/* Large floating orbs */}
+                    {[...Array(3)].map((_, i) => (
                       <motion.div
                         key={`float-${i}`}
-                        className={`absolute w-8 h-8 ${pathData.accentColor} rounded-full opacity-5`}
+                        className={`absolute w-8 h-8 ${pathData.accentColor} rounded-full opacity-10`}
                         animate={{
-                          y: [0, -20, 0],
-                          scale: [0.8, 1.2, 0.8],
+                          y: [0, -25, 0],
+                          scale: [0.6, 1.4, 0.6],
                           rotate: [0, 180, 360],
+                          opacity: [0.05, 0.15, 0.05],
                         }}
                         transition={{
                           duration: 6 + i * 2,
@@ -143,8 +225,50 @@ export const ChoosePathStep: React.FC = () => {
                           delay: i * 1.5
                         }}
                         style={{
-                          left: `${25 + i * 50}%`,
-                          top: `${20 + i * 40}%`,
+                          left: `${20 + i * 30}%`,
+                          top: `${15 + i * 35}%`,
+                        }}
+                      />
+                    ))}
+
+                    {/* Shimmer effect */}
+                    <motion.div
+                      className={`absolute w-full h-0.5 ${pathData.accentColor} opacity-20`}
+                      animate={{
+                        x: ['-100%', '100%'],
+                        opacity: [0, 0.3, 0],
+                      }}
+                      transition={{
+                        duration: 2.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 0.5
+                      }}
+                      style={{
+                        top: '30%',
+                        transform: 'rotate(45deg)',
+                      }}
+                    />
+
+                    {/* Pulse rings */}
+                    {[...Array(2)].map((_, i) => (
+                      <motion.div
+                        key={`pulse-${i}`}
+                        className={`absolute w-16 h-16 border-2 ${pathData.particleColor.replace('bg-', 'border-')} rounded-full opacity-0`}
+                        animate={{
+                          scale: [0, 2],
+                          opacity: [0.3, 0],
+                        }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "easeOut",
+                          delay: i * 1.5
+                        }}
+                        style={{
+                          left: '50%',
+                          top: '50%',
+                          transform: 'translate(-50%, -50%)',
                         }}
                       />
                     ))}
@@ -160,7 +284,7 @@ export const ChoosePathStep: React.FC = () => {
                         w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center relative transition-all duration-300
                         ${isSelected 
                           ? `${pathData.accentColor} shadow-lg` 
-                          : `bg-gradient-to-br from-gray-100/80 to-gray-200/50 group-hover:from-gray-200/80 group-hover:to-gray-300/60 shadow-sm group-hover:shadow-md`
+                          : `bg-gradient-to-br from-gray-100/80 to-gray-200/50 shadow-sm group-hover:shadow-md`
                         }
                       `}
                       whileHover={{ 
@@ -191,14 +315,30 @@ export const ChoosePathStep: React.FC = () => {
                         </motion.div>
                       )}
 
-                      {/* Subtle glow for unselected on hover */}
+                      {/* Enhanced glow for unselected on hover */}
                       {!isSelected && (
-                        <motion.div
-                          className={`absolute inset-0 rounded-lg ${pathData.accentColor} opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-sm`}
-                          initial={{ scale: 0.8 }}
-                          whileHover={{ scale: 1.2 }}
-                          transition={{ duration: 0.3 }}
-                        />
+                        <>
+                          <motion.div
+                            className={`absolute inset-0 rounded-lg ${pathData.accentColor} opacity-0 group-hover:opacity-30 transition-opacity duration-300 blur-sm`}
+                            initial={{ scale: 0.8 }}
+                            whileHover={{ scale: 1.3 }}
+                            transition={{ duration: 0.3 }}
+                          />
+                          {/* Additional outer glow ring */}
+                          <motion.div
+                            className={`absolute inset-0 rounded-lg border-2 ${pathData.particleColor.replace('bg-', 'border-')} opacity-0 group-hover:opacity-40 transition-opacity duration-300`}
+                            initial={{ scale: 1 }}
+                            whileHover={{ scale: 1.2 }}
+                            transition={{ duration: 0.4 }}
+                            animate={{
+                              scale: [1, 1.05, 1],
+                            }}
+                            style={{
+                              animationDuration: "2s",
+                              animationIterationCount: "infinite"
+                            }}
+                          />
+                        </>
                       )}
                     </motion.div>
 
@@ -240,7 +380,19 @@ export const ChoosePathStep: React.FC = () => {
                       whileHover={{ x: 4, scale: 1.02 }}
                     >
                       <div className="flex items-center gap-3">
-                        <Zap className={`w-4 h-4 transition-all duration-300 ${isSelected ? 'text-primary' : 'text-gray-700 group-hover:text-primary group-hover:scale-110'}`} />
+                        <motion.div
+                          animate={!isSelected ? {
+                            scale: [1, 1.2, 1],
+                            rotate: [0, 15, 0],
+                          } : {}}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        >
+                          <Zap className={`w-4 h-4 transition-all duration-300 ${isSelected ? 'text-primary' : 'text-gray-700 group-hover:text-primary group-hover:scale-110'}`} />
+                        </motion.div>
                         <span className={`
                           text-sm font-semibold transition-colors duration-300
                           ${isSelected ? 'text-primary' : 'text-gray-800 group-hover:text-primary'}

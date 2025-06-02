@@ -315,8 +315,8 @@ export const FinalStep: React.FC = () => {
           {selectedAsset && selectedPath !== 'learn' && (
             <p className="text-sm text-primary font-medium">
               You selected {selectedAsset.tokenSymbol} - great choice!
-              {selectedPath === 'earn' && " Let&apos;s start earning yield on this stable token."}
-              {selectedPath === 'borrow' && " Let&apos;s set up your borrowing position."}
+              {selectedPath === 'earn' && " Let's start earning yield on this stable token."}
+              {selectedPath === 'borrow' && " Let's set up your borrowing position."}
             </p>
           )}
         </motion.div>
