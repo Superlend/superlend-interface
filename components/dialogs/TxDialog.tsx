@@ -220,8 +220,8 @@ export function ConfirmationDialog({
                 loopAssetDetails?.borrowAsset?.token?.decimals ?? 0
             ).toString()
             return {
-                amountRaw: amount, 
-                scValue: amount, 
+                amountRaw: amount,
+                scValue: amount,
                 amountParsed,
                 lendAmount: lendAmount,
                 borrowAmount: borrowAmount,
@@ -274,6 +274,9 @@ export function ConfirmationDialog({
     const canDisplayExplorerLinkWhileLoading = positionTypeTxStatusMap[positionType].hash.length > 0 && (positionTypeTxStatusMap[positionType].isConfirming || positionTypeTxStatusMap[positionType].isPending)
 
     function getNewHfColor() {
+        if (!healthFactorValues.healthFactor || !healthFactorValues.newHealthFactor) {
+            return 'text-gray-800'
+        }
         const newHF = Number(healthFactorValues.newHealthFactor.toString())
         const HF = Number(healthFactorValues.healthFactor.toString())
 
@@ -299,7 +302,7 @@ export function ConfirmationDialog({
     const isDisableActionButton =
         disabled ||
         isTxInProgress ||
-        (!hasAcknowledgedRisk && !isLendPositionType && isHfLow())
+        (!hasAcknowledgedRisk && positionType === 'borrow' && isHfLow())
 
     function getTriggerButtonText() {
         const buttonTextMap: { [key: string]: string } = {
@@ -742,27 +745,29 @@ export function ConfirmationDialog({
                             </BodyText>
                             <div className="flex flex-col items-end justify-end gap-0">
                                 <div className="flex items-center gap-2">
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className={`text-gray-800`}
-                                    >
-                                        {Number(healthFactorValues.healthFactor) <
-                                            0 && (
-                                                <InfinityIcon className="w-4 h-4" />
-                                            )}
-                                        {Number(healthFactorValues.healthFactor) >=
-                                            0 &&
-                                            healthFactorValues.healthFactor.toFixed(
-                                                2
-                                            )}
-                                    </BodyText>
-                                    <ArrowRightIcon
-                                        width={16}
-                                        height={16}
-                                        className="stroke-gray-800"
-                                        strokeWidth={2.5}
-                                    />
+                                    {healthFactorValues.healthFactor &&
+                                        <BodyText
+                                            level="body2"
+                                            weight="normal"
+                                            className={`text-gray-800`}
+                                        >
+                                            {Number(healthFactorValues.healthFactor) <
+                                                0 && (
+                                                    <InfinityIcon className="w-4 h-4" />
+                                                )}
+                                            {Number(healthFactorValues?.healthFactor) >=
+                                                0 &&
+                                                healthFactorValues.healthFactor.toFixed(
+                                                    2
+                                                )}
+                                        </BodyText>}
+                                    {(healthFactorValues.healthFactor && healthFactorValues.newHealthFactor) &&
+                                        <ArrowRightIcon
+                                            width={16}
+                                            height={16}
+                                            className="stroke-gray-800"
+                                            strokeWidth={2.5}
+                                        />}
                                     <BodyText
                                         level="body2"
                                         weight="normal"
