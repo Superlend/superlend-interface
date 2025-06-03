@@ -183,7 +183,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                 setFlashLoanAmount(result.flashLoanAmountFormatted ?? '0')
             })
         }
-    }, [providerStatus.isReady, selectedLendToken?.address, lendAmount, selectedBorrowToken?.address])
+    }, [providerStatus.isReady, selectedLendToken?.address, lendAmount, selectedBorrowToken?.address, leverage])
 
     useEffect(() => {
         if (!!selectedBorrowToken && !!selectedLendToken && !!Number(borrowAmountRaw)) {
@@ -284,14 +284,14 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
             <Card className="flex flex-col gap-3 p-4">
                 <CardHeader className="p-0 pl-3">
                     <CardTitle className="text-lg font-medium text-gray-800">
-                        Adjust Exposure
+                        Create New Loop Position
                     </CardTitle>
                 </CardHeader>
 
                 <CardContent className="p-0 space-y-6">
                     {/* Lend Position Section */}
                     <div className="space-y-1">
-                        <div className="flex justify-between items-center mb-1 px-4">
+                        <div className="flex justify-between items-center mb-1 px-2">
                             <Label size="medium">Lend</Label>
                             <BodyText
                                 level="body2"
@@ -360,9 +360,9 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
 
                     {/* Borrow Position Section */}
                     <div className="space-y-1">
-                        <div className="flex justify-between items-center mb-1 px-4">
+                        <div className="flex justify-between items-center mb-1 px-2">
                             <Label size="medium">Borrow</Label>
-                            <BodyText
+                            {/* <BodyText
                                 level="body2"
                                 weight="normal"
                                 className="text-gray-600"
@@ -380,7 +380,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                             : 2
                                     )
                                 )}
-                            </BodyText>
+                            </BodyText> */}
                         </div>
 
                         <div className="border rounded-5 border-gray-200 py-2 px-4 flex items-center gap-3 bg-gray-100 max-w-full">
@@ -438,13 +438,13 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                     </div>
 
                     {/* Leverage Slider */}
-                    <div className="space-y-2 px-4">
+                    <div className="space-y-2 px-2">
                         <div className="flex justify-between items-center">
                             <Label size="medium">Leverage</Label>
                             <Badge variant="secondary">{leverage}x</Badge>
                         </div>
 
-                        <div className="px-2">
+                        <div className="">
                             <Slider
                                 value={[leverage]}
                                 min={1}
