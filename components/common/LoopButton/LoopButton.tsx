@@ -116,12 +116,12 @@ const LoopButton = ({
             isConfirming
                 ? 'confirming'
                 : isConfirmed
-                  ? loopTx.status === 'view'
-                      ? 'success'
-                      : 'default'
-                  : isPending
-                    ? 'pending'
-                    : 'default'
+                    ? loopTx.status === 'view'
+                        ? 'success'
+                        : 'default'
+                    : isPending
+                        ? 'pending'
+                        : 'default'
         ]
     }
 
@@ -138,7 +138,6 @@ const LoopButton = ({
             isPending: isPending,
             isConfirming: isConfirming,
             isConfirmed: isConfirmed,
-            isRefreshingAllowance: isConfirmed,
         }))
     }, [isPending, isConfirming, isConfirmed])
 
@@ -151,9 +150,17 @@ const LoopButton = ({
             !isPending &&
             !isConfirming
         ) {
+            if (loopTx.hasCreditDelegation) {
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'credit_delegation',
+                    hash: hash || '',
+                }))
+                return
+            }
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
-                status: 'credit_delegation',
+                status: 'loop',
                 hash: hash || '',
             }))
             return
@@ -169,6 +176,20 @@ const LoopButton = ({
                 ...prev,
                 hash: hash || '',
                 status: 'loop',
+            }))
+            return
+        }
+        if (
+            loopTx.status === 'loop' &&
+            hash &&
+            isConfirmed &&
+            !isPending &&
+            !isConfirming
+        ) {
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                hash: hash || '',
+                status: 'view',
             }))
             return
         }

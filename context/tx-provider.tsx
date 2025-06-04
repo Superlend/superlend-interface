@@ -69,8 +69,7 @@ const TxInitialState: TTxContext = {
         isPending: false,
         isConfirming: false,
         isConfirmed: false,
-        isRefreshingAllowance: false,
-        allowanceBN: BigNumber.from(0),
+        hasCreditDelegation: false,
     },
     setLoopTx: () => { },
     setWithdrawTx: () => { },
@@ -131,8 +130,7 @@ export type TLoopTx = {
     isPending: boolean
     isConfirming: boolean
     isConfirmed: boolean
-    isRefreshingAllowance: boolean
-    allowanceBN: BigNumber
+    hasCreditDelegation: boolean
 }
 
 export default function TxProvider({
@@ -189,8 +187,7 @@ export default function TxProvider({
         isPending: false,
         isConfirming: false,
         isConfirmed: false,
-        isRefreshingAllowance: false,
-        allowanceBN: BigNumber.from(0),
+        hasCreditDelegation: false,
     })
 
     const [isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen] =

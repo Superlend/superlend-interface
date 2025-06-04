@@ -188,6 +188,16 @@ export function ConfirmationDialog({
             isConfirmed: false,
             errorMessage: '',
         }))
+        setLoopTx((prev: TLoopTx) => ({
+            ...prev,
+            status: 'approve',
+            hash: '',
+            isPending: false,
+            isConfirming: false,
+            isConfirmed: false,
+            errorMessage: '',
+            hasCreditDelegation: false,
+        }))
     }
 
     const getActionButtonAmount = () => {
@@ -235,16 +245,14 @@ export function ConfirmationDialog({
         // When opening the dialog, reset the amount and the tx status
         setOpen(open)
         // When closing the dialog, reset the amount and the tx status
-        if (open) {
-            resetLendBorrowTx()
-        } else if (
+        if (
             !open &&
-            (lendTx.status !== 'approve' || borrowTx.status !== 'borrow')
+            (lendTx.status !== 'approve' || borrowTx.status !== 'borrow' || loopTx.status !== 'approve')
         ) {
             setAmount('')
             setTimeout(() => {
                 resetLendBorrowTx()
-            }, 5000)
+            }, 3000)
         }
     }
 
@@ -1101,11 +1109,12 @@ export function ConfirmationDialog({
             {/* Loop Credit Delegation */}
             {isShowBlock({
                 loop:
-                    (loopTx.status === 'credit_delegation' &&
+                    ((loopTx.status === 'credit_delegation' &&
                         (isLoopTxInProgress ||
                             (!isLoopTxInProgress && loopTx.isConfirmed))) ||
-                    loopTx.status === 'loop' ||
-                    loopTx.status === 'view',
+                        loopTx.status === 'loop' ||
+                        loopTx.status === 'view') &&
+                    loopTx.hasCreditDelegation,
             }) && (
                     <div className="py-1">
                         {isLoopTxInProgress && loopTx.status === 'credit_delegation' && (
@@ -1220,7 +1229,7 @@ export function ConfirmationDialog({
                                 )}
                             </div>
                         )}
-                        {((!isLoopTxInProgress && loopTx.isConfirmed) || loopTx.status === 'view') && (
+                        {(!isLoopTxInProgress && loopTx.isConfirmed && loopTx.status === 'view') && (
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center justify-start gap-2">
                                     <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
@@ -1237,7 +1246,7 @@ export function ConfirmationDialog({
                                         Loop successful
                                     </BodyText>
                                 </div>
-                                {loopTx.hash && loopTx.status === 'loop' && (
+                                {loopTx.hash && loopTx.status === 'view' && (
                                     <ExternalLink
                                         href={getExplorerLink(
                                             loopTx.hash,

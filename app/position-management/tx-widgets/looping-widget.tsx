@@ -2,7 +2,7 @@
 
 import { FC, useState, useEffect, useContext } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useTxContext } from '@/context/tx-provider'
+import { TLoopTx, useTxContext } from '@/context/tx-provider'
 import { TTxContext } from '@/context/tx-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { useDiscordDialog } from '@/hooks/useDiscordDialog'
@@ -102,7 +102,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         string,
         Record<string, number>
     > | null>(null)
-
+    const { setLoopTx } = useTxContext()
     // Token balances
     const {
         erc20TokensBalanceData,
@@ -176,7 +176,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                 ).toString(),
                 leverage: leverage,
                 borrowToken: selectedBorrowToken?.address || '',
-                _walletAddress: walletAddress, // 0x0e9852b16ae49c99b84b0241e3c6f4a5692c6b05
+                _walletAddress: walletAddress,
             })
                 .then((result) => {
                     console.log(
@@ -204,7 +204,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         if (
             !!selectedBorrowToken &&
             !!selectedLendToken &&
-            !!Number(borrowAmountRaw)
+            Number(borrowAmountRaw) > 0
         ) {
             setIsLoadingTradePath(true)
             getTradePath(
@@ -219,15 +219,15 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                         setPathTokens([])
                         setPathFees([
                             result?.routes[0]?.pools[0]?.fee?.toString() ??
-                                '500',
+                            '500',
                         ])
                     } else {
                         setPathTokens([result?.routes[0]?.path[1]?.address])
                         setPathFees([
                             result?.routes[0]?.pools[0]?.fee?.toString() ??
-                                '500',
+                            '500',
                             result?.routes[0]?.pools[1]?.fee?.toString() ??
-                                '500',
+                            '500',
                         ])
                     }
                 })
@@ -236,20 +236,17 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                 })
                 .finally(() => {
                     setIsLoadingTradePath(false)
+                    setLoopTx((prev: TLoopTx) => ({
+                        ...prev,
+                        hasCreditDelegation: true,
+                    }))
                 })
         }
     }, [
         selectedBorrowToken?.address,
         selectedLendToken?.address,
         borrowAmountRaw,
-        lendAmount,
-        leverage,
     ])
-
-    console.log({
-        pathTokens,
-        pathFees,
-    })
 
     // Get balance for selected token
     const getTokenBalance = (token: TToken | null) => {
@@ -282,7 +279,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
      */
 
     const selectedLendTokenBalance = getTokenBalance(selectedLendToken)
-    const selectedBorrowTokenBalance = getTokenBalance(selectedBorrowToken)
+    // const selectedBorrowTokenBalance = getTokenBalance(selectedBorrowToken)
 
     // Format health factor for display
     const getHealthFactorDisplay = () => {
@@ -316,13 +313,13 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     }
     // Check if button should be disabled
     const diableActionButton =
-        // !isWalletConnected ||
+        !isWalletConnected ||
         !selectedLendToken ||
         !lendAmount ||
         Number(lendAmount) <= 0 ||
-        Number(lendAmount) > Number(selectedLendTokenBalance)
-    //  ||
-    // Number(borrowAmount) <= 0
+        Number(lendAmount) > Number(selectedLendTokenBalance) ||
+        isLoadingTradePath ||
+        isLoadingBorrowAmount
 
     // looping-widget
     return (
@@ -352,8 +349,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                         selectedLendTokenBalance,
                                         selectedLendToken
                                             ? getMaxDecimalsToDisplay(
-                                                  selectedLendToken.symbol
-                                              )
+                                                selectedLendToken.symbol
+                                            )
                                             : 2
                                     )
                                 )}
@@ -500,9 +497,9 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     Number(
                                         abbreviateNumber(
                                             maxLeverage?.[
-                                                selectedLendToken?.address
+                                            selectedLendToken?.address
                                             ]?.[selectedBorrowToken?.address] ??
-                                                1,
+                                            1,
                                             1
                                         )
                                     ) || 1
@@ -534,7 +531,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 >
                                     {abbreviateNumber(
                                         maxLeverage?.[
-                                            selectedLendToken?.address
+                                        selectedLendToken?.address
                                         ]?.[selectedBorrowToken?.address] ?? 1,
                                         1
                                     )}
@@ -603,6 +600,18 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             ${selectedLendToken && lendAmount ? (Number(lendAmount) * selectedLendToken.price_usd * (leverage - 1)).toFixed(2) : '0.00'}
                         </BodyText>
                     </div> */}
+                    {(isLoadingTradePath || isLoadingBorrowAmount) &&
+                        <div className="flex items-center justify-start gap-2">
+                            <LoaderCircle className="animate-spin w-4 h-4 text-secondary-500" />
+                            <BodyText
+                                level="body3"
+                                weight="normal"
+                                className="text-gray-600"
+                            >
+                                {isLoadingTradePath && 'Fetching trade path...'}
+                                {isLoadingBorrowAmount && 'Fetching borrow amount...'}
+                            </BodyText>
+                        </div>}
                 </CardContent>
 
                 <CardFooter className="p-0 pt-2">
@@ -705,7 +714,7 @@ function TokenSelector({
                             className={cn(
                                 'flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4',
                                 selectedToken?.address === token.address &&
-                                    'bg-gray-400'
+                                'bg-gray-400'
                             )}
                         >
                             <ImageWithDefault

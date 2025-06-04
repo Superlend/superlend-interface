@@ -20,6 +20,7 @@ export function middleware(request: NextRequest) {
     // In development mode, allow localhost
     if (process.env.NODE_ENV === 'development') {
         allowedOrigins.push('http://localhost:3000');
+        allowedOrigins.push('http://localhost:3001');
     }
     
     const origin = request.headers.get('origin');
