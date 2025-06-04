@@ -63,8 +63,10 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const [isLoopTxDialogOpen, setIsLoopTxDialogOpen] = useState(false)
-    const uiPoolDataProviderAddress = '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9'
-    const lendingPoolAddressProvider = '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec'
+    const uiPoolDataProviderAddress =
+        '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9'
+    const lendingPoolAddressProvider =
+        '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec'
     const {
         walletAddress,
         handleSwitchChain,
@@ -87,7 +89,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     const [lendAmountRaw, setLendAmountRaw] = useState<string>('0')
     const [borrowAmount, setBorrowAmount] = useState<string>('0')
     const [borrowAmountRaw, setBorrowAmountRaw] = useState<string>('0')
-    const [isLoadingBorrowAmount, setIsLoadingBorrowAmount] = useState<boolean>(false)
+    const [isLoadingBorrowAmount, setIsLoadingBorrowAmount] =
+        useState<boolean>(false)
     const [leverage, setLeverage] = useState<number>(1)
     const [healthFactor, setHealthFactor] = useState<number>(0)
     const [flashLoanAmount, setFlashLoanAmount] = useState<string>('0')
@@ -154,10 +157,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
             // Get max leverage
             getMaxLeverage({
                 chainId: ChainId.Etherlink,
-                uiPoolDataProviderAddress:
-                    uiPoolDataProviderAddress,
-                lendingPoolAddressProvider:
-                    lendingPoolAddressProvider,
+                uiPoolDataProviderAddress: uiPoolDataProviderAddress,
+                lendingPoolAddressProvider: lendingPoolAddressProvider,
             }).then((results) => {
                 setMaxLeverage(results as any)
             })
@@ -166,37 +167,69 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
             setIsLoadingBorrowAmount(true)
             getBorrowTokenAmountForLeverage({
                 chainId: ChainId.Etherlink,
-                uiPoolDataProviderAddress:
-                    uiPoolDataProviderAddress,
-                lendingPoolAddressProvider:
-                    lendingPoolAddressProvider,
+                uiPoolDataProviderAddress: uiPoolDataProviderAddress,
+                lendingPoolAddressProvider: lendingPoolAddressProvider,
                 supplyToken: selectedLendToken?.address || '',
-                supplyTokenAmount: parseUnits(lendAmount, selectedLendToken?.decimals || 18).toString(),
+                supplyTokenAmount: parseUnits(
+                    lendAmount,
+                    selectedLendToken?.decimals || 18
+                ).toString(),
                 leverage: leverage,
                 borrowToken: selectedBorrowToken?.address || '',
                 _walletAddress: walletAddress, // 0x0e9852b16ae49c99b84b0241e3c6f4a5692c6b05
-            }).then((result) => {
-                console.log('Borrow token amount for leverage result', result)
-                setHealthFactor(Number(result?.healthFactor ?? 0))
-                setBorrowAmount(result.amountFormatted)
-                setBorrowAmountRaw(result.amount)
-                setFlashLoanAmount(result.flashLoanAmountFormatted ?? '0')
-            }).finally(() => {
-                setIsLoadingBorrowAmount(false)
             })
+                .then((result) => {
+                    console.log(
+                        'Borrow token amount for leverage result',
+                        result
+                    )
+                    setHealthFactor(Number(result?.healthFactor ?? 0))
+                    setBorrowAmount(result.amountFormatted)
+                    setBorrowAmountRaw(result.amount)
+                    setFlashLoanAmount(result.flashLoanAmountFormatted ?? '0')
+                })
+                .finally(() => {
+                    setIsLoadingBorrowAmount(false)
+                })
         }
-    }, [providerStatus.isReady, selectedLendToken?.address, lendAmount, selectedBorrowToken?.address, leverage])
+    }, [
+        providerStatus.isReady,
+        selectedLendToken?.address,
+        lendAmount,
+        selectedBorrowToken?.address,
+        leverage,
+    ])
 
     useEffect(() => {
-        if (!!selectedBorrowToken && !!selectedLendToken && !!Number(borrowAmountRaw)) {
+        if (
+            !!selectedBorrowToken &&
+            !!selectedLendToken &&
+            !!Number(borrowAmountRaw)
+        ) {
             setIsLoadingTradePath(true)
-            getTradePath(selectedBorrowToken?.address, selectedLendToken?.address, borrowAmountRaw)
+            getTradePath(
+                selectedBorrowToken?.address,
+                selectedLendToken?.address,
+                borrowAmountRaw
+            )
                 .then((result: any) => {
                     console.log('Trade path result', result)
-                    const pathTokens: string[] = result.routes[0].path.map((path: any) => path.address) // [Borrow token address, Lend token address]
-                    const pathFees: string[] = result.routes[0].pools.map((pool: any) => pool.fee.toString())
-                    setPathTokens(pathTokens)
-                    setPathFees(pathFees)
+
+                    if (result.routes[0]?.pools?.length === 1) {
+                        setPathTokens([])
+                        setPathFees([
+                            result?.routes[0]?.pools[0]?.fee?.toString() ??
+                                '500',
+                        ])
+                    } else {
+                        setPathTokens([result?.routes[0]?.path[1]?.address])
+                        setPathFees([
+                            result?.routes[0]?.pools[0]?.fee?.toString() ??
+                                '500',
+                            result?.routes[0]?.pools[1]?.fee?.toString() ??
+                                '500',
+                        ])
+                    }
                 })
                 .catch((error) => {
                     console.error('Error fetching trade path\n', error)
@@ -205,7 +238,18 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                     setIsLoadingTradePath(false)
                 })
         }
-    }, [selectedBorrowToken?.address, selectedLendToken?.address, borrowAmountRaw, lendAmount])
+    }, [
+        selectedBorrowToken?.address,
+        selectedLendToken?.address,
+        borrowAmountRaw,
+        lendAmount,
+        leverage,
+    ])
+
+    console.log({
+        pathTokens,
+        pathFees,
+    })
 
     // Get balance for selected token
     const getTokenBalance = (token: TToken | null) => {
@@ -275,9 +319,10 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         // !isWalletConnected ||
         !selectedLendToken ||
         !lendAmount ||
-        (Number(lendAmount) <= 0) ||
-        (Number(lendAmount) > Number(selectedLendTokenBalance)) ||
-        Number(borrowAmount) <= 0
+        Number(lendAmount) <= 0 ||
+        Number(lendAmount) > Number(selectedLendTokenBalance)
+    //  ||
+    // Number(borrowAmount) <= 0
 
     // looping-widget
     return (
@@ -307,8 +352,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                         selectedLendTokenBalance,
                                         selectedLendToken
                                             ? getMaxDecimalsToDisplay(
-                                                selectedLendToken.symbol
-                                            )
+                                                  selectedLendToken.symbol
+                                              )
                                             : 2
                                     )
                                 )}
@@ -455,9 +500,9 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     Number(
                                         abbreviateNumber(
                                             maxLeverage?.[
-                                            selectedLendToken?.address
+                                                selectedLendToken?.address
                                             ]?.[selectedBorrowToken?.address] ??
-                                            1,
+                                                1,
                                             1
                                         )
                                     ) || 1
@@ -489,7 +534,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 >
                                     {abbreviateNumber(
                                         maxLeverage?.[
-                                        selectedLendToken?.address
+                                            selectedLendToken?.address
                                         ]?.[selectedBorrowToken?.address] ?? 1,
                                         1
                                     )}
@@ -660,7 +705,7 @@ function TokenSelector({
                             className={cn(
                                 'flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4',
                                 selectedToken?.address === token.address &&
-                                'bg-gray-400'
+                                    'bg-gray-400'
                             )}
                         >
                             <ImageWithDefault
