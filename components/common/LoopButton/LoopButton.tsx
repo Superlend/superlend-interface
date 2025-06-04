@@ -154,14 +154,14 @@ const LoopButton = ({
                 setLoopTx((prev: TLoopTx) => ({
                     ...prev,
                     status: 'credit_delegation',
-                    hash: hash || '',
+                    hash: '',
                 }))
                 return
             }
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
                 status: 'loop',
-                hash: hash || '',
+                hash: '',
             }))
             return
         }
@@ -174,22 +174,8 @@ const LoopButton = ({
         ) {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
-                hash: hash || '',
+                hash: '',
                 status: 'loop',
-            }))
-            return
-        }
-        if (
-            loopTx.status === 'loop' &&
-            hash &&
-            isConfirmed &&
-            !isPending &&
-            !isConfirming
-        ) {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                hash: hash || '',
-                status: 'view',
             }))
             return
         }
@@ -221,15 +207,13 @@ const LoopButton = ({
     // Trigger the credit deligation or loop function based on loopTx.status
     useEffect(() => {
         if (
-            loopTx.status === 'credit_delegation' &&
-            !ETH_ADDRESSES.includes(underlyingAssetAdress)
+            loopTx.status === 'credit_delegation'
         ) {
             onCreditDeligation()
             return
         }
         if (
-            loopTx.status === 'loop' &&
-            ETH_ADDRESSES.includes(underlyingAssetAdress)
+            loopTx.status === 'loop'
         ) {
             onLoop()
             return

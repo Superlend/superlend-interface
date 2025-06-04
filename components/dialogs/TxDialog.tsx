@@ -1052,7 +1052,7 @@ export function ConfirmationDialog({
                                     <ExternalLink
                                         href={getExplorerLink(
                                             loopTx.hash,
-                                            assetDetails?.chain_id ?? 1
+                                            loopAssetDetails?.chain_id ?? 1
                                         )}
                                     >
                                         <BodyText
@@ -1090,7 +1090,7 @@ export function ConfirmationDialog({
                                         <ExternalLink
                                             href={getExplorerLink(
                                                 loopTx.hash,
-                                                assetDetails?.chain_id ?? 1
+                                                loopAssetDetails?.chain_id ?? 1
                                             )}
                                         >
                                             <BodyText
@@ -1135,7 +1135,7 @@ export function ConfirmationDialog({
                                     <ExternalLink
                                         href={getExplorerLink(
                                             loopTx.hash,
-                                            assetDetails?.chain_id ?? 1
+                                            loopAssetDetails?.chain_id ?? 1
                                         )}
                                     >
                                         <BodyText
@@ -1172,7 +1172,7 @@ export function ConfirmationDialog({
                                         <ExternalLink
                                             href={getExplorerLink(
                                                 loopTx.hash,
-                                                assetDetails?.chain_id ?? 1
+                                                loopAssetDetails?.chain_id ?? 1
                                             )}
                                         >
                                             <BodyText
@@ -1215,7 +1215,7 @@ export function ConfirmationDialog({
                                     <ExternalLink
                                         href={getExplorerLink(
                                             loopTx.hash,
-                                            assetDetails?.chain_id ?? 1
+                                            loopAssetDetails?.chain_id ?? 1
                                         )}
                                     >
                                         <BodyText
@@ -1229,7 +1229,7 @@ export function ConfirmationDialog({
                                 )}
                             </div>
                         )}
-                        {(!isLoopTxInProgress && loopTx.isConfirmed && loopTx.status === 'view') && (
+                        {(!isLoopTxInProgress && loopTx.isConfirmed && loopTx.status === 'view' && !!loopTx.hash) && (
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center justify-start gap-2">
                                     <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
@@ -1246,11 +1246,11 @@ export function ConfirmationDialog({
                                         Loop successful
                                     </BodyText>
                                 </div>
-                                {loopTx.hash && loopTx.status === 'view' && (
+                                {!!loopTx.hash && (
                                     <ExternalLink
                                         href={getExplorerLink(
                                             loopTx.hash,
-                                            assetDetails?.chain_id ?? 1
+                                            loopAssetDetails?.chain_id ?? 1
                                         )}
                                     >
                                         <BodyText
