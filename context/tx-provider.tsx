@@ -125,7 +125,7 @@ export type TWithdrawTx = {
 }
 
 export type TLoopTx = {
-    status: 'approve' | 'credit_deligation' | 'loop' | 'view'
+    status: 'approve' | 'credit_delegation' | 'loop' | 'view'
     hash: string
     errorMessage: string
     isPending: boolean

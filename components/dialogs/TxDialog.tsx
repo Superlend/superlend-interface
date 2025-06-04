@@ -261,8 +261,9 @@ export function ConfirmationDialog({
 
     const isLendTxInProgress = lendTx.isPending || lendTx.isConfirming
     const isBorrowTxInProgress = borrowTx.isPending || borrowTx.isConfirming
+    const isLoopTxInProgress = loopTx.isPending || loopTx.isConfirming
 
-    const isTxInProgress = isLendTxInProgress || isBorrowTxInProgress
+    const isTxInProgress = isLendTxInProgress || isBorrowTxInProgress || isLoopTxInProgress
 
     const lendTxSpinnerColor = lendTx.isPending
         ? 'text-secondary-500'
@@ -564,8 +565,6 @@ export function ConfirmationDialog({
                 )}
             {/* Block 2 - Loop Borrow Asset Details */}
             {isShowBlock({
-                lend: false,
-                borrow: false,
                 loop: true,
             }) && (
                     getSelectedAssetDetailsUI({
@@ -583,7 +582,6 @@ export function ConfirmationDialog({
             <div className="flex flex-col items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-400">
                 {isShowBlock({
                     lend: isMorphoMarkets,
-                    borrow: false,
                 }) && (
                         <div
                             className={`flex items-center justify-between w-full py-3`}
@@ -608,8 +606,6 @@ export function ConfirmationDialog({
                         </div>
                     )}
                 {isShowBlock({
-                    lend: false,
-                    borrow: false,
                     loop: true,
                 }) && (
                         <div
@@ -690,7 +686,6 @@ export function ConfirmationDialog({
                         </div>
                     )} */}
                 {isShowBlock({
-                    lend: false,
                     borrow:
                         borrowTx.status === 'borrow' ||
                         borrowTx.status === 'view',
@@ -729,7 +724,6 @@ export function ConfirmationDialog({
                         </div>
                     )}
                 {isShowBlock({
-                    lend: false,
                     borrow:
                         borrowTx.status === 'borrow' ||
                         borrowTx.status === 'view',
@@ -837,7 +831,6 @@ export function ConfirmationDialog({
                             </div> */}
             </div>
             {isShowBlock({
-                lend: false,
                 borrow: isHfLow(),
             }) && (
                     <div className="flex flex-col items-center justify-center">
@@ -867,7 +860,6 @@ export function ConfirmationDialog({
                             (!isLendTxInProgress && lendTx.isConfirmed))) ||
                     lendTx.status === 'lend' ||
                     lendTx.status === 'view',
-                borrow: false,
             }) && (
                     <div className="py-1">
                         {isLendTxInProgress && lendTx.status === 'approve' && (
@@ -1023,8 +1015,249 @@ export function ConfirmationDialog({
                             )}
                     </div>
                 )}
+            {/* Loop Approval */}
             {isShowBlock({
-                lend: false,
+                loop:
+                    (loopTx.status === 'approve' &&
+                        (isLoopTxInProgress ||
+                            (!isLoopTxInProgress && loopTx.isConfirmed))) ||
+                    loopTx.status === 'credit_delegation' ||
+                    loopTx.status === 'loop' ||
+                    loopTx.status === 'view',
+            }) && (
+                    <div className="py-1">
+                        {isLoopTxInProgress && loopTx.status === 'approve' && (
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="text-gray-600"
+                                    >
+                                        {loopTx.isPending &&
+                                            'Waiting for confirmation...'}
+                                        {loopTx.isConfirming && 'Approving...'}
+                                    </BodyText>
+                                </div>
+                                {loopTx.hash && loopTx.status === 'approve' && (
+                                    <ExternalLink
+                                        href={getExplorerLink(
+                                            loopTx.hash,
+                                            assetDetails?.chain_id ?? 1
+                                        )}
+                                    >
+                                        <BodyText
+                                            level="body2"
+                                            weight="normal"
+                                            className="text-inherit"
+                                        >
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                )}
+                            </div>
+                        )}
+                        {((!isLoopTxInProgress && loopTx.isConfirmed) ||
+                            loopTx.status === 'credit_delegation' ||
+                            loopTx.status === 'loop' ||
+                            loopTx.status === 'view') && (
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center justify-start gap-2">
+                                        <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                            <Check
+                                                className="w-5 h-5 stroke-[#013220]/75"
+                                                strokeWidth={1.5}
+                                            />
+                                        </div>
+                                        <BodyText
+                                            level="body2"
+                                            weight="medium"
+                                            className="text-gray-800"
+                                        >
+                                            Approval successful
+                                        </BodyText>
+                                    </div>
+                                    {loopTx.hash && loopTx.status === 'approve' && (
+                                        <ExternalLink
+                                            href={getExplorerLink(
+                                                loopTx.hash,
+                                                assetDetails?.chain_id ?? 1
+                                            )}
+                                        >
+                                            <BodyText
+                                                level="body2"
+                                                weight="normal"
+                                                className="text-inherit"
+                                            >
+                                                View on explorer
+                                            </BodyText>
+                                        </ExternalLink>
+                                    )}
+                                </div>
+                            )}
+                    </div>
+                )}
+            {/* Loop Credit Delegation */}
+            {isShowBlock({
+                loop:
+                    (loopTx.status === 'credit_delegation' &&
+                        (isLoopTxInProgress ||
+                            (!isLoopTxInProgress && loopTx.isConfirmed))) ||
+                    loopTx.status === 'loop' ||
+                    loopTx.status === 'view',
+            }) && (
+                    <div className="py-1">
+                        {isLoopTxInProgress && loopTx.status === 'credit_delegation' && (
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="text-gray-600"
+                                    >
+                                        {loopTx.isPending &&
+                                            'Waiting for confirmation...'}
+                                        {loopTx.isConfirming && 'Delegating...'}
+                                    </BodyText>
+                                </div>
+                                {loopTx.hash && loopTx.status === 'credit_delegation' && (
+                                    <ExternalLink
+                                        href={getExplorerLink(
+                                            loopTx.hash,
+                                            assetDetails?.chain_id ?? 1
+                                        )}
+                                    >
+                                        <BodyText
+                                            level="body2"
+                                            weight="normal"
+                                            className="text-inherit"
+                                        >
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                )}
+                            </div>
+                        )}
+                        {((!isLoopTxInProgress && loopTx.isConfirmed) ||
+                            loopTx.status === 'loop' ||
+                            loopTx.status === 'view') && (
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center justify-start gap-2">
+                                        <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                            <Check
+                                                className="w-5 h-5 stroke-[#013220]/75"
+                                                strokeWidth={1.5}
+                                            />
+                                        </div>
+                                        <BodyText
+                                            level="body2"
+                                            weight="medium"
+                                            className="text-gray-800"
+                                        >
+                                            Credit delegation successful
+                                        </BodyText>
+                                    </div>
+                                    {loopTx.hash && loopTx.status === 'credit_delegation' && (
+                                        <ExternalLink
+                                            href={getExplorerLink(
+                                                loopTx.hash,
+                                                assetDetails?.chain_id ?? 1
+                                            )}
+                                        >
+                                            <BodyText
+                                                level="body2"
+                                                weight="normal"
+                                                className="text-inherit"
+                                            >
+                                                View on explorer
+                                            </BodyText>
+                                        </ExternalLink>
+                                    )}
+                                </div>
+                            )}
+                    </div>
+                )}
+            {/* Final Loop */}
+            {isShowBlock({
+                loop:
+                    (loopTx.status === 'loop' &&
+                        (isLoopTxInProgress ||
+                            (!isLoopTxInProgress && loopTx.isConfirmed))) ||
+                    loopTx.status === 'view',
+            }) && (
+                    <div className="py-1">
+                        {isLoopTxInProgress && loopTx.status === 'loop' && (
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="text-gray-600"
+                                    >
+                                        {loopTx.isPending &&
+                                            'Waiting for confirmation...'}
+                                        {loopTx.isConfirming && 'Looping...'}
+                                    </BodyText>
+                                </div>
+                                {loopTx.hash && loopTx.status === 'loop' && (
+                                    <ExternalLink
+                                        href={getExplorerLink(
+                                            loopTx.hash,
+                                            assetDetails?.chain_id ?? 1
+                                        )}
+                                    >
+                                        <BodyText
+                                            level="body2"
+                                            weight="normal"
+                                            className="text-inherit"
+                                        >
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                )}
+                            </div>
+                        )}
+                        {((!isLoopTxInProgress && loopTx.isConfirmed) || loopTx.status === 'view') && (
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                        <Check
+                                            className="w-5 h-5 stroke-[#013220]/75"
+                                            strokeWidth={1.5}
+                                        />
+                                    </div>
+                                    <BodyText
+                                        level="body2"
+                                        weight="medium"
+                                        className="text-gray-800"
+                                    >
+                                        Loop successful
+                                    </BodyText>
+                                </div>
+                                {loopTx.hash && loopTx.status === 'loop' && (
+                                    <ExternalLink
+                                        href={getExplorerLink(
+                                            loopTx.hash,
+                                            assetDetails?.chain_id ?? 1
+                                        )}
+                                    >
+                                        <BodyText
+                                            level="body2"
+                                            weight="normal"
+                                            className="text-inherit"
+                                        >
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+            {isShowBlock({
                 borrow:
                     (borrowTx.status === 'view' && borrowTx.isConfirmed) ||
                     isBorrowTxInProgress,

@@ -57,6 +57,7 @@ const LoopButton = ({
     handleCloseModal,
 }: ILoopButtonProps) => {
     const { logEvent } = useAnalytics()
+    const { isWalletConnected, walletAddress } = useWalletConnection()
     const {
         writeContractAsync,
         isPending,
@@ -68,7 +69,6 @@ const LoopButton = ({
             confirmations: 2,
             hash,
         })
-    const { walletAddress } = useWalletConnection()
     const { loopTx, setLoopTx } = useTxContext() as TTxContext
     const { logUserEvent } = useLogNewUserEvent()
     const { accessToken, getAccessTokenFromPrivy } = useAuth()
@@ -144,13 +144,13 @@ const LoopButton = ({
         ) {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
-                status: 'credit_deligation',
+                status: 'credit_delegation',
                 hash: hash || '',
             }))
             return
         }
         if (
-            (loopTx.status === 'credit_deligation') && hash && isConfirmed && !isPending && !isConfirming
+            (loopTx.status === 'credit_delegation') && hash && isConfirmed && !isPending && !isConfirming
         ) {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
@@ -180,7 +180,7 @@ const LoopButton = ({
 
     // Trigger the credit deligation or loop function based on loopTx.status
     useEffect(() => {
-        if (loopTx.status === 'credit_deligation' && !ETH_ADDRESSES.includes(underlyingAssetAdress)) {
+        if (loopTx.status === 'credit_delegation' && !ETH_ADDRESSES.includes(underlyingAssetAdress)) {
             onCreditDeligation()
             return
         }
@@ -190,8 +190,25 @@ const LoopButton = ({
         }
     }, [loopTx.status])
 
+    // Check wallet connection before executing any transaction
+    const checkWalletConnection = () => {
+        if (!isWalletConnected || !walletAddress) {
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: 'Please connect your wallet to continue',
+            }))
+            return false
+        }
+        return true
+    }
+
     // Approve the supply token
     const onApproveSupply = async () => {
+        if (!checkWalletConnection()) return
+
         const decimals = assetDetails?.supplyAsset?.token?.decimals ?? 18
         const parsedLendAmount = parseUnits(amount?.lendAmount?.toString() ?? '0', decimals)
 
@@ -212,18 +229,11 @@ const LoopButton = ({
                 errorMessage: '',
             }))
 
-            writeContractAsync({
+            await writeContractAsync({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
                 args: [LOOPING_SC_LEVERAGE_ADDRESS, parsedLendAmount],
-            }).catch((error) => {
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    isPending: false,
-                    isConfirming: false,
-                }))
-                console.log('onApproveSupply .catch()error', error)
             })
         } catch (error: any) {
             setLoopTx((prev: TLoopTx) => ({
@@ -231,19 +241,23 @@ const LoopButton = ({
                 isPending: false,
                 isConfirming: false,
                 isConfirmed: false,
-                // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+                errorMessage: error?.message?.includes('ConnectorNotConnectedError')
+                    ? 'Wallet connection lost. Please reconnect your wallet and try again.'
+                    : '',
             }))
-            console.log('onApproveSupply catch() error', error)
+            console.log('onApproveSupply error', error)
         }
     }
 
     // Credit deligation function
     const onCreditDeligation = async () => {
+        if (!checkWalletConnection()) return
+
         const decimals = assetDetails?.borrowAsset?.token?.decimals ?? 18
         const parsedBorrowAmount = parseUnits(amount?.borrowAmount?.toString() ?? '0', decimals)
 
         try {
-            logEvent('credit_deligation_initiated', {
+            logEvent('credit_delegation_initiated', {
                 amount: (amount?.borrowAmount ?? '0'),
                 token_symbol: assetDetails?.borrowAsset?.token?.symbol ?? '',
                 platform_name: assetDetails?.name ?? '',
@@ -254,22 +268,16 @@ const LoopButton = ({
 
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
-                status: 'credit_deligation',
+                status: 'credit_delegation',
                 hash: '',
                 errorMessage: '',
             }))
 
-            writeContractAsync({
+            await writeContractAsync({
                 address: debtToken as `0x${string}`,
                 abi: CREDIT_DELEGATION_ABI,
                 functionName: 'approveDelegation',
                 args: [LOOPING_SC_LEVERAGE_ADDRESS, parsedBorrowAmount],
-            }).catch((error) => {
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    isPending: false,
-                    isConfirming: false,
-                }))
             })
         } catch (error: any) {
             setLoopTx((prev: TLoopTx) => ({
@@ -277,46 +285,67 @@ const LoopButton = ({
                 isPending: false,
                 isConfirming: false,
                 isConfirmed: false,
-                // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+                errorMessage: error?.message?.includes('ConnectorNotConnectedError')
+                    ? 'Wallet connection lost. Please reconnect your wallet and try again.'
+                    : '',
             }))
+            console.log('onCreditDeligation error', error)
         }
     }
 
     // Loop function
     const onLoop = async () => {
-        const supplyToken = assetDetails?.asset?.token?.address ?? ''
+        if (!checkWalletConnection()) return
+
+        const supplyToken = assetDetails?.supplyAsset?.token?.address ?? ''
         const borrowToken = assetDetails?.borrowAsset?.token?.address ?? ''
-        const supplyAmount = parseUnits(amount?.lendAmount?.toString() ?? '0', decimals)
-        const flashLoanAmount = amount?.flashLoanAmount ?? '0'
+        const supplyAmount = parseUnits(amount?.lendAmount?.toString() ?? '0', assetDetails?.supplyAsset?.token?.decimals ?? 18)
+        const flashLoanAmount = parseUnits(amount?.flashLoanAmount?.toString() ?? '0', assetDetails?.borrowAsset?.token?.decimals ?? 18)
         const pathTokens: string[] = assetDetails?.pathTokens ?? []
         const pathFees: string[] = assetDetails?.pathFees ?? []
 
-        writeContractAsync({
-            address: LOOPING_SC_LEVERAGE_ADDRESS,
-            abi: LOOPING_LEVERAGE_ABI,
-            functionName: 'loop',
-            args: [supplyToken, borrowToken, supplyAmount, flashLoanAmount, pathTokens, pathFees],
-        }).catch((error) => {
+        // console.log('LOOPING_SC_LEVERAGE_ADDRESS', LOOPING_SC_LEVERAGE_ADDRESS)
+        // console.log('supplyToken', supplyToken)
+        // console.log('borrowToken', borrowToken)
+        // console.log('supplyAmount', supplyAmount)
+        // console.log('flashLoanAmount', flashLoanAmount)
+        // console.log('pathTokens', pathTokens)
+        // console.log('pathFees', pathFees)
+
+        try {
+            await writeContractAsync({
+                address: LOOPING_SC_LEVERAGE_ADDRESS,
+                abi: LOOPING_LEVERAGE_ABI,
+                functionName: 'loop',
+                args: [supplyToken, borrowToken, supplyAmount, flashLoanAmount, pathTokens, pathFees],
+            })
+        } catch (error: any) {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
                 isPending: false,
                 isConfirming: false,
+                errorMessage: error?.message?.includes('ConnectorNotConnectedError')
+                    ? 'Wallet connection lost. Please reconnect your wallet and try again.'
+                    : '',
             }))
-        })
+            console.log('onLoop error', error)
+        }
     }
 
     // Handle the SC interaction
     const handleSCInteraction = useCallback(() => {
+        if (!checkWalletConnection()) return
+
         if (loopTx.status === 'approve') {
             onApproveSupply()
-        } else if (loopTx.status === 'credit_deligation') {
+        } else if (loopTx.status === 'credit_delegation') {
             onCreditDeligation()
         } else if (loopTx.status === 'loop') {
             onLoop()
         } else {
             handleCloseModal(false)
         }
-    }, [loopTx.status])
+    }, [loopTx.status, isWalletConnected, walletAddress])
 
     return (
         <div className="flex flex-col gap-2">
@@ -333,13 +362,13 @@ const LoopButton = ({
                 <CustomAlert description={loopTx.errorMessage} />
             )}
             <Button
-                disabled={isPending || isConfirming || disabled}
+                disabled={isPending || isConfirming || disabled || !isWalletConnected}
                 onClick={handleSCInteraction}
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
                 variant="primary"
             >
-                {txBtnText}
-                {loopTx.status !== 'view' && !isPending && !isConfirming && (
+                {!isWalletConnected ? 'Connect Wallet' : txBtnText}
+                {loopTx.status !== 'view' && !isPending && !isConfirming && isWalletConnected && (
                     <ArrowRightIcon
                         width={16}
                         height={16}

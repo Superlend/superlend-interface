@@ -272,7 +272,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     }
     // Check if button should be disabled
     const diableActionButton =
-        !isWalletConnected ||
+        // !isWalletConnected ||
         !selectedLendToken ||
         !lendAmount ||
         (Number(lendAmount) <= 0) ||
