@@ -29,7 +29,7 @@ import {
     useTxContext,
 } from '@/context/tx-provider'
 import CustomAlert from '@/components/alerts/CustomAlert'
-import { ArrowRightIcon } from 'lucide-react'
+import { ArrowRightIcon, LoaderCircle } from 'lucide-react'
 import { BigNumber } from 'ethers'
 import { getErrorText } from '@/lib/getErrorText'
 import { ChainId } from '@/types/chain'
@@ -50,6 +50,8 @@ interface ILoopButtonProps {
     amount: TScAmount
     decimals: number
     handleCloseModal: (isVisible: boolean) => void
+    ctaText?: string | null
+    isLoading?: boolean
 }
 
 const LoopButton = ({
@@ -60,6 +62,8 @@ const LoopButton = ({
     decimals,
     disabled,
     handleCloseModal,
+    ctaText,
+    isLoading,
 }: ILoopButtonProps) => {
     const { logEvent } = useAnalytics()
     const { isWalletConnected, walletAddress } = useWalletConnection()
@@ -423,11 +427,12 @@ const LoopButton = ({
                     isPending || isConfirming || disabled || !isWalletConnected
                 }
                 onClick={handleSCInteraction}
-                className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
+                className="group flex items-center gap-1 py-3 w-full rounded-5 uppercase"
                 variant="primary"
             >
-                {!isWalletConnected ? 'Connect Wallet' : txBtnText}
-                {loopTx.status !== 'view' &&
+                {isLoading && <LoaderCircle className="text-white w-4 h-4 animate-spin inline" />}
+                {!isWalletConnected ? 'Connect Wallet' : ctaText || txBtnText}
+                {(loopTx.status !== 'view' && !isLoading) &&
                     !isPending &&
                     !isConfirming &&
                     isWalletConnected && (

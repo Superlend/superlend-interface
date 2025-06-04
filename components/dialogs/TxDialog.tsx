@@ -69,6 +69,7 @@ import ExternalLink from '../ExternalLink'
 import { parseUnits } from 'ethers/lib/utils'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
+import { useIguanaDexData } from '@/hooks/protocols/useIguanaDexData'
 
 type TLoopAssetDetails = Omit<TAssetDetails, 'asset'> & {
     supplyAsset: TAssetDetails['asset']
@@ -86,6 +87,7 @@ interface IConfirmationDialogProps {
     amount?: string
     lendAmount?: string
     borrowAmount?: string
+    borrowAmountRaw?: string
     flashLoanAmount?: string
     balance: string
     maxBorrowAmount: {
@@ -115,6 +117,7 @@ export function ConfirmationDialog({
     amount = '0',
     lendAmount = '0',
     borrowAmount = '0',
+    borrowAmountRaw = '0',
     flashLoanAmount = '0',
     setAmount,
     balance,
@@ -153,6 +156,12 @@ export function ConfirmationDialog({
         allChainsData,
         chainIdToMatch: assetDetails?.chain_id ?? loopAssetDetails?.chain_id ?? 1,
     })
+    const { getTradePath } = useIguanaDexData()
+    const [isLoadingTradePath, setIsLoadingTradePath] = useState<boolean>(false)
+    const [pathTokens, setPathTokens] = useState<string[]>([])
+    const [pathFees, setPathFees] = useState<string[]>([])
+
+    const assetDetailsForActionButton = positionType === 'loop' ? { ...loopAssetDetails, pathTokens, pathFees } : assetDetails
 
     // Get Discord dialog state
     const lendTxCompleted: boolean = (lendTx.isConfirmed && !!lendTx.hash && lendTx.status === 'view')
@@ -166,6 +175,56 @@ export function ConfirmationDialog({
             handleSwitchChain(Number(chain_id))
         }
     }, [open])
+
+    useEffect(() => {
+        if (
+            open &&
+            !!loopAssetDetails?.borrowAsset &&
+            !!loopAssetDetails?.supplyAsset &&
+            Number(borrowAmountRaw) > 0
+        ) {
+            setIsLoadingTradePath(true)
+            getTradePath(
+                loopAssetDetails?.borrowAsset?.token?.address,
+                loopAssetDetails?.supplyAsset?.token?.address,
+                borrowAmountRaw
+            )
+                .then((result: any) => {
+                    console.log('Trade path result', result)
+
+                    if (result.routes[0]?.pools?.length === 1) {
+                        setPathTokens([])
+                        setPathFees([
+                            result?.routes[0]?.pools[0]?.fee?.toString() ??
+                            '500',
+                        ])
+                    } else {
+                        setPathTokens([result?.routes[0]?.path[1]?.address])
+                        setPathFees([
+                            result?.routes[0]?.pools[0]?.fee?.toString() ??
+                            '500',
+                            result?.routes[0]?.pools[1]?.fee?.toString() ??
+                            '500',
+                        ])
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error fetching trade path\n', error)
+                })
+                .finally(() => {
+                    setIsLoadingTradePath(false)
+                    setLoopTx((prev: TLoopTx) => ({
+                        ...prev,
+                        hasCreditDelegation: true,
+                    }))
+                })
+        }
+    }, [
+        open,
+        loopAssetDetails?.borrowAsset?.token?.address,
+        loopAssetDetails?.supplyAsset?.token?.address,
+        borrowAmountRaw,
+    ])
 
     function resetLendBorrowTx() {
         setLendTx((prev: TLendTx) => ({
@@ -310,6 +369,7 @@ export function ConfirmationDialog({
 
     const isDisableActionButton =
         disabled ||
+        isLoadingTradePath ||
         isTxInProgress ||
         (!hasAcknowledgedRisk && positionType === 'borrow' && isHfLow())
 
@@ -1351,8 +1411,10 @@ export function ConfirmationDialog({
             {/* Block 5 */}
             <ActionButton
                 disabled={isDisableActionButton}
+                ctaText={isLoadingTradePath ? 'Fetching trade path...' : null}
+                isLoading={isLoadingTradePath}
                 handleCloseModal={handleOpenChange}
-                asset={assetDetails || loopAssetDetails}
+                asset={assetDetailsForActionButton}
                 amount={getActionButtonAmount()}
                 setActionType={setActionType}
                 actionType={positionType}

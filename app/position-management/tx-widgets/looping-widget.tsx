@@ -73,8 +73,6 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         isWalletConnected,
         isConnectingWallet,
     } = useWalletConnection()
-    const { getTradePath } = useIguanaDexData()
-    const [isLoadingTradePath, setIsLoadingTradePath] = useState<boolean>(false)
     const [availableLendTokens, setAvailableLendTokens] = useState<TToken[]>([])
     const [availableBorrowTokens, setAvailableBorrowTokens] = useState<
         TToken[]
@@ -86,7 +84,6 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         availableBorrowTokens[0]
     )
     const [lendAmount, setLendAmount] = useState<string>('0')
-    const [lendAmountRaw, setLendAmountRaw] = useState<string>('0')
     const [borrowAmount, setBorrowAmount] = useState<string>('0')
     const [borrowAmountRaw, setBorrowAmountRaw] = useState<string>('0')
     const [isLoadingBorrowAmount, setIsLoadingBorrowAmount] =
@@ -94,15 +91,12 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     const [leverage, setLeverage] = useState<number>(1)
     const [healthFactor, setHealthFactor] = useState<number>(0)
     const [flashLoanAmount, setFlashLoanAmount] = useState<string>('0')
-    const [pathTokens, setPathTokens] = useState<string[]>([])
-    const [pathFees, setPathFees] = useState<string[]>([])
     const { getMaxLeverage, getBorrowTokenAmountForLeverage, providerStatus } =
         useAaveV3Data()
     const [maxLeverage, setMaxLeverage] = useState<Record<
         string,
         Record<string, number>
     > | null>(null)
-    const { setLoopTx } = useTxContext()
     // Token balances
     const {
         erc20TokensBalanceData,
@@ -200,54 +194,6 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         leverage,
     ])
 
-    useEffect(() => {
-        if (
-            !!selectedBorrowToken &&
-            !!selectedLendToken &&
-            Number(borrowAmountRaw) > 0
-        ) {
-            setIsLoadingTradePath(true)
-            getTradePath(
-                selectedBorrowToken?.address,
-                selectedLendToken?.address,
-                borrowAmountRaw
-            )
-                .then((result: any) => {
-                    console.log('Trade path result', result)
-
-                    if (result.routes[0]?.pools?.length === 1) {
-                        setPathTokens([])
-                        setPathFees([
-                            result?.routes[0]?.pools[0]?.fee?.toString() ??
-                            '500',
-                        ])
-                    } else {
-                        setPathTokens([result?.routes[0]?.path[1]?.address])
-                        setPathFees([
-                            result?.routes[0]?.pools[0]?.fee?.toString() ??
-                            '500',
-                            result?.routes[0]?.pools[1]?.fee?.toString() ??
-                            '500',
-                        ])
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error fetching trade path\n', error)
-                })
-                .finally(() => {
-                    setIsLoadingTradePath(false)
-                    setLoopTx((prev: TLoopTx) => ({
-                        ...prev,
-                        hasCreditDelegation: true,
-                    }))
-                })
-        }
-    }, [
-        selectedBorrowToken?.address,
-        selectedLendToken?.address,
-        borrowAmountRaw,
-    ])
-
     // Get balance for selected token
     const getTokenBalance = (token: TToken | null) => {
         if (!token || !isWalletConnected) return '0'
@@ -259,7 +205,6 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         ).toString()
     }
 
-    // @Shreyas:
     /**
      * Even before all this
      * 1. Extract all the data pipeline to a different hook or function.
@@ -279,7 +224,6 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
      */
 
     const selectedLendTokenBalance = getTokenBalance(selectedLendToken)
-    // const selectedBorrowTokenBalance = getTokenBalance(selectedBorrowToken)
 
     // Format health factor for display
     const getHealthFactorDisplay = () => {
@@ -318,7 +262,6 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         !lendAmount ||
         Number(lendAmount) <= 0 ||
         Number(lendAmount) > Number(selectedLendTokenBalance) ||
-        isLoadingTradePath ||
         isLoadingBorrowAmount
 
     // looping-widget
@@ -473,7 +416,14 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     title={borrowAmount}
                                 >
                                     {isLoadingBorrowAmount ? (
-                                        <LoaderCircle className="text-primary w-4 h-4 animate-spin inline" />
+                                        <div className="flex items-center justify-start gap-1 py-2.5">
+                                            <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
+                                            <span
+                                                className="font-medium text-gray-600 text-sm"
+                                            >
+                                                Fetching borrow amount...
+                                            </span>
+                                        </div>
                                     ) : (
                                         borrowAmount
                                     )}
@@ -600,7 +550,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             ${selectedLendToken && lendAmount ? (Number(lendAmount) * selectedLendToken.price_usd * (leverage - 1)).toFixed(2) : '0.00'}
                         </BodyText>
                     </div> */}
-                    {(isLoadingTradePath || isLoadingBorrowAmount) &&
+                    {/* {(isLoadingTradePath || isLoadingBorrowAmount) &&
                         <div className="flex items-center justify-start gap-2">
                             <LoaderCircle className="animate-spin w-4 h-4 text-secondary-500" />
                             <BodyText
@@ -611,7 +561,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 {isLoadingTradePath && 'Fetching trade path...'}
                                 {isLoadingBorrowAmount && 'Fetching borrow amount...'}
                             </BodyText>
-                        </div>}
+                        </div>} */}
                 </CardContent>
 
                 <CardFooter className="p-0 pt-2">
@@ -639,12 +589,13 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     remaining_borrow_cap: 0,
                                     remaining_supply_cap: 0,
                                 },
-                                pathTokens,
-                                pathFees,
+                                // pathTokens,
+                                // pathFees,
                                 ...platformData?.platform,
                             }}
                             lendAmount={lendAmount}
                             borrowAmount={borrowAmount}
+                            borrowAmountRaw={borrowAmountRaw}
                             flashLoanAmount={flashLoanAmount}
                             balance={selectedLendTokenBalance}
                             maxBorrowAmount={{

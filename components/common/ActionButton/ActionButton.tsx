@@ -26,6 +26,8 @@ interface IActionButtonSelectComponent {
     handleCloseModal: (isVisible: boolean) => void
     actionType: TActionType
     setActionType?: (actionType: TPositionType) => void
+    ctaText?: string | null
+    isLoading?: boolean
 }
 
 const ActionButton = ({
@@ -35,6 +37,8 @@ const ActionButton = ({
     handleCloseModal,
     actionType,
     setActionType,
+    ctaText,
+    isLoading,
 }: IActionButtonSelectComponent) => {
     if (actionType === 'borrow') {
         return (
@@ -93,6 +97,8 @@ const ActionButton = ({
                     amount={amount}
                     decimals={asset?.asset?.token.decimals || asset.supplyAsset.token.decimals}
                     assetDetails={asset}
+                    ctaText={ctaText}
+                    isLoading={isLoading}
                 />
             )
         }
