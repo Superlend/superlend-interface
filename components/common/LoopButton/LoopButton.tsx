@@ -96,6 +96,7 @@ const LoopButton = ({
             '0x1504d006b80b1616d2651e8d15d5d25a88efef58',
     }
     const debtToken = DEBT_TOKENS[assetDetails.borrowAsset.token.address]
+    const isDisabledCta = loopTx.isPending || loopTx.isConfirming || disabled || !isWalletConnected
 
     // const amountBN = useMemo(() => {
     //     return amount ? BigNumber.from(amount.amountRaw) : BigNumber.from(0)
@@ -116,14 +117,13 @@ const LoopButton = ({
         isConfirming: boolean,
         isConfirmed: boolean
     ) => {
+        // Use internal loopTx state flags instead of wagmi flags for consistent behavior
         return txBtnStatus[
-            isConfirming
+            loopTx.isConfirming
                 ? 'confirming'
-                : isConfirmed
-                    ? loopTx.status === 'view'
-                        ? 'success'
-                        : 'default'
-                    : isPending
+                : loopTx.isConfirmed && loopTx.status === 'view'
+                    ? 'success'
+                    : loopTx.isPending
                         ? 'pending'
                         : 'default'
         ]
@@ -152,20 +152,27 @@ const LoopButton = ({
             hash &&
             isConfirmed &&
             !isPending &&
-            !isConfirming
+            !isConfirming &&
+            hash !== loopTx.hash // Only transition for new transaction
         ) {
             if (loopTx.hasCreditDelegation) {
                 setLoopTx((prev: TLoopTx) => ({
                     ...prev,
                     status: 'credit_delegation',
-                    hash: '',
+                    hash: hash, // Store the current hash to prevent re-triggering
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
                 }))
                 return
             }
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
                 status: 'loop',
-                hash: '',
+                hash: hash, // Store the current hash to prevent re-triggering
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
             }))
             return
         }
@@ -174,21 +181,26 @@ const LoopButton = ({
             hash &&
             isConfirmed &&
             !isPending &&
-            !isConfirming
+            !isConfirming &&
+            hash !== loopTx.hash // Only transition for new transaction
         ) {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
-                hash: '',
+                hash: hash, // Store the current hash to prevent re-triggering
                 status: 'loop',
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
             }))
             return
         }
         if (
-            loopTx.status === 'view' &&
+            loopTx.status === 'loop' &&
             hash &&
             isConfirmed &&
             !isPending &&
-            !isConfirming
+            !isConfirming &&
+            hash !== loopTx.hash // Only transition if this is a new transaction hash
         ) {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
@@ -208,21 +220,65 @@ const LoopButton = ({
         }
     }, [hash, loopTx.status, isConfirmed, isPending, isConfirming])
 
-    // Trigger the credit deligation or loop function based on loopTx.status
+    // Handle transaction cancellation/failure
     useEffect(() => {
+        // If transaction was pending/confirming but now stopped without being confirmed
+        // This indicates cancellation or failure
         if (
-            loopTx.status === 'credit_delegation'
+            !isPending &&
+            !isConfirming &&
+            !isConfirmed &&
+            !hash &&
+            loopTx.status !== 'view' &&
+            (loopTx.isPending || loopTx.isConfirming)
         ) {
-            onCreditDeligation()
-            return
+            console.log('Transaction cancelled or failed, keeping status:', loopTx.status)
+            // Keep the current status so user can retry, but reset the transaction flags
+            // Only set error message if there isn't already a more specific one
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: prev.errorMessage || 'Transaction was cancelled because the action was not confirmed in your wallet',
+            }))
         }
-        if (
-            loopTx.status === 'loop'
-        ) {
-            onLoop()
-            return
+    }, [isPending, isConfirming, isConfirmed, hash, loopTx.isPending, loopTx.isConfirming, loopTx.status])
+
+    // Auto-trigger next transaction step after successful completion
+    useEffect(() => {
+        // Only auto-trigger if the status change came from a successful transaction
+        // We can detect this by checking if we just transitioned and there's no pending user action
+        const shouldAutoTrigger =
+            !loopTx.isPending &&
+            !loopTx.isConfirming &&
+            !loopTx.errorMessage &&
+            loopTx.hash && // There's a transaction hash from the previous step
+            (loopTx.status === 'credit_delegation' || loopTx.status === 'loop')
+
+        if (shouldAutoTrigger) {
+            console.log('Auto-triggering next step for status:', loopTx.status)
+
+            if (loopTx.status === 'credit_delegation') {
+                // Clear hash first to prevent re-triggering, then call function
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    hash: '', // Clear hash to prevent re-triggering
+                }))
+                setTimeout(() => onCreditDeligation(), 100)
+                return
+            }
+            if (loopTx.status === 'loop') {
+                // Clear hash first to prevent re-triggering, then call function
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    hash: '', // Clear hash to prevent re-triggering
+                }))
+                setTimeout(() => onLoop(), 100)
+                return
+            }
         }
-    }, [loopTx.status])
+    }, [loopTx.status, loopTx.hash, loopTx.isPending, loopTx.isConfirming, loopTx.errorMessage])
 
     // Check wallet connection before executing any transaction
     const checkWalletConnection = () => {
@@ -273,18 +329,37 @@ const LoopButton = ({
                 args: [LOOPING_SC_LEVERAGE_ADDRESS, parsedLendAmount],
             })
         } catch (error: any) {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                isPending: false,
-                isConfirming: false,
-                isConfirmed: false,
-                errorMessage: error?.message?.includes(
-                    'ConnectorNotConnectedError'
-                )
-                    ? 'Wallet connection lost. Please reconnect your wallet and try again.'
-                    : '',
-            }))
             console.log('onApproveSupply error', error)
+
+            // Don't overwrite error message if user cancelled (rejection errors)
+            const isUserRejection = error?.message?.includes('User rejected') ||
+                error?.message?.includes('user rejected') ||
+                error?.code === 4001 ||
+                error?.code === 'ACTION_REJECTED'
+
+            if (!isUserRejection) {
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'approve', // Reset to initial status on error
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    errorMessage: error?.message?.includes(
+                        'ConnectorNotConnectedError'
+                    )
+                        ? 'Wallet connection lost. Please reconnect your wallet and try again.'
+                        : 'Transaction failed. Please try again.',
+                }))
+            } else {
+                // For user rejections, just reset the flags but let cancellation detection handle the error message
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'approve',
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                }))
+            }
         }
     }
 
@@ -322,18 +397,37 @@ const LoopButton = ({
                 args: [LOOPING_SC_LEVERAGE_ADDRESS, parsedBorrowAmount],
             })
         } catch (error: any) {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                isPending: false,
-                isConfirming: false,
-                isConfirmed: false,
-                errorMessage: error?.message?.includes(
-                    'ConnectorNotConnectedError'
-                )
-                    ? 'Wallet connection lost. Please reconnect your wallet and try again.'
-                    : '',
-            }))
             console.log('onCreditDeligation error', error)
+
+            // Don't overwrite error message if user cancelled (rejection errors)
+            const isUserRejection = error?.message?.includes('User rejected') ||
+                error?.message?.includes('user rejected') ||
+                error?.code === 4001 ||
+                error?.code === 'ACTION_REJECTED'
+
+            if (!isUserRejection) {
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'credit_delegation', // Reset to current status on error for retry
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    errorMessage: error?.message?.includes(
+                        'ConnectorNotConnectedError'
+                    )
+                        ? 'Wallet connection lost. Please reconnect your wallet and try again.'
+                        : 'Credit delegation failed. Please try again.',
+                }))
+            } else {
+                // For user rejections, just reset the flags but let cancellation detection handle the error message
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'credit_delegation',
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                }))
+            }
         }
     }
 
@@ -379,34 +473,70 @@ const LoopButton = ({
                 ],
             })
         } catch (error: any) {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                isPending: false,
-                isConfirming: false,
-                errorMessage: error?.message?.includes(
-                    'ConnectorNotConnectedError'
-                )
-                    ? 'Wallet connection lost. Please reconnect your wallet and try again.'
-                    : '',
-            }))
             console.log('onLoop error', error)
+
+            // Don't overwrite error message if user cancelled (rejection errors)
+            const isUserRejection = error?.message?.includes('User rejected') ||
+                error?.message?.includes('user rejected') ||
+                error?.code === 4001 ||
+                error?.code === 'ACTION_REJECTED'
+
+            if (!isUserRejection) {
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'loop', // Keep in loop status for retry
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    errorMessage: error?.message?.includes(
+                        'ConnectorNotConnectedError'
+                    )
+                        ? 'Wallet connection lost. Please reconnect your wallet and try again.'
+                        : 'Loop transaction failed. Please try again.',
+                }))
+            } else {
+                // For user rejections, just reset the flags but let cancellation detection handle the error message
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'loop',
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                }))
+            }
         }
     }
 
     // Handle the SC interaction
     const handleSCInteraction = useCallback(() => {
+        console.log('Button clicked - Current loopTx status:', loopTx.status)
+        console.log('Button clicked - loopTx state:', loopTx)
+
         if (!checkWalletConnection()) return
 
+        // Clear any previous error message when user tries again
+        if (loopTx.errorMessage) {
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                errorMessage: '',
+            }))
+        }
+
+        // For manual button clicks, always proceed (this handles retries and initial approve)
         if (loopTx.status === 'approve') {
+            console.log('Manual: Calling onApproveSupply')
             onApproveSupply()
         } else if (loopTx.status === 'credit_delegation') {
+            console.log('Manual: Calling onCreditDeligation')
             onCreditDeligation()
         } else if (loopTx.status === 'loop') {
+            console.log('Manual: Calling onLoop')
             onLoop()
         } else {
+            console.log('Closing modal - unexpected status:', loopTx.status)
             handleCloseModal(false)
         }
-    }, [loopTx.status, isWalletConnected, walletAddress])
+    }, [loopTx.status, loopTx.errorMessage, isWalletConnected, walletAddress])
 
     return (
         <div className="flex flex-col gap-2">
@@ -423,9 +553,7 @@ const LoopButton = ({
                 <CustomAlert description={loopTx.errorMessage} />
             )}
             <Button
-                disabled={
-                    isPending || isConfirming || disabled || !isWalletConnected
-                }
+                disabled={isDisabledCta}
                 onClick={handleSCInteraction}
                 className="group flex items-center gap-1 py-3 w-full rounded-5 uppercase"
                 variant="primary"
@@ -433,8 +561,8 @@ const LoopButton = ({
                 {isLoading && <LoaderCircle className="text-white w-4 h-4 animate-spin inline" />}
                 {!isWalletConnected ? 'Connect Wallet' : ctaText || txBtnText}
                 {(loopTx.status !== 'view' && !isLoading) &&
-                    !isPending &&
-                    !isConfirming &&
+                    !loopTx.isPending &&
+                    !loopTx.isConfirming &&
                     isWalletConnected && (
                         <ArrowRightIcon
                             width={16}

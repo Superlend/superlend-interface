@@ -1,6 +1,6 @@
 'use client'
 
-import { FC, useState, useEffect, useContext } from 'react'
+import { FC, useState, useEffect, useContext, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { TLoopTx, useTxContext } from '@/context/tx-provider'
 import { TTxContext } from '@/context/tx-provider'
@@ -25,7 +25,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ChevronDownIcon } from 'lucide-react'
+import { ArrowRightIcon, ChevronDownIcon, InfinityIcon } from 'lucide-react'
 import { LoaderCircle } from 'lucide-react'
 import {
     cn,
@@ -45,7 +45,10 @@ import { BigNumber } from 'ethers'
 import { ChainId } from '@/types/chain'
 import { TToken } from '@/types'
 import { useIguanaDexData } from '@/hooks/protocols/useIguanaDexData'
-import { parseUnits } from 'viem'
+import { parseUnits, formatUnits } from 'viem'
+import { useReadContract } from 'wagmi'
+import AAVE_POOL_ABI from '@/data/abi/aaveApproveABI.json'
+import { calculateHealthFactorFromBalancesBigUnits, valueToBigNumber } from '@aave/math-utils'
 
 interface LoopingWidgetProps {
     isLoading?: boolean
@@ -89,7 +92,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     const [isLoadingBorrowAmount, setIsLoadingBorrowAmount] =
         useState<boolean>(false)
     const [leverage, setLeverage] = useState<number>(1)
-    const [healthFactor, setHealthFactor] = useState<number>(0)
+    const [newHealthFactor, setNewHealthFactor] = useState<number>(0)
     const [flashLoanAmount, setFlashLoanAmount] = useState<string>('0')
     const { getMaxLeverage, getBorrowTokenAmountForLeverage, providerStatus } =
         useAaveV3Data()
@@ -97,11 +100,57 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         string,
         Record<string, number>
     > | null>(null)
+    const { loopTx } = useTxContext()
     // Token balances
     const {
         erc20TokensBalanceData,
         isLoading: isLoadingErc20TokensBalanceData,
+        setIsRefreshing: setIsRefreshingTokensBalanceData,
     } = useUserTokenBalancesContext()
+
+    // Get user positions from portfolio data using protocol identifier
+    const userPositions = useMemo(
+        () =>
+            portfolioData?.platforms.filter(
+                (platform: any) =>
+                    platform?.protocol_identifier?.toLowerCase() ===
+                    (
+                        platformData?.platform as any
+                    )?.protocol_identifier?.toLowerCase()
+            ),
+        [portfolioData, platformData]
+    )
+
+    // Format user positions
+    const [currentHealthFactor] = useMemo(
+        () =>
+            userPositions?.map((platform: any, index: number) => platform.health_factor),
+        [userPositions]
+    )
+
+    // Refresh balance when view(success) UI after supplying/borrowing an asset
+    useEffect(() => {
+        if (
+            (loopTx.status === 'view' &&
+                loopTx.isConfirmed &&
+                !!loopTx.hash
+            )
+        ) {
+            console.log('Refreshing tokens balance data')
+            setIsRefreshingTokensBalanceData(true)
+        }
+    }, [loopTx.status, loopTx.isConfirmed, loopTx.hash])
+
+    useEffect(() => {
+        if (!isLoopTxDialogOpen && loopTx.status !== 'approve') {
+            setLendAmount('')
+            setBorrowAmount('0')
+            setBorrowAmountRaw('0')
+            setFlashLoanAmount('0')
+            setLeverage(1)
+            setNewHealthFactor(0)
+        }
+    }, [isLoopTxDialogOpen])
 
     // Setup tokens when platform data is available
     useEffect(() => {
@@ -177,7 +226,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                         'Borrow token amount for leverage result',
                         result
                     )
-                    setHealthFactor(Number(result?.healthFactor ?? 0))
+                    setNewHealthFactor(Number(result?.healthFactor ?? 0))
                     setBorrowAmount(result.amountFormatted)
                     setBorrowAmountRaw(result.amount)
                     setFlashLoanAmount(result.flashLoanAmountFormatted ?? '0')
@@ -227,15 +276,16 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
 
     // Format health factor for display
     const getHealthFactorDisplay = () => {
-        if (healthFactor === 0) return 'N/A'
-        if (healthFactor > 10) return '∞'
-        return healthFactor.toFixed(2)
+        if (newHealthFactor === 0) return 'N/A'
+        if (newHealthFactor > 10) return '∞'
+        return newHealthFactor.toFixed(2)
     }
 
     // Get color for health factor
     const getHealthFactorColor = () => {
-        if (healthFactor < 1.5) return 'text-danger-500'
-        if (healthFactor < 3) return 'text-warning-500'
+        if (newHealthFactor === 0) return 'text-gray-500'
+        if (newHealthFactor < 1.5) return 'text-danger-500'
+        if (newHealthFactor < 3) return 'text-warning-500'
         return 'text-success-500'
     }
 
@@ -500,7 +550,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                         >
                             Health Factor
                         </BodyText>
-                        <BodyText
+                        {/* <BodyText
                             level="body2"
                             weight="medium"
                             className={cn(
@@ -509,7 +559,47 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             )}
                         >
                             {getHealthFactorDisplay()}
-                        </BodyText>
+                        </BodyText> */}
+                        <div className="flex flex-col items-end justify-end gap-0">
+                            <div className="flex items-center gap-2">
+                                {currentHealthFactor &&
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className={`text-gray-800`}
+                                    >
+                                        {Number(currentHealthFactor) <
+                                            0 && (
+                                                <InfinityIcon className="w-4 h-4" />
+                                            )}
+                                        {Number(currentHealthFactor) >=
+                                            0 &&
+                                            currentHealthFactor.toFixed(
+                                                2
+                                            )}
+                                    </BodyText>}
+                                {(currentHealthFactor && newHealthFactor && Number(borrowAmount) > 0 && Number(lendAmount) > 0) &&
+                                    <ArrowRightIcon
+                                        width={16}
+                                        height={16}
+                                        className="stroke-gray-800"
+                                        strokeWidth={2.5}
+                                    />}
+                                {(currentHealthFactor && newHealthFactor && Number(borrowAmount) > 0 && Number(lendAmount) > 0) &&
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className={getHealthFactorColor()}
+                                    >
+                                        {newHealthFactor.toFixed(
+                                            2
+                                        )}
+                                    </BodyText>}
+                            </div>
+                            <Label size="small" className="text-gray-600">
+                                Liquidation at &lt;1.0
+                            </Label>
+                        </div>
                     </div>
 
                     {/* USD Information */}
@@ -589,8 +679,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     remaining_borrow_cap: 0,
                                     remaining_supply_cap: 0,
                                 },
-                                // pathTokens,
-                                // pathFees,
+                                // pathTokens, // Fetched in TxDialog
+                                // pathFees, // Fetched in TxDialog
                                 ...platformData?.platform,
                             }}
                             lendAmount={lendAmount}
@@ -606,8 +696,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             }}
                             setAmount={setLendAmount}
                             healthFactorValues={{
-                                healthFactor: null,
-                                newHealthFactor: healthFactor,
+                                healthFactor: currentHealthFactor,
+                                newHealthFactor: Number(borrowAmount) > 0 ? newHealthFactor : null,
                             }}
                             open={isLoopTxDialogOpen}
                             setOpen={setIsLoopTxDialogOpen}

@@ -309,9 +309,21 @@ export function ConfirmationDialog({
             (lendTx.status !== 'approve' || borrowTx.status !== 'borrow' || loopTx.status !== 'approve')
         ) {
             setAmount('')
-            setTimeout(() => {
-                resetLendBorrowTx()
-            }, 3000)
+            // Only reset if transactions are completed (view status) or there are no pending retries
+            // Don't reset if user might want to retry a failed transaction
+            const shouldReset = (
+                (lendTx.status === 'view' && lendTx.isConfirmed) ||
+                (borrowTx.status === 'view' && borrowTx.isConfirmed) ||
+                (loopTx.status === 'view' && loopTx.isConfirmed) ||
+                // Only reset if no errors that user might want to retry
+                (!lendTx.errorMessage && !borrowTx.errorMessage && !loopTx.errorMessage)
+            )
+
+            if (shouldReset) {
+                setTimeout(() => {
+                    resetLendBorrowTx()
+                }, 3000)
+            }
         }
     }
 
@@ -363,7 +375,7 @@ export function ConfirmationDialog({
 
     function isHfLow() {
         return (
-            Number(healthFactorValues.newHealthFactor.toString()) < Number(1.5)
+            Number(healthFactorValues.newHealthFactor?.toString() ?? 0) < Number(1.5)
         )
     }
 
@@ -823,22 +835,23 @@ export function ConfirmationDialog({
                                                     2
                                                 )}
                                         </BodyText>}
-                                    {(healthFactorValues.healthFactor && healthFactorValues.newHealthFactor) &&
+                                    {(!!healthFactorValues.newHealthFactor) &&
                                         <ArrowRightIcon
                                             width={16}
                                             height={16}
                                             className="stroke-gray-800"
                                             strokeWidth={2.5}
                                         />}
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className={getNewHfColor()}
-                                    >
-                                        {healthFactorValues.newHealthFactor.toFixed(
-                                            2
-                                        )}
-                                    </BodyText>
+                                    {(!!healthFactorValues.newHealthFactor) &&
+                                        <BodyText
+                                            level="body2"
+                                            weight="normal"
+                                            className={getNewHfColor()}
+                                        >
+                                            {healthFactorValues.newHealthFactor?.toFixed(
+                                                2
+                                            )}
+                                        </BodyText>}
                                 </div>
                                 <Label size="small" className="text-gray-600">
                                     Liquidation at &lt;1.0
