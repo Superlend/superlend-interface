@@ -69,6 +69,7 @@ import {
     getMaxDecimalsToDisplay,
     handleSmallestValue,
 } from '@/components/dialogs/TxDialog'
+import LoopingWidget from './looping-widget'
 
 interface LendAndBorrowAssetsProps {
     isLoading: boolean
@@ -112,6 +113,7 @@ export default function AaveV3TxWidget({
     const searchParams = useSearchParams()
     const tokenAddress = searchParams?.get('token') || ''
     const chain_id = searchParams?.get('chain_id') || '1'
+    const isEtherlinkChain = ChainId.Etherlink === Number(chain_id)
     const protocol_identifier = searchParams?.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType =
         (searchParams?.get('position_type') as TPositionType) || 'lend'
@@ -280,7 +282,7 @@ export default function AaveV3TxWidget({
                                 platformData?.platform?.name,
                             chain_name:
                                 CHAIN_ID_MAPPER[
-                                    assetDetails?.chain_id as ChainId
+                                assetDetails?.chain_id as ChainId
                                 ],
                             wallet_address: walletAddress,
                             error_message: r.gte(amountBN)
@@ -471,7 +473,7 @@ export default function AaveV3TxWidget({
     } => {
         const borrowTokenDetails =
             maxBorrowTokensAmount?.[
-                selectedBorrowTokenDetails?.token?.address ?? ''
+            selectedBorrowTokenDetails?.token?.address ?? ''
             ] ?? {}
 
         const { user } = borrowTokenDetails
@@ -550,9 +552,9 @@ export default function AaveV3TxWidget({
     const disabledButton: boolean = useMemo(
         () =>
             Number(amount) >
-                Number(
-                    isLendPositionType(positionType) ? balance : maxBorrowAmount
-                ) ||
+            Number(
+                isLendPositionType(positionType) ? balance : maxBorrowAmount
+            ) ||
             (isLendPositionType(positionType) ? false : !hasCollateral) ||
             Number(amount) <= 0 ||
             toManyDecimals,
@@ -603,13 +605,31 @@ export default function AaveV3TxWidget({
     return (
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
             <ToggleTab
-                type={positionType === 'lend' ? 'tab1' : 'tab2'}
+                type={positionType === 'lend' ? 'tab1' : positionType === 'borrow' ? 'tab2' : 'tab3'}
                 handleToggle={(positionType: TTypeToMatch) => {
-                    setPositionType(positionType === 'tab1' ? 'lend' : 'borrow')
+                    if (positionType === 'tab1') {
+                        setPositionType('lend')
+                    } else if (positionType === 'tab2') {
+                        setPositionType('borrow')
+                    } else if (positionType === 'tab3') {
+                        setPositionType('loop')
+                    }
                     setAmount('')
                 }}
+                showTab={{
+                    tab1: true,
+                    tab2: true,
+                    tab3: isEtherlinkChain,
+                }}
             />
-            <Card className="flex flex-col gap-[12px] p-[16px]">
+            {positionType === 'loop' ? (
+                <LoopingWidget
+                    isLoading={isLoading}
+                    platformData={platformData}
+                    portfolioData={portfolioData}
+                />
+            ) : (
+                <Card className="flex flex-col gap-[12px] p-[16px]">
                 <div className="flex items-center justify-between px-[14px]">
                     <BodyText
                         level="body2"
@@ -704,8 +724,8 @@ export default function AaveV3TxWidget({
                             (!selectedBorrowTokenDetails?.token?.address &&
                                 !isLendPositionType(positionType) &&
                                 isWalletConnected)) && (
-                            <Skeleton className="shrink-0 w-[34px] h-[34px] rounded-full" />
-                        )}
+                                <Skeleton className="shrink-0 w-[34px] h-[34px] rounded-full" />
+                            )}
                         {!isLoading &&
                             !!selectedBorrowTokenDetails?.token?.address &&
                             !isLendPositionType(positionType) && (
@@ -768,12 +788,12 @@ export default function AaveV3TxWidget({
                                     {abbreviateNumber(
                                         isLendPositionType(positionType)
                                             ? Number(
-                                                  assetDetails?.asset?.apy ?? 0
-                                              )
+                                                assetDetails?.asset?.apy ?? 0
+                                            )
                                             : Number(
-                                                  selectedBorrowTokenDetails?.variable_borrow_apy ??
-                                                      0
-                                              )
+                                                selectedBorrowTokenDetails?.variable_borrow_apy ??
+                                                0
+                                            )
                                     )}
                                     %
                                 </Badge>
@@ -846,6 +866,7 @@ export default function AaveV3TxWidget({
                     )}
                 </CardFooter>
             </Card>
+            )}
         </section>
     )
 }
@@ -891,7 +912,7 @@ function SelectTokensDropdown({
                             className={cn(
                                 'flex items-center gap-2 hover:bg-gray-300 cursor-pointer py-2 px-4',
                                 selectedItemDetails?.token?.address ===
-                                    asset?.token?.address && 'bg-gray-400'
+                                asset?.token?.address && 'bg-gray-400'
                             )}
                         >
                             <ImageWithDefault

@@ -167,11 +167,6 @@ export const WidgetWrapper = ({
     return (
         <div className="flex flex-col gap-4">
             {children}
-            <LoopingWidget
-                isLoading={isLoading}
-                platformData={platformData}
-                portfolioData={portfolioData}
-            />
             <WhalesSupportDialog
                 open={showWhalesSupportDialog}
                 setOpen={setShowWhalesSupportDialog}

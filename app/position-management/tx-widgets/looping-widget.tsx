@@ -283,10 +283,11 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
 
     // Get color for health factor
     const getHealthFactorColor = () => {
-        if (newHealthFactor === 0) return 'text-gray-500'
-        if (newHealthFactor < 1.5) return 'text-danger-500'
-        if (newHealthFactor < 3) return 'text-warning-500'
-        return 'text-success-500'
+        if(newHealthFactor < 1) return 'text-red-600'
+        if (newHealthFactor === currentHealthFactor) return 'text-gray-800'
+        if (newHealthFactor < currentHealthFactor) return 'text-yellow-600'
+        if (newHealthFactor > currentHealthFactor) return 'text-green-600'
+        return 'text-gray-800'
     }
 
     // Handle max button click
@@ -318,7 +319,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     return (
         <section className="looping-widget flex flex-col gap-3">
             <Card className="flex flex-col gap-3 p-4">
-                <CardHeader className="p-0 pl-3">
+                <CardHeader className="p-0 pl-1">
                     <CardTitle className="text-lg font-medium text-gray-800">
                         Create New Loop Position
                     </CardTitle>
@@ -578,14 +579,14 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                                 2
                                             )}
                                     </BodyText>}
-                                {(currentHealthFactor && newHealthFactor && Number(borrowAmount) > 0 && Number(lendAmount) > 0) &&
+                                {(!!Number(currentHealthFactor) && !!Number(newHealthFactor) && Number(borrowAmount) > 0 && Number(lendAmount) > 0) &&
                                     <ArrowRightIcon
                                         width={16}
                                         height={16}
                                         className="stroke-gray-800"
                                         strokeWidth={2.5}
                                     />}
-                                {(currentHealthFactor && newHealthFactor && Number(borrowAmount) > 0 && Number(lendAmount) > 0) &&
+                                {(!!Number(currentHealthFactor) && !!Number(newHealthFactor) && Number(borrowAmount) > 0 && Number(lendAmount) > 0) &&
                                     <BodyText
                                         level="body2"
                                         weight="normal"

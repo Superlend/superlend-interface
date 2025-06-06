@@ -354,23 +354,14 @@ export function ConfirmationDialog({
     const canDisplayExplorerLinkWhileLoading = positionTypeTxStatusMap[positionType].hash.length > 0 && (positionTypeTxStatusMap[positionType].isConfirming || positionTypeTxStatusMap[positionType].isPending)
 
     function getNewHfColor() {
-        if (!healthFactorValues.healthFactor || !healthFactorValues.newHealthFactor) {
-            return 'text-gray-800'
-        }
-        const newHF = Number(healthFactorValues.newHealthFactor.toString())
-        const HF = Number(healthFactorValues.healthFactor.toString())
+        const newHF = Number(healthFactorValues.newHealthFactor?.toString() ?? 0)
+        const HF = Number(healthFactorValues.healthFactor?.toString() ?? 0)
 
-        // if (newHF < HF) {
-        //     return 'text-danger-500'
-        // } else if (newHF > HF) {
-        //     return 'text-success-500'
-        // } else {
-        //     return 'text-warning-500'
-        // }
-
-        if (newHF < 2) {
-            return 'text-danger-500'
-        }
+        if (newHF < 1) return 'text-red-600'
+        if (newHF === HF) return 'text-gray-800'
+        if (newHF < HF) return 'text-yellow-600'
+        if (newHF > HF) return 'text-green-600'
+        return 'text-gray-800'
     }
 
     function isHfLow() {
@@ -819,7 +810,7 @@ export function ConfirmationDialog({
                             </BodyText>
                             <div className="flex flex-col items-end justify-end gap-0">
                                 <div className="flex items-center gap-2">
-                                    {healthFactorValues.healthFactor &&
+                                    {!!Number(healthFactorValues.healthFactor) &&
                                         <BodyText
                                             level="body2"
                                             weight="normal"
@@ -835,14 +826,14 @@ export function ConfirmationDialog({
                                                     2
                                                 )}
                                         </BodyText>}
-                                    {(!!healthFactorValues.newHealthFactor) &&
+                                    {(!!Number(healthFactorValues.newHealthFactor) && !!Number(healthFactorValues.healthFactor)) &&
                                         <ArrowRightIcon
                                             width={16}
                                             height={16}
                                             className="stroke-gray-800"
                                             strokeWidth={2.5}
                                         />}
-                                    {(!!healthFactorValues.newHealthFactor) &&
+                                    {(!!Number(healthFactorValues.newHealthFactor)) &&
                                         <BodyText
                                             level="body2"
                                             weight="normal"
