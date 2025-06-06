@@ -14,17 +14,20 @@ import WithdrawButton from '../WithdrawButton'
 import { BigNumber } from 'ethers'
 import SupplyMorphoButton from '../SupplyMorphoButton'
 import { CodeSquare } from 'lucide-react'
-import { TPositionType, TScAmount } from '@/types'
+import { TPositionType, TScAmount, TActionType } from '@/types'
 import RepayButton from '../RepayButton'
 import SupplyFluidButton from '../SupplyFluidButton'
+import LoopButton from '../LoopButton'
 
 interface IActionButtonSelectComponent {
     disabled?: boolean
     asset: any
     amount: TScAmount
     handleCloseModal: (isVisible: boolean) => void
-    actionType: 'lend' | 'collateral' | 'borrow' | 'repay' | 'withdraw'
+    actionType: TActionType
     setActionType?: (actionType: TPositionType) => void
+    ctaText?: string | null
+    isLoading?: boolean
 }
 
 const ActionButton = ({
@@ -34,6 +37,8 @@ const ActionButton = ({
     handleCloseModal,
     actionType,
     setActionType,
+    ctaText,
+    isLoading,
 }: IActionButtonSelectComponent) => {
     if (actionType === 'borrow') {
         return (
@@ -79,6 +84,21 @@ const ActionButton = ({
                     amount={amount}
                     decimals={asset.asset.token.decimals}
                     assetDetails={asset}
+                />
+            )
+        }
+        if (actionType === 'loop') {
+            return (
+                <LoopButton
+                    disabled={disabled}
+                    handleCloseModal={handleCloseModal}
+                    poolContractAddress={asset.core_contract}
+                    underlyingAssetAdress={asset?.asset?.token.address || asset.supplyAsset.token.address}
+                    amount={amount}
+                    decimals={asset?.asset?.token.decimals || asset.supplyAsset.token.decimals}
+                    assetDetails={asset}
+                    ctaText={ctaText}
+                    isLoading={isLoading}
                 />
             )
         }

@@ -10,7 +10,7 @@ export interface IHeadingTextProps {
 
 export interface IBodyTextProps {
     children: React.ReactNode
-    level: 'body1' | 'body2' | 'body3'
+    level: 'body1' | 'body2' | 'body3' | 'custom'
     weight?: TFontWeight
     className?: string
     as?: string
