@@ -97,12 +97,16 @@ export const useOnboarding = ({
     setState(prev => ({ ...prev, selectedAsset: asset }))
   }, [])
 
+  const clearSelectedAsset = useCallback(() => {
+    setState(prev => ({ ...prev, selectedAsset: null }))
+  }, [])
+
   const nextStep = useCallback(() => {
     setState(prev => {
       const stepFlow: Record<OnboardingStep, OnboardingStep | null> = {
         'welcome': 'choose-path',
-        'choose-path': prev.selectedPath === 'earn' ? 'earn-flow' 
-                     : prev.selectedPath === 'borrow' ? 'borrow-flow'
+        'choose-path': prev.selectedPath === 'earn' ? 'earn-assets' // Skip earn-flow and go directly to earn-assets
+                     : prev.selectedPath === 'borrow' ? 'borrow-assets' // Skip borrow-flow and go directly to borrow-assets
                      : prev.selectedPath === 'learn' ? 'learn-flow'
                      : null, // Don't allow progression without path selection
         'earn-flow': 'earn-assets',
@@ -138,9 +142,9 @@ export const useOnboarding = ({
         'welcome': null,
         'choose-path': 'welcome',
         'earn-flow': 'choose-path',
-        'earn-assets': 'earn-flow',
+        'earn-assets': 'choose-path', // Go back to choose-path instead of earn-flow since we skip it
         'borrow-flow': 'choose-path',
-        'borrow-assets': 'borrow-flow',
+        'borrow-assets': 'choose-path', // Go back to choose-path instead of borrow-flow since we skip it
         'borrow-collateral': 'borrow-assets', // Keep this for backwards compatibility but shouldn't be reached
         'learn-flow': 'choose-path',
         'learn-basics': 'learn-flow',
@@ -148,7 +152,7 @@ export const useOnboarding = ({
         'learn-risk': 'learn-strategies',
         'learn-quiz': 'learn-risk',
         'final': prev.selectedPath === 'earn' ? 'earn-assets'
-                : prev.selectedPath === 'borrow' ? 'borrow-assets' // Go back to borrow-assets instead of borrow-collateral
+                : prev.selectedPath === 'borrow' ? 'borrow-assets'
                 : prev.selectedPath === 'learn' ? 'learn-quiz'
                 : 'choose-path',
       }
@@ -177,18 +181,18 @@ export const useOnboarding = ({
   }, [])
 
   const getStepProgress = useCallback(() => {
-    const totalSteps = state.selectedPath === 'earn' ? 4
-                     : state.selectedPath === 'borrow' ? 4 // Reduced from 5 to 4 steps (removed borrow-collateral)
+    const totalSteps = state.selectedPath === 'earn' ? 3 // Reduced from 4 to 3 steps (removed earn-flow)
+                     : state.selectedPath === 'borrow' ? 3 // Reduced from 4 to 3 steps (removed borrow-flow)
                      : state.selectedPath === 'learn' ? 7
                      : 2 // welcome + choose-path
 
     const stepNumbers: Record<OnboardingStep, number> = {
       'welcome': 1,
       'choose-path': 2,
-      'earn-flow': 3,
-      'earn-assets': 4,
-      'borrow-flow': 3,
-      'borrow-assets': 4,
+      'earn-flow': 3, // This won't be used in the new flow but keeping for backwards compatibility
+      'earn-assets': 3, // Now step 3 instead of 4
+      'borrow-flow': 3, // This won't be used in the new flow but keeping for backwards compatibility
+      'borrow-assets': 3, // Now step 3 instead of 4
       'borrow-collateral': 5, // Keep this but it won't be used in normal flow
       'learn-flow': 3,
       'learn-basics': 4,
@@ -212,6 +216,7 @@ export const useOnboarding = ({
     setStep,
     setPath,
     setSelectedAsset,
+    clearSelectedAsset,
     nextStep,
     previousStep,
     resetOnboarding,

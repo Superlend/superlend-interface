@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, Star, Check, RefreshCw, AlertCircle } from 'lucide-react'
+import { TrendingUp, Star, Check, RefreshCw, AlertCircle, ChevronRight, CheckCircle, XCircle } from 'lucide-react'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { useOnboardingContext } from '@/components/providers/OnboardingProvider'
@@ -25,45 +25,94 @@ interface Asset {
   apyNumeric: number
 }
 
+type TokenType = 'USDC' | 'USDT' | 'FRAX' | 'DAI'
+type RiskLevel = 'Low' | 'Medium' | 'High'
+
 export const EarnAssetsStep: React.FC = () => {
   const [lastRefetch, setLastRefetch] = useState<Date>(new Date())
-  const { setSelectedAsset: setOnboardingSelectedAsset, currentStep, selectedAsset: contextSelectedAsset } = useOnboardingContext()
-  
-  // Initialize selectedAsset from context if available
+  const { setSelectedAsset: setOnboardingSelectedAsset, clearSelectedAsset, currentStep, selectedAsset: contextSelectedAsset } = useOnboardingContext()
+
+  // Filter states
+  const [selectedTokenType, setSelectedTokenType] = useState<TokenType | null>(null)
+  const [selectedRiskLevel, setSelectedRiskLevel] = useState<RiskLevel | null>(null)
+
+  // Initialize selectedAsset from context if available - use unique identifier
   const [selectedAsset, setSelectedAsset] = useState<string | null>(() => {
-    return contextSelectedAsset?.tokenSymbol || null
+    if (contextSelectedAsset?.tokenSymbol && contextSelectedAsset?.protocolIdentifier) {
+      return `${contextSelectedAsset.tokenSymbol}-${contextSelectedAsset.protocolIdentifier}`
+    }
+    return null
   })
 
   // Update local state when context changes (e.g., when coming back to this step)
   useEffect(() => {
-    if (contextSelectedAsset?.tokenSymbol && contextSelectedAsset.positionType === 'lend') {
-      setSelectedAsset(contextSelectedAsset.tokenSymbol)
+    if (contextSelectedAsset?.tokenSymbol && contextSelectedAsset?.protocolIdentifier && contextSelectedAsset.positionType === 'lend') {
+      setSelectedAsset(`${contextSelectedAsset.tokenSymbol}-${contextSelectedAsset.protocolIdentifier}`)
+      // Try to infer filters from context if available, but don't set them as this could cause issues
+      // The user should re-select their filters to ensure data freshness
+    } else {
+      // Clear local state if context is cleared
+      setSelectedAsset(null)
     }
   }, [contextSelectedAsset])
 
-  // Fetch real opportunities data with re-fetching capability
-  const { data: opportunitiesData, isLoading, refetch } = useGetOpportunitiesData({
+  // Clear state when entering the step to ensure fresh selection
+  useEffect(() => {
+    if (currentStep === 'earn-assets') {
+      // Reset all filters and selections for a fresh start
+      setSelectedTokenType(null)
+      setSelectedRiskLevel(null)
+      setSelectedAsset(null)
+      clearSelectedAsset()
+    }
+  }, [currentStep, clearSelectedAsset])
+
+  // Only fetch data when both filters are selected
+  const shouldFetchData = Boolean(selectedTokenType && selectedRiskLevel)
+
+  // Fetch real opportunities data with filtering
+  const { data: opportunitiesData, isLoading, isError, refetch } = useGetOpportunitiesData({
     type: 'lend',
-    enabled: true,
+    enabled: shouldFetchData,
+    tokens: selectedTokenType ? [selectedTokenType] : [],
   })
 
   // Auto-refetch when step becomes active or every 30 seconds while active
   useEffect(() => {
-    if (currentStep === 'earn-assets') {
+    if (currentStep === 'earn-assets' && shouldFetchData) {
       // Initial refetch when step becomes active
       refetch()
-      
+
       // Set up interval for background refetching every 30 seconds
       const interval = setInterval(() => {
         refetch()
         setLastRefetch(new Date())
       }, 30000)
-      
+
       return () => clearInterval(interval)
     }
-  }, [currentStep, refetch])
+  }, [currentStep, refetch, shouldFetchData])
 
-  // Helper functions for risk styling (moved before useMemo)
+  // Reset dependent states when token type changes
+  useEffect(() => {
+    if (selectedTokenType) {
+      setSelectedRiskLevel(null)
+      setSelectedAsset(null)
+      // Clear onboarding context when token type changes
+      clearSelectedAsset()
+    }
+  }, [selectedTokenType, clearSelectedAsset])
+
+  // Reset asset selection when risk level changes
+  useEffect(() => {
+    if (selectedRiskLevel) {
+      setSelectedAsset(null)
+      // Clear onboarding context when risk level changes
+      clearSelectedAsset()
+    }
+  }, [selectedRiskLevel, clearSelectedAsset])
+
+  // Helper functions for risk styling
   const getRiskColor = (risk: string): string => {
     switch (risk) {
       case 'Low': return 'text-green-600'
@@ -84,166 +133,96 @@ export const EarnAssetsStep: React.FC = () => {
 
   // Helper function to calculate risk level dynamically
   const calculateRiskLevel = (utilization: number, liquidity: number, platformName: string): 'Low' | 'Medium' | 'High' => {
-    // Risk factors:
-    // 1. High utilization rate (>80%) = higher risk
-    // 2. Low liquidity (<$1M) = higher risk  
-    // 3. Newer/less established protocols = higher risk
-
     const highRiskProtocols = ['morpho', 'fluid']
     const mediumRiskProtocols = ['compound', 'euler']
     const lowRiskProtocols = ['aave', 'superlend']
-    
+
     const platformLower = platformName.toLowerCase()
-    
+
     let riskScore = 0
-    
+
     // Utilization risk
     if (utilization > 0.8) riskScore += 2
     else if (utilization > 0.6) riskScore += 1
-    
+
     // Liquidity risk
     if (liquidity < 1000000) riskScore += 2
     else if (liquidity < 10000000) riskScore += 1
-    
+
     // Protocol risk
     if (highRiskProtocols.some(p => platformLower.includes(p))) riskScore += 2
     else if (mediumRiskProtocols.some(p => platformLower.includes(p))) riskScore += 1
     else if (lowRiskProtocols.some(p => platformLower.includes(p))) riskScore -= 1
-    
+
     if (riskScore >= 4) return 'High'
     if (riskScore >= 2) return 'Medium'
     return 'Low'
   }
 
-  // Process and filter for stable tokens with mixed risk levels
+  // Process opportunities data and filter by selected risk level
   const assets: Asset[] = useMemo(() => {
-    if (!opportunitiesData?.length) return []
+    if (!opportunitiesData?.length || !selectedRiskLevel) return []
 
-    // Define stable tokens we want to show
-    const stableTokens = ['USDC', 'USDT', 'DAI', 'FRAX', 'LUSD', 'FDUSD', 'PYUSD']
-    
-    // Filter for stable tokens that are available for LENDING (not borrowing)
-    const stableOpportunities = opportunitiesData.filter(item => {
-      const isStableToken = stableTokens.includes(item.token.symbol.toUpperCase())
-      const hasLendingAPY = Number(item.platform.apy.current) > 0.1 // At least 0.1% APY
-      const hasLiquidity = Number(item.platform.liquidity) > 0 // Has liquidity for lending
+    // Filter for the selected token type and process the data
+    const filteredOpportunities = opportunitiesData.filter(item => {
+      const isSelectedToken = item.token.symbol.toUpperCase() === selectedTokenType
+      const hasLendingAPY = Number(item.platform.apy.current) > 0.1
+      const hasLiquidity = Number(item.platform.liquidity) > 0
       const liquidityUSD = Number(item.platform.liquidity) * Number(item.token.price_usd)
-      const hasMeaningfulLiquidity = liquidityUSD > 10000 // At least $10k liquidity
-      
-      // Exclude risky Morpho Markets (non-vaults) for lending - same logic as discover page
+      const hasMeaningfulLiquidity = liquidityUSD > 10000
+
+      // Exclude risky Morpho Markets (non-vaults) for lending
       const platformName = item.platform.platform_name?.split('-')[0]?.toLowerCase()
       const isMorpho = platformName === PlatformType.MORPHO
       const isVault = item.platform.isVault
-      const excludeRiskyMorphoMarkets = true // Always exclude risky markets in onboarding
+      const excludeRiskyMorphoMarkets = true
       const shouldExcludeMorphoMarkets = excludeRiskyMorphoMarkets && isMorpho && !isVault
-      
-      console.log('🔍 Filtering asset:', {
-        symbol: item.token.symbol,
-        isStableToken,
-        hasLendingAPY,
-        hasLiquidity,
-        hasMeaningfulLiquidity,
-        apy: item.platform.apy.current,
-        liquidity: item.platform.liquidity,
-        liquidityUSD: liquidityUSD,
-        platformName: item.platform.platform_name,
-        isMorpho,
-        isVault,
-        shouldExcludeMorphoMarkets,
-        finalDecision: isStableToken && hasLendingAPY && hasLiquidity && hasMeaningfulLiquidity && !shouldExcludeMorphoMarkets
-      })
-      
-      return isStableToken && hasLendingAPY && hasLiquidity && hasMeaningfulLiquidity && !shouldExcludeMorphoMarkets
+
+      return isSelectedToken && hasLendingAPY && hasLiquidity && hasMeaningfulLiquidity && !shouldExcludeMorphoMarkets
     })
 
-    console.log('✅ Filtered stable lending opportunities:', stableOpportunities.length)
-
-    // Group by token symbol and get best APY for each
-    const tokenMap = new Map<string, any>()
-    
-    stableOpportunities.forEach(item => {
-      const existing = tokenMap.get(item.token.symbol)
-      if (!existing || item.platform.apy.current > existing.platform.apy.current) {
-        tokenMap.set(item.token.symbol, item)
-      }
-    })
-
-    // Convert to array and calculate risk levels
-    const processedAssets = Array.from(tokenMap.values()).map(item => {
+    // Process and filter by risk level
+    const processedAssets = filteredOpportunities.map(item => {
       const liquidity = Number(item.platform.liquidity) * Number(item.token.price_usd)
-      const utilization = item.platform.utilization_rate || 0
+      const utilization = Number(item.platform.utilization_rate) || 0
       const platformName = item.platform.platform_name?.split('-')[0] || ''
-      
+
       const risk = calculateRiskLevel(utilization, liquidity, platformName)
-      
-      console.log('📊 Processed asset:', {
-        symbol: item.token.symbol,
-        apy: item.platform.apy.current,
-        risk,
-        liquidity,
-        utilization,
-        platform: platformName
-      })
-      
+
       return {
         symbol: item.token.symbol,
         name: item.token.name,
         logo: item.token.logo,
-        apy: `${item.platform.apy.current.toFixed(1)}%`,
-        apyNumeric: item.platform.apy.current,
+        apy: `${Number(item.platform.apy.current).toFixed(1)}%`,
+        apyNumeric: Number(item.platform.apy.current),
         risk,
         color: getRiskColor(risk),
         bgColor: getRiskBgColor(risk),
         popular: ['USDC', 'USDT', 'DAI'].includes(item.token.symbol.toUpperCase()),
         utilization,
         liquidity,
-        // Store data needed for navigation
         tokenAddress: item.token.address,
-        chainId: item.chain_id,
+        chainId: item.chain_id.toString(),
         protocolIdentifier: item.platform.protocol_identifier,
         platformName: item.platform.platform_name
       }
     })
 
-    console.log('🎯 Final processed assets:', processedAssets)
+    // Filter by selected risk level and sort by APY
+    const riskFilteredAssets = processedAssets
+      .filter(asset => asset.risk === selectedRiskLevel)
+      .sort((a, b) => b.apyNumeric - a.apyNumeric)
+      .slice(0, 4) // Limit to 4 results
 
-    // Ensure we have a good mix of risk levels - try to get 1 low, 2 medium, 1 high
-    const lowRisk = processedAssets.filter(a => a.risk === 'Low').sort((a, b) => b.apyNumeric - a.apyNumeric)
-    const mediumRisk = processedAssets.filter(a => a.risk === 'Medium').sort((a, b) => b.apyNumeric - a.apyNumeric)
-    const highRisk = processedAssets.filter(a => a.risk === 'High').sort((a, b) => b.apyNumeric - a.apyNumeric)
-
-    console.log('📈 Risk distribution:', {
-      low: lowRisk.length,
-      medium: mediumRisk.length, 
-      high: highRisk.length
-    })
-
-    const finalAssets = [
-      ...lowRisk.slice(0, 1),     // 1 low risk
-      ...mediumRisk.slice(0, 2),  // 2 medium risk  
-      ...highRisk.slice(0, 1)     // 1 high risk
-    ]
-
-    // If we don't have enough variety, fill with highest APY remaining assets
-    if (finalAssets.length < 4) {
-      const remaining = processedAssets
-        .filter(asset => !finalAssets.find(selected => selected.symbol === asset.symbol))
-        .sort((a, b) => b.apyNumeric - a.apyNumeric)
-      
-      finalAssets.push(...remaining.slice(0, 4 - finalAssets.length))
-    }
-
-    const result = finalAssets.slice(0, 4)
-    console.log('🏆 Final 4 assets selected:', result.map(a => ({ symbol: a.symbol, apy: a.apy, risk: a.risk })))
-    
-    return result
-  }, [opportunitiesData])
+    console.log('🎯 Final filtered assets:', riskFilteredAssets)
+    return riskFilteredAssets
+  }, [opportunitiesData, selectedRiskLevel, selectedTokenType])
 
   const handleAssetSelect = (asset: Asset) => {
-    console.log('💰 Asset selected:', asset.symbol)
-    console.log('📦 Full asset data:', asset)
-    setSelectedAsset(asset.symbol)
-    
+    console.log('💰 Asset selected:', asset.symbol, asset.protocolIdentifier)
+    const uniqueAssetId = `${asset.symbol}-${asset.protocolIdentifier}`
+    setSelectedAsset(uniqueAssetId)
+
     // Store in onboarding context for final step
     const assetToStore = {
       tokenAddress: asset.tokenAddress,
@@ -252,25 +231,97 @@ export const EarnAssetsStep: React.FC = () => {
       protocolIdentifier: asset.protocolIdentifier,
       positionType: 'lend' as const
     }
-    console.log('💾 Storing in onboarding context:', assetToStore)
     setOnboardingSelectedAsset(assetToStore)
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col h-full">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground mb-3">
-            Stable Tokens for Earning
-          </h2>
-          <p className="text-base text-gray-600 max-w-xl mx-auto">
-            Loading the latest stable token yield opportunities...
-          </p>
+  // Token type options
+  const tokenTypes: { symbol: TokenType; name: string; description: string }[] = [
+    { symbol: 'USDC', name: 'USD Coin', description: 'Most liquid stablecoin' },
+    { symbol: 'USDT', name: 'Tether', description: 'Largest stablecoin by market cap' },
+    { symbol: 'FRAX', name: 'Frax', description: 'Algorithmic stablecoin' },
+    { symbol: 'DAI', name: 'Dai', description: 'Decentralized stablecoin' },
+  ]
+
+  // Risk level options
+  const riskLevels: { level: RiskLevel; title: string; description: string; color: string; bgColor: string }[] = [
+    {
+      level: 'Low',
+      title: 'Low Risk',
+      description: 'Established protocols with proven track records',
+      color: 'text-green-700',
+      bgColor: 'bg-green-50 border-green-200 hover:bg-green-100'
+    },
+    {
+      level: 'Medium',
+      title: 'Medium Risk',
+      description: 'Higher yields with moderate exposure',
+      color: 'text-yellow-700',
+      bgColor: 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
+    },
+    {
+      level: 'High',
+      title: 'High Risk',
+      description: 'Newest protocols with highest potential',
+      color: 'text-red-700',
+      bgColor: 'bg-red-50 border-red-200 hover:bg-red-100'
+    },
+  ]
+
+  // Step indicator component
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center mb-8">
+      <div className="flex items-center space-x-4">
+        {/* Step 1 */}
+        <div className="flex items-center">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${selectedTokenType
+              ? 'bg-primary border-primary text-white'
+              : 'border-primary text-primary bg-white'
+            }`}>
+            {selectedTokenType ? <Check className="w-4 h-4" /> : '1'}
+          </div>
+          <span className={`ml-2 text-sm font-medium ${selectedTokenType ? 'text-primary' : 'text-gray-500'}`}>
+            Token Type
+          </span>
         </div>
-        <LoadingSectionSkeleton className="h-[400px]" />
+
+        <ChevronRight className="w-4 h-4 text-gray-400" />
+
+        {/* Step 2 */}
+        <div className="flex items-center">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${selectedRiskLevel
+              ? 'bg-primary border-primary text-white'
+              : selectedTokenType
+                ? 'border-primary text-primary bg-white'
+                : 'border-gray-300 text-gray-400 bg-gray-50'
+            }`}>
+            {selectedRiskLevel ? <Check className="w-4 h-4" /> : '2'}
+          </div>
+          <span className={`ml-2 text-sm font-medium ${selectedRiskLevel ? 'text-primary' : selectedTokenType ? 'text-gray-700' : 'text-gray-400'
+            }`}>
+            Risk Level
+          </span>
+        </div>
+
+        <ChevronRight className="w-4 h-4 text-gray-400" />
+
+        {/* Step 3 */}
+        <div className="flex items-center">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${selectedAsset
+              ? 'bg-primary border-primary text-white'
+              : shouldFetchData
+                ? 'border-primary text-primary bg-white'
+                : 'border-gray-300 text-gray-400 bg-gray-50'
+            }`}>
+            {selectedAsset ? <Check className="w-4 h-4" /> : '3'}
+          </div>
+          <span className={`ml-2 text-sm font-medium ${selectedAsset ? 'text-primary' : shouldFetchData ? 'text-gray-700' : 'text-gray-400'
+            }`}>
+            Final Selection
+          </span>
+        </div>
       </div>
-    )
-  }
+    </div>
+  )
 
   return (
     <div className="flex flex-col h-full">
@@ -279,233 +330,274 @@ export const EarnAssetsStep: React.FC = () => {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="text-center mb-4 sm:mb-6"
+        className="text-center mb-6"
       >
-        <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-            Stable Tokens for Earning
-          </h2>
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="text-gray-400"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </motion.div>
-        </div>
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
+          Select Token for Earning
+        </h2>
         <p className="text-sm sm:text-base text-gray-600 max-w-xl mx-auto px-2">
-          Choose from our curated selection of 4 stable tokens with different risk profiles.
-        </p>
-        <p className="text-xs text-gray-500 mt-1 sm:mt-2">
-          Last updated: {lastRefetch.toLocaleTimeString()}
+          Follow the 3 steps below to find the perfect earning opportunity for you.
         </p>
       </motion.div>
 
-      {/* Assets Grid */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-4xl space-y-8">
-          {/* Enhanced Risk Level Guide */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-2xl p-6 shadow-lg"
-          >
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                <AlertCircle className="w-6 h-6 text-gray-600" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-gray-900 text-lg mb-3">Understanding Risk Levels</h4>
-                <p className="text-sm text-gray-600 mb-4">Each token is categorized by risk level to help you make informed decisions</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <motion.div 
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white rounded-xl p-4 border border-green-200 hover:shadow-md transition-all duration-300"
-                  >
-                    <div className="flex items-center space-x-3 mb-2">
-                      <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                      <span className="font-semibold text-green-700">Low Risk</span>
-                    </div>
-                    <p className="text-xs text-gray-600">Established protocols with proven track records and stable returns</p>
-                  </motion.div>
-                  
-                  <motion.div 
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white rounded-xl p-4 border border-yellow-200 hover:shadow-md transition-all duration-300"
-                  >
-                    <div className="flex items-center space-x-3 mb-2">
-                      <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
-                      <span className="font-semibold text-yellow-700">Medium Risk</span>
-                    </div>
-                    <p className="text-xs text-gray-600">Higher yields with moderate exposure and acceptable risk levels</p>
-                  </motion.div>
-                  
-                  <motion.div 
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white rounded-xl p-4 border border-red-200 hover:shadow-md transition-all duration-300"
-                  >
-                    <div className="flex items-center space-x-3 mb-2">
-                      <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                      <span className="font-semibold text-red-700">High Risk</span>
-                    </div>
-                    <p className="text-xs text-gray-600">Newest protocols with highest potential but increased risk</p>
-                  </motion.div>
+      {/* Step Indicator */}
+      <StepIndicator />
+
+      <div className="flex-1 space-y-8">
+        {/* Step 1: Token Type Selection */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className={`border-2 rounded-2xl p-6 transition-all duration-300 ${selectedTokenType ? 'border-green-200 bg-green-50/50' : 'border-gray-200 bg-white'
+            }`}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${selectedTokenType ? 'bg-primary border-primary text-white' : 'border-primary text-primary'
+              }`}>
+              {selectedTokenType ? <Check className="w-4 h-4" /> : '1'}
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">Choose Token Type</h3>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {tokenTypes.map((token) => (
+              <motion.button
+                key={token.symbol}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedTokenType(token.symbol)}
+                className={`p-4 rounded-xl border-2 text-center transition-all duration-300 ${selectedTokenType === token.symbol
+                    ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+              >
+                <div className="font-bold text-lg text-foreground">{token.symbol}</div>
+                <div className="text-xs text-gray-600 mt-1">{token.name}</div>
+                <div className="text-xs text-gray-500 mt-1">{token.description}</div>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Step 2: Risk Level Selection */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{
+            opacity: selectedTokenType ? 1 : 0.5,
+            y: 0
+          }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className={`border-2 rounded-2xl p-6 transition-all duration-300 ${selectedRiskLevel ? 'border-green-200 bg-green-50/50'
+              : selectedTokenType ? 'border-gray-200 bg-white'
+                : 'border-gray-200 bg-gray-50'
+            }`}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${selectedRiskLevel ? 'bg-primary border-primary text-white'
+                : selectedTokenType ? 'border-primary text-primary'
+                  : 'border-gray-300 text-gray-400'
+              }`}>
+              {selectedRiskLevel ? <Check className="w-4 h-4" /> : '2'}
+            </div>
+            <h3 className={`text-lg font-semibold ${selectedTokenType ? 'text-foreground' : 'text-gray-400'}`}>
+              Select Risk Level
+            </h3>
+          </div>
+
+          {!selectedTokenType && (
+            <p className="text-sm text-gray-500 mb-4">Please select a token type first</p>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {riskLevels.map((risk) => (
+              <motion.button
+                key={risk.level}
+                whileHover={selectedTokenType ? { scale: 1.02 } : {}}
+                whileTap={selectedTokenType ? { scale: 0.98 } : {}}
+                onClick={() => selectedTokenType && setSelectedRiskLevel(risk.level)}
+                disabled={!selectedTokenType}
+                className={`p-4 rounded-xl border-2 text-left transition-all duration-300 ${selectedRiskLevel === risk.level
+                    ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
+                    : selectedTokenType
+                      ? `${risk.bgColor} border-opacity-60 hover:border-opacity-100`
+                      : 'border-gray-200 bg-gray-100 cursor-not-allowed'
+                  }`}
+              >
+                <div className={`flex items-center space-x-2 mb-2 ${selectedTokenType ? risk.color : 'text-gray-400'
+                  }`}>
+                  <div className={`w-3 h-3 rounded-full ${risk.level === 'Low' ? 'bg-green-500'
+                      : risk.level === 'Medium' ? 'bg-yellow-500'
+                        : 'bg-red-500'
+                    } ${!selectedTokenType ? 'opacity-40' : ''}`}></div>
+                  <span className="font-semibold">{risk.title}</span>
                 </div>
+                <p className={`text-xs ${selectedTokenType ? 'text-gray-600' : 'text-gray-400'}`}>
+                  {risk.description}
+                </p>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Step 3: Final Token Selection */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{
+            opacity: shouldFetchData ? 1 : 0.5,
+            y: 0
+          }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className={`border-2 rounded-2xl p-6 transition-all duration-300 ${selectedAsset ? 'border-green-200 bg-green-50/50'
+              : shouldFetchData ? 'border-gray-200 bg-white'
+                : 'border-gray-200 bg-gray-50'
+            }`}
+        >
+          <div className="flex items-center space-x-3 mb-4">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${selectedAsset ? 'bg-primary border-primary text-white'
+                : shouldFetchData ? 'border-primary text-primary'
+                  : 'border-gray-300 text-gray-400'
+              }`}>
+              {selectedAsset ? <Check className="w-4 h-4" /> : '3'}
+            </div>
+            <h3 className={`text-lg font-semibold ${shouldFetchData ? 'text-foreground' : 'text-gray-400'}`}>
+              Select Your Token
+            </h3>
+            {shouldFetchData && isLoading && (
+              <div className="text-blue-500 flex items-center space-x-2">
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span className="text-xs text-blue-600 font-medium">Fetching tokens...</span>
               </div>
-            </div>
-          </motion.div>
-
-          {/* Section Separator */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-background px-4 text-gray-500 font-medium">Select Your Token</span>
-            </div>
+            )}
+            {shouldFetchData && !isLoading && !isError && (
+              <div className="text-green-500 flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-xs text-green-600 font-medium">Tokens fetched</span>
+              </div>
+            )}
+            {shouldFetchData && !isLoading && isError && (
+              <div className="text-red-500 flex items-center space-x-2">
+                <XCircle className="w-4 h-4" />
+                <span className="text-xs text-red-600 font-medium">Failed to fetch tokens</span>
+              </div>
+            )}
           </div>
 
-          {/* Enhanced Token Grid */}
-          <div className="mobile-asset-grid">
-            {assets.map((asset, index) => {
-              const isSelected = selectedAsset === asset.symbol
-              return (
-                <motion.button
-                  key={asset.symbol}
-                  type="button"
-                  initial={{ y: 40, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.4 + (index * 0.1) }}
-                  whileHover={{ 
-                    scale: 1.03, 
-                    y: -4,
-                    boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)"
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleAssetSelect(asset)}
-                  className={`
-                    mobile-asset-card relative text-left rounded-2xl p-6 border-2 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-primary/30 group
-                    ${isSelected
-                      ? 'border-primary bg-gradient-to-br from-primary/15 to-primary/10 ring-4 ring-primary/20 shadow-xl'
-                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50 shadow-md'
-                    }
-                  `}
-                >
-                  {/* Enhanced Selection Badge */}
-                  {isSelected && (
-                    <motion.div
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ duration: 0.3, type: "spring" }}
-                      className="absolute -top-3 -right-3 bg-primary text-white text-sm px-3 py-1 rounded-full flex items-center space-x-2 shadow-lg z-10"
+          {!shouldFetchData && (
+            <div className="text-center py-8">
+              <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500 font-medium">Select filters to proceed with Token selection</p>
+              <p className="text-sm text-gray-400 mt-1">Choose a token type and risk level above</p>
+            </div>
+          )}
+
+          {shouldFetchData && isLoading && (
+            <LoadingSectionSkeleton className="h-[200px]" />
+          )}
+
+          {shouldFetchData && !isLoading && assets.length === 0 && (
+            <div className="text-center py-8">
+              <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500 font-medium">No {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} opportunities found</p>
+              <p className="text-sm text-gray-400 mt-1">Try selecting a different risk level</p>
+            </div>
+          )}
+
+          {shouldFetchData && !isLoading && assets.length > 0 && (
+            <>
+              <p className="text-sm text-gray-600 mb-4">
+                Found {assets.length} {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} opportunities
+                {lastRefetch && (
+                  <span className="text-xs text-gray-500 ml-2">
+                    • Last updated: {lastRefetch.toLocaleTimeString()}
+                  </span>
+                )}
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {assets.map((asset, index) => {
+                  const uniqueAssetId = `${asset.symbol}-${asset.protocolIdentifier}`
+                  const isSelected = selectedAsset === uniqueAssetId
+                  return (
+                    <motion.button
+                      key={`${asset.symbol}-${asset.protocolIdentifier}`}
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleAssetSelect(asset)}
+                      className={`relative text-left rounded-xl p-4 border-2 transition-all duration-300 ${isSelected
+                          ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
+                          : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                        }`}
                     >
-                      <Check className="w-4 h-4" />
-                      <span className="font-medium">Selected</span>
-                    </motion.div>
-                  )}
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="absolute -top-2 -right-2 bg-primary text-white text-xs px-2 py-1 rounded-full flex items-center space-x-1"
+                        >
+                          <Check className="w-3 h-3" />
+                          <span>Selected</span>
+                        </motion.div>
+                      )}
 
-                  {/* Token Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-4 flex-1 min-w-0">
-                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
-                        {asset.logo ? (
-                          <img 
-                            src={asset.logo} 
-                            alt={asset.symbol}
-                            className="w-8 h-8 object-contain"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement
-                              target.style.display = 'none'
-                              target.nextElementSibling!.classList.remove('hidden')
-                            }}
-                          />
-                        ) : null}
-                        <span className={`text-lg font-bold text-gray-700 ${asset.logo ? 'hidden' : ''}`}>
-                          {asset.symbol.slice(0, 2)}
-                        </span>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                            {asset.logo ? (
+                              <img
+                                src={asset.logo}
+                                alt={asset.symbol}
+                                className="w-6 h-6 object-contain"
+                              />
+                            ) : (
+                              <span className="text-sm font-bold text-gray-700">
+                                {asset.symbol.slice(0, 2)}
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-foreground">{asset.symbol}</h4>
+                            <p className="text-xs text-gray-500">{asset.platformName.split('-')[0]}</p>
+                          </div>
+                        </div>
+
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${asset.bgColor} ${asset.color} border`}>
+                          {asset.risk}
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors duration-300 truncate">
-                          {asset.symbol}
-                        </h3>
-                        <p className="text-sm text-gray-500 truncate">{asset.name}</p>
+
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-gray-700">APY</span>
+                          <span className="text-lg font-bold text-green-700">{asset.apy}</span>
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Risk Badge - Made smaller and less prominent */}
-                    <div className={`
-                      px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ml-2
-                      ${asset.risk === 'Low' 
-                        ? 'bg-green-50 text-green-700 border-green-200' 
-                        : asset.risk === 'Medium'
-                        ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                        : 'bg-red-50 text-red-700 border-red-200'
-                      }
-                    `}>
-                      {asset.risk}
-                    </div>
-                  </div>
-
-                  {/* APY Display - Enhanced */}
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700">Current APY</span>
-                      <span className="text-2xl font-bold text-green-700">
-                        {asset.apy}
-                      </span>
-                    </div>
-                    <div className="text-xs text-green-600 mt-1">
-                      Real-time rate • Updates every 30 seconds
-                    </div>
-                  </div>
-
-                  {/* Hover Indicator */}
-                  <div className={`
-                    text-center py-2 rounded-lg border-2 border-dashed transition-all duration-300
-                    ${isSelected 
-                      ? 'border-primary bg-primary/5 text-primary' 
-                      : 'border-gray-300 text-gray-500 group-hover:border-primary group-hover:text-primary'
-                    }
-                  `}>
-                    <span className="text-sm font-medium">
-                      {isSelected ? '✓ Selected' : 'Click to select'}
-                    </span>
-                  </div>
-                </motion.button>
-              )
-            })}
-          </div>
-        </div>
+                    </motion.button>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </motion.div>
       </div>
 
-      {/* Live Data Information */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
-        className="mt-4 text-center px-2"
-      >
-        <div className="bg-primary/5 rounded-xl p-3 border border-primary/20">
-          <p className="text-xs text-gray-600">
-            <strong>Live Data:</strong> APY rates are fetched in real-time from leading DeFi protocols. 
-            Risk levels are calculated based on utilization rates, liquidity, and protocol maturity.
-          </p>
-        </div>
-      </motion.div>
-
-      {/* Selection Feedback - Compact for mobile */}
-      {selectedAsset && (
+      {/* Selection Summary */}
+      {selectedAsset && selectedRiskLevel && selectedTokenType && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className="mt-3 text-center px-2"
+          className="mt-6 text-center"
         >
-          <p className="text-xs sm:text-sm text-primary font-medium">
-            Great choice! You&apos;ve selected {selectedAsset}. Click &quot;Next&quot; to proceed.
-          </p>
+          <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
+            <p className="text-sm text-primary font-medium">
+              Perfect! You&apos;ve selected {selectedAsset?.split('-')[0]} with {selectedRiskLevel?.toLowerCase()} risk. Click &quot;Next&quot; to proceed.
+            </p>
+          </div>
         </motion.div>
       )}
     </div>

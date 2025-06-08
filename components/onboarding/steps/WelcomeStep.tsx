@@ -26,10 +26,10 @@ export const WelcomeStep: React.FC = () => {
               Superlend
             </span>
           </h1>
-          <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed px-2 sm:px-4">
+          {/* <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed px-2 sm:px-4">
             Your gateway to DeFi excellence. We&apos;ll guide you through earning, borrowing, 
             and learning about decentralized finance in just a few simple steps.
-          </p>
+          </p> */}
         </div>
       </motion.div>
 
@@ -63,9 +63,9 @@ export const WelcomeStep: React.FC = () => {
           <span className="text-sm sm:text-base">Ready to get started?</span>
           <ArrowRight className="w-4 h-4" />
         </div>
-        <p className="text-gray-500 text-xs sm:text-sm">
+        {/* <p className="text-gray-500 text-xs sm:text-sm">
           This personalized tour takes less than 2 minutes
-        </p>
+        </p> */}
       </motion.div>
     </div>
   )

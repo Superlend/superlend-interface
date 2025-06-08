@@ -191,7 +191,7 @@ export const FinalStep: React.FC = () => {
             'Make your first deposit and start earning',
             'Track your returns in real-time'
           ],
-          cta: 'Start Earning Now',
+          cta: `Deposit ${selectedAsset?.tokenSymbol}`,
           color: 'accent-lightBlue',
           iconBg: 'from-blue-500 to-blue-600',
           iconColor: 'text-white'
@@ -205,7 +205,7 @@ export const FinalStep: React.FC = () => {
             'Set up risk management alerts',
             'Monitor your position health'
           ],
-          cta: 'Start Borrowing',
+          cta: `Borrow against ${selectedAsset?.tokenSymbol}`,
           color: 'accent-lightGreen',
           iconBg: 'from-green-500 to-green-600',
           iconColor: 'text-white'

@@ -89,7 +89,7 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
         }, 1000)
     }
 
-    function handleGetStarted() {
+    function handleStartTour() {
         resetOnboarding()
         setOpen(false) // Close the dropdown/drawer
     }
@@ -212,14 +212,14 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
             </div>
             
             <div className="flex flex-col gap-3">
-                <Button
+                {/* <Button
                     variant="secondaryOutline"
                     size="lg"
                     className="rounded-4 py-3 md:py-2 capitalize w-full flex items-center justify-center gap-2"
-                    onClick={handleGetStarted}
+                    onClick={handleStartTour}
                 >
                     Get started
-                </Button>
+                </Button> */}
                 
             <Button
                 variant="outline"
