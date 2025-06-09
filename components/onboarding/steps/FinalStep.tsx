@@ -202,7 +202,7 @@ export const FinalStep: React.FC = () => {
           description: 'You understand borrowing and are ready to leverage your assets.',
           nextSteps: [
             'Connect your wallet and deposit collateral',
-            'Set up risk management alerts',
+            'Access instant liquidity',
             'Monitor your position health'
           ],
           cta: `Borrow against ${selectedAsset?.tokenSymbol}`,
