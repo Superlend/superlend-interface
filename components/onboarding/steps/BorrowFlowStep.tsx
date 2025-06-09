@@ -5,14 +5,14 @@ import { CreditCard, Lock, ArrowRight, DollarSign } from 'lucide-react'
 export const BorrowFlowStep: React.FC = () => {
   const steps = [
     {
-      icon: <Lock className="w-6 h-6" />,
-      title: "Provide Collateral",
-      description: "Deposit crypto assets as collateral to secure your loan"
-    },
-    {
       icon: <CreditCard className="w-6 h-6" />,
       title: "Choose Loan Asset",
       description: "Select your preferred asset to borrow"
+    },
+    {
+      icon: <Lock className="w-6 h-6" />,
+      title: "Provide Collateral",
+      description: "Deposit crypto assets as collateral to secure your loan"
     },
     {
       icon: <DollarSign className="w-6 h-6" />,
@@ -37,7 +37,7 @@ export const BorrowFlowStep: React.FC = () => {
           How Borrowing Works
         </h2>
         <p className="text-base text-gray-600 max-w-xl mx-auto">
-          Access liquidity without selling your crypto assets. Superlend finds you 
+          Access liquidity without selling your crypto assets. Superlend finds you
           the best borrowing rates across multiple DeFi protocols.
         </p>
       </motion.div>

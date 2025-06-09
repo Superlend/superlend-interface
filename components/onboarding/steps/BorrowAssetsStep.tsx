@@ -58,16 +58,15 @@ export const BorrowAssetsStep: React.FC = () => {
     }
   }, [contextSelectedAsset])
 
-  // Clear state when entering the step to ensure fresh selection
+  // Only clear state when first entering the step, not on every render
   useEffect(() => {
-    if (currentStep === 'borrow-assets') {
-      // Reset all filters and selections for a fresh start
+    if (currentStep === 'borrow-assets' && !contextSelectedAsset) {
+      // Only reset if there's no existing context selection
       setSelectedTokenType(null)
       setSelectedRiskLevel(null)
       setSelectedAsset(null)
-      clearSelectedAsset()
     }
-  }, [currentStep, clearSelectedAsset])
+  }, [currentStep, contextSelectedAsset])
 
   // Only fetch data when both filters are selected
   const shouldFetchData = Boolean(selectedTokenType && selectedRiskLevel)
@@ -77,40 +76,56 @@ export const BorrowAssetsStep: React.FC = () => {
     type: 'borrow',
     enabled: shouldFetchData,
     tokens: selectedTokenType ? [selectedTokenType] : [],
+    trend: true, // Explicitly set trend parameter for consistency
   })
+
+  // Force refetch when both filters are selected to ensure fresh data
+  useEffect(() => {
+    if (shouldFetchData && !isLoading) {
+      console.log('🚀 Both filters selected, forcing refetch')
+      refetch()
+    }
+  }, [shouldFetchData, refetch, selectedTokenType, selectedRiskLevel])
 
   // Auto-refetch when step becomes active or every 30 seconds while active
   useEffect(() => {
     if (currentStep === 'borrow-assets' && shouldFetchData) {
+      console.log('🔄 Triggering data refetch for:', { selectedTokenType, selectedRiskLevel })
+      
       // Initial refetch when step becomes active
       refetch()
 
       // Set up interval for background refetching every 30 seconds
       const interval = setInterval(() => {
+        console.log('🔄 Auto-refetching data for:', { selectedTokenType, selectedRiskLevel })
         refetch()
         setLastRefetch(new Date())
       }, 30000)
 
       return () => clearInterval(interval)
     }
-  }, [currentStep, refetch, shouldFetchData])
+  }, [currentStep, refetch, shouldFetchData, selectedTokenType, selectedRiskLevel])
 
   // Reset dependent states when token type changes
   useEffect(() => {
     if (selectedTokenType) {
-      setSelectedRiskLevel(null)
-      setSelectedAsset(null)
-      // Clear onboarding context when token type changes
-      clearSelectedAsset()
+      // Use setTimeout to prevent race conditions with data fetching
+      setTimeout(() => {
+        setSelectedRiskLevel(null)
+        setSelectedAsset(null)
+        clearSelectedAsset()
+      }, 0)
     }
   }, [selectedTokenType, clearSelectedAsset])
 
   // Reset asset selection when risk level changes
   useEffect(() => {
     if (selectedRiskLevel) {
-      setSelectedAsset(null)
-      // Clear onboarding context when risk level changes
-      clearSelectedAsset()
+      // Use setTimeout to prevent race conditions with data fetching
+      setTimeout(() => {
+        setSelectedAsset(null)
+        clearSelectedAsset()
+      }, 0)
     }
   }, [selectedRiskLevel, clearSelectedAsset])
 
@@ -173,7 +188,17 @@ export const BorrowAssetsStep: React.FC = () => {
 
   // Process opportunities data and filter by selected risk level
   const assets: BorrowAsset[] = useMemo(() => {
-    if (!opportunitiesData?.length || !selectedRiskLevel) return []
+    console.log('🎯 Processing opportunities data:', {
+      dataLength: opportunitiesData?.length || 0,
+      selectedTokenType,
+      selectedRiskLevel,
+      hasData: !!opportunitiesData?.length
+    })
+
+    if (!opportunitiesData?.length || !selectedRiskLevel) {
+      console.log('❌ No data or risk level not selected')
+      return []
+    }
 
     // Filter for the selected token type and process the data
     const filteredOpportunities = opportunitiesData.filter(item => {
@@ -190,7 +215,32 @@ export const BorrowAssetsStep: React.FC = () => {
       const excludeRiskyMorphoMarkets = true
       const shouldExcludeMorphoMarkets = excludeRiskyMorphoMarkets && isMorpho && !isVault
 
-      return isSelectedToken && hasBorrowRate && hasLiquidity && hasMeaningfulLiquidity && !shouldExcludeMorphoMarkets
+      const shouldInclude = isSelectedToken && hasBorrowRate && hasLiquidity && hasMeaningfulLiquidity && !shouldExcludeMorphoMarkets
+
+      if (isSelectedToken) {
+        console.log('🔍 Filtering item:', {
+          symbol: item.token.symbol,
+          isSelectedToken,
+          hasBorrowRate,
+          hasLiquidity,
+          hasMeaningfulLiquidity,
+          shouldExcludeMorphoMarkets,
+          shouldInclude,
+          borrowRate: item.platform.apy.current,
+          liquidity: item.platform.liquidity,
+          liquidityUSD,
+          platformName
+        })
+      }
+
+      return shouldInclude
+    })
+
+    console.log('🎯 Filtered opportunities:', {
+      originalCount: opportunitiesData.length,
+      filteredCount: filteredOpportunities.length,
+      selectedTokenType,
+      tokens: filteredOpportunities.map(item => item.token.symbol)
     })
 
     // Process and filter by risk level
@@ -255,8 +305,6 @@ export const BorrowAssetsStep: React.FC = () => {
   const tokenTypes: { symbol: TokenType; name: string; description: string }[] = [
     { symbol: 'USDC', name: 'USD Coin', description: 'Most liquid stablecoin' },
     { symbol: 'USDT', name: 'Tether', description: 'Largest stablecoin by market cap' },
-    { symbol: 'FRAX', name: 'Frax', description: 'Algorithmic stablecoin' },
-    { symbol: 'DAI', name: 'Dai', description: 'Decentralized stablecoin' },
   ]
 
   // Risk level options
@@ -512,11 +560,33 @@ export const BorrowAssetsStep: React.FC = () => {
             <LoadingSectionSkeleton className="h-[200px]" />
           )}
 
-          {shouldFetchData && !isLoading && assets.length === 0 && (
+          {shouldFetchData && !isLoading && isError && (
+            <div className="text-center py-8">
+              <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+              <p className="text-red-500 font-medium">Failed to load borrowing opportunities</p>
+              <p className="text-sm text-gray-400 mt-1">Check your connection and try again</p>
+              <button
+                onClick={() => refetch()}
+                className="mt-3 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4 inline mr-2" />
+                Retry
+              </button>
+            </div>
+          )}
+
+          {shouldFetchData && !isLoading && !isError && assets.length === 0 && (
             <div className="text-center py-8">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">No {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} borrowing opportunities found</p>
-              <p className="text-sm text-gray-400 mt-1">Try selecting a different risk level</p>
+              <p className="text-sm text-gray-400 mt-1">Try selecting a different risk level or token type</p>
+              <button
+                onClick={() => refetch()}
+                className="mt-3 px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+              >
+                <RefreshCw className="w-4 h-4 inline mr-2" />
+                Refresh Data
+              </button>
             </div>
           )}
 

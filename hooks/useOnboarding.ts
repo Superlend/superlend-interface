@@ -58,7 +58,7 @@ export const useOnboarding = ({
   // Check if user has seen onboarding
   useEffect(() => {
     const hasCompleted = localStorage.getItem(STORAGE_KEY) === 'true'
-    console.log('📱 Initial localStorage check:', { hasCompleted })
+    // console.log('📱 Initial localStorage check:', { hasCompleted })
     setState(prev => ({ 
       ...prev, 
       hasSeenOnboarding: hasCompleted,
@@ -76,9 +76,9 @@ export const useOnboarding = ({
   }, [])
 
   const setStep = useCallback((step: OnboardingStep) => {
-    console.log('📍 setStep called:', step)
+    // console.log('📍 setStep called:', step)
     setState(prev => {
-      console.log('📍 setStep - prev state:', prev.currentStep, '-> new step:', step)
+      // console.log('📍 setStep - prev state:', prev.currentStep, '-> new step:', step)
       return {
         ...prev, 
         currentStep: step,
@@ -225,30 +225,30 @@ export const useOnboarding = ({
     canGoNext: (() => {
       // Can't go next from final step
       if (state.currentStep === 'final') {
-        console.log('canGoNext: false (final step)')
+        // console.log('canGoNext: false (final step)')
         return false
       }
       
       // Can't go next from choose-path without selecting a path
       if (state.currentStep === 'choose-path' && !state.selectedPath) {
-        console.log('canGoNext: false (choose-path without selection)', { selectedPath: state.selectedPath })
+        // console.log('canGoNext: false (choose-path without selection)', { selectedPath: state.selectedPath })
         return false
       }
       
       // Can't go next from earn-assets without selecting an asset
       if (state.currentStep === 'earn-assets' && !state.selectedAsset) {
-        console.log('canGoNext: false (earn-assets without asset selection)', { selectedAsset: state.selectedAsset })
+        // console.log('canGoNext: false (earn-assets without asset selection)', { selectedAsset: state.selectedAsset })
         return false
       }
       
       // Can't go next from borrow-assets without selecting an asset
       if (state.currentStep === 'borrow-assets' && !state.selectedAsset) {
-        console.log('canGoNext: false (borrow-assets without asset selection)', { selectedAsset: state.selectedAsset })
+        // console.log('canGoNext: false (borrow-assets without asset selection)', { selectedAsset: state.selectedAsset })
         return false
       }
       
       // All other cases can proceed
-      console.log('canGoNext: true', { currentStep: state.currentStep, selectedPath: state.selectedPath, selectedAsset: state.selectedAsset })
+      // console.log('canGoNext: true', { currentStep: state.currentStep, selectedPath: state.selectedPath, selectedAsset: state.selectedAsset })
       return true
     })(),
   }

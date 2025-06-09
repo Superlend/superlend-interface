@@ -95,14 +95,14 @@ export const ChoosePathStep: React.FC = () => {
 
   const borrowSteps = [
     {
-      icon: <Lock className="w-6 h-6" />,
-      title: "Provide Collateral",
-      description: "Deposit crypto assets as collateral to secure your loan"
-    },
-    {
       icon: <CreditCard className="w-6 h-6" />,
       title: "Choose Loan Asset",
       description: "Select your preferred asset to borrow"
+    },
+    {
+      icon: <Lock className="w-6 h-6" />,
+      title: "Provide Collateral",
+      description: "Deposit crypto assets as collateral to secure your loan"
     },
     {
       icon: <DollarSign className="w-6 h-6" />,
