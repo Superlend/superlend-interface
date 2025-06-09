@@ -107,7 +107,7 @@ export const useOnboarding = ({
         'welcome': 'choose-path',
         'choose-path': prev.selectedPath === 'earn' ? 'earn-assets' // Skip earn-flow and go directly to earn-assets
                      : prev.selectedPath === 'borrow' ? 'borrow-assets' // Skip borrow-flow and go directly to borrow-assets
-                     : prev.selectedPath === 'learn' ? 'learn-flow'
+                     : prev.selectedPath === 'learn' ? 'learn-basics' // Skip learn-flow and go directly to learn-basics
                      : null, // Don't allow progression without path selection
         'earn-flow': 'earn-assets',
         'earn-assets': 'final',
@@ -147,7 +147,7 @@ export const useOnboarding = ({
         'borrow-assets': 'choose-path', // Go back to choose-path instead of borrow-flow since we skip it
         'borrow-collateral': 'borrow-assets', // Keep this for backwards compatibility but shouldn't be reached
         'learn-flow': 'choose-path',
-        'learn-basics': 'learn-flow',
+        'learn-basics': 'choose-path', // Go back to choose-path instead of learn-flow since we skip it
         'learn-strategies': 'learn-basics',
         'learn-risk': 'learn-strategies',
         'learn-quiz': 'learn-risk',
@@ -183,7 +183,7 @@ export const useOnboarding = ({
   const getStepProgress = useCallback(() => {
     const totalSteps = state.selectedPath === 'earn' ? 3 // Reduced from 4 to 3 steps (removed earn-flow)
                      : state.selectedPath === 'borrow' ? 3 // Reduced from 4 to 3 steps (removed borrow-flow)
-                     : state.selectedPath === 'learn' ? 7
+                     : state.selectedPath === 'learn' ? 6 // Reduced from 7 to 6 steps (removed learn-flow)
                      : 2 // welcome + choose-path
 
     const stepNumbers: Record<OnboardingStep, number> = {
@@ -194,11 +194,11 @@ export const useOnboarding = ({
       'borrow-flow': 3, // This won't be used in the new flow but keeping for backwards compatibility
       'borrow-assets': 3, // Now step 3 instead of 4
       'borrow-collateral': 5, // Keep this but it won't be used in normal flow
-      'learn-flow': 3,
-      'learn-basics': 4,
-      'learn-strategies': 5,
-      'learn-risk': 6,
-      'learn-quiz': 7,
+      'learn-flow': 3, // This won't be used in the new flow but keeping for backwards compatibility
+      'learn-basics': 3, // Now step 3 instead of 4
+      'learn-strategies': 4, // Now step 4 instead of 5
+      'learn-risk': 5, // Now step 5 instead of 6
+      'learn-quiz': 6, // Now step 6 instead of 7
       'final': totalSteps,
     }
 

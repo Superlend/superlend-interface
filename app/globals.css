@@ -66,6 +66,16 @@
         --chart-fluid: 223 98% 62%;
         --chart-superlend: 21 100% 50%;
         --chart-euler: 166 78% 53%;
+        --tertiary-black: 0 0% 0%;
+        --tertiary-navy: 213 84% 18%;
+        --tertiary-blue: 228 100% 55%;
+        --tertiary-green: 143 39% 31%;
+        --tertiary-charcoal: 22 7% 16%;
+        --tertiary-lightblue: 201 100% 85%;
+        --tertiary-lightgreen: 135 100% 92%;
+        --tertiary-yellow: 56 100% 66%;
+        --tertiary-pink: 301 82% 90%;
+        --tertiary-cream: 60 100% 90%;
         --pulse-color: 21, 100%, 50%;
         --duration: 1.3s;
     }
@@ -101,6 +111,16 @@
         --chart-fluid: 223 98% 62%;
         --chart-superlend: 21 100% 50%;
         --chart-euler: 166 78% 53%;
+        --tertiary-black: 0 0% 0%;
+        --tertiary-navy: 213 84% 18%;
+        --tertiary-blue: 228 100% 55%;
+        --tertiary-green: 143 39% 31%;
+        --tertiary-charcoal: 22 7% 16%;
+        --tertiary-lightblue: 201 100% 85%;
+        --tertiary-lightgreen: 135 100% 92%;
+        --tertiary-yellow: 56 100% 66%;
+        --tertiary-pink: 301 82% 90%;
+        --tertiary-cream: 60 100% 90%;
         --pulse-color: 21, 100%, 50%;
         --duration: 1.3s;
     }
