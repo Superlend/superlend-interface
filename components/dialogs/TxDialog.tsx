@@ -20,6 +20,7 @@ import {
     abbreviateNumber,
     capitalizeText,
     checkDecimalPlaces,
+    cn,
     decimalPlacesCount,
     getLowestDisplayValue,
     hasExponent,
@@ -76,6 +77,8 @@ type TLoopAssetDetails = Omit<TAssetDetails, 'asset'> & {
     borrowAsset: TAssetDetails['asset']
     pathTokens: string[]
     pathFees: string[]
+    netAPY: string
+    loopNetAPY: string
 }
 
 // TYPES
@@ -850,6 +853,79 @@ export function ConfirmationDialog({
                             </div>
                         </div>
                     )}
+
+                {/* Current Net APY */}
+                {isShowBlock({
+                    loop: true,
+                }) && (
+                        <div className="flex items-center justify-between gap-2 w-full py-3">
+                            <div className="flex items-center gap-2">
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-gray-600"
+                                >
+                                    Net APY
+                                </BodyText>
+                                <InfoTooltip
+                                    content="Net APY from your existing positions"
+                                />
+                            </div>
+                            <BodyText
+                                level="body2"
+                                weight="medium"
+                                className={cn(
+                                    loopAssetDetails?.netAPY.startsWith('+')
+                                        ? 'text-green-600'
+                                        : loopAssetDetails?.netAPY.startsWith('-')
+                                            ? 'text-red-600'
+                                            : 'text-gray-800'
+                                )}
+                            >
+                                {
+                                    loopAssetDetails?.netAPY || '0.00%'
+                                }
+                            </BodyText>
+                        </div>
+                    )}
+
+                {/* Net APY of Loop */}
+                {isShowBlock({
+                    loop: true,
+                }) && (
+                        <div className="flex items-center justify-between gap-2 w-full py-3">
+                            <div className="flex items-center gap-2">
+                                <BodyText
+                                    level="body2"
+                                    weight="normal"
+                                    className="text-gray-600"
+                                >
+                                    Net APY of Loop
+                                </BodyText>
+                                <InfoTooltip
+                                    content="Projected Net APY for the new looping position"
+                                />
+                            </div>
+                            <BodyText
+                                level="body2"
+                                weight="medium"
+                                className={cn(
+                                    loopAssetDetails?.loopNetAPY && (
+                                        loopAssetDetails?.loopNetAPY.startsWith('+')
+                                            ? 'text-green-600'
+                                            : loopAssetDetails?.loopNetAPY.startsWith('-')
+                                                ? 'text-red-600'
+                                                : 'text-gray-800'
+                                    )
+                                )}
+                            >
+                                {
+                                    loopAssetDetails?.loopNetAPY || '0.00%'
+                                }
+                            </BodyText>
+                        </div>
+                    )}
+
                 {isShowBlock({
                     lend: false,
                     borrow: false,

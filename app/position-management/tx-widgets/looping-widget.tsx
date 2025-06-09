@@ -48,7 +48,9 @@ import { useIguanaDexData } from '@/hooks/protocols/useIguanaDexData'
 import { parseUnits, formatUnits } from 'viem'
 import { useReadContract } from 'wagmi'
 import AAVE_POOL_ABI from '@/data/abi/aaveApproveABI.json'
-import { calculateHealthFactorFromBalancesBigUnits, valueToBigNumber } from '@aave/math-utils'
+import { calculateHealthFactorFromBalancesBigUnits, valueToBigNumber, formatReserves, formatUserSummary } from '@aave/math-utils'
+import BigNumberJS from 'bignumber.js'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
 
 interface LoopingWidgetProps {
     isLoading?: boolean
@@ -94,12 +96,171 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     const [leverage, setLeverage] = useState<number>(1)
     const [newHealthFactor, setNewHealthFactor] = useState<number>(0)
     const [flashLoanAmount, setFlashLoanAmount] = useState<string>('0')
-    const { getMaxLeverage, getBorrowTokenAmountForLeverage, providerStatus } =
+    const { getMaxLeverage, getBorrowTokenAmountForLeverage, providerStatus, getUserData, getReservesData } =
         useAaveV3Data()
+    const userData = getUserData(Number(chain_id))
+    const reservesData = getReservesData(Number(chain_id))
+    
+    const [netAPY, setNetAPY] = useState<{
+        value: string
+        isLoading: boolean
+    }>({
+        value: '',
+        isLoading: false,
+    })
+    
+    const [loopNetAPY, setLoopNetAPY] = useState<{
+        value: string
+        isLoading: boolean
+    }>({
+        value: '',
+        isLoading: false,
+    })
+
+    // Helper function to convert ray format to percentage
+    const rayToPercentage = (rayValue: string): number => {
+        // Ray format has 27 decimals, convert to percentage
+        return (Number(rayValue) / Math.pow(10, 27)) * 100
+    }
+
+    // Calculate net APY for looping position
+    const calculateLoopingNetAPY = () => {
+        if (!selectedLendToken || !selectedBorrowToken || !reservesData?.reservesData || leverage <= 1) {
+            return '0.00%'
+        }
+
+        // Find reserves for selected tokens
+        const lendTokenReserve = reservesData.reservesData.find(
+            (reserve: any) => reserve.underlyingAsset.toLowerCase() === selectedLendToken.address.toLowerCase()
+        )
+        
+        const borrowTokenReserve = reservesData.reservesData.find(
+            (reserve: any) => reserve.underlyingAsset.toLowerCase() === selectedBorrowToken.address.toLowerCase()
+        )
+
+        if (!lendTokenReserve || !borrowTokenReserve) {
+            return '0.00%'
+        }
+
+        // Convert rates from ray format to percentage
+        const supplyAPY = rayToPercentage(lendTokenReserve.liquidityRate || '0')
+        const borrowAPY = rayToPercentage(borrowTokenReserve.variableBorrowRate || '0')
+
+        // Calculate net APY for looping position
+        // Formula: (Supply APY × Leverage) - (Borrow APY × (Leverage - 1))
+        const netAPYValue = (supplyAPY * leverage) - (borrowAPY * (leverage - 1))
+
+        // Format to 2 decimal places with % sign
+        const formattedValue = Math.abs(netAPYValue) < 0.01 && netAPYValue !== 0
+            ? `${netAPYValue >= 0 ? '+' : ''}${netAPYValue < 0.01 ? '<0.01' : netAPYValue.toFixed(2)}%`
+            : `${netAPYValue >= 0 ? '+' : ''}${netAPYValue.toFixed(2)}%`
+        
+        return formattedValue
+    }
+
+    // Calculate user's current net APY from existing positions (similar to useAppDataProvider.tsx)
+    const calculateUserCurrentNetAPY = () => {
+        if (!userData || !reservesData?.reservesData || !walletAddress) {
+            return '0.00%'
+        }
+
+        try {
+            const currentTimestamp = Math.floor(Date.now() / 1000)
+            const baseCurrencyData = reservesData.baseCurrencyData
+            
+            // Format reserves using the same logic as useAppDataProvider
+            const formattedPoolReserves = formatReserves({
+                reserves: reservesData.reservesData as any,
+                currentTimestamp,
+                marketReferenceCurrencyDecimals: baseCurrencyData.marketReferenceCurrencyDecimals,
+                marketReferencePriceInUsd: baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+            })
+
+            // Format user summary
+            const user = formatUserSummary({
+                currentTimestamp,
+                marketReferencePriceInUsd: baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                marketReferenceCurrencyDecimals: baseCurrencyData.marketReferenceCurrencyDecimals,
+                userReserves: userData.userReserves,
+                formattedReserves: formattedPoolReserves as any,
+                userEmodeCategoryId: userData.userEmodeCategoryId,
+            })
+
+            // Calculate proportions like in useAppDataProvider
+            const proportions = user.userReservesData.reduce(
+                (acc: any, value: any) => {
+                    const reserve = formattedPoolReserves.find(
+                        (r: any) => r.underlyingAsset === value.reserve.underlyingAsset
+                    )
+                    if (reserve) {
+                        // Supply APY calculation
+                        if (value.underlyingBalanceUSD !== '0') {
+                            acc.positiveProportion = acc.positiveProportion.plus(
+                                new BigNumberJS(reserve.supplyAPY).multipliedBy(value.underlyingBalanceUSD)
+                            )
+                        }
+                        
+                        // Variable borrow APY calculation
+                        if (value.variableBorrowsUSD !== '0') {
+                            acc.negativeProportion = acc.negativeProportion.plus(
+                                new BigNumberJS(reserve.variableBorrowAPY).multipliedBy(value.variableBorrowsUSD)
+                            )
+                        }
+                        
+                        // Stable borrow APY calculation
+                        if (value.stableBorrowsUSD !== '0') {
+                            acc.negativeProportion = acc.negativeProportion.plus(
+                                new BigNumberJS(value.stableBorrowAPY).multipliedBy(value.stableBorrowsUSD)
+                            )
+                        }
+                    }
+                    return acc
+                },
+                { 
+                    positiveProportion: new BigNumberJS(0), 
+                    negativeProportion: new BigNumberJS(0) 
+                }
+            )
+
+            // Calculate net APY like in useAppDataProvider
+            const earnedAPY = user.totalLiquidityUSD !== '0' 
+                ? proportions.positiveProportion.dividedBy(user.totalLiquidityUSD).toNumber()
+                : 0
+                
+            const debtAPY = user.totalBorrowsUSD !== '0'
+                ? proportions.negativeProportion.dividedBy(user.totalBorrowsUSD).toNumber()
+                : 0
+
+            const netWorthUSD = user.netWorthUSD !== '0' ? user.netWorthUSD : '1'
+            const netAPYValue = 
+                (earnedAPY || 0) * (Number(user.totalLiquidityUSD) / Number(netWorthUSD)) - 
+                (debtAPY || 0) * (Number(user.totalBorrowsUSD) / Number(netWorthUSD))
+
+            // Format the result
+            return `${netAPYValue >= 0 ? '+' : ''}${netAPYValue.toFixed(2)}%`
+            
+        } catch (error) {
+            console.error('Error calculating user current net APY:', error)
+            return '0.00%'
+        }
+    }
     const [maxLeverage, setMaxLeverage] = useState<Record<
         string,
         Record<string, number>
     > | null>(null)
+    
+    // Debug: Log APY calculation details
+    // console.log('APY Debug:', {
+    //     selectedLendToken: selectedLendToken?.symbol,
+    //     selectedBorrowToken: selectedBorrowToken?.symbol,
+    //     leverage,
+    //     currentNetAPY: netAPY.value,
+    //     loopNetAPY: loopNetAPY.value,
+    //     hasUserData: !!userData,
+    //     hasReservesData: !!reservesData?.reservesData,
+    //     walletConnected: !!walletAddress,
+    // })
+    
     const { loopTx } = useTxContext()
     // Token balances
     const {
@@ -243,6 +404,48 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         leverage,
     ])
 
+    // Calculate user's current net APY whenever relevant parameters change
+    useEffect(() => {
+        if (walletAddress && userData && reservesData?.reservesData) {
+            setNetAPY({
+                value: calculateUserCurrentNetAPY(),
+                isLoading: false,
+            })
+        } else if (walletAddress && (!userData || !reservesData?.reservesData)) {
+            setNetAPY({
+                value: '',
+                isLoading: true,
+            })
+        } else {
+            setNetAPY({
+                value: '0.00%',
+                isLoading: false,
+            })
+        }
+    }, [walletAddress, userData, reservesData])
+
+    // Calculate loop net APY whenever relevant parameters change
+    useEffect(() => {
+        if (selectedLendToken && selectedBorrowToken && leverage > 1) {
+            if (reservesData?.reservesData) {
+                setLoopNetAPY({
+                    value: calculateLoopingNetAPY(),
+                    isLoading: false,
+                })
+            } else {
+                setLoopNetAPY({
+                    value: '',
+                    isLoading: true,
+                })
+            }
+        } else {
+            setLoopNetAPY({
+                value: '0.00%',
+                isLoading: false,
+            })
+        }
+    }, [selectedLendToken, selectedBorrowToken, reservesData, leverage])
+
     // Get balance for selected token
     const getTokenBalance = (token: TToken | null) => {
         if (!token || !isWalletConnected) return '0'
@@ -283,7 +486,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
 
     // Get color for health factor
     const getHealthFactorColor = () => {
-        if(newHealthFactor < 1) return 'text-red-600'
+        if (newHealthFactor < 1) return 'text-red-600'
         if (newHealthFactor === currentHealthFactor) return 'text-gray-800'
         if (newHealthFactor < currentHealthFactor) return 'text-yellow-600'
         if (newHealthFactor > currentHealthFactor) return 'text-green-600'
@@ -543,7 +746,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                     </div>
 
                     {/* Health Factor */}
-                    <div className="flex items-center justify-between px-6 py-4 bg-gray-200 lg:bg-white rounded-5">
+                    <div className="flex items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5">
                         <BodyText
                             level="body2"
                             weight="normal"
@@ -603,25 +806,77 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                         </div>
                     </div>
 
-                    {/* USD Information */}
-                    {/* <div className="flex items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5">
+                    {/* Current Net APY */}
+                    <div className="flex items-center justify-between px-6 py-3 bg-gray-200 lg:bg-white rounded-5">
                         <div className="flex items-center gap-2">
                             <BodyText
                                 level="body2"
                                 weight="normal"
                                 className="text-gray-600"
                             >
-                                deposit in USD
+                                Net APY
                             </BodyText>
+                            <InfoTooltip
+                                content="Net APY from your existing positions"
+                            />
                         </div>
                         <BodyText
                             level="body2"
                             weight="medium"
-                            className="text-gray-800"
+                            className={cn(
+                                "text-gray-800",
+                                netAPY.value && !netAPY.isLoading && (
+                                    netAPY.value.startsWith('+') 
+                                        ? 'text-green-600' 
+                                        : netAPY.value.startsWith('-') 
+                                        ? 'text-red-600' 
+                                        : 'text-gray-800'
+                                )
+                            )}
                         >
-                            ${selectedLendToken && lendAmount ? (Number(lendAmount) * selectedLendToken.price_usd).toFixed(2) : '0.00'}
+                            {netAPY.isLoading ? (
+                                <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
+                            ) : (
+                                netAPY.value || '0.00%'
+                            )}
                         </BodyText>
-                    </div> */}
+                    </div>
+
+                    {/* Net APY of Loop */}
+                    <div className="flex items-center justify-between px-6 py-3 bg-gray-200 lg:bg-white rounded-5">
+                        <div className="flex items-center gap-2">
+                            <BodyText
+                                level="body2"
+                                weight="normal"
+                                className="text-gray-600"
+                            >
+                                Net APY of Loop
+                            </BodyText>
+                            <InfoTooltip
+                                content="Projected Net APY for the new looping position"
+                            />
+                        </div>
+                        <BodyText
+                            level="body2"
+                            weight="medium"
+                            className={cn(
+                                "text-gray-800",
+                                loopNetAPY.value && !loopNetAPY.isLoading && (
+                                    loopNetAPY.value.startsWith('+') 
+                                        ? 'text-green-600' 
+                                        : loopNetAPY.value.startsWith('-') 
+                                        ? 'text-red-600' 
+                                        : 'text-gray-800'
+                                )
+                            )}
+                        >
+                            {loopNetAPY.isLoading ? (
+                                <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
+                            ) : (
+                                loopNetAPY.value || '0.00%'
+                            )}
+                        </BodyText>
+                    </div>
 
                     {/* <div className="flex items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5">
                         <div className="flex items-center gap-2">
@@ -683,6 +938,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 // pathTokens, // Fetched in TxDialog
                                 // pathFees, // Fetched in TxDialog
                                 ...platformData?.platform,
+                                netAPY: netAPY.value,
+                                loopNetAPY: loopNetAPY.value,
                             }}
                             lendAmount={lendAmount}
                             borrowAmount={borrowAmount}
