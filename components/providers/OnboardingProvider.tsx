@@ -51,9 +51,15 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     </OnboardingContext.Provider>
   )
 }
-
 // Custom hook to use the onboarding context
-export const useOnboardingContext = () => {
+export const useOnboardingContext = (): ReturnType<typeof useOnboarding> & {
+  positionType: TPositionType
+  setPositionType: (positionType: TPositionType) => void
+  opportunitiesData: any
+  isLoadingOpportunitiesData: boolean
+  isErrorOpportunitiesData: boolean
+  refetchOpportunitiesData: () => void
+} => {
   const context = useContext(OnboardingContext)
   if (!context) {
     throw new Error('useOnboardingContext must be used within an OnboardingProvider')

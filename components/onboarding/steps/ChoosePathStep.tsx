@@ -727,13 +727,13 @@ export const ChoosePathStep: React.FC = () => {
           </div>
 
           {/* Educational Tips */}
-          <motion.div
+          {/* <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 1.0 }}
             className="space-y-6"
           >
-            {/* Section Separator */}
+            // Section Separator
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
@@ -743,7 +743,7 @@ export const ChoosePathStep: React.FC = () => {
               </div>
             </div>
 
-            {/* Quick Tips Row */}
+            // Quick Tips Row
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <motion.div
                 whileHover={{ y: -2 }}
@@ -785,7 +785,7 @@ export const ChoosePathStep: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Enhanced Learn More Section */}
+            // Enhanced Learn More Section
             <motion.div
               whileHover={{ y: -2 }}
               className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-200 rounded-2xl p-6 shadow-lg hover:shadow-xl hover:border-amber-300 transition-all duration-300"
@@ -837,7 +837,7 @@ export const ChoosePathStep: React.FC = () => {
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </motion.div> */}
         </motion.div>
       )}
     </div>

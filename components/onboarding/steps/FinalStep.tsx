@@ -76,7 +76,7 @@ const ConfettiAnimation: React.FC = () => {
 }
 
 export const FinalStep: React.FC = () => {
-  const { selectedPath, selectedAsset, closeOnboarding, setPath, setStep } = useOnboardingContext()
+  const { selectedPath, selectedAsset, closeOnboarding, setPath, setStep, clearSelectedAsset } = useOnboardingContext()
   const router = useRouter()
   const [showConfetti, setShowConfetti] = React.useState(false)
   
@@ -182,6 +182,8 @@ export const FinalStep: React.FC = () => {
 
   const handleStartOver = () => {
     console.log('🔄 Starting over from beginning')
+    // Clear selected asset to ensure fresh selection
+    clearSelectedAsset()
     // Reset to appropriate starting point based on current path
     if (selectedPath === 'learn') {
       setStep('choose-path')
@@ -219,7 +221,7 @@ export const FinalStep: React.FC = () => {
             'Access instant liquidity',
             'Monitor your position health'
           ],
-          cta: `Borrow against ${selectedAsset?.tokenSymbol}`,
+          cta: `Borrow ${selectedAsset?.tokenSymbol}`,
           color: 'accent-lightGreen',
           iconBg: 'from-green-500 to-green-600',
           iconColor: 'text-white'

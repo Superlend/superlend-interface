@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CreditCard, Star, Check, RefreshCw, AlertCircle, ChevronRight, CheckCircle, XCircle } from 'lucide-react'
-import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { useOnboardingContext } from '@/components/providers/OnboardingProvider'
 import { PlatformType } from '@/types/platform'
 import { useAssetsDataContext } from '@/context/data-provider'
+import { getTokenLogo } from '@/lib/utils'
+import Image from 'next/image'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
 
 interface BorrowAsset {
   symbol: string
@@ -40,12 +42,22 @@ interface CollateralToken {
   bgColor: string
 }
 
-type TokenType = 'USDC' | 'USDT' | 'FRAX' | 'DAI' | 'WPOL' | 'EURC'
+type TokenType = 'USDC' | 'USDT' | 'FRAX' | 'DAI' | 'WBTC' | 'WETH'
 type RiskLevel = 'Low' | 'Medium' | 'High'
 
 export const BorrowAssetsStep: React.FC = () => {
-  const [lastRefetch, setLastRefetch] = useState<Date>(new Date())
-  const { setSelectedAsset: setOnboardingSelectedAsset, clearSelectedAsset, currentStep, selectedAsset: contextSelectedAsset } = useOnboardingContext()
+  // const [lastRefetch, setLastRefetch] = useState<Date>(new Date())
+  const {
+    setSelectedAsset: setOnboardingSelectedAsset,
+    clearSelectedAsset, currentStep,
+    selectedAsset: contextSelectedAsset,
+    opportunitiesData,
+    isLoadingOpportunitiesData,
+    isErrorOpportunitiesData,
+    refetchOpportunitiesData,
+    setPositionType,
+    positionType
+  } = useOnboardingContext()
   const { allTokensData } = useAssetsDataContext()
 
   // Filter states
@@ -64,21 +76,46 @@ export const BorrowAssetsStep: React.FC = () => {
   // State to track refresh button visibility
   const [isRefreshButtonHidden, setIsRefreshButtonHidden] = useState(false)
 
-  // Custom refresh handler that manages button visibility
-  const handleRefresh = async () => {
-    try {
-      await refetch()
-      // Hide the refresh button for 3 seconds after successful refresh
-      setIsRefreshButtonHidden(true)
-      setTimeout(() => {
-        setIsRefreshButtonHidden(false)
-      }, 3000)
-      setLastRefetch(new Date())
-    } catch (error) {
-      // If there's an error, don't hide the button
-      console.error('Refresh failed:', error)
-    }
+  // Smooth scroll function with optional delay
+  const smoothScrollToSection = (sectionId: string, delay: number = 0) => {
+    setTimeout(() => {
+      const element = document.getElementById(sectionId)
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }
+    }, delay)
   }
+
+  // Filter opportunities data by selected token type
+  const filteredOpportunitiesByTokenType = useMemo(() => {
+    if (!opportunitiesData?.length) return []
+    return opportunitiesData.filter((item: any) => item.token.symbol.toUpperCase() === selectedTokenType)
+  }, [opportunitiesData, selectedTokenType])
+
+  // Custom refresh handler that manages button visibility
+  // const handleRefresh = async () => {
+  //   try {
+  //     await refetch()
+  //     // Hide the refresh button for 3 seconds after successful refresh
+  //     setIsRefreshButtonHidden(true)
+  //     setTimeout(() => {
+  //       setIsRefreshButtonHidden(false)
+  //     }, 3000)
+  //     setLastRefetch(new Date())
+  //   } catch (error) {
+  //     // If there's an error, don't hide the button
+  //     console.error('Refresh failed:', error)
+  //   }
+  // }
+
+  useEffect(() => {
+    if (positionType === 'lend') {
+      setPositionType('borrow')
+    }
+  }, [])
 
   // Update local state when context changes (e.g., when coming back to this step)
   useEffect(() => {
@@ -98,7 +135,7 @@ export const BorrowAssetsStep: React.FC = () => {
       // Only reset if there's no existing context selection AND we're not preserving user selections
       // This prevents clearing selections when users navigate between steps
       const shouldPreserveSelections = selectedTokenType || selectedRiskLevel || selectedCollateralToken || selectedAsset
-      
+
       if (!shouldPreserveSelections) {
         setSelectedTokenType(null)
         setSelectedRiskLevel(null)
@@ -112,42 +149,42 @@ export const BorrowAssetsStep: React.FC = () => {
   const shouldFetchData = Boolean(selectedTokenType && selectedRiskLevel)
 
   // Fetch real opportunities data with filtering
-  const { data: opportunitiesData, isLoading, isError, refetch } = useGetOpportunitiesData({
-    type: 'borrow',
-    enabled: shouldFetchData,
-    tokens: [], // Fetch all tokens instead of filtering by selectedTokenType
-    trend: true, // Explicitly set trend parameter for consistency
-  })
+  // const { data: opportunitiesData, isLoading, isError, refetch } = useGetOpportunitiesData({
+  //   type: 'borrow',
+  //   enabled: shouldFetchData,
+  //   tokens: [], // Fetch all tokens instead of filtering by selectedTokenType
+  //   trend: true, // Explicitly set trend parameter for consistency
+  // })
 
   // Force refetch when both filters are selected to ensure fresh data
-  useEffect(() => {
-    if (shouldFetchData && !isLoading) {
-      console.log('🚀 Both filters selected, forcing refetch')
-      refetch()
-    }
-  }, [shouldFetchData, refetch, selectedTokenType, selectedRiskLevel])
+  // useEffect(() => {
+  //   if (shouldFetchData && !isLoadingOpportunitiesData) {
+  //     console.log('🚀 Both filters selected, forcing refetch')
+  //     refetchOpportunitiesData()
+  //   }
+  // }, [shouldFetchData, refetchOpportunitiesData, selectedTokenType, selectedRiskLevel])
 
   // Auto-refetch when step becomes active or every 30 seconds while active
-  useEffect(() => {
-    if (currentStep === 'borrow-assets' && shouldFetchData) {
-      console.log('🔄 Triggering data refetch for:', { selectedTokenType, selectedRiskLevel })
+  // useEffect(() => {
+  //   if (currentStep === 'borrow-assets' && shouldFetchData) {
+  //     console.log('🔄 Triggering data refetch for:', { selectedTokenType, selectedRiskLevel })
 
-      // Initial refetch when step becomes active
-      refetch()
+  //     // Initial refetch when step becomes active
+  //     refetchOpportunitiesData()
 
-      // Set up interval for background refetching every 30 seconds
-      const interval = setInterval(() => {
-        // Only auto-refresh if user isn't actively refreshing
-        if (!isLoading && !isRefreshButtonHidden) {
-          console.log('🔄 Auto-refetching data for:', { selectedTokenType, selectedRiskLevel })
-          refetch()
-          setLastRefetch(new Date())
-        }
-      }, 30000)
+  //     // Set up interval for background refetching every 30 seconds
+  //     const interval = setInterval(() => {
+  //       // Only auto-refresh if user isn't actively refreshing
+  //       if (!isLoadingOpportunitiesData && !isRefreshButtonHidden) {
+  //         console.log('🔄 Auto-refetching data for:', { selectedTokenType, selectedRiskLevel })
+  //         refetchOpportunitiesData()
+  //         // setLastRefetch(new Date())
+  //       }
+  //     }, 30000)
 
-      return () => clearInterval(interval)
-    }
-  }, [currentStep, refetch, shouldFetchData, selectedTokenType, selectedRiskLevel])
+  //     return () => clearInterval(interval)
+  //   }
+  // }, [currentStep, refetchOpportunitiesData, shouldFetchData, selectedTokenType, selectedRiskLevel])
 
   /* 
    * STATE MANAGEMENT LOGIC:
@@ -158,7 +195,7 @@ export const BorrowAssetsStep: React.FC = () => {
    * 5. Navigation preservation: Don't reset selections when navigating between steps
    */
 
-  // Reset dependent states when token type changes
+  // Reset dependent states when token type changes and scroll to next section
   useEffect(() => {
     if (selectedTokenType) {
       // Use setTimeout to prevent race conditions with data fetching
@@ -166,13 +203,14 @@ export const BorrowAssetsStep: React.FC = () => {
         setSelectedRiskLevel(null)
         setSelectedCollateralToken(null)
         setSelectedAsset(null)
-        clearSelectedAsset()
         setIsRefreshButtonHidden(false) // Reset refresh button visibility
       }, 0)
+      // Scroll to risk level section
+      smoothScrollToSection('risk-level-section')
     }
-  }, [selectedTokenType, clearSelectedAsset])
+  }, [selectedTokenType])
 
-  // Reset asset selection when risk level changes (but keep collateral selection)
+  // Reset asset selection when risk level changes and scroll to next section
   useEffect(() => {
     if (selectedRiskLevel) {
       // Use setTimeout to prevent race conditions with data fetching
@@ -180,21 +218,23 @@ export const BorrowAssetsStep: React.FC = () => {
         // Only reset collateral and asset if the selected collateral is no longer valid for the new risk level
         // This will be handled by the collateral processing logic automatically
         setSelectedAsset(null)
-        clearSelectedAsset()
         setIsRefreshButtonHidden(false) // Reset refresh button visibility
       }, 0)
+      // Scroll to collateral selection section
+      smoothScrollToSection('collateral-selection-section')
     }
-  }, [selectedRiskLevel, clearSelectedAsset])
+  }, [selectedRiskLevel])
 
-    // Reset final selection when collateral changes (but keep collateral selection itself)
+  // Reset final selection when collateral changes and scroll to next section
   useEffect(() => {
     if (selectedCollateralToken) {
       setTimeout(() => {
         setSelectedAsset(null)
-        clearSelectedAsset()
       }, 0)
+      // Scroll to market selection section
+      smoothScrollToSection('market-selection-section')
     }
-  }, [selectedCollateralToken, clearSelectedAsset])
+  }, [selectedCollateralToken])
 
   // Helper functions for risk styling
   const getRiskColor = (risk: string): string => {
@@ -299,7 +339,6 @@ export const BorrowAssetsStep: React.FC = () => {
     const symbolUpper = symbol.toUpperCase()
     // Handle common symbol variations
     const symbolMap: Record<string, string> = {
-      'WPOL': 'POL', // WPOL might be stored as POL in the API
       'WMATIC': 'MATIC',
       'WETH': 'ETH',
       'WBTC': 'BTC'
@@ -320,18 +359,18 @@ export const BorrowAssetsStep: React.FC = () => {
     console.log('🏷️ Processing collateral tokens with risk filter:', {
       selectedTokenType,
       selectedRiskLevel,
-      totalOpportunities: opportunitiesData?.length || 0
+      totalOpportunities: filteredOpportunitiesByTokenType?.length || 0
     })
-    
+
     // Add detailed debugging for token symbols
-    if (opportunitiesData?.length) {
-      console.log('🔍 Available token symbols in API response:', 
-        Array.from(new Set(opportunitiesData.map(item => item.token.symbol.toUpperCase())))
+    if (filteredOpportunitiesByTokenType?.length) {
+      console.log('🔍 Available token symbols in API response:',
+        Array.from(new Set(filteredOpportunitiesByTokenType.map((item: any) => item.token.symbol.toUpperCase())))
       )
-      
+
       // Log a few sample opportunities for debugging
-      console.log('📊 Sample opportunities (first 3):', 
-        opportunitiesData.slice(0, 3).map(item => ({
+      console.log('📊 Sample opportunities (first 3):',
+        filteredOpportunitiesByTokenType.slice(0, 3).map((item: any) => ({
           symbol: item.token.symbol,
           platformName: item.platform.platform_name,
           borrowRate: item.platform.apy.current,
@@ -339,20 +378,20 @@ export const BorrowAssetsStep: React.FC = () => {
           hasCollateral: item.platform.collateral_tokens?.length > 0
         }))
       )
-      
+
       // Check specifically for selected token type
-      const matchingTokenOpportunities = opportunitiesData.filter(item => 
+      const matchingTokenOpportunities = filteredOpportunitiesByTokenType.filter((item: any) =>
         isTokenMatch(item.token.symbol, selectedTokenType)
       )
       console.log(`🎯 Found ${matchingTokenOpportunities.length} opportunities for ${selectedTokenType}`)
     }
-    
-    if (!opportunitiesData?.length || !selectedRiskLevel) {
+
+    if (!filteredOpportunitiesByTokenType?.length || !selectedRiskLevel) {
       return []
     }
 
     // Filter opportunities first by token type and risk level
-    const filteredOpportunities = opportunitiesData.filter(item => {
+    const filteredOpportunities = filteredOpportunitiesByTokenType.filter((item: any) => {
       const isSelectedToken = isTokenMatch(item.token.symbol, selectedTokenType)
       const hasBorrowRate = Number(item.platform.apy.current) > 0.1
       const hasLiquidity = Number(item.platform.liquidity) > 0
@@ -379,61 +418,61 @@ export const BorrowAssetsStep: React.FC = () => {
       const shouldExcludeMorphoMarkets = excludeRiskyMorphoMarkets && isMorpho && !isVault
       const shouldExcludeEulerMarkets = excludeEulerMarkets && isEuler
 
-              // Add detailed logging for filtering decisions
-        if (isSelectedToken) {
-          console.log(`🔍 Filtering ${item.token.symbol} opportunity:`, {
-            isSelectedToken,
-            hasBorrowRate: `${hasBorrowRate} (rate: ${item.platform.apy.current})`,
-            hasLiquidity: `${hasLiquidity} (liquidity: ${item.platform.liquidity})`,
-            hasMeaningfulLiquidity: `${hasMeaningfulLiquidity} (USD: ${liquidityUSD})`,
-            calculatedRisk: opportunityRisk,
-            selectedRisk: selectedRiskLevel,
-            matchesRiskLevel,
-            platformName,
-            shouldExcludeMorphoMarkets: shouldExcludeMorphoMarkets ? `excluded (isMorpho: ${isMorpho}, isVault: ${isVault})` : 'included',
-            shouldExcludeEulerMarkets: shouldExcludeEulerMarkets ? `excluded (isEuler: ${isEuler})` : 'included'
-          })
-        }
+      // Add detailed logging for filtering decisions
+      if (isSelectedToken) {
+        console.log(`🔍 Filtering ${item.token.symbol} opportunity:`, {
+          isSelectedToken,
+          hasBorrowRate: `${hasBorrowRate} (rate: ${item.platform.apy.current})`,
+          hasLiquidity: `${hasLiquidity} (liquidity: ${item.platform.liquidity})`,
+          hasMeaningfulLiquidity: `${hasMeaningfulLiquidity} (USD: ${liquidityUSD})`,
+          calculatedRisk: opportunityRisk,
+          selectedRisk: selectedRiskLevel,
+          matchesRiskLevel,
+          platformName,
+          shouldExcludeMorphoMarkets: shouldExcludeMorphoMarkets ? `excluded (isMorpho: ${isMorpho}, isVault: ${isVault})` : 'included',
+          shouldExcludeEulerMarkets: shouldExcludeEulerMarkets ? `excluded (isEuler: ${isEuler})` : 'included'
+        })
+      }
 
-        return isSelectedToken && hasBorrowRate && hasLiquidity && hasMeaningfulLiquidity && matchesRiskLevel && !shouldExcludeMorphoMarkets && !shouldExcludeEulerMarkets
+      return isSelectedToken && hasBorrowRate && hasLiquidity && hasMeaningfulLiquidity && matchesRiskLevel && !shouldExcludeMorphoMarkets && !shouldExcludeEulerMarkets
     })
 
     console.log('🎯 Filtered opportunities by risk level:', {
       selectedRiskLevel,
       filteredCount: filteredOpportunities.length,
-      originalCount: opportunitiesData.length
+      originalCount: filteredOpportunitiesByTokenType.length
     })
 
     // Extract and group collateral tokens
-    const collateralMap = new Map<string, { 
+    const collateralMap = new Map<string, {
       address: string,
-      symbol: string, 
-      name: string, 
-      logo: string, 
-      marketCount: number, 
-      platforms: Set<string> 
+      symbol: string,
+      name: string,
+      logo: string,
+      marketCount: number,
+      platforms: Set<string>
     }>()
 
-    filteredOpportunities.forEach(item => {
+    filteredOpportunities.forEach((item: any) => {
       const collateralTokensArray = item.platform.collateral_tokens || []
       const chainId = item.chain_id
-      
+
       collateralTokensArray.forEach((tokenAddress: string) => {
         // Skip null/undefined/empty token addresses
         if (!tokenAddress || typeof tokenAddress !== 'string') return
-        
+
         // Lookup actual token data
         const tokenData = allTokensData[chainId]?.find(
           (asset: any) => asset?.address?.toLowerCase() === tokenAddress.toLowerCase()
         )
-        
+
         // Skip if we can't find token data
         if (!tokenData?.symbol) return
-        
+
         // Use token symbol as key for grouping (since same token can exist on different chains)
         const tokenKey = tokenData.symbol.toUpperCase()
         const existing = collateralMap.get(tokenKey)
-        
+
         if (existing) {
           existing.marketCount += 1
           existing.platforms.add(item.platform.platform_name?.split('-')[0] || '')
@@ -451,7 +490,7 @@ export const BorrowAssetsStep: React.FC = () => {
     })
 
     // Convert to array and calculate risk levels
-    const collateralTokens = Array.from(collateralMap.entries()).map(([tokenKey, data]) => {
+    const collateralTokens = Array.from(collateralMap.entries()).map(([tokenKey, data]: any) => {
       // Since we're filtering opportunities by selected risk level,
       // the collateral token risk should always match what the user selected
       const riskLevel: 'Low' | 'Medium' | 'High' = selectedRiskLevel
@@ -467,13 +506,13 @@ export const BorrowAssetsStep: React.FC = () => {
         bgColor: getRiskBgColor(riskLevel)
       }
     }).sort((a, b) => b.marketCount - a.marketCount) // Sort by market count desc
-    
-    console.log('🏷️ Final collateral tokens for risk level', selectedRiskLevel, ':', 
+
+    console.log('🏷️ Final collateral tokens for risk level', selectedRiskLevel, ':',
       collateralTokens.map(c => ({ symbol: c.symbol, marketCount: c.marketCount, riskLevel: c.riskLevel }))
     )
-    
+
     return collateralTokens
-  }, [opportunitiesData, selectedRiskLevel, selectedTokenType, allTokensData])
+  }, [filteredOpportunitiesByTokenType, selectedRiskLevel, selectedTokenType, allTokensData])
 
   // Validate and potentially clear collateral selection when risk level changes
   useEffect(() => {
@@ -482,7 +521,7 @@ export const BorrowAssetsStep: React.FC = () => {
       const isCollateralStillValid = collateralTokens.some(
         token => token.symbol.toUpperCase() === selectedCollateralToken
       )
-      
+
       if (!isCollateralStillValid) {
         console.log(`🔄 Clearing collateral ${selectedCollateralToken} as it's no longer available for ${selectedRiskLevel} risk`)
         setSelectedCollateralToken(null)
@@ -495,20 +534,20 @@ export const BorrowAssetsStep: React.FC = () => {
   // Process opportunities data and filter by selected risk level and collateral
   const assets: BorrowAsset[] = useMemo(() => {
     console.log('🎯 Processing opportunities data:', {
-      dataLength: opportunitiesData?.length || 0,
+      dataLength: filteredOpportunitiesByTokenType?.length || 0,
       selectedTokenType,
       selectedRiskLevel,
       selectedCollateralToken,
-      hasData: !!opportunitiesData?.length
+      hasData: !!filteredOpportunitiesByTokenType?.length
     })
 
-    if (!opportunitiesData?.length || !selectedRiskLevel || !selectedCollateralToken) {
+    if (!filteredOpportunitiesByTokenType?.length || !selectedRiskLevel || !selectedCollateralToken) {
       console.log('❌ No data or filters not selected')
       return []
     }
 
     // Filter for the selected token type, risk level, and collateral
-    const filteredOpportunities = opportunitiesData.filter(item => {
+    const filteredOpportunities = filteredOpportunitiesByTokenType.filter((item: any) => {
       const isSelectedToken = isTokenMatch(item.token.symbol, selectedTokenType)
       const hasBorrowRate = Number(item.platform.apy.current) > 0.1
       const hasLiquidity = Number(item.platform.liquidity) > 0
@@ -521,12 +560,12 @@ export const BorrowAssetsStep: React.FC = () => {
       const supportsSelectedCollateral = collateralTokensArray.some((tokenAddress: string) => {
         // Skip null/undefined/empty token addresses
         if (!tokenAddress || typeof tokenAddress !== 'string') return false
-        
+
         // Lookup actual token data
         const tokenData = allTokensData[chainId]?.find(
           (asset: any) => asset?.address?.toLowerCase() === tokenAddress.toLowerCase()
         )
-        
+
         // Check if this token symbol matches the selected collateral
         return tokenData?.symbol?.toUpperCase() === selectedCollateralToken
       })
@@ -571,14 +610,14 @@ export const BorrowAssetsStep: React.FC = () => {
     })
 
     console.log('🎯 Filtered opportunities:', {
-      originalCount: opportunitiesData.length,
+      originalCount: filteredOpportunitiesByTokenType.length,
       filteredCount: filteredOpportunities.length,
       selectedTokenType,
-      tokens: filteredOpportunities.map(item => item.token.symbol)
+      tokens: filteredOpportunities.map((item: any) => item.token.symbol)
     })
 
     // Process and filter by risk level
-    const processedAssets = filteredOpportunities.map(item => {
+    const processedAssets = filteredOpportunities.map((item: any) => {
       const totalLiquidity = Number(item.platform.liquidity) * Number(item.token.price_usd)
       const totalBorrows = Number(item.platform.borrows) * Number(item.token.price_usd)
       const availableLiquidity = totalLiquidity - totalBorrows
@@ -624,8 +663,8 @@ export const BorrowAssetsStep: React.FC = () => {
     }
 
     const riskFilteredAssets = processedAssets
-      .filter(asset => asset.risk === selectedRiskLevel)
-      .sort((a, b) => {
+      .filter((asset: any) => asset.risk === selectedRiskLevel)
+      .sort((a: any, b: any) => {
         const aRiskScore = getPlatformRiskScore(a.platformName)
         const bRiskScore = getPlatformRiskScore(b.platformName)
 
@@ -639,7 +678,7 @@ export const BorrowAssetsStep: React.FC = () => {
 
     console.log('🎯 Final filtered borrow assets:', riskFilteredAssets)
     return riskFilteredAssets
-  }, [opportunitiesData, selectedRiskLevel, selectedTokenType, selectedCollateralToken, allTokensData])
+  }, [filteredOpportunitiesByTokenType, selectedRiskLevel, selectedTokenType, selectedCollateralToken, allTokensData])
 
   const handleAssetSelect = (asset: BorrowAsset) => {
     console.log('💰 Borrow asset selected:', asset.symbol, asset.protocolIdentifier)
@@ -655,40 +694,139 @@ export const BorrowAssetsStep: React.FC = () => {
       positionType: 'borrow' as const
     }
     setOnboardingSelectedAsset(assetToStore)
+
+    // Scroll to summary section
+    smoothScrollToSection('selection-summary-section')
   }
 
-  // Token type options
-  const tokenTypes: { symbol: TokenType; name: string; description: string }[] = [
-    { symbol: 'USDC', name: 'USD Coin', description: 'Most liquid stablecoin' },
-    { symbol: 'USDT', name: 'Tether', description: 'Largest stablecoin by market cap' },
-    { symbol: 'WPOL', name: 'Wrapped Polkadot', description: 'Native Polkadot token' },
-    { symbol: 'EURC', name: 'Euro Coin', description: 'Euro-pegged stablecoin' },
+  // Token type options with logos
+  const tokenTypes: { symbol: TokenType; name: string; description: string; logo: string }[] = [
+    {
+      symbol: 'USDC',
+      name: 'USD Coin',
+      description: 'Most liquid stablecoin',
+      logo: '/images/tokens/usdc.webp'
+    },
+    {
+      symbol: 'USDT',
+      name: 'Tether',
+      description: 'Largest stablecoin by market cap',
+      logo: '/images/tokens/usdt.webp'
+    },
+    {
+      symbol: 'WBTC',
+      name: 'Wrapped Bitcoin',
+      description: 'Bitcoin on Ethereum ecosystem',
+      logo: getTokenLogo('WBTC')
+    },
+    {
+      symbol: 'WETH',
+      name: 'Wrapped Ether',
+      description: 'ERC-20 version of Ethereum',
+      logo: getTokenLogo('WETH')
+    },
   ]
 
-  // Risk level options
-  const riskLevels: { level: RiskLevel; title: string; description: string; color: string; bgColor: string }[] = [
-    {
-      level: 'Low',
-      title: 'Low Risk',
-      description: 'Established protocols with competitive rates',
-      color: 'text-green-700',
-      bgColor: 'bg-green-50 border-green-200 hover:bg-green-100'
-    },
-    {
-      level: 'Medium',
-      title: 'Medium Risk',
-      description: 'Moderate rates with balanced exposure',
-      color: 'text-yellow-700',
-      bgColor: 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
-    },
-    {
-      level: 'High',
-      title: 'High Risk',
-      description: 'Higher rates but increased protocol exposure',
-      color: 'text-red-700',
-      bgColor: 'bg-red-50 border-red-200 hover:bg-red-100'
-    },
-  ]
+  // Risk level options with tooltip content
+  const riskLevels: {
+    level: RiskLevel;
+    title: string;
+    description: string;
+    color: string;
+    bgColor: string;
+    tooltipContent: React.ReactNode;
+  }[] = [
+      {
+        level: 'Low',
+        title: 'Low Risk',
+        description: 'Established protocols with competitive rates',
+        color: 'text-green-700',
+        bgColor: 'bg-green-50 border-green-200 hover:bg-green-100',
+        tooltipContent: (
+          <div className="space-y-3">
+            <h4 className="font-semibold text-green-800 text-sm">Low Risk Borrowing Characteristics</h4>
+            <ul className="space-y-1.5 text-xs text-gray-700">
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Borrow rates below 8%</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Utilization rates below 80%</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Liquidity above $1M</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Established platforms (Aave, Superlend)</span>
+              </li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        level: 'Medium',
+        title: 'Medium Risk',
+        description: 'Moderate rates with balanced exposure',
+        color: 'text-yellow-700',
+        bgColor: 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100',
+        tooltipContent: (
+          <div className="space-y-3">
+            <h4 className="font-semibold text-yellow-800 text-sm">Medium Risk Borrowing Characteristics</h4>
+            <ul className="space-y-1.5 text-xs text-gray-700">
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Borrow rates 8-12%</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Utilization rates 80-90%</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Liquidity $100K-$1M</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Medium risk protocols (Compound, Euler)</span>
+              </li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        level: 'High',
+        title: 'High Risk',
+        description: 'Higher rates but increased protocol exposure',
+        color: 'text-red-700',
+        bgColor: 'bg-red-50 border-red-200 hover:bg-red-100',
+        tooltipContent: (
+          <div className="space-y-3">
+            <h4 className="font-semibold text-red-800 text-sm">High Risk Borrowing Characteristics</h4>
+            <ul className="space-y-1.5 text-xs text-gray-700">
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Borrow rates above 12%</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Utilization rates above 90%</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Liquidity below $100K</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>High risk protocols (Morpho, Fluid)</span>
+              </li>
+            </ul>
+          </div>
+        )
+      },
+    ]
 
   // Step indicator component
   const StepIndicator = () => (
@@ -794,6 +932,7 @@ export const BorrowAssetsStep: React.FC = () => {
       <div className="flex-1 space-y-8">
         {/* Step 1: Token Type Selection */}
         <motion.div
+          id="token-type-section"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -820,7 +959,20 @@ export const BorrowAssetsStep: React.FC = () => {
                   : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                   }`}
               >
-                <div className="font-bold text-lg text-foreground">{token.symbol}</div>
+                <div className="flex items-center justify-center space-x-1 mb-2">
+                  <Image
+                    src={token.logo}
+                    alt={token.symbol}
+                    className="w-5 h-5 object-contain"
+                    width={20}
+                    height={20}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                    }}
+                  />
+                  <div className="font-bold text-lg text-foreground">{token.symbol}</div>
+                </div>
                 <div className="text-xs text-gray-600 mt-1">{token.name}</div>
                 <div className="text-xs text-gray-500 mt-1">{token.description}</div>
               </motion.button>
@@ -830,6 +982,7 @@ export const BorrowAssetsStep: React.FC = () => {
 
         {/* Step 2: Risk Level Selection */}
         <motion.div
+          id="risk-level-section"
           initial={{ opacity: 0, y: 20 }}
           animate={{
             opacity: selectedTokenType ? 1 : 0.5,
@@ -879,6 +1032,11 @@ export const BorrowAssetsStep: React.FC = () => {
                       : 'bg-red-500'
                     } ${!selectedTokenType ? 'opacity-40' : ''}`}></div>
                   <span className="font-semibold">{risk.title}</span>
+                  <InfoTooltip
+                    content={risk.tooltipContent}
+                    side="top"
+                    className="max-w-sm"
+                  />
                 </div>
                 <p className={`text-xs ${selectedTokenType ? 'text-gray-600' : 'text-gray-400'}`}>
                   {risk.description}
@@ -890,6 +1048,7 @@ export const BorrowAssetsStep: React.FC = () => {
 
         {/* Step 3: Collateral Selection */}
         <motion.div
+          id="collateral-selection-section"
           initial={{ opacity: 0, y: 20 }}
           animate={{
             opacity: selectedTokenType ? 1 : 0.5,
@@ -911,19 +1070,19 @@ export const BorrowAssetsStep: React.FC = () => {
             <h3 className={`text-lg font-semibold ${selectedTokenType ? 'text-foreground' : 'text-gray-400'}`}>
               Select Collateral Token
             </h3>
-            {shouldFetchData && isLoading && (
+            {shouldFetchData && isLoadingOpportunitiesData && (
               <div className="text-blue-500 flex items-center space-x-2">
                 <RefreshCw className="w-4 h-4 animate-spin" />
                 <span className="text-xs text-blue-600 font-medium">Fetching data...</span>
               </div>
             )}
-            {shouldFetchData && !isLoading && !isError && (
+            {shouldFetchData && !isLoadingOpportunitiesData && !isErrorOpportunitiesData && (
               <div className="text-green-500 flex items-center space-x-2">
                 <CheckCircle className="w-4 h-4" />
                 <span className="text-xs text-green-600 font-medium">Data fetched</span>
               </div>
             )}
-            {shouldFetchData && !isLoading && isError && (
+            {shouldFetchData && !isLoadingOpportunitiesData && isErrorOpportunitiesData && (
               <div className="text-red-500 flex items-center space-x-2">
                 <XCircle className="w-4 h-4" />
                 <span className="text-xs text-red-600 font-medium">Failed to fetch data</span>
@@ -939,11 +1098,11 @@ export const BorrowAssetsStep: React.FC = () => {
             </div>
           )}
 
-          {shouldFetchData && isLoading && (
+          {shouldFetchData && isLoadingOpportunitiesData && (
             <LoadingSectionSkeleton className="h-[200px]" />
           )}
 
-          {shouldFetchData && !isLoading && isError && (
+          {/* {shouldFetchData && !isLoading && isError && (
             <div className="text-center py-8">
               <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
               <p className="text-red-500 font-medium">Failed to load collateral tokens</p>
@@ -964,23 +1123,23 @@ export const BorrowAssetsStep: React.FC = () => {
                 </div>
               )}
             </div>
-          )}
+          )} */}
 
-          {shouldFetchData && !isLoading && !isError && collateralTokens.length === 0 && (
+          {shouldFetchData && !isLoadingOpportunitiesData && !isErrorOpportunitiesData && collateralTokens.length === 0 && (
             <div className="text-center py-8">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">No collateral tokens found for {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} borrowing</p>
               <p className="text-sm text-gray-400 mt-1">
-                {opportunitiesData?.length > 0 ? (
+                {filteredOpportunitiesByTokenType?.length > 0 ? (
                   <>Try selecting a different risk level or consider these available tokens: {' '}
-                  <span className="font-mono text-xs">
-                    {Array.from(new Set(opportunitiesData.map(item => item.token.symbol.toUpperCase()))).slice(0, 5).join(', ')}
-                  </span></>
+                    <span className="font-mono text-xs">
+                      {Array.from(new Set(filteredOpportunitiesByTokenType.map((item: any) => item.token.symbol.toUpperCase()))).slice(0, 5).join(', ')}
+                    </span></>
                 ) : (
                   'Try selecting a different risk level or token type'
                 )}
               </p>
-              {!isRefreshButtonHidden ? (
+              {/* {!isRefreshButtonHidden ? (
                 <button
                   onClick={handleRefresh}
                   disabled={isLoading}
@@ -994,22 +1153,22 @@ export const BorrowAssetsStep: React.FC = () => {
                   <CheckCircle className="w-4 h-4" />
                   <span className="font-medium">Refreshed!</span>
                 </div>
-              )}
+              )} */}
             </div>
           )}
 
-          {shouldFetchData && !isLoading && !isError && collateralTokens.length > 0 && (
+          {shouldFetchData && !isLoadingOpportunitiesData && !isErrorOpportunitiesData && collateralTokens.length > 0 && (
             <>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-600">
                   Found {collateralTokens.length} collateral options for {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} borrowing
-                  {lastRefetch && (
+                  {/* {lastRefetch && (
                     <span className="text-xs text-gray-500 ml-2">
                       • Last updated: {lastRefetch.toLocaleTimeString()}
                     </span>
-                  )}
+                  )} */}
                 </p>
-                {!isRefreshButtonHidden && (
+                {/* {!isRefreshButtonHidden && (
                   <button
                     onClick={handleRefresh}
                     disabled={isLoading}
@@ -1018,17 +1177,17 @@ export const BorrowAssetsStep: React.FC = () => {
                     <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
                     <span>{isLoading ? 'Refreshing...' : 'Refresh'}</span>
                   </button>
-                )}
-                {isRefreshButtonHidden && (
+                )} */}
+                {/* {isRefreshButtonHidden && (
                   <div className="text-xs text-green-600 flex items-center space-x-1">
                     <CheckCircle className="w-3 h-3" />
                     <span>Refreshed!</span>
                   </div>
-                )}
+                )} */}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {collateralTokens.map((collateral, index) => {
+                {collateralTokens.slice(0, 3).map((collateral, index) => {
                   const isSelected = selectedCollateralToken === collateral.symbol.toUpperCase()
                   return (
                     <motion.button
@@ -1098,6 +1257,7 @@ export const BorrowAssetsStep: React.FC = () => {
 
         {/* Step 4: Final Market Selection */}
         <motion.div
+          id="market-selection-section"
           initial={{ opacity: 0, y: 20 }}
           animate={{
             opacity: selectedCollateralToken ? 1 : 0.5,
@@ -1129,11 +1289,11 @@ export const BorrowAssetsStep: React.FC = () => {
             </div>
           )}
 
-          {selectedCollateralToken && isLoading && (
+          {selectedCollateralToken && isLoadingOpportunitiesData && (
             <LoadingSectionSkeleton className="h-[200px]" />
           )}
 
-          {selectedCollateralToken && !isLoading && isError && (
+          {selectedCollateralToken && !isLoadingOpportunitiesData && isErrorOpportunitiesData && (
             <div className="text-center py-8">
               <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
               <p className="text-red-500 font-medium">Failed to load borrowing opportunities</p>
@@ -1141,18 +1301,18 @@ export const BorrowAssetsStep: React.FC = () => {
             </div>
           )}
 
-          {selectedCollateralToken && !isLoading && !isError && assets.length === 0 && (
+          {selectedCollateralToken && !isLoadingOpportunitiesData && !isErrorOpportunitiesData && assets.length === 0 && (
             <div className="text-center py-8">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">No markets found for {selectedTokenType} borrowing with {getCollateralDisplayName()} collateral</p>
               <p className="text-sm text-gray-400 mt-1">
-                {opportunitiesData?.filter(item => isTokenMatch(item.token.symbol, selectedTokenType)).length > 0 ? (
+                {filteredOpportunitiesByTokenType?.filter((item: any) => isTokenMatch(item.token.symbol, selectedTokenType)).length > 0 ? (
                   <>This combination is not available. Try a different collateral token or risk level.</>
                 ) : (
                   <>No {selectedTokenType} borrowing opportunities found. Available tokens: {' '}
-                  <span className="font-mono text-xs">
-                    {Array.from(new Set(opportunitiesData?.map(item => item.token.symbol.toUpperCase()) || [])).slice(0, 5).join(', ')}
-                  </span></>
+                    <span className="font-mono text-xs">
+                      {Array.from(new Set(filteredOpportunitiesByTokenType?.map((item: any) => item.token.symbol.toUpperCase()) || [])).slice(0, 5).join(', ')}
+                    </span></>
                 )}
               </p>
               <div className="text-xs text-gray-400 mt-3">
@@ -1161,19 +1321,19 @@ export const BorrowAssetsStep: React.FC = () => {
             </div>
           )}
 
-          {selectedCollateralToken && !isLoading && !isError && assets.length > 0 && (
+          {selectedCollateralToken && !isLoadingOpportunitiesData && !isErrorOpportunitiesData && assets.length > 0 && (
             <>
               <p className="text-sm text-gray-600 mb-4">
                 Found {assets.length} market{assets.length > 1 ? 's' : ''} for {selectedTokenType} borrowing with {getCollateralDisplayName()} collateral
-                {lastRefetch && (
+                {/* {lastRefetch && (
                   <span className="text-xs text-gray-500 ml-2">
                     • Last updated: {lastRefetch.toLocaleTimeString()}
                   </span>
-                )}
+                )} */}
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {assets.map((asset, index) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {assets.slice(0, 3).map((asset, index) => {
                   const uniqueAssetId = `${asset.symbol}-${asset.protocolIdentifier}`
                   const isSelected = selectedAsset === uniqueAssetId
                   return (
@@ -1228,23 +1388,10 @@ export const BorrowAssetsStep: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3 mb-3">
+                      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3">
                         <div className="flex justify-between items-center">
                           <span className="text-xs font-medium text-gray-700">Borrow Rate</span>
                           <span className="text-lg font-bold text-blue-700">{asset.borrowRate}</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-gray-600">Max LTV</span>
-                          <span className="text-xs font-medium text-gray-700">{asset.maxLtv}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-gray-600">Available</span>
-                          <span className="text-xs font-medium text-gray-700">
-                            ${(asset.availableLiquidity / 1000000).toFixed(1)}M
-                          </span>
                         </div>
                       </div>
                     </motion.button>
@@ -1259,6 +1406,7 @@ export const BorrowAssetsStep: React.FC = () => {
       {/* Selection Summary */}
       {selectedAsset && selectedCollateralToken && selectedRiskLevel && selectedTokenType && (
         <motion.div
+          id="selection-summary-section"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}

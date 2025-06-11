@@ -39,7 +39,8 @@ export const EarnAssetsStep: React.FC = () => {
     opportunitiesData, isLoadingOpportunitiesData,
     isErrorOpportunitiesData,
     refetchOpportunitiesData,
-    positionType
+    positionType,
+    setPositionType
   } = useOnboardingContext()
   // Filter states
   const [selectedTokenType, setSelectedTokenType] = useState<TokenType | null>(null)
@@ -66,6 +67,12 @@ export const EarnAssetsStep: React.FC = () => {
     }, delay)
   }
 
+  useEffect(() => {
+    if (positionType === 'borrow') {
+      setPositionType('lend')
+    }
+  }, [positionType])
+
   // Update local state when context changes (e.g., when coming back to this step)
   useEffect(() => {
     if (contextSelectedAsset?.tokenSymbol && contextSelectedAsset?.protocolIdentifier && contextSelectedAsset.positionType === 'lend') {
@@ -78,16 +85,20 @@ export const EarnAssetsStep: React.FC = () => {
     }
   }, [contextSelectedAsset])
 
-  // Clear state when entering the step to ensure fresh selection
+  // Only clear state when first entering the step, not on every render
   useEffect(() => {
-    if (currentStep === 'earn-assets') {
-      // Reset all filters and selections for a fresh start
-      setSelectedTokenType(null)
-      setSelectedRiskLevel(null)
-      setSelectedAsset(null)
-      clearSelectedAsset()
+    if (currentStep === 'earn-assets' && !contextSelectedAsset) {
+      // Only reset if there's no existing context selection AND we're not preserving user selections
+      // This prevents clearing selections when users navigate between steps
+      const shouldPreserveSelections = selectedTokenType || selectedRiskLevel || selectedAsset
+
+      if (!shouldPreserveSelections) {
+        setSelectedTokenType(null)
+        setSelectedRiskLevel(null)
+        setSelectedAsset(null)
+      }
     }
-  }, [currentStep, clearSelectedAsset])
+  }, [currentStep, contextSelectedAsset])
 
   // Only fetch data when both filters are selected
   const shouldFetchData = Boolean(selectedTokenType && selectedRiskLevel)
@@ -119,23 +130,19 @@ export const EarnAssetsStep: React.FC = () => {
     if (selectedTokenType) {
       setSelectedRiskLevel(null)
       setSelectedAsset(null)
-      // Clear onboarding context when token type changes
-      clearSelectedAsset()
       // Scroll to risk level section
       smoothScrollToSection('risk-level-section')
     }
-  }, [selectedTokenType, clearSelectedAsset])
+  }, [selectedTokenType])
 
   // Reset asset selection when risk level changes and scroll to next section
   useEffect(() => {
     if (selectedRiskLevel) {
       setSelectedAsset(null)
-      // Clear onboarding context when risk level changes
-      clearSelectedAsset()
       // Scroll to token selection section
       smoothScrollToSection('token-selection-section')
     }
-  }, [selectedRiskLevel, clearSelectedAsset])
+  }, [selectedRiskLevel])
 
   // Helper functions for risk styling
   const getRiskColor = (risk: string): string => {
