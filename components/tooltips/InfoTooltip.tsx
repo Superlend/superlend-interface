@@ -34,10 +34,11 @@ type TProps = {
     classNameLabel?: string
 }
 
-const sizes: any = {
+const sizes: Record<string, string> = {
     lg: 'py-[18px] px-[22px]',
     md: 'py-[12px] px-[16px]',
     sm: 'py-[6px] px-[12px]',
+    none: 'p-0',
 }
 
 export default function InfoTooltip({
