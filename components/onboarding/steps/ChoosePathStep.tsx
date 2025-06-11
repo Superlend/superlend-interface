@@ -1,9 +1,10 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, CreditCard, GraduationCap, ArrowRight, Sparkles, Star, Zap, Coins, DollarSign, BookOpen, Info, Shield, Lock } from 'lucide-react'
+import { TrendingUp, CreditCard, GraduationCap, ArrowRight, Sparkles, Star, Zap, Coins, DollarSign, BookOpen, Info, Shield, Lock, CircleHelp } from 'lucide-react'
 import { useOnboardingContext } from '@/components/providers/OnboardingProvider'
 import type { OnboardingPath } from '@/hooks/useOnboarding'
 import { BodyText, HeadingText } from '@/components/ui/typography'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
 
 export const ChoosePathStep: React.FC = () => {
   const { selectedPath, setPath } = useOnboardingContext()
@@ -102,7 +103,29 @@ export const ChoosePathStep: React.FC = () => {
     {
       icon: <Lock className="w-6 h-6" />,
       title: "Provide Collateral",
-      description: "Deposit crypto assets as collateral to secure your loan"
+      description: "Deposit crypto assets as collateral to secure your loan",
+      tooltipContent: () => (
+        <div className="flex flex-col gap-3 max-w-[250px]">
+          <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+            <Shield className="w-4 h-4 text-primary" />
+            <BodyText level="body1" className="font-semibold text-foreground">Why Provide Collateral?</BodyText>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+              <BodyText level="body2" className="text-gray-700 leading-relaxed">
+                <span className="font-medium text-foreground">Secures your loan:</span> Protects lenders and enables competitive borrowing rates
+              </BodyText>
+            </div>
+            <div className="flex items-start gap-2">
+              <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+              <BodyText level="body2" className="text-gray-700 leading-relaxed">
+                <span className="font-medium text-foreground">Smart contract protection:</span> Your assets are safely locked and returned when you repay
+              </BodyText>
+            </div>
+          </div>
+        </div>
+      )
     },
     {
       icon: <DollarSign className="w-6 h-6" />,
@@ -706,6 +729,14 @@ export const ChoosePathStep: React.FC = () => {
                       </div>
                       <h3 className="text-lg font-semibold text-foreground mb-3">
                         {step.title}
+                        {index === 1 && step.tooltipContent && (
+                          <InfoTooltip
+                            label={<Info className="w-4 h-4 text-primary/70 hover:text-primary ml-2 inline cursor-help transition-colors duration-200" />}
+                            content={step.tooltipContent()}
+                            side="top"
+                            className="max-w-[350px]"
+                          />
+                        )}
                       </h3>
                       <p className="text-sm text-gray-600 leading-relaxed flex-1">
                         {step.description}
