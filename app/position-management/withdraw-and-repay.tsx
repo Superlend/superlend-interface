@@ -1009,7 +1009,42 @@ export default function WithdrawAndRepayActionButton({
         }
     }, [isWithdrawRepayTxDialogOpen])
 
+    // Check if user has any borrowings across all platforms and positions
+    function checkUserHasBorrowings(): boolean {
+        if (!portfolioData?.platforms?.length) return false
+        
+        return portfolioData.platforms.some(platform => 
+            platform.positions?.some(position => 
+                position.type === 'borrow' && Number(position.amount) > 0
+            )
+        )
+    }
+
     function getMaxWithdrawAmountForTx() {
+        const userHasBorrowings = checkUserHasBorrowings()
+        
+       
+        if (!userHasBorrowings) {
+            // Use the exact deposited token amount without any conversions
+            const exactTokenAmount = hasSingleToken 
+                ? tokenDetails[0]?.tokenAmount?.toString() ?? '0'
+                : selectedTokenDetails?.tokenAmount?.toString() ?? '0'
+            
+            // Format to remove any unnecessary precision for display
+            const decimals = hasSingleToken 
+                ? tokenDetails[0]?.decimals ?? 0
+                : selectedTokenDetails?.decimals ?? 0
+            
+            const formattedTokenAmount = Number(exactTokenAmount).toFixed(decimals).replace(/\.?0+$/, '')
+            
+            return {
+                maxToWithdraw: exactTokenAmount,
+                maxToWithdrawFormatted: formattedTokenAmount,
+                maxToWithdrawSCValue: 'max', // Special value indicating no slippage needed
+                user: {},
+            }
+        }
+        
         const fallbackMaxWithdrawAmount = {
             maxToWithdraw: '0',
             maxToWithdrawFormatted: '0',
@@ -1283,6 +1318,7 @@ export default function WithdrawAndRepayActionButton({
                     setAmount={setAmount}
                     positionTokenAmount={positionTokenAmount}
                     errorMessage={errorMessage}
+                    userHasNoBorrowings={!checkUserHasBorrowings()}
                 />
             )}
         </section>
