@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { CheckCircle, ArrowRight, Star, Sparkles, ExternalLink as ExternalLinkIcon } from 'lucide-react'
+import { CheckCircle, ArrowRight, Star, Sparkles, ExternalLink as ExternalLinkIcon, RotateCcw } from 'lucide-react'
 import { useOnboardingContext } from '@/components/providers/OnboardingProvider'
 import { useRouter } from 'next/navigation'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
@@ -180,6 +180,20 @@ export const FinalStep: React.FC = () => {
     setStep('borrow-flow')
   }
 
+  const handleStartOver = () => {
+    console.log('🔄 Starting over from beginning')
+    // Reset to appropriate starting point based on current path
+    if (selectedPath === 'learn') {
+      setStep('choose-path')
+    } else if (selectedPath === 'earn') {
+      setStep('earn-assets')
+    } else if (selectedPath === 'borrow') {
+      setStep('borrow-assets')
+    } else {
+      setStep('choose-path')
+    }
+  }
+
   const getPathSpecificContent = () => {
     switch (selectedPath) {
       case 'earn':
@@ -250,7 +264,7 @@ export const FinalStep: React.FC = () => {
       
       <div className="flex flex-col text-center space-y-6 py-6 min-h-full max-w-full">
         {/* Celebration Animation */}
-        <motion.div
+        {/* <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{
@@ -264,7 +278,6 @@ export const FinalStep: React.FC = () => {
             <CheckCircle className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 ${content.iconColor}`} />
           </div>
 
-          {/* Floating sparkles - properly positioned relative to main icon */}
           <motion.div
             animate={{
               rotate: 360,
@@ -297,7 +310,7 @@ export const FinalStep: React.FC = () => {
           >
             <Star className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-400" />
           </motion.div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Success Message */}
         <motion.div
@@ -326,34 +339,34 @@ export const FinalStep: React.FC = () => {
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="w-full max-w-2xl mx-auto px-4"
+          className="w-full max-w-4xl mx-auto px-4"
         >
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-foreground mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-foreground mb-4 sm:mb-6 text-center">
             What&apos;s Next?
           </h2>
 
-          <div className="space-y-2">
+          <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-6">
             {content.nextSteps.map((step, index) => (
               <div key={index} className="relative">
                 <motion.div
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.8 + index * 0.1 }}
-                  className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-4 p-4 sm:p-6 border border-primary/20 hover:shadow-lg transition-all duration-300"
+                  className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-4 p-4 sm:p-6 border border-primary/20 hover:shadow-lg transition-all duration-300 h-full"
                 >
-                  <div className="flex items-center space-x-3 sm:space-x-4">
+                  <div className="flex items-center space-x-3 sm:space-x-4 lg:flex-col lg:space-x-0 lg:space-y-4 lg:text-center h-full">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-base sm:text-lg font-bold text-primary">{index + 1}</span>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm sm:text-base font-medium text-gray-800">{step}</p>
+                    <div className="flex-1 lg:flex lg:items-center lg:justify-center lg:min-h-[60px]">
+                      <p className="text-sm sm:text-base font-medium text-gray-800 leading-relaxed">{step}</p>
                     </div>
                   </div>
                 </motion.div>
 
-                {/* Arrow between steps */}
+                {/* Arrow between steps - Only show on mobile/tablet, not desktop grid */}
                 {index < content.nextSteps.length - 1 && (
-                  <div className="flex justify-center py-2 sm:py-3">
+                  <div className="flex justify-center py-2 sm:py-3 lg:hidden">
                     <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary/20 rounded-full flex items-center justify-center">
                       <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-primary rotate-90" />
                     </div>
@@ -417,25 +430,43 @@ export const FinalStep: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.6 }}
                 className="text-center"
               >
-                <a 
-                  href="https://blog.superlend.xyz/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-gray-50"
-                >
-                  <span>Continue Learning</span>
-                  <ExternalLinkIcon className="w-4 h-4" />
-                </a>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <a 
+                    href="https://blog.superlend.xyz/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-gray-50"
+                  >
+                    <span>Continue Learning</span>
+                    <ExternalLinkIcon className="w-4 h-4" />
+                  </a>
+                  <button
+                    onClick={handleStartOver}
+                    className="inline-flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 font-medium underline underline-offset-2 transition-colors duration-200 px-2 py-1 rounded hover:bg-gray-50"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Start over</span>
+                  </button>
+                </div>
               </motion.div>
             </div>
           ) : (
-            <button
-              onClick={handleGetStarted}
-              disabled={isLoading}
-              className="bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-8 rounded-4 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
-            >
-              {isLoading ? 'Loading...' : content.cta}
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                onClick={handleGetStarted}
+                disabled={isLoading}
+                className="bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-8 rounded-4 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isLoading ? 'Loading...' : content.cta}
+              </button>
+              <button
+                onClick={handleStartOver}
+                className="inline-flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 font-medium underline underline-offset-2 transition-colors duration-200 px-2 py-1 rounded hover:bg-gray-50"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Start over</span>
+              </button>
+            </div>
           )}
         </motion.div>
 

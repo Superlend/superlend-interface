@@ -11,13 +11,13 @@ export const ChoosePathStep: React.FC = () => {
   const handlePathSelect = (path: OnboardingPath, pathTitle: string) => {
     console.log('🎮 Path selected:', path, pathTitle)
     setPath(path)
-    
+
     // Auto-scroll to the respective flow section when selected
     if (path === 'earn') {
       setTimeout(() => {
         const earnFlowSection = document.getElementById('earn-flow-section')
         if (earnFlowSection) {
-          earnFlowSection.scrollIntoView({ 
+          earnFlowSection.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
           })
@@ -27,7 +27,7 @@ export const ChoosePathStep: React.FC = () => {
       setTimeout(() => {
         const borrowFlowSection = document.getElementById('borrow-flow-section')
         if (borrowFlowSection) {
-          borrowFlowSection.scrollIntoView({ 
+          borrowFlowSection.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
           })
@@ -77,14 +77,14 @@ export const ChoosePathStep: React.FC = () => {
 
   const earnSteps = [
     {
-      icon: <TrendingUp className="w-6 h-6" />,
-      title: "Choose Yield Strategy",
-      description: "Compare APYs across different lending protocols and filter from the best options"
-    },
-    {
       icon: <Coins className="w-6 h-6" />,
       title: "Select Your Assets",
       description: "Choose from USDC, ETH, BTC and other supported cryptocurrencies"
+    },
+    {
+      icon: <TrendingUp className="w-6 h-6" />,
+      title: "Choose Yield Strategy",
+      description: "Compare APYs across different lending protocols and filter from the best options"
     },
     {
       icon: <DollarSign className="w-6 h-6" />,
@@ -121,7 +121,7 @@ export const ChoosePathStep: React.FC = () => {
           Choose Your DeFi Journey
         </HeadingText>
         <BodyText level="body1" weight="normal" className="text-base sm:text-lg text-foreground max-w-2xl mx-auto">
-          Select the path that interests you the most. We&apos;ll customize your experience 
+          Select the path that interests you the most. We&apos;ll customize your experience
           and show you exactly how Superlend can help you achieve your goals.
         </BodyText>
       </div>
@@ -135,13 +135,13 @@ export const ChoosePathStep: React.FC = () => {
               key={pathData.path}
               initial={{ y: 40, opacity: 0, scale: 0.9 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
-              transition={{ 
-                duration: 0.6, 
+              transition={{
+                duration: 0.6,
                 delay: index * 0.15,
                 type: "spring",
                 stiffness: 100
               }}
-              whileHover={{ 
+              whileHover={{
                 y: -8,
                 scale: 1.02,
                 transition: { duration: 0.2 }
@@ -152,8 +152,8 @@ export const ChoosePathStep: React.FC = () => {
               <div
                 className={`
                   relative rounded-lg p-6 sm:p-8 border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full min-h-[360px]
-                  ${isSelected 
-                    ? `border-primary ${pathData.gradient} shadow-2xl ring-4 ring-primary/20` 
+                  ${isSelected
+                    ? `border-primary ${pathData.gradient} shadow-2xl ring-4 ring-primary/20`
                     : `border-gray-200 ${pathData.gradient} bg-white/50 backdrop-blur-sm hover:border-primary/50 hover:shadow-2xl group-hover:shadow-2xl hover:bg-white/70`
                   }
                 `}
@@ -162,8 +162,8 @@ export const ChoosePathStep: React.FC = () => {
                 {/* Enhanced hover glow effect */}
                 <div className={`
                   absolute inset-0 rounded-lg transition-all duration-500 -z-10
-                  ${isSelected 
-                    ? `opacity-100 ${pathData.hoverGradient} blur-xl` 
+                  ${isSelected
+                    ? `opacity-100 ${pathData.hoverGradient} blur-xl`
                     : `opacity-0 group-hover:opacity-60 ${pathData.hoverGradient} blur-lg`
                   }
                 `} />
@@ -345,15 +345,15 @@ export const ChoosePathStep: React.FC = () => {
                 <div className="relative z-10 flex-1 flex flex-col">
                   {/* Icon section */}
                   <div className="flex items-center justify-between mb-6">
-                    <motion.div 
+                    <motion.div
                       className={`
                         w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center relative transition-all duration-300
-                        ${isSelected 
-                          ? `${pathData.accentColor} shadow-lg` 
+                        ${isSelected
+                          ? `${pathData.accentColor} shadow-lg`
                           : `bg-gradient-to-br from-gray-100/80 to-gray-200/50 shadow-sm group-hover:shadow-md`
                         }
                       `}
-                      whileHover={{ 
+                      whileHover={{
                         rotate: isSelected ? 360 : 12,
                         scale: isSelected ? 1 : 1.05
                       }}
@@ -369,7 +369,7 @@ export const ChoosePathStep: React.FC = () => {
                       {React.cloneElement(pathData.icon as React.ReactElement, {
                         className: `w-8 h-8 sm:w-10 sm:h-10 transition-colors duration-300 ${isSelected ? 'text-white' : 'text-gray-700 group-hover:text-primary'}`
                       })}
-                      
+
                       {/* Enhanced sparkles for selected */}
                       {isSelected && (
                         <motion.div
@@ -420,7 +420,7 @@ export const ChoosePathStep: React.FC = () => {
                       </motion.div>
                     )}
                   </div>
-                  
+
                   {/* Content section */}
                   <div className="space-y-4 flex-1 flex flex-col">
                     <h3 className={`
@@ -429,17 +429,17 @@ export const ChoosePathStep: React.FC = () => {
                     `}>
                       {pathData.title}
                     </h3>
-                    
+
                     <p className="text-sm sm:text-base text-foreground leading-relaxed flex-1">
                       {pathData.description}
                     </p>
 
                     {/* Enhanced CTA button */}
-                    <motion.div 
+                    <motion.div
                       className={`
                         flex items-center justify-between p-4 rounded-lg transition-all duration-300 mt-auto
-                        ${isSelected 
-                          ? 'bg-primary/10 border border-primary/20' 
+                        ${isSelected
+                          ? 'bg-primary/10 border border-primary/20'
                           : 'bg-gray-50 group-hover:bg-primary/5 border border-gray-200 group-hover:border-primary/30'
                         }
                       `}
@@ -544,13 +544,13 @@ export const ChoosePathStep: React.FC = () => {
           </div>
 
           {/* Educational Tips */}
-          <motion.div
+          {/* <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 1.0 }}
             className="space-y-6"
           >
-            {/* Section Separator */}
+            // Section Separator
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
@@ -560,9 +560,9 @@ export const ChoosePathStep: React.FC = () => {
               </div>
             </div>
 
-            {/* Quick Tips Row */}
+            // Quick Tips Row
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <motion.div 
+              <motion.div
                 whileHover={{ y: -2 }}
                 className="bg-blue-50 border border-blue-200 rounded-xl p-5 text-center hover:shadow-lg hover:border-blue-300 transition-all duration-300"
               >
@@ -574,8 +574,8 @@ export const ChoosePathStep: React.FC = () => {
                   Annual Percentage Yield - your yearly return including compound interest
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 whileHover={{ y: -2 }}
                 className="bg-green-50 border border-green-200 rounded-xl p-5 text-center hover:shadow-lg hover:border-green-300 transition-all duration-300"
               >
@@ -587,8 +587,8 @@ export const ChoosePathStep: React.FC = () => {
                   Begin with low-risk stablecoins to learn before exploring higher yields
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 whileHover={{ y: -2 }}
                 className="bg-purple-50 border border-purple-200 rounded-xl p-5 text-center hover:shadow-lg hover:border-purple-300 transition-all duration-300"
               >
@@ -602,8 +602,8 @@ export const ChoosePathStep: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Enhanced Learn More Section */}
-            <motion.div 
+            // Enhanced Learn More Section
+            <motion.div
               whileHover={{ y: -2 }}
               className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-200 rounded-2xl p-6 shadow-lg hover:shadow-xl hover:border-amber-300 transition-all duration-300"
             >
@@ -614,16 +614,16 @@ export const ChoosePathStep: React.FC = () => {
                 <div className="flex-1">
                   <h4 className="font-bold text-amber-900 text-lg mb-2">Deep Dive into DeFi Strategies</h4>
                   <p className="text-amber-800 mb-4 leading-relaxed">
-                    Want comprehensive understanding? Our Learn path covers everything from DeFi fundamentals 
+                    Want comprehensive understanding? Our Learn path covers everything from DeFi fundamentals
                     to advanced risk management strategies. Plus, explore our blog for the latest insights.
                   </p>
-                  
+
                   <div className="flex flex-wrap gap-3 mb-4">
                     <span className="inline-flex items-center px-3 py-2 bg-white/70 rounded-full text-sm font-medium text-amber-800 border border-amber-200">
                       💡 DeFi Basics
                     </span>
                     <span className="inline-flex items-center px-3 py-2 bg-white/70 rounded-full text-sm font-medium text-amber-800 border border-amber-200">
-                      📈 Earning Strategies  
+                      📈 Earning Strategies
                     </span>
                     <span className="inline-flex items-center px-3 py-2 bg-white/70 rounded-full text-sm font-medium text-amber-800 border border-amber-200">
                       🛡️ Risk Management
@@ -631,17 +631,17 @@ export const ChoosePathStep: React.FC = () => {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <button 
+                    <button
                       onClick={handleStartLearningPath}
                       className="flex items-center justify-center px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors duration-200 text-sm"
                     >
                       <span>Start Learning Path</span>
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </button>
-                    
-                    <a 
-                      href="https://blog.superlend.xyz/" 
-                      target="_blank" 
+
+                    <a
+                      href="https://blog.superlend.xyz/"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center px-4 py-2 bg-white border-2 border-amber-300 text-amber-800 rounded-lg font-medium hover:bg-amber-50 transition-colors duration-200 text-sm"
                     >
@@ -654,7 +654,7 @@ export const ChoosePathStep: React.FC = () => {
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </motion.div> */}
         </motion.div>
       )}
 
@@ -681,7 +681,7 @@ export const ChoosePathStep: React.FC = () => {
               How Borrowing Works
             </h2>
             <p className="text-base text-gray-600 max-w-xl mx-auto">
-              Access liquidity without selling your crypto assets. Superlend finds you 
+              Access liquidity without selling your crypto assets. Superlend finds you
               the best borrowing rates across multiple DeFi protocols.
             </p>
           </motion.div>
@@ -745,7 +745,7 @@ export const ChoosePathStep: React.FC = () => {
 
             {/* Quick Tips Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <motion.div 
+              <motion.div
                 whileHover={{ y: -2 }}
                 className="bg-blue-50 border border-blue-200 rounded-xl p-5 text-center hover:shadow-lg hover:border-blue-300 transition-all duration-300"
               >
@@ -757,8 +757,8 @@ export const ChoosePathStep: React.FC = () => {
                   Keep your collateral ratio healthy to avoid liquidation risks
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 whileHover={{ y: -2 }}
                 className="bg-green-50 border border-green-200 rounded-xl p-5 text-center hover:shadow-lg hover:border-green-300 transition-all duration-300"
               >
@@ -770,8 +770,8 @@ export const ChoosePathStep: React.FC = () => {
                   Start with stable assets and conservative borrowing ratios
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 whileHover={{ y: -2 }}
                 className="bg-purple-50 border border-purple-200 rounded-xl p-5 text-center hover:shadow-lg hover:border-purple-300 transition-all duration-300"
               >
@@ -786,7 +786,7 @@ export const ChoosePathStep: React.FC = () => {
             </div>
 
             {/* Enhanced Learn More Section */}
-            <motion.div 
+            <motion.div
               whileHover={{ y: -2 }}
               className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-200 rounded-2xl p-6 shadow-lg hover:shadow-xl hover:border-amber-300 transition-all duration-300"
             >
@@ -800,13 +800,13 @@ export const ChoosePathStep: React.FC = () => {
                     Want to understand borrowing deeply? Our Learn path covers collateral management,
                     liquidation risks, and advanced borrowing strategies. Explore our blog for expert insights.
                   </p>
-                  
+
                   <div className="flex flex-wrap gap-3 mb-4">
                     <span className="inline-flex items-center px-3 py-2 bg-white/70 rounded-full text-sm font-medium text-amber-800 border border-amber-200">
                       🔒 Collateral Management
                     </span>
                     <span className="inline-flex items-center px-3 py-2 bg-white/70 rounded-full text-sm font-medium text-amber-800 border border-amber-200">
-                      💳 Borrowing Strategies  
+                      💳 Borrowing Strategies
                     </span>
                     <span className="inline-flex items-center px-3 py-2 bg-white/70 rounded-full text-sm font-medium text-amber-800 border border-amber-200">
                       ⚡ Risk Management
@@ -814,17 +814,17 @@ export const ChoosePathStep: React.FC = () => {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <button 
+                    <button
                       onClick={handleStartLearningPath}
                       className="flex items-center justify-center px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors duration-200 text-sm"
                     >
                       <span>Start Learning Path</span>
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </button>
-                    
-                    <a 
-                      href="https://blog.superlend.xyz/" 
-                      target="_blank" 
+
+                    <a
+                      href="https://blog.superlend.xyz/"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center px-4 py-2 bg-white border-2 border-amber-300 text-amber-800 rounded-lg font-medium hover:bg-amber-50 transition-colors duration-200 text-sm"
                     >
