@@ -1,11 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, Star, Check, RefreshCw, AlertCircle, ChevronRight, CheckCircle, XCircle } from 'lucide-react'
-import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { useOnboardingContext } from '@/components/providers/OnboardingProvider'
 import { PlatformType } from '@/types/platform'
-import { useOpportunitiesContext } from '@/context/opportunities-provider'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { getTokenLogo } from '@/lib/utils'
 import Image from 'next/image'
@@ -33,9 +31,16 @@ type TokenType = 'USDC' | 'USDT' | 'WBTC' | 'WETH'
 type RiskLevel = 'Low' | 'Medium' | 'High'
 
 export const EarnAssetsStep: React.FC = () => {
-  const [lastRefetch, setLastRefetch] = useState<Date>(new Date())
-  const { setSelectedAsset: setOnboardingSelectedAsset, clearSelectedAsset, currentStep, selectedAsset: contextSelectedAsset } = useOnboardingContext()
-  const { opportunitiesData, isLoadingOpportunitiesData, isErrorOpportunitiesData, refetchOpportunitiesData, positionType } = useOnboardingContext()
+  // const [lastRefetch, setLastRefetch] = useState<Date>(new Date())
+  const {
+    setSelectedAsset: setOnboardingSelectedAsset,
+    clearSelectedAsset, currentStep,
+    selectedAsset: contextSelectedAsset,
+    opportunitiesData, isLoadingOpportunitiesData,
+    isErrorOpportunitiesData,
+    refetchOpportunitiesData,
+    positionType
+  } = useOnboardingContext()
   // Filter states
   const [selectedTokenType, setSelectedTokenType] = useState<TokenType | null>(null)
   const [selectedRiskLevel, setSelectedRiskLevel] = useState<RiskLevel | null>(null)
@@ -53,7 +58,7 @@ export const EarnAssetsStep: React.FC = () => {
     setTimeout(() => {
       const element = document.getElementById(sectionId)
       if (element) {
-        element.scrollIntoView({ 
+        element.scrollIntoView({
           behavior: 'smooth',
           block: 'start'
         })
@@ -260,132 +265,132 @@ export const EarnAssetsStep: React.FC = () => {
 
   // Token type options with logos
   const tokenTypes: { symbol: TokenType; name: string; description: string; logo: string }[] = [
-    { 
-      symbol: 'USDC', 
-      name: 'USD Coin', 
+    {
+      symbol: 'USDC',
+      name: 'USD Coin',
       description: 'Most liquid stablecoin',
       logo: '/images/tokens/usdc.webp'
     },
-    { 
-      symbol: 'USDT', 
-      name: 'Tether', 
+    {
+      symbol: 'USDT',
+      name: 'Tether',
       description: 'Largest stablecoin by market cap',
       logo: '/images/tokens/usdt.webp'
     },
-    { 
-      symbol: 'WBTC', 
-      name: 'Wrapped Bitcoin', 
+    {
+      symbol: 'WBTC',
+      name: 'Wrapped Bitcoin',
       description: 'Bitcoin on Ethereum with highest market cap',
       logo: getTokenLogo('WBTC')
     },
-    { 
-      symbol: 'WETH', 
-      name: 'Wrapped Ethereum', 
+    {
+      symbol: 'WETH',
+      name: 'Wrapped Ethereum',
       description: 'Ethereum with highest market cap',
       logo: getTokenLogo('WETH')
     },
   ]
 
   // Risk level options with tooltip content
-  const riskLevels: { 
-    level: RiskLevel; 
-    title: string; 
-    description: string; 
-    color: string; 
+  const riskLevels: {
+    level: RiskLevel;
+    title: string;
+    description: string;
+    color: string;
     bgColor: string;
     tooltipContent: React.ReactNode;
   }[] = [
-    {
-      level: 'Low',
-      title: 'Low Risk',
-      description: 'Established protocols with proven track records',
-      color: 'text-green-700',
-      bgColor: 'bg-green-50 border-green-200 hover:bg-green-100',
-      tooltipContent: (
-        <div className="space-y-3">
-          <h4 className="font-semibold text-green-800 text-sm">Low Risk Characteristics</h4>
-          <ul className="space-y-1.5 text-xs text-gray-700">
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Utilization rates below 60%</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>High liquidity above $10M</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Established platforms (Aave, Superlend)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Proven track records & audits</span>
-            </li>
-          </ul>
-        </div>
-      )
-    },
-    {
-      level: 'Medium',
-      title: 'Medium Risk',
-      description: 'Higher yields with moderate exposure',
-      color: 'text-yellow-700',
-      bgColor: 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100',
-      tooltipContent: (
-        <div className="space-y-3">
-          <h4 className="font-semibold text-yellow-800 text-sm">Medium Risk Characteristics</h4>
-          <ul className="space-y-1.5 text-xs text-gray-700">
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Utilization rates 60-80%</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Moderate liquidity $1M-$10M</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Established platforms (Compound, Euler)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Balanced risk-reward profile</span>
-            </li>
-          </ul>
-        </div>
-      )
-    },
-    {
-      level: 'High',
-      title: 'High Risk',
-      description: 'Newest protocols with highest potential',
-      color: 'text-red-700',
-      bgColor: 'bg-red-50 border-red-200 hover:bg-red-100',
-      tooltipContent: (
-        <div className="space-y-3">
-          <h4 className="font-semibold text-red-800 text-sm">High Risk Characteristics</h4>
-          <ul className="space-y-1.5 text-xs text-gray-700">
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Utilization rates above 80%</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Lower liquidity below $1M</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Newer platforms (Morpho markets)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
-              <span>Higher potential returns</span>
-            </li>
-          </ul>
-        </div>
-      )
-    },
-  ]
+      {
+        level: 'Low',
+        title: 'Low Risk',
+        description: 'Established protocols with proven track records',
+        color: 'text-green-700',
+        bgColor: 'bg-green-50 border-green-200 hover:bg-green-100',
+        tooltipContent: (
+          <div className="space-y-3">
+            <h4 className="font-semibold text-green-800 text-sm">Low Risk Characteristics</h4>
+            <ul className="space-y-1.5 text-xs text-gray-700">
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Utilization rates below 60%</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>High liquidity above $10M</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Established platforms (Aave, Superlend)</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Proven track records & audits</span>
+              </li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        level: 'Medium',
+        title: 'Medium Risk',
+        description: 'Higher yields with moderate exposure',
+        color: 'text-yellow-700',
+        bgColor: 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100',
+        tooltipContent: (
+          <div className="space-y-3">
+            <h4 className="font-semibold text-yellow-800 text-sm">Medium Risk Characteristics</h4>
+            <ul className="space-y-1.5 text-xs text-gray-700">
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Utilization rates 60-80%</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Moderate liquidity $1M-$10M</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Established platforms (Compound, Euler)</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Balanced risk-reward profile</span>
+              </li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        level: 'High',
+        title: 'High Risk',
+        description: 'Newest protocols with highest potential',
+        color: 'text-red-700',
+        bgColor: 'bg-red-50 border-red-200 hover:bg-red-100',
+        tooltipContent: (
+          <div className="space-y-3">
+            <h4 className="font-semibold text-red-800 text-sm">High Risk Characteristics</h4>
+            <ul className="space-y-1.5 text-xs text-gray-700">
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Utilization rates above 80%</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Lower liquidity below $1M</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Newer platforms (Morpho markets)</span>
+              </li>
+              <li className="flex items-start space-x-2">
+                <span className="w-1 h-1 bg-red-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                <span>Higher potential returns</span>
+              </li>
+            </ul>
+          </div>
+        )
+      },
+    ]
 
   // Step indicator component
   const StepIndicator = () => (
@@ -494,8 +499,8 @@ export const EarnAssetsStep: React.FC = () => {
                   }`}
               >
                 <div className="flex items-center justify-center space-x-1 mb-2">
-                  <Image 
-                    src={token.logo} 
+                  <Image
+                    src={token.logo}
                     alt={token.symbol}
                     className="w-5 h-5 object-contain"
                     width={20}
@@ -566,7 +571,7 @@ export const EarnAssetsStep: React.FC = () => {
                       : 'bg-red-500'
                     } ${!selectedTokenType ? 'opacity-40' : ''}`}></div>
                   <span className="font-semibold">{risk.title}</span>
-                  <InfoTooltip 
+                  <InfoTooltip
                     content={risk.tooltipContent}
                     side="top"
                     className="max-w-sm"
@@ -648,11 +653,11 @@ export const EarnAssetsStep: React.FC = () => {
             <>
               <p className="text-sm text-gray-600 mb-4">
                 Found {assets.length} {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} opportunities
-                {lastRefetch && (
+                {/* {lastRefetch && (
                   <span className="text-xs text-gray-500 ml-2">
                     • Last updated: {lastRefetch.toLocaleTimeString()}
                   </span>
-                )}
+                )} */}
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
