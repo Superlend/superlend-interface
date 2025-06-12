@@ -51,10 +51,10 @@ export const BorrowAssetsStep: React.FC = () => {
     setSelectedAsset: setOnboardingSelectedAsset,
     clearSelectedAsset, currentStep,
     selectedAsset: contextSelectedAsset,
-    opportunitiesData,
-    isLoadingOpportunitiesData,
-    isErrorOpportunitiesData,
-    refetchOpportunitiesData,
+    borrowOpportunitiesData,
+    isLoadingBorrowOpportunitiesData,
+    isErrorBorrowOpportunitiesData,
+    refetchBorrowOpportunitiesData,
     setPositionType,
     positionType
   } = useOnboardingContext()
@@ -91,9 +91,9 @@ export const BorrowAssetsStep: React.FC = () => {
 
   // Filter opportunities data by selected token type
   const filteredOpportunitiesByTokenType = useMemo(() => {
-    if (!opportunitiesData?.length) return []
-    return opportunitiesData.filter((item: any) => item.token.symbol.toUpperCase() === selectedTokenType)
-  }, [opportunitiesData, selectedTokenType])
+    if (!borrowOpportunitiesData?.length) return []
+    return borrowOpportunitiesData.filter((item: any) => item.token.symbol.toUpperCase() === selectedTokenType)
+  }, [borrowOpportunitiesData, selectedTokenType])
 
   // Custom refresh handler that manages button visibility
   // const handleRefresh = async () => {
@@ -111,11 +111,11 @@ export const BorrowAssetsStep: React.FC = () => {
   //   }
   // }
 
-  useEffect(() => {
-    if (positionType === 'lend') {
-      setPositionType('borrow')
-    }
-  }, [])
+  // useEffect(() => {
+  //   if (positionType === 'lend') {
+  //     setPositionType('borrow')
+  //   }
+  // }, [])
 
   // Update local state when context changes (e.g., when coming back to this step)
   useEffect(() => {
@@ -1073,19 +1073,19 @@ export const BorrowAssetsStep: React.FC = () => {
             <h3 className={`text-lg font-semibold ${selectedTokenType ? 'text-foreground' : 'text-gray-400'}`}>
               Select Collateral Token
             </h3>
-            {shouldFetchData && isLoadingOpportunitiesData && (
+            {shouldFetchData && isLoadingBorrowOpportunitiesData && (
               <div className="text-blue-500 flex items-center space-x-2">
                 <RefreshCw className="w-4 h-4 animate-spin" />
                 <span className="text-xs text-blue-600 font-medium">Fetching data...</span>
               </div>
             )}
-            {shouldFetchData && !isLoadingOpportunitiesData && !isErrorOpportunitiesData && (
+            {shouldFetchData && !isLoadingBorrowOpportunitiesData && !isErrorBorrowOpportunitiesData && (
               <div className="text-green-500 flex items-center space-x-2">
                 <CheckCircle className="w-4 h-4" />
                 <span className="text-xs text-green-600 font-medium">Data fetched</span>
               </div>
             )}
-            {shouldFetchData && !isLoadingOpportunitiesData && isErrorOpportunitiesData && (
+            {shouldFetchData && !isLoadingBorrowOpportunitiesData && isErrorBorrowOpportunitiesData && (
               <div className="text-red-500 flex items-center space-x-2">
                 <XCircle className="w-4 h-4" />
                 <span className="text-xs text-red-600 font-medium">Failed to fetch data</span>
@@ -1101,7 +1101,7 @@ export const BorrowAssetsStep: React.FC = () => {
             </div>
           )}
 
-          {shouldFetchData && isLoadingOpportunitiesData && (
+          {shouldFetchData && isLoadingBorrowOpportunitiesData && (
             <LoadingSectionSkeleton className="h-[200px]" />
           )}
 
@@ -1128,7 +1128,7 @@ export const BorrowAssetsStep: React.FC = () => {
             </div>
           )} */}
 
-          {shouldFetchData && !isLoadingOpportunitiesData && !isErrorOpportunitiesData && collateralTokens.length === 0 && (
+          {shouldFetchData && !isLoadingBorrowOpportunitiesData && !isErrorBorrowOpportunitiesData && collateralTokens.length === 0 && (
             <div className="text-center py-8">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">No collateral tokens found for {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} borrowing</p>
@@ -1160,7 +1160,7 @@ export const BorrowAssetsStep: React.FC = () => {
             </div>
           )}
 
-          {shouldFetchData && !isLoadingOpportunitiesData && !isErrorOpportunitiesData && collateralTokens.length > 0 && (
+          {shouldFetchData && !isLoadingBorrowOpportunitiesData && !isErrorBorrowOpportunitiesData && collateralTokens.length > 0 && (
             <>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-600">
@@ -1292,11 +1292,11 @@ export const BorrowAssetsStep: React.FC = () => {
             </div>
           )}
 
-          {selectedCollateralToken && isLoadingOpportunitiesData && (
+          {selectedCollateralToken && isLoadingBorrowOpportunitiesData && (
             <LoadingSectionSkeleton className="h-[200px]" />
           )}
 
-          {selectedCollateralToken && !isLoadingOpportunitiesData && isErrorOpportunitiesData && (
+          {selectedCollateralToken && !isLoadingBorrowOpportunitiesData && isErrorBorrowOpportunitiesData && (
             <div className="text-center py-8">
               <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
               <p className="text-red-500 font-medium">Failed to load borrowing opportunities</p>
@@ -1304,7 +1304,7 @@ export const BorrowAssetsStep: React.FC = () => {
             </div>
           )}
 
-          {selectedCollateralToken && !isLoadingOpportunitiesData && !isErrorOpportunitiesData && assets.length === 0 && (
+          {selectedCollateralToken && !isLoadingBorrowOpportunitiesData && !isErrorBorrowOpportunitiesData && assets.length === 0 && (
             <div className="text-center py-8">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">No markets found for {selectedTokenType} borrowing with {getCollateralDisplayName()} collateral</p>
@@ -1324,7 +1324,7 @@ export const BorrowAssetsStep: React.FC = () => {
             </div>
           )}
 
-          {selectedCollateralToken && !isLoadingOpportunitiesData && !isErrorOpportunitiesData && assets.length > 0 && (
+          {selectedCollateralToken && !isLoadingBorrowOpportunitiesData && !isErrorBorrowOpportunitiesData && assets.length > 0 && (
             <>
               <p className="text-sm text-gray-600 mb-4">
                 Found {assets.length} market{assets.length > 1 ? 's' : ''} for {selectedTokenType} borrowing with {getCollateralDisplayName()} collateral

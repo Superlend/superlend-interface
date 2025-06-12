@@ -36,9 +36,10 @@ export const EarnAssetsStep: React.FC = () => {
     setSelectedAsset: setOnboardingSelectedAsset,
     clearSelectedAsset, currentStep,
     selectedAsset: contextSelectedAsset,
-    opportunitiesData, isLoadingOpportunitiesData,
-    isErrorOpportunitiesData,
-    refetchOpportunitiesData,
+    lendOpportunitiesData,
+    isLoadingLendOpportunitiesData,
+    isErrorLendOpportunitiesData,
+    refetchLendOpportunitiesData,
     positionType,
     setPositionType
   } = useOnboardingContext()
@@ -67,11 +68,11 @@ export const EarnAssetsStep: React.FC = () => {
     }, delay)
   }
 
-  useEffect(() => {
-    if (positionType === 'borrow') {
-      setPositionType('lend')
-    }
-  }, [positionType])
+  // useEffect(() => {
+  //   if (positionType === 'borrow') {
+  //     setPositionType('lend')
+  //   }
+  // }, [positionType])
 
   // Update local state when context changes (e.g., when coming back to this step)
   useEffect(() => {
@@ -105,9 +106,9 @@ export const EarnAssetsStep: React.FC = () => {
 
   // Filter opportunities data by selected token type
   const filteredOpportunitiesByTokenType = useMemo(() => {
-    if (!opportunitiesData?.length) return []
-    return opportunitiesData.filter((item: any) => item.token.symbol.toUpperCase() === selectedTokenType)
-  }, [opportunitiesData, selectedTokenType])
+    if (!lendOpportunitiesData?.length) return []
+    return lendOpportunitiesData.filter((item: any) => item.token.symbol.toUpperCase() === selectedTokenType)
+  }, [lendOpportunitiesData, selectedTokenType])
 
   // Auto-refetch when step becomes active or every 30 seconds while active
   // useEffect(() => {
@@ -621,19 +622,19 @@ export const EarnAssetsStep: React.FC = () => {
             <h3 className={`text-lg font-semibold ${shouldFetchData ? 'text-foreground' : 'text-gray-400'}`}>
               Select Your Token
             </h3>
-            {shouldFetchData && isLoadingOpportunitiesData && (
+            {shouldFetchData && isLoadingLendOpportunitiesData && (
               <div className="text-blue-500 flex items-center space-x-2">
                 <RefreshCw className="w-4 h-4 animate-spin" />
                 <span className="text-xs text-blue-600 font-medium">Fetching tokens...</span>
               </div>
             )}
-            {shouldFetchData && !isLoadingOpportunitiesData && !isErrorOpportunitiesData && (
+            {shouldFetchData && !isLoadingLendOpportunitiesData && !isErrorLendOpportunitiesData && (
               <div className="text-green-500 flex items-center space-x-2">
                 <CheckCircle className="w-4 h-4" />
                 <span className="text-xs text-green-600 font-medium">Tokens fetched</span>
               </div>
             )}
-            {shouldFetchData && !isLoadingOpportunitiesData && isErrorOpportunitiesData && (
+            {shouldFetchData && !isLoadingLendOpportunitiesData && isErrorLendOpportunitiesData && (
               <div className="text-red-500 flex items-center space-x-2">
                 <XCircle className="w-4 h-4" />
                 <span className="text-xs text-red-600 font-medium">Failed to fetch tokens</span>
@@ -649,11 +650,11 @@ export const EarnAssetsStep: React.FC = () => {
             </div>
           )}
 
-          {shouldFetchData && isLoadingOpportunitiesData && (
+          {shouldFetchData && isLoadingLendOpportunitiesData && (
             <LoadingSectionSkeleton className="h-[200px]" />
           )}
 
-          {shouldFetchData && !isLoadingOpportunitiesData && assets.length === 0 && (
+          {shouldFetchData && !isLoadingLendOpportunitiesData && assets.length === 0 && (
             <div className="text-center py-8">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">No {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} opportunities found</p>
@@ -661,7 +662,7 @@ export const EarnAssetsStep: React.FC = () => {
             </div>
           )}
 
-          {shouldFetchData && !isLoadingOpportunitiesData && assets.length > 0 && (
+          {shouldFetchData && !isLoadingLendOpportunitiesData && assets.length > 0 && (
             <>
               <p className="text-sm text-gray-600 mb-4">
                 Found {assets.length} {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} opportunities

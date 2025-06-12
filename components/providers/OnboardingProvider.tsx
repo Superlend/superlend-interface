@@ -11,10 +11,14 @@ import { TPositionType } from '@/types'
 const OnboardingContext = createContext<ReturnType<typeof useOnboarding> & {
   positionType: TPositionType
   setPositionType: (positionType: TPositionType) => void
-  opportunitiesData: any
-  isLoadingOpportunitiesData: boolean
-  isErrorOpportunitiesData: boolean
-  refetchOpportunitiesData: () => void
+  lendOpportunitiesData: any
+  isLoadingLendOpportunitiesData: boolean
+  isErrorLendOpportunitiesData: boolean
+  refetchLendOpportunitiesData: () => void
+  borrowOpportunitiesData: any
+  isLoadingBorrowOpportunitiesData: boolean
+  isErrorBorrowOpportunitiesData: boolean
+  refetchBorrowOpportunitiesData: () => void
 } | null>(null)
 
 interface OnboardingProviderProps {
@@ -28,12 +32,21 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
 
 
   const {
-    data: opportunitiesData,
-    isLoading: isLoadingOpportunitiesData,
-    isError: isErrorOpportunitiesData,
-    refetch: refetchOpportunitiesData
+    data: lendOpportunitiesData,
+    isLoading: isLoadingLendOpportunitiesData,
+    isError: isErrorLendOpportunitiesData,
+    refetch: refetchLendOpportunitiesData
 } = useGetOpportunitiesData({
-    type: positionType,
+    type: 'lend',
+})
+
+  const {
+    data: borrowOpportunitiesData,
+    isLoading: isLoadingBorrowOpportunitiesData,
+    isError: isErrorBorrowOpportunitiesData,
+    refetch: refetchBorrowOpportunitiesData
+} = useGetOpportunitiesData({
+    type: 'borrow',
 })
 
   return (
@@ -41,10 +54,14 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
       ...onboardingState,
       positionType,
       setPositionType,
-      opportunitiesData,
-      isLoadingOpportunitiesData,
-      isErrorOpportunitiesData,
-      refetchOpportunitiesData
+      lendOpportunitiesData,
+      isLoadingLendOpportunitiesData,
+      isErrorLendOpportunitiesData,
+      refetchLendOpportunitiesData,
+      borrowOpportunitiesData,
+      isLoadingBorrowOpportunitiesData,
+      isErrorBorrowOpportunitiesData,
+      refetchBorrowOpportunitiesData
     }}>
       {children}
       <OnboardingDialog />
@@ -55,10 +72,14 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
 export const useOnboardingContext = (): ReturnType<typeof useOnboarding> & {
   positionType: TPositionType
   setPositionType: (positionType: TPositionType) => void
-  opportunitiesData: any
-  isLoadingOpportunitiesData: boolean
-  isErrorOpportunitiesData: boolean
-  refetchOpportunitiesData: () => void
+  lendOpportunitiesData: any
+  isLoadingLendOpportunitiesData: boolean
+  isErrorLendOpportunitiesData: boolean
+  refetchLendOpportunitiesData: () => void
+  borrowOpportunitiesData: any
+  isLoadingBorrowOpportunitiesData: boolean
+  isErrorBorrowOpportunitiesData: boolean
+  refetchBorrowOpportunitiesData: () => void
 } => {
   const context = useContext(OnboardingContext)
   if (!context) {
