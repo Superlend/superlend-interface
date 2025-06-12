@@ -208,10 +208,15 @@ export const EarnAssetsStep: React.FC = () => {
       const isMorpho = platformName === PlatformType.MORPHO
       const isVault = item.platform.isVault
       const excludeRiskyMorphoMarkets = true
-      const shouldExcludeMorphoMarkets = excludeRiskyMorphoMarkets && isMorpho && !isVault
+      const excludeCompoundMarkets = true
+      const excludeEulerMarkets = true
       const isEuler = platformName === PlatformType.EULER
+      const isCompound = platformName === PlatformType.COMPOUND
+      const shouldExcludeMorphoMarkets = excludeRiskyMorphoMarkets && isMorpho && !isVault
+      const shouldExcludeEulerMarkets = excludeEulerMarkets && isEuler
+      const shouldExcludeCompoundMarkets = excludeCompoundMarkets && isCompound
 
-      return isSelectedToken && hasLendingAPY && hasLiquidity && hasMeaningfulLiquidity && !shouldExcludeMorphoMarkets && !isEuler
+      return isSelectedToken && hasLendingAPY && hasLiquidity && hasMeaningfulLiquidity && !shouldExcludeMorphoMarkets && !shouldExcludeEulerMarkets && !shouldExcludeCompoundMarkets
     })
 
     // Process and filter by risk level

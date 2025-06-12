@@ -412,29 +412,32 @@ export const BorrowAssetsStep: React.FC = () => {
       const platformNameLower = item.platform.platform_name?.split('-')[0]?.toLowerCase()
       const isMorpho = platformNameLower === PlatformType.MORPHO
       const isEuler = platformNameLower === PlatformType.EULER
+      const isCompound = platformNameLower === PlatformType.COMPOUND
       const isVault = item.platform.isVault
       const excludeRiskyMorphoMarkets = true
-      const excludeEulerMarkets = true
+      const excludeEulerMarkets = true 
+      const excludeCompoundMarkets = true
       const shouldExcludeMorphoMarkets = excludeRiskyMorphoMarkets && isMorpho && !isVault
       const shouldExcludeEulerMarkets = excludeEulerMarkets && isEuler
-
+      const shouldExcludeCompoundMarkets = excludeCompoundMarkets && isCompound
       // Add detailed logging for filtering decisions
-      if (isSelectedToken) {
-        console.log(`🔍 Filtering ${item.token.symbol} opportunity:`, {
-          isSelectedToken,
-          hasBorrowRate: `${hasBorrowRate} (rate: ${item.platform.apy.current})`,
-          hasLiquidity: `${hasLiquidity} (liquidity: ${item.platform.liquidity})`,
-          hasMeaningfulLiquidity: `${hasMeaningfulLiquidity} (USD: ${liquidityUSD})`,
-          calculatedRisk: opportunityRisk,
-          selectedRisk: selectedRiskLevel,
-          matchesRiskLevel,
-          platformName,
-          shouldExcludeMorphoMarkets: shouldExcludeMorphoMarkets ? `excluded (isMorpho: ${isMorpho}, isVault: ${isVault})` : 'included',
-          shouldExcludeEulerMarkets: shouldExcludeEulerMarkets ? `excluded (isEuler: ${isEuler})` : 'included'
-        })
-      }
+      // if (isSelectedToken) {
+      //   console.log(`🔍 Filtering ${item.token.symbol} opportunity:`, {
+      //     isSelectedToken,
+      //     hasBorrowRate: `${hasBorrowRate} (rate: ${item.platform.apy.current})`,
+      //     hasLiquidity: `${hasLiquidity} (liquidity: ${item.platform.liquidity})`,
+      //     hasMeaningfulLiquidity: `${hasMeaningfulLiquidity} (USD: ${liquidityUSD})`,
+      //     calculatedRisk: opportunityRisk,
+      //     selectedRisk: selectedRiskLevel,
+      //     matchesRiskLevel,
+      //     platformName,
+      //     shouldExcludeMorphoMarkets: shouldExcludeMorphoMarkets ? `excluded (isMorpho: ${isMorpho}, isVault: ${isVault})` : 'included',
+      //     shouldExcludeEulerMarkets: shouldExcludeEulerMarkets ? `excluded (isEuler: ${isEuler})` : 'included',
+      //     shouldExcludeCompoundMarkets: shouldExcludeCompoundMarkets ? `excluded (isCompound: ${isCompound})` : 'included'
+      //   })
+      // }
 
-      return isSelectedToken && hasBorrowRate && hasLiquidity && hasMeaningfulLiquidity && matchesRiskLevel && !shouldExcludeMorphoMarkets && !shouldExcludeEulerMarkets
+      return isSelectedToken && hasBorrowRate && hasLiquidity && hasMeaningfulLiquidity && matchesRiskLevel && !shouldExcludeMorphoMarkets && !shouldExcludeEulerMarkets && !shouldExcludeCompoundMarkets
     })
 
     console.log('🎯 Filtered opportunities by risk level:', {
