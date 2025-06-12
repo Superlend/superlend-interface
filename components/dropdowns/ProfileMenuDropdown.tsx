@@ -31,6 +31,7 @@ import { Button } from '../ui/button'
 import { TChain } from '@/types/chain'
 import { Check, Copy, LoaderCircle, LogOut } from 'lucide-react'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import { useOnboardingContext } from '@/components/providers/OnboardingProvider'
 
 interface TokenDetails {
     symbol: string
@@ -72,6 +73,7 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
     const [addressIsCopied, setAddressIsCopied] = useState(false)
     const [isLoggingOut, setIsLoggingOut] = useState(false)
     const { logEvent } = useAnalytics()
+    const { resetOnboarding } = useOnboardingContext()
 
     useEffect(() => {
         logEvent('wallet_connected', {
@@ -85,6 +87,11 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
         setTimeout(() => {
             setAddressIsCopied(false)
         }, 1000)
+    }
+
+    function handleStartTour() {
+        resetOnboarding()
+        setOpen(false) // Close the dropdown/drawer
     }
 
     function handleLogout() {
@@ -203,6 +210,17 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
                     )}
                 </Button>
             </div>
+            
+            <div className="flex flex-col gap-3">
+                {/* <Button
+                    variant="secondaryOutline"
+                    size="lg"
+                    className="rounded-4 py-3 md:py-2 capitalize w-full flex items-center justify-center gap-2"
+                    onClick={handleStartTour}
+                >
+                    Get started
+                </Button> */}
+                
             <Button
                 variant="outline"
                 size="lg"
@@ -217,6 +235,7 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
                     <LogOut className="w-4 h-4" />
                 )}
             </Button>
+            </div>
         </div>
     )
 

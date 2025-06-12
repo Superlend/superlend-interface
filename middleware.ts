@@ -15,11 +15,12 @@ export function middleware(request: NextRequest) {
     }
 
     // Define allowed origins
-    const allowedOrigins = ['https://app.superlend.xyz', 'https://deploy-preview-112--superlend.netlify.app'];
+    const allowedOrigins = ['https://app.superlend.xyz'];
     
     // In development mode, allow localhost
     if (process.env.NODE_ENV === 'development') {
         allowedOrigins.push('http://localhost:3000');
+        allowedOrigins.push('http://localhost:3001');
     }
     
     const origin = request.headers.get('origin');
