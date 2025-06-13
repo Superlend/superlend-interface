@@ -1,4 +1,5 @@
-import { ProxyProvider } from './proxy-provider';
+import { getDirectProvider } from './direct-providers';
+import { providers } from 'ethers';
 
 // Store for prefetched data
 const prefetchStore: Record<string, any> = {};
@@ -12,14 +13,21 @@ export async function prefetchBlockchainData(chainIds: number[]): Promise<void> 
     console.log('Prefetching blockchain data...');
     
     // Create providers for each chain
-    const providers: Record<number, ProxyProvider> = {};
+    const providersRecord: Record<number, providers.JsonRpcProvider> = {};
     for (const chainId of chainIds) {
-      providers[chainId] = new ProxyProvider(chainId);
+      const provider = getDirectProvider(chainId);
+      if (provider) {
+        providersRecord[chainId] = provider;
+      }
     }
     
     // Prefetch in parallel for all chains
     await Promise.all(chainIds.map(async (chainId) => {
-      const provider = providers[chainId];
+      const provider = providersRecord[chainId];
+      if (!provider) {
+        console.warn(`No provider available for chain ${chainId}`);
+        return;
+      }
       
       try {
         // Prefetch latest block
