@@ -12,6 +12,8 @@ export type TTxContext = {
     setRepayTx: any
     withdrawTx: TWithdrawTx
     setWithdrawTx: any
+    loopTx: TLoopTx
+    setLoopTx: any
     isLendBorrowTxDialogOpen: boolean
     setIsLendBorrowTxDialogOpen: any
     isWithdrawRepayTxDialogOpen: boolean
@@ -29,7 +31,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setLendTx: () => {},
+    setLendTx: () => { },
     borrowTx: {
         status: 'borrow',
         hash: '',
@@ -38,7 +40,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setBorrowTx: () => {},
+    setBorrowTx: () => { },
     repayTx: {
         status: 'approve',
         hash: '',
@@ -49,7 +51,7 @@ const TxInitialState: TTxContext = {
         isConfirming: false,
         isConfirmed: false,
     },
-    setRepayTx: () => {},
+    setRepayTx: () => { },
     withdrawTx: {
         status: 'approve',
         hash: '',
@@ -60,11 +62,21 @@ const TxInitialState: TTxContext = {
         isRefreshingAllowance: false,
         allowanceBN: BigNumber.from(0),
     },
-    setWithdrawTx: () => {},
+    loopTx: {
+        status: 'approve',
+        hash: '',
+        errorMessage: '',
+        isPending: false,
+        isConfirming: false,
+        isConfirmed: false,
+        hasCreditDelegation: false,
+    },
+    setLoopTx: () => { },
+    setWithdrawTx: () => { },
     isLendBorrowTxDialogOpen: false,
-    setIsLendBorrowTxDialogOpen: () => {},
+    setIsLendBorrowTxDialogOpen: () => { },
     isWithdrawRepayTxDialogOpen: false,
-    setIsWithdrawRepayTxDialogOpen: () => {},
+    setIsWithdrawRepayTxDialogOpen: () => { },
 }
 
 export const TxContext = createContext<TTxContext>(TxInitialState)
@@ -88,6 +100,7 @@ export type TBorrowTx = {
     isConfirming: boolean
     isConfirmed: boolean
 }
+
 export type TRepayTx = {
     status: 'approve' | 'repay' | 'view'
     hash: string
@@ -108,6 +121,16 @@ export type TWithdrawTx = {
     isConfirmed: boolean
     isRefreshingAllowance: boolean
     allowanceBN: BigNumber
+}
+
+export type TLoopTx = {
+    status: 'approve' | 'credit_delegation' | 'loop' | 'view'
+    hash: string
+    errorMessage: string
+    isPending: boolean
+    isConfirming: boolean
+    isConfirmed: boolean
+    hasCreditDelegation: boolean
 }
 
 export default function TxProvider({
@@ -157,6 +180,16 @@ export default function TxProvider({
         allowanceBN: BigNumber.from(0),
     })
 
+    const [loopTx, setLoopTx] = useState<TLoopTx>({
+        status: 'approve',
+        hash: '',
+        errorMessage: '',
+        isPending: false,
+        isConfirming: false,
+        isConfirmed: false,
+        hasCreditDelegation: false,
+    })
+
     const [isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen] =
         useState(false)
     const [isWithdrawRepayTxDialogOpen, setIsWithdrawRepayTxDialogOpen] =
@@ -173,6 +206,8 @@ export default function TxProvider({
                 setRepayTx,
                 withdrawTx,
                 setWithdrawTx,
+                loopTx,
+                setLoopTx,
                 isLendBorrowTxDialogOpen,
                 setIsLendBorrowTxDialogOpen,
                 isWithdrawRepayTxDialogOpen,

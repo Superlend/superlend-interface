@@ -25,7 +25,7 @@ export type TPlatform = {
         name: string
         platform_name: string
         protocol_identifier: string
-        protocol_type: 'aaveV3' | 'compoundV2' | 'morpho' | 'fluid' | 'euler'
+        protocol_type: ProtocolType
         logo: string
         chain_id: number
         vaultId: string
@@ -157,3 +157,5 @@ export enum PlatformTypeMap {
     euler = 'Euler',
     superlend = 'Superlend',
 }
+
+export type ProtocolType = 'aaveV3' | 'compoundV2' | 'morpho' | 'fluid' | 'euler'

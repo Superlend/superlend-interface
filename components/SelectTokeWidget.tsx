@@ -14,12 +14,13 @@ import { Skeleton } from './ui/skeleton'
 import ImageWithDefault from './ImageWithDefault'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import { TPositionType } from '@/types'
 
 interface ISelectTokeWidgetProps {
     setOpenSelectTokenDialog: (open: boolean) => void
     selectedToken: any
     opportunitiesData: any
-    positionType: 'lend' | 'borrow'
+    positionType: TPositionType
     setShowOpportunitiesTable: (show: boolean) => void
     isLoadingOpportunities: boolean
     tokenBalance: number

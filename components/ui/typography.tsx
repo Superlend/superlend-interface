@@ -94,6 +94,7 @@ const bodySizes: Record<string, string> = {
     body1: 'text-[14px] sm:text-[16px]',
     body2: 'text-[12px] sm:text-[14px]',
     body3: 'text-[12px]',
+    custom: '',
 }
 
 const getBodyClassName = (
