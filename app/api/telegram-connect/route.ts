@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { validateTelegramUsername } from '@/services/telegram-service';
 import { supabaseServer } from '@/lib/supabase-client';
-import { validateRequestCsrfToken } from '@/lib/csrf-protection';
 import { applyRateLimit, getClientIp } from '@/lib/rate-limiter';
 
 /**
@@ -45,15 +44,7 @@ function getErrorMessage(error: any): string {
  */
 export async function POST(request: Request) {
   try {
-    // 1. Check CSRF token
-    if (!validateRequestCsrfToken(request)) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid or missing CSRF token' },
-        { status: 403 }
-      );
-    }
-    
-    // 2. Apply rate limiting
+    // 1. Apply rate limiting
     const rateLimit = await applyRateLimit(
       request, 
       undefined, // Use IP as identifier
@@ -65,7 +56,7 @@ export async function POST(request: Request) {
       return rateLimit; // Return rate limit response if limit exceeded
     }
     
-    // 3. Check Referer header
+    // 2. Check Referer header
     const referer = request.headers.get('referer');
     const origin = request.headers.get('origin');
     if (

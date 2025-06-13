@@ -23,6 +23,7 @@ import {
     sonic,
 } from 'viem/chains'
 import { http } from 'wagmi'
+import { RPC_URLS } from '@/lib/direct-providers'
 import { AnalyticsProvider } from './analytics-provider'
 import { PageVisitTracker } from '@/components/analytics/PageVisitTracker'
 import { ShowAllMarketsProvider } from './show-all-markets-provider'
@@ -50,19 +51,19 @@ export const config = createConfig({
         sonic,
     ], // Pass your required chains as an array
     transports: {
-        [mainnet.id]: http(),
-        [polygon.id]: http(),
-        [base.id]: http(),
-        [metis.id]: http(),
-        [scroll.id]: http(),
-        [avalanche.id]: http(),
-        [optimism.id]: http(),
-        [bsc.id]: http(),
-        [gnosis.id]: http(),
-        [arbitrum.id]: http(),
-        [etherlink.id]: http(),
-        [linea.id]: http(),
-        [sonic.id]: http(),
+        [mainnet.id]: http(RPC_URLS[1]),
+        [polygon.id]: http(RPC_URLS[137]),
+        [base.id]: http(RPC_URLS[8453]),
+        [metis.id]: http(RPC_URLS[1088]),
+        [scroll.id]: http(RPC_URLS[534352]),
+        [avalanche.id]: http(RPC_URLS[43114]),
+        [optimism.id]: http(RPC_URLS[10]),
+        [bsc.id]: http(RPC_URLS[56]),
+        [gnosis.id]: http(RPC_URLS[100]),
+        [arbitrum.id]: http(RPC_URLS[42161]),
+        [etherlink.id]: http(RPC_URLS[42793]),
+        [linea.id]: http(), // Will use default Viem RPC or add specific URL
+        [sonic.id]: http(), // Will use default Viem RPC or add specific URL
     },
 })
 
