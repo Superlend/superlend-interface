@@ -34,6 +34,34 @@ const showTabInitial = {
     tab3: false,
 }
 
+// Utility function to calculate recommended container width based on visible tabs
+export const getToggleTabContainerWidth = (visibleTabsCount: number): string => {
+    // Calculate based on: (min-width per tab × count) + padding + gaps
+    // 2 tabs: 120px × 2 + 32px padding + 4px gap = ~280px → max-w-[350px]
+    // 3 tabs: 100px × 3 + 32px padding + 8px gaps = ~340px → max-w-[450px]
+    // 4+ tabs: 90px × count + padding + gaps
+    
+    if (visibleTabsCount <= 2) return 'sm:max-w-[350px]'
+    if (visibleTabsCount === 3) return 'sm:max-w-[450px]'
+    return 'sm:max-w-[500px]'
+}
+
+// Helper function to count visible tabs from showTab prop
+export const countVisibleTabs = (showTab?: {
+    tab1?: boolean
+    tab2?: boolean
+    tab3?: boolean
+}): number => {
+    const actualShowTab = showTab || showTabInitial
+    let count = 0
+    
+    if (actualShowTab.tab1 ?? showTabInitial.tab1) count++
+    if (actualShowTab.tab2 ?? showTabInitial.tab2) count++
+    if (actualShowTab.tab3 ?? showTabInitial.tab3) count++
+    
+    return count
+}
+
 const ToggleTab = ({ type, handleToggle, title, showTab }: TProps) => {
     const { width } = useDimensions()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -89,8 +117,14 @@ const ToggleTab = ({ type, handleToggle, title, showTab }: TProps) => {
         setIsDropdownOpen(false)
     }
 
-    const BUTTON_DEFAULT_STYLE =
-        'flex items-center justify-center py-[8px] grow-1 min-w-[120px] w-full flex-1 h-full my-auto hover:bg-white/45 uppercase font-semibold rounded-4'
+    // Dynamic button styling based on number of visible tabs
+    const getButtonMinWidth = () => {
+        if (visibleTabs.length === 2) return 'min-w-[120px]'
+        if (visibleTabs.length === 3) return 'min-w-[100px]'
+        return 'min-w-[90px]'
+    }
+
+    const BUTTON_DEFAULT_STYLE = `flex items-center justify-center py-[8px] grow-1 ${getButtonMinWidth()} w-full flex-1 h-full my-auto hover:bg-white/45 uppercase font-semibold rounded-4`
     const BUTTON_ACTIVE_STYLE =
         'shadow bg-[linear-gradient(180deg,#FF5B00_0%,#F55700_100%)]'
 

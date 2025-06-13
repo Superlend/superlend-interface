@@ -8,7 +8,7 @@ import React, {
     useCallback,
     useRef,
 } from 'react'
-import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
+import ToggleTab, { TTypeToMatch, getToggleTabContainerWidth, countVisibleTabs } from '@/components/ToggleTab'
 import { HeadingText } from '@/components/ui/typography'
 import { columns } from '@/data/table/top-apy-opportunities'
 import SearchInput from '@/components/inputs/SearchInput'
@@ -85,6 +85,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const [showRainingPolygons, setShowRainingPolygons] = useState(false)
     const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
     const pathname = usePathname() || ''
+    const IS_POLYGON_MARKET = pathname.includes('polygon')
     const { appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards, hasAppleFarmRewards } = useAppleFarmRewards()
 
     // Add this ref at component level
@@ -496,19 +497,28 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
-                        <div className="w-full sm:max-w-[350px]">
+                        <div className={`w-full ${getToggleTabContainerWidth(countVisibleTabs({ tab1: true, tab2: true, tab3: true }))}`}>
                             <ToggleTab
                                 type={
                                     positionTypeParam === 'lend'
                                         ? 'tab1'
-                                        : 'tab2'
+                                        : positionTypeParam === 'borrow'
+                                            ? 'tab2'
+                                            : 'tab3'
                                 }
                                 handleToggle={(positionType: TTypeToMatch) => {
                                     toggleOpportunityType(
                                         positionType === 'tab1'
                                             ? 'lend'
-                                            : 'borrow'
+                                            : positionType === 'tab2'
+                                                ? 'borrow'
+                                                : 'loop'
                                     )
+                                }}
+                                showTab={{
+                                    tab1: true,
+                                    tab2: true,
+                                    tab3: !IS_POLYGON_MARKET,
                                 }}
                             />
                         </div>
