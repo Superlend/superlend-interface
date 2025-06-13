@@ -330,7 +330,7 @@ export const FinalStep: React.FC = () => {
           {selectedAsset && selectedPath !== 'learn' && (
             <p className="text-sm text-primary font-medium">
               You selected {selectedAsset.tokenSymbol} - great choice!
-              {selectedPath === 'earn' && " Let's start earning yield on this stable token."}
+              {selectedPath === 'earn' && " Let's start earning yield on this token."}
               {selectedPath === 'borrow' && " Let's set up your borrowing position."}
             </p>
           )}

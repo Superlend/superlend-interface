@@ -719,13 +719,13 @@ export const BorrowAssetsStep: React.FC = () => {
     {
       symbol: 'WBTC',
       name: 'Wrapped Bitcoin',
-      description: 'Bitcoin on Ethereum ecosystem',
+      description: 'Bitcoin on Ethereum',
       logo: getTokenLogo('WBTC')
     },
     {
       symbol: 'WETH',
       name: 'Wrapped Ether',
-      description: 'ERC-20 version of Ethereum',
+      description: 'ERC-20 version of ETH token',
       logo: getTokenLogo('WETH')
     },
   ]
@@ -802,7 +802,7 @@ export const BorrowAssetsStep: React.FC = () => {
       {
         level: 'High',
         title: 'High Risk',
-        description: 'Higher rates but increased protocol exposure',
+        description: 'Higher rates with increased exposure to risk',
         color: 'text-red-700',
         bgColor: 'bg-red-50 border-red-200 hover:bg-red-100',
         tooltipContent: (

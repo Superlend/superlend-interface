@@ -293,13 +293,13 @@ export const EarnAssetsStep: React.FC = () => {
     {
       symbol: 'WBTC',
       name: 'Wrapped Bitcoin',
-      description: 'Bitcoin on Ethereum with highest market cap',
+      description: 'Bitcoin on Ethereum',
       logo: getTokenLogo('WBTC')
     },
     {
       symbol: 'WETH',
       name: 'Wrapped Ethereum',
-      description: 'Ethereum with highest market cap',
+      description: 'ERC-20 version of ETH token',
       logo: getTokenLogo('WETH')
     },
   ]

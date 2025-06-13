@@ -48,31 +48,46 @@ export const ChoosePathStep: React.FC = () => {
       path: 'earn' as OnboardingPath,
       title: 'Earn on Crypto',
       description: 'Maximize yields on your digital assets through DeFi protocols. Start earning passive income today!',
-      icon: <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 text-gray-700" />,
-      gradient: 'bg-gradient-to-br from-green-400/20 via-emerald-400/20 to-teal-400/20',
-      hoverGradient: 'bg-gradient-to-br from-green-400/40 to-teal-400/40',
-      accentColor: 'bg-gradient-to-br from-green-400 to-emerald-500',
-      particleColor: 'bg-green-400',
+      icon: <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10" />,
+      theme: {
+        gradient: 'from-tertiary-lightgreen/10 via-tertiary-green/5 to-tertiary-lightgreen/10',
+        borderColor: 'border-tertiary-green',
+        glowColor: 'shadow-tertiary-green/20',
+        iconBg: 'from-tertiary-green to-tertiary-lightgreen',
+        textColor: 'text-tertiary-green',
+        bgPattern: 'from-tertiary-lightgreen/50 to-tertiary-green/30',
+        hoverGlow: 'shadow-tertiary-green/30'
+      }
     },
     {
       path: 'borrow' as OnboardingPath,
       title: 'Borrow Crypto',
       description: "Access liquidity while keeping your assets. Unlock your crypto's potential without selling!",
-      icon: <CreditCard className="w-8 h-8 sm:w-10 sm:h-10 text-gray-700" />,
-      gradient: 'bg-gradient-to-br from-blue-400/20 via-cyan-400/20 to-indigo-400/20',
-      hoverGradient: 'bg-gradient-to-br from-blue-400/40 to-indigo-400/40',
-      accentColor: 'bg-gradient-to-br from-blue-400 to-cyan-500',
-      particleColor: 'bg-blue-400',
+      icon: <CreditCard className="w-8 h-8 sm:w-10 sm:h-10" />,
+      theme: {
+        gradient: 'from-tertiary-lightblue/10 via-tertiary-blue/5 to-tertiary-lightblue/10',
+        borderColor: 'border-tertiary-blue',
+        glowColor: 'shadow-tertiary-blue/20',
+        iconBg: 'from-tertiary-blue to-tertiary-lightblue',
+        textColor: 'text-tertiary-blue',
+        bgPattern: 'from-tertiary-lightblue/50 to-tertiary-blue/30',
+        hoverGlow: 'shadow-tertiary-blue/30'
+      }
     },
     {
       path: 'learn' as OnboardingPath,
       title: 'Learn about DeFi',
       description: 'Master decentralized finance from basics to advanced. Become a DeFi expert step by step!',
-      icon: <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-gray-700" />,
-      gradient: 'bg-gradient-to-br from-purple-400/20 via-pink-400/20 to-rose-400/20',
-      hoverGradient: 'bg-gradient-to-br from-purple-400/40 to-rose-400/40',
-      accentColor: 'bg-gradient-to-br from-purple-400 to-pink-500',
-      particleColor: 'bg-purple-400',
+      icon: <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10" />,
+      theme: {
+        gradient: 'from-tertiary-pink/10 via-tertiary-navy/5 to-tertiary-pink/10',
+        borderColor: 'border-tertiary-navy',
+        glowColor: 'shadow-tertiary-navy/20',
+        iconBg: 'from-tertiary-navy to-tertiary-pink',
+        textColor: 'text-tertiary-navy',
+        bgPattern: 'from-tertiary-pink/50 to-tertiary-navy/30',
+        hoverGlow: 'shadow-tertiary-navy/30'
+      }
     },
   ]
 
@@ -106,19 +121,19 @@ export const ChoosePathStep: React.FC = () => {
       description: "Deposit crypto assets as collateral to secure your loan",
       tooltipContent: () => (
         <div className="flex flex-col gap-3 max-w-[250px]">
-          <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-            <Shield className="w-4 h-4 text-primary" />
+          <div className="flex items-center gap-1 pb-2 border-b border-gray-100">
+            <Shield className="w-4 h-4 text-secondary-500" />
             <BodyText level="body1" className="font-semibold text-foreground">Why Provide Collateral?</BodyText>
           </div>
           <div className="space-y-3">
             <div className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+              <div className="w-1.5 h-1.5 bg-secondary-500 rounded-full mt-2 flex-shrink-0" />
               <BodyText level="body2" className="text-gray-700 leading-relaxed">
                 <span className="font-medium text-foreground">Secures your loan:</span> Protects lenders and enables competitive borrowing rates
               </BodyText>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+              <div className="w-1.5 h-1.5 bg-secondary-500 rounded-full mt-2 flex-shrink-0" />
               <BodyText level="body2" className="text-gray-700 leading-relaxed">
                 <span className="font-medium text-foreground">Smart contract protection:</span> Your assets are safely locked and returned when you repay
               </BodyText>
@@ -153,345 +168,120 @@ export const ChoosePathStep: React.FC = () => {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 py-6">
         {paths.map((pathData, index) => {
           const isSelected = selectedPath === pathData.path
+          const theme = pathData.theme
+
           return (
             <motion.div
               key={pathData.path}
-              initial={{ y: 40, opacity: 0, scale: 0.9 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              transition={{
-                duration: 0.6,
-                delay: index * 0.15,
-                type: "spring",
-                stiffness: 100
-              }}
-              whileHover={{
-                y: -8,
-                scale: 1.02,
-                transition: { duration: 0.2 }
-              }}
-              whileTap={{ scale: 0.98 }}
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: index * 0.15 }}
+              whileHover={{ y: -10, scale: 1.02, transition: { duration: 0.3 } }}
               className="relative group"
             >
+              {/* Optimized glassmorphism card */}
               <div
                 className={`
-                  relative rounded-lg p-6 sm:p-8 border-2 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full min-h-[360px]
+                  relative rounded-2xl p-8 transition-all duration-300 cursor-pointer flex flex-col h-full min-h-[300px]
+                  backdrop-blur-sm border
                   ${isSelected
-                    ? `border-primary ${pathData.gradient} shadow-2xl ring-4 ring-primary/20`
-                    : `border-gray-200 ${pathData.gradient} bg-white/50 backdrop-blur-sm hover:border-primary/50 hover:shadow-2xl group-hover:shadow-2xl hover:bg-white/70`
+                    ? `${theme.borderColor} bg-white/30 shadow-2xl border-2 ${theme.glowColor} shadow-lg ring-1 ring-white/20`
+                    : `bg-gradient-to-br from-white/20 ${theme.bgPattern} border-white/30 ${theme.glowColor} shadow-lg hover:bg-white/28 hover:border-2 hover:${theme.borderColor} hover:shadow-xl hover:${theme.glowColor} hover:ring-1 hover:ring-white/15`
                   }
                 `}
                 onClick={() => handlePathSelect(pathData.path, pathData.title)}
               >
-                {/* Enhanced hover glow effect */}
-                <div className={`
-                  absolute inset-0 rounded-lg transition-all duration-500 -z-10
-                  ${isSelected
-                    ? `opacity-100 ${pathData.hoverGradient} blur-xl`
-                    : `opacity-0 group-hover:opacity-60 ${pathData.hoverGradient} blur-lg`
-                  }
-                `} />
+                {/* Single optimized gradient overlay */}
+                <div 
+                  className={`absolute inset-0 rounded-2xl bg-gradient-to-br transition-opacity duration-300 ${
+                    isSelected 
+                      ? `${theme.gradient} opacity-50` 
+                      : `${theme.bgPattern} opacity-30 group-hover:opacity-45`
+                  }`}
+                />
 
-                {/* Enhanced animated background particles for selected */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  {[...Array(isSelected ? 8 : 0)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className={`absolute w-1 h-1 ${pathData.accentColor} rounded-full opacity-30`}
-                      animate={{
-                        x: [0, 100, 0],
-                        y: [0, -60, 0],
-                        scale: [0, 1.5, 0],
-                        opacity: [0, 0.4, 0],
-                      }}
-                      transition={{
-                        duration: 3 + i * 0.3,
-                        repeat: Infinity,
-                        delay: i * 0.4,
-                        ease: "easeInOut"
-                      }}
-                      style={{
-                        left: `${15 + i * 12}%`,
-                        top: `${25 + i * 10}%`,
-                      }}
-                    />
-                  ))}
-                </div>
-
-                {/* Floating light particles for unselected cards on hover */}
-                {!isSelected && (
-                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {/* Constant subtle particles */}
-                    {[...Array(4)].map((_, i) => (
-                      <motion.div
-                        key={`subtle-${i}`}
-                        className={`absolute w-0.5 h-0.5 ${pathData.particleColor} rounded-full opacity-20`}
-                        animate={{
-                          x: [0, 60, 0],
-                          y: [0, -30, 0],
-                          scale: [0, 1, 0],
-                          opacity: [0, 0.3, 0],
-                        }}
-                        transition={{
-                          duration: 4 + i * 0.8,
-                          repeat: Infinity,
-                          delay: i * 1.2,
-                          ease: "easeInOut"
-                        }}
-                        style={{
-                          left: `${20 + i * 20}%`,
-                          top: `${40 + i * 15}%`,
-                        }}
-                      />
-                    ))}
-
-                    {/* Enhanced hover particles */}
-                    {[...Array(6)].map((_, i) => (
-                      <motion.div
-                        key={`hover-${i}`}
-                        className={`absolute w-1 h-1 ${pathData.particleColor} rounded-full opacity-0 group-hover:opacity-40`}
-                        animate={{
-                          x: [0, 120, 0],
-                          y: [0, -80, 0],
-                          scale: [0, 1.2, 0],
-                          rotate: [0, 360, 720],
-                        }}
-                        transition={{
-                          duration: 3.5 + i * 0.5,
-                          repeat: Infinity,
-                          delay: i * 0.6,
-                          ease: "easeInOut"
-                        }}
-                        style={{
-                          left: `${10 + i * 15}%`,
-                          top: `${30 + i * 12}%`,
-                        }}
-                      />
-                    ))}
-
-                    {/* Orbiting particles on hover */}
-                    {[...Array(3)].map((_, i) => (
-                      <motion.div
-                        key={`orbit-${i}`}
-                        className={`absolute w-1.5 h-1.5 ${pathData.particleColor} rounded-full opacity-0 group-hover:opacity-25`}
-                        animate={{
-                          rotate: [0, 360],
-                          scale: [0.8, 1.2, 0.8],
-                        }}
-                        transition={{
-                          duration: 8 + i * 2,
-                          repeat: Infinity,
-                          ease: "linear",
-                          delay: i * 1.5
-                        }}
-                        style={{
-                          left: `${50}%`,
-                          top: `${50}%`,
-                          transformOrigin: `${30 + i * 20}px ${20 + i * 15}px`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Magical floating elements for unselected cards */}
-                {!isSelected && (
-                  <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                    {/* Large floating orbs */}
-                    {[...Array(3)].map((_, i) => (
-                      <motion.div
-                        key={`float-${i}`}
-                        className={`absolute w-8 h-8 ${pathData.accentColor} rounded-full opacity-10`}
-                        animate={{
-                          y: [0, -25, 0],
-                          scale: [0.6, 1.4, 0.6],
-                          rotate: [0, 180, 360],
-                          opacity: [0.05, 0.15, 0.05],
-                        }}
-                        transition={{
-                          duration: 6 + i * 2,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 1.5
-                        }}
-                        style={{
-                          left: `${20 + i * 30}%`,
-                          top: `${15 + i * 35}%`,
-                        }}
-                      />
-                    ))}
-
-                    {/* Shimmer effect */}
-                    <motion.div
-                      className={`absolute w-full h-0.5 ${pathData.accentColor} opacity-20`}
-                      animate={{
-                        x: ['-100%', '100%'],
-                        opacity: [0, 0.3, 0],
-                      }}
-                      transition={{
-                        duration: 2.5,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 0.5
-                      }}
-                      style={{
-                        top: '30%',
-                        transform: 'rotate(45deg)',
-                      }}
-                    />
-
-                    {/* Pulse rings */}
-                    {[...Array(2)].map((_, i) => (
-                      <motion.div
-                        key={`pulse-${i}`}
-                        className={`absolute w-16 h-16 border-2 ${pathData.particleColor.replace('bg-', 'border-')} rounded-full opacity-0`}
-                        animate={{
-                          scale: [0, 2],
-                          opacity: [0.3, 0],
-                        }}
-                        transition={{
-                          duration: 3,
-                          repeat: Infinity,
-                          ease: "easeOut",
-                          delay: i * 1.5
-                        }}
-                        style={{
-                          left: '50%',
-                          top: '50%',
-                          transform: 'translate(-50%, -50%)',
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
+                {/* Simplified glass reflection */}
+                <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br from-white/25 to-transparent transition-opacity duration-300 ${
+                  isSelected ? 'opacity-70' : 'opacity-50 group-hover:opacity-65'
+                }`} />
 
                 {/* Content */}
                 <div className="relative z-10 flex-1 flex flex-col">
-                  {/* Icon section */}
-                  <div className="flex items-center justify-between mb-6">
-                    <motion.div
+                  {/* Optimized icon section */}
+                  <div className="flex items-center justify-between mb-8">
+                    <div
                       className={`
-                        w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center relative transition-all duration-300
+                        w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-300 relative overflow-hidden
+                        border shadow-md
                         ${isSelected
-                          ? `${pathData.accentColor} shadow-lg`
-                          : `bg-gradient-to-br from-gray-100/80 to-gray-200/50 shadow-sm group-hover:shadow-md`
+                          ? `bg-gradient-to-br ${theme.iconBg} border-white/40 shadow-lg transform scale-105`
+                          : `bg-white/25 border-white/30 shadow-lg group-hover:border-white/40 group-hover:shadow-xl group-hover:scale-105`
                         }
                       `}
-                      whileHover={{
-                        rotate: isSelected ? 360 : 12,
-                        scale: isSelected ? 1 : 1.05
-                      }}
-                      transition={{ duration: 0.6 }}
-                      animate={!isSelected ? {
-                        scale: [1, 1.02, 1],
-                      } : {}}
-                      style={!isSelected ? {
-                        animationDuration: "3s",
-                        animationIterationCount: "infinite"
-                      } : {}}
                     >
+                      {/* Single gradient background */}
+                      <div 
+                        className={`absolute inset-0 bg-gradient-to-br ${theme.iconBg} transition-opacity duration-300 ${
+                          isSelected ? 'opacity-100' : 'opacity-20 group-hover:opacity-100'
+                        }`}
+                      />
+                      
+                      {/* Simplified glass shine */}
+                      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br from-white/25 to-transparent transition-opacity duration-300 ${
+                        isSelected ? 'opacity-50' : 'opacity-35 group-hover:opacity-45'
+                      }`} />
+                      
                       {React.cloneElement(pathData.icon as React.ReactElement, {
-                        className: `w-8 h-8 sm:w-10 sm:h-10 transition-colors duration-300 ${isSelected ? 'text-white' : 'text-gray-700 group-hover:text-primary'}`
+                        className: `w-10 h-10 transition-colors duration-300 relative z-10 ${
+                          isSelected ? 'text-white' : `${theme.textColor} group-hover:text-white`
+                        }`
                       })}
-
-                      {/* Enhanced sparkles for selected */}
-                      {isSelected && (
-                        <motion.div
-                          className="absolute -top-1 -right-1"
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                        >
-                          <Sparkles className="w-5 h-5 text-yellow-400" />
-                        </motion.div>
-                      )}
-
-                      {/* Enhanced glow for unselected on hover */}
-                      {!isSelected && (
-                        <>
-                          <motion.div
-                            className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300 blur-sm`}
-                            initial={{ scale: 0.8 }}
-                            whileHover={{ scale: 1.3 }}
-                            transition={{ duration: 0.3 }}
-                          />
-                          {/* Additional outer glow ring */}
-                          <motion.div
-                            className={`absolute inset-0 rounded-lg border-2 ${pathData.particleColor.replace('bg-', 'border-')} opacity-0 group-hover:opacity-40 transition-opacity duration-300`}
-                            initial={{ scale: 1 }}
-                            whileHover={{ scale: 1.2 }}
-                            transition={{ duration: 0.4 }}
-                            animate={{
-                              scale: [1, 1.05, 1],
-                            }}
-                            style={{
-                              animationDuration: "2s",
-                              animationIterationCount: "infinite"
-                            }}
-                          />
-                        </>
-                      )}
-                    </motion.div>
+                    </div>
 
                     {isSelected && (
                       <motion.div
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
-                        className="flex items-center gap-1 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold"
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                        className="flex items-center gap-2 bg-primary/90 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg border border-white/20"
                       >
-                        <Star className="w-3 h-3 fill-current" />
+                        <Star className="w-4 h-4 fill-current" />
                         <span>SELECTED</span>
                       </motion.div>
                     )}
                   </div>
 
                   {/* Content section */}
-                  <div className="space-y-4 flex-1 flex flex-col">
+                  <div className="space-y-6 flex-1 flex flex-col">
                     <h3 className={`
-                      text-xl sm:text-2xl font-bold transition-colors duration-300
-                      ${isSelected ? 'text-primary' : 'text-foreground group-hover:text-primary'}
+                      text-2xl sm:text-3xl font-bold transition-colors duration-300 leading-tight
+                      ${isSelected ? 'text-gray-900' : 'text-gray-800 group-hover:text-gray-900'}
                     `}>
                       {pathData.title}
                     </h3>
 
-                    <p className="text-sm sm:text-base text-foreground leading-relaxed flex-1">
+                    <p className={`text-base leading-relaxed flex-1 font-medium transition-colors duration-300 ${
+                      isSelected ? 'text-gray-700' : 'text-gray-600 group-hover:text-gray-700'
+                    }`}>
                       {pathData.description}
                     </p>
-
-                    {/* Enhanced CTA button */}
-                    <motion.div
-                      className={`
-                        flex items-center justify-between p-4 rounded-lg transition-all duration-300 mt-auto
-                        ${isSelected
-                          ? 'bg-primary/10 border border-primary/20'
-                          : 'bg-gray-50 group-hover:bg-primary/5 border border-gray-200 group-hover:border-primary/30'
-                        }
-                      `}
-                      whileHover={{ x: 4, scale: 1.02 }}
-                    >
-                      <span className={`
-                        text-sm font-semibold transition-colors duration-300
-                        ${isSelected ? 'text-primary' : 'text-foreground group-hover:text-primary'}
-                      `}>
-                        {isSelected ? 'Selected!' : 'Get Started'}
-                      </span>
-                      <ArrowRight className={`
-                        transition-all duration-300
-                        ${isSelected ? 'text-primary translate-x-1' : 'text-gray-500 group-hover:text-primary group-hover:translate-x-1'}
-                        ${isSelected ? 'rotate-90 w-6 h-6' : 'w-4 h-4'}
-                      `} />
-                    </motion.div>
                   </div>
                 </div>
 
-                {/* Progress indicator */}
+                {/* Fixed progress indicator with proper containment */}
                 {isSelected && (
                   <motion.div
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                    className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/60 rounded-b-lg"
-                  />
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    className="absolute bottom-0 left-0 right-0 h-1.5 mx-0.5 mb-0.5 rounded-b-xl overflow-hidden"
+                  >
+                    <div className={`w-full h-full bg-gradient-to-r ${theme.iconBg} rounded-b-xl`} />
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-b-xl" />
+                  </motion.div>
                 )}
+
+
               </div>
             </motion.div>
           )
@@ -514,8 +304,10 @@ export const ChoosePathStep: React.FC = () => {
             transition={{ duration: 0.5 }}
             className="text-center mb-6"
           >
-            <div className="w-14 h-14 mx-auto bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center mb-4">
-              <TrendingUp className="w-7 h-7 text-white" />
+            <div className={`w-14 h-14 mx-auto bg-gradient-to-br ${paths.find(p => p.path === 'earn')?.theme.iconBg} rounded-full flex items-center justify-center mb-4 relative overflow-hidden border border-white/20 shadow-lg`}>
+              {/* Glass shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-full" />
+              <TrendingUp className="w-7 h-7 text-white relative z-10" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-3">
               How to Earn on Crypto
@@ -530,38 +322,43 @@ export const ChoosePathStep: React.FC = () => {
           <div className="flex-1 flex items-center justify-center mb-8">
             <div className="w-full max-w-5xl">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {earnSteps.map((step, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ y: 40, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.4 + index * 0.2 }}
-                    className="relative"
-                  >
-                    <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-4 p-6 border border-primary/20 text-center hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-                      <div className="w-12 h-12 mx-auto bg-primary/20 rounded-full flex items-center justify-center mb-4">
-                        <div className="text-primary">
-                          {step.icon}
+                {earnSteps.map((step, index) => {
+                  const earnTheme = paths.find(p => p.path === 'earn')?.theme
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ y: 40, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.4 + index * 0.2 }}
+                      className="relative"
+                    >
+                      <div className={`bg-gradient-to-br ${earnTheme?.gradient} backdrop-blur-sm rounded-xl p-6 border ${earnTheme?.borderColor} text-center hover:shadow-lg transition-all duration-300 h-full flex flex-col`}>
+                        <div className={`w-12 h-12 mx-auto bg-gradient-to-br ${earnTheme?.iconBg} rounded-full flex items-center justify-center mb-4 relative overflow-hidden border border-white/20 shadow-md`}>
+                          {/* Glass shine effect */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/25 to-transparent rounded-full" />
+                          <div className="text-white relative z-10">
+                            {step.icon}
+                          </div>
                         </div>
+                        <h3 className="text-lg font-semibold text-foreground mb-3">
+                          {step.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 leading-relaxed flex-1">
+                          {step.description}
+                        </p>
                       </div>
-                      <h3 className="text-lg font-semibold text-foreground mb-3">
-                        {step.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 leading-relaxed flex-1">
-                        {step.description}
-                      </p>
-                    </div>
 
-                    {/* Improved Arrow between steps */}
-                    {index < earnSteps.length - 1 && (
-                      <div className="hidden md:flex absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
-                        <div className="bg-white rounded-full p-1 shadow-sm border border-primary/20">
-                          <ArrowRight className="w-4 h-4 text-primary" />
+                      {/* Improved Arrow between steps */}
+                      {index < earnSteps.length - 1 && (
+                        <div className="hidden md:flex absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
+                          <div className={`bg-white rounded-full p-1 shadow-sm border ${earnTheme?.borderColor}`}>
+                            <ArrowRight className={`w-4 h-4 ${earnTheme?.textColor}`} />
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
+                      )}
+                    </motion.div>
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -697,8 +494,10 @@ export const ChoosePathStep: React.FC = () => {
             transition={{ duration: 0.5 }}
             className="text-center mb-6"
           >
-            <div className="w-14 h-14 mx-auto bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center mb-4">
-              <CreditCard className="w-7 h-7 text-white" />
+            <div className={`w-14 h-14 mx-auto bg-gradient-to-br ${paths.find(p => p.path === 'borrow')?.theme.iconBg} rounded-full flex items-center justify-center mb-4 relative overflow-hidden border border-white/20 shadow-lg`}>
+              {/* Glass shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-full" />
+              <CreditCard className="w-7 h-7 text-white relative z-10" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-3">
               How Borrowing Works
@@ -713,46 +512,51 @@ export const ChoosePathStep: React.FC = () => {
           <div className="flex-1 flex items-center justify-center mb-8">
             <div className="w-full max-w-5xl">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {borrowSteps.map((step, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ y: 40, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.4 + index * 0.2 }}
-                    className="relative"
-                  >
-                    <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-4 p-6 border border-primary/20 text-center hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-                      <div className="w-12 h-12 mx-auto bg-primary/20 rounded-full flex items-center justify-center mb-4">
-                        <div className="text-primary">
-                          {step.icon}
+                {borrowSteps.map((step, index) => {
+                  const borrowTheme = paths.find(p => p.path === 'borrow')?.theme
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ y: 40, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.4 + index * 0.2 }}
+                      className="relative"
+                    >
+                      <div className={`bg-gradient-to-br ${borrowTheme?.gradient} backdrop-blur-sm rounded-xl p-6 border ${borrowTheme?.borderColor} text-center hover:shadow-lg transition-all duration-300 h-full flex flex-col`}>
+                        <div className={`w-12 h-12 mx-auto bg-gradient-to-br ${borrowTheme?.iconBg} rounded-full flex items-center justify-center mb-4 relative overflow-hidden border border-white/20 shadow-md`}>
+                          {/* Glass shine effect */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/25 to-transparent rounded-full" />
+                          <div className="text-white relative z-10">
+                            {step.icon}
+                          </div>
                         </div>
+                        <h3 className="text-lg font-semibold text-foreground mb-3">
+                          {step.title}
+                          {index === 1 && step.tooltipContent && (
+                            <InfoTooltip
+                              label={<Info className={`w-4 h-4 ${borrowTheme?.textColor} ml-2 inline cursor-help transition-colors duration-200`} />}
+                              content={step.tooltipContent()}
+                              side="top"
+                              className="max-w-[350px]"
+                            />
+                          )}
+                        </h3>
+                        <p className="text-sm text-gray-600 leading-relaxed flex-1">
+                          {step.description}
+                        </p>
                       </div>
-                      <h3 className="text-lg font-semibold text-foreground mb-3">
-                        {step.title}
-                        {index === 1 && step.tooltipContent && (
-                          <InfoTooltip
-                            label={<Info className="w-4 h-4 text-primary/70 hover:text-primary ml-2 inline cursor-help transition-colors duration-200" />}
-                            content={step.tooltipContent()}
-                            side="top"
-                            className="max-w-[350px]"
-                          />
-                        )}
-                      </h3>
-                      <p className="text-sm text-gray-600 leading-relaxed flex-1">
-                        {step.description}
-                      </p>
-                    </div>
 
-                    {/* Improved Arrow between steps */}
-                    {index < borrowSteps.length - 1 && (
-                      <div className="hidden md:flex absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
-                        <div className="bg-white rounded-full p-1 shadow-sm border border-primary/20">
-                          <ArrowRight className="w-4 h-4 text-primary" />
+                      {/* Improved Arrow between steps */}
+                      {index < borrowSteps.length - 1 && (
+                        <div className="hidden md:flex absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
+                          <div className={`bg-white rounded-full p-1 shadow-sm border ${borrowTheme?.borderColor}`}>
+                            <ArrowRight className={`w-4 h-4 ${borrowTheme?.textColor}`} />
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
+                      )}
+                    </motion.div>
+                  )
+                })}
               </div>
             </div>
           </div>
