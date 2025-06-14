@@ -31,6 +31,7 @@ interface OnboardingState {
   selectedAsset: SelectedAsset | null
   completedSteps: OnboardingStep[]
   hasSeenOnboarding: boolean
+  quizCompleted: boolean
 }
 
 const STORAGE_KEY = 'superlend_onboarding_completed'
@@ -47,6 +48,7 @@ export const useOnboarding = ({
     selectedAsset: null,
     completedSteps: [],
     hasSeenOnboarding: false,
+    quizCompleted: false,
   })
 
   // Debug state changes
@@ -84,7 +86,9 @@ export const useOnboarding = ({
         currentStep: step,
         completedSteps: prev.completedSteps.includes(step) 
           ? prev.completedSteps 
-          : [...prev.completedSteps, step]
+          : [...prev.completedSteps, step],
+        // Reset quiz completion when navigating to learn-quiz step
+        quizCompleted: step === 'learn-quiz' ? false : prev.quizCompleted
       }
     })
   }, [])
@@ -99,6 +103,10 @@ export const useOnboarding = ({
 
   const clearSelectedAsset = useCallback(() => {
     setState(prev => ({ ...prev, selectedAsset: null }))
+  }, [])
+
+  const setQuizCompleted = useCallback((completed: boolean) => {
+    setState(prev => ({ ...prev, quizCompleted: completed }))
   }, [])
 
   const nextStep = useCallback(() => {
@@ -129,7 +137,9 @@ export const useOnboarding = ({
           currentStep: next,
           completedSteps: prev.completedSteps.includes(next) 
             ? prev.completedSteps 
-            : [...prev.completedSteps, next]
+            : [...prev.completedSteps, next],
+          // Reset quiz completion when navigating to learn-quiz step
+          quizCompleted: next === 'learn-quiz' ? false : prev.quizCompleted
         }
       }
       return prev
@@ -176,6 +186,7 @@ export const useOnboarding = ({
       selectedAsset: null,
       completedSteps: [],
       hasSeenOnboarding: false,
+      quizCompleted: false,
     })
     localStorage.removeItem(STORAGE_KEY)
   }, [])
@@ -221,6 +232,7 @@ export const useOnboarding = ({
     previousStep,
     resetOnboarding,
     getStepProgress,
+    setQuizCompleted,
     canGoBack: state.currentStep !== 'welcome',
     canGoNext: (() => {
       // Can't go next from final step
@@ -244,6 +256,12 @@ export const useOnboarding = ({
       // Can't go next from borrow-assets without selecting an asset
       if (state.currentStep === 'borrow-assets' && !state.selectedAsset) {
         // console.log('canGoNext: false (borrow-assets without asset selection)', { selectedAsset: state.selectedAsset })
+        return false
+      }
+      
+      // Can't go next from learn-quiz without completing the quiz
+      if (state.currentStep === 'learn-quiz' && !state.quizCompleted) {
+        // console.log('canGoNext: false (learn-quiz without completion)', { quizCompleted: state.quizCompleted })
         return false
       }
       

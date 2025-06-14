@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Shield, AlertTriangle, CheckCircle, Info, TrendingUp, Lock, Eye } from 'lucide-react'
+import { BodyText, HeadingText } from '@/components/ui/typography'
 
 export const LearnRiskStep: React.FC = () => {
   const riskFactors = [
@@ -11,10 +12,10 @@ export const LearnRiskStep: React.FC = () => {
       mitigation: "Use audited, battle-tested protocols with proven track records and insurance coverage",
       level: "Low-Medium",
       color: "blue",
-      bgGradient: "from-blue-50 to-cyan-50",
-      borderColor: "border-blue-200",
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600"
+      bgGradient: "from-tertiary-blue/20 to-tertiary-blue/5",
+      borderColor: "border-tertiary-blue/75",
+      iconBg: "bg-tertiary-blue/10",
+      iconColor: "text-tertiary-blue/75"
     },
     {
       icon: <TrendingUp className="w-6 h-6" />,
@@ -23,9 +24,9 @@ export const LearnRiskStep: React.FC = () => {
       mitigation: "Diversify across stablecoins and volatile assets, use dollar-cost averaging strategies",
       level: "Medium-High",
       color: "yellow",
-      bgGradient: "from-yellow-50 to-amber-50",
-      borderColor: "border-yellow-200",
-      iconBg: "bg-yellow-100",
+      bgGradient: "from-tertiary-yellow/20 to-tertiary-yellow/5",
+      borderColor: "border-tertiary-yellow/75",
+      iconBg: "bg-tertiary-yellow/30",
       iconColor: "text-yellow-600"
     },
     {
@@ -35,10 +36,10 @@ export const LearnRiskStep: React.FC = () => {
       mitigation: "Monitor protocol liquidity metrics, diversify across platforms, maintain emergency reserves",
       level: "Low-Medium",
       color: "purple",
-      bgGradient: "from-purple-50 to-pink-50",
-      borderColor: "border-purple-200",
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600"
+      bgGradient: "from-tertiary-pink/50 to-tertiary-pink/5",
+      borderColor: "border-tertiary-pink",
+      iconBg: "bg-tertiary-pink/50",
+      iconColor: "text-pink-600/50"
     },
     {
       icon: <Lock className="w-6 h-6" />,
@@ -47,10 +48,10 @@ export const LearnRiskStep: React.FC = () => {
       mitigation: "Stay informed about regulatory developments, use compliant platforms when possible",
       level: "Medium",
       color: "orange",
-      bgGradient: "from-orange-50 to-red-50",
-      borderColor: "border-orange-200",
-      iconBg: "bg-orange-100",
-      iconColor: "text-orange-600"
+      bgGradient: "from-primary/10 to-primary/5",
+      borderColor: "border-primary/75",
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary/75"
     }
   ]
 
@@ -88,7 +89,7 @@ export const LearnRiskStep: React.FC = () => {
   ]
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full px-2">
       {/* Header */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -99,27 +100,28 @@ export const LearnRiskStep: React.FC = () => {
         <div className="w-16 h-16 mx-auto bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
           <Shield className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-3xl font-bold text-foreground mb-4">
+        <HeadingText level="h2" weight="bold" className="text-3xl text-gray-800 mb-4 text-center">
           Risk Management in DeFi
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          Understanding and managing risks is crucial for long-term success in DeFi. 
+        </HeadingText>
+        <BodyText level="body1" className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          Understanding and managing risks is crucial for long-term success in DeFi.
           Learn how to protect your investments while maximizing opportunities.
-        </p>
+        </BodyText>
       </motion.div>
 
       <div className="flex-1 space-y-8">
         {/* Risk Factors */}
         <div>
-          <motion.h3 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-2xl font-bold text-foreground mb-6 text-center"
           >
-            Key Risk Factors
-          </motion.h3>
-          
+            <HeadingText level="h3" weight="bold" className="text-gray-800 mb-6 text-center">
+              Key Risk Factors
+            </HeadingText>
+          </motion.div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {riskFactors.map((risk, index) => (
               <motion.div
@@ -136,18 +138,18 @@ export const LearnRiskStep: React.FC = () => {
               >
                 {/* Background decoration */}
                 <div className="absolute top-0 right-0 w-20 h-20 bg-white/20 rounded-full -translate-y-6 translate-x-6 group-hover:scale-150 transition-transform duration-500" />
-                
+
                 {/* Risk level badge */}
                 <div className="absolute top-4 right-4">
                   <span className={`
                     px-3 py-1 rounded-full text-xs font-semibold
-                    ${risk.level === 'Low-Medium' 
+                    ${risk.level === 'Low-Medium'
                       ? 'bg-blue-100 text-blue-600'
                       : risk.level === 'Medium-High'
-                      ? 'bg-orange-100 text-orange-600'
-                      : risk.level === 'Medium'
-                      ? 'bg-yellow-100 text-yellow-600'
-                      : 'bg-gray-100 text-gray-600'
+                        ? 'bg-orange-100 text-orange-600'
+                        : risk.level === 'Medium'
+                          ? 'bg-yellow-100 text-yellow-600'
+                          : 'bg-gray-100 text-gray-600'
                     }
                   `}>
                     {risk.level} Risk
@@ -162,21 +164,20 @@ export const LearnRiskStep: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <h4 className="text-lg font-bold text-gray-900 mb-3 relative z-10">
+                <HeadingText level="h4" weight="bold" className="text-gray-900 mb-3 relative z-10">
                   {risk.title}
-                </h4>
-                
-                <p className="text-gray-700 mb-4 text-sm leading-relaxed relative z-10">
+                </HeadingText>
+
+                <BodyText level="body2" className="text-gray-700 mb-4 leading-relaxed relative z-10">
                   {risk.description}
-                </p>
-                
+                </BodyText>
+
                 {/* Mitigation */}
                 <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-white/50 relative z-10">
-                  <p className="text-xs text-gray-800">
-                    <span className="font-semibold text-gray-900">How to mitigate:</span>
-                    <br />
+                  <BodyText level="body2" weight="semibold" className="text-gray-800 mb-2">How to mitigate:</BodyText>
+                  <BodyText level="body2" className="text-gray-800">
                     {risk.mitigation}
-                  </p>
+                  </BodyText>
                 </div>
               </motion.div>
             ))}
@@ -191,14 +192,14 @@ export const LearnRiskStep: React.FC = () => {
           className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 rounded-2xl p-8 border-2 border-primary/20 shadow-xl"
         >
           <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-foreground mb-3">
+            <HeadingText level="h3" weight="bold" className="text-2xl text-gray-800 mb-3">
               Risk Management Best Practices
-            </h3>
-            <p className="text-gray-600 max-w-md mx-auto">
+            </HeadingText>
+            <BodyText level="body2" className="text-gray-600 max-w-md mx-auto">
               Essential strategies to protect your investments and minimize potential losses
-            </p>
+            </BodyText>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {riskManagementTips.map((tip, index) => (
               <motion.div
@@ -215,12 +216,12 @@ export const LearnRiskStep: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">
+                    <HeadingText level="h4" weight="semibold" className="text-gray-900 mb-2">
                       {tip.title}
-                    </h4>
-                    <p className="text-sm text-gray-600 leading-relaxed">
+                    </HeadingText>
+                    <BodyText level="body2" className="text-gray-600 leading-relaxed">
                       {tip.description}
-                    </p>
+                    </BodyText>
                   </div>
                 </div>
               </motion.div>
@@ -242,12 +243,12 @@ export const LearnRiskStep: React.FC = () => {
               <AlertTriangle className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <h4 className="font-bold text-amber-900 mb-2">Remember: Risk = Opportunity</h4>
-              <p className="text-amber-800 leading-relaxed text-sm">
-                DeFi offers unprecedented opportunities, but with great potential comes responsibility. 
-                Never invest more than you can afford to lose, and always prioritize learning and 
+              <HeadingText level="h4" weight="bold" className="text-amber-900 mb-2">Remember: Risk = Opportunity</HeadingText>
+              <BodyText level="body2" className="text-amber-800 leading-relaxed">
+                DeFi offers unprecedented opportunities, but with great potential comes responsibility.
+                Never invest more than you can afford to lose, and always prioritize learning and
                 understanding over potential returns.
-              </p>
+              </BodyText>
             </div>
           </div>
         </div>

@@ -1,12 +1,18 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, XCircle, Brain, Award, Trophy, ArrowRight } from 'lucide-react'
 import { useOnboardingContext } from '@/components/providers/OnboardingProvider'
+import { BodyText, HeadingText } from '@/components/ui/typography'
 
 export const LearnQuizStep: React.FC = () => {
-  const { setPath, setStep } = useOnboardingContext()
+  const { setPath, setStep, setQuizCompleted } = useOnboardingContext()
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [showResults, setShowResults] = useState(false)
+
+  // Reset quiz completion status when component mounts
+  useEffect(() => {
+    setQuizCompleted(false)
+  }, [setQuizCompleted])
 
   const questions = [
     {
@@ -93,6 +99,7 @@ export const LearnQuizStep: React.FC = () => {
 
   const handleShowResults = () => {
     setShowResults(true)
+    setQuizCompleted(true)
   }
 
   const getScore = () => {
@@ -131,13 +138,13 @@ export const LearnQuizStep: React.FC = () => {
   const getScoreMessage = (score: number, total: number) => {
     const percentage = (score / total) * 100
     if (percentage === 100) {
-      return { message: "🎉 Perfect! You're ready to conquer DeFi!", color: "text-green-600", icon: <Trophy className="w-6 h-6 text-yellow-500" /> }
+      return { message: "🎉 Perfect! You're ready to conquer DeFi!", color: "text-tertiary-blue", icon: <Trophy className="w-6 h-6 text-tertiary-blue" /> }
     } else if (percentage >= 80) {
-      return { message: "🚀 Excellent! You have a strong DeFi foundation!", color: "text-green-600", icon: <Award className="w-6 h-6 text-green-500" /> }
+      return { message: "🚀 Excellent! You have a strong DeFi foundation!", color: "text-tertiary-blue", icon: <Award className="w-6 h-6 text-tertiary-blue" /> }
     } else if (percentage >= 60) {
-      return { message: "👍 Good start! Keep learning to build confidence!", color: "text-blue-600", icon: <Brain className="w-6 h-6 text-blue-500" /> }
+      return { message: "👍 Good start! Keep learning to build confidence!", color: "text-tertiary-blue", icon: <Brain className="w-6 h-6 text-tertiary-blue" /> }
     } else {
-      return { message: "📚 Great effort! Our resources will help you master DeFi!", color: "text-purple-600", icon: <Brain className="w-6 h-6 text-purple-500" /> }
+      return { message: "📚 Great effort! Our resources will help you master DeFi!", color: "text-tertiary-blue", icon: <Brain className="w-6 h-6 text-tertiary-blue" /> }
     }
   }
 
@@ -158,16 +165,16 @@ export const LearnQuizStep: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="text-center mb-8"
       >
-        <div className="w-16 h-16 mx-auto bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+        <div className="w-16 h-16 mx-auto bg-gradient-to-br from-tertiary-blue/75 to-tertiary-blue/50 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
           <Brain className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-3xl font-bold text-foreground mb-4">
+        <HeadingText level="h2" weight="bold" className="text-3xl text-gray-800 mb-4 text-center">
           DeFi Knowledge Assessment
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+        </HeadingText>
+        <BodyText level="body1" className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
           Test your understanding of DeFi fundamentals, strategies, and risk management. 
           This will help us tailor your experience and identify areas to explore further.
-        </p>
+        </BodyText>
       </motion.div>
 
       {/* Quiz Questions */}
@@ -204,11 +211,11 @@ export const LearnQuizStep: React.FC = () => {
                     className={`
                       p-4 rounded-xl border-2 cursor-pointer transition-all duration-300
                       ${!showResults && isSelected 
-                        ? 'border-purple-300 bg-purple-50 shadow-md' 
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'border-tertiary-blue/75 bg-tertiary-blue/15 shadow-md' 
+                        : 'border-gray-200'
                       }
                       ${showCorrectness && isCorrect 
-                        ? 'border-green-300 bg-green-50 shadow-lg' 
+                        ? 'border-tertiary-green/75 bg-tertiary-lightgreen/75 shadow-lg' 
                         : ''
                       }
                       ${showCorrectness && isSelected && !isCorrect 
@@ -267,7 +274,7 @@ export const LearnQuizStep: React.FC = () => {
               className={`
                 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300
                 ${allAnswered
-                  ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                  ? 'bg-gradient-to-r from-tertiary-blue/75 to-tertiary-blue/50 text-white hover:from-tertiary-blue/75 hover:to-tertiary-blue/75 shadow-lg hover:shadow-xl'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }
               `}
@@ -278,33 +285,33 @@ export const LearnQuizStep: React.FC = () => {
         ) : (
           <div className="space-y-6">
             {/* Overall Score */}
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-8 border-2 border-purple-200 text-center shadow-xl">
+            <div className="bg-gradient-to-r from-tertiary-lightblue/10 to-tertiary-lightblue/5 rounded-2xl p-8 border-2 border-tertiary-blue/50 text-center shadow-xl">
               <div className="flex items-center justify-center space-x-3 mb-4">
                 {scoreMessage.icon}
-                <h3 className="text-2xl font-bold text-foreground">
+                <HeadingText level="h3" weight="bold" className="text-2xl text-gray-800">
                   Quiz Complete!
-                </h3>
+                </HeadingText>
               </div>
               
-              <div className="text-3xl font-bold text-purple-600 mb-2">
+              <div className="text-3xl font-bold text-tertiary-blue/75 mb-2">
                 {score} / {questions.length}
               </div>
               
-              <p className={`text-lg font-medium mb-4 ${scoreMessage.color}`}>
+              <BodyText level="body1" className={`text-lg font-medium mb-4 ${scoreMessage.color}`}>
                 {scoreMessage.message}
-              </p>
+              </BodyText>
 
               {/* Category Breakdown */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                 {Object.entries(categoryScores).map(([category, scores]) => (
                   <div key={category} className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/50">
                     <h4 className="font-semibold text-gray-900 mb-2">{category}</h4>
-                    <p className="text-2xl font-bold text-purple-600">
+                    <p className="text-2xl font-bold text-tertiary-blue/75">
                       {scores.correct}/{scores.total}
                     </p>
                     <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                       <div 
-                        className="bg-purple-500 h-2 rounded-full transition-all duration-500" 
+                        className="bg-tertiary-blue/75 h-2 rounded-full transition-all duration-500" 
                         style={{ width: `${(scores.correct / scores.total) * 100}%` }}
                       />
                     </div>

@@ -403,26 +403,26 @@ export const FinalStep: React.FC = () => {
                   onClick={handleStartEarnPath}
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 group relative bg-gradient-to-r from-emerald-500/20 to-green-500/20 hover:from-emerald-500/30 hover:to-green-500/30 backdrop-blur-sm border border-emerald-200/50 text-emerald-700 hover:text-emerald-800 font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="flex-1 group relative bg-gradient-to-r from-tertiary-lightgreen/20 to-tertiary-lightgreen/20 hover:from-tertiary-lightgreen/30 hover:to-tertiary-lightgreen/30 backdrop-blur-sm border border-tertiary-green/50 text-tertiary-green/75 hover:text-tertiary-green/80 font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <span className="text-lg">Start Earning</span>
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                   </div>
-                  <p className="text-emerald-600/80 text-sm mt-1">Generate passive income</p>
+                  <p className="text-tertiary-green/75 text-sm mt-1">Generate passive income</p>
                 </motion.button>
                 
                 <motion.button
                   onClick={handleStartBorrowPath}
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 group relative bg-gradient-to-r from-blue-500/20 to-indigo-500/20 hover:from-blue-500/30 hover:to-indigo-500/30 backdrop-blur-sm border border-blue-200/50 text-blue-700 hover:text-blue-800 font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="flex-1 group relative bg-gradient-to-r from-tertiary-lightblue/20 to-tertiary-lightblue/20 hover:from-tertiary-lightblue/30 hover:to-tertiary-lightblue/30 backdrop-blur-sm border border-tertiary-blue/50 text-tertiary-blue/75 hover:text-tertiary-blue/80 font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <span className="text-lg">Start Borrowing</span>
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                   </div>
-                  <p className="text-blue-600/80 text-sm mt-1">Access instant liquidity</p>
+                  <p className="text-tertiary-blue/75 text-sm mt-1">Access instant liquidity</p>
                 </motion.button>
               </div>
               
@@ -432,41 +432,25 @@ export const FinalStep: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.6 }}
                 className="text-center"
               >
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <a 
-                    href="https://blog.superlend.xyz/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-gray-50"
-                  >
-                    <span>Continue Learning</span>
-                    <ExternalLinkIcon className="w-4 h-4" />
-                  </a>
-                  <button
-                    onClick={handleStartOver}
-                    className="inline-flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 font-medium underline underline-offset-2 transition-colors duration-200 px-2 py-1 rounded hover:bg-gray-50"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    <span>Start over</span>
-                  </button>
-                </div>
+                <a 
+                  href="https://blog.superlend.xyz/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 px-4 py-2 rounded-lg hover:bg-gray-50"
+                >
+                  <span>Continue Learning</span>
+                  <ExternalLinkIcon className="w-4 h-4" />
+                </a>
               </motion.div>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex justify-center">
               <button
                 onClick={handleGetStarted}
                 disabled={isLoading}
                 className="bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-8 rounded-4 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isLoading ? 'Loading...' : content.cta}
-              </button>
-              <button
-                onClick={handleStartOver}
-                className="inline-flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 font-medium underline underline-offset-2 transition-colors duration-200 px-2 py-1 rounded hover:bg-gray-50"
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span>Start over</span>
               </button>
             </div>
           )}

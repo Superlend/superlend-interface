@@ -2,7 +2,7 @@
 
 import React, { useMemo, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, RotateCcw } from 'lucide-react'
 import useDimensions from '@/hooks/useDimensions'
 
 import {
@@ -67,6 +67,9 @@ export const OnboardingDialog: React.FC = () => {
     canGoNext,
     getStepProgress,
     selectedPath,
+    setStep,
+    setPath,
+    clearSelectedAsset,
   } = useOnboardingContext()
 
   // Scroll to top when step changes - target the correct container based on platform
@@ -81,6 +84,23 @@ export const OnboardingDialog: React.FC = () => {
   }, [currentStep, isDesktop])
 
   const progress = getStepProgress()
+
+  // Handle start over functionality
+  const handleStartOver = () => {
+    console.log('🔄 Starting over from dialog footer')
+    // Clear selected asset to ensure fresh selection
+    clearSelectedAsset()
+    // Reset to appropriate starting point based on current path
+    if (selectedPath === 'learn') {
+      setStep('choose-path')
+    } else if (selectedPath === 'earn') {
+      setStep('earn-assets')
+    } else if (selectedPath === 'borrow') {
+      setStep('borrow-assets')
+    } else {
+      setStep('choose-path')
+    }
+  }
 
   const renderStep = () => {
     console.log('🎭 renderStep called with currentStep:', currentStep)
@@ -181,6 +201,18 @@ export const OnboardingDialog: React.FC = () => {
             </Button>
           );
         })()}
+        
+        {/* Start Over button - only show on final step */}
+        {currentStep === 'final' && (
+          <Button
+            variant="ghost"
+            onClick={handleStartOver}
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mobile-onboarding-button"
+          >
+            <RotateCcw className="h-4 w-4" />
+            <span>Start Over</span>
+          </Button>
+        )}
       </div>
     </div>
   )
