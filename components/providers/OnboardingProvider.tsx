@@ -6,6 +6,7 @@ import { OnboardingDialog } from '@/components/onboarding'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { TPositionType } from '@/types'
+import { AppleFarmRewardsProvider } from '@/context/apple-farm-rewards-provider'
 
 // Create the context with the same type as the useOnboarding hook
 const OnboardingContext = createContext<ReturnType<typeof useOnboarding> & {
@@ -36,18 +37,18 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     isLoading: isLoadingLendOpportunitiesData,
     isError: isErrorLendOpportunitiesData,
     refetch: refetchLendOpportunitiesData
-} = useGetOpportunitiesData({
+  } = useGetOpportunitiesData({
     type: 'lend',
-})
+  })
 
   const {
     data: borrowOpportunitiesData,
     isLoading: isLoadingBorrowOpportunitiesData,
     isError: isErrorBorrowOpportunitiesData,
     refetch: refetchBorrowOpportunitiesData
-} = useGetOpportunitiesData({
+  } = useGetOpportunitiesData({
     type: 'borrow',
-})
+  })
 
   return (
     <OnboardingContext.Provider value={{
@@ -63,8 +64,10 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
       isErrorBorrowOpportunitiesData,
       refetchBorrowOpportunitiesData
     }}>
-      {children}
-      <OnboardingDialog />
+      <AppleFarmRewardsProvider>
+        {children}
+        <OnboardingDialog />
+      </AppleFarmRewardsProvider>
     </OnboardingContext.Provider>
   )
 }

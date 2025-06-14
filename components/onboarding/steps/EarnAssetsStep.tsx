@@ -7,6 +7,7 @@ import { PlatformType } from '@/types/platform'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { getTokenLogo } from '@/lib/utils'
 import Image from 'next/image'
+import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 
 interface Asset {
   symbol: string
@@ -46,6 +47,7 @@ export const EarnAssetsStep: React.FC = () => {
   // Filter states
   const [selectedTokenType, setSelectedTokenType] = useState<TokenType | null>(null)
   const [selectedRiskLevel, setSelectedRiskLevel] = useState<RiskLevel | null>(null)
+  const { appleFarmRewardsAprs } = useAppleFarmRewards()
 
   // Initialize selectedAsset from context if available - use unique identifier
   const [selectedAsset, setSelectedAsset] = useState<string | null>(() => {
@@ -199,7 +201,7 @@ export const EarnAssetsStep: React.FC = () => {
     // Filter for the selected token type and process the data
     const filteredOpportunities = filteredOpportunitiesByTokenType.filter((item: any) => {
       const isSelectedToken = item.token.symbol.toUpperCase() === selectedTokenType
-      const hasLendingAPY = Number(item.platform.apy.current) > 0.1
+      const hasLendingAPY = (Number(item.platform.apy.current) + Number((appleFarmRewardsAprs?.[item?.token?.address] ?? 0))) > 0.1
       const hasLiquidity = Number(item.platform.liquidity) > 0
       const liquidityUSD = Number(item.platform.liquidity) * Number(item.token.price_usd)
       const hasMeaningfulLiquidity = liquidityUSD > 10000
@@ -232,8 +234,8 @@ export const EarnAssetsStep: React.FC = () => {
         symbol: item.token.symbol,
         name: item.token.name,
         logo: item.token.logo,
-        apy: `${Number(item.platform.apy.current).toFixed(1)}%`,
-        apyNumeric: Number(item.platform.apy.current),
+        apy: `${(Number(item.platform.apy.current) + Number((appleFarmRewardsAprs?.[item?.token?.address] ?? 0))).toFixed(1)}%`,
+        apyNumeric: Number(item.platform.apy.current) + Number((appleFarmRewardsAprs?.[item?.token?.address] ?? 0)),
         risk,
         color: getRiskColor(risk),
         bgColor: getRiskBgColor(risk),

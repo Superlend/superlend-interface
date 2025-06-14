@@ -100,6 +100,7 @@ export const FinalStep: React.FC = () => {
 
   // Use selected asset or find fallback
   const getRedirectAsset = () => {
+    const POSITION_TYPE = 'lend'
     // If user has selected an asset, use that
     if (selectedAsset) {
       return selectedAsset
@@ -123,7 +124,7 @@ export const FinalStep: React.FC = () => {
         tokenSymbol: topAsset.token.symbol,
         chainId: topAsset.chain_id,
         protocolIdentifier: topAsset.platform.protocol_identifier,
-        positionType: positionType as 'lend' | 'borrow'
+        positionType: POSITION_TYPE
       }
     }
 
@@ -133,7 +134,7 @@ export const FinalStep: React.FC = () => {
       tokenSymbol: topSuperlendAsset.token.symbol,
       chainId: topSuperlendAsset.chain_id,
       protocolIdentifier: topSuperlendAsset.platform.protocol_identifier,
-      positionType: positionType as 'lend' | 'borrow'
+      positionType: POSITION_TYPE
     }
   }
 
