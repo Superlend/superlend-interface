@@ -97,7 +97,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     const [leverage, setLeverage] = useState<number>(1)
     const [newHealthFactor, setNewHealthFactor] = useState<number>(0)
     const [flashLoanAmount, setFlashLoanAmount] = useState<string>('0')
-    const { getMaxLeverage, getBorrowTokenAmountForLeverage, providerStatus, getUserData, getReservesData } =
+    const { getMaxLeverage, getBorrowTokenAmountForLeverage, providerStatus, getUserData, getReservesData, refreshData } =
         useAaveV3Data()
     const userData = getUserData(Number(chain_id))
     const reservesData = getReservesData(Number(chain_id))
@@ -117,6 +117,16 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         value: '',
         isLoading: false,
     })
+    
+    useEffect(() => {
+        if (!userData || !reservesData) {
+            refreshData({
+                chainId: ChainId.Etherlink,
+                uiPoolDataProviderAddress: uiPoolDataProviderAddress,
+                lendingPoolAddressProvider: lendingPoolAddressProvider,
+            })
+        }
+    }, [userData, reservesData])
 
     // Helper function to convert ray format to percentage
     const rayToPercentage = (rayValue: string): number => {
@@ -418,11 +428,6 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
             setNetAPY({
                 value: calculateUserCurrentNetAPY(),
                 isLoading: false,
-            })
-        } else if (walletAddress && (!userData || !reservesData?.reservesData)) {
-            setNetAPY({
-                value: '',
-                isLoading: true,
             })
         } else {
             setNetAPY({
