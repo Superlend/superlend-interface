@@ -1,3 +1,5 @@
+'use client'
+
 import MainContainer from '@/components/MainContainer'
 import React from 'react'
 import PageHeader from './page-header'
@@ -17,8 +19,14 @@ import TxProvider from '@/context/tx-provider'
 import { AssetTxWidget } from './tx-widgets'
 import PortfolioProvider from '@/context/portfolio-provider'
 import { AppleFarmRewardsProvider } from '@/context/apple-farm-rewards-provider'
+import { useSearchParams } from 'next/navigation'
+import FlatTabs from '@/components/tabs/flat-tabs'
 
 export default function PositionManagementPage() {
+    const searchParams = useSearchParams()
+    const positionTypeParam = searchParams?.get('position_type') || ''
+    const isLoopPosition = positionTypeParam === 'loop'
+
     return (
         <PositionManagementProvider>
             <TxProvider>
@@ -27,10 +35,17 @@ export default function PositionManagementPage() {
                         <PageHeader />
                     </AppleFarmRewardsProvider>
                     <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-[16px]">
-                        <div className="flex flex-col gap-[16px] order-last xl:order-first">
-                            <PositionDetails />
-                            <AssetHistory />
-                        </div>
+                        {!isLoopPosition &&
+                            <div className="flex flex-col gap-[16px] order-last xl:order-first">
+                                <PositionDetails />
+                                <AssetHistory />
+                            </div>
+                        }
+                        {isLoopPosition &&
+                            <div className="flex flex-col gap-[16px] order-last xl:order-first">
+                                
+                            </div>
+                        }
                         <div className="order-first xl:order-last">
                             <PortfolioProvider>
                                 <AssetTxWidget />

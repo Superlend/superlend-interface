@@ -141,7 +141,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                 borrows: isActiveTab('borrow'),
                 collateral_exposure: isActiveTab('lend'),
                 collateral_tokens: isActiveTab('borrow'),
-                available_liquidity: isActiveTab('borrow'),
+                available_liquidity: isActiveTab('borrow') || isActiveTab('loop'),
                 apy_avg_7days: isActiveTab('lend'),
             }
         })

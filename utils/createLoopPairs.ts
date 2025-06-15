@@ -25,15 +25,19 @@ export function createLoopPairs(
     }
 
     const pairs: TLoopPair[] = []
-    
+
     // Get borrowable tokens from platform data
     const borrowableTokens = platformData.assets.filter(asset => asset.borrow_enabled)
-    
+    const isBorrowableToken = (tokenAddress: string) => borrowableTokens.some(asset => asset.token.address.toLowerCase() === tokenAddress.toLowerCase())
+
     lendOpportunities.forEach(item => {
+        if (!isBorrowableToken(item.token.address)) return;
+
         // Transform TOpportunity to TOpportunityTable format (copied from top-apy-opportunities.tsx)
         const liquidityInUSD = Number(item.platform.liquidity) * Number(item.token.price_usd)
         const borrowsInUSD = Number(item.platform.borrows) * Number(item.token.price_usd)
-        
+        const availableLiquidity = liquidityInUSD - borrowsInUSD
+
         const lendOpp: TOpportunityTable = {
             tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,
@@ -59,12 +63,12 @@ export function createLoopPairs(
             deposits: `${liquidityInUSD}`,
             borrows: `${borrowsInUSD}`,
             utilization: item.platform.utilization_rate,
+            available_liquidity: availableLiquidity,
             additional_rewards: item.platform.additional_rewards,
             rewards: item.platform.rewards,
             isVault: item.platform.isVault || false,
             collateral_exposure: item.platform.collateral_exposure,
             collateral_tokens: item.platform.collateral_tokens,
-            available_liquidity: liquidityInUSD - borrowsInUSD,
             apple_farm_apr: 0, // TODO: Add apple farm logic if needed
             has_apple_farm_rewards: false, // TODO: Add apple farm logic if needed
         }
@@ -74,7 +78,7 @@ export function createLoopPairs(
             if (lendOpp.tokenAddress.toLowerCase() === borrowAsset.token.address.toLowerCase()) {
                 return
             }
-            
+
             // Create pair object
             const pair: TLoopPair = {
                 ...lendOpp,
@@ -91,11 +95,11 @@ export function createLoopPairs(
                 // Interim: Using lend token APY as placeholder
                 maxAPY: Number(lendOpp.apy_current)
             }
-            
+
             pairs.push(pair)
         })
     })
-    
+
     // Sort by Max APY (descending)
     return pairs.sort((a, b) => b.maxAPY - a.maxAPY)
 } 

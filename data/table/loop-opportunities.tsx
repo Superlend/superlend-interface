@@ -436,6 +436,40 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         enableGlobalFilter: false,
     },
     {
+        accessorKey: 'available_liquidity',
+        accessorFn: (item) => Number(item.available_liquidity),
+        header: () => (
+            <InfoTooltip
+                side="bottom"
+                label={<TooltipText>Available Liquidity</TooltipText>}
+                content={
+                    'Total amount of asset available to be borrowed.'
+                }
+            />
+        ),
+        cell: ({ row }) => {
+            const value: number = row.original.available_liquidity
+
+            if (containsNegativeInteger(value)) {
+                return (
+                    <BodyText level={'body2'} weight={'medium'}>
+                        -$
+                        {abbreviateNumber(
+                            Number(convertNegativeToPositive(value))
+                        )}
+                    </BodyText>
+                )
+            }
+
+            return (
+                <BodyText level={'body2'} weight={'medium'}>
+                    ${abbreviateNumber(Number(value))}
+                </BodyText>
+            )
+        },
+        enableGlobalFilter: false,
+    },
+    {
         accessorKey: 'borrowToken',
         header: () => (
             <InfoTooltip
