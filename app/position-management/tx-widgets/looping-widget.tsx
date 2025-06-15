@@ -64,7 +64,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     portfolioData,
 }) => {
     const searchParams = useSearchParams() || new URLSearchParams()
-    const tokenAddress = searchParams.get('token') || ''
+    const lendTokenAddressParam = searchParams.get('lend_token') || ''
+    const borrowTokenAddressParam = searchParams.get('borrow_token') || ''
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const [isLoopTxDialogOpen, setIsLoopTxDialogOpen] = useState(false)
@@ -100,7 +101,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         useAaveV3Data()
     const userData = getUserData(Number(chain_id))
     const reservesData = getReservesData(Number(chain_id))
-    
+
     const [netAPY, setNetAPY] = useState<{
         value: string
         isLoading: boolean
@@ -108,7 +109,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         value: '',
         isLoading: false,
     })
-    
+
     const [loopNetAPY, setLoopNetAPY] = useState<{
         value: string
         isLoading: boolean
@@ -133,7 +134,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         const lendTokenReserve = reservesData.reservesData.find(
             (reserve: any) => reserve.underlyingAsset.toLowerCase() === selectedLendToken.address.toLowerCase()
         )
-        
+
         const borrowTokenReserve = reservesData.reservesData.find(
             (reserve: any) => reserve.underlyingAsset.toLowerCase() === selectedBorrowToken.address.toLowerCase()
         )
@@ -154,7 +155,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         const formattedValue = Math.abs(netAPYValue) < 0.01 && netAPYValue !== 0
             ? `${netAPYValue >= 0 ? '+' : ''}${netAPYValue < 0.01 ? '<0.01' : netAPYValue.toFixed(2)}%`
             : `${netAPYValue >= 0 ? '+' : ''}${netAPYValue.toFixed(2)}%`
-        
+
         return formattedValue
     }
 
@@ -167,7 +168,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         try {
             const currentTimestamp = Math.floor(Date.now() / 1000)
             const baseCurrencyData = reservesData.baseCurrencyData
-            
+
             // Format reserves using the same logic as useAppDataProvider
             const formattedPoolReserves = formatReserves({
                 reserves: reservesData.reservesData as any,
@@ -199,14 +200,14 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 new BigNumberJS(reserve.supplyAPY).multipliedBy(value.underlyingBalanceUSD)
                             )
                         }
-                        
+
                         // Variable borrow APY calculation
                         if (value.variableBorrowsUSD !== '0') {
                             acc.negativeProportion = acc.negativeProportion.plus(
                                 new BigNumberJS(reserve.variableBorrowAPY).multipliedBy(value.variableBorrowsUSD)
                             )
                         }
-                        
+
                         // Stable borrow APY calculation
                         if (value.stableBorrowsUSD !== '0') {
                             acc.negativeProportion = acc.negativeProportion.plus(
@@ -216,29 +217,29 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                     }
                     return acc
                 },
-                { 
-                    positiveProportion: new BigNumberJS(0), 
-                    negativeProportion: new BigNumberJS(0) 
+                {
+                    positiveProportion: new BigNumberJS(0),
+                    negativeProportion: new BigNumberJS(0)
                 }
             )
 
             // Calculate net APY like in useAppDataProvider
-            const earnedAPY = user.totalLiquidityUSD !== '0' 
+            const earnedAPY = user.totalLiquidityUSD !== '0'
                 ? proportions.positiveProportion.dividedBy(user.totalLiquidityUSD).toNumber()
                 : 0
-                
+
             const debtAPY = user.totalBorrowsUSD !== '0'
                 ? proportions.negativeProportion.dividedBy(user.totalBorrowsUSD).toNumber()
                 : 0
 
             const netWorthUSD = user.netWorthUSD !== '0' ? user.netWorthUSD : '1'
-            const netAPYValue = 
-                (earnedAPY || 0) * (Number(user.totalLiquidityUSD) / Number(netWorthUSD)) - 
+            const netAPYValue =
+                (earnedAPY || 0) * (Number(user.totalLiquidityUSD) / Number(netWorthUSD)) -
                 (debtAPY || 0) * (Number(user.totalBorrowsUSD) / Number(netWorthUSD))
 
             // Format the result
             return `${netAPYValue >= 0 ? '+' : ''}${netAPYValue.toFixed(2)}%`
-            
+
         } catch (error) {
             console.error('Error calculating user current net APY:', error)
             return '0.00%'
@@ -248,7 +249,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         string,
         Record<string, number>
     > | null>(null)
-    
+
     // Debug: Log APY calculation details
     // console.log('APY Debug:', {
     //     selectedLendToken: selectedLendToken?.symbol,
@@ -260,7 +261,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     //     hasReservesData: !!reservesData?.reservesData,
     //     walletConnected: !!walletAddress,
     // })
-    
+
     const { loopTx } = useTxContext()
     // Token balances
     const {
@@ -313,11 +314,16 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         }
     }, [isLoopTxDialogOpen])
 
-    // Setup tokens when platform data is available
+    // Set Available tokens when platform data is available
     useEffect(() => {
         if (platformData?.assets?.length > 0) {
             const lendTokens = platformData.assets
-                .filter((asset: any) => true)
+                .filter((asset: any) => {
+                    const isTokenOption1 = lendTokenAddressParam.toLowerCase() === asset.token.address.toLowerCase()
+                    const isTokenOption2 = borrowTokenAddressParam.toLowerCase() === asset.token.address.toLowerCase()
+
+                    return isTokenOption1 || isTokenOption2
+                })
                 .map((asset: any) => {
                     return {
                         ...asset.token,
@@ -326,7 +332,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                     }
                 })
             const borrowTokens = platformData.assets
-                .filter((asset: any) => asset.borrow_enabled)
+                .filter((asset: any) => borrowTokenAddressParam.toLowerCase() === asset.token.address.toLowerCase())
                 .map((asset: any) => {
                     return {
                         ...asset.token,
@@ -334,30 +340,25 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                         chain_name: ChainId[platformData.platform.chain_id],
                     }
                 })
-            // Select the first token by default
-            const defaultLendToken =
-                lendTokens.find(
-                    (token: TToken) =>
-                        token.address.toLowerCase() ===
-                        tokenAddress.toLowerCase()
-                ) || lendTokens[0]
-
-            const defaultBorrowToken =
-                borrowTokens.find(
-                    (token: TToken) =>
-                        token.address.toLowerCase() ===
-                        tokenAddress.toLowerCase()
-                ) || borrowTokens[0]
 
             setAvailableLendTokens(lendTokens)
             setAvailableBorrowTokens(borrowTokens)
-            setSelectedLendToken(defaultLendToken)
-            setSelectedBorrowToken(defaultBorrowToken)
         }
-    }, [!!platformData, !!tokenAddress])
+    }, [!!platformData, !!lendTokenAddressParam.length, !!borrowTokenAddressParam.length])
 
     useEffect(() => {
-        if (providerStatus.isReady) {
+        const [defaultLendToken] = availableLendTokens.filter((token: any) => {
+            const isLendToken = lendTokenAddressParam.toLowerCase() === token.address.toLowerCase()
+            return isLendToken;
+        })
+        const defaultBorrowToken = availableBorrowTokens[0]
+
+        setSelectedLendToken(defaultLendToken)
+        setSelectedBorrowToken(defaultBorrowToken)
+    }, [!!availableLendTokens.length, !!availableBorrowTokens.length])
+
+    useEffect(() => {
+        if (providerStatus.isReady && !!Number(lendAmount)) {
             // Get max leverage
             getMaxLeverage({
                 chainId: ChainId.Etherlink,
@@ -395,7 +396,14 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                 .finally(() => {
                     setIsLoadingBorrowAmount(false)
                 })
+            return
         }
+
+        // Reset values, if provider is not ready or no Lend Amount found
+        setNewHealthFactor(0)
+        setBorrowAmount('0')
+        setBorrowAmountRaw('0')
+        setFlashLoanAmount('0')
     }, [
         providerStatus.isReady,
         selectedLendToken?.address,
@@ -500,6 +508,19 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         }
     }
 
+    const handTokenSwap = (token: TToken) => {
+        const newBorrowToken = availableLendTokens.find((lendToken: any) => {
+            return lendToken.address !== token.address
+        })
+        // If borrow token replacement found, then update lend token
+        if (newBorrowToken) {
+            handleBorrowTokenSelect(newBorrowToken)
+            handleLendTokenSelect(token)
+            return;
+        }
+        return;
+    }
+
     const handleLendTokenSelect = (token: TToken) => {
         setSelectedLendToken(token)
         setLendAmount('')
@@ -507,8 +528,17 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
 
     const handleBorrowTokenSelect = (token: TToken) => {
         setSelectedBorrowToken(token)
-        setBorrowAmount('0.00')
+        setBorrowAmount('0')
     }
+
+    const isLeverageDisabled = !isWalletConnected ||
+        Number(lendAmount) <= 0 ||
+        (maxLeverage?.[
+            selectedLendToken?.address
+        ]?.[selectedBorrowToken?.address] ?? 0) <= 1
+
+    const isDisabledMaxButton = !isWalletConnected || Number(selectedLendTokenBalance) <= 0
+
     // Check if button should be disabled
     const diableActionButton =
         !isWalletConnected ||
@@ -518,15 +548,22 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         Number(lendAmount) > Number(selectedLendTokenBalance) ||
         isLoadingBorrowAmount
 
+    function handleLendAmountChange(amount: string = '') {
+        if (!amount.length || !Number(amount)) {
+            setLeverage(1)
+        }
+        setLendAmount(amount)
+    }
+
     // looping-widget
     return (
         <section className="looping-widget flex flex-col gap-3">
             <Card className="flex flex-col gap-3 p-4">
-                <CardHeader className="p-0 pl-1">
+                {/* <CardHeader className="p-0 pl-1">
                     <CardTitle className="text-lg font-medium text-gray-800">
                         Create New Loop Position
                     </CardTitle>
-                </CardHeader>
+                </CardHeader> */}
 
                 <CardContent className="p-0 space-y-6">
                     {/* Lend Position Section */}
@@ -559,7 +596,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             <TokenSelector
                                 selectedToken={selectedLendToken}
                                 availableTokens={availableLendTokens}
-                                handleTokenSelect={handleLendTokenSelect}
+                                handleTokenSelect={handTokenSwap}
                             />
 
                             <BodyText
@@ -574,9 +611,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             <div className="flex flex-col flex-1 gap-[4px]">
                                 <CustomNumberInput
                                     amount={lendAmount}
-                                    setAmount={(amount) =>
-                                        setLendAmount(amount)
-                                    }
+                                    setAmount={handleLendAmountChange}
                                     maxDecimals={
                                         selectedLendToken?.decimals || 18
                                     }
@@ -584,15 +619,11 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 />
                             </div>
 
-                            {/* Max Button */}
                             <Button
                                 variant="link"
                                 className="uppercase text-[14px] font-medium"
                                 onClick={handleMaxClick}
-                                disabled={
-                                    !isWalletConnected ||
-                                    Number(selectedLendTokenBalance) <= 0
-                                }
+                                disabled={isDisabledMaxButton}
                             >
                                 max
                             </Button>
@@ -601,35 +632,17 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
 
                     {/* Borrow Position Section */}
                     <div className="space-y-1">
-                        <div className="flex justify-between items-center mb-1 px-2">
+                        <div className="flex justify-between items-center gap-2 mb-1 px-2">
                             <Label size="medium">Borrow</Label>
-                            {/* <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                Balance:{' '}
-                                {isLoadingErc20TokensBalanceData ? (
-                                    <LoaderCircle className="text-primary w-4 h-4 animate-spin inline" />
-                                ) : (
-                                    handleSmallestValue(
-                                        selectedBorrowTokenBalance,
-                                        selectedBorrowToken
-                                            ? getMaxDecimalsToDisplay(
-                                                selectedBorrowToken.symbol
-                                            )
-                                            : 2
-                                    )
-                                )}
-                            </BodyText> */}
+                            <Badge variant={'gray'} className='text-gray-600 rounded-4 px-2'>Read only</Badge>
                         </div>
 
                         <div className="border rounded-5 border-gray-200 py-2 px-4 flex items-center gap-3 bg-gray-100 max-w-full">
                             {/* Single Token */}
-                            {/* <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1">
                                 <ImageWithDefault
-                                    src={selectedLendToken?.logo || ''}
-                                    alt={selectedLendToken?.symbol || ''}
+                                    src={selectedBorrowToken?.logo || ''}
+                                    alt={selectedBorrowToken?.symbol || ''}
                                     width={24}
                                     height={24}
                                     className="rounded-full max-w-[24px] max-h-[24px]"
@@ -639,15 +652,9 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     weight="medium"
                                     className="text-gray-800"
                                 >
-                                    {selectedLendToken?.symbol || 'Select token'}
+                                    {selectedBorrowToken?.symbol || 'Select token'}
                                 </BodyText>
-                            </div> */}
-                            {/* Token Selector */}
-                            <TokenSelector
-                                selectedToken={selectedBorrowToken}
-                                availableTokens={availableBorrowTokens}
-                                handleTokenSelect={handleBorrowTokenSelect}
-                            />
+                            </div>
 
                             <BodyText
                                 level="body2"
@@ -658,30 +665,39 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             </BodyText>
 
                             <div className="flex flex-col flex-1 gap-[4px] truncate">
-                                <BodyText
-                                    level="custom"
-                                    weight="medium"
-                                    className={cn(
-                                        'text-[24px] cursor-not-allowed hover:text-gray-500 select-none truncate',
-                                        borrowAmount === '0.00'
-                                            ? 'text-gray-500'
-                                            : 'text-gray-800'
-                                    )}
-                                    title={borrowAmount}
-                                >
-                                    {isLoadingBorrowAmount ? (
-                                        <div className="flex items-center justify-start gap-1 py-2.5">
-                                            <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
-                                            <span
-                                                className="font-medium text-gray-600 text-sm"
+                                {isLoadingBorrowAmount ? (
+                                    <div className="flex items-center justify-start gap-1 py-2">
+                                        <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
+                                        <span
+                                            className="font-medium text-gray-600 text-sm"
+                                        >
+                                            Fetching amount...
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <InfoTooltip
+                                        classNameLabel="truncate max-w-full"
+                                        label={
+                                            <BodyText
+                                                level="custom"
+                                                weight="medium"
+                                                className={cn(
+                                                    'text-[24px] cursor-not-allowed hover:text-gray-500 select-none truncate',
+                                                    !Number(borrowAmount)
+                                                        ? 'text-gray-500'
+                                                        : 'text-gray-800'
+                                                )}
                                             >
-                                                Fetching borrow amount...
-                                            </span>
-                                        </div>
-                                    ) : (
-                                        borrowAmount
-                                    )}
-                                </BodyText>
+                                                {borrowAmount}
+                                            </BodyText>
+                                        }
+                                        content={
+                                            <BodyText level="body1" weight='medium' className='p-0'>
+                                                {borrowAmount}
+                                            </BodyText>
+                                        }
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
@@ -693,8 +709,9 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             <Badge variant="secondary">{leverage}x</Badge>
                         </div>
 
-                        <div className="">
+                        <div>
                             <Slider
+                                title={Number(lendAmount) === 0 ? 'Add Lend amount to enable leverage.' : ''}
                                 value={[leverage]}
                                 min={1}
                                 max={
@@ -712,13 +729,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 onValueChange={(values) =>
                                     setLeverage(values[0])
                                 }
-                                disabled={
-                                    !isWalletConnected ||
-                                    Number(lendAmount) <= 0 ||
-                                    (maxLeverage?.[
-                                        selectedLendToken?.address
-                                    ]?.[selectedBorrowToken?.address] ?? 0) <= 1
-                                }
+                                disabled={isLeverageDisabled}
+                                className={`${isLeverageDisabled ? 'group disabled' : ''}`}
                             />
                             <div className="flex justify-between mt-3">
                                 <BodyText
@@ -826,11 +838,11 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             className={cn(
                                 "text-gray-800",
                                 netAPY.value && !netAPY.isLoading && (
-                                    netAPY.value.startsWith('+') 
-                                        ? 'text-green-600' 
-                                        : netAPY.value.startsWith('-') 
-                                        ? 'text-red-600' 
-                                        : 'text-gray-800'
+                                    netAPY.value.startsWith('+')
+                                        ? 'text-green-600'
+                                        : netAPY.value.startsWith('-')
+                                            ? 'text-red-600'
+                                            : 'text-gray-800'
                                 )
                             )}
                         >
@@ -862,11 +874,11 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             className={cn(
                                 "text-gray-800",
                                 loopNetAPY.value && !loopNetAPY.isLoading && (
-                                    loopNetAPY.value.startsWith('+') 
-                                        ? 'text-green-600' 
-                                        : loopNetAPY.value.startsWith('-') 
-                                        ? 'text-red-600' 
-                                        : 'text-gray-800'
+                                    loopNetAPY.value.startsWith('+')
+                                        ? 'text-green-600'
+                                        : loopNetAPY.value.startsWith('-')
+                                            ? 'text-red-600'
+                                            : 'text-gray-800'
                                 )
                             )}
                         >

@@ -605,267 +605,259 @@ export default function AaveV3TxWidget({
     return (
         <section className="lend-and-borrow-section-wrapper flex flex-col gap-[12px]">
             <ToggleTab
-                type={positionType === 'lend' ? 'tab1' : positionType === 'borrow' ? 'tab2' : 'tab3'}
+                type={positionType === 'lend' ? 'tab1' : 'tab2'}
                 handleToggle={(positionType: TTypeToMatch) => {
                     if (positionType === 'tab1') {
                         setPositionType('lend')
-                    } else if (positionType === 'tab2') {
+                    } else {
                         setPositionType('borrow')
-                    } else if (positionType === 'tab3') {
-                        setPositionType('loop')
                     }
                     setAmount('')
                 }}
                 showTab={{
                     tab1: true,
                     tab2: true,
-                    tab3: isEtherlinkChain,
+                    tab3: false,
                 }}
             />
-            {positionType === 'loop' ? (
-                <LoopingWidget
-                    isLoading={isLoading}
-                    platformData={platformData}
-                    portfolioData={portfolioData}
-                />
-            ) : (
+            {(
                 <Card className="flex flex-col gap-[12px] p-[16px]">
-                <div className="flex items-center justify-between px-[14px]">
-                    <BodyText
-                        level="body2"
-                        weight="normal"
-                        className="text-gray-600"
-                    >
-                        {isLendPositionType(positionType)
-                            ? 'Lend Collateral'
-                            : `Borrow ${selectedBorrowTokenDetails?.token?.symbol || ''}`}
-                    </BodyText>
-                    {isWalletConnected && isLendPositionType(positionType) && (
+                    <div className="flex items-center justify-between px-[14px]">
                         <BodyText
                             level="body2"
                             weight="normal"
-                            className="text-gray-600 flex items-center gap-[4px]"
+                            className="text-gray-600"
                         >
-                            Bal:{' '}
-                            {isLoadingErc20TokensBalanceData ? (
-                                <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
-                            ) : (
-                                abbreviateNumber(
-                                    Number(
-                                        getLowestDisplayValue(
-                                            Number(balance ?? 0),
-                                            getMaxDecimalsToDisplay(tokenSymbol)
-                                        )
-                                    ),
-                                    getMaxDecimalsToDisplay(tokenSymbol)
-                                )
-                            )}
-                            <span className="inline-block truncate max-w-[70px]">
-                                {isLendPositionType(positionType)
-                                    ? assetDetails?.asset?.token?.symbol
-                                    : selectedBorrowTokenDetails?.token?.symbol}
-                            </span>
+                            {isLendPositionType(positionType)
+                                ? 'Lend Collateral'
+                                : `Borrow ${selectedBorrowTokenDetails?.token?.symbol || ''}`}
                         </BodyText>
-                    )}
-                    {isWalletConnected && !isLendPositionType(positionType) && (
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="capitalize text-gray-600 flex items-center gap-[4px]"
+                        {isWalletConnected && isLendPositionType(positionType) && (
+                            <BodyText
+                                level="body2"
+                                weight="normal"
+                                className="text-gray-600 flex items-center gap-[4px]"
+                            >
+                                Bal:{' '}
+                                {isLoadingErc20TokensBalanceData ? (
+                                    <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
+                                ) : (
+                                    abbreviateNumber(
+                                        Number(
+                                            getLowestDisplayValue(
+                                                Number(balance ?? 0),
+                                                getMaxDecimalsToDisplay(tokenSymbol)
+                                            )
+                                        ),
+                                        getMaxDecimalsToDisplay(tokenSymbol)
+                                    )
+                                )}
+                                <span className="inline-block truncate max-w-[70px]">
+                                    {isLendPositionType(positionType)
+                                        ? assetDetails?.asset?.token?.symbol
+                                        : selectedBorrowTokenDetails?.token?.symbol}
+                                </span>
+                            </BodyText>
+                        )}
+                        {isWalletConnected && !isLendPositionType(positionType) && (
+                            <BodyText
+                                level="body2"
+                                weight="normal"
+                                className="capitalize text-gray-600 flex items-center gap-[4px]"
+                            >
+                                limit:{' '}
+                                {isLoadingMaxBorrowingAmount ? (
+                                    <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
+                                ) : (
+                                    handleSmallestValue(
+                                        maxBorrowAmount,
+                                        getMaxDecimalsToDisplay(tokenSymbol)
+                                    )
+                                )}
+                            </BodyText>
+                        )}
+                    </div>
+                    <CardContent className="p-0 bg-white rounded-5">
+                        <div
+                            className={cn(
+                                isLendPositionType(positionType)
+                                    ? 'border rounded-5 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]'
+                                    : 'border-t rounded-t-5',
+                                'border-gray-200 py-[12px] px-[20px] flex items-center gap-[12px]'
+                            )}
                         >
-                            limit:{' '}
-                            {isLoadingMaxBorrowingAmount ? (
-                                <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
-                            ) : (
-                                handleSmallestValue(
-                                    maxBorrowAmount,
-                                    getMaxDecimalsToDisplay(tokenSymbol)
-                                )
+                            {isLoading && (
+                                <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
                             )}
-                        </BodyText>
-                    )}
-                </div>
-                <CardContent className="p-0 bg-white rounded-5">
-                    <div
-                        className={cn(
-                            isLendPositionType(positionType)
-                                ? 'border rounded-5 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]'
-                                : 'border-t rounded-t-5',
-                            'border-gray-200 py-[12px] px-[20px] flex items-center gap-[12px]'
-                        )}
-                    >
-                        {isLoading && (
-                            <Skeleton className="shrink-0 w-[24px] h-[24px] rounded-full" />
-                        )}
-                        {/* Lend position type - Selected token image */}
-                        {!isLoading && isLendPositionType(positionType) && (
-                            <ImageWithDefault
-                                src={assetDetails?.asset?.token?.logo || ''}
-                                alt={assetDetails?.asset?.token?.symbol || ''}
-                                className="shrink-0 w-[24px] h-[24px] rounded-full"
-                                width={24}
-                                height={24}
-                            />
-                        )}
-                        {/* Borrow position type - Select token dropdown */}
-                        {!isWalletConnected &&
-                            !isLendPositionType(positionType) && (
+                            {/* Lend position type - Selected token image */}
+                            {!isLoading && isLendPositionType(positionType) && (
                                 <ImageWithDefault
                                     src={assetDetails?.asset?.token?.logo || ''}
-                                    alt={
-                                        assetDetails?.asset?.token?.symbol || ''
-                                    }
+                                    alt={assetDetails?.asset?.token?.symbol || ''}
                                     className="shrink-0 w-[24px] h-[24px] rounded-full"
                                     width={24}
                                     height={24}
                                 />
                             )}
-                        {(isLoading ||
-                            (!selectedBorrowTokenDetails?.token?.address &&
-                                !isLendPositionType(positionType) &&
-                                isWalletConnected)) && (
-                                <Skeleton className="shrink-0 w-[34px] h-[34px] rounded-full" />
-                            )}
-                        {!isLoading &&
-                            !!selectedBorrowTokenDetails?.token?.address &&
-                            !isLendPositionType(positionType) && (
-                                <SelectTokensDropdown
-                                    key={positionType}
-                                    options={borrowTokensDetails}
-                                    selectedItemDetails={
-                                        selectedBorrowTokenDetails
-                                    }
-                                    setSelectedItemDetails={(token) => {
-                                        setSelectedBorrowTokenDetails(token)
-                                        setAmount('')
-                                    }}
-                                />
-                            )}
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="capitalize text-gray-500"
-                        >
-                            |
-                        </BodyText>
-                        <div className="flex flex-col flex-1 gap-[4px]">
-                            <CustomNumberInput
-                                key={positionType}
-                                amount={amount}
-                                setAmount={(amount) => setAmount(amount)}
-                            />
-                        </div>
-                        <Button
-                            variant="link"
-                            className="uppercase text-[14px] font-medium w-fit"
-                            onClick={() =>
-                                setAmount(
-                                    isLendPositionType(positionType)
-                                        ? (balance ?? '0')
-                                        : (maxBorrowAmount ?? '0')
-                                )
-                            }
-                            disabled={isDisabledMaxBtn()}
-                        >
-                            max
-                        </Button>
-                    </div>
-                    {/* Net APY - ONLY FOR BORROW TAB */}
-                    {!isLendPositionType(positionType) && isWalletConnected && (
-                        <div className="flex items-center justify-between w-full py-[12px] px-[24px] rounded-b-5 bg-white border-y border-gray-200 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]">
+                            {/* Borrow position type - Select token dropdown */}
+                            {!isWalletConnected &&
+                                !isLendPositionType(positionType) && (
+                                    <ImageWithDefault
+                                        src={assetDetails?.asset?.token?.logo || ''}
+                                        alt={
+                                            assetDetails?.asset?.token?.symbol || ''
+                                        }
+                                        className="shrink-0 w-[24px] h-[24px] rounded-full"
+                                        width={24}
+                                        height={24}
+                                    />
+                                )}
+                            {(isLoading ||
+                                (!selectedBorrowTokenDetails?.token?.address &&
+                                    !isLendPositionType(positionType) &&
+                                    isWalletConnected)) && (
+                                    <Skeleton className="shrink-0 w-[34px] h-[34px] rounded-full" />
+                                )}
+                            {!isLoading &&
+                                !!selectedBorrowTokenDetails?.token?.address &&
+                                !isLendPositionType(positionType) && (
+                                    <SelectTokensDropdown
+                                        key={positionType}
+                                        options={borrowTokensDetails}
+                                        selectedItemDetails={
+                                            selectedBorrowTokenDetails
+                                        }
+                                        setSelectedItemDetails={(token) => {
+                                            setSelectedBorrowTokenDetails(token)
+                                            setAmount('')
+                                        }}
+                                    />
+                                )}
                             <BodyText
-                                level="body3"
+                                level="body2"
                                 weight="normal"
-                                className="text-gray-600"
+                                className="capitalize text-gray-500"
                             >
-                                Net APY
+                                |
                             </BodyText>
-                            {isLoadingMaxBorrowingAmount && (
-                                <Skeleton className="w-[50px] h-[20px]" />
-                            )}
-                            {!isLoadingMaxBorrowingAmount && (
-                                <Badge variant="green">
-                                    {abbreviateNumber(
+                            <div className="flex flex-col flex-1 gap-[4px]">
+                                <CustomNumberInput
+                                    key={positionType}
+                                    amount={amount}
+                                    setAmount={(amount) => setAmount(amount)}
+                                />
+                            </div>
+                            <Button
+                                variant="link"
+                                className="uppercase text-[14px] font-medium w-fit"
+                                onClick={() =>
+                                    setAmount(
                                         isLendPositionType(positionType)
-                                            ? Number(
-                                                assetDetails?.asset?.apy ?? 0
-                                            )
-                                            : Number(
-                                                selectedBorrowTokenDetails?.variable_borrow_apy ??
-                                                0
-                                            )
-                                    )}
-                                    %
-                                </Badge>
-                            )}
+                                            ? (balance ?? '0')
+                                            : (maxBorrowAmount ?? '0')
+                                    )
+                                }
+                                disabled={isDisabledMaxBtn()}
+                            >
+                                max
+                            </Button>
                         </div>
-                    )}
-                    {isWalletConnected && (
-                        <div className="card-content-bottom max-md:px-2 py-3 max-w-[250px] mx-auto">
-                            {isLoadingHelperText && (
+                        {/* Net APY - ONLY FOR BORROW TAB */}
+                        {!isLendPositionType(positionType) && isWalletConnected && (
+                            <div className="flex items-center justify-between w-full py-[12px] px-[24px] rounded-b-5 bg-white border-y border-gray-200 shadow-[0px_4px_16px_rgba(0,0,0,0.04)]">
                                 <BodyText
-                                    level="body2"
+                                    level="body3"
                                     weight="normal"
-                                    className="w-full text-gray-500 text-center"
+                                    className="text-gray-600"
                                 >
-                                    {getLoadingHelperText()}
+                                    Net APY
                                 </BodyText>
-                            )}
-                            {!errorMessage && !isLoadingHelperText && (
-                                <BodyText
-                                    level="body2"
-                                    weight="normal"
-                                    className="w-full text-gray-500 text-center"
-                                >
-                                    {isLendPositionType(positionType)
-                                        ? 'Enter amount to proceed with supplying collateral for this position'
-                                        : 'Enter the amount you want to borrow from this position'}
-                                </BodyText>
-                            )}
-                            {errorMessage &&
-                                !isLoadingHelperText &&
-                                !isLoadingErc20TokensBalanceData &&
-                                !isLoadingMaxBorrowingAmount && (
+                                {isLoadingMaxBorrowingAmount && (
+                                    <Skeleton className="w-[50px] h-[20px]" />
+                                )}
+                                {!isLoadingMaxBorrowingAmount && (
+                                    <Badge variant="green">
+                                        {abbreviateNumber(
+                                            isLendPositionType(positionType)
+                                                ? Number(
+                                                    assetDetails?.asset?.apy ?? 0
+                                                )
+                                                : Number(
+                                                    selectedBorrowTokenDetails?.variable_borrow_apy ??
+                                                    0
+                                                )
+                                        )}
+                                        %
+                                    </Badge>
+                                )}
+                            </div>
+                        )}
+                        {isWalletConnected && (
+                            <div className="card-content-bottom max-md:px-2 py-3 max-w-[250px] mx-auto">
+                                {isLoadingHelperText && (
                                     <BodyText
                                         level="body2"
                                         weight="normal"
-                                        className="text-center text-destructive-foreground"
+                                        className="w-full text-gray-500 text-center"
                                     >
-                                        {errorMessage}
+                                        {getLoadingHelperText()}
                                     </BodyText>
                                 )}
-                        </div>
-                    )}
-                </CardContent>
-                <CardFooter className="p-0 justify-center">
-                    {!isWalletConnected && <ConnectWalletButton />}
-                    {isWalletConnected && !isLoading && (
-                        <div className="flex flex-col gap-[12px] w-full">
-                            <ConfirmationDialog
-                                disabled={disabledButton}
-                                positionType={positionType}
-                                assetDetails={
-                                    isLendPositionType(positionType)
-                                        ? assetDetails
-                                        : selectedBorrowTokenDetailsFormatted
-                                }
-                                amount={amount}
-                                balance={balance}
-                                maxBorrowAmount={{
-                                    maxToBorrow: maxBorrowAmount,
-                                    maxToBorrowFormatted: maxBorrowAmount,
-                                    maxToBorrowSCValue: '0',
-                                    user: {},
-                                }}
-                                setAmount={setAmount}
-                                healthFactorValues={healthFactorValues}
-                                open={isLendBorrowTxDialogOpen}
-                                setOpen={setIsLendBorrowTxDialogOpen}
-                            />
-                        </div>
-                    )}
-                </CardFooter>
-            </Card>
+                                {!errorMessage && !isLoadingHelperText && (
+                                    <BodyText
+                                        level="body2"
+                                        weight="normal"
+                                        className="w-full text-gray-500 text-center"
+                                    >
+                                        {isLendPositionType(positionType)
+                                            ? 'Enter amount to proceed with supplying collateral for this position'
+                                            : 'Enter the amount you want to borrow from this position'}
+                                    </BodyText>
+                                )}
+                                {errorMessage &&
+                                    !isLoadingHelperText &&
+                                    !isLoadingErc20TokensBalanceData &&
+                                    !isLoadingMaxBorrowingAmount && (
+                                        <BodyText
+                                            level="body2"
+                                            weight="normal"
+                                            className="text-center text-destructive-foreground"
+                                        >
+                                            {errorMessage}
+                                        </BodyText>
+                                    )}
+                            </div>
+                        )}
+                    </CardContent>
+                    <CardFooter className="p-0 justify-center">
+                        {!isWalletConnected && <ConnectWalletButton />}
+                        {isWalletConnected && !isLoading && (
+                            <div className="flex flex-col gap-[12px] w-full">
+                                <ConfirmationDialog
+                                    disabled={disabledButton}
+                                    positionType={positionType}
+                                    assetDetails={
+                                        isLendPositionType(positionType)
+                                            ? assetDetails
+                                            : selectedBorrowTokenDetailsFormatted
+                                    }
+                                    amount={amount}
+                                    balance={balance}
+                                    maxBorrowAmount={{
+                                        maxToBorrow: maxBorrowAmount,
+                                        maxToBorrowFormatted: maxBorrowAmount,
+                                        maxToBorrowSCValue: '0',
+                                        user: {},
+                                    }}
+                                    setAmount={setAmount}
+                                    healthFactorValues={healthFactorValues}
+                                    open={isLendBorrowTxDialogOpen}
+                                    setOpen={setIsLendBorrowTxDialogOpen}
+                                />
+                            </div>
+                        )}
+                    </CardFooter>
+                </Card>
             )}
         </section>
     )

@@ -11,12 +11,13 @@ import React, {
 import ToggleTab, { TTypeToMatch, getToggleTabContainerWidth, countVisibleTabs } from '@/components/ToggleTab'
 import { HeadingText } from '@/components/ui/typography'
 import { columns } from '@/data/table/top-apy-opportunities'
+import { columns as columnsForLoops } from '@/data/table/loop-opportunities'
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { TOpportunityTable, TPositionType } from '@/types'
-import { TChain } from '@/types/chain'
+import { ChainId, TChain } from '@/types/chain'
 import { DataTable } from '@/components/ui/data-table'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
@@ -32,6 +33,7 @@ import RainingApples from '@/components/animations/RainingApples'
 import RainingPolygons from '@/components/animations/RainingPolygons'
 import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
+import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -78,8 +80,11 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const [isTableLoading, setIsTableLoading] = useState(false)
     const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData } =
         useGetOpportunitiesData({
-            type: positionTypeParam as TPositionType,
+            type: isActiveTab('loop') ? 'lend' : positionTypeParam as TPositionType,
         })
+    
+    // Get loop pairs when position type is 'loop'
+    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
     const { allChainsData } = useContext<any>(AssetsDataContext)
     const [showRainingApples, setShowRainingApples] = useState(false)
     const [showRainingPolygons, setShowRainingPolygons] = useState(false)
@@ -88,6 +93,10 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const IS_POLYGON_MARKET = pathname.includes('polygon')
     const { appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards, hasAppleFarmRewards } = useAppleFarmRewards()
 
+    function isActiveTab(tabId: 'lend' | 'borrow' | 'loop') {
+        return positionTypeParam === tabId
+    }
+
     // Add this ref at component level
     const prevParamsRef = useRef(searchParams?.toString() || '')
 
@@ -95,7 +104,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         if (sortingParam.length === 2) {
             return [{ id: sortingParam[0], desc: sortingParam[1] === 'desc' }]
         }
-        return [{ id: 'apy_current', desc: positionTypeParam === 'lend' }]
+        return [{ id: 'apy_current', desc: isActiveTab('lend') }]
     })
 
     // useEffect(() => {
@@ -128,15 +137,15 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     useEffect(() => {
         setColumnVisibility(() => {
             return {
-                deposits: positionTypeParam === 'lend',
-                borrows: positionTypeParam === 'borrow',
-                collateral_exposure: positionTypeParam === 'lend',
-                collateral_tokens: positionTypeParam === 'borrow',
-                available_liquidity: positionTypeParam === 'borrow',
-                apy_avg_7days: positionTypeParam === 'lend',
+                deposits: isActiveTab('lend'),
+                borrows: isActiveTab('borrow'),
+                collateral_exposure: isActiveTab('lend'),
+                collateral_tokens: isActiveTab('borrow'),
+                available_liquidity: isActiveTab('borrow'),
+                apy_avg_7days: isActiveTab('lend'),
             }
         })
-        setSorting([{ id: 'apy_current', desc: positionTypeParam === 'lend' }])
+        setSorting([{ id: 'apy_current', desc: isActiveTab('lend') || isActiveTab('loop') }])
     }, [positionTypeParam])
 
     useEffect(() => {
@@ -222,18 +231,24 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             const sortParam = `${sorting[0].id},${sorting[0].desc ? 'desc' : 'asc'}`
             updateSearchParams({ sort: sortParam })
         }
+        let protocolIds = unfilteredIds
+        if (isActiveTab('lend')) {
+            protocolIds = filteredIds
+        } else if (isActiveTab('borrow') || isActiveTab('loop')) {
+            protocolIds = unfilteredIds
+        }
+
         updateSearchParams({
             // exclude_risky_markets:
             //     positionTypeParam === 'lend' ? 'true' : undefined,
-            protocol_ids:
-                positionTypeParam === 'lend' ? filteredIds : unfilteredIds,
+            protocol_ids: protocolIds,
         })
     }, [sorting])
 
     useEffect(() => {
         updateSearchParams({
             exclude_risky_markets:
-                positionTypeParam === 'lend'
+                isActiveTab('lend')
                     ? excludeRiskyMarketsFlag
                     : undefined,
         })
@@ -276,7 +291,14 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         }
     }, [pathname, chainIdsParam.length, updateSearchParams]);
 
-    const rawTableData: TOpportunityTable[] = opportunitiesData.map((item) => {
+    const rawTableData: TOpportunityTable[] = useMemo(() => {
+        // For loop position type, use loop pairs instead of raw opportunities data
+        if (isActiveTab('loop')) {
+            return loopPairs
+        }
+
+        // For lend/borrow, use the existing transformation logic
+        return opportunitiesData.map((item) => {
         const platformName = item.platform.platform_name?.split('-')[0]?.toLowerCase()
         const isAaveV3 = PlatformType.AAVE.includes(platformName)
         const isCompound = PlatformType.COMPOUND.includes(platformName)
@@ -335,7 +357,8 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             apple_farm_apr: appleFarmRewardsAprs[item.token.address] ?? 0,
             has_apple_farm_rewards: tokenHasAppleFarmRewards,
         }
-    })
+        })
+    }, [positionTypeParam, loopPairs, opportunitiesData, allChainsData, appleFarmRewardsAprs, hasAppleFarmRewards])
 
     function handleFilterTableRowsByPlatformIds(
         opportunity: TOpportunityTable
@@ -406,32 +429,51 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         const matchesChainId = chainIdsParam.length === 0 || chainIdsParam.includes(opportunity.chain_id.toString())
         const matchesToken = tokenIdsParam.length === 0 || tokenIdsParam.includes(opportunity.tokenSymbol)
 
-        return positionTypeParam === 'borrow'
-            ? handleExcludeMorphoVaultsByPositionType(opportunity) &&
-            handleFilterTableRowsByPlatformIds(opportunity) &&
+        const baseFilters = handleFilterTableRowsByPlatformIds(opportunity) &&
             matchesChainId &&
             matchesToken &&
             !EXCLUDEED_PROTOCOLS_LIST.includes(opportunity.protocol_identifier) &&
             !EXCLUDEED_TOKENS_LIST.includes(opportunity.tokenAddress)
-            : handleExcludeMorphoMarketsByParamFlag(opportunity) &&
-            handleFilterTableRowsByPlatformIds(opportunity) &&
-            matchesChainId &&
-            matchesToken &&
-            !EXCLUDEED_PROTOCOLS_LIST.includes(opportunity.protocol_identifier) &&
-            !EXCLUDEED_TOKENS_LIST.includes(opportunity.tokenAddress)
+
+        if (positionTypeParam === 'borrow') {
+            return handleExcludeMorphoVaultsByPositionType(opportunity) && baseFilters
+        } else if (positionTypeParam === 'lend') {
+            return handleExcludeMorphoMarketsByParamFlag(opportunity) && baseFilters
+        } else if (positionTypeParam === 'loop') {
+            // For loop positions, we don't want to exclude morpho markets or vaults
+            return handleExcludeMorphoMarketsByParamFlag(opportunity) && opportunity.chain_id === ChainId.Etherlink
+        }
+        
+        // Default fallback (shouldn't reach here)
+        return baseFilters
     }
 
     function handleRowClick(rowData: any) {
-        const { tokenAddress, protocol_identifier, chain_id } = rowData
-        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
-        router.push(url)
-        logEvent('money_market_selected', {
-            action: positionTypeParam,
-            token_symbol: rowData.tokenSymbol,
-            platform_name: rowData.platformName,
-            chain_name: rowData.chainName,
-            wallet_address: walletAddress,
-        })
+        if (positionTypeParam === 'loop') {
+            // For loop pairs, use both lend and borrow token information
+            const { tokenAddress, borrowToken, protocol_identifier, chain_id } = rowData
+            const url = `/position-management?lend_token=${tokenAddress}&borrow_token=${borrowToken.address}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
+            router.push(url)
+            logEvent('money_market_selected', {
+                action: positionTypeParam,
+                token_symbol: `${rowData.tokenSymbol} → ${borrowToken.symbol}`,
+                platform_name: rowData.platformName,
+                chain_name: rowData.chainName,
+                wallet_address: walletAddress,
+            })
+        } else {
+            // For lend/borrow, use existing logic
+            const { tokenAddress, protocol_identifier, chain_id } = rowData
+            const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
+            router.push(url)
+            logEvent('money_market_selected', {
+                action: positionTypeParam,
+                token_symbol: rowData.tokenSymbol,
+                platform_name: rowData.platformName,
+                chain_name: rowData.chainName,
+                wallet_address: walletAddress,
+            })
+        }
     }
 
     const toggleOpportunityType = (positionType: TPositionType): void => {
@@ -444,11 +486,24 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             ? platformIdsParam
             : undefined
 
+        let protocolIds = unfilteredIds
+        let excludeRiskyMarkets = undefined
+
+        if (positionType === 'lend') {
+            protocolIds = filteredIds
+            excludeRiskyMarkets = excludeRiskyMarketsFlag
+        } else if (positionType === 'borrow') {
+            protocolIds = unfilteredIds
+            excludeRiskyMarkets = undefined
+        } else if (positionType === 'loop') {
+            protocolIds = unfilteredIds
+            excludeRiskyMarkets = undefined
+        }
+
         const params = {
             position_type: positionType,
-            exclude_risky_markets:
-                positionType === 'lend' ? excludeRiskyMarketsFlag : undefined,
-            protocol_ids: positionType === 'lend' ? filteredIds : unfilteredIds,
+            exclude_risky_markets: excludeRiskyMarkets,
+            protocol_ids: protocolIds,
         }
         updateSearchParams(params)
     }
@@ -470,6 +525,9 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     // if (isStateLoading || isLoadingOpportunitiesData) {
     //     return <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
     // }
+    const filteredColumns = useMemo(() => {
+        return positionTypeParam === 'loop' ? columnsForLoops : columns
+    }, [positionTypeParam])
 
     return (
         <section
@@ -539,9 +597,9 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                 </div>
             </div>
             <div className="top-apy-opportunities-content">
-                {!isLoadingOpportunitiesData && !isTableLoading && (
+                {!isLoadingOpportunitiesData && !isLoadingLoopPairs && !isTableLoading && (
                     <DataTable
-                        columns={columns}
+                        columns={filteredColumns}
                         data={tableData}
                         filters={keywords}
                         setFilters={handleKeywordChange}

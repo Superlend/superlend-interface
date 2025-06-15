@@ -26,14 +26,15 @@ export default async function DiscoverPageComponents({ chain }: DiscoverPageComp
             )}
 
             {/* Common components for all chains */}
-            <AppleFarmRewardsProvider>
-                <DiscoverOpportunities chain={chain} />
-            </AppleFarmRewardsProvider>
             <OpportunitiesProvider>
                 <AppleFarmRewardsProvider>
                     <TopApyOpportunities chain={chain} />
                 </AppleFarmRewardsProvider>
             </OpportunitiesProvider>
+
+            <AppleFarmRewardsProvider>
+                <DiscoverOpportunities chain={chain} />
+            </AppleFarmRewardsProvider>
 
             {/* 
                 Future chain-specific components or behaviors can be added here

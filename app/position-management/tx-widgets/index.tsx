@@ -24,6 +24,7 @@ export const AssetTxWidget: FC = () => {
     const { portfolioData: portfolioContextData } = useContext(PortfolioContext)
     const searchParams = useSearchParams()
     // const tokenAddress = searchParams.get('token') || ''
+    const position_type = searchParams.get('position_type') || ''
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const chain_id = searchParams?.get('chain_id') || '1'
     const {
@@ -78,12 +79,23 @@ export const AssetTxWidget: FC = () => {
     const isMorphoMarket = isMorphoProtocol && !platformData?.platform?.isVault
     const isFluidProtocol =
         platformData?.platform?.protocol_type === PlatformType.FLUID
+    const isLoopingPosition = position_type === 'loop'
 
     if (isLoading && (isAaveV3Protocol || isMorphoProtocol)) {
         return <LoadingSectionSkeleton className="h-[300px] w-full" />
     }
 
-    if (isAaveV3Protocol) {
+    if (isLoopingPosition && !isLoading) {
+        return (
+            <LoopingWidget
+                isLoading={isLoading}
+                platformData={platformData}
+                portfolioData={portfolioData}
+            />
+        )
+    }
+
+    if (isAaveV3Protocol && !isLoading) {
         return (
             <WidgetWrapper
                 isLoading={isLoading}
@@ -102,7 +114,7 @@ export const AssetTxWidget: FC = () => {
         )
     }
 
-    if (isMorphoProtocol) {
+    if (isMorphoProtocol && !isLoading) {
         // if (
         //     isMorphoMarket &&
         //     !MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))
@@ -125,7 +137,7 @@ export const AssetTxWidget: FC = () => {
         )
     }
 
-    if (isFluidProtocol) {
+    if (isFluidProtocol && !isLoading) {
         return (
             <WidgetWrapper
                 isLoading={isLoadingPlatformData}

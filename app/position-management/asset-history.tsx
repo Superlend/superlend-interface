@@ -33,7 +33,7 @@ interface IDropdownCategoryFilter {
 export default function AssetHistory() {
     const searchParams = useSearchParams()
     const { logEvent } = useAnalytics()
-    const tokenAddress = searchParams?.get('token') || ''
+    const tokenAddress = searchParams?.get('token') || searchParams?.get('lend_token') || ''
     // const chain_id = searchParams.get("chain_id") || "";
     const protocol_identifier = searchParams?.get('protocol_identifier') || ''
     const positionType = searchParams?.get('position_type') || 'lend'

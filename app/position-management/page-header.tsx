@@ -35,7 +35,6 @@ import {
 } from '@/constants'
 import { motion } from 'framer-motion'
 import { getChainDetails, getTokenDetails } from './helper-functions'
-import { ExternalLink, TriangleAlert } from 'lucide-react'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import DangerSquare from '@/components/icons/danger-square'
 import { PlatformType } from '@/types/platform'
@@ -53,10 +52,13 @@ type TTokenDetails = {
 export default function PageHeader() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const tokenAddress = searchParams?.get('token') || ''
+    const tokenAddress = searchParams?.get('token') || searchParams?.get('lend_token') || ''
     const chain_id: string = searchParams?.get('chain_id') || '1'
     const protocol_identifier = searchParams?.get('protocol_identifier') || ''
     const positionTypeParam = searchParams?.get('position_type') || 'lend'
+    const lendTokenAddress = searchParams?.get('lend_token') || ''
+    const borrowTokenAddress = searchParams?.get('borrow_token') || ''
+    const isLoopPosition = positionTypeParam === 'loop'
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
     const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
 
@@ -140,23 +142,36 @@ export default function PageHeader() {
     const checkForPairBasedTokens = (
         platformTypes: string[],
         platformType: string
-    ) =>
-        platformTypes
+    ) => {
+        if (isLoopPosition) {
+            return true;
+        };
+
+        return platformTypes
             .map((type) => type?.toLowerCase())
             .includes(platformType?.toLowerCase())
+    }
+
     const hasPoolBasedTokens = checkForPairBasedTokens(
         POOL_BASED_PROTOCOLS,
         platformType
     )
+
     const hasPairBasedTokens = checkForPairBasedTokens(
         PAIR_BASED_PROTOCOLS,
         platformType
     )
+
     const isFluidPlatform =
         platformData?.platform?.protocol_type === PlatformType.FLUID
 
     // If has Collateral Token, then get the Collateral token details
-    const collateralTokenAddress = platformData.assets.find((asset: TPlatformAsset) => !asset.borrow_enabled)?.token?.address || ''
+    const collateralTokenAddress = platformData.assets.find((asset: TPlatformAsset) => {
+        if (isLoopPosition) {
+            return asset.token.address.toLowerCase() === lendTokenAddress.toLowerCase()
+        }
+        return !asset.borrow_enabled
+    })?.token?.address || ''
     const getCollateralTokenDetails = (tokenAddress: string) => {
         const collateralTokenDetails = allTokensData[Number(chain_id)]?.find(
             (token: any) =>
@@ -169,7 +184,13 @@ export default function PageHeader() {
     )
 
     // If has Loan Token, then get the loan token details
-    const loanTokenAddress = platformData.assets.find((asset: TPlatformAsset) => asset.borrow_enabled)?.token?.address || ''
+    const loanTokenAddress = platformData.assets.find((asset: TPlatformAsset) => {
+        if (isLoopPosition) {
+            return asset.token.address.toLowerCase() === borrowTokenAddress.toLowerCase()
+        }
+        return asset.borrow_enabled
+    })?.token?.address || ''
+
     const getLoanTokenDetails = (tokenAddress: string) => {
         const loanTokenDetails = allTokensData[Number(chain_id)]?.find(
             (token: any) =>
@@ -177,28 +198,30 @@ export default function PageHeader() {
         )
         return loanTokenDetails
     }
+
     const loanTokenDetails = getLoanTokenDetails(loanTokenAddress)
 
     const hasWarnings =
         platformData.assets.filter(
             (asset: TPlatformAsset) => asset?.token?.warnings?.length > 0
         ).length > 0
+
     const warningMessages = platformData.assets
         .filter((asset: TPlatformAsset) => asset?.token?.warnings?.length > 0)
         ?.flatMap((asset: TPlatformAsset) => asset.token.warnings)
 
     const isDisplayOneToken =
-        hasPoolBasedTokens ||
-        (isFluidPlatform && !isFluidVault) ||
-        (isMorpho && isMorphoVault) ||
-        isEulerProtocol
+        (hasPoolBasedTokens ||
+            (isFluidPlatform && !isFluidVault) ||
+            (isMorpho && isMorphoVault) ||
+            isEulerProtocol) && !isLoopPosition
 
     const isDisplayTwoTokens = !(
         hasPoolBasedTokens ||
         (isFluidPlatform && !isFluidVault) ||
         (isMorpho && isMorphoVault) ||
         isEulerProtocol
-    )
+    ) || isLoopPosition
 
     const tokensToDisplayOnTooltip = isDisplayOneToken
         ? [tokenDetails]
@@ -361,7 +384,7 @@ export default function PageHeader() {
                             {!isLoadingPlatformData && platformLogo && (
                                 <Badge
                                     size="md"
-                                    className="border-0 flex items-center justify-between gap-[16px] pl-[6px] pr-[4px] w-fit max-w-[400px]"
+                                    className={`border-0 flex items-center justify-between gap-[16px] ${isLoopPosition ? 'pr-2.5' : 'pl-[6px] pr-1'} w-fit max-w-[400px]`}
                                 >
                                     <div className="flex items-center gap-1">
                                         <ImageWithDefault
@@ -378,20 +401,21 @@ export default function PageHeader() {
                                             {chainName?.toLowerCase()}
                                         </Label>
                                     </div>
-                                    <a
-                                        className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
-                                        href={platformWebsiteLink}
-                                        target="_blank"
-                                    >
-                                        <span className="uppercase text-secondary-500 font-medium">
-                                            {platformId.split('-')[0]}{' '}
-                                            {getPlatformVersion(platformId)}
-                                        </span>
-                                        <ArrowRightIcon
-                                            weight="3"
-                                            className="stroke-secondary-500 -rotate-45"
-                                        />
-                                    </a>
+                                    {!isLoopPosition &&
+                                        (<a
+                                            className="inline-block w-fit h-full rounded-2 ring-1 ring-gray-300 flex items-center gap-[4px] hover:bg-secondary-100/15 py-1 px-2"
+                                            href={platformWebsiteLink}
+                                            target="_blank"
+                                        >
+                                            <span className="uppercase text-secondary-500 font-medium">
+                                                {platformId.split('-')[0]}{' '}
+                                                {getPlatformVersion(platformId)}
+                                            </span>
+                                            <ArrowRightIcon
+                                                weight="3"
+                                                className="stroke-secondary-500 -rotate-45"
+                                            />
+                                        </a>)}
                                 </Badge>
                             )}
                             {/* Info Tooltip */}
