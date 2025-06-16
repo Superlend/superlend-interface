@@ -155,8 +155,7 @@ export function WithdrawOrRepayTxDialog({
             ? localMaxWithdrawAmount.maxToWithdrawFormatted
             : (Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
             '0')
-        : ((Number(localMaxRepayAmount.maxToRepayFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
-            '0')
+        : localMaxRepayAmount.maxToRepayFormatted
 
     const isMorphoVaultsProtocol = !!localAssetDetails?.vault 
 
