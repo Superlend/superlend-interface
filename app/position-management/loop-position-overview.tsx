@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import FlatTabs from '@/components/tabs/flat-tabs'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
@@ -11,17 +11,22 @@ import LoopEducationSection from './loop-education-section'
 import LoopMetricsCards from './loop-metrics-cards'
 import LoopPositionDetails from './loop-position-details'
 import LoopPerformance from './loop-performance'
+import { abbreviateNumber } from '@/lib/utils'
+import { DollarSign, TrendingUp, TrendingDown, Target } from 'lucide-react'
+import { useAaveV3Data } from '@/hooks/protocols/useAaveV3Data'
+import { ChainId } from '@/types/chain'
 
 export default function LoopPositionOverview() {
     const searchParams = useSearchParams()
     const chain_id = searchParams?.get('chain_id') || '1'
     const protocol_identifier = searchParams?.get('protocol_identifier') || ''
-    const lend_token = searchParams?.get('lend_token') || ''
-    const borrow_token = searchParams?.get('borrow_token') || ''
+    const lendTokenAddressParam = searchParams?.get('lend_token') || ''
+    const borrowTokenAddressParam = searchParams?.get('borrow_token') || ''
     const { walletAddress, isWalletConnected } = useWalletConnection()
     const [activeTab, setActiveTab] = useState('overview')
+    const { getMaxLeverage, providerStatus, uiPoolDataProviderAddress, lendingPoolAddressProvider } = useAaveV3Data()
+    const [maxLeverage, setMaxLeverage] = useState<number>(0)
 
-    // API calls for real data
     const { data: platformData, isLoading: isLoadingPlatformData } = useGetPlatformData({
         protocol_identifier,
         chain_id: Number(chain_id),
@@ -32,6 +37,25 @@ export default function LoopPositionOverview() {
         platform_id: [protocol_identifier],
         chain_id: [String(chain_id)],
     })
+
+    const borrowTokenLiquidity = useMemo(() => {
+        platformData
+    }, [portfolioData])
+
+    useEffect(() => {
+        if (providerStatus.isReady) {
+            getMaxLeverage({
+                chainId: ChainId.Etherlink,
+                uiPoolDataProviderAddress: uiPoolDataProviderAddress,
+                lendingPoolAddressProvider: lendingPoolAddressProvider,
+            }).then((results) => {
+                const maxLeverage = (results?.[
+                    lendTokenAddressParam.toLowerCase()
+                ]?.[borrowTokenAddressParam.toLowerCase()] ?? 0)
+                setMaxLeverage(maxLeverage)
+            })
+        }
+    }, [providerStatus])
 
     // Dummy data structure - easily replaceable with real API data
     const dummyLoopPositionData = useMemo(() => ({
@@ -50,8 +74,8 @@ export default function LoopPositionOverview() {
             token: {
                 symbol: 'USDC',
                 name: 'USD Coin',
-                logo: '/tokens/usdc.svg',
-                address: lend_token,
+                logo: '/images/tokens/usdc.webp',
+                address: lendTokenAddressParam,
                 decimals: 6,
                 price_usd: 1.0
             },
@@ -61,10 +85,10 @@ export default function LoopPositionOverview() {
         },
         borrowAsset: {
             token: {
-                symbol: 'WETH',
-                name: 'Wrapped Ethereum',
-                logo: '/tokens/weth.svg',
-                address: borrow_token,
+                symbol: 'USDT',
+                name: 'Tether',
+                logo: '/images/tokens/usdt.webp',
+                address: borrowTokenAddressParam,
                 decimals: 18,
                 price_usd: 2500
             },
@@ -92,7 +116,53 @@ export default function LoopPositionOverview() {
             logo: platformData?.platform?.logo || '/platforms/aave.svg',
             chain_id: Number(chain_id)
         }
-    }), [platformData, lend_token, borrow_token, chain_id])
+    }), [platformData, lendTokenAddressParam, borrowTokenAddressParam, chain_id])
+
+    const metrics = [
+        // {
+        //     title: 'Net Value',
+        //     value: `$${abbreviateNumber(dummyLoopPositionData.netValue)}`,
+        //     icon: DollarSign,
+        //     tooltip: 'Total value of your loop position after accounting for all assets and debts',
+        //     className: 'text-gray-800'
+        // },
+        // {
+        //     title: 'PnL',
+        //     value: `${dummyLoopPositionData.pnl.isPositive ? '+' : ''}$${abbreviateNumber(dummyLoopPositionData.pnl.value)}`,
+        //     subValue: `${dummyLoopPositionData.pnl.isPositive ? '+' : ''}${dummyLoopPositionData.pnl.percentage.toFixed(2)}%`,
+        //     icon: dummyLoopPositionData.pnl.isPositive ? TrendingUp : TrendingDown,
+        //     tooltip: 'Profit and loss from your loop position since opening',
+        //     className: dummyLoopPositionData.pnl.isPositive ? 'text-green-600' : 'text-red-600'
+        // },
+        {
+            title: 'Liquidity',
+            value: `$${abbreviateNumber(dummyLoopPositionData.totalSupplied)}`,
+            icon: DollarSign,
+            tooltip: 'Total value of your loop position after accounting for all assets and debts',
+            className: 'text-gray-800'
+        },
+        {
+            title: 'Max APY',
+            value: `${dummyLoopPositionData.netAPY >= 0 ? '+' : ''}${dummyLoopPositionData.netAPY.toFixed(2)}%`,
+            icon: Target,
+            tooltip: 'Your effective APY after accounting for supply rewards and borrowing costs',
+            className: dummyLoopPositionData.netAPY >= 0 ? 'text-green-600' : 'text-red-600'
+        },
+        {
+            title: 'Total Supply',
+            value: `$${abbreviateNumber(dummyLoopPositionData.totalSupplied)}`,
+            icon: DollarSign,
+            tooltip: 'Total value of your loop position after accounting for all assets',
+            className: 'text-gray-800'
+        },
+        {
+            title: 'Max Multiplier',
+            value: `${maxLeverage}x`,
+            icon: TrendingUp,
+            tooltip: 'Your current leverage multiplier - how much your exposure is amplified',
+            className: 'text-primary'
+        }
+    ]
 
     const isLoading = isLoadingPlatformData || isLoadingPortfolioData
 
@@ -103,7 +173,7 @@ export default function LoopPositionOverview() {
             content: (
                 <div className="flex flex-col gap-6">
                     <LoopMetricsCards
-                        loopData={dummyLoopPositionData}
+                        metrics={metrics}
                         isLoading={isLoading}
                     />
                     <LoopEducationSection />

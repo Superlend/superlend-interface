@@ -66,7 +66,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                     <InfoTooltip content="Total amount of assets you've supplied as collateral" />
                                 </div>
                                 
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
                                     <ImageWithDefault
                                         src={loopData.collateralAsset.token.logo}
                                         alt={loopData.collateralAsset.token.symbol}
@@ -74,7 +74,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                         height={32}
                                         className="rounded-full"
                                     />
-                                    <div className="flex flex-col gap-1">
+                                    <div className="flex flex-col">
                                         <HeadingText level="h4" weight="medium" className="text-gray-800">
                                             {abbreviateNumber(loopData.collateralAsset.amount)} {loopData.collateralAsset.token.symbol}
                                         </HeadingText>
@@ -103,7 +103,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                     <InfoTooltip content="Total amount of assets you've borrowed against your collateral" />
                                 </div>
                                 
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
                                     <ImageWithDefault
                                         src={loopData.borrowAsset.token.logo}
                                         alt={loopData.borrowAsset.token.symbol}
@@ -111,7 +111,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                         height={32}
                                         className="rounded-full"
                                     />
-                                    <div className="flex flex-col gap-1">
+                                    <div className="flex flex-col">
                                         <HeadingText level="h4" weight="medium" className="text-gray-800">
                                             {abbreviateNumber(loopData.borrowAsset.amount)} {loopData.borrowAsset.token.symbol}
                                         </HeadingText>
@@ -151,9 +151,9 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                         </div>
 
                         {/* Health Factor */}
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                     <BodyText level="body2" weight="medium" className="text-gray-600">
                                         Health Factor
                                     </BodyText>
@@ -272,7 +272,6 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                         alt={loopData.platform.name}
                                         width={20}
                                         height={20}
-                                        className="rounded-full"
                                     />
                                     <BodyText level="body2" weight="medium" className="text-gray-800">
                                         {loopData.platform.name}

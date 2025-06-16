@@ -2,50 +2,17 @@
 
 import React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { BodyText, HeadingText } from '@/components/ui/typography'
-import { TrendingUp, TrendingDown, DollarSign, Target } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, abbreviateNumber } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 
 interface LoopMetricsCardsProps {
-    loopData: any
+    metrics: any[]
     isLoading: boolean
 }
 
-export default function LoopMetricsCards({ loopData, isLoading }: LoopMetricsCardsProps) {
-    const metrics = [
-        {
-            title: 'Net Value',
-            value: `$${abbreviateNumber(loopData.netValue)}`,
-            icon: DollarSign,
-            tooltip: 'Total value of your loop position after accounting for all assets and debts',
-            className: 'text-gray-800'
-        },
-        {
-            title: 'PnL',
-            value: `${loopData.pnl.isPositive ? '+' : ''}$${abbreviateNumber(loopData.pnl.value)}`,
-            subValue: `${loopData.pnl.isPositive ? '+' : ''}${loopData.pnl.percentage.toFixed(2)}%`,
-            icon: loopData.pnl.isPositive ? TrendingUp : TrendingDown,
-            tooltip: 'Profit and loss from your loop position since opening',
-            className: loopData.pnl.isPositive ? 'text-green-600' : 'text-red-600'
-        },
-        {
-            title: 'Net APY',
-            value: `${loopData.netAPY >= 0 ? '+' : ''}${loopData.netAPY.toFixed(2)}%`,
-            icon: Target,
-            tooltip: 'Your effective APY after accounting for supply rewards and borrowing costs',
-            className: loopData.netAPY >= 0 ? 'text-green-600' : 'text-red-600'
-        },
-        {
-            title: 'Multiplier',
-            value: `${loopData.currentMultiplier}x`,
-            icon: TrendingUp,
-            tooltip: 'Your current leverage multiplier - how much your exposure is amplified',
-            className: 'text-primary'
-        }
-    ]
+export default function LoopMetricsCards({ metrics, isLoading }: LoopMetricsCardsProps) {
 
     if (isLoading) {
         return (

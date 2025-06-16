@@ -32,7 +32,11 @@ import { useAaveV3DataContext, type ChainConfig } from '../../context/aave-v3-da
 export const useAaveV3Data = () => {
     const { address: walletAddress } = useAccount()
     const { providers } = useEthersMulticall()
-    
+    const uiPoolDataProviderAddress =
+        '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9'
+    const lendingPoolAddressProvider =
+        '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec'
+
     // Use the context instead of local state
     const {
         getReservesData,
@@ -135,22 +139,22 @@ export const useAaveV3Data = () => {
             ReservesDataHumanized | ReservesDataHumanizedLegacy,
             (
                 | {
-                      userReserves: UserReserveDataHumanized[]
-                      userEmodeCategoryId: number
-                  }
+                    userReserves: UserReserveDataHumanized[]
+                    userEmodeCategoryId: number
+                }
                 | {
-                      userReserves: UserReserveDataHumanizedLegacy[]
-                      userEmodeCategoryId: number
-                  }
+                    userReserves: UserReserveDataHumanizedLegacy[]
+                    userEmodeCategoryId: number
+                }
             ),
         ]
     ) => {
         const isLegacyInstance = IsAaveV3Legacy(chainId)
-        
+
         // Use provided data or get from context
         const _reserveData = allData ? allData[0] : getReservesData(chainId)
         const _userData = allData ? allData[1] : getUserData(chainId)
-        
+
         if (!_reserveData || !_userData) return
         const reserve = _reserveData.reservesData.find(
             (r) => r.underlyingAsset.toLowerCase() === token.toLowerCase()
@@ -163,52 +167,52 @@ export const useAaveV3Data = () => {
         const currentTimestamp = Math.floor(Date.now() / 1000)
         const formattedPoolReserves = isLegacyInstance
             ? formatReservesLegacy({
-                  reserves: _reserveData.reservesData as any,
-                  currentTimestamp,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-              }).map((r) => ({
-                  ...r,
-                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
-                  isWrappedBaseAsset: false,
-              }))
+                reserves: _reserveData.reservesData as any,
+                currentTimestamp,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+            }).map((r) => ({
+                ...r,
+                isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                isWrappedBaseAsset: false,
+            }))
             : formatReserves({
-                  reserves: _reserveData.reservesData as any,
-                  currentTimestamp,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-              }).map((r) => ({
-                  ...r,
-                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
-                  isWrappedBaseAsset: false,
-              }))
+                reserves: _reserveData.reservesData as any,
+                currentTimestamp,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+            }).map((r) => ({
+                ...r,
+                isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                isWrappedBaseAsset: false,
+            }))
 
         const user = isLegacyInstance
             ? formatUserSummaryLegacy({
-                  currentTimestamp: currentTimestamp,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  userReserves:
-                      _userData.userReserves as UserReserveDataHumanizedLegacy[],
-                  formattedReserves: formattedPoolReserves as any,
-                  userEmodeCategoryId: _userData.userEmodeCategoryId,
-              })
+                currentTimestamp: currentTimestamp,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                userReserves:
+                    _userData.userReserves as UserReserveDataHumanizedLegacy[],
+                formattedReserves: formattedPoolReserves as any,
+                userEmodeCategoryId: _userData.userEmodeCategoryId,
+            })
             : formatUserSummary({
-                  currentTimestamp: currentTimestamp,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  userReserves: _userData.userReserves,
-                  formattedReserves: formattedPoolReserves as any,
-                  userEmodeCategoryId: _userData.userEmodeCategoryId,
-              })
+                currentTimestamp: currentTimestamp,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                userReserves: _userData.userReserves,
+                formattedReserves: formattedPoolReserves as any,
+                userEmodeCategoryId: _userData.userEmodeCategoryId,
+            })
 
         const _userReserve = user.userReservesData.filter(
             (f) => f.underlyingAsset.toLowerCase() === token.toLowerCase()
@@ -240,7 +244,7 @@ export const useAaveV3Data = () => {
         ) {
             const reserveLiquidationThreshold =
                 'userEmodeCategoryId' in user &&
-                user.userEmodeCategoryId === poolReserve.eModeCategoryId
+                    user.userEmodeCategoryId === poolReserve.eModeCategoryId
                     ? String(poolReserve.eModeLiquidationThreshold / 10000)
                     : poolReserve.formattedReserveLiquidationThreshold
 
@@ -284,9 +288,9 @@ export const useAaveV3Data = () => {
                                 )
                             ),
                             20 +
-                                baseCurrencyData?.marketReferenceCurrencyDecimals -
-                                4 -
-                                poolReserve.decimals // => 20 + marketReferenceCurrencyDecimals - 4 - reserve.decimals
+                            baseCurrencyData?.marketReferenceCurrencyDecimals -
+                            4 -
+                            poolReserve.decimals // => 20 + marketReferenceCurrencyDecimals - 4 - reserve.decimals
                         )
                     )
                         .toFixed(poolReserve.decimals)
@@ -316,13 +320,13 @@ export const useAaveV3Data = () => {
             ReservesDataHumanized | ReservesDataHumanizedLegacy,
             (
                 | {
-                      userReserves: UserReserveDataHumanized[]
-                      userEmodeCategoryId: number
-                  }
+                    userReserves: UserReserveDataHumanized[]
+                    userEmodeCategoryId: number
+                }
                 | {
-                      userReserves: UserReserveDataHumanizedLegacy[]
-                      userEmodeCategoryId: number
-                  }
+                    userReserves: UserReserveDataHumanizedLegacy[]
+                    userEmodeCategoryId: number
+                }
             ),
         ]
     ) => {
@@ -343,52 +347,52 @@ export const useAaveV3Data = () => {
 
         const formattedPoolReserves = isLegacyInstance
             ? formatReservesLegacy({
-                  reserves: _reserveData.reservesData as any,
-                  currentTimestamp,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-              }).map((r) => ({
-                  ...r,
-                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
-                  isWrappedBaseAsset: false,
-              }))
+                reserves: _reserveData.reservesData as any,
+                currentTimestamp,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+            }).map((r) => ({
+                ...r,
+                isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                isWrappedBaseAsset: false,
+            }))
             : formatReserves({
-                  reserves: _reserveData.reservesData as any,
-                  currentTimestamp,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-              }).map((r) => ({
-                  ...r,
-                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
-                  isWrappedBaseAsset: false,
-              }))
+                reserves: _reserveData.reservesData as any,
+                currentTimestamp,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+            }).map((r) => ({
+                ...r,
+                isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                isWrappedBaseAsset: false,
+            }))
 
         const user = isLegacyInstance
             ? formatUserSummaryLegacy({
-                  currentTimestamp: currentTimestamp,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  userReserves:
-                      _userData.userReserves as UserReserveDataHumanizedLegacy[],
-                  formattedReserves: formattedPoolReserves as any,
-                  userEmodeCategoryId: _userData.userEmodeCategoryId,
-              })
+                currentTimestamp: currentTimestamp,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                userReserves:
+                    _userData.userReserves as UserReserveDataHumanizedLegacy[],
+                formattedReserves: formattedPoolReserves as any,
+                userEmodeCategoryId: _userData.userEmodeCategoryId,
+            })
             : formatUserSummary({
-                  currentTimestamp: currentTimestamp,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  userReserves: _userData.userReserves,
-                  formattedReserves: formattedPoolReserves as any,
-                  userEmodeCategoryId: _userData.userEmodeCategoryId,
-              })
+                currentTimestamp: currentTimestamp,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                userReserves: _userData.userReserves,
+                formattedReserves: formattedPoolReserves as any,
+                userEmodeCategoryId: _userData.userEmodeCategoryId,
+            })
 
         const maxToBorrow = getMaxAmountAvailableToBorrow(
             formattedPoolReserves.find(
@@ -424,13 +428,13 @@ export const useAaveV3Data = () => {
             ReservesDataHumanized | ReservesDataHumanizedLegacy,
             (
                 | {
-                      userReserves: UserReserveDataHumanized[]
-                      userEmodeCategoryId: number
-                  }
+                    userReserves: UserReserveDataHumanized[]
+                    userEmodeCategoryId: number
+                }
                 | {
-                      userReserves: UserReserveDataHumanizedLegacy[]
-                      userEmodeCategoryId: number
-                  }
+                    userReserves: UserReserveDataHumanizedLegacy[]
+                    userEmodeCategoryId: number
+                }
             ),
         ]
     ) => {
@@ -451,52 +455,52 @@ export const useAaveV3Data = () => {
 
         const formattedPoolReserves = isLegacyInstance
             ? formatReservesLegacy({
-                  reserves: _reserveData.reservesData as any,
-                  currentTimestamp,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-              }).map((r) => ({
-                  ...r,
-                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
-                  isWrappedBaseAsset: false,
-              }))
+                reserves: _reserveData.reservesData as any,
+                currentTimestamp,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+            }).map((r) => ({
+                ...r,
+                isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                isWrappedBaseAsset: false,
+            }))
             : formatReserves({
-                  reserves: _reserveData.reservesData as any,
-                  currentTimestamp,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-              }).map((r) => ({
-                  ...r,
-                  isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
-                  isWrappedBaseAsset: false,
-              }))
+                reserves: _reserveData.reservesData as any,
+                currentTimestamp,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+            }).map((r) => ({
+                ...r,
+                isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
+                isWrappedBaseAsset: false,
+            }))
 
         const user = isLegacyInstance
             ? formatUserSummaryLegacy({
-                  currentTimestamp: currentTimestamp,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  userReserves:
-                      _userData.userReserves as UserReserveDataHumanizedLegacy[],
-                  formattedReserves: formattedPoolReserves as any,
-                  userEmodeCategoryId: _userData.userEmodeCategoryId,
-              })
+                currentTimestamp: currentTimestamp,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                userReserves:
+                    _userData.userReserves as UserReserveDataHumanizedLegacy[],
+                formattedReserves: formattedPoolReserves as any,
+                userEmodeCategoryId: _userData.userEmodeCategoryId,
+            })
             : formatUserSummary({
-                  currentTimestamp: currentTimestamp,
-                  marketReferencePriceInUsd:
-                      baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-                  marketReferenceCurrencyDecimals:
-                      baseCurrencyData.marketReferenceCurrencyDecimals,
-                  userReserves: _userData.userReserves,
-                  formattedReserves: formattedPoolReserves as any,
-                  userEmodeCategoryId: _userData.userEmodeCategoryId,
-              })
+                currentTimestamp: currentTimestamp,
+                marketReferencePriceInUsd:
+                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
+                marketReferenceCurrencyDecimals:
+                    baseCurrencyData.marketReferenceCurrencyDecimals,
+                userReserves: _userData.userReserves,
+                formattedReserves: formattedPoolReserves as any,
+                userEmodeCategoryId: _userData.userEmodeCategoryId,
+            })
 
         const userToken = erc20TokensBalanceData[chainId]
             ? erc20TokensBalanceData[chainId][token.toLowerCase()]
@@ -631,7 +635,7 @@ export const useAaveV3Data = () => {
                     formatUnits(
                         additionalSupplyTokenAmountToRepay.mul(
                             supplyTokenReserve?.priceInMarketReferenceCurrency.toString() ??
-                                '0'
+                            '0'
                         ),
                         supplyTokenReserve?.decimals ?? 0
                     )
@@ -646,7 +650,7 @@ export const useAaveV3Data = () => {
                 .div(
                     BigNumber.from(
                         borrowTokenReserve?.priceInMarketReferenceCurrency.toString() ??
-                            '1'
+                        '1'
                     )
                 )
 
@@ -697,7 +701,7 @@ export const useAaveV3Data = () => {
                     .mul(
                         BigNumber.from(
                             supplyTokenReserve?.priceInMarketReferenceCurrency.toString() ??
-                                '0'
+                            '0'
                         )
                     ),
                 (supplyTokenReserve?.decimals ?? 0) + 8
@@ -751,10 +755,14 @@ export const useAaveV3Data = () => {
         isLoading,
         hasError,
         refreshData,
-        
+
+        // Context values
+        uiPoolDataProviderAddress,
+        lendingPoolAddressProvider,
+
         // Backwards compatibility - deprecated methods
         fetchAaveV3Data,
-        
+
         // Utility methods
         getAllowance,
         getMaxBorrowAmount,
@@ -762,7 +770,7 @@ export const useAaveV3Data = () => {
         getMaxRepayAmount,
         getMaxLeverage,
         getBorrowTokenAmountForLeverage,
-        
+
         // Legacy state values for backwards compatibility
         reserveData: undefined, // deprecated - use getReservesData(chainId) instead
         userData: undefined, // deprecated - use getUserData(chainId) instead

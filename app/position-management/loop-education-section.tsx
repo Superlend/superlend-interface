@@ -25,8 +25,8 @@ export default function LoopEducationSection() {
                                 </Badge>
                             </div>
                             <BodyText level="body2" className="text-yellow-700">
-                                Leveraged looping is a high-risk strategy that can amplify both gains and losses. 
-                                You risk liquidation if the market moves against your position. Ensure you understand 
+                                Leveraged looping is a high-risk strategy that can amplify both gains and losses.
+                                You risk liquidation if the market moves against your position. Ensure you understand
                                 the risks and only invest what you can afford to lose.
                             </BodyText>
                         </div>
@@ -41,10 +41,10 @@ export default function LoopEducationSection() {
                         <div className="flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-primary" />
                             <HeadingText level="h5" weight="medium" className="text-gray-800">
-                                How Loop Positions Work
+                                How Looping Works
                             </HeadingText>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="flex flex-col gap-2">
                                 <div className="flex items-center gap-2">
@@ -56,10 +56,10 @@ export default function LoopEducationSection() {
                                     </BodyText>
                                 </div>
                                 <BodyText level="body3" className="text-gray-600 ml-8">
-                                    Deposit your initial asset as collateral
+                                    Initial asset is deposited as collateral
                                 </BodyText>
                             </div>
-                            
+
                             <div className="flex flex-col gap-2">
                                 <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm font-medium">
@@ -70,10 +70,10 @@ export default function LoopEducationSection() {
                                     </BodyText>
                                 </div>
                                 <BodyText level="body3" className="text-gray-600 ml-8">
-                                    Borrow against collateral and swap to more collateral
+                                    Borrowed against collateral and swapped to more collateral tokens
                                 </BodyText>
                             </div>
-                            
+
                             <div className="flex flex-col gap-2">
                                 <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm font-medium">
@@ -84,7 +84,7 @@ export default function LoopEducationSection() {
                                     </BodyText>
                                 </div>
                                 <BodyText level="body3" className="text-gray-600 ml-8">
-                                    Repeat process to increase exposure and yield
+                                    Repeats the process to increase exposure and yield
                                 </BodyText>
                             </div>
                         </div>
@@ -102,12 +102,14 @@ export default function LoopEducationSection() {
                                 Key Concepts to Understand
                             </HeadingText>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex items-start gap-3">
-                                <Info className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm font-medium">
+                                    1
+                                </div>
                                 <div>
-                                    <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex items-center gap-1 mb-1">
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
                                             Health Factor
                                         </BodyText>
@@ -118,11 +120,13 @@ export default function LoopEducationSection() {
                                     </BodyText>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-start gap-3">
-                                <Info className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm font-medium">
+                                    2
+                                </div>
                                 <div>
-                                    <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex items-center gap-1 mb-1">
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
                                             Leverage Multiplier
                                         </BodyText>
@@ -133,11 +137,13 @@ export default function LoopEducationSection() {
                                     </BodyText>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-start gap-3">
-                                <Info className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm font-medium">
+                                    3
+                                </div>
                                 <div>
-                                    <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex items-center gap-1 mb-1">
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
                                             Net APY
                                         </BodyText>
@@ -148,11 +154,13 @@ export default function LoopEducationSection() {
                                     </BodyText>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-start gap-3">
-                                <Info className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm font-medium">
+                                    4
+                                </div>
                                 <div>
-                                    <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex items-center gap-1 mb-1">
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
                                             Liquidation Risk
                                         </BodyText>

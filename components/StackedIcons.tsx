@@ -15,7 +15,7 @@ type TProps = {
 
 export default function StackedIcons({ list }: TProps) {
     return (
-        <div className="relative flex items-center">
+        <div className="relative group flex items-center">
             {list.map((item) => (
                 <img
                     key={item.id}
@@ -23,7 +23,7 @@ export default function StackedIcons({ list }: TProps) {
                     alt={item.alt || ''}
                     width={item.width || 20}
                     height={item.height || 20}
-                    className={`first:ml-0 -ml-[12px] p-[1.5px] bg-white rounded-full ${item.className || ''}`}
+                    className={`first:ml-0 -ml-3 p-[1.5px] bg-white rounded-full group-hover:-ml-1 transition-all duration-300 ${item.className || ''}`}
                 />
             ))}
         </div>

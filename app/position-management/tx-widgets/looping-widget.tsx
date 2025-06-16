@@ -69,10 +69,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const [isLoopTxDialogOpen, setIsLoopTxDialogOpen] = useState(false)
-    const uiPoolDataProviderAddress =
-        '0x9f9384ef6a1a76ae1a95df483be4b0214fda0ef9'
-    const lendingPoolAddressProvider =
-        '0x5ccf60c7e10547c5389e9cbff543e5d0db9f4fec'
+
     const {
         walletAddress,
         handleSwitchChain,
@@ -97,7 +94,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     const [leverage, setLeverage] = useState<number>(1)
     const [newHealthFactor, setNewHealthFactor] = useState<number>(0)
     const [flashLoanAmount, setFlashLoanAmount] = useState<string>('0')
-    const { getMaxLeverage, getBorrowTokenAmountForLeverage, providerStatus, getUserData, getReservesData, refreshData } =
+    const { getMaxLeverage, getBorrowTokenAmountForLeverage, providerStatus, getUserData, getReservesData, refreshData, uiPoolDataProviderAddress, lendingPoolAddressProvider } =
         useAaveV3Data()
     const userData = getUserData(Number(chain_id))
     const reservesData = getReservesData(Number(chain_id))
@@ -117,7 +114,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         value: '',
         isLoading: false,
     })
-    
+
     useEffect(() => {
         if (!userData || !reservesData) {
             refreshData({
@@ -368,7 +365,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     }, [!!availableLendTokens.length, !!availableBorrowTokens.length])
 
     useEffect(() => {
-        if (providerStatus.isReady && !!Number(lendAmount)) {
+        if (providerStatus.isReady) {
             // Get max leverage
             getMaxLeverage({
                 chainId: ChainId.Etherlink,
@@ -378,34 +375,36 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                 setMaxLeverage(results as any)
             })
 
-            // Get borrow token amount for leverage
-            setIsLoadingBorrowAmount(true)
-            getBorrowTokenAmountForLeverage({
-                chainId: ChainId.Etherlink,
-                uiPoolDataProviderAddress: uiPoolDataProviderAddress,
-                lendingPoolAddressProvider: lendingPoolAddressProvider,
-                supplyToken: selectedLendToken?.address || '',
-                supplyTokenAmount: parseUnits(
-                    lendAmount,
-                    selectedLendToken?.decimals || 18
-                ).toString(),
-                leverage: leverage,
-                borrowToken: selectedBorrowToken?.address || '',
-                _walletAddress: walletAddress,
-            })
-                .then((result) => {
-                    console.log(
-                        'Borrow token amount for leverage result',
-                        result
-                    )
-                    setNewHealthFactor(Number(result?.healthFactor ?? 0))
-                    setBorrowAmount(result.amountFormatted)
-                    setBorrowAmountRaw(result.amount)
-                    setFlashLoanAmount(result.flashLoanAmountFormatted ?? '0')
+            if (!!Number(lendAmount)) {
+                // Get borrow token amount for leverage
+                setIsLoadingBorrowAmount(true)
+                getBorrowTokenAmountForLeverage({
+                    chainId: ChainId.Etherlink,
+                    uiPoolDataProviderAddress: uiPoolDataProviderAddress,
+                    lendingPoolAddressProvider: lendingPoolAddressProvider,
+                    supplyToken: selectedLendToken?.address || '',
+                    supplyTokenAmount: parseUnits(
+                        lendAmount,
+                        selectedLendToken?.decimals || 18
+                    ).toString(),
+                    leverage: leverage,
+                    borrowToken: selectedBorrowToken?.address || '',
+                    _walletAddress: walletAddress,
                 })
-                .finally(() => {
-                    setIsLoadingBorrowAmount(false)
-                })
+                    .then((result) => {
+                        console.log(
+                            'Borrow token amount for leverage result',
+                            result
+                        )
+                        setNewHealthFactor(Number(result?.healthFactor ?? 0))
+                        setBorrowAmount(result.amountFormatted)
+                        setBorrowAmountRaw(result.amount)
+                        setFlashLoanAmount(result.flashLoanAmountFormatted ?? '0')
+                    })
+                    .finally(() => {
+                        setIsLoadingBorrowAmount(false)
+                    })
+            }
             return
         }
 

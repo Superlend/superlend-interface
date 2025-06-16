@@ -3,6 +3,7 @@
 import ExternalLink from '@/components/ExternalLink'
 import ImageWithBadge from '@/components/ImageWithBadge'
 import ImageWithDefault from '@/components/ImageWithDefault'
+import StackedIcons from '@/components/StackedIcons'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import AvatarCircles from '@/components/ui/avatar-circles'
 import { Badge } from '@/components/ui/badge'
@@ -49,10 +50,12 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const chainLogo = row.original.chainLogo
             const chainName = row.original.chainName
             const protocolIdentifier = row.original.protocol_identifier
+            const borrowToken = (row.original as TLoopPair).borrowToken
+
             const tooltipContent = (
                 <span className="flex flex-col gap-[16px]">
                     <span className="flex flex-col gap-[4px]">
-                        <Label>Token</Label>
+                        <Label>Lend Token</Label>
                         <span className="flex items-center gap-[8px]">
                             <ImageWithDefault
                                 alt={`${tokenSymbol} token logo`}
@@ -63,6 +66,25 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             />
                             <BodyText level="body2" weight="medium">
                                 {tokenName}
+                            </BodyText>
+                        </span>
+                    </span>
+                    <span className="flex flex-col gap-[4px]">
+                        <Label>Borrow Token</Label>
+                        <span className="flex items-center gap-[8px] w-fit max-w-full">
+                            <ImageWithDefault
+                                src={borrowToken.logo || ''}
+                                alt={`${borrowToken.symbol} token logo`}
+                                width={20}
+                                height={20}
+                                className="rounded-full max-w-[20px] max-h-[20px]"
+                            />
+                            <BodyText
+                                level={'body2'}
+                                weight={'medium'}
+                                className="truncate"
+                            >
+                                {borrowToken.symbol}
                             </BodyText>
                         </span>
                     </span>
@@ -89,11 +111,23 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 <span className="flex items-center gap-[8px] w-fit max-w-full">
                     <InfoTooltip
                         label={
-                            <ImageWithBadge
-                                mainImg={tokenLogo || ''}
-                                badgeImg={chainLogo || ''}
-                                mainImgAlt={`${tokenSymbol} token logo`}
-                                badgeImgAlt={`${chainName} chain logo`}
+                            <StackedIcons
+                                list={[
+                                    {
+                                        id: 'lend_token',
+                                        src: tokenLogo || '',
+                                        alt: `${tokenSymbol} token logo`,
+                                        width: '24',
+                                        height: '24',
+                                    },
+                                    {
+                                        id: 'borrow_token',
+                                        src: borrowToken.logo || '',
+                                        alt: `${borrowToken.symbol} token logo`,
+                                        width: '24',
+                                        height: '24',
+                                    }
+                                ]}
                             />
                         }
                         content={tooltipContent}
@@ -108,14 +142,28 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 position_type: positionTypeParam,
                             },
                         }}
-                        className="truncate"
+                        className="flex items-center gap-1 w-fit truncate"
                     >
                         <BodyText
                             level={'body2'}
                             weight={'medium'}
-                            className="truncate block shrink-0 hover:text-secondary-500 active:text-secondary-500"
+                            className="truncate block shrink-0 hover:text-secondary-500 active:text-secondary-500 w-fit max-w-full"
                         >
                             {tokenSymbol}
+                        </BodyText>
+                        <BodyText
+                            level="body1"
+                            weight="medium"
+                            className="text-gray-500"
+                        >
+                            /
+                        </BodyText>
+                        <BodyText
+                            level={'body2'}
+                            weight={'medium'}
+                            className="truncate block shrink-0 hover:text-secondary-500 active:text-secondary-500 w-fit max-w-full"
+                        >
+                            {borrowToken.symbol}
                         </BodyText>
                     </Link>
                     {isMorphoShiftToken && positionTypeParam === 'lend' && (
@@ -469,50 +517,50 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         },
         enableGlobalFilter: false,
     },
-    {
-        accessorKey: 'borrowToken',
-        header: () => (
-            <InfoTooltip
-                side="bottom"
-                label={<TooltipText>Borrows</TooltipText>}
-                content={
-                    'The asset that will be borrowed in this loop position.'
-                }
-            />
-        ),
-        cell: ({ row }) => {
-            const borrowToken = (row.original as TLoopPair).borrowToken
-            
-            if (!borrowToken) {
-                return (
-                    <BodyText level={'body2'} weight={'medium'}>
-                        -
-                    </BodyText>
-                )
-            }
+    // {
+    //     accessorKey: 'borrowToken',
+    //     header: () => (
+    //         <InfoTooltip
+    //             side="bottom"
+    //             label={<TooltipText>Borrows</TooltipText>}
+    //             content={
+    //                 'The asset that will be borrowed in this loop position.'
+    //             }
+    //         />
+    //     ),
+    //     cell: ({ row }) => {
+    //         const borrowToken = (row.original as TLoopPair).borrowToken
 
-            return (
-                <span className="flex items-center gap-[8px] w-fit max-w-full">
-                    <ImageWithDefault
-                        src={borrowToken.logo || ''}
-                        alt={`${borrowToken.symbol} token logo`}
-                        width={20}
-                        height={20}
-                        className="rounded-full max-w-[20px] max-h-[20px]"
-                    />
-                    <BodyText
-                        level={'body2'}
-                        weight={'medium'}
-                        className="truncate"
-                    >
-                        {borrowToken.symbol}
-                    </BodyText>
-                </span>
-            )
-        },
-        enableSorting: false,
-        enableGlobalFilter: false,
-    },
+    //         if (!borrowToken) {
+    //             return (
+    //                 <BodyText level={'body2'} weight={'medium'}>
+    //                     -
+    //                 </BodyText>
+    //             )
+    //         }
+
+    //         return (
+    //             <span className="flex items-center gap-[8px] w-fit max-w-full">
+    //                 <ImageWithDefault
+    //                     src={borrowToken.logo || ''}
+    //                     alt={`${borrowToken.symbol} token logo`}
+    //                     width={20}
+    //                     height={20}
+    //                     className="rounded-full max-w-[20px] max-h-[20px]"
+    //                 />
+    //                 <BodyText
+    //                     level={'body2'}
+    //                     weight={'medium'}
+    //                     className="truncate"
+    //                 >
+    //                     {borrowToken.symbol}
+    //                 </BodyText>
+    //             </span>
+    //         )
+    //     },
+    //     enableSorting: false,
+    //     enableGlobalFilter: false,
+    // },
 ]
 
 function TooltipText({
