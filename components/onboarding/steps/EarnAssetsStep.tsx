@@ -667,7 +667,7 @@ export const EarnAssetsStep: React.FC = () => {
           {shouldFetchData && !isLoadingLendOpportunitiesData && assets.length > 0 && (
             <>
               <p className="text-sm text-gray-600 mb-4">
-                Displaying <span className="font-bold">Top 3</span> {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} opportunities
+                Showing <span className="font-bold">Top {assets.slice(0, 3).length}</span> {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} opportunitie{assets.length > 1 ? 's' : ''}
                 {/* {lastRefetch && (
                   <span className="text-xs text-gray-500 ml-2">
                     • Last updated: {lastRefetch.toLocaleTimeString()}
