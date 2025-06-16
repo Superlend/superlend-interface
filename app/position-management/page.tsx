@@ -21,6 +21,7 @@ import PortfolioProvider from '@/context/portfolio-provider'
 import { AppleFarmRewardsProvider } from '@/context/apple-farm-rewards-provider'
 import { useSearchParams } from 'next/navigation'
 import FlatTabs from '@/components/tabs/flat-tabs'
+import LoopPositionOverview from './loop-position-overview'
 
 export default function PositionManagementPage() {
     const searchParams = useSearchParams()
@@ -43,7 +44,7 @@ export default function PositionManagementPage() {
                         }
                         {isLoopPosition &&
                             <div className="flex flex-col gap-[16px] order-last xl:order-first">
-                                
+                                <LoopPositionOverview />
                             </div>
                         }
                         <div className="order-first xl:order-last">

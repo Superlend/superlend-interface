@@ -22,9 +22,9 @@ export default function FlatTabs({
             className="w-full"
         >
             <div className="sticky top-[56px] md:top-[74px] bg-transparent backdrop-blur-md rounded-4 z-10">
-                <TabsList className="w-full">
+                <TabsList className="w-full bg-transparent">
                     {tabs.map((tab) => (
-                        <TabsTrigger key={tab.value} value={tab.value} className="flex-1 pt-4 md:pt-2 pb-4 bg-transparent uppercase text-gray-500 border-b-[1px] border-gray-500 data-[state=active]:text-secondary-500 data-[state=active]:border-secondary-500 data-[state=active]:border-b-[2px]">
+                        <TabsTrigger key={tab.value} value={tab.value} className="flex-1 pt-4 md:pt-2 pb-4 bg-transparent uppercase rounded-none text-gray-500 border-b-[1px] border-gray-500 data-[state=active]:text-secondary-500 data-[state=active]:border-secondary-500 data-[state=active]:border-b-[2px] data-[state=active]:bg-transparent">
                             {tab.label}
                         </TabsTrigger>
                     ))}
