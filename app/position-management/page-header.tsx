@@ -565,7 +565,7 @@ function getAssetTooltipContent({
             {TooltipData.map((item) => (
                 <span key={item.label} className="flex flex-col gap-[4px]">
                     <Label>{item.label}</Label>
-                    <span className="flex items-center gap-[8px]">
+                    <span className="flex items-center gap-[8px] max-w-full">
                         <ImageWithDefault
                             alt={item.imageAlt}
                             src={item.image}
@@ -573,7 +573,7 @@ function getAssetTooltipContent({
                             height={24}
                             className="max-w-[24px] max-h-[24px]"
                         />
-                        <BodyText level="body1" weight="medium">
+                        <BodyText level="body1" weight="medium" className='break-all'>
                             {item.displayName}
                         </BodyText>
                     </span>

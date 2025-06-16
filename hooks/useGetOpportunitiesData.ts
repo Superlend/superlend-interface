@@ -28,8 +28,10 @@ export default function useGetOpportunitiesData(
                 return []
             }
         },
-        staleTime: 5 * 60 * 1000, // 5 minutes instead of Infinity
-        gcTime: 10 * 60 * 1000, // 10 minutes garbage collection time
+        staleTime: 2 * 60 * 1000,
+        gcTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
         refetchInterval: false,
         enabled: params.enabled,
     })
