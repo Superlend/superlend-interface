@@ -1164,7 +1164,7 @@ export const BorrowAssetsStep: React.FC = () => {
             <>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-600">
-                  Found <span className="font-bold">Top 3</span> collateral options for {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} borrowing
+                  Displaying <span className="font-bold">Top 3</span> collateral options for {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} borrowing
                   {/* {lastRefetch && (
                     <span className="text-xs text-gray-500 ml-2">
                       • Last updated: {lastRefetch.toLocaleTimeString()}
@@ -1327,7 +1327,7 @@ export const BorrowAssetsStep: React.FC = () => {
           {selectedCollateralToken && !isLoadingBorrowOpportunitiesData && !isErrorBorrowOpportunitiesData && assets.length > 0 && (
             <>
               <p className="text-sm text-gray-600 mb-4">
-                Found <span className="font-bold">Top 3</span> market{assets.length > 1 ? 's' : ''} for {selectedTokenType} borrowing with {getCollateralDisplayName()} collateral
+                Displaying <span className="font-bold">Top 3</span> market{assets.length > 1 ? 's' : ''} for {selectedTokenType} borrowing with {getCollateralDisplayName()} collateral
                 {/* {lastRefetch && (
                   <span className="text-xs text-gray-500 ml-2">
                     • Last updated: {lastRefetch.toLocaleTimeString()}
