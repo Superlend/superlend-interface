@@ -10,7 +10,7 @@ export const ChoosePathStep: React.FC = () => {
   const { selectedPath, setPath } = useOnboardingContext()
 
   const handlePathSelect = (path: OnboardingPath, pathTitle: string) => {
-    console.log('🎮 Path selected:', path, pathTitle)
+    // console.log('🎮 Path selected:', path, pathTitle)
     setPath(path)
 
     // Auto-scroll to the respective flow section when selected
@@ -38,7 +38,7 @@ export const ChoosePathStep: React.FC = () => {
   }
 
   const handleStartLearningPath = () => {
-    console.log('🎓 Starting Learning Path from Earn Flow')
+    // console.log('🎓 Starting Learning Path from Earn Flow')
     setPath('learn')
     // Note: We don't setStep here as the navigation is handled by the onboarding dialog
   }
@@ -149,7 +149,7 @@ export const ChoosePathStep: React.FC = () => {
     }
   ]
 
-  console.log('🎮 Current selectedPath:', selectedPath)
+  // console.log('🎮 Current selectedPath:', selectedPath)
 
   return (
     <div className="h-full flex flex-col space-y-6 px-4 sm:px-6">
@@ -186,7 +186,7 @@ export const ChoosePathStep: React.FC = () => {
                   backdrop-blur-sm border transform-gpu
                   ${isSelected
                     ? `${theme.borderColor} bg-white/35 shadow-2xl border-2 ${theme.glowColor} shadow-lg ring-1 ring-white/25`
-                    : `bg-white/25 ${theme.bgPattern} border-white/40 shadow-xl hover:bg-white/35 hover:border-2 hover:border-primary hover:shadow-2xl hover:shadow-primary/30 hover:ring-2 hover:ring-white/20 hover:-translate-y-1`
+                    : `bg-white/25 ${theme.bgPattern} border-primary/50 shadow-xl hover:bg-white/35 hover:border-2 hover:border-primary hover:shadow-2xl hover:shadow-primary/30 hover:ring-2 hover:ring-white/20 hover:-translate-y-1`
                   }
                 `}
                 onClick={() => handlePathSelect(pathData.path, pathData.title)}

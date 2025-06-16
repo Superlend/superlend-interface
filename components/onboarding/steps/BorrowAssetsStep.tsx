@@ -81,7 +81,7 @@ export const BorrowAssetsStep: React.FC = () => {
     setTimeout(() => {
       const element = document.getElementById(sectionId)
       if (element) {
-        element.scrollIntoView({ 
+        element.scrollIntoView({
           behavior: 'smooth',
           block: 'start'
         })
@@ -415,7 +415,7 @@ export const BorrowAssetsStep: React.FC = () => {
       const isCompound = platformNameLower === PlatformType.COMPOUND
       const isVault = item.platform.isVault
       const excludeRiskyMorphoMarkets = true
-      const excludeEulerMarkets = true 
+      const excludeEulerMarkets = true
       const excludeCompoundMarkets = true
       const shouldExcludeMorphoMarkets = excludeRiskyMorphoMarkets && isMorpho && !isVault
       const shouldExcludeEulerMarkets = excludeEulerMarkets && isEuler
@@ -1164,7 +1164,7 @@ export const BorrowAssetsStep: React.FC = () => {
             <>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-600">
-                  Displaying <span className="font-bold">Top 3</span> collateral options for {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} borrowing
+                  Showing <span className="font-bold">Top {collateralTokens.slice(0, 3).length}</span> collateral options for {selectedRiskLevel?.toLowerCase()} risk {selectedTokenType} borrowing
                   {/* {lastRefetch && (
                     <span className="text-xs text-gray-500 ml-2">
                       • Last updated: {lastRefetch.toLocaleTimeString()}
@@ -1218,7 +1218,7 @@ export const BorrowAssetsStep: React.FC = () => {
                         </motion.div>
                       )}
 
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
                             {collateral.logo ? (
@@ -1244,12 +1244,12 @@ export const BorrowAssetsStep: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-3 mb-3">
+                      {/* <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-3 mb-3">
                         <div className="flex justify-between items-center">
                           <span className="text-xs font-medium text-gray-700">Markets</span>
                           <span className="text-lg font-bold text-orange-700">{collateral.marketCount}</span>
                         </div>
-                      </div>
+                      </div> */}
                     </motion.button>
                   )
                 })}
@@ -1327,7 +1327,7 @@ export const BorrowAssetsStep: React.FC = () => {
           {selectedCollateralToken && !isLoadingBorrowOpportunitiesData && !isErrorBorrowOpportunitiesData && assets.length > 0 && (
             <>
               <p className="text-sm text-gray-600 mb-4">
-                Displaying <span className="font-bold">Top 3</span> market{assets.length > 1 ? 's' : ''} for {selectedTokenType} borrowing with {getCollateralDisplayName()} collateral
+                Showing <span className="font-bold">Top {assets.slice(0, 3).length}</span> market{assets.length > 1 ? 's' : ''} for {selectedTokenType} borrowing with {getCollateralDisplayName()} collateral
                 {/* {lastRefetch && (
                   <span className="text-xs text-gray-500 ml-2">
                     • Last updated: {lastRefetch.toLocaleTimeString()}

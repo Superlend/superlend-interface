@@ -87,7 +87,7 @@ export const OnboardingDialog: React.FC = () => {
 
   // Handle start over functionality
   const handleStartOver = () => {
-    console.log('🔄 Starting over from dialog footer')
+    // console.log('🔄 Starting over from dialog footer')
     // Clear selected asset to ensure fresh selection
     clearSelectedAsset()
     // Reset to appropriate starting point based on current path
@@ -103,14 +103,14 @@ export const OnboardingDialog: React.FC = () => {
   }
 
   const renderStep = () => {
-    console.log('🎭 renderStep called with currentStep:', currentStep)
+    // console.log('🎭 renderStep called with currentStep:', currentStep)
     
     switch (currentStep) {
       case 'welcome':
-        console.log('🎭 Rendering WelcomeStep')
+        // console.log('🎭 Rendering WelcomeStep')
         return <WelcomeStep />
       case 'choose-path':
-        console.log('🎭 Rendering ChoosePathStep')
+        // console.log('🎭 Rendering ChoosePathStep')
         return <ChoosePathStep />
       case 'earn-flow':
         return <EarnFlowStep />
@@ -135,7 +135,7 @@ export const OnboardingDialog: React.FC = () => {
       case 'final':
         return <FinalStep />
       default:
-        console.log('🎭 Rendering default WelcomeStep for step:', currentStep)
+        // console.log('🎭 Rendering default WelcomeStep for step:', currentStep)
         return <WelcomeStep />
     }
   }
@@ -157,7 +157,7 @@ export const OnboardingDialog: React.FC = () => {
       <Button
         variant="ghost"
         size="sm"
-        onClick={closeOnboarding}
+        onClick={(e) => closeOnboarding()}
         className="h-8 w-8 p-0 rounded-full hover:bg-gray-100"
       >
         <X className="h-4 w-4" />
@@ -181,12 +181,12 @@ export const OnboardingDialog: React.FC = () => {
       <div className="flex items-center space-x-3">
         {(() => {
           const shouldShowContinue = canGoNext || (currentStep === 'choose-path' && selectedPath);
-          console.log('🔲 Continue button logic:', {
-            canGoNext,
-            currentStep,
-            selectedPath,
-            shouldShowContinue
-          });
+          // console.log('🔲 Continue button logic:', {
+          //   canGoNext,
+          //   currentStep,
+          //   selectedPath,
+          //   shouldShowContinue
+          // });
           
           return shouldShowContinue && (
             <Button
