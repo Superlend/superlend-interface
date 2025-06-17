@@ -18,6 +18,7 @@ export default function useGetOpportunitiesData(
     const [manualRefreshRequested, setManualRefreshRequested] = useState(false)
     const [isManualRefreshing, setIsManualRefreshing] = useState(false)
     const hasInitializedRef = useRef(false)
+    const currentCacheKeyRef = useRef<string>('')
     
     // Create a cache key based on params
     const cacheKey = `opportunities_${params.type}_${params.chain_ids || 'all'}_${params.tokens || 'all'}`
@@ -34,7 +35,20 @@ export default function useGetOpportunitiesData(
         return Date.now() - lastFetchTime <= 600000 // 10 minutes
     }, [lastFetchTime])
 
-    // Load cached data on mount
+    // Reset state when cache key changes (tab switch)
+    useEffect(() => {
+        if (currentCacheKeyRef.current && currentCacheKeyRef.current !== cacheKey) {
+            // Cache key changed, reset state for new tab
+            setCachedData([])
+            setLastFetchTime(null)
+            setManualRefreshRequested(false)
+            setIsManualRefreshing(false)
+            hasInitializedRef.current = false
+        }
+        currentCacheKeyRef.current = cacheKey
+    }, [cacheKey])
+
+    // Load cached data when cache key changes or on mount
     useEffect(() => {
         if (typeof window !== 'undefined' && !hasInitializedRef.current) {
             const cached = localStorage.getItem(cacheKey)
@@ -43,6 +57,15 @@ export default function useGetOpportunitiesData(
                     const parsedCache: CachedOpportunitiesData = JSON.parse(cached)
                     setCachedData(parsedCache.data)
                     setLastFetchTime(parsedCache.timestamp)
+                    
+                    // Check if we should auto-refresh after tab switch
+                    const isStale = Date.now() - parsedCache.timestamp > 600000 // 10 minutes
+                    if (isStale && parsedCache.data.length > 0) {
+                        // Auto-refresh stale data after tab switch
+                        setTimeout(() => {
+                            setManualRefreshRequested(true)
+                        }, 500) // Small delay to let UI settle
+                    }
                 } catch (error) {
                     console.error('Error parsing cached opportunities data:', error)
                     localStorage.removeItem(cacheKey)
