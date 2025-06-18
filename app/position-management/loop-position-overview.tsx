@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useContext } from 'react'
 import { useSearchParams } from 'next/navigation'
 import FlatTabs from '@/components/tabs/flat-tabs'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
@@ -15,6 +15,9 @@ import { abbreviateNumber } from '@/lib/utils'
 import { DollarSign, TrendingUp, TrendingDown, Target } from 'lucide-react'
 import { useAaveV3Data } from '@/hooks/protocols/useAaveV3Data'
 import { ChainId } from '@/types/chain'
+import { AssetsDataContext } from '@/context/data-provider'
+import { TPlatformAsset } from '@/types/platform'
+import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 
 export default function LoopPositionOverview() {
     const searchParams = useSearchParams()
@@ -26,6 +29,8 @@ export default function LoopPositionOverview() {
     const [activeTab, setActiveTab] = useState('overview')
     const { getMaxLeverage, providerStatus, uiPoolDataProviderAddress, lendingPoolAddressProvider } = useAaveV3Data()
     const [maxLeverage, setMaxLeverage] = useState<number>(0)
+    const { allChainsData, allTokensData } = useContext(AssetsDataContext)
+    const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
 
     const { data: platformData, isLoading: isLoadingPlatformData } = useGetPlatformData({
         protocol_identifier,
@@ -38,9 +43,100 @@ export default function LoopPositionOverview() {
         chain_id: [String(chain_id)],
     })
 
-    const borrowTokenLiquidity = useMemo(() => {
-        platformData
-    }, [portfolioData])
+    // Get token details from platform data
+    const lendTokenDetails = useMemo(() => {
+        if (!platformData?.assets) return null
+        const asset = platformData.assets.find((asset: TPlatformAsset) => 
+            asset.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
+        )
+        if (!asset) return null
+        
+        // Calculate enhanced supply APY with apple farm rewards (similar to page-header)
+        const baseSupplyAPY = asset.supply_apy || 0
+        const appleFarmReward = appleFarmRewardsAprs?.[asset.token.address] ?? 0
+        const enhancedSupplyAPY = baseSupplyAPY + appleFarmReward
+        
+        return {
+            ...asset.token,
+            apy: enhancedSupplyAPY,
+            baseApy: baseSupplyAPY, // Keep original for reference
+            appleFarmReward: appleFarmReward,
+            ltv: asset.ltv, // Loan-to-value ratio
+            remaining_supply_cap: asset.remaining_supply_cap, // Available supply capacity
+            totalSupply: 0 // TODO: Need to calculate total supply from platform data - not available in asset
+        }
+    }, [platformData, lendTokenAddressParam, appleFarmRewardsAprs])
+
+    const borrowTokenDetails = useMemo(() => {
+        if (!platformData?.assets) return null
+        const asset = platformData.assets.find((asset: TPlatformAsset) => 
+            asset.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
+        )
+        return asset ? {
+            ...asset.token,
+            apy: asset.variable_borrow_apy, // Use variable borrow APY for borrowing
+            borrow_enabled: asset.borrow_enabled, // Whether borrowing is enabled for this asset
+            remaining_borrow_cap: asset.remaining_borrow_cap, // Available borrow capacity
+            totalBorrow: 0, // TODO: Need to calculate total borrows - not available in asset
+            availableLiquidity: 0 // TODO: Need to calculate available liquidity - not available in asset
+        } : null
+    }, [platformData, borrowTokenAddressParam])
+
+    // Get user positions from portfolio data
+    const userPositions = useMemo(() => {
+        if (!portfolioData?.platforms || !walletAddress) return []
+        return portfolioData.platforms.filter((platform) =>
+            platform?.protocol_identifier?.toLowerCase() === protocol_identifier?.toLowerCase()
+        )
+    }, [portfolioData, protocol_identifier, walletAddress])
+
+    const userLoopPosition = useMemo(() => {
+        if (!userPositions.length) return null
+        
+        const platform = userPositions[0]
+        const lendPosition = platform.positions.find(p => 
+            p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
+        )
+        const borrowPosition = platform.positions.find(p => 
+            p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
+        )
+
+        console.log('lendPosition', lendPosition)
+        console.log('borrowPosition', borrowPosition)
+
+        if (!lendPosition || !borrowPosition) return null
+
+        const collateralValueUSD = lendPosition.amount * lendPosition.token.price_usd
+        const borrowValueUSD = borrowPosition.amount * borrowPosition.token.price_usd
+        const netValue = collateralValueUSD - borrowValueUSD
+        const currentLeverage = collateralValueUSD / (collateralValueUSD - borrowValueUSD)
+        const netAPY = (lendPosition.apy * currentLeverage) - (borrowPosition.apy * (currentLeverage - 1))
+
+        return {
+            netValue,
+            currentLeverage,
+            netAPY,
+            collateralAsset: {
+                token: lendPosition.token,
+                amount: lendPosition.amount,
+                amountUSD: collateralValueUSD,
+                apy: lendPosition.apy
+            },
+            borrowAsset: {
+                token: borrowPosition.token,
+                amount: borrowPosition.amount,
+                amountUSD: borrowValueUSD,
+                apy: borrowPosition.apy
+            },
+            healthFactor: platform.health_factor,
+            positionLTV: (borrowValueUSD / collateralValueUSD) * 100,
+            liquidationLTV: (lendPosition.liquidation_threshold || 80),
+            liquidationPrice: borrowValueUSD / ((lendPosition.liquidation_threshold || 80) / 100 * lendPosition.amount),
+            utilizationRate: (borrowValueUSD / collateralValueUSD) * 100,
+            totalSupplied: collateralValueUSD,
+            totalBorrowed: borrowValueUSD
+        }
+    }, [userPositions, lendTokenAddressParam, borrowTokenAddressParam])
 
     useEffect(() => {
         if (providerStatus.isReady) {
@@ -55,116 +151,106 @@ export default function LoopPositionOverview() {
                 setMaxLeverage(maxLeverage)
             })
         }
-    }, [providerStatus])
+    }, [providerStatus, lendTokenAddressParam, borrowTokenAddressParam])
 
-    // Dummy data structure - easily replaceable with real API data
-    const dummyLoopPositionData = useMemo(() => ({
-        // Position Overview
-        netValue: 1250.50,
-        pnl: {
-            value: 125.30,
-            percentage: 11.2,
-            isPositive: true
-        },
-        netAPY: 8.45,
-        currentMultiplier: 2.5,
-
-        // Position Details
-        collateralAsset: {
-            token: {
-                symbol: 'USDC',
-                name: 'USD Coin',
-                logo: '/images/tokens/usdc.webp',
-                address: lendTokenAddressParam,
-                decimals: 6,
-                price_usd: 1.0
+    // Dynamic data for metrics
+    const metrics = useMemo(() => {
+        const baseMetrics = [
+            {
+                title: 'Liquidity',
+                value: borrowTokenDetails?.availableLiquidity ? `$${abbreviateNumber(borrowTokenDetails.availableLiquidity)}` : '$1.2M', // Static fallback
+                icon: DollarSign,
+                tooltip: 'Available liquidity for borrowing',
+                className: 'text-gray-800'
             },
-            amount: 1000,
-            amountUSD: 1000,
-            apy: 8.5
-        },
-        borrowAsset: {
-            token: {
-                symbol: 'USDT',
-                name: 'Tether',
-                logo: '/images/tokens/usdt.webp',
-                address: borrowTokenAddressParam,
-                decimals: 18,
-                price_usd: 2500
+            {
+                title: 'Max APY',
+                value: lendTokenDetails ? `${lendTokenDetails.apy.toFixed(2)}%` : '5.25%', // Static fallback
+                icon: Target,
+                tooltip: 'Maximum APY available for this position',
+                className: 'text-green-600'
             },
-            amount: 0.6,
-            amountUSD: 1500,
-            apy: 7.73
-        },
+            {
+                title: 'Total Supply',
+                value: lendTokenDetails?.totalSupply ? `$${abbreviateNumber(lendTokenDetails.totalSupply)}` : '$8.5M', // Static fallback
+                icon: TrendingUp,
+                tooltip: 'Total amount supplied to this market',
+                className: 'text-gray-800'
+            },
+            {
+                title: 'Max Multiplier',
+                value: `${maxLeverage || 4.0}x`, // Static fallback to 4.0x
+                icon: TrendingUp,
+                tooltip: 'Maximum leverage multiplier available',
+                className: 'text-primary'
+            }
+        ]
 
-        // Risk Metrics
-        healthFactor: 1.62,
-        liquidationPrice: 1875.40,
-        maxLeverage: 4.0,
-        currentLeverage: 2.5,
-        utilizationRate: 62.5,
+        return baseMetrics
+    }, [lendTokenDetails, borrowTokenDetails, maxLeverage])
 
-        // Performance
-        totalSupplied: 2500,
-        totalBorrowed: 1500,
-        positionLTV: 60,
-        liquidationLTV: 80,
-
-        // Platform Details
-        platform: {
-            name: platformData?.platform?.name || 'Aave V3',
-            logo: platformData?.platform?.logo || '/platforms/aave.svg',
-            chain_id: Number(chain_id)
+    // Dynamic loop data
+    const loopData = useMemo(() => {
+        if (userLoopPosition) {
+            return {
+                ...userLoopPosition,
+                maxLeverage: maxLeverage || 4.0,
+                platform: {
+                    name: platformData?.platform?.name || 'Unknown',
+                    logo: platformData?.platform?.logo || '',
+                    chain_id: Number(chain_id)
+                }
+            }
         }
-    }), [platformData, lendTokenAddressParam, borrowTokenAddressParam, chain_id])
 
-    const metrics = [
-        // {
-        //     title: 'Net Value',
-        //     value: `$${abbreviateNumber(dummyLoopPositionData.netValue)}`,
-        //     icon: DollarSign,
-        //     tooltip: 'Total value of your loop position after accounting for all assets and debts',
-        //     className: 'text-gray-800'
-        // },
-        // {
-        //     title: 'PnL',
-        //     value: `${dummyLoopPositionData.pnl.isPositive ? '+' : ''}$${abbreviateNumber(dummyLoopPositionData.pnl.value)}`,
-        //     subValue: `${dummyLoopPositionData.pnl.isPositive ? '+' : ''}${dummyLoopPositionData.pnl.percentage.toFixed(2)}%`,
-        //     icon: dummyLoopPositionData.pnl.isPositive ? TrendingUp : TrendingDown,
-        //     tooltip: 'Profit and loss from your loop position since opening',
-        //     className: dummyLoopPositionData.pnl.isPositive ? 'text-green-600' : 'text-red-600'
-        // },
-        {
-            title: 'Liquidity',
-            value: `$${abbreviateNumber(dummyLoopPositionData.totalSupplied)}`,
-            icon: DollarSign,
-            tooltip: 'Total value of your loop position after accounting for all assets and debts',
-            className: 'text-gray-800'
-        },
-        {
-            title: 'Max APY',
-            value: `${dummyLoopPositionData.netAPY >= 0 ? '+' : ''}${dummyLoopPositionData.netAPY.toFixed(2)}%`,
-            icon: Target,
-            tooltip: 'Your effective APY after accounting for supply rewards and borrowing costs',
-            className: dummyLoopPositionData.netAPY >= 0 ? 'text-green-600' : 'text-red-600'
-        },
-        {
-            title: 'Total Supply',
-            value: `$${abbreviateNumber(dummyLoopPositionData.totalSupplied)}`,
-            icon: DollarSign,
-            tooltip: 'Total value of your loop position after accounting for all assets',
-            className: 'text-gray-800'
-        },
-        {
-            title: 'Max Multiplier',
-            value: `${maxLeverage}x`,
-            icon: TrendingUp,
-            tooltip: 'Your current leverage multiplier - how much your exposure is amplified',
-            className: 'text-primary'
+        // Fallback data for users without positions
+        return {
+            netValue: 0,
+            currentLeverage: 1.0,
+            netAPY: lendTokenDetails?.apy || 0,
+            collateralAsset: {
+                token: lendTokenDetails || {
+                    symbol: 'Unknown',
+                    name: 'Unknown',
+                    logo: '',
+                    address: lendTokenAddressParam,
+                    decimals: 18,
+                    price_usd: 0
+                },
+                amount: 0,
+                amountUSD: 0,
+                apy: lendTokenDetails?.apy || 0
+            },
+            borrowAsset: {
+                token: borrowTokenDetails || {
+                    symbol: 'Unknown',
+                    name: 'Unknown', 
+                    logo: '',
+                    address: borrowTokenAddressParam,
+                    decimals: 18,
+                    price_usd: 0
+                },
+                amount: 0,
+                amountUSD: 0,
+                apy: borrowTokenDetails?.apy || 0
+            },
+            healthFactor: 0,
+            positionLTV: 0,
+            liquidationLTV: 80,
+            liquidationPrice: 0,
+            maxLeverage: maxLeverage || 4.0,
+            utilizationRate: 0,
+            totalSupplied: 0,
+            totalBorrowed: 0,
+            platform: {
+                name: platformData?.platform?.name || 'Unknown',
+                logo: platformData?.platform?.logo || '',
+                chain_id: Number(chain_id)
+            }
         }
-    ]
+    }, [userLoopPosition, lendTokenDetails, borrowTokenDetails, maxLeverage, platformData, chain_id, lendTokenAddressParam, borrowTokenAddressParam])
 
-    const isLoading = isLoadingPlatformData || isLoadingPortfolioData
+    const isLoading = isLoadingPlatformData || isLoadingPortfolioData || isLoadingAppleFarmRewards
 
     const tabs = [
         {
@@ -185,7 +271,7 @@ export default function LoopPositionOverview() {
             value: 'details',
             content: (
                 <LoopPositionDetails
-                    loopData={dummyLoopPositionData}
+                    loopData={loopData}
                     isLoading={isLoading}
                 />
             )
@@ -195,7 +281,7 @@ export default function LoopPositionOverview() {
             value: 'performance',
             content: (
                 <LoopPerformance
-                    loopData={dummyLoopPositionData}
+                    loopData={loopData}
                     isLoading={isLoading}
                 />
             )

@@ -10,6 +10,7 @@ import { cn, abbreviateNumber, getRiskFactor, getLiquidationRisk } from '@/lib/u
 import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import AvatarCircles from '@/components/ui/avatar-circles'
+import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 
 interface LoopPositionDetailsProps {
     loopData: any
@@ -17,7 +18,9 @@ interface LoopPositionDetailsProps {
 }
 
 export default function LoopPositionDetails({ loopData, isLoading }: LoopPositionDetailsProps) {
-    if (isLoading) {
+    const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
+
+    if (isLoading || isLoadingAppleFarmRewards) {
         return (
             <div className="flex flex-col gap-6">
                 <Card className="bg-white bg-opacity-40">
@@ -40,6 +43,11 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
             </div>
         )
     }
+
+    // Calculate enhanced supply APY with apple farm rewards (similar to page-header)
+    const baseSupplyAPY = loopData.collateralAsset.baseApy || loopData.collateralAsset.apy || 0
+    const appleFarmRewardAPY = appleFarmRewardsAprs?.[loopData.collateralAsset.token.address] ?? 0
+    const enhancedSupplyAPY = baseSupplyAPY 
 
     // Calculate risk metrics
     const liquidationPercentage = (loopData.positionLTV / loopData.liquidationLTV) * 100
@@ -89,7 +97,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                         Supply APY
                                     </BodyText>
                                     <BodyText level="body3" weight="medium" className="text-green-700">
-                                        {loopData.collateralAsset.apy.toFixed(2)}%
+                                        {enhancedSupplyAPY.toFixed(2)}%
                                     </BodyText>
                                 </div>
                             </div>

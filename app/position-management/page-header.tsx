@@ -230,10 +230,12 @@ export default function PageHeader() {
     const pageHeaderStats = getPageHeaderStats({
         tokenAddress: isDisplayOneToken ? [tokenDetails?.address] : [collateralTokenDetails?.address, loanTokenDetails?.address],
         platformData: platformData as TPlatform,
+        positionType: positionTypeParam,
     })
 
     const formattedSupplyAPY = Number(pageHeaderStats?.supply_apy || 0) + Number((appleFarmRewardsAprs?.[tokenDetails?.address] ?? 0))
 
+    console.log('formattedSupplyAPY', formattedSupplyAPY ,pageHeaderStats?.supply_apy,appleFarmRewardsAprs?.[tokenDetails?.address],tokenDetails )
     const formattedBorrowRate = (isMorphoVault || isFluidLend)
         ? 'N/A'
         : (
@@ -516,10 +518,14 @@ export default function PageHeader() {
 function getPageHeaderStats({
     tokenAddress,
     platformData,
+    positionType,
 }: {
     tokenAddress: string[]
     platformData: TPlatform
+    positionType: string
 }) {
+    // console.log('platformData', platformData)
+    // console.log('tokenAddress', tokenAddress)
     const stats = platformData?.assets
         ?.filter(
             (asset: TPlatformAsset) =>
@@ -529,16 +535,28 @@ function getPageHeaderStats({
                 tokenAddress[1]?.toLowerCase()
         )
         .reduce((acc: any, item: TPlatformAsset, currentIndex: number, array: TPlatformAsset[]) => {
-            if (!item.borrow_enabled && array.length > 1) {
-                acc.supply_apy = item.supply_apy
-            } else if (item.borrow_enabled && array.length > 1) {
-                acc.borrow_rate = item.variable_borrow_apy
+            // Special handling for loop positions
+            if (positionType === 'loop') {
+                // For loop positions: supply_apy from 0th index token, borrow_rate from 1st index token (if borrow enabled)
+                if (item.token.address.toLowerCase() === tokenAddress[0]?.toLowerCase()) {
+                    acc.supply_apy = item.supply_apy
+                } else if (item.token.address.toLowerCase() === tokenAddress[1]?.toLowerCase() && item.borrow_enabled) {
+                    acc.borrow_rate = item.variable_borrow_apy
+                }
             } else {
-                acc.supply_apy = item.supply_apy
-                acc.borrow_rate = item.variable_borrow_apy
+                if (!item.borrow_enabled && array.length > 1) {
+                    acc.supply_apy = item.supply_apy
+                } else if (item.borrow_enabled && array.length > 1) {
+                    acc.supply_apy = item.supply_apy
+                } else {
+                    acc.supply_apy = item.supply_apy
+                    acc.borrow_rate = item.variable_borrow_apy
+                }
             }
             return acc
         }, {})
+
+    // console.log('stats', stats)
 
     return stats
 }

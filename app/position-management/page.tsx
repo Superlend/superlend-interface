@@ -34,26 +34,26 @@ export default function PositionManagementPage() {
                 <MainContainer className="flex flex-col gap-[40px]">
                     <AppleFarmRewardsProvider>
                         <PageHeader />
-                    </AppleFarmRewardsProvider>
-                    <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-[16px]">
-                        {!isLoopPosition &&
-                            <div className="flex flex-col gap-[16px] order-last xl:order-first">
-                                <PositionDetails />
-                                <AssetHistory />
+                        <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-[16px]">
+                            {!isLoopPosition &&
+                                <div className="flex flex-col gap-[16px] order-last xl:order-first">
+                                    <PositionDetails />
+                                    <AssetHistory />
+                                </div>
+                            }
+                            {isLoopPosition &&
+                                <div className="flex flex-col gap-[16px] order-last xl:order-first">
+                                    <LoopPositionOverview />
+                                </div>
+                            }
+                            <div className="order-first xl:order-last">
+                                <PortfolioProvider>
+                                    <AssetTxWidget />
+                                </PortfolioProvider>
                             </div>
-                        }
-                        {isLoopPosition &&
-                            <div className="flex flex-col gap-[16px] order-last xl:order-first">
-                                <LoopPositionOverview />
-                            </div>
-                        }
-                        <div className="order-first xl:order-last">
-                            <PortfolioProvider>
-                                <AssetTxWidget />
-                            </PortfolioProvider>
+                            {/* <BlogCard /> */}
                         </div>
-                        {/* <BlogCard /> */}
-                    </div>
+                    </AppleFarmRewardsProvider>
                 </MainContainer>
             </TxProvider>
         </PositionManagementProvider>
