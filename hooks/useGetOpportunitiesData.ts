@@ -3,10 +3,78 @@
 import { getOpportunitiesData } from '@/queries/opportunities-api'
 import { TGetOpportunitiesParams, TOpportunity } from '@/types'
 import { useQuery } from '@tanstack/react-query'
+import { useState, useEffect, useCallback, useRef } from 'react'
+
+interface CachedOpportunitiesData {
+    data: TOpportunity[]
+    timestamp: number
+}
 
 export default function useGetOpportunitiesData(
     params: TGetOpportunitiesParams
 ) {
+    const [cachedData, setCachedData] = useState<TOpportunity[]>([])
+    const [lastFetchTime, setLastFetchTime] = useState<number | null>(null)
+    const [manualRefreshRequested, setManualRefreshRequested] = useState(false)
+    const [isManualRefreshing, setIsManualRefreshing] = useState(false)
+    const hasInitializedRef = useRef(false)
+    const currentCacheKeyRef = useRef<string>('')
+    
+    // Create a cache key based on params
+    const cacheKey = `opportunities_${params.type}_${params.chain_ids || 'all'}_${params.tokens || 'all'}`
+    
+    // Check if data should be refreshed (10 minutes = 600000ms)
+    const shouldAutoRefresh = useCallback(() => {
+        if (!lastFetchTime) return true
+        return Date.now() - lastFetchTime > 600000 // 10 minutes
+    }, [lastFetchTime])
+
+    // Check if we have fresh cached data (less than 10 minutes old)
+    const hasFreshCache = useCallback(() => {
+        if (!lastFetchTime) return false
+        return Date.now() - lastFetchTime <= 600000 // 10 minutes
+    }, [lastFetchTime])
+
+    // Reset state when cache key changes (tab switch)
+    useEffect(() => {
+        if (currentCacheKeyRef.current && currentCacheKeyRef.current !== cacheKey) {
+            // Cache key changed, reset state for new tab
+            setCachedData([])
+            setLastFetchTime(null)
+            setManualRefreshRequested(false)
+            setIsManualRefreshing(false)
+            hasInitializedRef.current = false
+        }
+        currentCacheKeyRef.current = cacheKey
+    }, [cacheKey])
+
+    // Load cached data when cache key changes or on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined' && !hasInitializedRef.current) {
+            const cached = localStorage.getItem(cacheKey)
+            if (cached) {
+                try {
+                    const parsedCache: CachedOpportunitiesData = JSON.parse(cached)
+                    setCachedData(parsedCache.data)
+                    setLastFetchTime(parsedCache.timestamp)
+                    
+                    // Check if we should auto-refresh after tab switch
+                    const isStale = Date.now() - parsedCache.timestamp > 600000 // 10 minutes
+                    if (isStale && parsedCache.data.length > 0) {
+                        // Auto-refresh stale data after tab switch
+                        setTimeout(() => {
+                            setManualRefreshRequested(true)
+                        }, 500) // Small delay to let UI settle
+                    }
+                } catch (error) {
+                    console.error('Error parsing cached opportunities data:', error)
+                    localStorage.removeItem(cacheKey)
+                }
+            }
+            hasInitializedRef.current = true
+        }
+    }, [cacheKey])
+
     const { data, isLoading, isError, refetch } = useQuery<
         TOpportunity[],
         Error
@@ -21,15 +89,72 @@ export default function useGetOpportunitiesData(
         queryFn: async () => {
             try {
                 const responseData = await getOpportunitiesData(params)
+                
+                // Cache the data with timestamp
+                if (typeof window !== 'undefined') {
+                    const cacheData: CachedOpportunitiesData = {
+                        data: responseData,
+                        timestamp: Date.now()
+                    }
+                    localStorage.setItem(cacheKey, JSON.stringify(cacheData))
+                    setLastFetchTime(Date.now())
+                    setCachedData(responseData)
+                    setManualRefreshRequested(false)
+                    setIsManualRefreshing(false)
+                }
+                
                 return responseData
             } catch (error) {
-                // toast.error(SOMETHING_WENT_WRONG_MESSAGE, ERROR_TOAST_ICON_STYLES);
+                setManualRefreshRequested(false)
+                setIsManualRefreshing(false)
+                // If fetch fails and we have cached data, use cached data
+                if (cachedData.length > 0) {
+                    return cachedData
+                }
                 return []
             }
         },
         staleTime: Infinity,
         refetchInterval: false,
-        enabled: params.enabled,
+        // Only enable query if:
+        // 1. No cached data exists, OR
+        // 2. Manual refresh was requested, OR  
+        // 3. Data is older than 10 minutes AND we've initialized
+        enabled: params.enabled !== false && (
+            cachedData.length === 0 || 
+            manualRefreshRequested || 
+            (hasInitializedRef.current && shouldAutoRefresh())
+        ),
     })
-    return { data: data || [], isLoading, isError, refetch }
+
+    // Background auto-refresh effect - only runs after component is initialized
+    useEffect(() => {
+        if (hasInitializedRef.current && shouldAutoRefresh() && cachedData.length > 0 && !manualRefreshRequested) {
+            // Do background refresh without affecting UI
+            const timer = setTimeout(() => {
+                refetch()
+            }, 1000) // Small delay to avoid immediate refresh on tab switch
+            
+            return () => clearTimeout(timer)
+        }
+    }, [shouldAutoRefresh, cachedData.length, manualRefreshRequested, refetch])
+
+    const manualRefresh = useCallback(() => {
+        setManualRefreshRequested(true)
+        setIsManualRefreshing(true)
+        refetch()
+    }, [refetch])
+
+    // Return cached data if available and we have fresh cache, otherwise return fresh data
+    const dataToReturn = hasFreshCache() && cachedData.length > 0 ? cachedData : (data || cachedData || [])
+
+    return { 
+        data: dataToReturn, 
+        isLoading: isLoading && cachedData.length === 0, // Only show loading if no cached data
+        isError, 
+        refetch: manualRefresh,
+        lastFetchTime,
+        shouldAutoRefresh: shouldAutoRefresh(),
+        isRefreshing: isManualRefreshing || (isLoading && cachedData.length > 0)
+    }
 }

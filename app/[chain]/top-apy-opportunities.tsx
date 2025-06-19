@@ -34,6 +34,7 @@ import RainingPolygons from '@/components/animations/RainingPolygons'
 import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+import { RefreshCw, Clock } from 'lucide-react'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -49,6 +50,25 @@ const EXCLUDEED_PROTOCOLS_LIST = [
     '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed',
     '0xe75f6fff3eec59db6ac1df4fcccf63b72cc053f78e3156b9eb78d12f5ac47367',
 ]
+
+// Utility function to format time difference
+const formatTimeAgo = (timestamp: number): string => {
+    const now = Date.now()
+    const diff = now - timestamp
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (days > 0) {
+        return `${days} day${days === 1 ? '' : 's'} ago`
+    } else if (hours > 0) {
+        return `${hours} hour${hours === 1 ? '' : 's'} ago`
+    } else if (minutes > 0) {
+        return `${minutes} min${minutes === 1 ? '' : 's'} ago`
+    } else {
+        return 'Just now'
+    }
+}
 
 export default function TopApyOpportunities({ chain }: { chain: string }) {
     const isClient = useIsClient()
@@ -78,7 +98,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         borrows: false,
     })
     const [isTableLoading, setIsTableLoading] = useState(false)
-    const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData } =
+    const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData, refetch, lastFetchTime, shouldAutoRefresh, isRefreshing } =
         useGetOpportunitiesData({
             type: isActiveTab('loop') ? 'lend' : positionTypeParam as TPositionType,
         })
@@ -106,6 +126,16 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         }
         return [{ id: 'apy_current', desc: isActiveTab('lend') }]
     })
+
+
+
+    const handleManualRefresh = useCallback(() => {
+        logEvent('data_refresh_clicked', {
+            position_type: positionTypeParam,
+            chain: chain,
+        })
+        refetch()
+    }, [refetch, logEvent, positionTypeParam, chain])
 
     // useEffect(() => {
     //     const hasFilters = tokenIdsParam.length > 0 || chainIdsParam.length > 0 || platformIdsParam.length > 0
@@ -596,6 +626,31 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                     <DiscoverFiltersDropdown chain={chain} />
                 </div>
             </div>
+
+            {/* Refresh button and last updated time */}
+            <div className="flex items-center justify-end gap-[8px] text-sm text-gray-600">
+                <button
+                    onClick={handleManualRefresh}
+                    disabled={isRefreshing}
+                    className="flex items-center gap-[6px] px-3 py-1.5 bg-gray-50 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg border border-gray-200 transition-colors duration-200"
+                    title="Refresh data"
+                >
+                    <RefreshCw 
+                        size={14} 
+                        className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
+                    />
+                    <span className="text-xs font-medium">
+                        {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                    </span>
+                </button>
+                {lastFetchTime && (
+                    <div className="flex items-center gap-[6px] text-xs text-gray-500">
+                        <Clock size={12} />
+                        <span>Last updated {formatTimeAgo(lastFetchTime)}</span>
+                    </div>
+                )}
+            </div>
+
             <div className="top-apy-opportunities-content">
                 {!isLoadingOpportunitiesData && !isLoadingLoopPairs && !isTableLoading && (
                     <DataTable
