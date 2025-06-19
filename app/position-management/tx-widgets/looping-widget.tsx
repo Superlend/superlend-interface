@@ -230,6 +230,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                 }
             )
 
+            console.log('proportions', proportions.positiveProportion.toString(), proportions.negativeProportion.toString())
+
             // Calculate net APY like in useAppDataProvider
             const earnedAPY = user.totalLiquidityUSD !== '0'
                 ? proportions.positiveProportion.dividedBy(user.totalLiquidityUSD).toNumber()
@@ -252,6 +254,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
             return '0.00%'
         }
     }
+    
     const [maxLeverage, setMaxLeverage] = useState<Record<
         string,
         Record<string, number>
@@ -296,6 +299,15 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
             userPositions?.map((platform: any, index: number) => platform.health_factor),
         [userPositions]
     )
+
+    // Get Net APY directly from portfolio data (same as overview page)
+    const portfolioNetAPY = useMemo(() => {
+        if (userPositions?.length > 0) {
+            const platformNetAPY = parseFloat(userPositions[0].net_apy.toFixed(2))
+            return `${platformNetAPY >= 0 ? '+' : ''}${platformNetAPY.toFixed(2)}%`
+        }
+        return '0.00%'
+    }, [userPositions])
 
     // Refresh balance when view(success) UI after supplying/borrowing an asset
     useEffect(() => {
@@ -833,7 +845,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 Net APY
                             </BodyText>
                             <InfoTooltip
-                                content="Net APY from your existing positions"
+                                content="Net APY from your existing positions on this platform"
                             />
                         </div>
                         <BodyText
@@ -841,20 +853,16 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                             weight="medium"
                             className={cn(
                                 "text-gray-800",
-                                netAPY.value && !netAPY.isLoading && (
-                                    netAPY.value.startsWith('+')
+                                portfolioNetAPY && (
+                                    portfolioNetAPY.startsWith('+')
                                         ? 'text-green-600'
-                                        : netAPY.value.startsWith('-')
+                                        : portfolioNetAPY.startsWith('-')
                                             ? 'text-red-600'
                                             : 'text-gray-800'
                                 )
                             )}
                         >
-                            {netAPY.isLoading ? (
-                                <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
-                            ) : (
-                                netAPY.value || '0.00%'
-                            )}
+                            {portfolioNetAPY}
                         </BodyText>
                     </div>
 
@@ -954,7 +962,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 // pathTokens, // Fetched in TxDialog
                                 // pathFees, // Fetched in TxDialog
                                 ...platformData?.platform,
-                                netAPY: netAPY.value,
+                                netAPY: portfolioNetAPY,
                                 loopNetAPY: loopNetAPY.value,
                             }}
                             lendAmount={lendAmount}

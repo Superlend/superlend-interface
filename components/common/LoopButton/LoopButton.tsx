@@ -82,7 +82,7 @@ const LoopButton = ({
     const { logUserEvent } = useLogNewUserEvent()
     const { accessToken, getAccessTokenFromPrivy } = useAuth()
     const LOOPING_SC_LEVERAGE_ADDRESS =
-        '0x061709cf0396c598063ca80001d1aafaa7d39f2b'
+        '0xE2a9BC6785cDAB0156C032074a658117a5213352'
     const DEBT_TOKENS: Record<string, string> = {
         '0x796ea11fa2dd751ed01b53c372ffdb4aaa8f00f9':
             '0x904a51d7b418d8d5f3739e421a6ed532d653f625',
@@ -443,8 +443,9 @@ const LoopButton = ({
         )
         const flashLoanAmount = parseUnits(
             amount?.flashLoanAmount?.toString() ?? '0',
-            assetDetails?.borrowAsset?.token?.decimals ?? 18
+            assetDetails?.supplyAsset?.token?.decimals ?? 18
         )
+        console.log('assetDetails', assetDetails)
         const pathTokens: string[] = assetDetails?.pathTokens ?? []
         const pathFees: string[] = assetDetails?.pathFees ?? []
 

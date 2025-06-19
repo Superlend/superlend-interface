@@ -20,6 +20,16 @@ export default function LoopPerformance({ loopData, isLoading }: LoopPerformance
         return loopData.netValue > 0 || loopData.totalSupplied > 0 || loopData.totalBorrowed > 0
     }, [loopData])
 
+    // Use platform Net APY directly from user positions data
+    const getPortfolioNetAPY = useMemo(() => {
+        // Show platform Net APY if it exists, regardless of active position for specific token pair
+        if (loopData.platformNetAPY === undefined || loopData.platformNetAPY === 0) {
+            return '0.00%'
+        }
+        
+        return `${loopData.platformNetAPY >= 0 ? '+' : ''}${loopData.platformNetAPY.toFixed(2)}%`
+    }, [loopData])
+
     // Transaction history - replaceable with real API data
     const transactionHistory = useMemo(() => {
         if (!hasActivePosition) return []
@@ -151,12 +161,45 @@ export default function LoopPerformance({ loopData, isLoading }: LoopPerformance
                 </CardContent>
             </Card>
 
+            {/* Portfolio Net APY */}
+            <Card className="bg-white bg-opacity-40">
+                <CardContent className="p-6">
+                    <div className="flex flex-col gap-6">
+                        <HeadingText level="h5" weight="medium" className="text-gray-800">
+                            Portfolio Net APY
+                        </HeadingText>
+                        
+                        <div className="p-4 bg-blue-50 rounded-4 border border-blue/50">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <BodyText level="body2" weight="medium" className="text-blue-800">
+                                        Platform Portfolio Net APY
+                                    </BodyText>
+                                    <BodyText level="body3" className="text-blue-600">
+                                        Weighted average across all your positions on this platform
+                                    </BodyText>
+                                </div>
+                                <HeadingText 
+                                    level="h3" 
+                                    weight="medium" 
+                                    className={cn(
+                                        getPortfolioNetAPY.includes('-') ? 'text-red-600' : 'text-blue-700'
+                                    )}
+                                >
+                                    {getPortfolioNetAPY}
+                                </HeadingText>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* APY Breakdown */}
             <Card className="bg-white bg-opacity-40">
                 <CardContent className="p-6">
                     <div className="flex flex-col gap-6">
                         <HeadingText level="h5" weight="medium" className="text-gray-800">
-                            APY Breakdown
+                            Position APY Breakdown
                         </HeadingText>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -224,7 +267,7 @@ export default function LoopPerformance({ loopData, isLoading }: LoopPerformance
                 </CardContent>
             </Card>
 
-            {/* Transaction History */}
+            {/* Transaction History
             <Card className="bg-white bg-opacity-40">
                 <CardContent className="p-6">
                     <div className="flex flex-col gap-6">
@@ -281,7 +324,7 @@ export default function LoopPerformance({ loopData, isLoading }: LoopPerformance
                         )}
                     </div>
                 </CardContent>
-            </Card>
+            </Card> */}
         </div>
     )
 } 

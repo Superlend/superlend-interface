@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import FlatTabs from '@/components/tabs/flat-tabs'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
+import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import LoopEducationSection from './loop-education-section'
@@ -37,11 +38,26 @@ export default function LoopPositionOverview() {
         chain_id: Number(chain_id),
     })
 
+
     const { data: portfolioData, isLoading: isLoadingPortfolioData } = useGetPortfolioData({
         user_address: walletAddress as `0x${string}`,
         platform_id: [protocol_identifier],
         chain_id: [String(chain_id)],
     })
+
+    const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData } = useGetOpportunitiesData({
+        type: 'lend',
+    })
+
+    // Helper function to find opportunity data for a token
+    const findOpportunityData = useMemo(() => (tokenAddress: string) => {
+        if (!opportunitiesData?.length) return null
+        return opportunitiesData.find(item => 
+            item.token.address.toLowerCase() === tokenAddress.toLowerCase() &&
+            item.chain_id === Number(chain_id) &&
+            item.platform.protocol_identifier === protocol_identifier
+        )
+    }, [opportunitiesData, chain_id, protocol_identifier])
 
     // Get token details from platform data
     const lendTokenDetails = useMemo(() => {
@@ -55,7 +71,31 @@ export default function LoopPositionOverview() {
         const baseSupplyAPY = asset.supply_apy || 0
         const appleFarmReward = appleFarmRewardsAprs?.[asset.token.address] ?? 0
         const enhancedSupplyAPY = baseSupplyAPY + appleFarmReward
-        
+        // console.log('platformData', platformData)
+        console.log('lendTokenDetails', asset)
+        // {
+        //     "token": {
+        //         "name": "Tether USD",
+        //         "symbol": "USDT",
+        //         "address": "0x2c03058c8afc06713be23e58d2febc8337dbfe6a",
+        //         "decimals": 6,
+        //         "price_usd": 1.00002748,
+        //         "logo": "https://superlend-public-assets.s3.ap-south-1.amazonaws.com/42793-usdt.svg"
+        //     },
+        //     "supply_apy": 4.8325397190042585,
+        //     "variable_borrow_apy": 7.246370323399698,
+        //     "stable_borrow_apy": 0,
+        //     "borrow_enabled": true,
+        //     "remaining_borrow_cap": 4892118.019822,
+        //     "remaining_supply_cap": 7203513.788465,
+        //     "ltv": 75
+        // }
+        // Get opportunity data for more accurate liquidity information
+        const opportunityData = findOpportunityData(lendTokenAddressParam)
+        const totalSupplyUSD = opportunityData ? 
+            Number(opportunityData.platform.liquidity) * Number(opportunityData.token.price_usd) : 
+            asset.remaining_supply_cap * asset.token.price_usd
+
         return {
             ...asset.token,
             apy: enhancedSupplyAPY,
@@ -63,24 +103,48 @@ export default function LoopPositionOverview() {
             appleFarmReward: appleFarmReward,
             ltv: asset.ltv, // Loan-to-value ratio
             remaining_supply_cap: asset.remaining_supply_cap, // Available supply capacity
-            totalSupply: 0 // TODO: Need to calculate total supply from platform data - not available in asset
+            totalSupply: totalSupplyUSD // Total supply in USD from opportunities data
         }
-    }, [platformData, lendTokenAddressParam, appleFarmRewardsAprs])
+    }, [platformData, lendTokenAddressParam, appleFarmRewardsAprs, findOpportunityData])
 
     const borrowTokenDetails = useMemo(() => {
         if (!platformData?.assets) return null
         const asset = platformData.assets.find((asset: TPlatformAsset) => 
             asset.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
         )
+        console.log('borrowTokenDetails', asset)
+        // {
+        //     "token": {
+        //         "name": "Wrapped Ether",
+        //         "symbol": "WETH",
+        //         "address": "0xfc24f770f94edbca6d6f885e12d4317320bcb401",
+        //         "decimals": 18,
+        //         "price_usd": 2512.32657984,
+        //         "logo": "https://superlend-public-assets.s3.ap-south-1.amazonaws.com/42793-weth.svg"
+        //     },
+        //     "supply_apy": 0.10986772477370454,
+        //     "variable_borrow_apy": 1.1864865027015892,
+        //     "stable_borrow_apy": 0,
+        //     "borrow_enabled": true,
+        //     "remaining_borrow_cap": 4130.895367835915,
+        //     "remaining_supply_cap": 4422.910447438019,
+        //     "ltv": 77
+        // }
+        // Get opportunity data for more accurate liquidity and borrow information
+        const opportunityData = findOpportunityData(borrowTokenAddressParam)
+        const liquidityUSD = opportunityData ? Number(opportunityData.platform.liquidity) * Number(opportunityData.token.price_usd) : 0
+        const borrowsUSD = opportunityData ? Number(opportunityData.platform.borrows) * Number(opportunityData.token.price_usd) : 0
+        const availableLiquidityUSD = liquidityUSD - borrowsUSD
+
         return asset ? {
             ...asset.token,
             apy: asset.variable_borrow_apy, // Use variable borrow APY for borrowing
             borrow_enabled: asset.borrow_enabled, // Whether borrowing is enabled for this asset
             remaining_borrow_cap: asset.remaining_borrow_cap, // Available borrow capacity
-            totalBorrow: 0, // TODO: Need to calculate total borrows - not available in asset
-            availableLiquidity: 0 // TODO: Need to calculate available liquidity - not available in asset
+            totalBorrow: borrowsUSD || asset.remaining_borrow_cap * asset.token.price_usd, // Total borrows in USD from opportunities data
+            availableLiquidity: availableLiquidityUSD || asset.remaining_borrow_cap * asset.token.price_usd // Available liquidity for borrowing in USD
         } : null
-    }, [platformData, borrowTokenAddressParam])
+    }, [platformData, borrowTokenAddressParam, findOpportunityData])
 
     // Get user positions from portfolio data
     const userPositions = useMemo(() => {
@@ -93,6 +157,7 @@ export default function LoopPositionOverview() {
     const userLoopPosition = useMemo(() => {
         if (!userPositions.length) return null
         
+        console.log('userPositions', userPositions)
         const platform = userPositions[0]
         const lendPosition = platform.positions.find(p => 
             p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
@@ -106,35 +171,51 @@ export default function LoopPositionOverview() {
 
         if (!lendPosition || !borrowPosition) return null
 
-        const collateralValueUSD = lendPosition.amount * lendPosition.token.price_usd
-        const borrowValueUSD = borrowPosition.amount * borrowPosition.token.price_usd
+        // Use parseFloat to ensure proper handling of scientific notation and small numbers
+        const lendAmount = parseFloat(lendPosition.amount.toString())
+        const borrowAmount = parseFloat(borrowPosition.amount.toString())
+        const lendPrice = parseFloat(lendPosition.token.price_usd.toString())
+        const borrowPrice = parseFloat(borrowPosition.token.price_usd.toString())
+
+        // Calculate USD values with proper precision handling
+        const collateralValueUSD = lendAmount * lendPrice
+        const borrowValueUSD = borrowAmount * borrowPrice
         const netValue = collateralValueUSD - borrowValueUSD
-        const currentLeverage = collateralValueUSD / (collateralValueUSD - borrowValueUSD)
+        
+        // Ensure we don't divide by zero or very small numbers that could cause issues
+        const leverageDenominator = collateralValueUSD - borrowValueUSD
+        const currentLeverage = leverageDenominator > 0.000001 ? collateralValueUSD / leverageDenominator : 1
         const netAPY = (lendPosition.apy * currentLeverage) - (borrowPosition.apy * (currentLeverage - 1))
 
+        // Calculate liquidation price with proper handling of small amounts
+        const liquidationThreshold = lendPosition.liquidation_threshold || 80
+        const liquidationPrice = lendAmount > 0 ? borrowValueUSD / ((liquidationThreshold / 100) * lendAmount) : 0
+
         return {
-            netValue,
-            currentLeverage,
-            netAPY,
+            netValue: parseFloat(netValue.toFixed(8)), // Maintain precision up to 8 decimal places
+            currentLeverage: parseFloat(currentLeverage.toFixed(6)),
+            netAPY: parseFloat(netAPY.toFixed(4)),
             collateralAsset: {
                 token: lendPosition.token,
-                amount: lendPosition.amount,
-                amountUSD: collateralValueUSD,
-                apy: lendPosition.apy
+                amount: lendAmount,
+                amountUSD: parseFloat(collateralValueUSD.toFixed(8)),
+                apy: lendPosition.apy,
+                baseApy: lendPosition.apy // Store the base APY from portfolio data for apple farm reward calculation
             },
             borrowAsset: {
                 token: borrowPosition.token,
-                amount: borrowPosition.amount,
-                amountUSD: borrowValueUSD,
+                amount: borrowAmount,
+                amountUSD: parseFloat(borrowValueUSD.toFixed(8)),
                 apy: borrowPosition.apy
             },
-            healthFactor: platform.health_factor,
-            positionLTV: (borrowValueUSD / collateralValueUSD) * 100,
-            liquidationLTV: (lendPosition.liquidation_threshold || 80),
-            liquidationPrice: borrowValueUSD / ((lendPosition.liquidation_threshold || 80) / 100 * lendPosition.amount),
-            utilizationRate: (borrowValueUSD / collateralValueUSD) * 100,
-            totalSupplied: collateralValueUSD,
-            totalBorrowed: borrowValueUSD
+            healthFactor: parseFloat(platform.health_factor.toFixed(2)),
+            platformNetAPY: parseFloat(platform.net_apy.toFixed(2)), // Net APY from platform data
+            positionLTV: parseFloat(((borrowValueUSD / collateralValueUSD) * 100).toFixed(4)),
+            liquidationLTV: liquidationThreshold,
+            liquidationPrice: parseFloat(liquidationPrice.toFixed(8)),
+            utilizationRate: parseFloat(((borrowValueUSD / collateralValueUSD) * 100).toFixed(4)),
+            totalSupplied: parseFloat(collateralValueUSD.toFixed(8)),
+            totalBorrowed: parseFloat(borrowValueUSD.toFixed(8))
         }
     }, [userPositions, lendTokenAddressParam, borrowTokenAddressParam])
 
@@ -155,33 +236,36 @@ export default function LoopPositionOverview() {
 
     // Dynamic data for metrics
     const metrics = useMemo(() => {
+        const borrowSymbol = borrowTokenDetails?.symbol || 'Unknown'
+        const lendSymbol = lendTokenDetails?.symbol || 'Unknown'
+        
         const baseMetrics = [
             {
                 title: 'Liquidity',
-                value: borrowTokenDetails?.availableLiquidity ? `$${abbreviateNumber(borrowTokenDetails.availableLiquidity)}` : '$1.2M', // Static fallback
+                value: borrowTokenDetails?.availableLiquidity ? `$${abbreviateNumber(borrowTokenDetails.availableLiquidity)}` : '$0',
                 icon: DollarSign,
-                tooltip: 'Available liquidity for borrowing',
+                tooltip: `Available ${borrowSymbol} liquidity that can be borrowed for loop positions. This is the total ${borrowSymbol} supplied minus what's already been borrowed by other users.`,
                 className: 'text-gray-800'
             },
             {
-                title: 'Max APY',
-                value: lendTokenDetails ? `${lendTokenDetails.apy.toFixed(2)}%` : '5.25%', // Static fallback
+                title: 'Supply APY',
+                value: lendTokenDetails ? `${lendTokenDetails.apy.toFixed(2)}%` : '0.00%',
                 icon: Target,
-                tooltip: 'Maximum APY available for this position',
+                tooltip: `Current APY earned for supplying ${lendSymbol} as collateral${lendTokenDetails?.appleFarmReward && lendTokenDetails.appleFarmReward > 0 ? ` (includes ${lendTokenDetails.appleFarmReward.toFixed(2)}% rewards bonus)` : ''}. This rate is applied to your leveraged position.`,
                 className: 'text-green-600'
             },
             {
                 title: 'Total Supply',
-                value: lendTokenDetails?.totalSupply ? `$${abbreviateNumber(lendTokenDetails.totalSupply)}` : '$8.5M', // Static fallback
+                value: lendTokenDetails?.totalSupply ? `$${abbreviateNumber(lendTokenDetails.totalSupply)}` : '$0',
                 icon: TrendingUp,
-                tooltip: 'Total amount supplied to this market',
+                tooltip: `Total ${lendSymbol} currently supplied to the lending market by all users. Higher supply indicates more market depth and stability.`,
                 className: 'text-gray-800'
             },
             {
-                title: 'Max Multiplier',
-                value: `${maxLeverage || 4.0}x`, // Static fallback to 4.0x
+                title: 'Max Leverage',
+                value: `${maxLeverage || 1}x`,
                 icon: TrendingUp,
-                tooltip: 'Maximum leverage multiplier available',
+                tooltip: `Maximum leverage multiplier available for ${lendSymbol}/${borrowSymbol} loop positions. Higher leverage amplifies both potential returns and risks.`,
                 className: 'text-primary'
             }
         ]
@@ -203,11 +287,15 @@ export default function LoopPositionOverview() {
             }
         }
 
-        // Fallback data for users without positions
+        // Check if user has any positions on this platform (even if not the specific token pair)
+        const platformHealthFactor = userPositions.length > 0 ? parseFloat(userPositions[0].health_factor.toFixed(2)) : parseFloat((0).toFixed(2))
+        const platformNetAPYValue = userPositions.length > 0 ? parseFloat(userPositions[0].net_apy.toFixed(2)) : 0
+
+        // Fallback data for users without specific token pair positions
         return {
-            netValue: 0,
-            currentLeverage: 1.0,
-            netAPY: lendTokenDetails?.apy || 0,
+            netValue: parseFloat((0).toFixed(8)),
+            currentLeverage: parseFloat((1.0).toFixed(6)),
+            netAPY: parseFloat((lendTokenDetails?.apy || 0).toFixed(4)),
             collateralAsset: {
                 token: lendTokenDetails || {
                     symbol: 'Unknown',
@@ -217,8 +305,8 @@ export default function LoopPositionOverview() {
                     decimals: 18,
                     price_usd: 0
                 },
-                amount: 0,
-                amountUSD: 0,
+                amount: parseFloat((0).toFixed(8)),
+                amountUSD: parseFloat((0).toFixed(8)),
                 apy: lendTokenDetails?.apy || 0
             },
             borrowAsset: {
@@ -230,18 +318,19 @@ export default function LoopPositionOverview() {
                     decimals: 18,
                     price_usd: 0
                 },
-                amount: 0,
-                amountUSD: 0,
+                amount: parseFloat((0).toFixed(8)),
+                amountUSD: parseFloat((0).toFixed(8)),
                 apy: borrowTokenDetails?.apy || 0
             },
-            healthFactor: 0,
-            positionLTV: 0,
+            healthFactor: platformHealthFactor, // Use platform health factor if user has any positions
+            platformNetAPY: platformNetAPYValue, // Use platform Net APY if user has any positions
+            positionLTV: parseFloat((0).toFixed(4)),
             liquidationLTV: 80,
-            liquidationPrice: 0,
+            liquidationPrice: parseFloat((0).toFixed(8)),
             maxLeverage: maxLeverage || 4.0,
-            utilizationRate: 0,
-            totalSupplied: 0,
-            totalBorrowed: 0,
+            utilizationRate: parseFloat((0).toFixed(4)),
+            totalSupplied: parseFloat((0).toFixed(8)),
+            totalBorrowed: parseFloat((0).toFixed(8)),
             platform: {
                 name: platformData?.platform?.name || 'Unknown',
                 logo: platformData?.platform?.logo || '',
@@ -250,7 +339,7 @@ export default function LoopPositionOverview() {
         }
     }, [userLoopPosition, lendTokenDetails, borrowTokenDetails, maxLeverage, platformData, chain_id, lendTokenAddressParam, borrowTokenAddressParam])
 
-    const isLoading = isLoadingPlatformData || isLoadingPortfolioData || isLoadingAppleFarmRewards
+    const isLoading = isLoadingPlatformData || isLoadingPortfolioData || isLoadingAppleFarmRewards || isLoadingOpportunitiesData
 
     const tabs = [
         {

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { BodyText, HeadingText } from '@/components/ui/typography'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, abbreviateNumber, getRiskFactor, getLiquidationRisk } from '@/lib/utils'
+import { cn, abbreviateNumber, getRiskFactor, getLiquidationRisk, convertScientificToNormal, isLowestValue, getLowestDisplayValue, hasLowestDisplayValuePrefix } from '@/lib/utils'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import AvatarCircles from '@/components/ui/avatar-circles'
@@ -47,12 +47,26 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
     // Calculate enhanced supply APY with apple farm rewards (similar to page-header)
     const baseSupplyAPY = loopData.collateralAsset.baseApy || loopData.collateralAsset.apy || 0
     const appleFarmRewardAPY = appleFarmRewardsAprs?.[loopData.collateralAsset.token.address] ?? 0
-    const enhancedSupplyAPY = baseSupplyAPY 
+    
+    // If baseApy exists, it means we have an active position and need to add apple farm rewards
+    // If baseApy doesn't exist, the apy already includes apple farm rewards (no position case)
+    const enhancedSupplyAPY = loopData.collateralAsset.baseApy 
+        ? baseSupplyAPY + appleFarmRewardAPY 
+        : loopData.collateralAsset.apy 
 
     // Calculate risk metrics
     const liquidationPercentage = (loopData.positionLTV / loopData.liquidationLTV) * 100
     const riskFactor = getLiquidationRisk(liquidationPercentage, 50, 80)
     const healthFactorRisk = getRiskFactor(loopData.healthFactor)
+    
+    // Format liquidation price with proper scientific notation handling
+    const formattedLiquidationPrice = (() => {
+        const normalValue = Number(convertScientificToNormal(loopData.liquidationPrice))
+        if (isLowestValue(normalValue)) {
+            return `${hasLowestDisplayValuePrefix(normalValue)}$${getLowestDisplayValue(normalValue)}`
+        }
+        return `$${abbreviateNumber(normalValue)}`
+    })()
 
     return (
         <div className="flex flex-col gap-6">
@@ -84,10 +98,22 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                     />
                                     <div className="flex flex-col">
                                         <HeadingText level="h4" weight="medium" className="text-gray-800">
-                                            {abbreviateNumber(loopData.collateralAsset.amount)} {loopData.collateralAsset.token.symbol}
+                                            {(() => {
+                                                const normalAmount = Number(convertScientificToNormal(loopData.collateralAsset.amount))
+                                                if (isLowestValue(normalAmount)) {
+                                                    return `${normalAmount.toExponential(4)} ${loopData.collateralAsset.token.symbol}`
+                                                }
+                                                return `${abbreviateNumber(normalAmount)} ${loopData.collateralAsset.token.symbol}`
+                                            })()}
                                         </HeadingText>
                                         <BodyText level="body3" className="text-gray-600">
-                                            ${abbreviateNumber(loopData.collateralAsset.amountUSD)}
+                                            {(() => {
+                                                const normalAmountUSD = Number(convertScientificToNormal(loopData.collateralAsset.amountUSD))
+                                                if (isLowestValue(normalAmountUSD)) {
+                                                    return `${hasLowestDisplayValuePrefix(normalAmountUSD)}$${getLowestDisplayValue(normalAmountUSD)}`
+                                                }
+                                                return `$${abbreviateNumber(normalAmountUSD)}`
+                                            })()}
                                         </BodyText>
                                     </div>
                                 </div>
@@ -121,10 +147,22 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                     />
                                     <div className="flex flex-col">
                                         <HeadingText level="h4" weight="medium" className="text-gray-800">
-                                            {abbreviateNumber(loopData.borrowAsset.amount)} {loopData.borrowAsset.token.symbol}
+                                            {(() => {
+                                                const normalAmount = Number(convertScientificToNormal(loopData.borrowAsset.amount))
+                                                if (isLowestValue(normalAmount)) {
+                                                    return `${normalAmount.toExponential(4)} ${loopData.borrowAsset.token.symbol}`
+                                                }
+                                                return `${abbreviateNumber(normalAmount)} ${loopData.borrowAsset.token.symbol}`
+                                            })()}
                                         </HeadingText>
                                         <BodyText level="body3" className="text-gray-600">
-                                            ${abbreviateNumber(loopData.borrowAsset.amountUSD)}
+                                            {(() => {
+                                                const normalAmountUSD = Number(convertScientificToNormal(loopData.borrowAsset.amountUSD))
+                                                if (isLowestValue(normalAmountUSD)) {
+                                                    return `${hasLowestDisplayValuePrefix(normalAmountUSD)}$${getLowestDisplayValue(normalAmountUSD)}`
+                                                }
+                                                return `$${abbreviateNumber(normalAmountUSD)}`
+                                            })()}
                                         </BodyText>
                                     </div>
                                 </div>
@@ -178,7 +216,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                                 : 'text-green-600'
                                     )}
                                 >
-                                    {loopData.healthFactor.toFixed(2)}
+                                    {loopData.healthFactor}
                                 </HeadingText>
                             </div>
                             <BodyText level="body3" className="text-gray-600">
@@ -203,7 +241,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                     className="rounded-full"
                                 />
                                 <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    ${abbreviateNumber(loopData.liquidationPrice)}
+                                    {formattedLiquidationPrice}
                                 </BodyText>
                             </div>
                         </div>

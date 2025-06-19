@@ -32,7 +32,42 @@ export function createLoopPairs(
 
     lendOpportunities.forEach(item => {
         if (!isBorrowableToken(item.token.address)) return;
-
+        console.log('item in createLoopPairs', item)   
+        // {
+        //     "token": {
+        //         "address": "0x2c03058c8afc06713be23e58d2febc8337dbfe6a",
+        //         "name": "Tether USD",
+        //         "symbol": "USDT",
+        //         "decimals": 6,
+        //         "logo": "https://superlend-public-assets.s3.ap-south-1.amazonaws.com/42793-usdt.svg",
+        //         "price_usd": 1.00002748,
+        //         "coin_gecko_id": "layerzero-bridged-usdt-etherlink"
+        //     },
+        //     "chain_id": 42793,
+        //     "platform": {
+        //         "name": "Superlend",
+        //         "protocol_identifier": "0xd68cf3aa73c75811ca1665efe01a10524ed5adcba0f412df44d78f04f1c902bf",
+        //         "platform_name": "SUPERLEND-ETHERLINK",
+        //         "core_contract": "0x3bd16d195786fb2f509f2e2d7f69920262ef114d",
+        //         "logo": "https://superlend-public-assets.s3.ap-south-1.amazonaws.com/superlend.svg",
+        //         "additional_rewards": false,
+        //         "max_ltv": 75,
+        //         "liquidity": "16794074.086307",
+        //         "borrows": "15108024.821267",
+        //         "utilization_rate": 89.96,
+        //         "protocol_type": "aaveV3",
+        //         "collateral_exposure": [
+        //             "0xbfc94cd2b1e55999cfc7347a9313e88702b83d0f",
+        //             "0xfc24f770f94edbca6d6f885e12d4317320bcb401",
+        //             "0xc9b53ab2679f573e480d01e0f49e2b5cfb7a3eab",
+        //             "0x796ea11fa2dd751ed01b53c372ffdb4aaa8f00f9"
+        //         ],
+        //         "apy": {
+        //             "current": 4.8325397190042585,
+        //             "avg_7days": 6.104875723764036
+        //         }
+        //     }
+        // }
         // Transform TOpportunity to TOpportunityTable format (copied from top-apy-opportunities.tsx)
         const liquidityInUSD = Number(item.platform.liquidity) * Number(item.token.price_usd)
         const borrowsInUSD = Number(item.platform.borrows) * Number(item.token.price_usd)
