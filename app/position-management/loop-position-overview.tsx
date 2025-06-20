@@ -154,6 +154,26 @@ export default function LoopPositionOverview() {
         )
     }, [portfolioData, protocol_identifier, walletAddress])
 
+    // Feature flag to control multiple positions warning
+    const SHOW_MULTIPLE_POSITIONS_WARNING = true
+
+    // Helper function to check if user has multiple positions beyond selected token pair
+    const hasMultiplePositions = useMemo(() => {
+        if (!userPositions.length) return false
+        
+        const platform = userPositions[0]
+        if (!platform.positions || platform.positions.length <= 2) return false
+
+        // Check if user has positions other than the selected lend/borrow token pair
+        const otherPositions = platform.positions.filter(position => {
+            const isSelectedLendToken = position.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
+            const isSelectedBorrowToken = position.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
+            return !isSelectedLendToken && !isSelectedBorrowToken
+        })
+
+        return otherPositions.length > 0
+    }, [userPositions, lendTokenAddressParam, borrowTokenAddressParam])
+
     const userLoopPosition = useMemo(() => {
         if (!userPositions.length) return null
         
@@ -210,6 +230,7 @@ export default function LoopPositionOverview() {
             },
             healthFactor: parseFloat(platform.health_factor.toFixed(2)),
             platformNetAPY: parseFloat(platform.net_apy.toFixed(2)), // Net APY from platform data
+            hasMultiplePositions: SHOW_MULTIPLE_POSITIONS_WARNING ? hasMultiplePositions : false,
             positionLTV: parseFloat(((borrowValueUSD / collateralValueUSD) * 100).toFixed(4)),
             liquidationLTV: liquidationThreshold,
             liquidationPrice: parseFloat(liquidationPrice.toFixed(8)),
@@ -324,6 +345,7 @@ export default function LoopPositionOverview() {
             },
             healthFactor: platformHealthFactor, // Use platform health factor if user has any positions
             platformNetAPY: platformNetAPYValue, // Use platform Net APY if user has any positions
+            hasMultiplePositions: SHOW_MULTIPLE_POSITIONS_WARNING ? hasMultiplePositions : false,
             positionLTV: parseFloat((0).toFixed(4)),
             liquidationLTV: 80,
             liquidationPrice: parseFloat((0).toFixed(8)),
@@ -351,7 +373,7 @@ export default function LoopPositionOverview() {
                         metrics={metrics}
                         isLoading={isLoading}
                     />
-                    <LoopEducationSection />
+                    <LoopEducationSection hasMultiplePositions={SHOW_MULTIPLE_POSITIONS_WARNING ? hasMultiplePositions : false} />
                 </div>
             )
         },

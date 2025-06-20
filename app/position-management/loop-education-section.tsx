@@ -7,7 +7,11 @@ import { BodyText, HeadingText } from '@/components/ui/typography'
 import { AlertTriangle, TrendingUp, Shield, Info } from 'lucide-react'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 
-export default function LoopEducationSection() {
+interface LoopEducationSectionProps {
+    hasMultiplePositions?: boolean
+}
+
+export default function LoopEducationSection({ hasMultiplePositions = false }: LoopEducationSectionProps) {
     return (
         <div className="loop-education-section flex flex-col gap-4">
             {/* High Risk Warning Card */}
@@ -130,7 +134,7 @@ export default function LoopEducationSection() {
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
                                             Leverage Multiplier
                                         </BodyText>
-                                        <InfoTooltip content="How much your exposure is amplified. Higher leverage = higher risk and potential rewards." />
+                                        <InfoTooltip content={`How much your exposure is amplified. Higher leverage = higher risk and potential rewards.${hasMultiplePositions ? ' Note: Leverage calculations may be approximate when you have multiple positions on this platform due to cross-collateralization.' : ''}`} />
                                     </div>
                                     <BodyText level="body3" className="text-gray-600">
                                         Amplifies both gains and losses
@@ -164,7 +168,7 @@ export default function LoopEducationSection() {
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
                                             Liquidation Risk
                                         </BodyText>
-                                        <InfoTooltip content="Risk of your position being automatically closed if collateral value drops too much." />
+                                        <InfoTooltip content={`Risk of your position being automatically closed if collateral value drops too much.${hasMultiplePositions ? ' Liquidation calculations consider all your positions on this platform, not just the selected token pair.' : ''}`} />
                                     </div>
                                     <BodyText level="body3" className="text-gray-600">
                                         Monitor market conditions closely

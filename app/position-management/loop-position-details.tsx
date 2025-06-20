@@ -11,6 +11,7 @@ import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import AvatarCircles from '@/components/ui/avatar-circles'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
+import { AlertTriangle } from 'lucide-react'
 
 interface LoopPositionDetailsProps {
     loopData: any
@@ -181,6 +182,28 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                 </CardContent>
             </Card>
 
+            {/* Multiple Positions Warning */}
+            {loopData.hasMultiplePositions && (
+                <Card className="border-orange-200 bg-orange-50">
+                    <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                            <div className="flex flex-col gap-2">
+                                <HeadingText level="h5" weight="medium" className="text-orange-800">
+                                    Multiple Positions Detected
+                                </HeadingText>
+                                <BodyText level="body2" className="text-orange-700">
+                                    You have multiple positions on this platform beyond the selected token pair. 
+                                    The leverage and liquidation calculations shown may be approximate due to 
+                                    cross-collateralization. This is a pool-based lending protocol, not pair-based, 
+                                    so all your positions contribute to your overall health factor and borrowing capacity.
+                                </BodyText>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Risk Metrics */}
             <Card className="bg-white bg-opacity-40">
                 <CardContent className="p-6">
@@ -230,7 +253,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                 <BodyText level="body2" weight="medium" className="text-gray-600">
                                     Liquidation Price
                                 </BodyText>
-                                <InfoTooltip content="Price at which your position would be liquidated" />
+                                <InfoTooltip content={`Price at which your position would be liquidated${loopData.hasMultiplePositions ? '. Note: This calculation considers all your positions on the platform due to cross-collateralization.' : ''}`} />
                             </div>
                             <div className="flex items-center gap-2">
                                 <ImageWithDefault
@@ -280,9 +303,12 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                         
                         <div className="grid grid-cols-2 gap-6">
                             <div className="flex flex-col gap-2">
-                                <BodyText level="body2" weight="medium" className="text-gray-600">
-                                    Current Leverage
-                                </BodyText>
+                                <div className="flex items-center gap-2">
+                                    <BodyText level="body2" weight="medium" className="text-gray-600">
+                                        Current Leverage
+                                    </BodyText>
+                                    <InfoTooltip content={`Your current leverage multiplier for this position${loopData.hasMultiplePositions ? '. This calculation may be approximate due to multiple positions on the platform.' : ''}`} />
+                                </div>
                                 <HeadingText level="h4" weight="medium" className="text-primary">
                                     {loopData.currentLeverage}x
                                 </HeadingText>
