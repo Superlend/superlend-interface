@@ -2,7 +2,7 @@ import { WarningMessages } from '@/constants'
 import { Period } from './periodButtons'
 import { ProtocolType } from './platform'
 
-export type TPositionType = 'lend' | 'borrow' | 'loop'
+export type TPositionType = 'all' | 'lend' | 'borrow' | 'loop'
 export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay' | 'collateral' | 'loop'
 export type TAddress = `0x${string}`
 

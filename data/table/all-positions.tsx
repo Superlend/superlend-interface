@@ -54,6 +54,7 @@ export type TPositionsTable = {
     borrows: string
     earnings: number
     isVault: boolean
+    positionType: string
 }
 
 export const columns: ColumnDef<TPositionsTable>[] = [
@@ -261,15 +262,20 @@ export const columns: ColumnDef<TPositionsTable>[] = [
     {
         accessorKey: 'deposits',
         accessorFn: (item) => Number(item.deposits),
-        header: () => (
-            <InfoTooltip
-                side="bottom"
-                label={<TooltipText>Deposits</TooltipText>}
-                content={
-                    'Total amount of asset deposited in the pool as collateral so far.'
-                }
-            />
-        ),
+        header: () => {
+            const { positionType } = useContext<any>(PositionsContext)
+            return (
+                <InfoTooltip
+                    side="bottom"
+                    label={<TooltipText>{positionType === 'all' ? 'Deposits/Borrows' : 'Deposits'}</TooltipText>}
+                    content={
+                        positionType === 'all' 
+                            ? 'Total amount of asset deposited in the pool as collateral or borrowed from the pool.'
+                            : 'Total amount of asset deposited in the pool as collateral so far.'
+                    }
+                />
+            )
+        },
         cell: ({ row }) => {
             const value: number = Number(row.getValue('deposits'))
             const isLowestValue = value < 0.01
@@ -309,6 +315,26 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             )
         },
         // enableGlobalFilter: false,
+    },
+    {
+        accessorKey: 'positionType',
+        accessorFn: (item) => item.positionType,
+        header: () => (
+            <InfoTooltip
+                side="bottom"
+                label={<TooltipText>Type</TooltipText>}
+                content={'Whether this is a lending or borrowing position.'}
+            />
+        ),
+        cell: ({ row }) => {
+            const positionType = row.original.positionType
+            return (
+                <Badge variant={positionType === 'lend' ? 'green' : 'blue'}>
+                    {positionType === 'lend' ? 'Lend' : 'Borrow'}
+                </Badge>
+            )
+        },
+        enableSorting: false,
     },
     {
         accessorKey: 'earnings',

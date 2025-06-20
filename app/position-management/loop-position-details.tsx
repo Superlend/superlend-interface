@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { BodyText, HeadingText } from '@/components/ui/typography'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, abbreviateNumber, getRiskFactor, getLiquidationRisk, convertScientificToNormal, isLowestValue, getLowestDisplayValue, hasLowestDisplayValuePrefix } from '@/lib/utils'
+import { cn, abbreviateNumber, getRiskFactor, getLiquidationRisk, convertScientificToNormal, isLowestValue, getLowestDisplayValue, hasLowestDisplayValuePrefix, formatTokenAmount } from '@/lib/utils'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import AvatarCircles from '@/components/ui/avatar-circles'
@@ -101,10 +101,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                         <HeadingText level="h4" weight="medium" className="text-gray-800">
                                             {(() => {
                                                 const normalAmount = Number(convertScientificToNormal(loopData.collateralAsset.amount))
-                                                if (isLowestValue(normalAmount)) {
-                                                    return `${normalAmount.toExponential(4)} ${loopData.collateralAsset.token.symbol}`
-                                                }
-                                                return `${abbreviateNumber(normalAmount)} ${loopData.collateralAsset.token.symbol}`
+                                                return `${formatTokenAmount(normalAmount)} ${loopData.collateralAsset.token.symbol}`
                                             })()}
                                         </HeadingText>
                                         <BodyText level="body3" className="text-gray-600">
@@ -150,10 +147,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                         <HeadingText level="h4" weight="medium" className="text-gray-800">
                                             {(() => {
                                                 const normalAmount = Number(convertScientificToNormal(loopData.borrowAsset.amount))
-                                                if (isLowestValue(normalAmount)) {
-                                                    return `${normalAmount.toExponential(4)} ${loopData.borrowAsset.token.symbol}`
-                                                }
-                                                return `${abbreviateNumber(normalAmount)} ${loopData.borrowAsset.token.symbol}`
+                                                return `${formatTokenAmount(normalAmount)} ${loopData.borrowAsset.token.symbol}`
                                             })()}
                                         </HeadingText>
                                         <BodyText level="body3" className="text-gray-600">
@@ -182,27 +176,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                 </CardContent>
             </Card>
 
-            {/* Multiple Positions Warning */}
-            {loopData.hasMultiplePositions && (
-                <Card className="border-orange-200 bg-orange-50">
-                    <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                            <AlertTriangle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
-                            <div className="flex flex-col gap-2">
-                                <HeadingText level="h5" weight="medium" className="text-orange-800">
-                                    Multiple Positions Detected
-                                </HeadingText>
-                                <BodyText level="body2" className="text-orange-700">
-                                    You have multiple positions on this platform beyond the selected token pair. 
-                                    The leverage and liquidation calculations shown may be approximate due to 
-                                    cross-collateralization. This is a pool-based lending protocol, not pair-based, 
-                                    so all your positions contribute to your overall health factor and borrowing capacity.
-                                </BodyText>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+           
 
             {/* Risk Metrics */}
             <Card className="bg-white bg-opacity-40">
@@ -292,6 +266,28 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                     </div>
                 </CardContent>
             </Card>
+
+             {/* Multiple Positions Warning */}
+             {loopData.hasMultiplePositions && (
+                <Card className="border-orange-200 bg-orange-50">
+                    <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                            <div className="flex flex-col gap-2">
+                                <HeadingText level="h5" weight="medium" className="text-orange-800">
+                                    Multiple Positions Detected
+                                </HeadingText>
+                                <BodyText level="body2" className="text-orange-700">
+                                    You have multiple positions on this platform beyond the selected token pair. 
+                                    The leverage and liquidation calculations shown may be approximate due to 
+                                    cross-collateralization. This is a pool-based lending protocol, not pair-based, 
+                                    so all your positions contribute to your overall health factor and borrowing capacity.
+                                </BodyText>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Leverage Details */}
             <Card className="bg-white bg-opacity-40">

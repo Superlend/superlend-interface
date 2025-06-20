@@ -248,36 +248,63 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         // enableGlobalFilter: false,
     },
     {
-        accessorKey: 'apy_current',
-        accessorFn: (item) => Number(item.apy_current) + (item.has_apple_farm_rewards ? Number(item.apple_farm_apr) : 0),
+        accessorKey: 'maxAPY',
+        accessorFn: (item) => {
+            // Check if this is a loop pair (has maxAPY field)
+            const loopPair = item as TLoopPair
+            if (loopPair.maxAPY !== undefined) {
+                return Number(loopPair.maxAPY)
+            }
+            // Fallback to regular APY calculation for non-loop pairs
+            return Number(item.apy_current) + (item.has_apple_farm_rewards ? Number(item.apple_farm_apr) : 0)
+        },
         header: () => {
             const searchParams = useSearchParams()
-            const positionTypeParam =
-                searchParams?.get('position_type') || 'lend'
-            const lendTooltipContent =
-                '% interest you earn on deposits over a year. This includes compounding.'
-            const borrowTooltipContent =
-                '% interest you pay for your borrows over a year. This includes compunding.'
-            const tooltipContent =
-                positionTypeParam === 'lend'
-                    ? lendTooltipContent
-                    : borrowTooltipContent
+            const positionTypeParam = searchParams?.get('position_type') || 'lend'
+            
+            // Check if we're showing loop pairs
+            const isLoopType = positionTypeParam === 'loop'
+            const headerText = isLoopType ? 'Max APY' : 'APY'
+            
+            const lendTooltipContent = '% interest you earn on deposits over a year. This includes compounding.'
+            const borrowTooltipContent = '% interest you pay for your borrows over a year. This includes compunding.'
+            const loopTooltipContent = 'Maximum APY achievable with leveraged loop position at maximum leverage.'
+            
+            let tooltipContent = lendTooltipContent
+            if (positionTypeParam === 'borrow') {
+                tooltipContent = borrowTooltipContent
+            } else if (isLoopType) {
+                tooltipContent = loopTooltipContent
+            }
 
             return (
                 <InfoTooltip
                     side="bottom"
-                    label={<TooltipText>APY</TooltipText>}
+                    label={<TooltipText>{headerText}</TooltipText>}
                     content={tooltipContent}
                 />
             )
         },
         cell: ({ row }) => {
             const searchParams = useSearchParams()
-            const positionTypeParam =
-                searchParams?.get('position_type') || 'lend'
-            const hasRewards =
-                row.original?.additional_rewards &&
-                row.original?.rewards.length > 0
+            const positionTypeParam = searchParams?.get('position_type') || 'lend'
+            const isLoopType = positionTypeParam === 'loop'
+            
+            // For loop pairs, use the maxAPY value directly
+            const loopPair = row.original as TLoopPair
+            if (isLoopType && loopPair.maxAPY !== undefined) {
+                const maxAPY = Number(loopPair.maxAPY)
+                const maxAPYFormatted = (maxAPY > 0 && maxAPY < 0.01) ? '<0.01' : abbreviateNumber(maxAPY)
+                
+                return (
+                    <BodyText level="body2" weight="medium">
+                        {maxAPY >= 0 ? '+' : ''}{maxAPYFormatted}%
+                    </BodyText>
+                )
+            }
+            
+            // Original APY logic for non-loop pairs
+            const hasRewards = row.original?.additional_rewards && row.original?.rewards.length > 0
             // Declare tooltip content related variables
             let baseRate, baseRateFormatted, rewards, totalRewards
             const isLend = positionTypeParam === 'lend'
@@ -288,7 +315,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const appleFarmApr = Number(row.original.apple_farm_apr)
             const hasAppleFarmRewards = row.original.has_apple_farm_rewards
 
-            const apyCurrent = Number(row.getValue('apy_current'))
+            const apyCurrent = Number(row.getValue('maxAPY'))
             const apyCurrentFormatted = (apyCurrent > 0 && apyCurrent < 0.01) ? '<0.01' : abbreviateNumber(apyCurrent)
 
             const appleFarmBaseRate = Number(row.original.apy_current)
