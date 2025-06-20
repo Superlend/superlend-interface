@@ -3,6 +3,7 @@ import { Period } from './periodButtons'
 import { ProtocolType } from './platform'
 
 export type TPositionType = 'all' | 'lend' | 'borrow' | 'loop'
+export type TTransactionType = 'lend' | 'borrow' | 'loop' // Excludes 'all' for transaction operations
 export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay' | 'collateral' | 'loop'
 export type TAddress = `0x${string}`
 

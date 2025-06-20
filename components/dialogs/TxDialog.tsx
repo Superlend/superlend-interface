@@ -2,7 +2,7 @@
 
 import ImageWithDefault from '@/components/ImageWithDefault'
 import { Button } from '@/components/ui/button'
-import { TPositionType, TAssetDetails, TChain } from '@/types'
+import { TPositionType, TAssetDetails, TChain, TTransactionType } from '@/types'
 import { PlatformType } from '@/types/platform'
 import {
     ArrowRightIcon,
@@ -134,11 +134,24 @@ export function ConfirmationDialog({
 }: IConfirmationDialogProps) {
     const { lendTx, setLendTx, borrowTx, setBorrowTx, withdrawTx, repayTx, loopTx, setLoopTx } =
         useTxContext() as TTxContext
-    const positionTypeTxStatusMap: Record<TPositionType, TLendTx | TBorrowTx | TLoopTx> = {
+    const positionTypeTxStatusMap: Record<TTransactionType, TLendTx | TBorrowTx | TLoopTx> = {
         'lend': lendTx,
         'borrow': borrowTx,
         'loop': loopTx,
     }
+    
+    // Helper function to safely get tx status, with fallback for 'all' position type
+    const getTxStatus = (type: TPositionType): TLendTx | TBorrowTx | TLoopTx => {
+        if (type === 'all') return lendTx // Fallback to lendTx for 'all' case
+        return positionTypeTxStatusMap[type as TTransactionType]
+    }
+    
+    // Helper function to convert position type to transaction type
+    const getTransactionType = (type: TPositionType): TTransactionType => {
+        if (type === 'all') return 'lend' // Default to 'lend' for 'all' case
+        return type as TTransactionType
+    }
+    
     const { logEvent } = useAnalytics()
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
     const searchParams = useSearchParams() || new URLSearchParams()
@@ -146,7 +159,7 @@ export function ConfirmationDialog({
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
     const isLendPositionType = positionType === 'lend'
-    const isTxFailed = positionTypeTxStatusMap[positionType].errorMessage.length > 0
+    const isTxFailed = getTxStatus(positionType).errorMessage.length > 0
     const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
     const isMorphoMarkets = isMorpho && !assetDetails?.isVault
     const isMorphoVault = isMorpho && assetDetails?.isVault
@@ -331,7 +344,8 @@ export function ConfirmationDialog({
     }
 
     function isShowBlock(action: { lend?: boolean; borrow?: boolean; loop?: boolean }) {
-        return action[positionType]
+        if (positionType === 'all') return false // 'all' is not a transaction type
+        return action[positionType as Exclude<TPositionType, 'all'>]
     }
 
     const inputUsdAmount =
@@ -345,7 +359,14 @@ export function ConfirmationDialog({
     const isBorrowTxInProgress = borrowTx.isPending || borrowTx.isConfirming
     const isLoopTxInProgress = loopTx.isPending || loopTx.isConfirming
 
-    const isTxInProgress = isLendTxInProgress || isBorrowTxInProgress || isLoopTxInProgress
+    const isTxInProgress =
+        positionType === 'lend'
+            ? isLendTxInProgress
+            : positionType === 'borrow'
+                ? isBorrowTxInProgress
+                : positionType === 'loop'
+                    ? isLoopTxInProgress
+                    : false // fallback for 'all'
 
     const lendTxSpinnerColor = lendTx.isPending
         ? 'text-secondary-500'
@@ -354,16 +375,27 @@ export function ConfirmationDialog({
         ? 'text-secondary-500'
         : 'text-primary'
 
-    const canDisplayExplorerLinkWhileLoading = positionTypeTxStatusMap[positionType].hash.length > 0 && (positionTypeTxStatusMap[positionType].isConfirming || positionTypeTxStatusMap[positionType].isPending)
+    const canDisplayExplorerLinkWhileLoading = getTxStatus(positionType).hash.length > 0 && (getTxStatus(positionType).isConfirming || getTxStatus(positionType).isPending)
 
     function getNewHfColor() {
-        const newHF = Number(healthFactorValues.newHealthFactor?.toString() ?? 0)
-        const HF = Number(healthFactorValues.healthFactor?.toString() ?? 0)
+        const newHealthFactor = Number(
+            healthFactorValues?.newHealthFactor ?? Number.MAX_VALUE
+        )
+        const healthFactorFormatted =
+            newHealthFactor === Number.MAX_VALUE ? '∞' : newHealthFactor.toFixed(2)
 
-        if (newHF < 1) return 'text-red-600'
-        if (newHF === HF) return 'text-gray-800'
-        if (newHF < HF) return 'text-yellow-600'
-        if (newHF > HF) return 'text-green-600'
+        if (
+            getTxStatus(positionType).status === 'approve' ||
+            getTxStatus(positionType).status === 'lend' ||
+            getTxStatus(positionType).status === 'borrow' ||
+            getTxStatus(positionType).status === 'loop'
+        ) {
+            if (newHealthFactor < 1) return 'text-red-600'
+            if (newHealthFactor === 1) return 'text-gray-800'
+            if (newHealthFactor < 1.5) return 'text-yellow-600'
+            if (newHealthFactor > 1.5) return 'text-green-600'
+            return 'text-gray-800'
+        }
         return 'text-gray-800'
     }
 
@@ -464,7 +496,7 @@ export function ConfirmationDialog({
                 {getTxInProgressText({
                     amount,
                     tokenName: assetDetails?.asset?.token?.symbol ?? '',
-                    txStatus: positionTypeTxStatusMap[positionType],
+                    txStatus: getTxStatus(positionType),
                     positionType,
                     actionTitle: isLendPositionType
                         ? isMorphoMarkets || isMorphoVault
@@ -490,7 +522,7 @@ export function ConfirmationDialog({
                         >
                             <a
                                 href={getExplorerLink(
-                                    positionTypeTxStatusMap[positionType].hash,
+                                    getTxStatus(positionType).hash,
                                     assetDetails?.chain_id ?? 1
                                 )}
                                 target="_blank"
@@ -498,7 +530,7 @@ export function ConfirmationDialog({
                                 className="text-secondary-500"
                             >
                                 {getTruncatedTxHash(
-                                    positionTypeTxStatusMap[positionType].hash
+                                    getTxStatus(positionType).hash
                                 )}
                             </a>
                             <ArrowUpRightIcon
@@ -946,7 +978,7 @@ export function ConfirmationDialog({
                                 >
                                     <a
                                         href={getExplorerLink(
-                                            positionTypeTxStatusMap[positionType].hash,
+                                            getTxStatus(positionType).hash,
                                             assetDetails?.chain_id ?? 1
                                         )}
                                         target="_blank"
@@ -954,7 +986,7 @@ export function ConfirmationDialog({
                                         className="text-secondary-500"
                                     >
                                         {getTruncatedTxHash(
-                                            positionTypeTxStatusMap[positionType].hash
+                                            getTxStatus(positionType).hash
                                         )}
                                     </a>
                                     <ArrowUpRightIcon
@@ -1497,7 +1529,7 @@ export function ConfirmationDialog({
                 asset={assetDetailsForActionButton}
                 amount={getActionButtonAmount()}
                 setActionType={setActionType}
-                actionType={positionType}
+                actionType={positionType === 'all' ? 'lend' : positionType as Exclude<TPositionType, 'all'>}
             />
         </div>
     )
