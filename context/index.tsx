@@ -1,6 +1,5 @@
 'use client'
 
-import { wagmiAdapter } from '@/config'
 import React, { type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AssetsDataProvider from './data-provider'
@@ -24,7 +23,6 @@ import {
 } from 'viem/chains'
 import { http } from 'wagmi'
 import { AnalyticsProvider } from './analytics-provider'
-import { PageVisitTracker } from '@/components/analytics/PageVisitTracker'
 import { ShowAllMarketsProvider } from './show-all-markets-provider'
 import { AuthProvider } from './auth-provider'
 
@@ -105,7 +103,6 @@ const privyConfig = {
 function ContextProvider({ children }: { children: ReactNode }) {
     return (
         <AnalyticsProvider>
-            {/* <PageVisitTracker /> */}
             <PrivyProvider
                 appId={appId}
                 config={privyConfig as PrivyClientConfig}
