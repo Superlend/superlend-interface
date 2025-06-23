@@ -32,13 +32,14 @@ type TProps = {
     side?: 'top' | 'bottom' | 'left' | 'right'
     className?: string
     classNameLabel?: string
+    isResponsive?: boolean
 }
 
-const sizes: Record<string, string> = {
+const sizes: any = {
     lg: 'py-[18px] px-[22px]',
     md: 'py-[12px] px-[16px]',
     sm: 'py-[6px] px-[12px]',
-    none: 'p-0',
+    none: 'py-0 px-0',
 }
 
 export default function InfoTooltip({
@@ -51,6 +52,7 @@ export default function InfoTooltip({
     side,
     className,
     classNameLabel,
+    isResponsive = true,
 }: TProps) {
     const [open, setOpen] = useState<boolean>(false)
     const { width: screenWidth } = useDimensions()
@@ -78,15 +80,17 @@ export default function InfoTooltip({
         }
     }, [])
 
-    if (isDesktop) {
+    if (hide) return label;
+
+    if (isDesktop || !isResponsive) {
         return (
             <TooltipPrimitive.Provider>
                 <TooltipPrimitive.Root open={open}>
                     <TooltipPrimitive.Trigger asChild>
                         <motion.span
-                            onClick={() => setOpen(true)}
-                            onMouseEnter={handleMouseEnter}
-                            onMouseLeave={handleMouseLeave}
+                            onClick={() => setOpen(!open)}
+                            onMouseEnter={isResponsive ? handleMouseEnter : undefined}
+                            onMouseLeave={isResponsive ? handleMouseLeave : undefined}
                             className={`w-fit inline-block shrink-0 ${classNameLabel}`}
                         >
                             {!label && (
