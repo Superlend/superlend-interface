@@ -571,3 +571,93 @@ export const convertAPRtoAPY = (apr: number) => {
     const apy = ((1 + apr / SEC_IN_YEAR) ** SEC_IN_YEAR - 1) * 100;
     return apy < 0.01 && apy > 0 ? 0.01 : apy;
 };
+
+/**
+ * Generic utility to map API response keys based on environment
+ * @param data - The API response data
+ * @param keyMappings - Object mapping expected keys to actual API keys
+ * @returns Mapped data with consistent key names
+ */
+export function mapApiResponse<T = any>(
+  data: any,
+  keyMappings: Record<string, string | Record<string, string>>
+): T {
+  if (!data || typeof data !== 'object') {
+    return data
+  }
+
+  if (Array.isArray(data)) {
+    return data.map(item => mapApiResponse(item, keyMappings)) as T
+  }
+
+  const mappedData: any = {}
+
+  Object.keys(keyMappings).forEach(expectedKey => {
+    const mapping = keyMappings[expectedKey]
+    
+    if (typeof mapping === 'string') {
+      // Simple key mapping
+      mappedData[expectedKey] = data[mapping]
+    } else if (typeof mapping === 'object') {
+      // Nested object mapping
+      const nestedData = data[expectedKey]
+      if (nestedData && typeof nestedData === 'object') {
+        mappedData[expectedKey] = mapApiResponse(nestedData, mapping)
+      }
+    }
+  })
+
+  return mappedData as T
+}
+
+/**
+ * Transform snake_case keys to camelCase
+ * @param obj - Object with snake_case keys
+ * @returns Object with camelCase keys
+ */
+export function snakeToCamelCase(obj: any): any {
+  if (obj === null || typeof obj !== 'object') {
+    return obj
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(snakeToCamelCase)
+  }
+
+  const camelObj: any = {}
+  
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+      camelObj[camelKey] = snakeToCamelCase(obj[key])
+    }
+  }
+
+  return camelObj
+}
+
+/**
+ * Transform camelCase keys to snake_case
+ * @param obj - Object with camelCase keys
+ * @returns Object with snake_case keys
+ */
+export function camelToSnakeCase(obj: any): any {
+  if (obj === null || typeof obj !== 'object') {
+    return obj
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(camelToSnakeCase)
+  }
+
+  const snakeObj: any = {}
+  
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
+      snakeObj[snakeKey] = camelToSnakeCase(obj[key])
+    }
+  }
+
+  return snakeObj
+}
