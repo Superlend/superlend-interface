@@ -176,7 +176,6 @@ const Header: React.FC = () => {
                         ))}
                     </nav>
                     <div className="flex items-center gap-[16px]">
-                        {/* <CheckInButton /> */}
                         <InfoTooltip
                             label={
                                 <Button
@@ -189,7 +188,9 @@ const Header: React.FC = () => {
                             }
                             content={'Start Tour'}
                         />
-                        <ConnectWalletButton />
+                        <div className="max-w-[120px] w-full">
+                            <ConnectWalletButton />
+                        </div>
                     </div>
                 </div>
             </header>
