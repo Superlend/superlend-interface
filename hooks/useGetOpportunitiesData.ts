@@ -20,6 +20,12 @@ export default function useGetOpportunitiesData(
     const hasInitializedRef = useRef(false)
     const currentCacheKeyRef = useRef<string>('')
     
+    // Convert 'loop' type to 'lend' for API compatibility
+    const apiParams = {
+        ...params,
+        type: params.type === 'loop' ? 'lend' : params.type
+    }
+    
     // Create a cache key based on params
     const cacheKey = `opportunities_${params.type}_${params.chain_ids || 'all'}_${params.tokens || 'all'}`
     
@@ -88,7 +94,7 @@ export default function useGetOpportunitiesData(
         ],
         queryFn: async () => {
             try {
-                const responseData = await getOpportunitiesData(params)
+                const responseData = await getOpportunitiesData(apiParams)
                 
                 // Cache the data with timestamp
                 if (typeof window !== 'undefined') {

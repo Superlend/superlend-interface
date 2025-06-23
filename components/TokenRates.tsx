@@ -36,7 +36,11 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
     const [isHovering, setIsHovering] = useState(false)
 
     function handleExcludeMorphoMarketsForLendAssets(opportunity: any) {
-        const isVault = opportunity.platform.isVault
+        if (!opportunity || !opportunity.platform) {
+            return false
+        }
+        
+        const isVault = opportunity.platform.isVault || false
         const isMorpho =
             opportunity.platform.protocol_type === PlatformType.MORPHO
 
@@ -44,7 +48,11 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
     }
 
     function handleExcludeMorphoVaultsForBorrowAssets(opportunity: any) {
-        const isVault = opportunity.platform.isVault
+        if (!opportunity || !opportunity.platform) {
+            return false
+        }
+        
+        const isVault = opportunity.platform.isVault || false
         const isMorpho =
             opportunity.platform.protocol_type === PlatformType.MORPHO
 

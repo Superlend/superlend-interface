@@ -79,6 +79,7 @@ interface SelectTokenByChainProps {
     isLoading?: boolean
     filterByChain?: boolean
     showChainBadge?: boolean
+    positionType?: 'lend' | 'borrow' | 'loop'
 }
 
 export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
@@ -89,6 +90,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
     isLoading,
     filterByChain = true,
     showChainBadge = true,
+    positionType = 'lend',
 }: SelectTokenByChainProps) => {
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
@@ -246,12 +248,18 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                 const matchesSearch = 
                     token?.symbol?.toLowerCase().includes(keywords.toLowerCase()) ||
                     token?.address?.toLowerCase().includes(keywords.toLowerCase());
-                return matchesChain && matchesSearch;
+                // For loop position type, only show Etherlink tokens (chain_id: 42793)
+                const matchesPositionType = positionType === 'loop' ? token.chain_id === 42793 : true;
+                return matchesChain && matchesSearch && matchesPositionType;
             })
-            : tokens.filter((token: TokenDetails) => 
-                token?.symbol?.toLowerCase().includes(keywords.toLowerCase()) ||
-                token?.address?.toLowerCase().includes(keywords.toLowerCase())
-            )
+            : tokens.filter((token: TokenDetails) => {
+                const matchesSearch = 
+                    token?.symbol?.toLowerCase().includes(keywords.toLowerCase()) ||
+                    token?.address?.toLowerCase().includes(keywords.toLowerCase());
+                // For loop position type, only show Etherlink tokens (chain_id: 42793)
+                const matchesPositionType = positionType === 'loop' ? token.chain_id === 42793 : true;
+                return matchesSearch && matchesPositionType;
+            })
     ).sort(sortTokensByBalance);
 
     // Group tokens by identity after filtering
