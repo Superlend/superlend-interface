@@ -192,7 +192,7 @@ export default function WithdrawAndRepayActionButton({
     >({})
 
     const searchParams = useSearchParams()
-    const tokenAddress = searchParams?.get('token') || ''
+    const urlTokenAddress = searchParams?.get('token') || ''
     const chain_id = searchParams?.get('chain_id') || '1'
     const protocol_identifier = searchParams?.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType =
@@ -260,6 +260,9 @@ export default function WithdrawAndRepayActionButton({
         isFluidProtocol && !platformData?.platform?.isVault
 
     const hasSingleToken = tokenDetails.length === 1
+
+    // Use token from URL params if available, otherwise use from tokenDetails (for loop positions)
+    const tokenAddress = urlTokenAddress || (hasSingleToken ? tokenDetails[0].address : (selectedTokenDetails?.address ?? ''))
 
     const { data: _marketData } = useSafeMarket({
         marketId: platformData?.platform?.morpho_market_id as MarketId,
@@ -1106,16 +1109,16 @@ export default function WithdrawAndRepayActionButton({
             assetDetailsForTx.protocol_type === PlatformType.MORPHO &&
             assetDetailsForTx.isVault
 
-        const maxToRepay =
-            Number(tokenDetails[0]?.amountInUSD)
-                .toFixed(tokenDetails[0]?.decimals)
-                .toString() ?? '0'
+        // For repay, we should use the exact token amount (full debt) without any reductions
+        const exactTokenAmount = hasSingleToken 
+            ? tokenDetails[0]?.tokenAmount?.toString() ?? '0'
+            : selectedTokenDetails?.tokenAmount?.toString() ?? '0'
 
         if (isMorphoVaultsProtocol) {
             return {
-                maxToRepay: maxToRepay,
-                maxToRepayFormatted: maxToRepay,
-                maxToRepaySCValue: '0',
+                maxToRepay: exactTokenAmount,
+                maxToRepayFormatted: exactTokenAmount,
+                maxToRepaySCValue: 'max', // Special value indicating full repay
                 user: {},
             }
         }
@@ -1126,6 +1129,15 @@ export default function WithdrawAndRepayActionButton({
                 ? tokenDetails[0].address
                     : (selectedTokenDetails?.address ?? '')
             ] ?? fallbackMaxRepayAmount
+
+        // If we have the exact token amount, override the max repay to ensure full debt can be repaid
+        if (Number(exactTokenAmount) > 0) {
+            return {
+                ...maxRepayAmount,
+                maxToRepayFormatted: exactTokenAmount,
+                maxToRepaySCValue: 'max', // Special value indicating full repay
+            }
+        }
 
         return maxRepayAmount;
     }

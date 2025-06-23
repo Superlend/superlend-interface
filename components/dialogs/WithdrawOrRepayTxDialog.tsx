@@ -155,7 +155,7 @@ export function WithdrawOrRepayTxDialog({
             ? localMaxWithdrawAmount.maxToWithdrawFormatted
             : (Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
             '0')
-        : localMaxRepayAmount.maxToRepayFormatted
+        : localMaxRepayAmount.maxToRepayFormatted  // For repay, always use the full amount without slippage
 
     const isMorphoVaultsProtocol = !!localAssetDetails?.vault 
 
@@ -299,7 +299,10 @@ export function WithdrawOrRepayTxDialog({
 
     const currentPositionAmountInUSD = Number(localPositionTokenAmount) * Number(localAssetDetails?.asset?.token?.price_usd)
     const inputAmountInUSD = (Number(amount) * Number(localAssetDetails?.asset?.token?.price_usd))
-    const newPositionAmountInUSD = currentPositionAmountInUSD - inputAmountInUSD
+    
+    // For repay actions, if user is repaying the maximum amount, remaining should be exactly 0
+    const isMaxRepay = !isWithdrawAction && Number(amount) === Number(localMaxRepayAmount.maxToRepayFormatted)
+    const newPositionAmountInUSD = isMaxRepay ? 0 : currentPositionAmountInUSD - inputAmountInUSD
 
     const disableActionButton = disabled || isTxInProgress
     // || (!hasAcknowledgedRisk && !isWithdrawAction && isHfLow())
@@ -1249,29 +1252,41 @@ const getActionButtonAmount = ({
     maxWithdrawAmount: any
     userHasNoBorrowings?: boolean
 }) => {
-    // For withdrawal with no borrowings, use the exact amount without any conversions to avoid precision loss
-    const amountWithSlippage = (actionType === 'withdraw' && userHasNoBorrowings) 
-        ? amount  // Use exact amount for users with no borrowings
-        : (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
     if (actionType === 'repay') {
+        // Check if user is trying to repay the maximum amount (full debt)
+        const isMaxRepay = Number(amount) === Number(maxRepayAmount.maxToRepayFormatted)
+        
+        // For max repay, use exact amount without slippage to ensure full debt is repaid
+        // For partial repay, apply slippage
+        const amountWithSlippage = isMaxRepay 
+            ? amount  // Use exact amount for max repay
+            : (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
+            
         const amountParsed = parseUnits(
             amount === '' ? '0' : amountWithSlippage,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
+        
         return {
             amountRaw: amountWithSlippage,
             amountParsed,
-            scValue:
-                amountParsed === maxRepayAmount.maxToRepay
-                    ? maxRepayAmount.maxToRepaySCValue
-                    : '-' + amountParsed.toString(),
+            scValue: isMaxRepay && maxRepayAmount.maxToRepaySCValue === 'max'
+                ? maxRepayAmount.maxToRepaySCValue
+                : '-' + amountParsed.toString(),
         }
     }
+    
     if (actionType === 'withdraw') {
+        // For withdrawal with no borrowings, use the exact amount without any conversions to avoid precision loss
+        const amountWithSlippage = (userHasNoBorrowings) 
+            ? amount  // Use exact amount for users with no borrowings
+            : (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
+            
         const amountParsed = parseUnits(
             amount === '' ? '0' : amountWithSlippage,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
+        
         const v = {
             amountRaw: amountWithSlippage,
             amountParsed,
