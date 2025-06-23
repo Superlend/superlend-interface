@@ -15,14 +15,17 @@ export default function useGetPlatformData(params: TGetPlatformParams) {
                 const responseData = await getPlatformData(params)
                 return responseData
             } catch (error) {
-                // toast.error(SOMETHING_WENT_WRONG_MESSAGE, ERROR_TOAST_ICON_STYLES);
                 throw new Error(
                     'There was an error while fetching Platform data'
                 )
             }
         },
-        staleTime: Infinity,
-        refetchInterval: 60000,
+        staleTime: 5 * 60 * 1000, // 5 minutes - platform data changes occasionally
+        gcTime: 10 * 60 * 1000, // 10 minutes cache
+        refetchOnWindowFocus: false, // Prevent unnecessary refetches
+        refetchOnMount: false, // Use cached data when available
+        refetchInterval: false,
+        refetchOnReconnect: true,
     })
     return {
         data: data || {
