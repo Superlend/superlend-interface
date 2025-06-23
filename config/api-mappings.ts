@@ -189,6 +189,68 @@ export const TREND_KEY_MAPPINGS: Record<ApiEnvironment, KeyMappingConfig> = {
 }
 
 /**
+ * Reward nested object key mappings
+ * Current: asset.address, asset.symbol, supply_apy, borrow_apy
+ * New dev format might be different
+ */
+export const REWARD_KEY_MAPPINGS: Record<ApiEnvironment, KeyMappingConfig> = {
+  production: {
+    // Current production structure
+    supply_apy: 'supply_apy',
+    borrow_apy: 'borrow_apy',
+    asset: 'asset',
+  },
+  
+  development: {
+    supply_apy: 's',        // Dev API: 's' = supply_apy (confirmed from console)
+    borrow_apy: 'b',        // Dev API: 'b' = borrow_apy (assumed based on pattern)  
+    asset: 'a',             // Dev API: 'a' = asset (confirmed from console)
+  },
+  
+  staging: {
+    supply_apy: 'supply_apy',
+    borrow_apy: 'borrow_apy',
+    asset: 'asset',
+  }
+}
+
+/**
+ * Asset nested object key mappings (for rewards)
+ * Current: address, symbol, name, logo, decimals, price_usd
+ * New dev format might be different
+ */
+export const ASSET_KEY_MAPPINGS: Record<ApiEnvironment, KeyMappingConfig> = {
+  production: {
+    // Current production structure
+    address: 'address',
+    symbol: 'symbol',
+    name: 'name',
+    logo: 'logo',
+    decimals: 'decimals',
+    price_usd: 'price_usd',
+  },
+  
+  development: {
+    // ACTUAL dev API structure (from console logs)
+    address: 'a',           // Dev API: 'a' = address
+    symbol: 's',            // Dev API: 's' = symbol
+    name: 'n',              // Dev API: 'n' = name
+    logo: 'l',              // Dev API: 'l' = logo
+    decimals: 'd',          // Dev API: 'd' = decimals
+    price_usd: 'p',         // Dev API: 'p' = price_usd
+  },
+  
+  staging: {
+    address: 'address',
+    symbol: 'symbol',
+    name: 'name',
+    logo: 'logo',
+    decimals: 'decimals',
+    price_usd: 'price_usd',
+  }
+}
+
+/**
  * Get current API environment based on HOST URL
  */
 export function getApiEnvironment(): ApiEnvironment {
@@ -250,4 +312,20 @@ export function getTokenKeyMappings(): KeyMappingConfig {
 export function getTrendKeyMappings(): KeyMappingConfig {
   const environment = getApiEnvironment()
   return TREND_KEY_MAPPINGS[environment]
+}
+
+/**
+ * Get reward key mappings for current environment
+ */
+export function getRewardKeyMappings(): KeyMappingConfig {
+  const environment = getApiEnvironment()
+  return REWARD_KEY_MAPPINGS[environment]
+}
+
+/**
+ * Get asset key mappings for current environment
+ */
+export function getAssetKeyMappings(): KeyMappingConfig {
+  const environment = getApiEnvironment()
+  return ASSET_KEY_MAPPINGS[environment]
 } 
