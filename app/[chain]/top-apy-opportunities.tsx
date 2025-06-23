@@ -34,7 +34,7 @@ import RainingPolygons from '@/components/animations/RainingPolygons'
 import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
-import { RefreshCw, Clock } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -569,7 +569,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             <div className="top-apy-opportunities-header flex items-end lg:items-center justify-between gap-[12px]">
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
                     <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
-                        <div className="flex items-center gap-[12px]">
+                        <div className="flex items-center gap-[8px]">
                             <HeadingText
                                 level="h3"
                                 weight="medium"
@@ -580,7 +580,27 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                             <InfoTooltip content="List of assets from different lending protocols across various chains, offering good APYs" />
                         </div>
                         {/* Filter button for Tablet and below screens */}
-                        <div className="block lg:hidden">
+                        <div className="flex items-center gap-[12px] lg:hidden">
+                            {/* Refresh functionality for mobile */}
+                            {lastFetchTime && (
+                                <button
+                                    onClick={handleManualRefresh}
+                                    disabled={isRefreshing}
+                                    className="flex items-center gap-[6px] text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Refresh data"
+                                >
+                                    <RefreshCw 
+                                        size={12} 
+                                        className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
+                                    />
+                                    <span className="hidden sm:inline">
+                                        {isRefreshing ? 'Refreshing...' : `Last updated ${formatTimeAgo(lastFetchTime)}`}
+                                    </span>
+                                    <span className="sm:hidden">
+                                        {isRefreshing ? 'Refreshing...' : formatTimeAgo(lastFetchTime)}
+                                    </span>
+                                </button>
+                            )}
                             <DiscoverFiltersDropdown chain={chain} />
                         </div>
                     </div>
@@ -622,34 +642,29 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                 </div>
                 {/* Filter buttons for Desktop and above screens */}
                 <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
+                    {/* Refresh functionality */}
+                    {lastFetchTime && (
+                        <button
+                            onClick={handleManualRefresh}
+                            disabled={isRefreshing}
+                            className="flex items-center gap-[6px] text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Refresh data"
+                        >
+                            <RefreshCw 
+                                size={12} 
+                                className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
+                            />
+                                                         <span>
+                                 {isRefreshing ? 'Refreshing...' : `Last updated ${formatTimeAgo(lastFetchTime)}`}
+                             </span>
+                        </button>
+                    )}
                     {/* <ChainSelectorDropdown /> */}
                     <DiscoverFiltersDropdown chain={chain} />
                 </div>
             </div>
 
-            {/* Refresh button and last updated time */}
-            <div className="flex items-center justify-end gap-[8px] text-sm text-gray-600">
-                <button
-                    onClick={handleManualRefresh}
-                    disabled={isRefreshing}
-                    className="flex items-center gap-[6px] px-3 py-1.5 bg-gray-50 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg border border-gray-200 transition-colors duration-200"
-                    title="Refresh data"
-                >
-                    <RefreshCw 
-                        size={14} 
-                        className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
-                    />
-                    <span className="text-xs font-medium">
-                        {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                    </span>
-                </button>
-                {lastFetchTime && (
-                    <div className="flex items-center gap-[6px] text-xs text-gray-500">
-                        <Clock size={12} />
-                        <span>Last updated {formatTimeAgo(lastFetchTime)}</span>
-                    </div>
-                )}
-            </div>
+
 
             <div className="top-apy-opportunities-content">
                 {!isLoadingOpportunitiesData && !isLoadingLoopPairs && !isTableLoading && (

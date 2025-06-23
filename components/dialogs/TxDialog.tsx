@@ -547,6 +547,10 @@ export function ConfirmationDialog({
 
     function getHeaderText() {
         if (positionType === 'loop') {
+            // Show "Looping Successful" when loop transaction is confirmed and successful
+            if (!isLoopTxInProgress && loopTx.isConfirmed && loopTx.status === 'view' && !!loopTx.hash) {
+                return 'Looping Successful'
+            }
             return 'Review Loop'
         }
         return isLendPositionType

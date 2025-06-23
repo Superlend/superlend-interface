@@ -12,6 +12,7 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import AvatarCircles from '@/components/ui/avatar-circles'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import { AlertTriangle } from 'lucide-react'
+import WithdrawAndRepayActionButton from './withdraw-and-repay'
 
 interface LoopPositionDetailsProps {
     loopData: any
@@ -69,6 +70,34 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
         return `$${abbreviateNumber(normalValue)}`
     })()
 
+    // Prepare token details for withdraw and repay buttons (similar to position-details.tsx)
+    const collateralTokenDetails = [{
+        address: loopData.collateralAsset.token.address,
+        decimals: loopData.collateralAsset.token.decimals,
+        logo: loopData.collateralAsset.token.logo,
+        symbol: loopData.collateralAsset.token.symbol,
+        amountInUSD: Number(convertScientificToNormal(loopData.collateralAsset.amountUSD)),
+        liquidation_threshold: loopData.liquidationLTV, // Using liquidation LTV for collateral
+        tokenAmount: Number(convertScientificToNormal(loopData.collateralAsset.amount)),
+        apy: enhancedSupplyAPY,
+        price_usd: loopData.collateralAsset.token.price_usd,
+        positionTokenAmount: Number(convertScientificToNormal(loopData.collateralAsset.amount)),
+        chain_name: loopData.collateralAsset.token.chain_name || ''
+    }]
+
+    const borrowTokenDetails = [{
+        address: loopData.borrowAsset.token.address,
+        decimals: loopData.borrowAsset.token.decimals,
+        logo: loopData.borrowAsset.token.logo,
+        symbol: loopData.borrowAsset.token.symbol,
+        amountInUSD: Number(convertScientificToNormal(loopData.borrowAsset.amountUSD)),
+        tokenAmount: Number(convertScientificToNormal(loopData.borrowAsset.amount)),
+        apy: loopData.borrowAsset.apy,
+        price_usd: loopData.borrowAsset.token.price_usd,
+        positionTokenAmount: Number(convertScientificToNormal(loopData.borrowAsset.amount)),
+        chain_name: loopData.borrowAsset.token.chain_name || ''
+    }]
+
     return (
         <div className="flex flex-col gap-6">
             {/* Position Assets Overview */}
@@ -89,31 +118,37 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                     <InfoTooltip content="Total amount of assets you've supplied as collateral" />
                                 </div>
                                 
-                                <div className="flex items-center gap-2">
-                                    <ImageWithDefault
-                                        src={loopData.collateralAsset.token.logo}
-                                        alt={loopData.collateralAsset.token.symbol}
-                                        width={32}
-                                        height={32}
-                                        className="rounded-full"
-                                    />
-                                    <div className="flex flex-col">
-                                        <HeadingText level="h4" weight="medium" className="text-gray-800">
-                                            {(() => {
-                                                const normalAmount = Number(convertScientificToNormal(loopData.collateralAsset.amount))
-                                                return `${formatTokenAmount(normalAmount)} ${loopData.collateralAsset.token.symbol}`
-                                            })()}
-                                        </HeadingText>
-                                        <BodyText level="body3" className="text-gray-600">
-                                            {(() => {
-                                                const normalAmountUSD = Number(convertScientificToNormal(loopData.collateralAsset.amountUSD))
-                                                if (isLowestValue(normalAmountUSD)) {
-                                                    return `${hasLowestDisplayValuePrefix(normalAmountUSD)}$${getLowestDisplayValue(normalAmountUSD)}`
-                                                }
-                                                return `$${abbreviateNumber(normalAmountUSD)}`
-                                            })()}
-                                        </BodyText>
+                                <div className="flex flex-col xs:flex-row gap-[12px] xs:items-center">
+                                    <div className="flex items-center gap-2">
+                                        <ImageWithDefault
+                                            src={loopData.collateralAsset.token.logo}
+                                            alt={loopData.collateralAsset.token.symbol}
+                                            width={32}
+                                            height={32}
+                                            className="rounded-full"
+                                        />
+                                        <div className="flex flex-col">
+                                            <HeadingText level="h4" weight="medium" className="text-gray-800">
+                                                {(() => {
+                                                    const normalAmount = Number(convertScientificToNormal(loopData.collateralAsset.amount))
+                                                    return `${formatTokenAmount(normalAmount)} ${loopData.collateralAsset.token.symbol}`
+                                                })()}
+                                            </HeadingText>
+                                            <BodyText level="body3" className="text-gray-600">
+                                                {(() => {
+                                                    const normalAmountUSD = Number(convertScientificToNormal(loopData.collateralAsset.amountUSD))
+                                                    if (isLowestValue(normalAmountUSD)) {
+                                                        return `${hasLowestDisplayValuePrefix(normalAmountUSD)}$${getLowestDisplayValue(normalAmountUSD)}`
+                                                    }
+                                                    return `$${abbreviateNumber(normalAmountUSD)}`
+                                                })()}
+                                            </BodyText>
+                                        </div>
                                     </div>
+                                    <WithdrawAndRepayActionButton
+                                        actionType="withdraw"
+                                        tokenDetails={collateralTokenDetails}
+                                    />
                                 </div>
                                 
                                 <div className="flex items-center justify-between p-3 bg-green-50/50 rounded-4">
@@ -135,31 +170,37 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                     <InfoTooltip content="Total amount of assets you've borrowed against your collateral" />
                                 </div>
                                 
-                                <div className="flex items-center gap-2">
-                                    <ImageWithDefault
-                                        src={loopData.borrowAsset.token.logo}
-                                        alt={loopData.borrowAsset.token.symbol}
-                                        width={32}
-                                        height={32}
-                                        className="rounded-full"
-                                    />
-                                    <div className="flex flex-col">
-                                        <HeadingText level="h4" weight="medium" className="text-gray-800">
-                                            {(() => {
-                                                const normalAmount = Number(convertScientificToNormal(loopData.borrowAsset.amount))
-                                                return `${formatTokenAmount(normalAmount)} ${loopData.borrowAsset.token.symbol}`
-                                            })()}
-                                        </HeadingText>
-                                        <BodyText level="body3" className="text-gray-600">
-                                            {(() => {
-                                                const normalAmountUSD = Number(convertScientificToNormal(loopData.borrowAsset.amountUSD))
-                                                if (isLowestValue(normalAmountUSD)) {
-                                                    return `${hasLowestDisplayValuePrefix(normalAmountUSD)}$${getLowestDisplayValue(normalAmountUSD)}`
-                                                }
-                                                return `$${abbreviateNumber(normalAmountUSD)}`
-                                            })()}
-                                        </BodyText>
+                                <div className="flex flex-col xs:flex-row gap-[12px] xs:items-center">
+                                    <div className="flex items-center gap-2">
+                                        <ImageWithDefault
+                                            src={loopData.borrowAsset.token.logo}
+                                            alt={loopData.borrowAsset.token.symbol}
+                                            width={32}
+                                            height={32}
+                                            className="rounded-full"
+                                        />
+                                        <div className="flex flex-col">
+                                            <HeadingText level="h4" weight="medium" className="text-gray-800">
+                                                {(() => {
+                                                    const normalAmount = Number(convertScientificToNormal(loopData.borrowAsset.amount))
+                                                    return `${formatTokenAmount(normalAmount)} ${loopData.borrowAsset.token.symbol}`
+                                                })()}
+                                            </HeadingText>
+                                            <BodyText level="body3" className="text-gray-600">
+                                                {(() => {
+                                                    const normalAmountUSD = Number(convertScientificToNormal(loopData.borrowAsset.amountUSD))
+                                                    if (isLowestValue(normalAmountUSD)) {
+                                                        return `${hasLowestDisplayValuePrefix(normalAmountUSD)}$${getLowestDisplayValue(normalAmountUSD)}`
+                                                    }
+                                                    return `$${abbreviateNumber(normalAmountUSD)}`
+                                                })()}
+                                            </BodyText>
+                                        </div>
                                     </div>
+                                    <WithdrawAndRepayActionButton
+                                        actionType="repay"
+                                        tokenDetails={borrowTokenDetails}
+                                    />
                                 </div>
                                 
                                 <div className="flex items-center justify-between p-3 bg-red-50/50 rounded-4">
