@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, XCircle, Brain, Award, Trophy, ArrowRight } from 'lucide-react'
 import { useOnboardingContext } from '@/components/providers/OnboardingProvider'
@@ -8,11 +8,6 @@ export const LearnQuizStep: React.FC = () => {
   const { setPath, setStep, setQuizCompleted } = useOnboardingContext()
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [showResults, setShowResults] = useState(false)
-
-  // Reset quiz completion status when component mounts
-  useEffect(() => {
-    setQuizCompleted(false)
-  }, [setQuizCompleted])
 
   const questions = [
     {

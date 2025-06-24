@@ -143,7 +143,7 @@ export const BorrowAssetsStep: React.FC = () => {
         setSelectedAsset(null)
       }
     }
-  }, [currentStep, contextSelectedAsset])
+  }, [currentStep, contextSelectedAsset, selectedTokenType, selectedRiskLevel, selectedCollateralToken, selectedAsset])
 
   // Only fetch data when both filters are selected
   const shouldFetchData = Boolean(selectedTokenType && selectedRiskLevel)
@@ -527,12 +527,15 @@ export const BorrowAssetsStep: React.FC = () => {
 
       if (!isCollateralStillValid) {
         console.log(`🔄 Clearing collateral ${selectedCollateralToken} as it's no longer available for ${selectedRiskLevel} risk`)
-        setSelectedCollateralToken(null)
-        setSelectedAsset(null)
-        clearSelectedAsset()
+        // Use a timeout to prevent immediate re-render loops
+        setTimeout(() => {
+          setSelectedCollateralToken(null)
+          setSelectedAsset(null)
+          clearSelectedAsset()
+        }, 0)
       }
     }
-  }, [selectedRiskLevel, selectedCollateralToken, collateralTokens, clearSelectedAsset])
+  }, [selectedRiskLevel, selectedCollateralToken, collateralTokens.length, clearSelectedAsset]) // Only depend on length instead of the full array
 
   // Process opportunities data and filter by selected risk level and collateral
   const assets: BorrowAsset[] = useMemo(() => {
@@ -833,8 +836,8 @@ export const BorrowAssetsStep: React.FC = () => {
 
   // Step indicator component
   const StepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
-      <div className="flex items-center space-x-4">
+    <div className="flex md:items-center md:justify-center mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
         {/* Step 1 */}
         <div className="flex items-center">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${selectedTokenType
@@ -843,7 +846,7 @@ export const BorrowAssetsStep: React.FC = () => {
             }`}>
             {selectedTokenType ? <Check className="w-4 h-4" /> : '1'}
           </div>
-          <span className={`ml-2 text-sm font-medium ${selectedTokenType ? 'text-primary' : 'text-gray-500'}`}>
+          <span className={`ml-2 text-sm font-medium ${selectedTokenType ? 'text-primary' : 'text-gray-600'}`}>
             Token Type
           </span>
         </div>
@@ -860,7 +863,7 @@ export const BorrowAssetsStep: React.FC = () => {
             }`}>
             {selectedRiskLevel ? <Check className="w-4 h-4" /> : '2'}
           </div>
-          <span className={`ml-2 text-sm font-medium ${selectedRiskLevel ? 'text-primary' : selectedTokenType ? 'text-gray-700' : 'text-gray-400'
+          <span className={`ml-2 text-sm font-medium ${selectedRiskLevel ? 'text-primary' : selectedTokenType ? 'text-gray-700' : 'text-gray-600'
             }`}>
             Risk Level
           </span>
@@ -870,7 +873,7 @@ export const BorrowAssetsStep: React.FC = () => {
 
         {/* Step 3 */}
         <div className="flex items-center">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${selectedCollateralToken
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${selectedCollateralToken
             ? 'bg-primary border-primary text-white'
             : shouldFetchData
               ? 'border-primary text-primary bg-white'
@@ -878,7 +881,7 @@ export const BorrowAssetsStep: React.FC = () => {
             }`}>
             {selectedCollateralToken ? <Check className="w-4 h-4" /> : '3'}
           </div>
-          <span className={`ml-2 text-sm font-medium ${selectedCollateralToken ? 'text-primary' : shouldFetchData ? 'text-gray-700' : 'text-gray-400'
+          <span className={`ml-2 text-sm font-medium ${selectedCollateralToken ? 'text-primary' : shouldFetchData ? 'text-gray-700' : 'text-gray-600'
             }`}>
             Collateral Selection
           </span>
@@ -888,7 +891,7 @@ export const BorrowAssetsStep: React.FC = () => {
 
         {/* Step 4 */}
         <div className="flex items-center">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${selectedAsset
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${selectedAsset
             ? 'bg-primary border-primary text-white'
             : selectedCollateralToken
               ? 'border-primary text-primary bg-white'
@@ -896,7 +899,7 @@ export const BorrowAssetsStep: React.FC = () => {
             }`}>
             {selectedAsset ? <Check className="w-4 h-4" /> : '4'}
           </div>
-          <span className={`ml-2 text-sm font-medium ${selectedAsset ? 'text-primary' : selectedCollateralToken ? 'text-gray-700' : 'text-gray-400'
+          <span className={`ml-2 text-sm font-medium ${selectedAsset ? 'text-primary' : selectedCollateralToken ? 'text-gray-700' : 'text-gray-600'
             }`}>
             Final Selection
           </span>
@@ -950,7 +953,7 @@ export const BorrowAssetsStep: React.FC = () => {
             <h3 className="text-lg font-semibold text-foreground">Choose Token Type</h3>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
             {tokenTypes.map((token) => (
               <motion.button
                 key={token.symbol}
@@ -1070,27 +1073,29 @@ export const BorrowAssetsStep: React.FC = () => {
               }`}>
               {selectedCollateralToken ? <Check className="w-4 h-4" /> : '3'}
             </div>
-            <h3 className={`text-lg font-semibold ${selectedTokenType ? 'text-foreground' : 'text-gray-400'}`}>
-              Select Collateral Token
-            </h3>
-            {shouldFetchData && isLoadingBorrowOpportunitiesData && (
-              <div className="text-blue-500 flex items-center space-x-2">
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                <span className="text-xs text-blue-600 font-medium">Fetching data...</span>
-              </div>
-            )}
-            {shouldFetchData && !isLoadingBorrowOpportunitiesData && !isErrorBorrowOpportunitiesData && (
-              <div className="text-green-500 flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4" />
-                <span className="text-xs text-green-600 font-medium">Data fetched</span>
-              </div>
-            )}
-            {shouldFetchData && !isLoadingBorrowOpportunitiesData && isErrorBorrowOpportunitiesData && (
-              <div className="text-red-500 flex items-center space-x-2">
-                <XCircle className="w-4 h-4" />
-                <span className="text-xs text-red-600 font-medium">Failed to fetch data</span>
-              </div>
-            )}
+            <div className="flex flex-col md:flex-row md:items-center md:space-x-2">
+              <h3 className={`text-lg font-semibold ${selectedTokenType ? 'text-foreground' : 'text-gray-400'}`}>
+                Select Collateral Token
+              </h3>
+              {shouldFetchData && isLoadingBorrowOpportunitiesData && (
+                <div className="text-blue-500 flex items-center space-x-2">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span className="text-xs text-blue-600 font-medium">Fetching data...</span>
+                </div>
+              )}
+              {shouldFetchData && !isLoadingBorrowOpportunitiesData && !isErrorBorrowOpportunitiesData && (
+                <div className="text-green-500 flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-xs text-green-600 font-medium">Data fetched</span>
+                </div>
+              )}
+              {shouldFetchData && !isLoadingBorrowOpportunitiesData && isErrorBorrowOpportunitiesData && (
+                <div className="text-red-500 flex items-center space-x-2">
+                  <XCircle className="w-4 h-4" />
+                  <span className="text-xs text-red-600 font-medium">Failed to fetch data</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {!shouldFetchData && (
