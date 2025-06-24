@@ -143,7 +143,7 @@ export const BorrowAssetsStep: React.FC = () => {
         setSelectedAsset(null)
       }
     }
-  }, [currentStep, contextSelectedAsset])
+  }, [currentStep, contextSelectedAsset, selectedTokenType, selectedRiskLevel, selectedCollateralToken, selectedAsset])
 
   // Only fetch data when both filters are selected
   const shouldFetchData = Boolean(selectedTokenType && selectedRiskLevel)
@@ -527,12 +527,15 @@ export const BorrowAssetsStep: React.FC = () => {
 
       if (!isCollateralStillValid) {
         console.log(`🔄 Clearing collateral ${selectedCollateralToken} as it's no longer available for ${selectedRiskLevel} risk`)
-        setSelectedCollateralToken(null)
-        setSelectedAsset(null)
-        clearSelectedAsset()
+        // Use a timeout to prevent immediate re-render loops
+        setTimeout(() => {
+          setSelectedCollateralToken(null)
+          setSelectedAsset(null)
+          clearSelectedAsset()
+        }, 0)
       }
     }
-  }, [selectedRiskLevel, selectedCollateralToken, collateralTokens, clearSelectedAsset])
+  }, [selectedRiskLevel, selectedCollateralToken, collateralTokens.length, clearSelectedAsset]) // Only depend on length instead of the full array
 
   // Process opportunities data and filter by selected risk level and collateral
   const assets: BorrowAsset[] = useMemo(() => {
@@ -870,7 +873,7 @@ export const BorrowAssetsStep: React.FC = () => {
 
         {/* Step 3 */}
         <div className="flex items-center">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${selectedCollateralToken
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${selectedCollateralToken
             ? 'bg-primary border-primary text-white'
             : shouldFetchData
               ? 'border-primary text-primary bg-white'
@@ -888,7 +891,7 @@ export const BorrowAssetsStep: React.FC = () => {
 
         {/* Step 4 */}
         <div className="flex items-center">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${selectedAsset
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${selectedAsset
             ? 'bg-primary border-primary text-white'
             : selectedCollateralToken
               ? 'border-primary text-primary bg-white'

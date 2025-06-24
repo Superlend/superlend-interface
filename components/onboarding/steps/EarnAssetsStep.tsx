@@ -101,7 +101,7 @@ export const EarnAssetsStep: React.FC = () => {
         setSelectedAsset(null)
       }
     }
-  }, [currentStep, contextSelectedAsset])
+  }, [currentStep, contextSelectedAsset, selectedTokenType, selectedRiskLevel, selectedAsset])
 
   // Only fetch data when both filters are selected
   const shouldFetchData = Boolean(selectedTokenType && selectedRiskLevel)
