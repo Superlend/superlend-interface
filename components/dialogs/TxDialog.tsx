@@ -2,7 +2,7 @@
 
 import ImageWithDefault from '@/components/ImageWithDefault'
 import { Button } from '@/components/ui/button'
-import { TPositionType, TAssetDetails, TChain } from '@/types'
+import { TPositionType, TActionType, TAssetDetails, TChain } from '@/types'
 import { PlatformType } from '@/types/platform'
 import {
     ArrowRightIcon,
@@ -138,6 +138,7 @@ export function ConfirmationDialog({
         'lend': lendTx,
         'borrow': borrowTx,
         'loop': loopTx,
+        'all': lendTx, // Fallback to lendTx for 'all' case
     }
     const { logEvent } = useAnalytics()
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
@@ -330,7 +331,7 @@ export function ConfirmationDialog({
         }
     }
 
-    function isShowBlock(action: { lend?: boolean; borrow?: boolean; loop?: boolean }) {
+    function isShowBlock(action: { lend?: boolean; borrow?: boolean; loop?: boolean; all?: boolean }) {
         return action[positionType]
     }
 
@@ -1497,7 +1498,7 @@ export function ConfirmationDialog({
                 asset={assetDetailsForActionButton}
                 amount={getActionButtonAmount()}
                 setActionType={setActionType}
-                actionType={positionType}
+                actionType={positionType === 'all' ? 'lend' : positionType as TActionType}
             />
         </div>
     )
