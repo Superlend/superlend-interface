@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Button } from './ui/button'
 import { usePathname, useRouter } from 'next/navigation'
 import HomeIcon from './icons/home-icon'
@@ -18,6 +18,7 @@ import { ChainId } from '@/types/chain'
 import TopBanner from './TopBanner'
 import InfoTooltip from './tooltips/InfoTooltip'
 import { useOnboardingContext } from './providers/OnboardingProvider'
+import useDimensions from '@/hooks/useDimensions'
 
 type TTab = {
     id: number
@@ -28,6 +29,8 @@ type TTab = {
 
 const Header: React.FC = () => {
     const { resetOnboarding } = useOnboardingContext()
+    const { width: screenWidth } = useDimensions()
+    const isDesktop = useMemo(() => screenWidth > 768, [screenWidth])
     const tabs: TTab[] = [
         { id: 1, name: 'Home', href: '/', icon: HomeIcon },
         { id: 2, name: 'Discover', href: getRedirectionLink('/discover'), icon: CompassIcon },
@@ -140,7 +143,7 @@ const Header: React.FC = () => {
                         />
                         <Badge
                             variant="blue"
-                            className="absolute top-[4px] -right-12 w-fit rounded-full px-2 py-[2px]"
+                            className="absolute max-md:bg-transparent max-md:left-6 md:top-[4px] md:-right-12 w-fit rounded-full px-2 py-[2px]"
                         >
                             Beta
                         </Badge>
@@ -177,6 +180,7 @@ const Header: React.FC = () => {
                     </nav>
                     <div className="flex items-center gap-[16px]">
                         <InfoTooltip
+                            hide={!isDesktop}
                             label={
                                 <Button
                                     variant="ghost"

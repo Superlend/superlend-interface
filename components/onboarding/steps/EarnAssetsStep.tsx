@@ -409,8 +409,8 @@ export const EarnAssetsStep: React.FC = () => {
 
   // Step indicator component
   const StepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
-      <div className="flex items-center space-x-4">
+    <div className="flex md:items-center md:justify-center mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
         {/* Step 1 */}
         <div className="flex items-center">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${selectedTokenType
@@ -419,7 +419,7 @@ export const EarnAssetsStep: React.FC = () => {
             }`}>
             {selectedTokenType ? <Check className="w-4 h-4" /> : '1'}
           </div>
-          <span className={`ml-2 text-sm font-medium ${selectedTokenType ? 'text-primary' : 'text-gray-500'}`}>
+          <span className={`ml-2 text-sm font-medium ${selectedTokenType ? 'text-primary' : 'text-gray-600'}`}>
             Token Type
           </span>
         </div>
@@ -436,7 +436,7 @@ export const EarnAssetsStep: React.FC = () => {
             }`}>
             {selectedRiskLevel ? <Check className="w-4 h-4" /> : '2'}
           </div>
-          <span className={`ml-2 text-sm font-medium ${selectedRiskLevel ? 'text-primary' : selectedTokenType ? 'text-gray-700' : 'text-gray-400'
+          <span className={`ml-2 text-sm font-medium ${selectedRiskLevel ? 'text-primary' : selectedTokenType ? 'text-gray-700' : 'text-gray-600'
             }`}>
             Risk Level
           </span>
@@ -454,7 +454,7 @@ export const EarnAssetsStep: React.FC = () => {
             }`}>
             {selectedAsset ? <Check className="w-4 h-4" /> : '3'}
           </div>
-          <span className={`ml-2 text-sm font-medium ${selectedAsset ? 'text-primary' : shouldFetchData ? 'text-gray-700' : 'text-gray-400'
+          <span className={`ml-2 text-sm font-medium ${selectedAsset ? 'text-primary' : shouldFetchData ? 'text-gray-700' : 'text-gray-600'
             }`}>
             Final Selection
           </span>
@@ -501,7 +501,7 @@ export const EarnAssetsStep: React.FC = () => {
             <h3 className="text-lg font-semibold text-foreground">Choose Token Type</h3>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
             {tokenTypes.map((token) => (
               <motion.button
                 key={token.symbol}
@@ -622,7 +622,7 @@ export const EarnAssetsStep: React.FC = () => {
               {selectedAsset ? <Check className="w-4 h-4" /> : '3'}
             </div>
             <h3 className={`text-lg font-semibold ${shouldFetchData ? 'text-foreground' : 'text-gray-400'}`}>
-              Select Your Token
+              Select <span className="hidden md:inline">Your</span> Token
             </h3>
             {shouldFetchData && isLoadingLendOpportunitiesData && (
               <div className="text-blue-500 flex items-center space-x-2">

@@ -4,7 +4,7 @@ import { Sparkles, ArrowRight } from 'lucide-react'
 
 export const WelcomeStep: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-full text-center space-y-4 sm:space-y-6 py-4 sm:py-8 px-4 sm:px-0">
+    <div className="flex flex-col items-center justify-center min-h-full text-center space-y-4 sm:space-y-6 py-4 sm:py-8">
       {/* Hero Section */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -22,7 +22,7 @@ export const WelcomeStep: React.FC = () => {
         <div className="space-y-2 sm:space-y-3 md:space-y-4">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
             Welcome to{' '}
-            <span className="bg-gradient-to-r from-primary-gradientStart to-primary-gradientEnd bg-clip-text text-transparent">
+            <span className="text-primary">
               Superlend
             </span>
           </h1>
