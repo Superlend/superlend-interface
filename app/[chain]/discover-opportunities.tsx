@@ -18,6 +18,10 @@ import { ChartNoAxesColumnIncreasing, TrendingUp } from 'lucide-react'
 import { CHAIN_ID_MAPPER } from '@/constants'
 import useGetBoostRewards from '@/hooks/useGetBoostRewards'
 import { useGetEffectiveApy } from '@/hooks/useGetEffectiveApy'
+import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
+import { AssetsDataContext } from '@/context/data-provider'
+import { useContext } from 'react'
 const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
 const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 
@@ -58,6 +62,16 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     const { logEvent } = useAnalytics()
     const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
     const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
+    const { allChainsData } = useContext<any>(AssetsDataContext)
+    
+    // Get loop pairs data for top 3 strategies
+    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
+    
+    // Get opportunities data for borrow APYs
+    const { data: borrowOpportunitiesData, isLoading: isLoadingBorrowOpportunities } = useGetOpportunitiesData({
+        type: 'borrow'
+    })
+    
     const SUPERFUNDS_DOMAIN = 'https://funds.superlend.xyz'
     const BASE_CHAIN_ID = 8453
     const BASE_VAULT_ADDRESS = '0x10076ed296571cE4Fde5b1FDF0eB9014a880e47B'
@@ -130,6 +144,249 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     // Add checks for platform data existence
     if (!opportunity1PlatformData?.assets || isLoadingBoostRewards || isLoadingEffectiveApy || !opportunity3PlatformData) {
         return <div className="p-5"><CardDetailsSkeleton /></div>
+    }
+
+    // Helper function to get borrow APY for a token (matching table calculation)
+    const getBorrowAPY = (tokenSymbol: string, chainId?: number) => {
+        if (!borrowOpportunitiesData) return 0
+        
+        const opportunity = borrowOpportunitiesData.find(opp => 
+            opp.token.symbol.toLowerCase() === tokenSymbol.toLowerCase() &&
+            (chainId ? opp.chain_id === chainId : true)
+        )
+        
+        if (!opportunity) return 0
+        
+        // For borrow APY, we use the same field as the table but interpret it correctly
+        // The table shows this as a cost (negative), so we should too
+        const borrowRate = Number(opportunity.platform.apy.current)
+        
+        // Return negative value to indicate this is a cost (what you pay for borrowing)
+        return -Math.abs(borrowRate)
+    }
+
+    // Get top 3 borrow opportunities - one per platform based on highest APY
+    const getTop3BorrowOpportunities = () => {
+        if (!borrowOpportunitiesData || borrowOpportunitiesData.length === 0) {
+            // Fallback to static borrow opportunities if no dynamic data is available
+            return [
+                {
+                    id: 4,
+                    label: 'Borrow USDC on Base',
+                    tokenSymbol: 'USDC',
+                    platformName: 'Aave',
+                    chainName: 'Base',
+                    description: 'Low borrow rates',
+                    tokenImage: `/images/tokens/usdc.webp`,
+                    platformImage: `${imageBaseUrl}/aave.svg`,
+                    link: getRedirectLink(
+                        opportunity4TokenAddress,
+                        opportunity4ProtocolIdentifier,
+                        opportunity4ChainId,
+                        'borrow'
+                    ),
+                },
+                {
+                    id: 5,
+                    label: 'Borrow BTC on Base',
+                    tokenSymbol: 'BTC',
+                    platformName: 'Compound',
+                    chainName: 'Base',
+                    description: 'Competitive rates',
+                    tokenImage: `/images/tokens/btc.webp`,
+                    platformImage: `${imageBaseUrl}/compound.svg`,
+                    link: getRedirectLink(
+                        opportunity5TokenAddress,
+                        opportunity5ProtocolIdentifier,
+                        opportunity5ChainId,
+                        'borrow'
+                    ),
+                },
+                {
+                    id: 6,
+                    label: 'Borrow crvUSD on Ethereum',
+                    tokenSymbol: 'crvUSD',
+                    platformName: 'Morpho',
+                    chainName: 'Ethereum',
+                    description: 'Efficient borrowing',
+                    tokenImage: `${morphoImageBaseUrl}/crvusd.svg`,
+                    platformImage: `${imageBaseUrl}/morpho-logo.svg`,
+                    link: getRedirectLink(
+                        opportunity6TokenAddress,
+                        opportunity6ProtocolIdentifier,
+                        opportunity6ChainId,
+                        'borrow'
+                    ),
+                },
+            ]
+        }
+        
+        // Apply the same filtering logic as the table to ensure consistency
+        const EXCLUDED_TOKENS_LIST = [
+            '0x89c31867c878e4268c65de3cdf8ea201310c5851',
+        ]
+        
+        const EXCLUDED_PROTOCOLS_LIST = [
+            '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed',
+            '0xe75f6fff3eec59db6ac1df4fcccf63b72cc053f78e3156b9eb78d12f5ac47367',
+        ]
+        
+        const filteredBorrowData = borrowOpportunitiesData.filter(opportunity => {
+            const isExcludedToken = EXCLUDED_TOKENS_LIST.includes(opportunity.token.address)
+            const isExcludedProtocol = EXCLUDED_PROTOCOLS_LIST.includes(opportunity.platform.protocol_identifier)
+            return !isExcludedToken && !isExcludedProtocol
+        })
+        
+        // Group opportunities by platform name
+        const platformGroups = filteredBorrowData.reduce((acc, opportunity) => {
+            const platformName = opportunity.platform.platform_name.split('-')[0].toLowerCase()
+            if (!acc[platformName]) {
+                acc[platformName] = []
+            }
+            acc[platformName].push(opportunity)
+            return acc
+        }, {} as Record<string, any[]>)
+        
+        // Get the best opportunity from each platform (lowest borrow rate = best for borrowing)
+        const bestOpportunityPerPlatform = Object.entries(platformGroups).map(([platformName, opportunities]) => {
+            // For borrow opportunities, lower APY is better (you pay less interest)
+            const bestOpportunity = opportunities.sort((a, b) => 
+                Number(a.platform.apy.current) - Number(b.platform.apy.current)
+            )[0]
+            
+            return {
+                ...bestOpportunity,
+                platformDisplayName: platformName.charAt(0).toUpperCase() + platformName.slice(1)
+            }
+        })
+        
+        // Sort by APY (lowest first = best borrow rates) and take top 3
+        const top3Opportunities = bestOpportunityPerPlatform
+            .sort((a, b) => Number(a.platform.apy.current) - Number(b.platform.apy.current))
+            .slice(0, 3)
+        
+        // Map to the required format
+        return top3Opportunities.map((opportunity, index) => {
+            const chainName = allChainsData?.find((chain: any) => 
+                Number(chain.chain_id) === Number(opportunity.chain_id)
+            )?.name || 'Unknown'
+            
+            // For borrow opportunities, manually add negative sign to match table display
+            const borrowRate = Number(opportunity.platform.apy.current)
+            const apyValue = borrowRate // Keep the raw value for internal use
+            
+            return {
+                id: 4 + index,
+                label: `Borrow ${opportunity.token.symbol} on ${chainName}`,
+                tokenSymbol: opportunity.token.symbol,
+                platformName: opportunity.platformDisplayName,
+                chainName: chainName,
+                description: `${abbreviateNumber(apyValue)}% APY`, // Manually add negative sign to show it's a cost
+                tokenImage: opportunity.token.logo,
+                platformImage: opportunity.platform.logo,
+                link: getRedirectLink(
+                    opportunity.token.address,
+                    opportunity.platform.protocol_identifier,
+                    opportunity.chain_id,
+                    'borrow'
+                ),
+                apy: -apyValue // Store negative value to match table behavior
+            }
+        })
+    }
+
+    // Get top 3 loop strategies by APY
+    const getTop3LoopStrategies = () => {
+        if (!loopPairs || loopPairs.length === 0) {
+            // Fallback to static loop opportunities if no dynamic data is available
+            return [
+                {
+                    id: 7,
+                    label: 'Loop with weETH',
+                    tokenSymbol: 'weETH/WETH',
+                    platformName: 'Superlend',
+                    chainName: 'Etherlink',
+                    description: 'Leverage your staking rewards',
+                    tokenImage: `/images/tokens/weeth.png`,
+                    borrowTokenImage: `${imageBaseUrl}/tokens/weth.png`,
+                    platformImage: `${imageBaseUrl}/superlend.svg`,
+                    link: getRedirectLink(
+                        opportunity7TokenAddress,
+                        opportunity7ProtocolIdentifier,
+                        opportunity7ChainId,
+                        'loop',
+                        '0xfc24f770f94edbca6d6f885e12d4317320bcb401' // WETH on Etherlink
+                    ),
+                    maxAPY: 0,
+                    isLoopPair: true
+                },
+                {
+                    id: 8,
+                    label: 'Loop with ezETH',
+                    tokenSymbol: 'ezETH/WETH',
+                    platformName: 'Superlend',
+                    chainName: 'Etherlink',
+                    description: 'Maximize your yield with looping',
+                    tokenImage: `/images/tokens/ezeth.png`,
+                    borrowTokenImage: `${imageBaseUrl}/tokens/weth.png`,
+                    platformImage: `${imageBaseUrl}/superlend.svg`,
+                    link: getRedirectLink(
+                        opportunity8TokenAddress,
+                        opportunity8ProtocolIdentifier,
+                        opportunity8ChainId,
+                        'loop',
+                        '0xfc24f770f94edbca6d6f885e12d4317320bcb401' // WETH on Etherlink
+                    ),
+                    maxAPY: 0,
+                    isLoopPair: true
+                },
+                {
+                    id: 9,
+                    label: 'Loop with wusdl',
+                    tokenSymbol: 'wusdl/USDC',
+                    platformName: 'Superlend',
+                    chainName: 'Etherlink',
+                    description: 'Loop stablecoins for enhanced yield',
+                    tokenImage: `${morphoImageBaseUrl}/wusdl.svg`,
+                    borrowTokenImage: `/images/tokens/usdc.webp`,
+                    platformImage: `${imageBaseUrl}/superlend.svg`,
+                    link: getRedirectLink(
+                        opportunity9TokenAddress,
+                        opportunity9ProtocolIdentifier,
+                        opportunity9ChainId,
+                        'loop',
+                        '0x2c03058c8afc06713be23e58d2febc8337dbfe6a' // USDC on Etherlink
+                    ),
+                    maxAPY: 0,
+                    isLoopPair: true
+                },
+            ]
+        }
+        
+        // Sort by maxAPY and take top 3
+        return loopPairs
+            .sort((a, b) => b.maxAPY - a.maxAPY)
+            .slice(0, 3)
+            .map((pair, index) => ({
+                id: 7 + index,
+                label: `Loop ${pair.tokenSymbol}/${pair.borrowToken.symbol}`,
+                tokenSymbol: `${pair.tokenSymbol}/${pair.borrowToken.symbol}`,
+                platformName: pair.platformName,
+                chainName: pair.chainName,
+                description: `${abbreviateNumber(pair.maxAPY)}% Max APY`,
+                tokenImage: pair.tokenLogo,
+                borrowTokenImage: pair.borrowToken.logo,
+                platformImage: pair.platformLogo,
+                link: getRedirectLink(
+                    pair.tokenAddress,
+                    pair.protocol_identifier,
+                    pair.chain_id,
+                    'loop',
+                    pair.borrowToken.address
+                ),
+                maxAPY: pair.maxAPY,
+                isLoopPair: true
+            }))
     }
 
     const asset1Data = opportunity1PlatformData?.assets?.find((asset: any) =>
@@ -207,106 +464,8 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
                     ),
                 },
             ],
-            borrow: [
-                {
-                    id: 4,
-                    label: 'Borrow USDC on Base',
-                    tokenSymbol: 'USDC',
-                    platformName: 'Aave',
-                    chainName: 'Base',
-                    description: 'Flexible rates for borrowing',
-                    tokenImage: `/images/tokens/usdc.webp`,
-                    platformImage: `${imageBaseUrl}/aave.svg`,
-                    link: getRedirectLink(
-                        opportunity4TokenAddress,
-                        opportunity4ProtocolIdentifier,
-                        opportunity4ChainId,
-                        'borrow'
-                    ),
-                },
-                {
-                    id: 5,
-                    label: 'Borrow WETH on Base',
-                    tokenSymbol: 'WETH',
-                    platformName: 'Compound',
-                    chainName: 'Base',
-                    description: 'Competitive borrowing rates',
-                    tokenImage: `${imageBaseUrl}/tokens/weth.png`,
-                    platformImage: `${imageBaseUrl}/compound.svg`,
-                    link: getRedirectLink(
-                        opportunity5TokenAddress,
-                        opportunity5ProtocolIdentifier,
-                        opportunity5ChainId,
-                        'borrow'
-                    ),
-                },
-                {
-                    id: 6,
-                    label: 'Borrow crvUSD on Ethereum',
-                    tokenSymbol: 'crvUSD',
-                    platformName: 'Morpho',
-                    chainName: 'Ethereum',
-                    description: 'Efficient borrowing on Morpho Blue',
-                    tokenImage: `${morphoImageBaseUrl}/crvusd.svg`,
-                    platformImage: `${imageBaseUrl}/morpho-logo.svg`,
-                    link: getRedirectLink(
-                        opportunity6TokenAddress,
-                        opportunity6ProtocolIdentifier,
-                        opportunity6ChainId,
-                        'borrow'
-                    ),
-                },
-            ],
-            loop: [
-                {
-                    id: 7,
-                    label: 'Loop with weETH',
-                    tokenSymbol: 'weETH',
-                    platformName: 'Superlend',
-                    chainName: 'Etherlink',
-                    description: 'Leverage your staking rewards',
-                    tokenImage: `/images/tokens/weeth.png`,
-                    platformImage: `${imageBaseUrl}/superlend.svg`,
-                    link: getRedirectLink(
-                        opportunity7TokenAddress,
-                        opportunity7ProtocolIdentifier,
-                        opportunity7ChainId,
-                        'loop'
-                    ),
-                },
-                {
-                    id: 8,
-                    label: 'Loop with ezETH',
-                    tokenSymbol: 'ezETH',
-                    platformName: 'Superlend',
-                    chainName: 'Etherlink',
-                    description: 'Maximize your yield with looping',
-                    tokenImage: `/images/tokens/ezeth.png`,
-                    platformImage: `${imageBaseUrl}/superlend.svg`,
-                    link: getRedirectLink(
-                        opportunity8TokenAddress,
-                        opportunity8ProtocolIdentifier,
-                        opportunity8ChainId,
-                        'loop'
-                    ),
-                },
-                {
-                    id: 9,
-                    label: 'Loop with wusdl',
-                    tokenSymbol: 'wusdl',
-                    platformName: 'Superlend',
-                    chainName: 'Etherlink',
-                    description: 'Loop stablecoins for enhanced yield',
-                    tokenImage: `${morphoImageBaseUrl}/wusdl.svg`,
-                    platformImage: `${imageBaseUrl}/superlend.svg`,
-                    link: getRedirectLink(
-                        opportunity9TokenAddress,
-                        opportunity9ProtocolIdentifier,
-                        opportunity9ChainId,
-                        'loop'
-                    ),
-                },
-            ],
+            borrow: getTop3BorrowOpportunities(),
+            loop: getTop3LoopStrategies(),
         }
 
     const appleFarmBaseRate = asset1DataSupplyApy
@@ -374,13 +533,33 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
                                 {isLoading[opportunity.id] ?
                                     (<CardDetailsSkeleton />)
                                     : (<div className="flex items-center gap-2">
-                                        <ImageWithDefault
-                                            src={opportunity.tokenImage}
-                                            alt={opportunity.tokenSymbol}
-                                            width={36}
-                                            height={36}
-                                            className="rounded-full object-contain"
-                                        />
+                                        {/* Render stacked icons for loop pairs, single icon for others */}
+                                        {opportunity.isLoopPair && opportunity.borrowTokenImage ? (
+                                            <div className="relative flex items-center">
+                                                <ImageWithDefault
+                                                    src={opportunity.tokenImage}
+                                                    alt={opportunity.tokenSymbol}
+                                                    width={36}
+                                                    height={36}
+                                                    className="rounded-full object-contain"
+                                                />
+                                                <ImageWithDefault
+                                                    src={opportunity.borrowTokenImage}
+                                                    alt={`${opportunity.tokenSymbol} borrow token`}
+                                                    width={24}
+                                                    height={24}
+                                                    className="rounded-full object-contain -ml-3 border-2 border-white"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <ImageWithDefault
+                                                src={opportunity.tokenImage}
+                                                alt={opportunity.tokenSymbol}
+                                                width={36}
+                                                height={36}
+                                                className="rounded-full object-contain"
+                                            />
+                                        )}
                                         <div className="flex flex-col gap-1">
                                             <div className="flex items-center gap-2">
                                                 <HeadingText
@@ -483,10 +662,9 @@ function getAssetDetails(platformData: any, tokenAddress: string) {
         asset?.token?.address?.toLowerCase() === tokenAddress?.toLowerCase()
     );
 }
-function getRedirectLink(tokenAddress: string, protocolIdentifier: string, chainId: number, positionType: string) {
-    if (positionType === 'loop') {
-        const borrowToken = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'; // Placeholder for borrow token in loop
-        return `/position-management?lend_token=${tokenAddress}&borrow_token=${borrowToken}&protocol_identifier=${protocolIdentifier}&chain_id=${chainId}&position_type=${positionType}`
+function getRedirectLink(tokenAddress: string, protocolIdentifier: string, chainId: number, positionType: string, borrowTokenAddress?: string) {
+    if (positionType === 'loop' && borrowTokenAddress) {
+        return `/position-management?lend_token=${tokenAddress}&borrow_token=${borrowTokenAddress}&protocol_identifier=${protocolIdentifier}&chain_id=${chainId}&position_type=${positionType}`
     }
     return `/position-management?token=${tokenAddress}&protocol_identifier=${protocolIdentifier}&chain_id=${chainId}&position_type=${positionType}`
 }
