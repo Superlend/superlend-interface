@@ -39,7 +39,7 @@ export function createLoopPairs(
     }
 
     lendOpportunities.forEach(item => {
-        if (!isBorrowableToken(item.token.address)) return;
+        // Allow any token to be a lend token (removed borrow_enabled filter for lend side)
         
         // Transform TOpportunity to TOpportunityTable format (copied from top-apy-opportunities.tsx)
         const liquidityInUSD = Number(item.platform.liquidity) * Number(item.token.price_usd)

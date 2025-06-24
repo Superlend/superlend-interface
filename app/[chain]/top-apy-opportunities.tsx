@@ -552,12 +552,13 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         setKeywords('')
     }
 
-    if (isStateLoading || isLoadingOpportunitiesData) {
-        return <LoadingSectionSkeleton className="h-[500px] md:h-[600px]" />
-    }
     const filteredColumns = useMemo(() => {
         return positionTypeParam === 'loop' ? columnsForLoops : columns
     }, [positionTypeParam])
+
+    if (isStateLoading || isLoadingOpportunitiesData) {
+        return <LoadingSectionSkeleton className="h-[500px] md:h-[600px]" />
+    }
 
     return (
         <section

@@ -415,7 +415,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                             />
                                         )}
                                         {(showChainBadge && !token.chain_logo) || !showChainBadge && (
-                                            <Image
+                                            <ImageWithDefault
                                                 src={token.logo || ''}
                                                 alt={token.symbol}
                                                 width={28}
@@ -472,7 +472,7 @@ export const SelectTokenByChain: FC<SelectTokenByChainProps> = ({
                                                     />
                                                 )}
                                                 {(showChainBadge && !token.chain_logo) || !showChainBadge && (
-                                                    <Image
+                                                    <ImageWithDefault
                                                         src={token.logo || ''}
                                                         alt={token.symbol}
                                                         width={28}

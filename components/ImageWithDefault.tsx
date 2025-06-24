@@ -21,24 +21,46 @@ const ImageWithDefault = ({
     height,
     ...props
 }: any) => {
-    const [imageSrc, setImageSrc] = useState(src)
+    const [imageSrc, setImageSrc] = useState(src || defaultSrc)
+    const [hasError, setHasError] = useState(false)
 
     useEffect(() => {
-        setImageSrc(src)
-    }, [src])
+        if (src && src !== imageSrc && !hasError) {
+            setImageSrc(src)
+            setHasError(false)
+        } else if (!src) {
+            setImageSrc(defaultSrc)
+        }
+    }, [src, defaultSrc, imageSrc, hasError])
 
     const handleError = () => {
-        setImageSrc(defaultSrc)
+        if (imageSrc !== defaultSrc) {
+            setImageSrc(defaultSrc)
+            setHasError(true)
+        }
+    }
+
+    const handleLoad = () => {
+        setHasError(false)
     }
 
     return (
         <Image
-            className={className}
+            className={`${className} ${hasError ? 'opacity-60' : ''}`}
             width={width}
             height={height}
             src={imageSrc}
             onError={handleError}
+            onLoad={handleLoad}
             alt={alt}
+            style={{
+                minWidth: width ? `${width}px` : undefined,
+                minHeight: height ? `${height}px` : undefined,
+                maxWidth: width ? `${width}px` : undefined,
+                maxHeight: height ? `${height}px` : undefined,
+                objectFit: 'contain',
+                ...props.style
+            }}
             {...props}
         />
     )
