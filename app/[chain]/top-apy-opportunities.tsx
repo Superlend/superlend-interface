@@ -35,6 +35,7 @@ import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
 import { RefreshCw } from 'lucide-react'
+import DiscoverOpportunities from './discover-opportunities'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -551,10 +552,9 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         setKeywords('')
     }
 
-    // Don't render anything while loading
-    // if (isStateLoading || isLoadingOpportunitiesData) {
-    //     return <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
-    // }
+    if (isStateLoading || isLoadingOpportunitiesData) {
+        return <LoadingSectionSkeleton className="h-[500px] md:h-[600px]" />
+    }
     const filteredColumns = useMemo(() => {
         return positionTypeParam === 'loop' ? columnsForLoops : columns
     }, [positionTypeParam])
@@ -664,7 +664,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                 </div>
             </div>
 
-
+            {showAllMarkets && <DiscoverOpportunities chain={chain} positionType={positionTypeParam} />}
 
             <div className="top-apy-opportunities-content">
                 {!isLoadingOpportunitiesData && !isLoadingLoopPairs && !isTableLoading && (
@@ -684,7 +684,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                     />
                 )}
                 {(isLoadingOpportunitiesData || isTableLoading) && (
-                    <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />
+                    <LoadingSectionSkeleton className="h-[500px] md:h-[600px]" />
                 )}
             </div>
         </section>

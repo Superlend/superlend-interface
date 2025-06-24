@@ -4,7 +4,6 @@ import TopOpportunitiesOnWalletTokens from './top-opportunities-on-wallet-tokens
 import TrendingLendTokens from './trending-lend-tokens'
 import TopApyOpportunities from './top-apy-opportunities'
 import OpportunitiesProvider from '@/context/opportunities-provider'
-import DiscoverOpportunities from './discover-opportunities'
 import AppleFarmBanner from './apple-farm-banner'
 import { AppleFarmRewardsProvider } from '@/context/apple-farm-rewards-provider'
 
@@ -31,10 +30,6 @@ export default async function DiscoverPageComponents({ chain }: DiscoverPageComp
                     <TopApyOpportunities chain={chain} />
                 </AppleFarmRewardsProvider>
             </OpportunitiesProvider>
-
-            <AppleFarmRewardsProvider>
-                <DiscoverOpportunities chain={chain} />
-            </AppleFarmRewardsProvider>
 
             {/* 
                 Future chain-specific components or behaviors can be added here
