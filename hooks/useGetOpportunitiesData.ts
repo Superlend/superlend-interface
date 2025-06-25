@@ -4,6 +4,7 @@ import { getOpportunitiesData } from '@/queries/opportunities-api'
 import { TGetOpportunitiesParams, TOpportunity } from '@/types'
 import { useQuery } from '@tanstack/react-query'
 import { useState, useEffect, useCallback, useRef } from 'react'
+import useGetMidasKpiData from './useGetMidasKpiData'
 
 interface CachedOpportunitiesData {
     data: TOpportunity[]
@@ -20,6 +21,9 @@ export default function useGetOpportunitiesData(
     const hasInitializedRef = useRef(false)
     const currentCacheKeyRef = useRef<string>('')
     
+    // Fetch Midas KPI data for lend and loop requests
+    const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
+    
     // Convert 'loop' type to 'lend' for API compatibility
     const apiParams = {
         ...params,
@@ -28,6 +32,45 @@ export default function useGetOpportunitiesData(
     
     // Create a cache key based on params
     const cacheKey = `opportunities_${params.type}_${params.chain_ids || 'all'}_${params.tokens || 'all'}`
+    
+    // Function to update Midas token APYs
+    const updateMidasTokenAPYs = useCallback((opportunities: TOpportunity[]) => {
+        if ((params.type !== 'lend' && params.type !== 'loop') || (!mBasisAPY && !mTbillAPY)) {
+            return opportunities
+        }
+
+        return opportunities.map(opportunity => {
+            const tokenSymbol = opportunity.token.symbol.toUpperCase()
+            
+            if (tokenSymbol === 'MBASIS' && mBasisAPY !== null) {
+                return {
+                    ...opportunity,
+                    platform: {
+                        ...opportunity.platform,
+                        apy: {
+                            ...opportunity.platform.apy,
+                            current: mBasisAPY.toString()
+                        }
+                    }
+                }
+            }
+            
+            if (tokenSymbol === 'MTBILL' && mTbillAPY !== null) {
+                return {
+                    ...opportunity,
+                    platform: {
+                        ...opportunity.platform,
+                        apy: {
+                            ...opportunity.platform.apy,
+                            current: mTbillAPY.toString()
+                        }
+                    }
+                }
+            }
+            
+            return opportunity
+        })
+    }, [params.type, mBasisAPY, mTbillAPY])
     
     // Check if data should be refreshed (10 minutes = 600000ms)
     const shouldAutoRefresh = useCallback(() => {
@@ -61,7 +104,8 @@ export default function useGetOpportunitiesData(
             if (cached) {
                 try {
                     const parsedCache: CachedOpportunitiesData = JSON.parse(cached)
-                    setCachedData(parsedCache.data)
+                    const updatedData = updateMidasTokenAPYs(parsedCache.data)
+                    setCachedData(updatedData)
                     setLastFetchTime(parsedCache.timestamp)
                     
                     // Check if we should auto-refresh after tab switch
@@ -79,7 +123,7 @@ export default function useGetOpportunitiesData(
             }
             hasInitializedRef.current = true
         }
-    }, [cacheKey])
+    }, [cacheKey, updateMidasTokenAPYs])
 
     const { data, isLoading, isError, refetch } = useQuery<
         TOpportunity[],
@@ -104,20 +148,23 @@ export default function useGetOpportunitiesData(
                     )
                 }
                 
-                // Cache the filtered data with timestamp
+                // Update Midas token APYs
+                const updatedData = updateMidasTokenAPYs(filteredData)
+                
+                // Cache the updated data with timestamp
                 if (typeof window !== 'undefined') {
                     const cacheData: CachedOpportunitiesData = {
-                        data: filteredData,
+                        data: updatedData,
                         timestamp: Date.now()
                     }
                     localStorage.setItem(cacheKey, JSON.stringify(cacheData))
                     setLastFetchTime(Date.now())
-                    setCachedData(filteredData)
+                    setCachedData(updatedData)
                     setManualRefreshRequested(false)
                     setIsManualRefreshing(false)
                 }
                 
-                return filteredData
+                return updatedData
             } catch (error) {
                 setManualRefreshRequested(false)
                 setIsManualRefreshing(false)
@@ -163,7 +210,9 @@ export default function useGetOpportunitiesData(
     }, [refetch])
 
     // Return cached data if available and we have fresh cache, otherwise return fresh data
-    const dataToReturn = hasFreshCache() && cachedData.length > 0 ? cachedData : (data || cachedData || [])
+    // Always apply Midas APY updates to the returned data
+    const baseData = hasFreshCache() && cachedData.length > 0 ? cachedData : (data || cachedData || [])
+    const dataToReturn = updateMidasTokenAPYs(baseData)
 
     return { 
         data: dataToReturn, 

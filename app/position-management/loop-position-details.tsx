@@ -13,6 +13,8 @@ import AvatarCircles from '@/components/ui/avatar-circles'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import { AlertTriangle } from 'lucide-react'
 import WithdrawAndRepayActionButton from './withdraw-and-repay'
+import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
+import { useSearchParams } from 'next/navigation'
 
 interface LoopPositionDetailsProps {
     loopData: any
@@ -21,6 +23,35 @@ interface LoopPositionDetailsProps {
 
 export default function LoopPositionDetails({ loopData, isLoading }: LoopPositionDetailsProps) {
     const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
+    const searchParams = useSearchParams()
+    const chain_id = searchParams?.get('chain_id') || '1'
+    const protocol_identifier = searchParams?.get('protocol_identifier') || ''
+    
+    // Get opportunities data to access updated APY values (includes Midas API updates)
+    const { data: opportunitiesData } = useGetOpportunitiesData({
+        type: 'lend',
+    })
+
+    // Helper function to find opportunity data for enhanced APY calculation
+    const findOpportunityAPY = (tokenAddress: string) => {
+        if (!opportunitiesData?.length || !tokenAddress) return null
+        const opportunity = opportunitiesData.find(item => 
+            item.token.address.toLowerCase() === tokenAddress.toLowerCase() &&
+            item.chain_id === Number(chain_id) &&
+            item.platform.protocol_identifier === protocol_identifier
+        )
+        
+        // Debug logging for Midas tokens
+        if (opportunity && (opportunity.token.symbol.toUpperCase() === 'MTBILL' || opportunity.token.symbol.toUpperCase() === 'MBASIS')) {
+            console.log(`Found opportunity APY for ${opportunity.token.symbol} in position details:`, {
+                tokenAddress: opportunity.token.address,
+                currentAPY: opportunity.platform.apy.current,
+                tokenSymbol: opportunity.token.symbol
+            })
+        }
+        
+        return opportunity ? parseFloat(opportunity.platform.apy.current) : null
+    }
 
     if (isLoading || isLoadingAppleFarmRewards) {
         return (
@@ -46,15 +77,28 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
         )
     }
 
-    // Calculate enhanced supply APY with apple farm rewards (similar to page-header)
-    const baseSupplyAPY = loopData.collateralAsset.baseApy || loopData.collateralAsset.apy || 0
+    // Enhanced supply APY calculation with opportunity data (includes Midas API updates)
+    const opportunityAPY = findOpportunityAPY(loopData.collateralAsset.token.address)
+    const baseSupplyAPY = opportunityAPY !== null ? opportunityAPY : (loopData.collateralAsset.baseApy || loopData.collateralAsset.apy || 0)
     const appleFarmRewardAPY = appleFarmRewardsAprs?.[loopData.collateralAsset.token.address] ?? 0
     
     // If baseApy exists, it means we have an active position and need to add apple farm rewards
     // If baseApy doesn't exist, the apy already includes apple farm rewards (no position case)
-    const enhancedSupplyAPY = loopData.collateralAsset.baseApy 
+    // But if we have opportunity APY (Midas API data), use that as base and add apple farm rewards
+    const enhancedSupplyAPY = (opportunityAPY !== null || loopData.collateralAsset.baseApy) 
         ? baseSupplyAPY + appleFarmRewardAPY 
         : loopData.collateralAsset.apy 
+
+    console.log('Position Details APY calculation:', {
+        tokenSymbol: loopData.collateralAsset.token.symbol,
+        tokenAddress: loopData.collateralAsset.token.address,
+        opportunityAPY,
+        baseSupplyAPY,
+        appleFarmRewardAPY,
+        enhancedSupplyAPY,
+        originalApy: loopData.collateralAsset.apy,
+        baseApy: loopData.collateralAsset.baseApy
+    })
 
     // Calculate risk metrics
     const liquidationPercentage = (loopData.positionLTV / loopData.liquidationLTV) * 100
@@ -356,7 +400,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                     Max Leverage
                                 </BodyText>
                                 <HeadingText level="h4" weight="medium" className="text-gray-800">
-                                    {loopData.maxLeverage}x
+                                    {Number(loopData.maxLeverage).toFixed(2)}x
                                 </HeadingText>
                             </div>
                             

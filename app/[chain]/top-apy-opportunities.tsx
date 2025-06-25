@@ -36,6 +36,8 @@ import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
 import { RefreshCw } from 'lucide-react'
 import DiscoverOpportunities from './discover-opportunities'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/typography'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -50,6 +52,31 @@ const EXCLUDEED_TOKENS_LIST = [
 const EXCLUDEED_PROTOCOLS_LIST = [
     '0x3d819db807d8f8ca10dfef283a3cf37d5576a2abcec9cfb6874efd2df8f4b6ed',
     '0xe75f6fff3eec59db6ac1df4fcccf63b72cc053f78e3156b9eb78d12f5ac47367',
+]
+
+// Define correlated pairs for loop strategies
+const CORRELATED_PAIRS = [
+    // Stablecoins - highly correlated
+    { pair1: 'USDC', pair2: 'USDT' },
+    { pair1: 'USDT', pair2: 'USDC' },
+    
+    // RWA Tokens - both Midas tokens, correlated
+    { pair1: 'mTBILL', pair2: 'USDT' },
+    { pair1: 'USDT', pair2: 'mTBILL' },
+    // RWA Tokens - both Midas tokens, correlated
+    { pair1: 'mBASIS', pair2: 'USDT' },
+    { pair1: 'USDT', pair2: 'mBASIS' },
+    
+    // RWA Tokens - both Midas tokens, correlated
+    { pair1: 'mTBILL', pair2: 'USDC' },
+    { pair1: 'USDC', pair2: 'mTBILL' },
+    // RWA Tokens - both Midas tokens, correlated
+    { pair1: 'mBASIS', pair2: 'USDC' },
+    { pair1: 'USDC', pair2: 'mBASIS' },
+    
+    // Major Cryptos - both major crypto assets, somewhat correlated
+    // { pair1: 'WETH', pair2: 'WBTC' },
+    // { pair1: 'WBTC', pair2: 'WETH' },
 ]
 
 // Utility function to format time difference
@@ -85,6 +112,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const keywordsParam = searchParams?.get('keywords') || ''
     const pageParam = searchParams?.get('page') || '0'
     const sortingParam = searchParams?.get('sort')?.split(',') || []
+    const showCorrelatedPairsParam = searchParams?.get('show_correlated_pairs') === 'true'
     const excludeRiskyMarketsFlag =
         isClient && typeof window !== 'undefined' &&
         localStorage.getItem('exclude_risky_markets') === 'true'
@@ -410,6 +438,15 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
     const tableData = rawTableData.filter(handleFilterTableRows)
 
+    useEffect(() => {
+        if (positionTypeParam === 'loop') {
+            console.log('Rendered loop strategies:', tableData)
+            console.log('Total strategies before filtering:', rawTableData.length)
+            console.log('Total strategies after filtering:', tableData.length)
+            console.log('Correlated pairs filter active:', showCorrelatedPairsParam)
+        }
+    }, [tableData, positionTypeParam, rawTableData.length, showCorrelatedPairsParam])
+
     // Calculate total number of pages
     const totalPages = Math.ceil(tableData.length / 10)
 
@@ -460,23 +497,55 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         const matchesChainId = chainIdsParam.length === 0 || chainIdsParam.includes(opportunity.chain_id.toString())
         const matchesToken = tokenIdsParam.length === 0 || tokenIdsParam.includes(opportunity.tokenSymbol)
 
-        const baseFilters = handleFilterTableRowsByPlatformIds(opportunity) &&
+        // Check correlated pairs filter for loop position type only
+        const matchesCorrelatedPairs = (() => {
+            if (positionTypeParam !== 'loop' || !showCorrelatedPairsParam) {
+                return true // No filtering if not loop or filter not active
+            }
+            
+            const lendToken = opportunity.tokenSymbol
+            const borrowToken = (opportunity as any).borrowToken?.symbol
+            
+            console.log('Checking correlation for:', {
+                lendToken,
+                borrowToken,
+                pairId: (opportunity as any).pairId,
+                showCorrelatedPairsParam
+            })
+            
+            if (!borrowToken) {
+                console.log('No borrow token found')
+                return false
+            }
+            
+            const isCorrelated = CORRELATED_PAIRS.some(pair => 
+                (pair.pair1 === lendToken && pair.pair2 === borrowToken) ||
+                (pair.pair1 === borrowToken && pair.pair2 === lendToken)
+            )
+            
+            console.log('Is correlated:', isCorrelated)
+            return isCorrelated
+        })()
+
+        // Base filters that apply to all position types
+        const commonFilters = handleFilterTableRowsByPlatformIds(opportunity) &&
             matchesChainId &&
             matchesToken &&
             !EXCLUDEED_PROTOCOLS_LIST.includes(opportunity.protocol_identifier) &&
             !EXCLUDEED_TOKENS_LIST.includes(opportunity.tokenAddress)
 
         if (positionTypeParam === 'borrow') {
-            return handleExcludeMorphoVaultsByPositionType(opportunity) && baseFilters
+            return handleExcludeMorphoVaultsByPositionType(opportunity) && commonFilters
         } else if (positionTypeParam === 'lend') {
-            return handleExcludeMorphoMarketsByParamFlag(opportunity) && baseFilters
+            return handleExcludeMorphoMarketsByParamFlag(opportunity) && commonFilters
         } else if (positionTypeParam === 'loop') {
-            // For loop positions, we don't want to exclude morpho markets or vaults
-            return handleExcludeMorphoMarketsByParamFlag(opportunity) && opportunity.chain_id === ChainId.Etherlink
+            // For loop positions, apply morpho markets filter, chain filter, and correlated pairs filter
+            const chainFilter = opportunity.chain_id === ChainId.Etherlink
+            return handleExcludeMorphoMarketsByParamFlag(opportunity) && chainFilter && commonFilters && matchesCorrelatedPairs
         }
         
         // Default fallback (shouldn't reach here)
-        return baseFilters
+        return commonFilters
     }
 
     function handleRowClick(rowData: any) {
@@ -641,30 +710,97 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                         </div>
                     </div>
                 </div>
-                {/* Filter buttons for Desktop and above screens */}
-                <div className="filter-dropdowns-container hidden lg:flex items-center gap-[12px]">
-                    {/* Refresh functionality */}
-                    {lastFetchTime && (
-                        <button
-                            onClick={handleManualRefresh}
-                            disabled={isRefreshing}
-                            className="flex items-center gap-[6px] text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Refresh data"
-                        >
-                            <RefreshCw 
-                                size={12} 
-                                className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
-                            />
-                                                         <span>
-                                 {isRefreshing ? 'Refreshing...' : `Last updated ${formatTimeAgo(lastFetchTime)}`}
-                             </span>
-                        </button>
-                    )}
-                    {/* <ChainSelectorDropdown /> */}
-                    <DiscoverFiltersDropdown chain={chain} />
+                {/* Filter button for Tablet and below screens */}
+                <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
+                    <div className="flex items-center gap-[12px]">
+                        {/* <div className="flex items-center gap-[8px]">
+                            <HeadingText
+                                level="h3"
+                                weight="medium"
+                                className="text-gray-800"
+                            >
+                                Top Money Markets
+                            </HeadingText>
+                            <InfoTooltip content="List of assets from different lending protocols across various chains, offering good APYs" />
+                        </div> */}
+                        {/* Filter button for Tablet and below screens */}
+                        <div className="flex items-center gap-[12px] lg:hidden">
+                            {/* Refresh functionality for mobile */}
+                            {lastFetchTime && (
+                                <button
+                                    onClick={handleManualRefresh}
+                                    disabled={isRefreshing}
+                                    className="flex items-center gap-[6px] text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Refresh data"
+                                >
+                                    <RefreshCw 
+                                        size={12} 
+                                        className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
+                                    />
+                                    <span className="hidden sm:inline">
+                                        {isRefreshing ? 'Refreshing...' : `Last updated ${formatTimeAgo(lastFetchTime)}`}
+                                    </span>
+                                    <span className="sm:hidden">
+                                        {isRefreshing ? 'Refreshing...' : formatTimeAgo(lastFetchTime)}
+                                    </span>
+                                </button>
+                            )}
+                            <DiscoverFiltersDropdown chain={chain} />
+                        </div>
+                    </div>
+                    {/* Filter buttons for Desktop and above screens */}
+                    <div className="filter-dropdowns-container hidden lg:flex flex-col items-end gap-[8px]">
+                        <div className="flex items-center gap-[12px]">
+                            {/* Refresh functionality */}
+                            {lastFetchTime && (
+                                <button
+                                    onClick={handleManualRefresh}
+                                    disabled={isRefreshing}
+                                    className="flex items-center gap-[6px] text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Refresh data"
+                                >
+                                    <RefreshCw 
+                                        size={12} 
+                                        className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
+                                    />
+                                    <span>
+                                        {isRefreshing ? 'Refreshing...' : `Last updated ${formatTimeAgo(lastFetchTime)}`}
+                                    </span>
+                                </button>
+                            )}
+                            <DiscoverFiltersDropdown chain={chain} />
+                        </div>
+                        {/* Correlated Pairs Toggle for Desktop */}
+                      
+                    </div>
+                    
                 </div>
+                
             </div>
 
+            {positionTypeParam === 'loop' && (
+                            <div className="flex justify-end w-full">
+                                <div className="flex items-center gap-2 text-sm">
+                                    <Switch
+                                        id="correlated-pairs-desktop"
+                                        checked={showCorrelatedPairsParam}
+                                        onCheckedChange={(checked) => {
+                                            updateSearchParams({
+                                                show_correlated_pairs: checked ? 'true' : undefined,
+                                            })
+                                        }}
+                                    />
+                                    <InfoTooltip
+                                        label={
+                                            <Label htmlFor="correlated-pairs-desktop" className="text-sm cursor-pointer">
+                                                Correlated Pairs
+                                            </Label>
+                                        }
+                                        content="Show only token pairs with similar price movements: USDC/USDT (stablecoins), mTBILL/USDT etc."
+                                    />
+                                </div>
+                            </div>
+                        )}
             {showAllMarkets && <DiscoverOpportunities chain={chain} positionType={positionTypeParam} />}
 
             <div className="top-apy-opportunities-content">

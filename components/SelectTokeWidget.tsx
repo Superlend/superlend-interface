@@ -61,8 +61,14 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = ({
         'Select an asset from your wallet to see earning opportunities.'
     const borrowHelperText =
         'Select an asset to view the best borrowing opportunities.'
+    const loopHelperText =
+        'Select an asset to view the best looping opportunities.'
     const helperText =
-        positionType === 'lend' ? lendHelperText : borrowHelperText
+        positionType === 'lend'
+            ? lendHelperText
+            : positionType === 'borrow'
+            ? borrowHelperText
+            : loopHelperText
 
     return (
         <div className="flex flex-col w-full min-w-full min-w-[350px] min-[1060px]:min-w-[400px] max-w-[450px] p-3 rounded-3xl bg-white bg-opacity-40 shadow-[0px_2px_2px_rgba(0,0,0,0.02)] shrink-0">
@@ -82,7 +88,11 @@ const SelectTokeWidget: React.FC<ISelectTokeWidgetProps> = ({
                             className="text-left max-[375px]:max-w-[18ch] max-[375px]:text-wrap my-auto text-sm sm:text-md font-medium leading-[1.2] text-gray-600"
                         >
                             Select{' '}
-                            {positionType === 'lend' ? 'lending' : 'borrow'}{' '}
+                            {positionType === 'lend'
+                                ? 'lending'
+                                : positionType === 'borrow'
+                                ? 'borrow'
+                                : 'looping'}{' '}
                             token
                         </Label>
                     )}

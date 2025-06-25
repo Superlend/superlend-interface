@@ -215,7 +215,7 @@ export default function HomePageComponents() {
                         }}
                     />
                 </div>
-                <TokenRates positionType={positionType === 'loop' ? 'lend' : positionType} />
+                <TokenRates positionType={positionType} />
                 <div className="flex flex-col lg:flex-row lg:items-start justify-center gap-2 transition-all duration-300 max-w-full w-full md:overflow-hidden">
                     <motion.div
                         animate={{ x: showOpportunitiesTable ? 0 : 'auto' }}

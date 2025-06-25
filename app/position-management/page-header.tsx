@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { notFound, useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
+import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { TPlatform, TPlatformAsset } from '@/types/platform'
@@ -61,6 +62,32 @@ export default function PageHeader() {
     const isLoopPosition = positionTypeParam === 'loop'
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
     const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
+
+    // Get opportunities data to access updated APY values (includes Midas API updates)
+    const { data: opportunitiesData } = useGetOpportunitiesData({
+        type: 'lend',
+    })
+
+    // Helper function to find opportunity data for enhanced APY calculation
+    const findOpportunityAPY = (tokenAddress: string) => {
+        if (!opportunitiesData?.length || !tokenAddress) return null
+        const opportunity = opportunitiesData.find(item => 
+            item.token.address.toLowerCase() === tokenAddress.toLowerCase() &&
+            item.chain_id === Number(chain_id) &&
+            item.platform.protocol_identifier === protocol_identifier
+        )
+        
+        // Debug logging for Midas tokens
+        if (opportunity && (opportunity.token.symbol.toUpperCase() === 'MTBILL' || opportunity.token.symbol.toUpperCase() === 'MBASIS')) {
+            console.log(`Found opportunity APY for ${opportunity.token.symbol} in page header:`, {
+                tokenAddress: opportunity.token.address,
+                currentAPY: opportunity.platform.apy.current,
+                tokenSymbol: opportunity.token.symbol
+            })
+        }
+        
+        return opportunity ? parseFloat(opportunity.platform.apy.current) : null
+    }
 
     // [API_CALL: GET] - Get Platform data
     const {
@@ -233,9 +260,24 @@ export default function PageHeader() {
         positionType: positionTypeParam,
     })
 
-    const formattedSupplyAPY = Number(pageHeaderStats?.supply_apy || 0) + Number((appleFarmRewardsAprs?.[tokenDetails?.address] ?? 0))
+    // Enhanced supply APY calculation with opportunity data (includes Midas API updates)
+    const relevantTokenAddress = isDisplayOneToken ? tokenDetails?.address : collateralTokenDetails?.address
+    const opportunityAPY = findOpportunityAPY(relevantTokenAddress)
+    const baseSupplyAPY = opportunityAPY !== null ? opportunityAPY : Number(pageHeaderStats?.supply_apy || 0)
+    const appleFarmRewardAPY = Number(appleFarmRewardsAprs?.[relevantTokenAddress] ?? 0)
+    const formattedSupplyAPY = baseSupplyAPY + appleFarmRewardAPY
 
-    console.log('formattedSupplyAPY', formattedSupplyAPY ,pageHeaderStats?.supply_apy,appleFarmRewardsAprs?.[tokenDetails?.address],tokenDetails )
+    console.log('Page Header APY calculation:', {
+        tokenSymbol: isDisplayOneToken ? tokenDetails?.symbol : collateralTokenDetails?.symbol,
+        tokenAddress: relevantTokenAddress,
+        opportunityAPY,
+        platformSupplyAPY: pageHeaderStats?.supply_apy,
+        baseSupplyAPY,
+        appleFarmRewardAPY,
+        formattedSupplyAPY,
+        isDisplayOneToken
+    })
+
     const formattedBorrowRate = (isMorphoVault || isFluidLend)
         ? 'N/A'
         : (

@@ -52,11 +52,22 @@ export default function LoopPositionOverview() {
     // Helper function to find opportunity data for a token
     const findOpportunityData = useMemo(() => (tokenAddress: string) => {
         if (!opportunitiesData?.length) return null
-        return opportunitiesData.find(item => 
+        const foundOpportunity = opportunitiesData.find(item => 
             item.token.address.toLowerCase() === tokenAddress.toLowerCase() &&
             item.chain_id === Number(chain_id) &&
             item.platform.protocol_identifier === protocol_identifier
         )
+        
+        // Debug logging for Midas tokens
+        if (foundOpportunity && (foundOpportunity.token.symbol.toUpperCase() === 'MTBILL' || foundOpportunity.token.symbol.toUpperCase() === 'MBASIS')) {
+            console.log(`Found opportunity data for ${foundOpportunity.token.symbol}:`, {
+                tokenAddress: foundOpportunity.token.address,
+                currentAPY: foundOpportunity.platform.apy.current,
+                tokenSymbol: foundOpportunity.token.symbol
+            })
+        }
+        
+        return foundOpportunity
     }, [opportunitiesData, chain_id, protocol_identifier])
 
     // Get token details from platform data
@@ -67,31 +78,26 @@ export default function LoopPositionOverview() {
         )
         if (!asset) return null
         
-        // Calculate enhanced supply APY with apple farm rewards (similar to page-header)
-        const baseSupplyAPY = asset.supply_apy || 0
+        // Get opportunity data for more accurate APY (includes Midas API updates for MTBILL/MBASIS)
+        const opportunityData = findOpportunityData(lendTokenAddressParam)
+        
+        // Use opportunity data APY if available (this includes Midas API updates), otherwise use platform data
+        const baseSupplyAPY = opportunityData ? 
+            parseFloat(opportunityData.platform.apy.current) : 
+            (asset.supply_apy || 0)
+            
         const appleFarmReward = appleFarmRewardsAprs?.[asset.token.address] ?? 0
         const enhancedSupplyAPY = baseSupplyAPY + appleFarmReward
-        // console.log('platformData', platformData)
-        console.log('lendTokenDetails', asset)
-        // {
-        //     "token": {
-        //         "name": "Tether USD",
-        //         "symbol": "USDT",
-        //         "address": "0x2c03058c8afc06713be23e58d2febc8337dbfe6a",
-        //         "decimals": 6,
-        //         "price_usd": 1.00002748,
-        //         "logo": "https://superlend-public-assets.s3.ap-south-1.amazonaws.com/42793-usdt.svg"
-        //     },
-        //     "supply_apy": 4.8325397190042585,
-        //     "variable_borrow_apy": 7.246370323399698,
-        //     "stable_borrow_apy": 0,
-        //     "borrow_enabled": true,
-        //     "remaining_borrow_cap": 4892118.019822,
-        //     "remaining_supply_cap": 7203513.788465,
-        //     "ltv": 75
-        // }
-        // Get opportunity data for more accurate liquidity information
-        const opportunityData = findOpportunityData(lendTokenAddressParam)
+        
+        console.log('lendTokenDetails APY calculation:', {
+            tokenSymbol: asset.token.symbol,
+            platformSupplyAPY: asset.supply_apy,
+            opportunityAPY: opportunityData?.platform.apy.current,
+            baseSupplyAPY,
+            appleFarmReward,
+            enhancedSupplyAPY
+        })
+        
         const totalSupplyUSD = opportunityData ? 
             Number(opportunityData.platform.liquidity) * Number(opportunityData.token.price_usd) : 
             asset.remaining_supply_cap * asset.token.price_usd
@@ -284,7 +290,7 @@ export default function LoopPositionOverview() {
             },
             {
                 title: 'Max Leverage',
-                value: `${maxLeverage || 1}x`,
+                value: `${(maxLeverage || 1).toFixed(2)}x`,
                 icon: TrendingUp,
                 tooltip: `Maximum leverage multiplier available for ${lendSymbol}/${borrowSymbol} loop positions. Higher leverage amplifies both potential returns and risks.`,
                 className: 'text-primary'
@@ -299,7 +305,7 @@ export default function LoopPositionOverview() {
         if (userLoopPosition) {
             return {
                 ...userLoopPosition,
-                maxLeverage: maxLeverage || 4.0,
+                maxLeverage: parseFloat((maxLeverage || 4.0).toFixed(2)),
                 platform: {
                     name: platformData?.platform?.name || 'Unknown',
                     logo: platformData?.platform?.logo || '',
@@ -349,7 +355,7 @@ export default function LoopPositionOverview() {
             positionLTV: parseFloat((0).toFixed(4)),
             liquidationLTV: 80,
             liquidationPrice: parseFloat((0).toFixed(8)),
-            maxLeverage: maxLeverage || 4.0,
+            maxLeverage: parseFloat((maxLeverage || 4.0).toFixed(2)),
             utilizationRate: parseFloat((0).toFixed(4)),
             totalSupplied: parseFloat((0).toFixed(8)),
             totalBorrowed: parseFloat((0).toFixed(8)),
