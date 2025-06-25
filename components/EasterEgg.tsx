@@ -20,8 +20,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import useDimensions from '@/hooks/useDimensions'
 import axios from 'axios'
 import { LoaderCircle } from 'lucide-react'
-import { useAccount } from 'wagmi'
-import { useDisconnect } from '@reown/appkit/react'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 
 const fakeCheatCodes =

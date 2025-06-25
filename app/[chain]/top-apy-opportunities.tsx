@@ -300,6 +300,19 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
         const tokenHasAppleFarmRewards = hasAppleFarmRewards(item.token.address) && positionTypeParam === 'lend'
 
+        // REWARDS DEBUG: Log rewards data for first few items
+        if (process.env.NODE_ENV === 'development' && item.token.symbol && opportunitiesData.indexOf(item) < 5) {
+            console.log(`🔍 TABLE REWARDS DEBUG [${item.token.symbol}]:`)
+            console.log('  - additional_rewards:', item.platform.additional_rewards)
+            console.log('  - rewards array:', item.platform.rewards)
+            console.log('  - rewards length:', item.platform.rewards?.length)
+            if (item.platform.rewards && item.platform.rewards.length > 0) {
+                console.log('  - first reward:', item.platform.rewards[0])
+                console.log('  - first reward asset:', item.platform.rewards[0]?.asset)
+                console.log('  - first reward supply_apy:', item.platform.rewards[0]?.supply_apy)
+            }
+        }
+
         return {
             tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,

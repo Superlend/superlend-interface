@@ -25,3 +25,68 @@ export const ETH_ADDRESSES = [
 ]
 
 export const ETH_DECIMALS = 18
+
+// API Environment Configuration
+export const API_CONFIG = {
+    // Key mappings for different API environments
+    KEY_MAPPINGS: {
+        production: {
+            // Production API uses current key names (no mapping needed)
+            token: 'token',
+            chain_id: 'chain_id',
+            platform: 'platform',
+            trend: 'trend',
+        },
+        development: {
+            // Development API key mappings (adjust based on actual changes)
+            token: 'asset',           // if dev API changed 'token' to 'asset'
+            chain_id: 'chainId',      // if dev API changed 'chain_id' to 'chainId'
+            platform: 'platform',    // if platform structure is the same
+            trend: 'trend',          // if trend structure is the same
+        }
+    },
+    
+    // Nested key mappings for platform object
+    PLATFORM_KEY_MAPPINGS: {
+        production: {
+            name: 'name',
+            platform_name: 'platform_name',
+            protocol_identifier: 'protocol_identifier',
+            logo: 'logo',
+            additional_rewards: 'additional_rewards',
+            max_ltv: 'max_ltv',
+            liquidity: 'liquidity',
+            borrows: 'borrows',
+            utilization_rate: 'utilization_rate',
+            apy: 'apy',
+            rewards: 'rewards',
+            collateral_exposure: 'collateral_exposure',
+            collateral_tokens: 'collateral_tokens',
+            collateral_token_price: 'collateral_token_price',
+            isVault: 'isVault',
+        },
+        development: {
+            name: 'name',
+            platform_name: 'platformName',        // example change
+            protocol_identifier: 'protocolId',    // example change
+            logo: 'logoUrl',                      // example change
+            additional_rewards: 'hasAdditionalRewards', // example change
+            max_ltv: 'maxLtv',                    // example change
+            liquidity: 'totalLiquidity',          // example change
+            borrows: 'totalBorrows',              // example change
+            utilization_rate: 'utilizationRate',  // example change
+            apy: 'apy',
+            rewards: 'rewards',
+            collateral_exposure: 'collateralExposure',
+            collateral_tokens: 'collateralTokens',
+            collateral_token_price: 'collateralTokenPrice',
+            isVault: 'is_vault',
+        }
+    }
+}
+
+// Get current environment
+export const getCurrentEnvironment = (): 'production' | 'development' => {
+    const host = process.env.NEXT_PUBLIC_HOST as string
+    return host?.includes('api.superlend.xyz') ? 'production' : 'development'
+}
