@@ -30,6 +30,7 @@ import { AuthProvider } from './auth-provider'
 const queryClient = new QueryClient()
 
 const appId = 'cm5o77rga039b99tzkjakb6ji'
+const REOWN_PROJECT_ID = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || ''
 
 export const config = createConfig({
     chains: [
@@ -73,6 +74,9 @@ const privyConfig = {
         landingHeader: 'Connect Wallet',
         loginMessage: 'Select wallet to continue',
         showWalletLoginFirst: true,
+        walletConnect: {
+            projectId: REOWN_PROJECT_ID,
+        },
         walletList: [
             'detected_ethereum_wallets',
             'metamask',
