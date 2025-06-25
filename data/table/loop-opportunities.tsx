@@ -297,7 +297,11 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 const maxAPYFormatted = (maxAPY > 0 && maxAPY < 0.01) ? '<0.01' : abbreviateNumber(maxAPY)
                 
                 return (
-                    <BodyText level="body2" weight="medium">
+                    <BodyText 
+                        level="body2" 
+                        weight="medium"
+                        className={maxAPY >= 0 ? 'text-green-600' : 'text-red-600'}
+                    >
                         {maxAPY >= 0 ? '+' : ''}{maxAPYFormatted}%
                     </BodyText>
                 )
