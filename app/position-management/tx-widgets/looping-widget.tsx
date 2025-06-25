@@ -51,6 +51,7 @@ import AAVE_POOL_ABI from '@/data/abi/aaveApproveABI.json'
 import { calculateHealthFactorFromBalancesBigUnits, valueToBigNumber, formatReserves, formatUserSummary } from '@aave/math-utils'
 import BigNumberJS from 'bignumber.js'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
+import useGetMidasKpiData from '@/hooks/useGetMidasKpiData'
 
 interface LoopingWidgetProps {
     isLoading?: boolean
@@ -154,9 +155,27 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         const supplyAPY = rayToPercentage(lendTokenReserve.liquidityRate || '0')
         const borrowAPY = rayToPercentage(borrowTokenReserve.variableBorrowRate || '0')
 
-        // Calculate net APY for looping position
-        // Formula: (Supply APY × Leverage) - (Borrow APY × (Leverage - 1))
-        const netAPYValue = (supplyAPY * leverage) - (borrowAPY * (leverage - 1))
+        // Add Midas KPI APY for mTbill and mBasis tokens
+        let additionalSupplyAPY = 0
+        let additionalBorrowAPY = 0
+
+        // Check lend token for Midas tokens
+        if (selectedLendToken?.symbol?.toLowerCase() === 'mtbill') {
+            additionalSupplyAPY = mTbillAPY || 0
+        } else if (selectedLendToken?.symbol?.toLowerCase() === 'mbasis') {
+            additionalSupplyAPY = mBasisAPY || 0
+        }
+
+        // Check borrow token for Midas tokens
+        if (selectedBorrowToken?.symbol?.toLowerCase() === 'mtbill') {
+            additionalBorrowAPY = mTbillAPY || 0
+        } else if (selectedBorrowToken?.symbol?.toLowerCase() === 'mbasis') {
+            additionalBorrowAPY = mBasisAPY || 0
+        }
+
+        // Calculate net APY for looping position including Midas KPI APY
+        // Formula: ((Supply APY + Additional Supply APY) × Leverage) - ((Borrow APY + Additional Borrow APY) × (Leverage - 1))
+        const netAPYValue = ((supplyAPY + additionalSupplyAPY) * leverage) - ((borrowAPY + additionalBorrowAPY) * (leverage - 1))
 
         // Format to 2 decimal places with % sign
         const formattedValue = Math.abs(netAPYValue) < 0.01 && netAPYValue !== 0
@@ -259,6 +278,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         string,
         Record<string, number>
     > | null>(null)
+
+    const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
 
     // Debug: Log APY calculation details
     // console.log('APY Debug:', {
