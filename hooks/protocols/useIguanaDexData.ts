@@ -27,6 +27,18 @@ const EtherlinkTokens: Record<string, ERC20Token> = {
     '0x796ea11fa2dd751ed01b53c372ffdb4aaa8f00f9': USDC[ChainId.ETHERLINK],
     '0xfc24f770f94edbca6d6f885e12d4317320bcb401': WETH9[ChainId.ETHERLINK],
     '0xbfc94cd2b1e55999cfc7347a9313e88702b83d0f': WBTC[ChainId.ETHERLINK],
+    '0xdd629e5241cbc5919847783e6c96b2de4754e438': new ERC20Token(
+                                                    ChainId.ETHERLINK, 
+                                                    '0xdd629e5241cbc5919847783e6c96b2de4754e438', 
+                                                    18, 
+                                                    'mTBILL', 
+                                                    'Midas US Treasury Bill Token'),
+    '0x2247b5a46bb79421a314ab0f0b67ffd11dd37ee4': new ERC20Token(
+                                                    ChainId.ETHERLINK, 
+                                                    '0x2247b5a46bb79421a314ab0f0b67ffd11dd37ee4', 
+                                                    18, 
+                                                    'mBASIS', 
+                                                    'Midas Basis Trading Token'),
 }
 
 const DEBT_TOKENS: Record<string, string> = {}
@@ -69,6 +81,8 @@ export const useIguanaDexData = () => {
             })
             const amount = CurrencyAmount.fromRawAmount(swapFrom, amountToSell)
 
+            console.log('IGUANA DEX: amount', amount, "swapFrom", swapFrom, "swapTo", swapTo)
+
             const [v2Pools, v3Pools] = await Promise.all([
                 SmartRouter.getV2CandidatePools({
                     onChainProvider: () => viemClient as any,
@@ -85,6 +99,11 @@ export const useIguanaDexData = () => {
                     subgraphFallback: false,
                 }),
             ])
+
+            console.log('IGUANA DEX: v2Pools', v2Pools)
+            console.log('IGUANA DEX: v3Pools', v3Pools)
+
+
             const pools = [...v2Pools, ...v3Pools]
             const trade = await SmartRouter.getBestTrade(
                 amount,
@@ -92,8 +111,8 @@ export const useIguanaDexData = () => {
                 TradeType.EXACT_INPUT,
                 {
                     gasPriceWei: () => viemClient.getGasPrice(),
-                    maxHops: 2,
-                    maxSplits: 2,
+                    maxHops: 3,
+                    maxSplits: 1,
                     poolProvider: SmartRouter.createStaticPoolProvider(pools),
                     quoteProvider,
                     quoterOptimization: true,

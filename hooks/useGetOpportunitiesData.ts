@@ -96,20 +96,28 @@ export default function useGetOpportunitiesData(
             try {
                 const responseData = await getOpportunitiesData(apiParams)
                 
-                // Cache the data with timestamp
+                // Filter out tokens whose name starts with "Hanji " for lend/loop calls
+                let filteredData = responseData
+                if (params.type === 'lend' || params.type === 'loop') {
+                    filteredData = responseData.filter(opportunity => 
+                        !opportunity.token.name.startsWith('Hanji ')
+                    )
+                }
+                
+                // Cache the filtered data with timestamp
                 if (typeof window !== 'undefined') {
                     const cacheData: CachedOpportunitiesData = {
-                        data: responseData,
+                        data: filteredData,
                         timestamp: Date.now()
                     }
                     localStorage.setItem(cacheKey, JSON.stringify(cacheData))
                     setLastFetchTime(Date.now())
-                    setCachedData(responseData)
+                    setCachedData(filteredData)
                     setManualRefreshRequested(false)
                     setIsManualRefreshing(false)
                 }
                 
-                return responseData
+                return filteredData
             } catch (error) {
                 setManualRefreshRequested(false)
                 setIsManualRefreshing(false)

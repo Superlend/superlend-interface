@@ -200,6 +200,7 @@ export function ConfirmationDialog({
             Number(borrowAmountRaw) > 0
         ) {
             setIsLoadingTradePath(true)
+            console.log('Getting trade path', loopAssetDetails?.borrowAsset?.token?.address, loopAssetDetails?.supplyAsset?.token?.address, borrowAmountRaw)
             getTradePath(
                 loopAssetDetails?.borrowAsset?.token?.address,
                 loopAssetDetails?.supplyAsset?.token?.address,
@@ -214,12 +215,25 @@ export function ConfirmationDialog({
                             result?.routes[0]?.pools[0]?.fee?.toString() ??
                             '500',
                         ])
-                    } else {
+                    } else if (result.routes[0]?.pools?.length === 2) {
                         setPathTokens([result?.routes[0]?.path[1]?.address])
                         setPathFees([
+                            result?.routes[0]?.pools[1]?.fee?.toString() ??
+                            '500',
                             result?.routes[0]?.pools[0]?.fee?.toString() ??
                             '500',
+                        ])
+                    } else{
+                        setPathTokens([
+                            result?.routes[0]?.path[2]?.address,
+                            result?.routes[0]?.path[1]?.address,
+                        ])
+                        setPathFees([
+                            result?.routes[0]?.pools[2]?.fee?.toString() ??
+                            '500',
                             result?.routes[0]?.pools[1]?.fee?.toString() ??
+                            '500',
+                            result?.routes[0]?.pools[0]?.fee?.toString() ??
                             '500',
                         ])
                     }
