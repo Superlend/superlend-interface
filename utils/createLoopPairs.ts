@@ -15,6 +15,7 @@ export type TLoopPair = TOpportunityTable & {
     maxAPY: number // Interim: using lend APY as placeholder
 }
 
+
 export function createLoopPairs(
     lendOpportunities: TOpportunity[],
     platformData: TPlatform | null,
