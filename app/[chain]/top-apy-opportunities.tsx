@@ -439,14 +439,14 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
     const tableData = rawTableData.filter(handleFilterTableRows)
 
-    useEffect(() => {
-        if (positionTypeParam === 'loop') {
-            console.log('Rendered loop strategies:', tableData)
-            console.log('Total strategies before filtering:', rawTableData.length)
-            console.log('Total strategies after filtering:', tableData.length)
-            console.log('Correlated pairs filter active:', showCorrelatedPairsParam)
-        }
-    }, [tableData, positionTypeParam, rawTableData.length, showCorrelatedPairsParam])
+    // useEffect(() => {
+    //     // if (positionTypeParam === 'loop') {
+    //     //     console.log('Rendered loop strategies:', tableData)
+    //     //     console.log('Total strategies before filtering:', rawTableData.length)
+    //     //     console.log('Total strategies after filtering:', tableData.length)
+    //     //     console.log('Correlated pairs filter active:', showCorrelatedPairsParam)
+    //     // }
+    // }, [tableData, positionTypeParam, rawTableData.length, showCorrelatedPairsParam])
 
     // Calculate total number of pages
     const totalPages = Math.ceil(tableData.length / 10)
@@ -673,7 +673,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                                     />
                                 </div>
                             )}
-                            <DiscoverFiltersDropdown chain={chain} />
+                            <DiscoverFiltersDropdown chain={chain} positionType={positionTypeParam} />
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
@@ -736,7 +736,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                                 />
                             </div>
                         )}
-                        <DiscoverFiltersDropdown chain={chain} />
+                        <DiscoverFiltersDropdown chain={chain} positionType={positionTypeParam} />
                     </div>
                 </div>
                 

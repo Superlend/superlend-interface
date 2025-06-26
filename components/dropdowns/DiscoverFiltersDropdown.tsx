@@ -35,8 +35,9 @@ import InfoTooltip from '../tooltips/InfoTooltip'
 import TooltipText from '../tooltips/TooltipText'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
+import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
 
-export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
+export default function DiscoverFiltersDropdown({ chain, positionType }: { chain?: string, positionType?: string }) {
     const searchParams = useSearchParams()
     const getFiltersFromURL = () => ({
         token_ids: searchParams?.get('token_ids')?.split(',') || [],
@@ -59,7 +60,10 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
     )
     const { width: screenWidth } = useDimensions()
     const isDesktop = useMemo(() => screenWidth > 768, [screenWidth])
-    const positionTypeParam = searchParams?.get('position_type') || 'lend'
+    const positionTypeParam = positionType || searchParams?.get('position_type') || 'lend'
+    
+    // Get loop pairs data to determine available tokens dynamically
+    const { pairs: loopPairs } = useGetLoopPairs()
 
     // Set initial chain_ids for etherlink and clear filters when switching
     // useEffect(() => {
@@ -184,10 +188,26 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
         return categories
     }, [chain, positionTypeParam])
 
+    const loopAvailableTokens = useMemo(() => {
+        if (positionTypeParam !== 'loop' || !loopPairs?.length) return []
+        
+        const tokenSet = new Set<string>()
+        loopPairs.forEach((pair: any) => {
+            tokenSet.add(pair.tokenSymbol)
+            if (pair.borrowToken?.symbol) {
+                tokenSet.add(pair.borrowToken.symbol)
+            }
+        })
+        
+        return Array.from(tokenSet)
+    }, [positionTypeParam, loopPairs])
+
     const FILTER_OPTIONS: any = {
         token: {
             type: 'token',
-            options: allTokenOptions,
+            options: positionTypeParam === 'loop' && loopAvailableTokens.length > 0 
+                ? allTokenOptions.filter((token: any) => loopAvailableTokens.includes(token.token_id))
+                : allTokenOptions,
         },
         chain: {
             type: 'chain',
@@ -262,6 +282,7 @@ export default function DiscoverFiltersDropdown({ chain }: { chain?: string }) {
         showCorrelatedPairs,
         handleCorrelatedPairsToggle,
         positionTypeParam,
+        loopAvailableTokens,
     }
 
     if (isDesktop) {
@@ -385,6 +406,7 @@ function FilterCardContent({
     showCorrelatedPairs,
     handleCorrelatedPairsToggle,
     positionTypeParam,
+    loopAvailableTokens,
 }: any) {
     const [activeTab, setActiveTab] = useState(FILTER_CATEGORIES[0])
     const isActiveTab = (item: any) =>
@@ -399,6 +421,7 @@ function FilterCardContent({
         showCorrelatedPairs,
         handleCorrelatedPairsToggle,
         positionTypeParam,
+        loopAvailableTokens,
     }
 
     return (
@@ -472,14 +495,30 @@ function FilterOptions({
     const tokenSymbolParam = searchParams?.get('token_ids')?.split(',') || []
     const chainIdParam = searchParams?.get('chain_ids')?.split(',') || []
     const protocolIdParam = searchParams?.get('protocol_ids')?.split(',') || []
-    const [searchKeyword, setSearchKeyword] = useState<string>('')
-    const [isExcluded, setIsExcluded] = useState(
-        localStorage.getItem('exclude_risky_markets') === 'true'
-    )
+    const [searchKeyword, setSearchKeyword] = useState('')
+    const [isExcluded, setIsExcluded] = useState<boolean>(false)
     const isMorphoMarketsRisky = useMemo(
         () => type === 'protocol' && positionTypeParam === 'lend',
         [type, positionTypeParam]
     )
+
+    // Define restrictions for loop position type
+    const isLoopPosition = positionTypeParam === 'loop'
+
+    // Function to check if an option should be disabled for loop positions
+    const isOptionDisabledForLoop = (option: any) => {
+        if (!isLoopPosition) return false
+        
+        if (type === 'chain') {
+            return option.chain_id?.toString() !== '42793'
+        }
+        
+        if (type === 'protocol') {
+            return option.protocol_id !== 'SUPERLEND'
+        }
+        
+        return false
+    }
 
     useEffect(() => {
         setSearchKeyword('')
@@ -525,10 +564,12 @@ function FilterOptions({
 
     const filters = getFiltersFromURL()
     const isSelected = (id: number | string, filterType: string) => {
-        return filters[`${filterType}_ids` as keyof typeof filters]?.includes(
-            id.toString()
-        )
+        const currentFilters =
+            filters[`${filterType}_ids` as keyof typeof filters]
+        return currentFilters.includes(id.toString())
     }
+
+    // Modified handleSelection to prevent selection of disabled options
     const handleSelection = (
         id: number | string | null,
         filterType: string
@@ -548,7 +589,7 @@ function FilterOptions({
         }
 
         updateSearchParams({
-            [`${filterType}_ids`]: newFilters.length
+            [`${filterType}_ids`]: newFilters?.length
                 ? newFilters.join(',')
                 : undefined,
         })
@@ -632,6 +673,7 @@ function FilterOptions({
                 )}
                 {type !== 'correlated' && (
                     <div className="filter-options flex flex-wrap gap-4 md:gap-3 bg-white p-4 md:p-[24px_24px_24px_14px]">
+                        
                         <Button
                             variant="outline"
                             size="sm"
@@ -641,31 +683,44 @@ function FilterOptions({
                             All {type.charAt(0).toUpperCase() + type.slice(1)}s
                         </Button>
                         {filterOptionsByKeyword(searchKeyword, options).map(
-                            (option: any) => (
-                                <Button
-                                    onClick={() =>
-                                        handleSelection(option[`${type}_id`], type)
-                                    }
-                                    variant="outline"
-                                    size="sm"
-                                    key={option[`${type}_id`]}
-                                    disabled={
-                                        isMorphoMarketsRisky &&
-                                        option.protocol_id === 'MORPHO_MARKETS' &&
-                                        isExcluded
-                                    }
-                                    className={`flex items-center gap-1 ${isSelected(option[`${type}_id`], type) ? 'selected' : ''}`}
-                                >
-                                    <ImageWithDefault
-                                        src={option.logo}
-                                        alt={option.name}
-                                        width={18}
-                                        height={18}
-                                        className="max-w-[18px] max-h-[18px]"
-                                    />
-                                    {option.name}
-                                </Button>
-                            )
+                            (option: any) => {
+                                const isLoopDisabled = isOptionDisabledForLoop(option)
+                                const isMorphoDisabled = isMorphoMarketsRisky &&
+                                    option.protocol_id === 'MORPHO_MARKETS' &&
+                                    isExcluded
+                                const shouldDisable = isLoopDisabled || isMorphoDisabled
+                                
+                                return (
+                                    <Button
+                                        onClick={() =>
+                                            !shouldDisable && handleSelection(option[`${type}_id`], type)
+                                        }
+                                        variant="outline"
+                                        size="sm"
+                                        key={option[`${type}_id`]}
+                                        disabled={shouldDisable}
+                                        className={`flex items-center gap-1 ${
+                                            isSelected(option[`${type}_id`], type) ? 'selected' : ''
+                                        } ${
+                                            shouldDisable ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400' : ''
+                                        }`}
+                                        title={
+                                            isLoopDisabled && isLoopPosition 
+                                                ? `${option.name} is not available for loop positions. Only Etherlink chain and Superlend platform are supported.`
+                                                : undefined
+                                        }
+                                    >
+                                        <ImageWithDefault
+                                            src={option.logo}
+                                            alt={option.name}
+                                            width={18}
+                                            height={18}
+                                            className={`max-w-[18px] max-h-[18px] ${shouldDisable ? 'grayscale' : ''}`}
+                                        />
+                                        {option.name}
+                                    </Button>
+                                )
+                            }
                         )}
                     </div>
                 )}
