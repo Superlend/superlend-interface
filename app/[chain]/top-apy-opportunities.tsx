@@ -38,6 +38,7 @@ import { RefreshCw } from 'lucide-react'
 import DiscoverOpportunities from './discover-opportunities'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/typography'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -651,25 +652,26 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                         </div>
                         {/* Filter button for Tablet and below screens */}
                         <div className="flex items-center gap-[12px] lg:hidden">
-                            {/* Refresh functionality for mobile */}
-                            {lastFetchTime && (
-                                <button
-                                    onClick={handleManualRefresh}
-                                    disabled={isRefreshing}
-                                    className="flex items-center gap-[6px] text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Refresh data"
-                                >
-                                    <RefreshCw 
-                                        size={12} 
-                                        className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
+                            {positionTypeParam === 'loop' && (
+                                <div className="flex items-center gap-2">
+                                    <Switch
+                                        id="correlated-pairs-mobile"
+                                        checked={showCorrelatedPairsParam}
+                                        onCheckedChange={(checked) => {
+                                            updateSearchParams({
+                                                show_correlated_pairs: checked ? 'true' : undefined,
+                                            })
+                                        }}
                                     />
-                                    <span className="hidden sm:inline">
-                                        {isRefreshing ? 'Refreshing...' : `Last updated ${formatTimeAgo(lastFetchTime)}`}
-                                    </span>
-                                    <span className="sm:hidden">
-                                        {isRefreshing ? 'Refreshing...' : formatTimeAgo(lastFetchTime)}
-                                    </span>
-                                </button>
+                                    <InfoTooltip
+                                        label={
+                                            <Label htmlFor="correlated-pairs-mobile" className="text-sm cursor-pointer">
+                                                Correlated Pairs
+                                            </Label>
+                                        }
+                                        content="Show only token pairs with similar price movements: USDC/USDT (stablecoins), mTBILL/USDT etc."
+                                    />
+                                </div>
                             )}
                             <DiscoverFiltersDropdown chain={chain} />
                         </div>
@@ -710,97 +712,36 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                         </div>
                     </div>
                 </div>
-                {/* Filter button for Tablet and below screens */}
-                <div className="flex items-center justify-between gap-[12px] max-lg:w-full">
+                {/* Filter buttons for Desktop and above screens */}
+                <div className="filter-dropdowns-container hidden lg:flex flex-col items-end gap-[8px]">
                     <div className="flex items-center gap-[12px]">
-                        {/* <div className="flex items-center gap-[8px]">
-                            <HeadingText
-                                level="h3"
-                                weight="medium"
-                                className="text-gray-800"
-                            >
-                                Top Money Markets
-                            </HeadingText>
-                            <InfoTooltip content="List of assets from different lending protocols across various chains, offering good APYs" />
-                        </div> */}
-                        {/* Filter button for Tablet and below screens */}
-                        <div className="flex items-center gap-[12px] lg:hidden">
-                            {/* Refresh functionality for mobile */}
-                            {lastFetchTime && (
-                                <button
-                                    onClick={handleManualRefresh}
-                                    disabled={isRefreshing}
-                                    className="flex items-center gap-[6px] text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Refresh data"
-                                >
-                                    <RefreshCw 
-                                        size={12} 
-                                        className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
-                                    />
-                                    <span className="hidden sm:inline">
-                                        {isRefreshing ? 'Refreshing...' : `Last updated ${formatTimeAgo(lastFetchTime)}`}
-                                    </span>
-                                    <span className="sm:hidden">
-                                        {isRefreshing ? 'Refreshing...' : formatTimeAgo(lastFetchTime)}
-                                    </span>
-                                </button>
-                            )}
-                            <DiscoverFiltersDropdown chain={chain} />
-                        </div>
+                        {positionTypeParam === 'loop' && (
+                            <div className="flex items-center gap-2">
+                                <Switch
+                                    id="correlated-pairs-desktop"
+                                    checked={showCorrelatedPairsParam}
+                                    onCheckedChange={(checked) => {
+                                        updateSearchParams({
+                                            show_correlated_pairs: checked ? 'true' : undefined,
+                                        })
+                                    }}
+                                />
+                                <InfoTooltip
+                                    label={
+                                        <Label htmlFor="correlated-pairs-desktop" className="text-sm cursor-pointer">
+                                            Correlated Pairs
+                                        </Label>
+                                    }
+                                    content="Show only token pairs with similar price movements: USDC/USDT (stablecoins), mTBILL/USDT etc."
+                                />
+                            </div>
+                        )}
+                        <DiscoverFiltersDropdown chain={chain} />
                     </div>
-                    {/* Filter buttons for Desktop and above screens */}
-                    <div className="filter-dropdowns-container hidden lg:flex flex-col items-end gap-[8px]">
-                        <div className="flex items-center gap-[12px]">
-                            {/* Refresh functionality */}
-                            {lastFetchTime && (
-                                <button
-                                    onClick={handleManualRefresh}
-                                    disabled={isRefreshing}
-                                    className="flex items-center gap-[6px] text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Refresh data"
-                                >
-                                    <RefreshCw 
-                                        size={12} 
-                                        className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
-                                    />
-                                    <span>
-                                        {isRefreshing ? 'Refreshing...' : `Last updated ${formatTimeAgo(lastFetchTime)}`}
-                                    </span>
-                                </button>
-                            )}
-                            <DiscoverFiltersDropdown chain={chain} />
-                        </div>
-                        {/* Correlated Pairs Toggle for Desktop */}
-                      
-                    </div>
-                    
                 </div>
                 
             </div>
 
-            {positionTypeParam === 'loop' && (
-                            <div className="flex justify-end w-full">
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Switch
-                                        id="correlated-pairs-desktop"
-                                        checked={showCorrelatedPairsParam}
-                                        onCheckedChange={(checked) => {
-                                            updateSearchParams({
-                                                show_correlated_pairs: checked ? 'true' : undefined,
-                                            })
-                                        }}
-                                    />
-                                    <InfoTooltip
-                                        label={
-                                            <Label htmlFor="correlated-pairs-desktop" className="text-sm cursor-pointer">
-                                                Correlated Pairs
-                                            </Label>
-                                        }
-                                        content="Show only token pairs with similar price movements: USDC/USDT (stablecoins), mTBILL/USDT etc."
-                                    />
-                                </div>
-                            </div>
-                        )}
             {showAllMarkets && <DiscoverOpportunities chain={chain} positionType={positionTypeParam} />}
 
             <div className="top-apy-opportunities-content">
@@ -818,6 +759,9 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                         pagination={pagination}
                         setPagination={handlePaginationChange}
                         totalPages={Math.ceil(tableData.length / 10)}
+                        onRefresh={handleManualRefresh}
+                        lastRefreshTime={lastFetchTime || undefined}
+                        isRefreshing={isRefreshing}
                     />
                 )}
                 {(isLoadingOpportunitiesData || isTableLoading) && (
