@@ -114,6 +114,26 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
         return `$${abbreviateNumber(normalValue)}`
     })()
 
+    // Calculate liquidation price for lend token (collateral)
+    const lendTokenLiquidationPrice = (() => {
+        if (loopData.borrowAsset.amount <= 0 || loopData.collateralAsset.amount <= 0) return 0
+        
+        const borrowAmount = Number(convertScientificToNormal(loopData.borrowAsset.amount))
+        const borrowPrice = loopData.borrowAsset.token.price_usd
+        const lendAmount = Number(convertScientificToNormal(loopData.collateralAsset.amount))
+        const liquidationThreshold = loopData.liquidationLTV / 100
+        
+        // Calculate at what price of lend token liquidation occurs
+        return (borrowAmount * borrowPrice) / (lendAmount * liquidationThreshold)
+    })()
+
+    const formattedLendTokenLiquidationPrice = (() => {
+        if (isLowestValue(lendTokenLiquidationPrice)) {
+            return `${hasLowestDisplayValuePrefix(lendTokenLiquidationPrice)}$${getLowestDisplayValue(lendTokenLiquidationPrice)}`
+        }
+        return `$${abbreviateNumber(lendTokenLiquidationPrice)}`
+    })()
+
     // Prepare token details for withdraw and repay buttons (similar to position-details.tsx)
     const collateralTokenDetails = [{
         address: loopData.collateralAsset.token.address,
@@ -310,21 +330,54 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <BodyText level="body2" weight="medium" className="text-gray-600">
-                                    Liquidation Price
+                                    Liquidation Prices
                                 </BodyText>
-                                <InfoTooltip content={`Price at which your position would be liquidated${loopData.hasMultiplePositions ? '. Note: This calculation considers all your positions on the platform due to cross-collateralization.' : ''}`} />
+                                <InfoTooltip content={`Prices at which your position would be liquidated${loopData.hasMultiplePositions ? '. Note: This calculation considers all your positions on the platform due to cross-collateralization.' : ''}`} />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <ImageWithDefault
-                                    src={loopData.borrowAsset.token.logo}
-                                    alt={loopData.borrowAsset.token.symbol}
-                                    width={16}
-                                    height={16}
-                                    className="rounded-full"
+                            
+                            <div className="flex items-center gap-3">
+                                {/* Borrow Token Liquidation Price */}
+                                <InfoTooltip
+                                    content={`If ${loopData.borrowAsset.token.symbol} price rises to ${formattedLiquidationPrice}, your position will be liquidated`}
+                                    label={
+                                        <div className="flex items-center gap-1 cursor-pointer">
+                                            <ImageWithDefault
+                                                src={loopData.borrowAsset.token.logo}
+                                                alt={loopData.borrowAsset.token.symbol}
+                                                width={14}
+                                                height={14}
+                                                className="rounded-full"
+                                            />
+                                            <BodyText level="body3" weight="medium" className="text-red-600">
+                                                {formattedLiquidationPrice}
+                                            </BodyText>
+                                        </div>
+                                    }
                                 />
-                                <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    {formattedLiquidationPrice}
+
+                                {/* Separator */}
+                                <BodyText level="body3" className="text-gray-400">
+                                    |
                                 </BodyText>
+
+                                {/* Lend Token Liquidation Price */}
+                                <InfoTooltip
+                                    content={`If ${loopData.collateralAsset.token.symbol} price falls to ${formattedLendTokenLiquidationPrice}, your position will be liquidated`}
+                                    label={
+                                        <div className="flex items-center gap-1 cursor-pointer">
+                                            <ImageWithDefault
+                                                src={loopData.collateralAsset.token.logo}
+                                                alt={loopData.collateralAsset.token.symbol}
+                                                width={14}
+                                                height={14}
+                                                className="rounded-full"
+                                            />
+                                            <BodyText level="body3" weight="medium" className="text-red-600">
+                                                {formattedLendTokenLiquidationPrice}
+                                            </BodyText>
+                                        </div>
+                                    }
+                                />
                             </div>
                         </div>
 

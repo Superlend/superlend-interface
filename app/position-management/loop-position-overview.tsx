@@ -215,7 +215,9 @@ export default function LoopPositionOverview() {
 
         // Calculate liquidation price with proper handling of small amounts
         const liquidationThreshold = lendPosition.liquidation_threshold || 80
-        const liquidationPrice = lendAmount > 0 ? borrowValueUSD / ((liquidationThreshold / 100) * lendAmount) : 0
+        // Calculate liquidation price for borrow token (how high it needs to rise for liquidation)
+        const liquidationPrice = borrowAmount > 0 ? 
+            (lendAmount * lendPrice * (liquidationThreshold / 100)) / borrowAmount : 0
 
         return {
             netValue: parseFloat(netValue.toFixed(8)), // Maintain precision up to 8 decimal places
