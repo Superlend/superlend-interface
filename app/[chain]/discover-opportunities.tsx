@@ -143,7 +143,15 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
 
     // Add checks for platform data existence
     if (!opportunity1PlatformData?.assets || isLoadingBoostRewards || isLoadingEffectiveApy || !opportunity3PlatformData) {
-        return <div className="p-5"><CardDetailsSkeleton /></div>
+        return (
+            <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-5">
+                    <FullCardSkeleton />
+                    <FullCardSkeleton />
+                    <FullCardSkeleton />
+                </div>
+            </div>
+        )
     }
 
     // Helper function to get borrow APY for a token (matching table calculation)
@@ -492,20 +500,23 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
         1: isLoading1,
         2: (isLoadingBoostRewards || isLoadingEffectiveApy),
         3: isLoading3,
-        4: isLoading4,
-        5: isLoading5,
-        6: isLoading6,
-        7: isLoading7,
-        8: isLoading8,
-        9: isLoading9,
+        4: isLoadingBorrowOpportunities,
+        5: isLoadingBorrowOpportunities,
+        6: isLoadingBorrowOpportunities,
+        7: isLoadingLoopPairs,
+        8: isLoadingLoopPairs,
+        9: isLoadingLoopPairs,
     }
 
     const cardsToRender = opportunities[positionType as keyof typeof opportunities] || opportunities.lend;
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-5">
-                {cardsToRender.map((opportunity: any, index: number) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-5">
+            {cardsToRender.map((opportunity: any, index: number) => (
+                isLoading[opportunity.id] ? (
+                    <FullCardSkeleton key={`skeleton-${opportunity.id}`} />
+                ) : (
                     <div
                         key={opportunity.id}
                         className="group overflow-hidden relative bg-white rounded-5 px-5 py-6 lg:hover:shadow-md lg:hover:shadow-gray-200/50 lg:hover:rounded-7 active:scale-95 transition-all duration-300 cursor-pointer"
@@ -530,28 +541,10 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
                                 >
                                     {opportunity.label}
                                 </Badge>
-                                {isLoading[opportunity.id] ?
-                                    (<CardDetailsSkeleton />)
-                                    : (<div className="flex items-center gap-2">
-                                        {/* Render stacked icons for loop pairs, single icon for others */}
-                                        {opportunity.isLoopPair && opportunity.borrowTokenImage ? (
-                                            <div className="relative flex items-center">
-                                                <ImageWithDefault
-                                                    src={opportunity.tokenImage}
-                                                    alt={opportunity.tokenSymbol}
-                                                    width={36}
-                                                    height={36}
-                                                    className="rounded-full object-contain"
-                                                />
-                                                <ImageWithDefault
-                                                    src={opportunity.borrowTokenImage}
-                                                    alt={`${opportunity.tokenSymbol} borrow token`}
-                                                    width={24}
-                                                    height={24}
-                                                    className="rounded-full object-contain -ml-3 border-2 border-white"
-                                                />
-                                            </div>
-                                        ) : (
+                                <div className="flex items-center gap-2">
+                                    {/* Render stacked icons for loop pairs, single icon for others */}
+                                    {opportunity.isLoopPair && opportunity.borrowTokenImage ? (
+                                        <div className="relative flex items-center">
                                             <ImageWithDefault
                                                 src={opportunity.tokenImage}
                                                 alt={opportunity.tokenSymbol}
@@ -559,59 +552,74 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
                                                 height={36}
                                                 className="rounded-full object-contain"
                                             />
-                                        )}
-                                        <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-2">
-                                                <HeadingText
-                                                    level="h4"
-                                                    weight="medium"
-                                                    className="text-gray-800"
-                                                >
-                                                    {opportunity.tokenSymbol}
-                                                </HeadingText>
-                                                <Badge
-                                                    variant="gray"
-                                                    className="w-fit rounded-md uppercase px-1"
-                                                >
-                                                    <Label
-                                                        weight="medium"
-                                                        className="text-black tracking-wide"
-                                                    >
-                                                        {opportunity.chainName}
-                                                    </Label>
-                                                </Badge>
-                                            </div>
-                                            <div className="flex items-center gap-1">
+                                            <ImageWithDefault
+                                                src={opportunity.borrowTokenImage}
+                                                alt={`${opportunity.tokenSymbol} borrow token`}
+                                                width={24}
+                                                height={24}
+                                                className="rounded-full object-contain -ml-3 border-2 border-white"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <ImageWithDefault
+                                            src={opportunity.tokenImage}
+                                            alt={opportunity.tokenSymbol}
+                                            width={36}
+                                            height={36}
+                                            className="rounded-full object-contain"
+                                        />
+                                    )}
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center gap-2">
+                                            <HeadingText
+                                                level="h4"
+                                                weight="medium"
+                                                className="text-gray-800"
+                                            >
+                                                {opportunity.tokenSymbol}
+                                            </HeadingText>
+                                            <Badge
+                                                variant="gray"
+                                                className="w-fit rounded-md uppercase px-1"
+                                            >
                                                 <Label
                                                     weight="medium"
-                                                    className="text-gray-600"
+                                                    className="text-black tracking-wide"
                                                 >
-                                                    {opportunity.description}
+                                                    {opportunity.chainName}
                                                 </Label>
-                                                {opportunity.hasAppleFarmRewards &&
-                                                    <InfoTooltip
-                                                        label={
-                                                            <ImageWithDefault
-                                                                src={'/images/logos/apple-green.png'}
-                                                                alt={'apple icon'}
-                                                                width={18}
-                                                                height={18}
-                                                                className="object-contain"
-                                                            />
-                                                        }
-                                                        content={getRewardsTooltipContent({
-                                                            baseRateFormatted: appleFarmBaseRateFormatted || '',
-                                                            rewards: appleFarmRewards || [],
-                                                            apyCurrent: asset1LendRate || 0,
-                                                            positionTypeParam: 'lend',
-                                                            netApyIcon: '/images/apple-farm-favicon.ico',
-                                                        })}
-                                                    />
-                                                }
-                                            </div>
+                                            </Badge>
                                         </div>
-                                    </div>)
-                                }
+                                        <div className="flex items-center gap-1">
+                                            <Label
+                                                weight="medium"
+                                                className="text-gray-600"
+                                            >
+                                                {opportunity.description}
+                                            </Label>
+                                            {opportunity.hasAppleFarmRewards &&
+                                                <InfoTooltip
+                                                    label={
+                                                        <ImageWithDefault
+                                                            src={'/images/logos/apple-green.png'}
+                                                            alt={'apple icon'}
+                                                            width={18}
+                                                            height={18}
+                                                            className="object-contain"
+                                                        />
+                                                    }
+                                                    content={getRewardsTooltipContent({
+                                                        baseRateFormatted: appleFarmBaseRateFormatted || '',
+                                                        rewards: appleFarmRewards || [],
+                                                        apyCurrent: asset1LendRate || 0,
+                                                        positionTypeParam: 'lend',
+                                                        netApyIcon: '/images/apple-farm-favicon.ico',
+                                                    })}
+                                                />
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             {(!!opportunity.platformImage || !!opportunity.platformImages) && (
                                 opportunity.platformImages ? (
@@ -630,8 +638,9 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
                             )}
                         </Link>
                     </div>
-                ))}
-            </div>
+                )
+            ))}
+        </div>
         </div>
     )
 }
@@ -650,6 +659,34 @@ function CardDetailsSkeleton() {
                 <Skeleton
                     className="w-12 h-2 rounded-md bg-gray-300"
                 />
+            </div>
+        </div>
+    )
+}
+
+function FullCardSkeleton() {
+    return (
+        <div className="overflow-hidden relative bg-white rounded-5 px-5 py-6 transition-all duration-300">
+            <div className="flex flex-col gap-[53px] relative z-10">
+                {/* Badge skeleton */}
+                <Skeleton className="w-32 h-6 rounded-md bg-gray-300" />
+                
+                {/* Token and details skeleton */}
+                <div className="flex items-center gap-2">
+                    <Skeleton className="w-9 h-9 rounded-full bg-gray-300" />
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                            <Skeleton className="w-20 h-5 rounded-md bg-gray-300" />
+                            <Skeleton className="w-12 h-4 rounded-md bg-gray-300" />
+                        </div>
+                        <Skeleton className="w-16 h-3 rounded-md bg-gray-300" />
+                    </div>
+                </div>
+            </div>
+            
+            {/* Platform logo skeleton */}
+            <div className="absolute -right-5 -bottom-5">
+                <Skeleton className="w-[124px] h-[136px] rounded-lg bg-gray-300 opacity-15" />
             </div>
         </div>
     )
