@@ -44,6 +44,7 @@ import CustomAlert from '@/components/alerts/CustomAlert'
 import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import { Percent, TrendingUp } from 'lucide-react'
+import useGetMidasKpiData from '@/hooks/useGetMidasKpiData'
 
 type TTokenDetails = {
     address: string
@@ -64,6 +65,7 @@ export default function PageHeader() {
     const isLoopPosition = positionTypeParam === 'loop'
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
     const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
+    const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
 
     // Get opportunities data to access updated APY values (includes Midas API updates)
     const { data: opportunitiesData } = useGetOpportunitiesData({
@@ -264,16 +266,34 @@ export default function PageHeader() {
 
     // Enhanced supply APY calculation with opportunity data (includes Midas API updates)
     const relevantTokenAddress = isDisplayOneToken ? tokenDetails?.address : collateralTokenDetails?.address
+    const relevantTokenSymbol = isDisplayOneToken ? tokenDetails?.symbol : collateralTokenDetails?.symbol
     const opportunityAPY = findOpportunityAPY(relevantTokenAddress)
-    const baseSupplyAPY = opportunityAPY !== null ? opportunityAPY : Number(pageHeaderStats?.supply_apy || 0)
+    
+    // Get base APY from opportunities data or platform data
+    let baseSupplyAPY = opportunityAPY !== null ? opportunityAPY : Number(pageHeaderStats?.supply_apy || 0)
+    
+    // Add Midas intrinsic APY for mTBILL and mBASIS tokens
+    let intrinsicAPY = 0
+    if (relevantTokenSymbol?.toLowerCase() === 'mtbill') {
+        intrinsicAPY = mTbillAPY || 0
+    } else if (relevantTokenSymbol?.toLowerCase() === 'mbasis') {
+        intrinsicAPY = mBasisAPY || 0
+    }
+    
+    // If we have opportunity APY (from Midas API), it already includes intrinsic APY, so don't double-add it
+    if (opportunityAPY === null && intrinsicAPY > 0) {
+        baseSupplyAPY += intrinsicAPY
+    }
+    
     const appleFarmRewardAPY = Number(appleFarmRewardsAprs?.[relevantTokenAddress] ?? 0)
     const formattedSupplyAPY = baseSupplyAPY + appleFarmRewardAPY
 
     console.log('Page Header APY calculation:', {
-        tokenSymbol: isDisplayOneToken ? tokenDetails?.symbol : collateralTokenDetails?.symbol,
+        tokenSymbol: relevantTokenSymbol,
         tokenAddress: relevantTokenAddress,
         opportunityAPY,
         platformSupplyAPY: pageHeaderStats?.supply_apy,
+        intrinsicAPY,
         baseSupplyAPY,
         appleFarmRewardAPY,
         formattedSupplyAPY,
@@ -551,10 +571,14 @@ export default function PageHeader() {
                                                             </motion.div>
                                                         }
                                                         content={getSupplyAPYBreakdownTooltip({
-                                                            baseSupplyAPY: Number(pageHeaderStats?.supply_apy || 0),
+                                                            baseSupplyAPY: (relevantTokenSymbol?.toLowerCase() === 'mtbill' || relevantTokenSymbol?.toLowerCase() === 'mbasis') 
+                                                                ? 0 
+                                                                : formattedSupplyAPY - appleFarmRewardAPY - intrinsicAPY,
+                                                            intrinsicAPY: intrinsicAPY,
                                                             appleFarmAPY: appleFarmRewardAPY,
                                                             totalSupplyAPY: formattedSupplyAPY,
-                                                            tokenSymbol: isDisplayOneToken ? tokenDetails?.symbol : collateralTokenDetails?.symbol,
+                                                            tokenSymbol: relevantTokenSymbol,
+                                                            hasOpportunityAPY: opportunityAPY !== null,
                                                         })}
                                                     />
                                                 )}
@@ -816,23 +840,29 @@ function MorphoMarketAlert() {
 }
 
 /**
- * Get supply APY breakdown tooltip content with Apple Farm rewards
+ * Get supply APY breakdown tooltip content with Apple Farm rewards and intrinsic APY
  * @param baseSupplyAPY
+ * @param intrinsicAPY
  * @param appleFarmAPY
  * @param totalSupplyAPY
  * @param tokenSymbol
+ * @param hasOpportunityAPY
  * @returns supply APY breakdown tooltip content
  */
 function getSupplyAPYBreakdownTooltip({
     baseSupplyAPY,
+    intrinsicAPY,
     appleFarmAPY,
     totalSupplyAPY,
     tokenSymbol,
+    hasOpportunityAPY,
 }: {
     baseSupplyAPY: number
+    intrinsicAPY: number
     appleFarmAPY: number
     totalSupplyAPY: number
     tokenSymbol: string
+    hasOpportunityAPY: boolean
 }) {
     return (
         <div className="flex flex-col divide-y divide-gray-800">
@@ -861,6 +891,27 @@ function getSupplyAPYBreakdownTooltip({
                     {abbreviateNumber(baseSupplyAPY, 2)}%
                 </BodyText>
             </div>
+            {/* Intrinsic APY for mTBILL and mBASIS */}
+            {intrinsicAPY > 0 && (tokenSymbol?.toLowerCase() === 'mtbill' || tokenSymbol?.toLowerCase() === 'mbasis') && (
+                <div
+                    className="flex items-center justify-between gap-[70px] py-2"
+                    style={{ gap: '70px' }}
+                >
+                    <div className="flex items-center gap-1">
+                        <TrendingUp className="w-[14px] h-[14px] text-gray-800" />
+                        <Label weight="medium" className="text-gray-800">
+                            Intrinsic APY
+                        </Label>
+                    </div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-800"
+                    >
+                        + {abbreviateNumber(intrinsicAPY, 2)}%
+                    </BodyText>
+                </div>
+            )}
             {appleFarmAPY > 0 && (
                 <div
                     className="flex items-center justify-between gap-[100px] py-2"
