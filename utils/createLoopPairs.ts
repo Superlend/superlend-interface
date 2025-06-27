@@ -1,6 +1,6 @@
 import { TOpportunity, TOpportunityTable } from '@/types'
 import { TPlatform } from '@/types/platform'
-import { TChain } from '@/types/chain'
+import { TChain, ChainId } from '@/types/chain'
 
 export type TLoopPair = TOpportunityTable & {
     borrowToken: {
@@ -20,7 +20,8 @@ export function createLoopPairs(
     lendOpportunities: TOpportunity[],
     platformData: TPlatform | null,
     allChainsData: TChain[],
-    maxLeverageData?: Record<string, Record<string, number>>
+    maxLeverageData?: Record<string, Record<string, number>>,
+    appleFarmRewardsAprs?: Record<string, number | undefined>
 ): TLoopPair[] {
     if (!platformData?.assets || !lendOpportunities.length) {
         return []
@@ -38,6 +39,9 @@ export function createLoopPairs(
             item.token.address.toLowerCase() === tokenAddress.toLowerCase()
         )
     }
+
+    // Check if it's Etherlink chain
+    const isEtherlinkChain = platformData.platform.chain_id === ChainId.Etherlink
 
     lendOpportunities.forEach(item => {
         // Allow any token to be a lend token (removed borrow_enabled filter for lend side)
@@ -101,15 +105,21 @@ export function createLoopPairs(
                 borrowTokenAvailableLiquidity = borrowAsset.remaining_borrow_cap * borrowAsset.token.price_usd
             }
 
-            // Calculate max APY using max leverage
+            // Calculate max APY using max leverage (base APY only)
             const maxLeverage = maxLeverageData?.[lendOpp.tokenAddress.toLowerCase()]?.[borrowAsset.token.address.toLowerCase()] || 1
-            const lendAPY = Number(lendOpp.apy_current)
+            const baseLendAPY = Number(lendOpp.apy_current)
             const borrowAPY = borrowAsset.variable_borrow_apy
             
             // Formula: (Supply APY × Max Leverage) - (Borrow APY × (Max Leverage - 1))
-            const calculatedMaxAPY = maxLeverage > 1 
-                ? (lendAPY * maxLeverage) - (borrowAPY * (maxLeverage - 1))
-                : lendAPY
+            let calculatedMaxAPY = maxLeverage > 1 
+                ? (baseLendAPY * maxLeverage) - (borrowAPY * (maxLeverage - 1))
+                : baseLendAPY
+            
+            // Add Apple Farm rewards to the final max APY (not leveraged)
+            if (isEtherlinkChain && appleFarmRewardsAprs) {
+                const appleFarmAPY = appleFarmRewardsAprs[lendOpp.tokenAddress.toLowerCase()] || 0
+                calculatedMaxAPY += appleFarmAPY
+            }
 
             // Create pair object
             const pair: TLoopPair = {
@@ -125,7 +135,7 @@ export function createLoopPairs(
                     price_usd: borrowAsset.token.price_usd
                 },
                 pairId: `${lendOpp.tokenSymbol.toLowerCase()}_${borrowAsset.token.symbol.toLowerCase()}`,
-                // Use calculated max APY instead of just lend APY
+                // Use calculated max APY that includes Apple Farm rewards
                 maxAPY: calculatedMaxAPY
             }
 

@@ -307,19 +307,25 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                     </BodyText>
                                     <InfoTooltip content="A numeric representation of position safety. Below 1.0 triggers liquidation." />
                                 </div>
-                                <HeadingText 
-                                    level="h4" 
-                                    weight="medium" 
-                                    className={cn(
-                                        loopData.healthFactor < 1.2
-                                            ? 'text-red-600'
-                                            : loopData.healthFactor < 1.5
-                                                ? 'text-yellow-600'
-                                                : 'text-green-600'
-                                    )}
-                                >
-                                    {loopData.healthFactor}
-                                </HeadingText>
+                                <InfoTooltip
+                                    content="This health factor is calculated based on all your positions on the platform, not just this specific token pair"
+                                    label={
+                                        <HeadingText 
+                                            level="h4" 
+                                            weight="medium" 
+                                            className={cn(
+                                                "cursor-pointer",
+                                                loopData.healthFactor < 1.2
+                                                    ? 'text-red-600'
+                                                    : loopData.healthFactor < 1.5
+                                                        ? 'text-yellow-600'
+                                                        : 'text-green-600'
+                                            )}
+                                        >
+                                            {loopData.healthFactor}
+                                        </HeadingText>
+                                    }
+                                />
                             </div>
                             <BodyText level="body3" className="text-gray-600">
                                 Liquidation occurs when health factor drops below 1.0

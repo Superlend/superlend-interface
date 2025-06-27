@@ -242,7 +242,7 @@ export default function LoopPerformance({ loopData, isLoading }: LoopPerformance
                             </div>
                         </div>
                         
-                        <div className="p-4 bg-primary-50 rounded-4 border border-primary/50">
+                        {/* <div className="p-4 bg-primary-50 rounded-4 border border-primary/50">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <BodyText level="body2" weight="medium" className="text-primary-800">
@@ -262,7 +262,7 @@ export default function LoopPerformance({ loopData, isLoading }: LoopPerformance
                                     {(loopData.netAPY || 0) >= 0 ? '+' : ''}{(loopData.netAPY || 0).toFixed(2)}%
                                 </HeadingText>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </CardContent>
             </Card>

@@ -6,6 +6,7 @@ import { TLoopTx, useTxContext } from '@/context/tx-provider'
 import { TTxContext } from '@/context/tx-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { useDiscordDialog } from '@/hooks/useDiscordDialog'
+import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import {
@@ -77,6 +78,9 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         isWalletConnected,
         isConnectingWallet,
     } = useWalletConnection()
+    
+    const { hasAppleFarmRewards, appleFarmRewardsAprs } = useAppleFarmRewards()
+    
     const [availableLendTokens, setAvailableLendTokens] = useState<TToken[]>([])
     const [availableBorrowTokens, setAvailableBorrowTokens] = useState<
         TToken[]
@@ -152,10 +156,10 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         }
 
         // Convert rates from ray format to percentage
-        const supplyAPY = rayToPercentage(lendTokenReserve.liquidityRate || '0')
+        const baseSupplyAPY = rayToPercentage(lendTokenReserve.liquidityRate || '0')
         const borrowAPY = rayToPercentage(borrowTokenReserve.variableBorrowRate || '0')
 
-        // Add Midas KPI APY for mTbill and mBasis tokens
+        // Add Midas KPI APY for mTbill and mBasis tokens (these should be leveraged)
         let additionalSupplyAPY = 0
         let additionalBorrowAPY = 0
 
@@ -173,9 +177,16 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
             additionalBorrowAPY = mBasisAPY || 0
         }
 
-        // Calculate net APY for looping position including Midas KPI APY
-        // Formula: ((Supply APY + Additional Supply APY) × Leverage) - ((Borrow APY + Additional Borrow APY) × (Leverage - 1))
-        const netAPYValue = ((supplyAPY + additionalSupplyAPY) * leverage) - ((borrowAPY + additionalBorrowAPY) * (leverage - 1))
+        // Calculate leveraged net APY without Apple Farm rewards
+        // Formula: ((Base Supply APY + Additional Supply APY) × Leverage) - ((Borrow APY + Additional Borrow APY) × (Leverage - 1))
+        let netAPYValue = ((baseSupplyAPY + additionalSupplyAPY) * leverage) - ((borrowAPY + additionalBorrowAPY) * (leverage - 1))
+
+        // Add Apple Farm rewards as a flat bonus (not leveraged)
+        const isEtherlinkChain = Number(chain_id) === ChainId.Etherlink
+        if (isEtherlinkChain && hasAppleFarmRewards(selectedLendToken.address)) {
+            const appleFarmAPY = appleFarmRewardsAprs?.[selectedLendToken.address.toLowerCase()] || 0
+            netAPYValue += appleFarmAPY
+        }
 
         // Format to 2 decimal places with % sign
         const formattedValue = Math.abs(netAPYValue) < 0.01 && netAPYValue !== 0

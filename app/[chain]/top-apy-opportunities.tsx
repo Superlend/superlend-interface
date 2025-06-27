@@ -764,7 +764,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                         isRefreshing={isRefreshing}
                     />
                 )}
-                {(isLoadingOpportunitiesData || isTableLoading) && (
+                {(isLoadingOpportunitiesData || isLoadingLoopPairs || isTableLoading) && (
                     <LoadingSectionSkeleton className="h-[500px] md:h-[600px]" />
                 )}
             </div>

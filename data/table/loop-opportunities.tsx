@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { BodyText, Label } from '@/components/ui/typography'
 import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import { useAssetsDataContext } from '@/context/data-provider'
+import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import useDimensions from '@/hooks/useDimensions'
 import {
     abbreviateNumber,
@@ -287,55 +288,38 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         },
         cell: ({ row }) => {
             const searchParams = useSearchParams()
-            const positionTypeParam = searchParams?.get('position_type') || 'lend'
-            const isLoopType = positionTypeParam === 'loop'
-            
-            // For loop pairs, use the maxAPY value directly
-            const loopPair = row.original as TLoopPair
-            if (isLoopType && loopPair.maxAPY !== undefined) {
-                const maxAPY = Number(loopPair.maxAPY)
-                const maxAPYFormatted = (maxAPY > 0 && maxAPY < 0.01) ? '<0.01' : abbreviateNumber(maxAPY)
-                
-                return (
-                    <BodyText 
-                        level="body2" 
-                        weight="medium"
-                        className={maxAPY >= 0 ? 'text-green-600' : 'text-red-600'}
-                    >
-                        {maxAPY >= 0 ? '+' : ''}{maxAPYFormatted}%
-                    </BodyText>
-                )
-            }
-            
-            // Original APY logic for non-loop pairs
-            const hasRewards = row.original?.additional_rewards && row.original?.rewards.length > 0
+            const positionTypeParam = 'loop' // Always loop for this table
+            const { hasAppleFarmRewards, appleFarmRewardsAprs } = useAppleFarmRewards()
+            const hasRewards =
+                row.original?.additional_rewards &&
+                row.original?.rewards.length > 0
             // Declare tooltip content related variables
             let baseRate, baseRateFormatted, rewards, totalRewards
-            const isLend = positionTypeParam === 'lend'
+            const isLend = true // Loop is always lend context for supply token
             const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
             const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
-            const appleFarmApr = Number(row.original.apple_farm_apr)
-            const hasAppleFarmRewards = row.original.has_apple_farm_rewards
+            const hasAppleFarmRewardsForToken = hasAppleFarmRewards(row.original.tokenAddress)
+            const appleFarmApr = Number(appleFarmRewardsAprs?.[row.original.tokenAddress] ?? 0)
 
-            const apyCurrent = Number(row.getValue('maxAPY'))
-            const apyCurrentFormatted = (apyCurrent > 0 && apyCurrent < 0.01) ? '<0.01' : abbreviateNumber(apyCurrent)
+            const apyCurrent = Number(row.getValue('apy_current'))
+            
+            // Get Max APY which already includes Apple Farm rewards (from createLoopPairs)
+            const maxAPY = (row.original as any).maxAPY || apyCurrent
+            const maxAPYFormatted = (maxAPY > 0 && maxAPY < 0.01) ? '<0.01' : abbreviateNumber(maxAPY)
 
-            const appleFarmBaseRate = Number(row.original.apy_current)
-            const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
+            // For tooltip: break down the max APY
+            const baseAPY = Number(row.original.apy_current)
+            const baseAPYFormatted = baseAPY < 0.01 && baseAPY > 0
                 ? '<0.01'
-                : abbreviateNumber(appleFarmBaseRate)
-            const netAppleFarmAPY = Number(row.original.apy_current) + Number(appleFarmApr ?? 0)
-            const netAppleFarmAPYFormatted = netAppleFarmAPY > 0 && netAppleFarmAPY < 0.01
-                ? '<0.01'
-                : abbreviateNumber(netAppleFarmAPY)
+                : abbreviateNumber(baseAPY)
 
             const appleFarmRewards = [
                 {
                     asset: {
                         address: row.original.tokenAddress as `0x${string}`,
-                        name: "APR",
+                        name: "Apple Farm APR",
                         symbol: row.original.tokenSymbol,
                         logo: '/images/apple-farm-favicon.ico',
                         decimals: 0,
@@ -368,7 +352,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             }
 
             if (
-                apyCurrentFormatted === '0.00' &&
+                maxAPYFormatted === '0.00' &&
                 !isPairBasedProtocol &&
                 !isLend
             ) {
@@ -377,7 +361,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         label={
                             <TooltipText>
                                 <BodyText level={'body2'} weight={'medium'}>
-                                    {`${apyCurrentFormatted}%`}
+                                    {`${maxAPYFormatted}%`}
                                 </BodyText>
                             </TooltipText>
                         }
@@ -389,9 +373,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <span className="flex items-center gap-1">
                     <BodyText level={'body2'} weight={'medium'}>
-                        {`${(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend') ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
+                        {`${maxAPYFormatted}%`}
                     </BodyText>
-                    {/* REWARDS */}
+                    {/* REGULAR REWARDS */}
                     {hasRewards && (
                         <InfoTooltip
                             label={
@@ -414,7 +398,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         />
                     )}
                     {/* APPLE FARM REWARDS */}
-                    {(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend') && (
+                    {(isEtherlinkChain && hasAppleFarmRewardsForToken) && (
                         <InfoTooltip
                             label={
                                 <motion.div
@@ -426,18 +410,17 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 >
                                     <ImageWithDefault
                                         src="/images/apple-farm-favicon.ico"
-                                        alt="Etherlink Rewards"
+                                        alt="Apple Farm Rewards"
                                         width={16}
                                         height={16}
                                     />
                                 </motion.div>
                             }
-                            content={getRewardsTooltipContent({
-                                baseRateFormatted: appleFarmBaseRateFormatted || '',
-                                rewards: appleFarmRewards || [],
-                                apyCurrent: netAppleFarmAPY || 0,
-                                positionTypeParam,
-                                netApyIcon: '/images/apple-farm-favicon.ico',
+                            content={getMaxAPYTooltipContent({
+                                baseAPYFormatted: baseAPYFormatted || '',
+                                appleFarmRewards: appleFarmRewards || [],
+                                maxAPY: maxAPY || 0,
+                                positionTypeParam: 'loop',
                             })}
                         />
                     )}
@@ -779,4 +762,108 @@ function getAppleFarmRewardsTooltipContent(score: string) {
 
 function getFormattedBaseRate(value: number) {
     return (Math.floor(Number(value) * 100) / 100).toFixed(2)
+}
+
+/**
+ * Get max APY tooltip content with Apple Farm rewards breakdown
+ * @param baseAPYFormatted
+ * @param appleFarmRewards
+ * @param maxAPY
+ * @param positionTypeParam
+ * @returns max APY tooltip content
+ */
+function getMaxAPYTooltipContent({
+    baseAPYFormatted,
+    appleFarmRewards,
+    maxAPY,
+    positionTypeParam,
+}: {
+    baseAPYFormatted: string
+    appleFarmRewards: TReward[]
+    maxAPY: number
+    positionTypeParam: string
+}) {
+    // Calculate loop APY by subtracting Apple Farm rewards from max APY
+    const appleFarmAPY = appleFarmRewards?.reduce((total, reward) => total + Number(reward.supply_apy), 0) || 0
+    const loopAPY = maxAPY - appleFarmAPY
+    const loopAPYFormatted = (loopAPY > 0 && loopAPY < 0.01) ? '<0.01' : abbreviateNumber(loopAPY)
+
+    return (
+        <div className="flex flex-col divide-y divide-gray-800">
+            <BodyText
+                level="body1"
+                weight="medium"
+                className="py-2 text-gray-800"
+            >
+                Max APY Breakdown
+            </BodyText>
+            <div
+                className="flex items-center justify-between gap-[70px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <ChartNoAxesColumnIncreasing className="w-[14px] h-[14px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">
+                        Loop APY
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    {loopAPYFormatted}%
+                </BodyText>
+            </div>
+            {appleFarmRewards?.map((reward: TReward) => (
+                <div
+                    key={reward.asset.address}
+                    className="flex items-center justify-between gap-[100px] py-2"
+                    style={{ gap: '70px' }}
+                >
+                    <div className="flex items-center gap-1">
+                        <ImageWithDefault
+                            src={reward?.asset?.logo || ''}
+                            width={14}
+                            height={14}
+                            alt={reward?.asset?.name || ''}
+                            className="inline-block rounded-full object-contain"
+                        />
+                        <Label
+                            weight="medium"
+                            className="truncate text-gray-800 max-w-[100px] truncate"
+                            title={reward?.asset?.name || ''}
+                        >
+                            {reward?.asset?.name || ''}
+                        </Label>
+                    </div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-800"
+                    >
+                        + {`${(Math.floor(Number(reward.supply_apy) * 100) / 100).toFixed(2)}%`}
+                    </BodyText>
+                </div>
+            ))}
+            <div
+                className="flex items-center justify-between gap-[100px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <TrendingUp className="w-[14px] h-[14px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">
+                        Max APY
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    = {abbreviateNumber(maxAPY)}%
+                </BodyText>
+            </div>
+        </div>
+    )
 }

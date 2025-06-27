@@ -24,6 +24,7 @@ import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { TPlatform, TPlatformAsset } from '@/types/platform'
+import { ChainId } from '@/types/chain'
 import ArrowRightIcon from '@/components/icons/arrow-right-icon'
 import {
     chainNamesBasedOnAaveMarkets,
@@ -42,6 +43,7 @@ import { PlatformType } from '@/types/platform'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
+import { Percent, TrendingUp } from 'lucide-react'
 
 type TTokenDetails = {
     address: string
@@ -499,33 +501,64 @@ export default function PageHeader() {
                                             >
                                                 Supply APY
                                             </BodyText>
-                                            <Badge variant="green">
-                                                <BodyText
-                                                    level="body1"
-                                                    weight="medium"
-                                                >
-                                                    {isLowestValue(
-                                                        Number(
-                                                            formattedSupplyAPY
+                                            <div className="flex items-center gap-1">
+                                                <Badge variant="green">
+                                                    <BodyText
+                                                        level="body1"
+                                                        weight="medium"
+                                                    >
+                                                        {isLowestValue(
+                                                            Number(
+                                                                formattedSupplyAPY
+                                                            )
                                                         )
-                                                    )
-                                                        ? `${hasLowestDisplayValuePrefix(
-                                                            Number(
-                                                                formattedSupplyAPY
-                                                            )
-                                                        )}${getLowestDisplayValue(
-                                                            Number(
-                                                                formattedSupplyAPY
-                                                            )
-                                                        )}`
-                                                        : abbreviateNumber(
-                                                            Number(
-                                                                formattedSupplyAPY
-                                                            ),
-                                                            2
-                                                        )}%
-                                                </BodyText>
-                                            </Badge>
+                                                            ? `${hasLowestDisplayValuePrefix(
+                                                                Number(
+                                                                    formattedSupplyAPY
+                                                                )
+                                                            )}${getLowestDisplayValue(
+                                                                Number(
+                                                                    formattedSupplyAPY
+                                                                )
+                                                            )}`
+                                                            : abbreviateNumber(
+                                                                Number(
+                                                                    formattedSupplyAPY
+                                                                ),
+                                                                2
+                                                            )}%
+                                                    </BodyText>
+                                                </Badge>
+                                                {/* Apple Farm Rewards Icon */}
+                                                {(Number(chain_id) === ChainId.Etherlink && 
+                                                  hasAppleFarmRewards(relevantTokenAddress) && 
+                                                  appleFarmRewardAPY > 0) && (
+                                                    <InfoTooltip
+                                                        label={
+                                                            <motion.div
+                                                                initial={{ rotate: 0 }}
+                                                                animate={{ rotate: 360 }}
+                                                                transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
+                                                                whileHover={{ rotate: -360 }}
+                                                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                                            >
+                                                                <ImageWithDefault
+                                                                    src="/images/apple-farm-favicon.ico"
+                                                                    alt="Apple Farm Rewards"
+                                                                    width={16}
+                                                                    height={16}
+                                                                />
+                                                            </motion.div>
+                                                        }
+                                                        content={getSupplyAPYBreakdownTooltip({
+                                                            baseSupplyAPY: Number(pageHeaderStats?.supply_apy || 0),
+                                                            appleFarmAPY: appleFarmRewardAPY,
+                                                            totalSupplyAPY: formattedSupplyAPY,
+                                                            tokenSymbol: isDisplayOneToken ? tokenDetails?.symbol : collateralTokenDetails?.symbol,
+                                                        })}
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
                                         <span className="hidden xs:inline-block text-gray">
                                             |
@@ -778,6 +811,104 @@ function MorphoMarketAlert() {
                     </div>
                 }
             />
+        </div>
+    )
+}
+
+/**
+ * Get supply APY breakdown tooltip content with Apple Farm rewards
+ * @param baseSupplyAPY
+ * @param appleFarmAPY
+ * @param totalSupplyAPY
+ * @param tokenSymbol
+ * @returns supply APY breakdown tooltip content
+ */
+function getSupplyAPYBreakdownTooltip({
+    baseSupplyAPY,
+    appleFarmAPY,
+    totalSupplyAPY,
+    tokenSymbol,
+}: {
+    baseSupplyAPY: number
+    appleFarmAPY: number
+    totalSupplyAPY: number
+    tokenSymbol: string
+}) {
+    return (
+        <div className="flex flex-col divide-y divide-gray-800">
+            <BodyText
+                level="body1"
+                weight="medium"
+                className="py-2 text-gray-800"
+            >
+                Supply APY Breakdown
+            </BodyText>
+            <div
+                className="flex items-center justify-between gap-[70px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <Percent className="w-[14px] h-[14px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">
+                        Base APY
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    {abbreviateNumber(baseSupplyAPY, 2)}%
+                </BodyText>
+            </div>
+            {appleFarmAPY > 0 && (
+                <div
+                    className="flex items-center justify-between gap-[100px] py-2"
+                    style={{ gap: '70px' }}
+                >
+                    <div className="flex items-center gap-1">
+                        <ImageWithDefault
+                            src="/images/apple-farm-favicon.ico"
+                            width={14}
+                            height={14}
+                            alt="Apple Farm"
+                            className="inline-block rounded-full object-contain"
+                        />
+                        <Label
+                            weight="medium"
+                            className="truncate text-gray-800 max-w-[100px] truncate"
+                            title="Apple Farm APR"
+                        >
+                            Apple Farm APR
+                        </Label>
+                    </div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-800"
+                    >
+                        + {abbreviateNumber(appleFarmAPY, 2)}%
+                    </BodyText>
+                </div>
+            )}
+            <div
+                className="flex items-center justify-between gap-[100px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <TrendingUp className="w-[14px] h-[14px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">
+                        Total APY
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    = {abbreviateNumber(totalSupplyAPY, 2)}%
+                </BodyText>
+            </div>
         </div>
     )
 }
