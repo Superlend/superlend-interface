@@ -543,65 +543,7 @@ export const useAaveV3Data = () => {
         lendingPoolAddressProvider: string
     }) => {
         if (chainId !== etherlink.id) return
-        const isLegacyInstance = IsAaveV3Legacy(chainId)
-        const _reserveData = getReservesData(chainId)
 
-        const currentTimestamp = Math.floor(Date.now() / 1000)
-        const _userData = getUserData(chainId)
-        if(!_reserveData || !_userData) return
-
-        const baseCurrencyData = _reserveData.baseCurrencyData
-
-        const formattedPoolReserves = isLegacyInstance
-            ? formatReservesLegacy({
-                reserves: _reserveData.reservesData as any,
-                currentTimestamp,
-                marketReferenceCurrencyDecimals:
-                    baseCurrencyData.marketReferenceCurrencyDecimals,
-                marketReferencePriceInUsd:
-                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-            }).map((r) => ({
-                ...r,
-                isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
-                isWrappedBaseAsset: false,
-            }))
-            : formatReserves({
-                reserves: _reserveData.reservesData as any,
-                currentTimestamp,
-                marketReferenceCurrencyDecimals:
-                    baseCurrencyData.marketReferenceCurrencyDecimals,
-                marketReferencePriceInUsd:
-                    baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-            }).map((r) => ({
-                ...r,
-                isEmodeEnabled: (r as any)?.eModeCategoryId !== 0,
-                isWrappedBaseAsset: false,
-            }))
-
-        const user = isLegacyInstance
-        ? formatUserSummaryLegacy({
-            currentTimestamp: currentTimestamp,
-            marketReferencePriceInUsd:
-                baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-            marketReferenceCurrencyDecimals:
-                baseCurrencyData.marketReferenceCurrencyDecimals,
-            userReserves:
-                _userData.userReserves as UserReserveDataHumanizedLegacy[],
-            formattedReserves: formattedPoolReserves as any,
-            userEmodeCategoryId: _userData.userEmodeCategoryId,
-        })
-        : formatUserSummary({
-            currentTimestamp: currentTimestamp,
-            marketReferencePriceInUsd:
-                baseCurrencyData.marketReferenceCurrencyPriceInUsd,
-            marketReferenceCurrencyDecimals:
-                baseCurrencyData.marketReferenceCurrencyDecimals,
-            userReserves: _userData.userReserves,
-            formattedReserves: formattedPoolReserves as any,
-            userEmodeCategoryId: _userData.userEmodeCategoryId,
-        })
-
-        console.log("user for get leverage", user)
         // TODO: Add error handling for this
         const reservesResult = (await fetchReservesData({
             chainId,
@@ -621,10 +563,7 @@ export const useAaveV3Data = () => {
         for (const reserve of reserves) {
             results[reserve.underlyingAsset.toLowerCase()] = {}
             for (const _reserve of reserves) {
-                console.log("LEV reserve.eModeCategoryId", reserve.eModeCategoryId)
-                console.log("LEV reserve.eModeLtv", reserve.eModeLtv)
-                console.log("LEV reserve userdata", _userData.userEmodeCategoryId)
-                if (!_reserve.borrowingEnabled || (reserve.eModeCategoryId !== _userData.userEmodeCategoryId)) continue
+                if (!_reserve.borrowingEnabled) continue
                 const ltv = Number(reserve.baseLTVasCollateral) / 10000
                 const maxLeverage = 1 / (1 - ltv)
                 results[reserve.underlyingAsset.toLowerCase()][
