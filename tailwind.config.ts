@@ -62,6 +62,18 @@ const config = {
                     DEFAULT: 'hsl(var(--secondary-01))',
                     foreground: 'hsl(var(--secondary-foreground))',
                 },
+                tertiary: {
+                    black: 'hsl(var(--tertiary-black))',
+                    navy: 'hsl(var(--tertiary-navy))',
+                    blue: 'hsl(var(--tertiary-blue))',
+                    green: 'hsl(var(--tertiary-green))',
+                    charcoal: 'hsl(var(--tertiary-charcoal))',
+                    lightblue: 'hsl(var(--tertiary-lightblue))',
+                    lightgreen: 'hsl(var(--tertiary-lightgreen))',
+                    yellow: 'hsl(var(--tertiary-yellow))',
+                    pink: 'hsl(var(--tertiary-pink))',
+                    cream: 'hsl(var(--tertiary-cream))',
+                },
                 destructive: {
                     DEFAULT: 'hsl(var(--destructive-background))',
                     foreground: 'hsl(var(--destructive-foreground))',

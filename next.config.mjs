@@ -29,6 +29,9 @@ const nextConfig = {
             {
                 hostname: 'funds.superlend.xyz',
             },
+            {
+                hostname: 'app.aave.com',
+            },
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'attachment',

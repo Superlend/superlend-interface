@@ -61,49 +61,16 @@ export default function ConnectWalletButton() {
                         />
                     )}
                     {!walletAddress && (
-                        <InfoTooltip
-                            size="none"
-                            className="px-2"
-                            classNameLabel="w-full"
-                            label={
-                                <Button
-                                    variant="primary"
-                                    size="lg"
-                                    className="rounded-5 py-2 px-4 capitalize w-full"
-                                    onClick={handleLogin}
-                                    disabled={isDisabled}
-                                    type="button"
-                                >
-                                    {isDisabled ? 'Connecting...' : 'Connect Wallet'}
-                                </Button>
-                            }
-                            content={
-                                <div className="flex flex-col gap-2 bg-blue-50/50 p-3 rounded-lg">
-                                    <div className="flex items-start gap-3">
-                                        <div className="shrink-0 p-1.5 bg-blue-100 rounded-full">
-                                            <AlertCircle className="w-5 h-5 text-blue-600" />
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <BodyText level="body2" className="font-semibold text-blue-900">
-                                                Temporary Connection Issue
-                                            </BodyText>
-                                            <BodyText level="body2" className="text-blue-700">
-                                                We&apos;re currently experiencing technical difficulties with wallet connections on Superlend.
-                                            </BodyText>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-blue-600 pl-2">
-                                        <div className="shrink-0 p-1 bg-blue-100 rounded-full">
-                                            <Clock className="w-4 h-4 text-blue-600" />
-                                        </div>
-                                        <BodyText level="body2" className="font-medium">
-                                            A fix is in progress.
-                                        </BodyText>
-                                    </div>
-                                </div>
-                            }
-                            side="bottom"
-                        />
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            className="rounded-5 py-2 px-4 capitalize w-full"
+                            onClick={handleLogin}
+                            disabled={isDisabled}
+                            type="button"
+                        >
+                            {isDisabled ? 'Connecting...' : 'Connect Wallet'}
+                        </Button>
                     )}
                 </>
             )}
