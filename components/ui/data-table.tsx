@@ -32,12 +32,33 @@ import {
     ChevronsLeft,
     ChevronsRight,
     ChevronsUpDown,
+    RefreshCw,
 } from 'lucide-react'
 import InfoTooltip from '../tooltips/InfoTooltip'
 import { Button } from './button'
 import { ScrollArea, ScrollBar } from './scroll-area'
 import { TOpportunityTable } from '@/types'
 import useDimensions from '@/hooks/useDimensions'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+
+// Utility function to format time difference
+const formatTimeAgo = (timestamp: number): string => {
+    const now = Date.now()
+    const diff = now - timestamp
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (days > 0) {
+        return `${days} day${days === 1 ? '' : 's'} ago`
+    } else if (hours > 0) {
+        return `${hours} hour${hours === 1 ? '' : 's'} ago`
+    } else if (minutes > 0) {
+        return `${minutes} min${minutes === 1 ? '' : 's'} ago`
+    } else {
+        return 'Just now'
+    }
+}
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -53,6 +74,9 @@ interface DataTableProps<TData, TValue> {
     pagination: PaginationState
     setPagination: any
     totalPages: number
+    onRefresh?: () => void
+    lastRefreshTime?: number
+    isRefreshing?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -69,6 +93,9 @@ export function DataTable<TData, TValue>({
     pagination,
     setPagination,
     totalPages,
+    onRefresh,
+    lastRefreshTime,
+    isRefreshing,
 }: DataTableProps<TData, TValue>) {
     const { width: screenWidth } = useDimensions()
 
@@ -167,13 +194,13 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="bg-white bg-opacity-40 rounded-6 border border-transparent overflow-hidden">
-            <ScrollArea className="h-[calc(100vh-250px)] max-h-[500px]">
+            <ScrollArea className="h-auto max-h-[620px]">
                 <Table>
                     <TableHeader className="[&_tr]:border-0">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow
                                 key={headerGroup.id}
-                                className="hover:bg-transparent"
+                                className="hover:bg-transparent relative"
                             >
                                 {headerGroup.headers.map((header) => {
                                     const { column } = header
@@ -238,6 +265,33 @@ export function DataTable<TData, TValue>({
                                         </TableHead>
                                     )
                                 })}
+                                {onRefresh && lastRefreshTime && (
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                        <TooltipProvider>
+                                            <Tooltip delayDuration={0}>
+                                                <TooltipTrigger>
+                                                    <button
+                                                        onClick={onRefresh}
+                                                        disabled={isRefreshing}
+                                                        className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md transition-all duration-200 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        <RefreshCw 
+                                                            size={20} 
+                                                            className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
+                                                        />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent 
+                                                    side="bottom" 
+                                                    align="end"
+                                                    className="z-50"
+                                                >
+                                                    <p>{isRefreshing ? 'Refreshing...' : `Last updated ${formatTimeAgo(lastRefreshTime)}`}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </div>
+                                )}
                             </TableRow>
                         ))}
                     </TableHeader>

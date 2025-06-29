@@ -2,11 +2,11 @@ import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useAccount } from 'wagmi'
 
 export const useWalletConnection = () => {
-    const { isConnecting: isConnectingWagmi } = useAccount()
+    const { isConnecting: isConnectingWagmi, isConnected: isConnectedWagmi, address: walletAddressWagmi } = useAccount()
     const { user, ready, authenticated } = usePrivy()
     const isConnectingWallet = isConnectingWagmi || !ready
-    const isWalletConnected = !!user
-    const walletAddress = user?.wallet?.address as `0x${string}`
+    const isWalletConnected = !!user || isConnectedWagmi
+    const walletAddress = (user?.wallet?.address ?? walletAddressWagmi) as `0x${string}`
     const { wallets } = useWallets()
     const wallet = wallets.find(
         (wallet: any) => wallet.address === walletAddress

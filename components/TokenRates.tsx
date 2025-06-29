@@ -9,7 +9,7 @@ import {
     CarouselPrevious,
 } from '@/components/ui/carousel'
 import Autoplay from 'embla-carousel-autoplay'
-import { TChain, TOpportunityTable, TPositionType } from '@/types'
+import { TChain, TOpportunityTable, TPositionType, TOpportunity } from '@/types'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import ImageWithDefault from './ImageWithDefault'
 import { abbreviateNumber, cn } from '@/lib/utils'
@@ -24,6 +24,9 @@ import ArrowRightIcon from './icons/arrow-right-icon'
 import { PlatformType } from '@/types/platform'
 import ImageWithBadge from './ImageWithBadge'
 import { motion } from 'framer-motion'
+import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+import { TLoopPair } from '@/utils/createLoopPairs'
+import DoubleImage from '@/components/DoubleImage'
 
 export default function TokenRates({ positionType }: { positionType: TPositionType }) {
     const { allChainsData } = useAssetsDataContext()
@@ -33,10 +36,15 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
             chain_ids: [],
             tokens: [],
         })
+    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
     const [isHovering, setIsHovering] = useState(false)
 
     function handleExcludeMorphoMarketsForLendAssets(opportunity: any) {
-        const isVault = opportunity.platform.isVault
+        if (!opportunity || !opportunity.platform) {
+            return false
+        }
+        
+        const isVault = opportunity.platform.isVault || false
         const isMorpho =
             opportunity.platform.protocol_type === PlatformType.MORPHO
 
@@ -44,20 +52,66 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
     }
 
     function handleExcludeMorphoVaultsForBorrowAssets(opportunity: any) {
-        const isVault = opportunity.platform.isVault
+        if (!opportunity || !opportunity.platform) {
+            return false
+        }
+        
+        const isVault = opportunity.platform.isVault || false
         const isMorpho =
             opportunity.platform.protocol_type === PlatformType.MORPHO
 
         return !(isMorpho && isVault)
     }
 
+    function handleExcludeMorphoMarketsForLoopAssets(opportunity: TLoopPair) {
+        // console.log('Filtering loop strategy:', {
+        //     token: (opportunity as any).tokenSymbol || (opportunity as any).tokenName,
+        //     platform: (opportunity as any).platformName,
+        //     isVault: (opportunity as any).isVault,
+        //     platformId: (opportunity as any).platformId,
+        // });
+
+        if (!opportunity) {
+            return false;
+        }
+
+        const isVault = (opportunity as any).isVault || false;
+        const platformId = (opportunity as any).platformId;
+        const isMorpho = platformId?.split('-')[0]?.toLowerCase() === PlatformType.MORPHO;
+        
+        const isIncluded = !(isMorpho && !isVault);
+        // console.log('Is included:', isIncluded);
+        return isIncluded;
+    }
+
     function handleFilterTableRows(opportunity: any) {
+        const apy =
+            positionType === 'loop'
+                ? (opportunity as TLoopPair)?.apy_current
+                : (opportunity as TOpportunity)?.platform?.apy?.current
+        const isValidApy =
+            apy !== null && apy !== undefined && !isNaN(Number(apy)) && Number(apy) > 0
+
+        if (!isValidApy) {
+            return false
+        }
+
+        if (positionType === 'loop') {
+            return handleExcludeMorphoMarketsForLoopAssets(opportunity as TLoopPair)
+        }
         return positionType === 'borrow'
             ? handleExcludeMorphoVaultsForBorrowAssets(opportunity)
             : handleExcludeMorphoMarketsForLendAssets(opportunity)
     }
 
-    const filteredOpportunitiesData = opportunitiesData
+    const isLoading =
+        positionType === 'loop'
+            ? isLoadingLoopPairs
+            : isLoadingOpportunitiesData
+    const data: Array<TOpportunity | TLoopPair> =
+        positionType === 'loop' ? loopPairs : opportunitiesData
+
+    const filteredOpportunitiesData = data
         .filter(handleFilterTableRows)
         .slice(0, 31)
 
@@ -75,13 +129,13 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
                         'hover:[animation-play-state:paused]'
                     )}
                 >
-                    {isLoadingOpportunitiesData &&
+                    {isLoading &&
                         Array.from({ length: 10 }).map((_, index) => (
                             <CarouselItem key={index} className="basis-auto">
                                 <Skeleton className="h-8 w-[100px] rounded-4" />
                             </CarouselItem>
                         ))}
-                    {!isLoadingOpportunitiesData &&
+                    {!isLoading &&
                         filteredOpportunitiesData.map((opportunity, index) => (
                             <CarouselItem key={index} className="basis-auto">
                                 <InfoTooltip
@@ -90,13 +144,7 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
                                     label={
                                         <LinkWrapper
                                             href={getOpportunityUrl({
-                                                tokenAddress:
-                                                    opportunity.token.address,
-                                                protocol_identifier:
-                                                    opportunity.platform
-                                                        .protocol_identifier,
-                                                chain_id:
-                                                    opportunity.chain_id.toString(),
+                                                opportunity,
                                                 positionType: positionType,
                                             })}
                                         >
@@ -109,32 +157,50 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
                                                 }
                                                 className="flex gap-2 items-center py-1 pr-2 pl-1 bg-white rounded-4 shadow-sm hover:shadow-none border border-transaprent hover:border-secondary-300 transition-all duration-300"
                                             >
-                                                <ImageWithBadge
-                                                    mainImg={
-                                                        opportunity?.token
-                                                            ?.logo || ''
-                                                    }
-                                                    badgeImg={
-                                                        getChainLogo({
-                                                            chain_id:
-                                                                opportunity.chain_id.toString(),
-                                                            allChainsData,
-                                                        }) || ''
-                                                    }
-                                                    mainImgAlt={
-                                                        opportunity?.token
-                                                            ?.name || ''
-                                                    }
-                                                    badgeImgAlt={
-                                                        opportunity?.chain_id?.toString() ||
-                                                        ''
-                                                    }
-                                                    mainImgWidth={24}
-                                                    badgeImgWidth={10}
-                                                    mainImgHeight={24}
-                                                    badgeImgHeight={10}
-                                                    badgeCustomClass="bottom-[0px] right-[1px]"
-                                                />
+                                                {positionType === 'loop' ? (
+                                                    <DoubleImage
+                                                        src1={
+                                                            (
+                                                                opportunity as TLoopPair
+                                                            )?.tokenLogo || ''
+                                                        }
+                                                        src2={
+                                                            (
+                                                                opportunity as TLoopPair
+                                                            )?.borrowToken
+                                                                ?.logo || ''
+                                                        }
+                                                    />
+                                                ) : (
+                                                    <ImageWithBadge
+                                                        mainImg={
+                                                            (
+                                                                opportunity as TOpportunity
+                                                            )?.token?.logo || ''
+                                                        }
+                                                        badgeImg={
+                                                            getChainLogo({
+                                                                chain_id:
+                                                                    opportunity.chain_id.toString(),
+                                                                allChainsData,
+                                                            }) || ''
+                                                        }
+                                                        mainImgAlt={
+                                                            (
+                                                                opportunity as TOpportunity
+                                                            )?.token?.name || ''
+                                                        }
+                                                        badgeImgAlt={
+                                                            opportunity?.chain_id?.toString() ||
+                                                            ''
+                                                        }
+                                                        mainImgWidth={24}
+                                                        badgeImgWidth={10}
+                                                        mainImgHeight={24}
+                                                        badgeImgHeight={10}
+                                                        badgeCustomClass="bottom-[0px] right-[1px]"
+                                                    />
+                                                )}
                                                 <BodyText
                                                     level="body2"
                                                     weight="medium"
@@ -142,8 +208,15 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
                                                 >
                                                     {abbreviateNumber(
                                                         Number(
-                                                            opportunity.platform
-                                                                .apy.current
+                                                            (
+                                                                opportunity as TLoopPair
+                                                            )?.apy_current ||
+                                                                (
+                                                                    opportunity as TOpportunity
+                                                                )
+                                                                    .platform
+                                                                    ?.apy
+                                                                    ?.current
                                                         )
                                                     )}
                                                     %
@@ -170,15 +243,32 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
                                                 >
                                                     {positionType === 'lend'
                                                         ? 'Supply'
-                                                        : 'Borrow'}{' '}
+                                                        : positionType ===
+                                                          'borrow'
+                                                        ? 'Borrow'
+                                                        : 'Loop'}{' '}
                                                     APY
                                                 </Label>
                                             </div>
                                             <div className="flex gap-2 items-center justify-start py-2 md:py-1">
                                                 <ImageWithDefault
                                                     loading="lazy"
-                                                    src={opportunity.token.logo}
-                                                    alt={opportunity.token.name}
+                                                    src={
+                                                        (
+                                                            opportunity as TLoopPair
+                                                        )?.tokenLogo ||
+                                                        (
+                                                            opportunity as TOpportunity
+                                                        )?.token?.logo
+                                                    }
+                                                    alt={
+                                                        (
+                                                            opportunity as TLoopPair
+                                                        )?.tokenName ||
+                                                        (
+                                                            opportunity as TOpportunity
+                                                        )?.token?.name
+                                                    }
                                                     width={14}
                                                     height={14}
                                                     className="object-contain shrink-0 rounded-full h-[14px] w-[14px] max-w-[14px] max-h-[14px]"
@@ -187,19 +277,38 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
                                                     weight="normal"
                                                     className="text-gray-700 truncate max-w-[150px]"
                                                 >
-                                                    {opportunity.token.name}
+                                                    {(
+                                                        opportunity as TLoopPair
+                                                    )?.tokenName ||
+                                                        (
+                                                            opportunity as TOpportunity
+                                                        )?.token?.name}
+                                                    {positionType === 'loop' &&
+                                                        ` → ${
+                                                            (
+                                                                opportunity as TLoopPair
+                                                            )?.borrowToken?.name
+                                                        }`}
                                                 </Label>
                                             </div>
                                             <div className="flex gap-2 items-center justify-start py-2 md:py-1">
                                                 <ImageWithDefault
                                                     loading="lazy"
                                                     src={
-                                                        opportunity.platform
-                                                            .logo
+                                                        (
+                                                            opportunity as TLoopPair
+                                                        )?.platformLogo ||
+                                                        (
+                                                            opportunity as TOpportunity
+                                                        )?.platform.logo
                                                     }
                                                     alt={
-                                                        opportunity.platform
-                                                            .name
+                                                        (
+                                                            opportunity as TLoopPair
+                                                        )?.platformName ||
+                                                        (
+                                                            opportunity as TOpportunity
+                                                        )?.platform.name
                                                     }
                                                     width={14}
                                                     height={14}
@@ -209,7 +318,12 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
                                                     weight="normal"
                                                     className="text-gray-700 truncate max-w-[150px]"
                                                 >
-                                                    {opportunity.platform.name}
+                                                    {(
+                                                        opportunity as TLoopPair
+                                                    )?.platformName ||
+                                                        (
+                                                            opportunity as TOpportunity
+                                                        ).platform.name}
                                                 </Label>
                                             </div>
                                             <div className="flex gap-2 items-center justify-start max-md:py-2 md:pt-2">
@@ -244,14 +358,7 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
                                             <div className="flex md:hidden gap-2 items-center justify-start pt-2">
                                                 <Link
                                                     href={getOpportunityUrl({
-                                                        tokenAddress:
-                                                            opportunity.token
-                                                                .address,
-                                                        protocol_identifier:
-                                                            opportunity.platform
-                                                                .protocol_identifier,
-                                                        chain_id:
-                                                            opportunity.chain_id.toString(),
+                                                        opportunity,
                                                         positionType:
                                                             positionType,
                                                     })}
@@ -276,16 +383,22 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
 }
 
 function getOpportunityUrl({
-    tokenAddress,
-    protocol_identifier,
-    chain_id,
+    opportunity,
     positionType,
 }: {
-    tokenAddress: string
-    protocol_identifier: string
-    chain_id: string
+    opportunity: TLoopPair | TOpportunity
     positionType: TPositionType
 }) {
+    if (positionType === 'loop') {
+        const { tokenAddress, borrowToken, protocol_identifier, chain_id } =
+            opportunity as TLoopPair
+        return `/position-management?lend_token=${tokenAddress}&borrow_token=${borrowToken.address}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=loop`
+    }
+    const {
+        token: { address: tokenAddress },
+        platform: { protocol_identifier },
+        chain_id,
+    } = opportunity as TOpportunity
     return `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`
 }
 

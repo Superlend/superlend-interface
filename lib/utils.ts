@@ -579,35 +579,35 @@ export const convertAPRtoAPY = (apr: number) => {
  * @returns Mapped data with consistent key names
  */
 export function mapApiResponse<T = any>(
-  data: any,
-  keyMappings: Record<string, string | Record<string, string>>
+    data: any,
+    keyMappings: Record<string, string | Record<string, string>>
 ): T {
-  if (!data || typeof data !== 'object') {
-    return data
-  }
-
-  if (Array.isArray(data)) {
-    return data.map(item => mapApiResponse(item, keyMappings)) as T
-  }
-
-  const mappedData: any = {}
-
-  Object.keys(keyMappings).forEach(expectedKey => {
-    const mapping = keyMappings[expectedKey]
-    
-    if (typeof mapping === 'string') {
-      // Simple key mapping
-      mappedData[expectedKey] = data[mapping]
-    } else if (typeof mapping === 'object') {
-      // Nested object mapping
-      const nestedData = data[expectedKey]
-      if (nestedData && typeof nestedData === 'object') {
-        mappedData[expectedKey] = mapApiResponse(nestedData, mapping)
-      }
+    if (!data || typeof data !== 'object') {
+        return data
     }
-  })
 
-  return mappedData as T
+    if (Array.isArray(data)) {
+        return data.map(item => mapApiResponse(item, keyMappings)) as T
+    }
+
+    const mappedData: any = {}
+
+    Object.keys(keyMappings).forEach(expectedKey => {
+        const mapping = keyMappings[expectedKey]
+
+        if (typeof mapping === 'string') {
+            // Simple key mapping
+            mappedData[expectedKey] = data[mapping]
+        } else if (typeof mapping === 'object') {
+            // Nested object mapping
+            const nestedData = data[expectedKey]
+            if (nestedData && typeof nestedData === 'object') {
+                mappedData[expectedKey] = mapApiResponse(nestedData, mapping)
+            }
+        }
+    })
+
+    return mappedData as T
 }
 
 /**
@@ -616,24 +616,24 @@ export function mapApiResponse<T = any>(
  * @returns Object with camelCase keys
  */
 export function snakeToCamelCase(obj: any): any {
-  if (obj === null || typeof obj !== 'object') {
-    return obj
-  }
-
-  if (Array.isArray(obj)) {
-    return obj.map(snakeToCamelCase)
-  }
-
-  const camelObj: any = {}
-  
-  for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
-      camelObj[camelKey] = snakeToCamelCase(obj[key])
+    if (obj === null || typeof obj !== 'object') {
+        return obj
     }
-  }
 
-  return camelObj
+    if (Array.isArray(obj)) {
+        return obj.map(snakeToCamelCase)
+    }
+
+    const camelObj: any = {}
+
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+            camelObj[camelKey] = snakeToCamelCase(obj[key])
+        }
+    }
+
+    return camelObj
 }
 
 /**
@@ -642,22 +642,50 @@ export function snakeToCamelCase(obj: any): any {
  * @returns Object with snake_case keys
  */
 export function camelToSnakeCase(obj: any): any {
-  if (obj === null || typeof obj !== 'object') {
-    return obj
-  }
-
-  if (Array.isArray(obj)) {
-    return obj.map(camelToSnakeCase)
-  }
-
-  const snakeObj: any = {}
-  
-  for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
-      snakeObj[snakeKey] = camelToSnakeCase(obj[key])
+    if (obj === null || typeof obj !== 'object') {
+        return obj
     }
-  }
 
-  return snakeObj
+    if (Array.isArray(obj)) {
+        return obj.map(camelToSnakeCase)
+    }
+
+    const snakeObj: any = {}
+
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
+            snakeObj[snakeKey] = camelToSnakeCase(obj[key])
+        }
+    }
+
+    return snakeObj
+}
+
+export function formatTokenAmount(amount: number | string, decimals: number = 8): string {
+    const numAmount = typeof amount === 'string' ? Number(amount) : amount
+
+    // If the amount is 0, return "0"
+    if (numAmount === 0) return '0'
+
+    // For very small amounts that would normally be in scientific notation
+    if (Math.abs(numAmount) < Math.pow(10, -decimals)) {
+        // Round to the specified decimal places and add ~ symbol
+        const roundedAmount = numAmount.toFixed(decimals)
+        return `~${roundedAmount}`
+    }
+
+    // For small but not tiny amounts, show with appropriate decimal places
+    if (Math.abs(numAmount) < 0.001) {
+        const decimalPlaces = Math.max(8, Math.ceil(-Math.log10(Math.abs(numAmount))) + 2)
+        return numAmount.toFixed(Math.min(decimalPlaces, 12))
+    }
+
+    // For larger amounts, use the existing abbreviateNumber function
+    if (Math.abs(numAmount) >= 1) {
+        return abbreviateNumber(numAmount)
+    }
+
+    // For amounts between 0.001 and 1, show with appropriate decimal places
+    return numAmount.toFixed(6).replace(/\.?0+$/, '')
 }

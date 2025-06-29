@@ -27,7 +27,7 @@ export default function AllPositions() {
     const router = useRouter()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
-    const positionTypeParam = searchParams?.get('position_type') || 'lend'
+    const positionTypeParam = searchParams?.get('position_type') || 'all'
     const tokenIdsParam = searchParams?.get('token_ids')?.split(',') || []
     const chainIdsParam = searchParams?.get('chain_ids')?.split(',') || []
     const platformIdsParam = searchParams?.get('protocol_ids')?.split(',') || []
@@ -40,11 +40,12 @@ export default function AllPositions() {
     const [searchKeywords, setSearchKeywords] = useState<string>('')
     const debouncedKeywords = useDebounce(searchKeywords, 300)
     const [sorting, setSorting] = useState<SortingState>([
-        { id: 'apy', desc: positionTypeParam === 'lend' },
+        { id: 'apy', desc: positionTypeParam === 'lend' || positionTypeParam === 'all' },
     ])
     const [columnVisibility, setColumnVisibility] = useState({
         deposits: true,
         borrows: false,
+        positionType: false,
     })
     const { allChainsData } = useContext(AssetsDataContext)
     const { portfolioData, isLoadingPortfolioData, isErrorPortfolioData } =
@@ -52,12 +53,20 @@ export default function AllPositions() {
 
     useEffect(() => {
         setColumnVisibility(() => {
+            if (positionTypeParam === 'all') {
+                return {
+                    deposits: true,
+                    borrows: false,
+                    positionType: true,
+                }
+            }
             return {
                 deposits: positionTypeParam === 'lend',
                 borrows: positionTypeParam === 'borrow',
+                positionType: false,
             }
         })
-        setSorting([{ id: 'apy', desc: positionTypeParam === 'lend' }])
+        setSorting([{ id: 'apy', desc: positionTypeParam === 'lend' || positionTypeParam === 'all' }])
     }, [positionTypeParam])
 
     useEffect(() => {
@@ -98,7 +107,7 @@ export default function AllPositions() {
             })
         })
         .flat(portfolioData?.platforms.length)
-        .filter((position) => position.type === positionTypeParam)
+        .filter((position) => positionTypeParam === 'all' || position.type === positionTypeParam)
 
     const rawTableData: TPositionsTable[] = POSITIONS?.map((item) => {
         return {
@@ -128,6 +137,7 @@ export default function AllPositions() {
             earnings:
                 (item.amount - item.initial_amount) * item.token.price_usd,
             isVault: item.platform.isVault || false,
+            positionType: item.type,
         }
     })
 
@@ -215,13 +225,25 @@ export default function AllPositions() {
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
                         <div className="w-full sm:max-w-[350px]">
                             <ToggleTab
-                                type={positionType === 'lend' ? 'tab1' : 'tab2'}
+                                type={positionType === 'all' ? 'tab1' : positionType === 'lend' ? 'tab2' : 'tab3'}
                                 handleToggle={(positionType: TTypeToMatch) => {
                                     toggleOpportunityType(
                                         positionType === 'tab1'
+                                            ? 'all'
+                                            : positionType === 'tab2'
                                             ? 'lend'
                                             : 'borrow'
                                     )
+                                }}
+                                title={{
+                                    tab1: 'All',
+                                    tab2: 'Earn',
+                                    tab3: 'Borrow',
+                                }}
+                                showTab={{
+                                    tab1: true,
+                                    tab2: true,
+                                    tab3: true,
                                 }}
                             />
                         </div>
