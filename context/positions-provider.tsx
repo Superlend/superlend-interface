@@ -41,7 +41,7 @@ const filtersInit = {
     protocol_identifier: [],
 }
 
-const positionTypeInit: TPositionType = 'lend'
+const positionTypeInit: TPositionType = 'all'
 
 const PortfolioDataInit = {
     platforms: [],
@@ -66,7 +66,7 @@ export default function PositionsProvider({
 }) {
     const searchParams = useSearchParams()
     const updateSearchParams = useUpdateSearchParams()
-    const positionTypeParam = searchParams?.get('position_type') || 'lend'
+    const positionTypeParam = searchParams?.get('position_type') || 'all'
     const tokenIdsParam = searchParams?.get('token_ids')?.split(',').filter(Boolean) || []
     const chainIdsParam = searchParams?.get('chain_ids')?.split(',').filter(Boolean) || []
     const platformIdsParam = searchParams?.get('protocol_ids')?.split(',').filter(Boolean) || []

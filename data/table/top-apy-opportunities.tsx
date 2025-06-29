@@ -446,12 +446,10 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                     />
                                 </motion.div>
                             }
-                            content={getRewardsTooltipContent({
-                                baseRateFormatted: appleFarmBaseRateFormatted || '',
-                                rewards: appleFarmRewards || [],
-                                apyCurrent: netAppleFarmAPY || 0,
-                                positionTypeParam,
-                                netApyIcon: '/images/apple-farm-favicon.ico',
+                            content={getAppleFarmAPYTooltipContent({
+                                baseAPY: appleFarmBaseRate,
+                                appleFarmAPR: appleFarmApr,
+                                totalAPY: netAppleFarmAPY,
                             })}
                         />
                     )}
@@ -910,6 +908,95 @@ function getRewardsTooltipContent({
                     className="text-gray-800"
                 >
                     = {abbreviateNumber(apyCurrent)}%
+                </BodyText>
+            </div>
+        </div>
+    )
+}
+
+/**
+ * Get apple farm APY breakdown tooltip content
+ * @param baseAPY
+ * @param appleFarmAPR
+ * @param totalAPY
+ * @returns apple farm APY breakdown tooltip content
+ */
+function getAppleFarmAPYTooltipContent({
+    baseAPY,
+    appleFarmAPR,
+    totalAPY,
+}: {
+    baseAPY: number
+    appleFarmAPR: number
+    totalAPY: number
+}) {
+    return (
+        <div className="flex flex-col divide-y divide-gray-800">
+            <BodyText
+                level="body1"
+                weight="medium"
+                className="py-2 text-gray-800"
+            >
+                APY Breakdown
+            </BodyText>
+            <div
+                className="flex items-center justify-between gap-[70px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <Percent className="w-[14px] h-[14px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">
+                        Base APY
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    {abbreviateNumber(baseAPY)}%
+                </BodyText>
+            </div>
+            <div
+                className="flex items-center justify-between gap-[70px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <ImageWithDefault
+                        src="/images/apple-farm-favicon.ico"
+                        width={14}
+                        height={14}
+                        alt="Apple Farm"
+                        className="inline-block rounded-full object-contain"
+                    />
+                    <Label weight="medium" className="text-gray-800">
+                        Apple Farm APR
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    + {abbreviateNumber(appleFarmAPR)}%
+                </BodyText>
+            </div>
+            <div
+                className="flex items-center justify-between gap-[70px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <TrendingUp className="w-[14px] h-[14px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">
+                        Total APY
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    = {abbreviateNumber(totalAPY)}%
                 </BodyText>
             </div>
         </div>

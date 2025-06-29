@@ -87,7 +87,7 @@ const WithdrawButton = ({
     const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
     const isAave = assetDetails?.protocol_type === PlatformType.AAVE
     const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
-    const isMorphoVault = isMorpho && !!assetDetails?.vault && !!assetDetails?.vault?.data
+    const isMorphoVault = isMorpho && !!assetDetails?.vault 
     const isMorphoMarket = isMorpho && !!assetDetails?.market
     const isFluid = assetDetails?.protocol_type === PlatformType.FLUID
     const isFluidVault = isFluid && assetDetails?.isVault
@@ -338,6 +338,8 @@ const WithdrawButton = ({
             abi: AAVE_APPROVE_ABI,
             functionName: 'approve',
             args: [bunder_address as `0x${string}`, shareAmount],
+        }).catch((error) => {
+            console.log('error', error)
         })
     }
 

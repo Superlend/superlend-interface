@@ -8,10 +8,10 @@ import ScrollToTop from '@/components/ScrollToTop'
 import { Toaster } from 'react-hot-toast'
 import EasterEgg from '@/components/EasterEgg'
 import { BlockchainDataPrefetcher } from '@/components/BlockchainDataPrefetcher'
-import { CsrfInitializer } from '@/components/CsrfInitializer'
 import MarketsBanner from '@/components/MarketsBanner'
 import { OnboardingProvider } from '@/components/providers/OnboardingProvider'
 import ZohoChatWidget from '@/components/ZohoChatWidget'
+import { CsrfInitializer } from '@/components/CsrfInitializer'
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://app.superlend.xyz'),

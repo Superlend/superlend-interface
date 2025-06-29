@@ -6,7 +6,8 @@ import {
     Multicall,
 } from 'ethereum-multicall'
 import { MULTICALL_ADDRESSES } from '../lib/constants'
-import { ProxyProvider } from '@/lib/proxy-provider'
+import { createDirectProviders } from '@/lib/direct-providers'
+import { providers } from 'ethers'
 import { SUPPORTED_CHAIN_IDS } from '@/constants'
 
 // Override Multicall to optimize RPC calls
@@ -60,26 +61,18 @@ export class OptimizedMulticall extends Multicall {
 }
 
 export const useEthersMulticall = () => {
-    const [providers, setProviders] = useState<
-        Record<number, ProxyProvider>
-    >({})
+    const [providers, setProviders] = useState<Record<number, providers.JsonRpcProvider>>({})
     const [multicall, setMulticall] = useState<Record<number, OptimizedMulticall>>({})
     const [isLoading, setIsLoading] = useState<Boolean>(false)
     const [isError, setIsError] = useState(false)
 
     const initalizeEthMulticall = () => {
         try {
-            // if (isLoading) return
             setIsLoading(true)
             
-            // Create providers using our secure proxy
-            const chainIds = SUPPORTED_CHAIN_IDS;
-            const _providers: Record<number, ProxyProvider> = {};
+            // Create direct providers instead of proxy providers
+            const _providers = createDirectProviders();
             
-            for (const chainId of chainIds) {
-                _providers[chainId] = new ProxyProvider(chainId);
-            }
-
             const _multicall: Record<number, OptimizedMulticall> = {}
             for (const chain of Object.keys(_providers)) {
                 const chainId = Number(chain)

@@ -84,6 +84,7 @@ export function WithdrawOrRepayTxDialog({
     setAmount,
     positionTokenAmount,
     errorMessage,
+    userHasNoBorrowings,
 }: {
     isOpen: boolean
     setIsOpen: (open: boolean) => void
@@ -111,6 +112,7 @@ export function WithdrawOrRepayTxDialog({
     setAmount: (amount: string) => void
     positionTokenAmount: string | number | undefined
     errorMessage: string | null
+    userHasNoBorrowings?: boolean
 }) {
     const { withdrawTx, setWithdrawTx, repayTx, setRepayTx } =
         useTxContext() as TTxContext
@@ -119,6 +121,7 @@ export function WithdrawOrRepayTxDialog({
     const [localPositionTokenAmount, setLocalPositionTokenAmount] = useState(positionTokenAmount)
     const [localMaxWithdrawAmount, setLocalMaxWithdrawAmount] = useState(maxWithdrawAmount)
     const [localMaxRepayAmount, setLocalMaxRepayAmount] = useState(maxRepayAmount)
+    const [localUserHasNoBorrowings, setLocalUserHasNoBorrowings] = useState(userHasNoBorrowings)
     const searchParams = useSearchParams()
     const chain_id = searchParams?.get('chain_id') || '1'
     const { width: screenWidth } = useDimensions()
@@ -148,12 +151,13 @@ export function WithdrawOrRepayTxDialog({
     ).toString()
 
     const maxAmount = isWithdrawAction
-        ? ((Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
+        ? (localUserHasNoBorrowings 
+            ? localMaxWithdrawAmount.maxToWithdrawFormatted
+            : (Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
             '0')
-        : ((Number(localMaxRepayAmount.maxToRepayFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
-            '0')
+        : localMaxRepayAmount.maxToRepayFormatted  // For repay, always use the full amount without slippage
 
-    const isMorphoVaultsProtocol = !!localAssetDetails?.vault && !!localAssetDetails?.vault?.data
+    const isMorphoVaultsProtocol = !!localAssetDetails?.vault 
 
     const withdrawTxCompleted = withdrawTx.isConfirmed && withdrawTx.hash && withdrawTx.status === 'view'
     const repayTxCompleted = repayTx.isConfirmed && repayTx.hash && repayTx.status === 'view'
@@ -191,12 +195,13 @@ export function WithdrawOrRepayTxDialog({
             setLocalPositionTokenAmount(positionTokenAmount)
             setLocalMaxWithdrawAmount(maxWithdrawAmount)
             setLocalMaxRepayAmount(maxRepayAmount)
+            setLocalUserHasNoBorrowings(userHasNoBorrowings)
             // Switch chain when the dialog is opened
             if (!!walletAddress) {
                 handleSwitchChain(Number(chain_id))
             }
         }
-    }, [isOpen, chain_id, maxWithdrawAmount, maxRepayAmount, assetDetails, positionTokenAmount])
+    }, [isOpen, chain_id, maxWithdrawAmount, maxRepayAmount, assetDetails, positionTokenAmount, userHasNoBorrowings])
 
     function resetLendwithdrawTx() {
         setRepayTx((prev: TRepayTx) => ({
@@ -294,7 +299,10 @@ export function WithdrawOrRepayTxDialog({
 
     const currentPositionAmountInUSD = Number(localPositionTokenAmount) * Number(localAssetDetails?.asset?.token?.price_usd)
     const inputAmountInUSD = (Number(amount) * Number(localAssetDetails?.asset?.token?.price_usd))
-    const newPositionAmountInUSD = currentPositionAmountInUSD - inputAmountInUSD
+    
+    // For repay actions, if user is repaying the maximum amount, remaining should be exactly 0
+    const isMaxRepay = !isWithdrawAction && Number(amount) === Number(localMaxRepayAmount.maxToRepayFormatted)
+    const newPositionAmountInUSD = isMaxRepay ? 0 : currentPositionAmountInUSD - inputAmountInUSD
 
     const disableActionButton = disabled || isTxInProgress
     // || (!hasAcknowledgedRisk && !isWithdrawAction && isHfLow())
@@ -1126,6 +1134,7 @@ export function WithdrawOrRepayTxDialog({
                         assetDetails: localAssetDetails,
                         maxRepayAmount: localMaxRepayAmount,
                         maxWithdrawAmount: localMaxWithdrawAmount,
+                        userHasNoBorrowings: localUserHasNoBorrowings,
                     })}
                     actionType={actionType}
                 />
@@ -1234,33 +1243,50 @@ const getActionButtonAmount = ({
     assetDetails,
     maxRepayAmount,
     maxWithdrawAmount,
+    userHasNoBorrowings,
 }: {
     amount: string
     actionType: TActionType
     assetDetails: any
     maxRepayAmount: any
     maxWithdrawAmount: any
+    userHasNoBorrowings?: boolean
 }) => {
-    const amountWithSlippage = (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
     if (actionType === 'repay') {
+        // Check if user is trying to repay the maximum amount (full debt)
+        const isMaxRepay = Number(amount) === Number(maxRepayAmount.maxToRepayFormatted)
+        
+        // For max repay, use exact amount without slippage to ensure full debt is repaid
+        // For partial repay, apply slippage
+        const amountWithSlippage = isMaxRepay 
+            ? amount  // Use exact amount for max repay
+            : (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
+            
         const amountParsed = parseUnits(
             amount === '' ? '0' : amountWithSlippage,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
+        
         return {
             amountRaw: amountWithSlippage,
             amountParsed,
-            scValue:
-                amountParsed === maxRepayAmount.maxToRepay
-                    ? maxRepayAmount.maxToRepaySCValue
-                    : '-' + amountParsed.toString(),
+            scValue: isMaxRepay && maxRepayAmount.maxToRepaySCValue === 'max'
+                ? maxRepayAmount.maxToRepaySCValue
+                : '-' + amountParsed.toString(),
         }
     }
+    
     if (actionType === 'withdraw') {
+        // For withdrawal with no borrowings, use the exact amount without any conversions to avoid precision loss
+        const amountWithSlippage = (userHasNoBorrowings) 
+            ? amount  // Use exact amount for users with no borrowings
+            : (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
+            
         const amountParsed = parseUnits(
             amount === '' ? '0' : amountWithSlippage,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
+        
         const v = {
             amountRaw: amountWithSlippage,
             amountParsed,

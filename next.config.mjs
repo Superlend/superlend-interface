@@ -24,6 +24,9 @@ const nextConfig = {
                 hostname: 'cdn.whisk.so',
             },
             {
+                hostname: 'cryptologos.cc',
+            },
+            {
                 hostname: 'funds.superlend.xyz',
             },
             {

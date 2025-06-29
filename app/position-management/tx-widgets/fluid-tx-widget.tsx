@@ -11,7 +11,7 @@ import {
     cn,
     getLowestDisplayValue,
 } from '@/lib/utils'
-import { TPlatform, TPositionType } from '@/types'
+import { TAssetDetails, TPlatform, TPositionType } from '@/types'
 import { PlatformType, TPlatformAsset } from '@/types/platform'
 import { LoaderCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
@@ -356,7 +356,7 @@ function FluidLend({
                                 assetDetails={{
                                     asset: selectedAssetTokenDetails,
                                     ...platformData?.platform,
-                                }}
+                                } as TAssetDetails}
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount
@@ -933,7 +933,7 @@ function FluidVaults({
                                         : fluidBorrowTokenDetails,
                                     ...platformData?.platform,
                                     fluid_vault_nftId: fluidVaultNftId,
-                                }}
+                                } as TAssetDetails}
                                 amount={amount}
                                 balance={balance}
                                 // TODO: Get max borrow amount

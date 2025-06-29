@@ -2,7 +2,7 @@
 
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { FC, useContext } from 'react'
-import { PlatformType } from '@/types/platform'
+import { PlatformType, TPlatform } from '@/types/platform'
 import useGetPlatformData from '@/hooks/useGetPlatformData'
 import { useSearchParams } from 'next/navigation'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
@@ -10,10 +10,13 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 import AaveV3TxWidget from './aave-tx-widget'
 import MorphoTxWidget from './morpho-tx-widget'
 import FluidTxWidget from './fluid-tx-widget'
+import LoopingWidget from './looping-widget'
+import { ChainId } from '@/types/chain'
 import { useTxContext } from '@/context/tx-provider'
 import { TTxContext } from '@/context/tx-provider'
 import { useWhalesSupportDialog } from '@/hooks/useWhalesSupportDialog'
 import { PortfolioContext } from '@/context/portfolio-provider'
+import { TPortfolio } from '@/types/queries/portfolio'
 import { WhalesSupportDialog } from '@/components/dialogs/WhalesSupportDialog'
 import { MORPHO_BLUE_API_CHAINIDS } from '../../../lib/constants'
 
@@ -21,8 +24,9 @@ export const AssetTxWidget: FC = () => {
     const { portfolioData: portfolioContextData } = useContext(PortfolioContext)
     const searchParams = useSearchParams()
     // const tokenAddress = searchParams.get('token') || ''
+    const position_type = searchParams.get('position_type') || ''
+    const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const chain_id = searchParams?.get('chain_id') || '1'
-    const protocol_identifier = searchParams?.get('protocol_identifier') || ''
     const {
         walletAddress,
         handleSwitchChain,
@@ -75,14 +79,28 @@ export const AssetTxWidget: FC = () => {
     const isMorphoMarket = isMorphoProtocol && !platformData?.platform?.isVault
     const isFluidProtocol =
         platformData?.platform?.protocol_type === PlatformType.FLUID
+    const isLoopingPosition = position_type === 'loop'
 
     if (isLoading && (isAaveV3Protocol || isMorphoProtocol)) {
         return <LoadingSectionSkeleton className="h-[300px] w-full" />
     }
 
-    if (isAaveV3Protocol) {
+    if (isLoopingPosition && !isLoading) {
         return (
-            <WhalesSupportDialogWrapper
+            <LoopingWidget
+                isLoading={isLoading}
+                platformData={platformData}
+                portfolioData={portfolioData}
+            />
+        )
+    }
+
+    if (isAaveV3Protocol && !isLoading) {
+        return (
+            <WidgetWrapper
+                isLoading={isLoading}
+                platformData={platformData}
+                portfolioData={portfolioData}
                 showWhalesSupportDialog={showWhalesSupportDialog}
                 setShowWhalesSupportDialog={setShowWhalesSupportDialog}
                 portfolioValue={portfolioValue}
@@ -92,18 +110,21 @@ export const AssetTxWidget: FC = () => {
                     platformData={platformData}
                     portfolioData={portfolioData}
                 />
-            </WhalesSupportDialogWrapper>
+            </WidgetWrapper>
         )
     }
 
-    if (isMorphoProtocol) {
+    if (isMorphoProtocol && !isLoading) {
         // if (
         //     isMorphoMarket &&
         //     !MORPHO_BLUE_API_CHAINIDS.includes(Number(chain_id))
         // )
         //     return null
         return (
-            <WhalesSupportDialogWrapper
+            <WidgetWrapper
+                isLoading={isLoadingPlatformData}
+                platformData={platformData}
+                portfolioData={portfolioData}
                 showWhalesSupportDialog={showWhalesSupportDialog}
                 setShowWhalesSupportDialog={setShowWhalesSupportDialog}
                 portfolioValue={portfolioValue}
@@ -112,13 +133,16 @@ export const AssetTxWidget: FC = () => {
                     isLoading={isLoadingPlatformData}
                     platformData={platformData}
                 />
-            </WhalesSupportDialogWrapper>
+            </WidgetWrapper>
         )
     }
 
-    if (isFluidProtocol) {
+    if (isFluidProtocol && !isLoading) {
         return (
-            <WhalesSupportDialogWrapper
+            <WidgetWrapper
+                isLoading={isLoadingPlatformData}
+                platformData={platformData}
+                portfolioData={portfolioData}
                 showWhalesSupportDialog={showWhalesSupportDialog}
                 setShowWhalesSupportDialog={setShowWhalesSupportDialog}
                 portfolioValue={portfolioValue}
@@ -128,26 +152,32 @@ export const AssetTxWidget: FC = () => {
                     platformData={platformData}
                     portfolioData={portfolioData}
                 />
-            </WhalesSupportDialogWrapper>
+            </WidgetWrapper>
         )
     }
 
     return null
 }
 
-export const WhalesSupportDialogWrapper = ({
+export const WidgetWrapper = ({
     children,
+    isLoading,
+    platformData,
+    portfolioData,
     showWhalesSupportDialog,
     setShowWhalesSupportDialog,
     portfolioValue
 }: {
     children: React.ReactNode,
+    isLoading: boolean,
+    platformData: TPlatform,
+    portfolioData: TPortfolio,
     showWhalesSupportDialog: boolean,
     setShowWhalesSupportDialog: (show: boolean) => void,
     portfolioValue: number
 }) => {
     return (
-        <>
+        <div className="flex flex-col gap-4">
             {children}
             <WhalesSupportDialog
                 open={showWhalesSupportDialog}
@@ -155,6 +185,6 @@ export const WhalesSupportDialogWrapper = ({
                 portfolioValue={portfolioValue}
                 website="AGGREGATOR"
             />
-        </>
+        </div>
     )
 }
