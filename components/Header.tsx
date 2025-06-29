@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Button } from './ui/button'
 import { usePathname, useRouter } from 'next/navigation'
 import HomeIcon from './icons/home-icon'
@@ -8,7 +8,7 @@ import CompassIcon from './icons/compass-icon'
 import PieChartIcon from './icons/pie-chart-icon'
 import RewardsIcon from './icons/rewards-icon'
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet'
-import { Menu, TrophyIcon, X } from 'lucide-react'
+import { CirclePower, InfoIcon, Menu, TrophyIcon, X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ConnectWalletButton from './ConnectWalletButton'
 import CheckInButton from './CheckInButton'
@@ -16,6 +16,9 @@ import Link from 'next/link'
 import { Badge } from './ui/badge'
 import { ChainId } from '@/types/chain'
 import TopBanner from './TopBanner'
+import InfoTooltip from './tooltips/InfoTooltip'
+import { useOnboardingContext } from './providers/OnboardingProvider'
+import useDimensions from '@/hooks/useDimensions'
 
 type TTab = {
     id: number
@@ -25,12 +28,20 @@ type TTab = {
 }
 
 const Header: React.FC = () => {
+    const { resetOnboarding } = useOnboardingContext()
+    const { width: screenWidth } = useDimensions()
+    const isDesktop = useMemo(() => screenWidth > 768, [screenWidth])
     const tabs: TTab[] = [
         { id: 1, name: 'Home', href: '/', icon: HomeIcon },
         { id: 2, name: 'Discover', href: getRedirectionLink('/discover'), icon: CompassIcon },
         { id: 3, name: 'Portfolio', href: '/portfolio', icon: PieChartIcon },
         // { id: 4, name: 'Points', href: '/points', icon: RewardsIcon },
     ]
+
+
+    function handleStartTour() {
+        resetOnboarding()
+    }
 
     const activeTabInitialValue = (pathname: string) => {
         // Treat /etherlink as /discover for tab highlighting
@@ -132,7 +143,7 @@ const Header: React.FC = () => {
                         />
                         <Badge
                             variant="blue"
-                            className="absolute top-[4px] -right-12 w-fit rounded-full px-2 py-[2px]"
+                            className="absolute max-md:bg-transparent max-md:left-6 md:top-[4px] md:-right-12 w-fit rounded-full px-2 py-[2px]"
                         >
                             Beta
                         </Badge>
@@ -168,8 +179,22 @@ const Header: React.FC = () => {
                         ))}
                     </nav>
                     <div className="flex items-center gap-[16px]">
-                        {/* <CheckInButton /> */}
-                        <ConnectWalletButton />
+                        <InfoTooltip
+                            hide={!isDesktop}
+                            label={
+                                <Button
+                                    variant="ghost"
+                                    className="p-0 w-fit flex items-center justify-center group hover:scale-110 transition-all duration-300"
+                                    onClick={handleStartTour}
+                                >
+                                    <CirclePower className="w-5 h-5 stroke-primary/75 group-hover:stroke-primary" />
+                                </Button>
+                            }
+                            content={'Start Tour'}
+                        />
+                        <div className="max-w-[120px] w-full">
+                            <ConnectWalletButton />
+                        </div>
                     </div>
                 </div>
             </header>

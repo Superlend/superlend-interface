@@ -1,6 +1,5 @@
 'use client'
 
-import { wagmiAdapter } from '@/config'
 import React, { type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AssetsDataProvider from './data-provider'
@@ -25,7 +24,6 @@ import {
 import { http } from 'wagmi'
 import { RPC_URLS } from '@/lib/direct-providers'
 import { AnalyticsProvider } from './analytics-provider'
-import { PageVisitTracker } from '@/components/analytics/PageVisitTracker'
 import { ShowAllMarketsProvider } from './show-all-markets-provider'
 import { AuthProvider } from './auth-provider'
 import { AaveV3DataProvider } from './aave-v3-data-provider'
@@ -34,6 +32,7 @@ import { AaveV3DataProvider } from './aave-v3-data-provider'
 const queryClient = new QueryClient()
 
 const appId = 'cm5o77rga039b99tzkjakb6ji'
+const REOWN_PROJECT_ID = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || ''
 
 export const config = createConfig({
     chains: [
@@ -77,6 +76,9 @@ const privyConfig = {
         landingHeader: 'Connect Wallet',
         loginMessage: 'Select wallet to continue',
         showWalletLoginFirst: true,
+        walletConnect: {
+            projectId: REOWN_PROJECT_ID,
+        },
         walletList: [
             'detected_ethereum_wallets',
             'metamask',
@@ -107,7 +109,6 @@ const privyConfig = {
 function ContextProvider({ children }: { children: ReactNode }) {
     return (
         <AnalyticsProvider>
-            {/* <PageVisitTracker /> */}
             <PrivyProvider
                 appId={appId}
                 config={privyConfig as PrivyClientConfig}

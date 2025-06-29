@@ -1,4 +1,3 @@
-import { customMetisNetwork } from './config'
 import { ChainId, ChainName } from './types/chain'
 import { Period, PeriodDisplay } from './types/periodButtons'
 import {
