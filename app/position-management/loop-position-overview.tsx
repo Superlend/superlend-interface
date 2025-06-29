@@ -350,8 +350,8 @@ export default function LoopPositionOverview() {
         }
 
         // Check if user has any positions on this platform (even if not the specific token pair)
-        const platformHealthFactor = userPositions.length > 0 ? parseFloat(userPositions[0].health_factor.toFixed(2)) : parseFloat((0).toFixed(2))
-        const platformNetAPYValue = userPositions.length > 0 ? parseFloat(userPositions[0].net_apy.toFixed(2)) : 0
+        const platformHealthFactor = userPositions.length > 0 && userPositions[0].health_factor != null ? parseFloat(userPositions[0].health_factor.toFixed(2)) : parseFloat((0).toFixed(2))
+        const platformNetAPYValue = userPositions.length > 0 && userPositions[0].net_apy != null ? parseFloat(userPositions[0].net_apy.toFixed(2)) : 0
 
         // Fallback data for users without specific token pair positions
         return {
