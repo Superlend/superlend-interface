@@ -11,6 +11,7 @@ import { BlockchainDataPrefetcher } from '@/components/BlockchainDataPrefetcher'
 import MarketsBanner from '@/components/MarketsBanner'
 import { OnboardingProvider } from '@/components/providers/OnboardingProvider'
 import ZohoChatWidget from '@/components/ZohoChatWidget'
+import { CsrfInitializer } from '@/components/CsrfInitializer'
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://app.superlend.xyz'),
