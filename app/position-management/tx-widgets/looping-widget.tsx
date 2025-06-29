@@ -99,6 +99,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         useState<boolean>(false)
     const [leverage, setLeverage] = useState<number>(1)
     const debouncedLeverage = useDebounce(leverage, 1000) // 1 second debounce
+    const [isLeverageChanging, setIsLeverageChanging] = useState<boolean>(false)
     const [newHealthFactor, setNewHealthFactor] = useState<number>(0)
     const [flashLoanAmount, setFlashLoanAmount] = useState<string>('0')
     const { getMaxLeverage, getBorrowTokenAmountForLeverage, providerStatus, getUserData, getReservesData, refreshData, uiPoolDataProviderAddress, lendingPoolAddressProvider } =
@@ -293,6 +294,15 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     > | null>(null)
 
     const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
+
+    // Track when leverage is changing vs settled
+    useEffect(() => {
+        if (leverage !== debouncedLeverage) {
+            setIsLeverageChanging(true)
+        } else {
+            setIsLeverageChanging(false)
+        }
+    }, [leverage, debouncedLeverage])
 
     // Debug: Log APY calculation details
     // console.log('APY Debug:', {
@@ -596,7 +606,8 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         !lendAmount ||
         Number(lendAmount) <= 0 ||
         Number(lendAmount) > Number(selectedLendTokenBalance) ||
-        isLoadingBorrowAmount
+        isLoadingBorrowAmount ||
+        isLeverageChanging
 
     function handleLendAmountChange(amount: string = '') {
         if (!amount.length || !Number(amount)) {

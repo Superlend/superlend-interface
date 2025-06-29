@@ -607,11 +607,34 @@ export const useAaveV3Data = () => {
                 lendingPoolAddressProvider,
             })) as ReservesDataHumanizedLegacy
 
+            // More precise calculation to handle small leverage values like 1.1x
+            // Convert leverage to basis points (10000 = 1x) to maintain precision
+            const leverageBasisPoints = Math.round(leverage * 10000)
             const additionalSupplyTokenAmount = BigNumber.from(
                 supplyTokenAmount
             )
-                .mul(BigNumber.from(leverage * 100).sub(BigNumber.from(100)))
-                .div(100)
+                .mul(BigNumber.from(leverageBasisPoints).sub(BigNumber.from(10000)))
+                .div(10000)
+            
+            // console.log('Leverage calculation debug:', {
+            //     leverage,
+            //     leverageBasisPoints,
+            //     supplyTokenAmount,
+            //     additionalSupplyTokenAmount: additionalSupplyTokenAmount.toString(),
+            //     multiplier: (leverageBasisPoints - 10000) / 10000
+            // })
+
+            // Check if the additional supply amount is too small to be meaningful
+            if (additionalSupplyTokenAmount.lte(BigNumber.from(0))) {
+                // console.log('Additional supply amount is zero or negative, returning zero borrow amount')
+                return {
+                    amount: '0',
+                    amountFormatted: '0',
+                    flashLoanAmount: '0',
+                    flashLoanAmountFormatted: '0',
+                    healthFactor: '0',
+                }
+            }
             const flashLoanPremium = 50 // => 0.05 // TODO: get this from the protocol
             const additionalSupplyTokenAmountToRepay =
                 additionalSupplyTokenAmount.add(
