@@ -53,6 +53,7 @@ import { calculateHealthFactorFromBalancesBigUnits, valueToBigNumber, formatRese
 import BigNumberJS from 'bignumber.js'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import useGetMidasKpiData from '@/hooks/useGetMidasKpiData'
+import { useDebounce } from '@/hooks/useDebounce'
 
 interface LoopingWidgetProps {
     isLoading?: boolean
@@ -97,6 +98,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
     const [isLoadingBorrowAmount, setIsLoadingBorrowAmount] =
         useState<boolean>(false)
     const [leverage, setLeverage] = useState<number>(1)
+    const debouncedLeverage = useDebounce(leverage, 1000) // 1 second debounce
     const [newHealthFactor, setNewHealthFactor] = useState<number>(0)
     const [flashLoanAmount, setFlashLoanAmount] = useState<string>('0')
     const { getMaxLeverage, getBorrowTokenAmountForLeverage, providerStatus, getUserData, getReservesData, refreshData, uiPoolDataProviderAddress, lendingPoolAddressProvider } =
@@ -431,7 +433,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                         lendAmount,
                         selectedLendToken?.decimals || 18
                     ).toString(),
-                    leverage: leverage,
+                    leverage: debouncedLeverage,
                     borrowToken: selectedBorrowToken?.address || '',
                     _walletAddress: walletAddress,
                 })
@@ -462,7 +464,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         selectedLendToken?.address,
         lendAmount,
         selectedBorrowToken?.address,
-        leverage,
+        debouncedLeverage,
     ])
 
     // Calculate user's current net APY whenever relevant parameters change
