@@ -6,6 +6,8 @@ import { BodyText, HeadingText } from '@/components/ui/typography'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
+import ImageWithDefault from '@/components/ImageWithDefault'
+import { motion } from 'framer-motion'
 
 interface LoopMetricsCardsProps {
     metrics: any[]
@@ -55,13 +57,37 @@ export default function LoopMetricsCards({ metrics, isLoading }: LoopMetricsCard
                                     <InfoTooltip content={metric.tooltip} />
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                    <HeadingText
-                                        level="h4"
-                                        weight="medium"
-                                        className={metric.className}
-                                    >
-                                        {metric.value}
-                                    </HeadingText>
+                                    <div className="flex items-center gap-1">
+                                        <HeadingText
+                                            level="h4"
+                                            weight="medium"
+                                            className={metric.className}
+                                        >
+                                            {metric.value}
+                                        </HeadingText>
+                                        {/* Apple Farm Rewards Icon for Supply APY */}
+                                        {metric.hasAppleFarmRewards && (
+                                            <InfoTooltip
+                                                label={
+                                                    <motion.div
+                                                        initial={{ rotate: 0 }}
+                                                        animate={{ rotate: 360 }}
+                                                        transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
+                                                        whileHover={{ rotate: -360 }}
+                                                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                                    >
+                                                        <ImageWithDefault
+                                                            src="/images/apple-farm-favicon.ico"
+                                                            alt="Apple Farm Rewards"
+                                                            width={16}
+                                                            height={16}
+                                                        />
+                                                    </motion.div>
+                                                }
+                                                content={metric.appleFarmTooltip}
+                                            />
+                                        )}
+                                    </div>
                                     {/* {metric.subValue && (
                                         <BodyText
                                             level="body3"

@@ -13,12 +13,17 @@ import LoopMetricsCards from './loop-metrics-cards'
 import LoopPositionDetails from './loop-position-details'
 import LoopPerformance from './loop-performance'
 import { abbreviateNumber } from '@/lib/utils'
-import { DollarSign, TrendingUp, TrendingDown, Target } from 'lucide-react'
+import { DollarSign, TrendingUp, TrendingDown, Target, Percent } from 'lucide-react'
 import { useAaveV3Data } from '@/hooks/protocols/useAaveV3Data'
 import { ChainId } from '@/types/chain'
 import { AssetsDataContext } from '@/context/data-provider'
 import { TPlatformAsset } from '@/types/platform'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
+import useGetMidasKpiData from '@/hooks/useGetMidasKpiData'
+import { motion } from 'framer-motion'
+import ImageWithDefault from '@/components/ImageWithDefault'
+import InfoTooltip from '@/components/tooltips/InfoTooltip'
+import { BodyText, Label } from '@/components/ui/typography'
 
 export default function LoopPositionOverview() {
     const searchParams = useSearchParams()
@@ -32,6 +37,7 @@ export default function LoopPositionOverview() {
     const [maxLeverage, setMaxLeverage] = useState<number>(0)
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
     const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
+    const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
 
     const { data: platformData, isLoading: isLoadingPlatformData } = useGetPlatformData({
         protocol_identifier,
@@ -268,6 +274,22 @@ export default function LoopPositionOverview() {
         const borrowSymbol = borrowTokenDetails?.symbol || 'Unknown'
         const lendSymbol = lendTokenDetails?.symbol || 'Unknown'
         
+        // Calculate intrinsic APY for mTBILL and mBASIS
+        let intrinsicAPY = 0
+        if (lendSymbol?.toLowerCase() === 'mtbill') {
+            intrinsicAPY = mTbillAPY || 0
+        } else if (lendSymbol?.toLowerCase() === 'mbasis') {
+            intrinsicAPY = mBasisAPY || 0
+        }
+        
+        const appleFarmRewardAPY = lendTokenDetails?.appleFarmReward || 0
+        const totalSupplyAPY = lendTokenDetails?.apy || 0
+        
+        // Calculate base APY (reverse calculation for mTBILL/mBASIS)
+        const baseSupplyAPY = (lendSymbol?.toLowerCase() === 'mtbill' || lendSymbol?.toLowerCase() === 'mbasis') 
+            ? 0 
+            : totalSupplyAPY - appleFarmRewardAPY - intrinsicAPY
+        
         const baseMetrics = [
             {
                 title: 'Liquidity',
@@ -281,7 +303,18 @@ export default function LoopPositionOverview() {
                 value: lendTokenDetails ? `${lendTokenDetails.apy.toFixed(2)}%` : '0.00%',
                 icon: Target,
                 tooltip: `Current APY earned for supplying ${lendSymbol} as collateral${lendTokenDetails?.appleFarmReward && lendTokenDetails.appleFarmReward > 0 ? ` (includes ${lendTokenDetails.appleFarmReward.toFixed(2)}% rewards bonus)` : ''}. This rate is applied to your leveraged position.`,
-                className: 'text-green-600'
+                className: 'text-green-600',
+                // Add Apple Farm icon and tooltip for enhanced display
+                hasAppleFarmRewards: Number(chain_id) === ChainId.Etherlink && 
+                                   hasAppleFarmRewards(lendTokenAddressParam) && 
+                                   appleFarmRewardAPY > 0,
+                appleFarmTooltip: getSupplyAPYBreakdownTooltip({
+                    baseSupplyAPY,
+                    intrinsicAPY,
+                    appleFarmAPY: appleFarmRewardAPY,
+                    totalSupplyAPY,
+                    tokenSymbol: lendSymbol,
+                })
             },
             {
                 title: 'Total Supply',
@@ -300,7 +333,7 @@ export default function LoopPositionOverview() {
         ]
 
         return baseMetrics
-    }, [lendTokenDetails, borrowTokenDetails, maxLeverage])
+    }, [lendTokenDetails, borrowTokenDetails, maxLeverage, mTbillAPY, mBasisAPY, hasAppleFarmRewards, lendTokenAddressParam, chain_id])
 
     // Dynamic loop data
     const loopData = useMemo(() => {
@@ -418,6 +451,122 @@ export default function LoopPositionOverview() {
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
             />
+        </div>
+    )
+}
+
+/**
+ * Get supply APY breakdown tooltip content with Apple Farm rewards and intrinsic APY
+ */
+function getSupplyAPYBreakdownTooltip({
+    baseSupplyAPY,
+    intrinsicAPY,
+    appleFarmAPY,
+    totalSupplyAPY,
+    tokenSymbol,
+}: {
+    baseSupplyAPY: number
+    intrinsicAPY: number
+    appleFarmAPY: number
+    totalSupplyAPY: number
+    tokenSymbol: string
+}) {
+    return (
+        <div className="flex flex-col divide-y divide-gray-800">
+            <BodyText
+                level="body1"
+                weight="medium"
+                className="py-2 text-gray-800"
+            >
+                Supply APY Breakdown
+            </BodyText>
+            <div
+                className="flex items-center justify-between gap-[70px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <Percent className="w-[14px] h-[14px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">
+                        Base APY
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    {abbreviateNumber(baseSupplyAPY, 2)}%
+                </BodyText>
+            </div>
+            {/* Intrinsic APY for mTBILL and mBASIS */}
+            {intrinsicAPY > 0 && (tokenSymbol?.toLowerCase() === 'mtbill' || tokenSymbol?.toLowerCase() === 'mbasis') && (
+                <div
+                    className="flex items-center justify-between gap-[70px] py-2"
+                    style={{ gap: '70px' }}
+                >
+                    <div className="flex items-center gap-1">
+                        <TrendingUp className="w-[14px] h-[14px] text-gray-800" />
+                        <Label weight="medium" className="text-gray-800">
+                            Intrinsic APY
+                        </Label>
+                    </div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-800"
+                    >
+                        + {abbreviateNumber(intrinsicAPY, 2)}%
+                    </BodyText>
+                </div>
+            )}
+            {appleFarmAPY > 0 && (
+                <div
+                    className="flex items-center justify-between gap-[100px] py-2"
+                    style={{ gap: '70px' }}
+                >
+                    <div className="flex items-center gap-1">
+                        <ImageWithDefault
+                            src="/images/apple-farm-favicon.ico"
+                            width={14}
+                            height={14}
+                            alt="Apple Farm"
+                            className="inline-block rounded-full object-contain"
+                        />
+                        <Label
+                            weight="medium"
+                            className="truncate text-gray-800 max-w-[100px] truncate"
+                            title="Apple Farm APR"
+                        >
+                            Apple Farm APR
+                        </Label>
+                    </div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-800"
+                    >
+                        + {abbreviateNumber(appleFarmAPY, 2)}%
+                    </BodyText>
+                </div>
+            )}
+            <div
+                className="flex items-center justify-between gap-[100px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <TrendingUp className="w-[14px] h-[14px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">
+                        Total APY
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    = {abbreviateNumber(totalSupplyAPY, 2)}%
+                </BodyText>
+            </div>
         </div>
     )
 } 

@@ -154,7 +154,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         if (sortingParam.length === 2) {
             return [{ id: sortingParam[0], desc: sortingParam[1] === 'desc' }]
         }
-        return [{ id: 'apy_current', desc: isActiveTab('lend') }]
+        return [{ id: isActiveTab('loop') ? 'maxAPY' : 'apy_current', desc: isActiveTab('lend') || isActiveTab('loop') }]
     })
 
 
@@ -205,7 +205,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                 apy_avg_7days: isActiveTab('lend'),
             }
         })
-        setSorting([{ id: 'apy_current', desc: isActiveTab('lend') || isActiveTab('loop') }])
+        setSorting([{ id: isActiveTab('loop') ? 'maxAPY' : 'apy_current', desc: isActiveTab('lend') || isActiveTab('loop') }])
     }, [positionTypeParam])
 
     useEffect(() => {

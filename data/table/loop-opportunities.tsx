@@ -303,14 +303,14 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const hasAppleFarmRewardsForToken = hasAppleFarmRewards(row.original.tokenAddress)
             const appleFarmApr = Number(appleFarmRewardsAprs?.[row.original.tokenAddress] ?? 0)
 
-            const apyCurrent = Number(row.getValue('apy_current'))
+            const apyCurrent = Number(row.original.apy_current || 0)
             
             // Get Max APY which already includes Apple Farm rewards (from createLoopPairs)
             const maxAPY = (row.original as any).maxAPY || apyCurrent
             const maxAPYFormatted = (maxAPY > 0 && maxAPY < 0.01) ? '<0.01' : abbreviateNumber(maxAPY)
 
             // For tooltip: break down the max APY
-            const baseAPY = Number(row.original.apy_current)
+            const baseAPY = Number(row.original.apy_current || 0)
             const baseAPYFormatted = baseAPY < 0.01 && baseAPY > 0
                 ? '<0.01'
                 : abbreviateNumber(baseAPY)
