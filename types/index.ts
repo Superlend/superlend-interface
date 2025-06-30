@@ -117,32 +117,86 @@ export type TOpportunity = {
         name: string
         price_usd: number
         symbol: string
+        coin_gecko_id?: string | null
     }
     chain_id: number
     platform: {
         name: string
         platform_name: string
         protocol_identifier: string
+        core_contract?: string
         logo: string
         additional_rewards: boolean
         max_ltv: number
         liquidity: string
         borrows: string
-        utilization_rate: string
+        utilization_rate: string | number
+        protocol_type?: string
         apy: {
-            current: string
-            avg_7days: string
-            avg_30days: string
+            current: string | number
+            avg_7days: string | number
+            avg_30days?: string
         }
         rewards: TReward[]
-        collateral_exposure: `0x${string}`[]
-        collateral_tokens: `0x${string}`[]
-        collateral_token_price: number
+        collateral_exposure?: `0x${string}`[]
+        collateral_tokens?: `0x${string}`[]
+        collateral_token_price?: number
+        morpho_market_id?: string
         isVault?: boolean
     }
-    trend: {
+    trend?: {
         value: string
         type: string
+    }
+}
+
+// Abbreviated API response types (optimized format from backend)
+export type TOpportunityAbbreviated = {
+    t: {
+        a: string // address
+        n: string // name
+        s: string // symbol
+        d: number // decimals
+        l: string // logo
+        p: number // price_usd
+        c?: string | null // coin_gecko_id
+    }
+    c: number // chain_id
+    p: {
+        n: string // name
+        pi: string // protocol_identifier
+        pn: string // platform_name
+        cc?: string // core_contract
+        iv?: boolean // isVault
+        l: string // logo
+        ar: boolean // additional_rewards
+        ml: number // max_ltv
+        li: string // liquidity
+        bo: string // borrows
+        cp?: number // collateral_token_price
+        ur: number // utilization_rate
+        pt?: string // protocol_type
+        ct?: `0x${string}`[] // collateral_tokens
+        ce?: `0x${string}`[] // collateral_exposure
+        mi?: string // morpho_market_id
+        ap: {
+            c: number // current
+            a: number // avg_7days
+        }
+        r: TRewardAbbreviated[] // rewards
+    }
+}
+
+export type TRewardAbbreviated = {
+    s: number // supply_apy
+    b: number // borrow_apy
+    a: {
+        a: string // address
+        n: string // name
+        s: string // symbol
+        d: number // decimals
+        l: string // logo
+        p: number // price_usd
     }
 }
 
