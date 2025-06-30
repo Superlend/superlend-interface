@@ -23,6 +23,7 @@ import {
     hasExponent,
     hasLowestDisplayValuePrefix,
     isLowestValue,
+    scientificToDecimal,
 } from '@/lib/utils'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
@@ -69,6 +70,48 @@ import { parseUnits } from 'ethers/lib/utils'
 import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
+
+function normalizeScientificNotation(value: string | number, decimals: number = 18): string {
+    try {
+        const strValue = value.toString()
+
+        // If value is empty or '0', return '0'
+        if (!strValue || strValue === '0' || strValue === '0.0') {
+            return '0'
+        }
+
+        const num = Number(strValue)
+        
+        // If the number is not valid, return '0'
+        if (isNaN(num) || !isFinite(num)) {
+            return '0'
+        }
+        
+        // If the number is extremely small (less than 1e-18), return "0"
+        if (Math.abs(num) < 1e-18) {
+            return '0'
+        }
+        
+        // Use toFixed to avoid scientific notation and limit precision
+        // Use Math.min to ensure we don't exceed the token's decimal places
+        const fixedDecimals = Math.min(decimals, 18)
+        const result = num.toFixed(fixedDecimals)
+        
+        // Remove trailing zeros and decimal point if not needed
+        const cleaned = result.replace(/\.?0+$/, '') || '0'
+        
+        // Double check the result doesn't contain scientific notation
+        if (cleaned.includes('e')) {
+            // Fallback: if still in scientific notation, convert using BigNumber approach
+            return '0'
+        }
+        
+        return cleaned
+    } catch (error) {
+        console.error('Error normalizing scientific notation:', error, 'value:', value)
+        return '0'
+    }
+}
 
 export function WithdrawOrRepayTxDialog({
     isOpen,
@@ -152,10 +195,12 @@ export function WithdrawOrRepayTxDialog({
 
     const maxAmount = isWithdrawAction
         ? (localUserHasNoBorrowings 
-            ? localMaxWithdrawAmount.maxToWithdrawFormatted
-            : (Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals) ??
-            '0')
-        : localMaxRepayAmount.maxToRepayFormatted  // For repay, always use the full amount without slippage
+            ? normalizeScientificNotation(localMaxWithdrawAmount.maxToWithdrawFormatted, localAssetDetails?.asset?.token?.decimals ?? 18)
+            : normalizeScientificNotation(
+                (Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals), 
+                localAssetDetails?.asset?.token?.decimals ?? 18
+              ))
+        : normalizeScientificNotation(localMaxRepayAmount.maxToRepayFormatted, localAssetDetails?.asset?.token?.decimals ?? 18)  // For repay, always use the full amount without slippage
 
     const isMorphoVaultsProtocol = !!localAssetDetails?.vault 
 
@@ -1262,8 +1307,9 @@ const getActionButtonAmount = ({
             ? amount  // Use exact amount for max repay
             : (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
             
+        const normalizedAmount = normalizeScientificNotation(amountWithSlippage, assetDetails?.asset?.token?.decimals ?? 18)
         const amountParsed = parseUnits(
-            amount === '' ? '0' : amountWithSlippage,
+            amount === '' ? '0' : normalizedAmount,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
         
@@ -1282,8 +1328,9 @@ const getActionButtonAmount = ({
             ? amount  // Use exact amount for users with no borrowings
             : (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
             
+        const normalizedAmount = normalizeScientificNotation(amountWithSlippage, assetDetails?.asset?.token?.decimals ?? 18)
         const amountParsed = parseUnits(
-            amount === '' ? '0' : amountWithSlippage,
+            amount === '' ? '0' : normalizedAmount,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
         

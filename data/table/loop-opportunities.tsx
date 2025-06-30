@@ -372,7 +372,11 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
 
             return (
                 <span className="flex items-center gap-1">
-                    <BodyText level={'body2'} weight={'medium'}>
+                    <BodyText 
+                        level={'body2'} 
+                        weight={'medium'}
+                        className={maxAPY > 0 ? 'text-green-600' : 'text-red-600'}
+                    >
                         {`${maxAPYFormatted}%`}
                     </BodyText>
                     {/* REGULAR REWARDS */}
