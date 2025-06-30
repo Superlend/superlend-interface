@@ -130,11 +130,11 @@ export type TOpportunity = {
         max_ltv: number
         liquidity: string
         borrows: string
-        utilization_rate: string | number
+        utilization_rate: string
         protocol_type?: string
         apy: {
-            current: string | number
-            avg_7days: string | number
+            current: string
+            avg_7days: string
             avg_30days?: string
         }
         rewards: TReward[]
@@ -222,8 +222,8 @@ export type TOpportunityTable = {
     borrows: string
     utilization: string
     isVault: boolean
-    collateral_exposure: `0x${string}`[]
-    collateral_tokens: `0x${string}`[]
+    collateral_exposure?: `0x${string}`[]
+    collateral_tokens?: `0x${string}`[]
     available_liquidity: number
     apple_farm_apr: number
     has_apple_farm_rewards: boolean
