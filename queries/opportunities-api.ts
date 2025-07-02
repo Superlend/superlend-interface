@@ -1,7 +1,8 @@
 import { request } from './request'
 import { TGetOpportunitiesParams, TOpportunity } from '@/types'
+import { normalizeOpportunitiesResponse } from '@/lib/opportunities-response-mapper'
 
-export async function getOpportunitiesData(params: TGetOpportunitiesParams) {
+export async function getOpportunitiesData(params: TGetOpportunitiesParams): Promise<TOpportunity[]> {
     const {
         type,
         chain_ids = [],
@@ -10,7 +11,7 @@ export async function getOpportunitiesData(params: TGetOpportunitiesParams) {
         limit = 0,
     } = params
 
-    return request<TOpportunity[]>({
+    const response = await request<any>({
         method: 'POST',
         path: `/opportunities/${type}`,
         body: {
@@ -20,6 +21,9 @@ export async function getOpportunitiesData(params: TGetOpportunitiesParams) {
             limit,
         },
     })
+
+    // Automatically detect and normalize response format
+    return normalizeOpportunitiesResponse(response)
 }
 
 // Midas KPI data types
