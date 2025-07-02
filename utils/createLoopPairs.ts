@@ -75,7 +75,7 @@ export function createLoopPairs(
             max_ltv: item.platform.max_ltv,
             deposits: `${liquidityInUSD}`,
             borrows: `${borrowsInUSD}`,
-            utilization: item.platform.utilization_rate,
+            utilization: String(item.platform.utilization_rate),
             available_liquidity: availableLiquidity,
             additional_rewards: item.platform.additional_rewards,
             rewards: item.platform.rewards,

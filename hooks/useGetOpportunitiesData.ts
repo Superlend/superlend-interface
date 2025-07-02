@@ -139,7 +139,19 @@ export default function useGetOpportunitiesData(
         ],
         queryFn: async () => {
             try {
+                const startTime = performance.now()
                 const responseData = await getOpportunitiesData(apiParams)
+                const endTime = performance.now()
+                
+                console.log(`🚀 OPPORTUNITIES API RESPONSE 🚀
+┌─────────────────────────────────────────────────────────────┐
+│ Type: ${params.type.toUpperCase()}
+│ Processing Time: ${(endTime - startTime).toFixed(2)}ms
+│ Response Length: ${responseData.length} opportunities
+│ Chain IDs: ${params.chain_ids?.length ? params.chain_ids.join(', ') : 'All'}
+│ Tokens Filter: ${params.tokens?.length ? params.tokens.join(', ') : 'All'}
+│ Timestamp: ${new Date().toISOString()}
+└─────────────────────────────────────────────────────────────┘`, responseData)
                 
                 // Filter out tokens whose name starts with "Hanji " for lend/loop calls
                 let filteredData = responseData

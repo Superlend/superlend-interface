@@ -8,7 +8,7 @@ import { useAaveV3Data } from '@/hooks/protocols/useAaveV3Data'
 import { ChainId } from '@/types/chain'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 
-export function useGetLoopPairs(waitForAllData: boolean = true) {
+export function useGetLoopPairs(waitForAllData: boolean = false) {
     const { allChainsData } = useContext<any>(AssetsDataContext)
     
     // Make Apple Farm rewards optional to handle cases where provider is not available
