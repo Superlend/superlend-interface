@@ -145,7 +145,7 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     if (!opportunity1PlatformData?.assets || isLoadingBoostRewards || isLoadingEffectiveApy || !opportunity3PlatformData) {
         return (
             <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <FullCardSkeleton />
                     <FullCardSkeleton />
                     <FullCardSkeleton />
@@ -512,7 +512,7 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
 
     return (
         <div className="flex flex-col gap-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {cardsToRender.map((opportunity: any, index: number) => (
                 isLoading[opportunity.id] ? (
                     <FullCardSkeleton key={`skeleton-${opportunity.id}`} />

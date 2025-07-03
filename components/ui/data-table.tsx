@@ -192,9 +192,45 @@ export function DataTable<TData, TValue>({
         return {}
     }
 
+    // Calculate dynamic height based on rows and content
+    const calculateTableHeight = React.useMemo(() => {
+        if (!rows || rows.length === 0) {
+            return 400 // Default height for empty table
+        }
+        
+        const headerHeight = 60 // Approximate header height
+        const paginationHeight = 80 // Approximate pagination height
+        const baseRowHeight = 64 // Base row height for simple content (py-4 = 16px top + 16px bottom + content)
+        const complexRowHeight = 88 // Height for rows with complex content (avatars, stacked icons, multi-line text)
+        
+        // Determine if we have complex content that needs more height
+        const hasComplexContent = rows.some(row => {
+            const cells = row.getVisibleCells()
+            return cells.some(cell => {
+                const columnId = cell.column.id
+                // Check for columns that typically have complex content
+                return columnId === 'collateral_tokens' || 
+                       columnId === 'collateral_exposure' || 
+                       columnId === 'tokenSymbol' ||
+                       columnId === 'platformName' ||
+                       columnId === 'apy_current' ||
+                       columnId === 'maxAPY'
+            })
+        })
+        
+        const rowHeight = hasComplexContent ? complexRowHeight : baseRowHeight
+        const contentHeight = headerHeight + (rows.length * rowHeight) + paginationHeight
+        
+        // Set reasonable min and max heights with responsive adjustments
+        const minHeight = screenWidth < 768 ? 400 : 500 // Smaller minimum on mobile
+        const maxHeight = screenWidth < 768 ? 700 : 900 // Smaller maximum on mobile
+        
+        return Math.max(minHeight, Math.min(maxHeight, contentHeight))
+    }, [rows, screenWidth])
+
     return (
         <div className="bg-white bg-opacity-40 rounded-6 border border-transparent overflow-hidden">
-            <ScrollArea className="h-auto max-h-[620px]">
+            <ScrollArea className="h-auto" style={{ maxHeight: `${calculateTableHeight}px` }}>
                 <Table>
                     <TableHeader className="[&_tr]:border-0">
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -266,17 +302,17 @@ export function DataTable<TData, TValue>({
                                     )
                                 })}
                                 {onRefresh && lastRefreshTime && (
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                    <TableHead className={`${screenWidth < 768 ? 'w-[50px] min-w-[50px]' : 'w-[60px] min-w-[60px]'} pt-6 pb-3 pr-5 text-right pl-0 shrink-0`}>
                                         <TooltipProvider>
                                             <Tooltip delayDuration={0}>
                                                 <TooltipTrigger>
                                                     <button
                                                         onClick={onRefresh}
                                                         disabled={isRefreshing}
-                                                        className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md transition-all duration-200 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        className={`flex items-center justify-center ${screenWidth < 768 ? 'w-7 h-7' : 'w-8 h-8'} rounded-full bg-white shadow-sm hover:shadow-md transition-all duration-200 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed ml-auto`}
                                                     >
                                                         <RefreshCw 
-                                                            size={20} 
+                                                            size={screenWidth < 768 ? 16 : 20} 
                                                             className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
                                                         />
                                                     </button>
@@ -290,7 +326,7 @@ export function DataTable<TData, TValue>({
                                                 </TooltipContent>
                                             </Tooltip>
                                         </TooltipProvider>
-                                    </div>
+                                    </TableHead>
                                 )}
                             </TableRow>
                         ))}
@@ -345,12 +381,17 @@ export function DataTable<TData, TValue>({
                                             </TableCell>
                                         )
                                     })}
+                                    {onRefresh && lastRefreshTime && (
+                                        <TableCell className={`${screenWidth < 768 ? 'w-[50px] min-w-[50px]' : 'w-[60px] min-w-[60px]'} py-4 pr-5 shrink-0`}>
+                                            {/* Empty cell to match header structure */}
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
                                 <TableCell
-                                    colSpan={columns.length}
+                                    colSpan={columns.length + (onRefresh && lastRefreshTime ? 1 : 0)}
                                     className="h-24 text-center"
                                 >
                                     No results
