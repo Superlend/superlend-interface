@@ -17,13 +17,13 @@ interface AppleFarmRewardsProviderProps {
 }
 
 const APPLE_FARM_REWARDS_CAMPAIGN_IDS = {
-    MBASIS: '0x6cf5b800dcc169a204dbe9c57473451e7932492ef33f669c6f625a8c66a7c113',
-    MTBill: '0x0c1fe667229297f48bb64b0d3c55c635cdb11219d1b13c3c86008fe533beca32',
-    XTZ: '0xaf113e08f8637ec1bc6a02e56313997122ceae1ef748e51a07fc9e5a433f8078',
+    MBASIS: '0xf21ca0bbc6dee4da47f35f1f8e3d88a9779e0e2ae8990392585fac6383671582',
+    MTBill: '0xb89cfe220406f4cb039241b8070350794eb6c445f61ceb85e5f045277c0db18f',
+    XTZ: '0xe272b94ede07948f5e11de40f588f9607b1d25f72a0a68ff21ce95e911ab3046',
     USDC: '0x277f8148036e308edf2509097b684304adeee739c143cc5b0ecf39349c73014b',
-    WBTC: '0x95ccc4921e1144fedb0e375e1b626992808fad4e311f835ddbc8b2b74f731317',
-    USDT: '0x63dbd3b41b8bed5a4adea2667a676e8573acb404820476326f2c865102741d7c',
-    WETH: '0x6d56c14a8d440c2b77b706726514cd3d939066c416394d2bb61a0b1412159418',
+    WBTC: '0x15334bcb7b6a7d518f1ed2f57d23d0614ef540074e500600a31a72b36cd7fb67',
+    USDT: '0x22b1631a0811fe1a14ca2554bf05eab15df5a2b8adbc607cb7c5330f804a9e8d',
+    WETH: '0xd1cc7c4f0734f461cd74b65d163d65960760e57631016bc6bf0269f13212c40f',
 }
 
 export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> = ({ children }) => {
@@ -85,7 +85,7 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
         wethOpportunityData,
     ]);
 
-    const hasAppleFarmRewards = (tokenAddress: string) => Object.values(ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS).includes(tokenAddress)
+    const hasAppleFarmRewards = (tokenAddress: string) => (Object.values(ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS).includes(tokenAddress)) && Number(appleFarmRewardsAprs[tokenAddress] ?? 0) > 0
 
     const value = {
         hasAppleFarmRewards,
