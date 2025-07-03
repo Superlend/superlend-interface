@@ -20,9 +20,9 @@ const APPLE_FARM_REWARDS_CAMPAIGN_IDS = {
     MBASIS: '0xf21ca0bbc6dee4da47f35f1f8e3d88a9779e0e2ae8990392585fac6383671582',
     MTBill: '0xb89cfe220406f4cb039241b8070350794eb6c445f61ceb85e5f045277c0db18f',
     XTZ: '0xe272b94ede07948f5e11de40f588f9607b1d25f72a0a68ff21ce95e911ab3046',
-    USDC: '0x277f8148036e308edf2509097b684304adeee739c143cc5b0ecf39349c73014b',
+    USDC: '0x22b1631a0811fe1a14ca2554bf05eab15df5a2b8adbc607cb7c5330f804a9e8d',
     WBTC: '0x15334bcb7b6a7d518f1ed2f57d23d0614ef540074e500600a31a72b36cd7fb67',
-    USDT: '0x22b1631a0811fe1a14ca2554bf05eab15df5a2b8adbc607cb7c5330f804a9e8d',
+    USDT: '0x3fa208effe1df2d25b546c9094e172df02a861d95136524306e18eb36d97ae28',
     WETH: '0xd1cc7c4f0734f461cd74b65d163d65960760e57631016bc6bf0269f13212c40f',
 }
 
@@ -85,7 +85,7 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
         wethOpportunityData,
     ]);
 
-    const hasAppleFarmRewards = (tokenAddress: string) => (Object.values(ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS).includes(tokenAddress)) && Number(appleFarmRewardsAprs[tokenAddress] ?? 0) > 0
+    const hasAppleFarmRewards = (tokenAddress: string) => (Object.values(ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS).includes(tokenAddress))
 
     const value = {
         hasAppleFarmRewards,
