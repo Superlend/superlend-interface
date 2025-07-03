@@ -302,17 +302,17 @@ export function DataTable<TData, TValue>({
                                     )
                                 })}
                                 {onRefresh && lastRefreshTime && (
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                    <TableHead className={`${screenWidth < 768 ? 'w-[50px] min-w-[50px]' : 'w-[60px] min-w-[60px]'} pt-6 pb-3 pr-5 text-right pl-0 shrink-0`}>
                                         <TooltipProvider>
                                             <Tooltip delayDuration={0}>
                                                 <TooltipTrigger>
                                                     <button
                                                         onClick={onRefresh}
                                                         disabled={isRefreshing}
-                                                        className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm hover:shadow-md transition-all duration-200 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        className={`flex items-center justify-center ${screenWidth < 768 ? 'w-7 h-7' : 'w-8 h-8'} rounded-full bg-white shadow-sm hover:shadow-md transition-all duration-200 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed ml-auto`}
                                                     >
                                                         <RefreshCw 
-                                                            size={20} 
+                                                            size={screenWidth < 768 ? 16 : 20} 
                                                             className={`transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`} 
                                                         />
                                                     </button>
@@ -326,7 +326,7 @@ export function DataTable<TData, TValue>({
                                                 </TooltipContent>
                                             </Tooltip>
                                         </TooltipProvider>
-                                    </div>
+                                    </TableHead>
                                 )}
                             </TableRow>
                         ))}
@@ -381,12 +381,17 @@ export function DataTable<TData, TValue>({
                                             </TableCell>
                                         )
                                     })}
+                                    {onRefresh && lastRefreshTime && (
+                                        <TableCell className={`${screenWidth < 768 ? 'w-[50px] min-w-[50px]' : 'w-[60px] min-w-[60px]'} py-4 pr-5 shrink-0`}>
+                                            {/* Empty cell to match header structure */}
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
                                 <TableCell
-                                    colSpan={columns.length}
+                                    colSpan={columns.length + (onRefresh && lastRefreshTime ? 1 : 0)}
                                     className="h-24 text-center"
                                 >
                                     No results
