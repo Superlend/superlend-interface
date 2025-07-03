@@ -406,7 +406,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         {`${(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend') ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
                     </BodyText>
                     {/* REWARDS */}
-                    {hasRewards && (
+                    {(hasRewards && !(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend')) && (
                         <InfoTooltip
                             label={
                                 <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
