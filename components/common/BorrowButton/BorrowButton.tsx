@@ -119,7 +119,7 @@ const BorrowButton = ({
                 wallet_address: walletAddress,
             })
             logUserEvent({
-                user_address: walletAddress,
+                user_address: walletAddress as `0x${string}`,
                 event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
                 platform_type: 'superlend_aggregator',
                 protocol_identifier: assetDetails?.protocol_identifier,

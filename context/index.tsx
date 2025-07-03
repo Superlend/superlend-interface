@@ -27,6 +27,7 @@ import { AnalyticsProvider } from './analytics-provider'
 import { ShowAllMarketsProvider } from './show-all-markets-provider'
 import { AuthProvider } from './auth-provider'
 import { AaveV3DataProvider } from './aave-v3-data-provider'
+import { usePrivyActiveWallet } from '@/hooks/usePrivyActiveWallet'
 
 // Set up queryClient
 const queryClient = new QueryClient()
@@ -104,6 +105,20 @@ const privyConfig = {
         linea,
         sonic,
     ],
+    // Enhanced wallet connection settings
+    embeddedWallets: {
+        createOnLogin: 'off' as const,
+    },
+    // Force fresh authentication on each connection
+    mfa: {
+        noPromptOnMfaRequired: false,
+    },
+}
+
+// Component that ensures Privy and Wagmi stay in sync
+function PrivyWagmiSync({ children }: { children: ReactNode }) {
+    usePrivyActiveWallet()
+    return <>{children}</>
 }
 
 function ContextProvider({ children }: { children: ReactNode }) {
@@ -115,7 +130,8 @@ function ContextProvider({ children }: { children: ReactNode }) {
             >
                 <QueryClientProvider client={queryClient}>
                     <WagmiProvider config={config}>
-                        <AssetsDataProvider>
+                        <PrivyWagmiSync>
+                            <AssetsDataProvider>
                             <UserTokenBalancesProvider>
                                 <AaveV3DataProvider>
                                     <ShowAllMarketsProvider>
@@ -126,6 +142,7 @@ function ContextProvider({ children }: { children: ReactNode }) {
                                 </AaveV3DataProvider>
                             </UserTokenBalancesProvider>
                         </AssetsDataProvider>
+                        </PrivyWagmiSync>
                     </WagmiProvider>
                 </QueryClientProvider>
             </PrivyProvider>

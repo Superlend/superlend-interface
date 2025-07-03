@@ -290,7 +290,7 @@ export default function WithdrawAndRepayActionButton({
     const fetchPositionData = async (multicall?: OptimizedMulticall) => {
         return await getPositionDataFromPlatformData(
             platformData,
-            walletAddress,
+            walletAddress as `0x${string}`,
             multicall
         )
     }

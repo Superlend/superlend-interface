@@ -148,47 +148,67 @@ export default function PositionsProvider({
 
     // combine all portfolio data loading states
     useEffect(() => {
-        setIsLoadingPortfolioData(
-            isLoadingPortfolioData1 &&
-                isLoadingPortfolioData2 &&
-                isLoadingPortfolioData3
-        )
+        if (walletAddress) {
+            setIsLoadingPortfolioData(
+                isLoadingPortfolioData1 &&
+                    isLoadingPortfolioData2 &&
+                    isLoadingPortfolioData3
+            )
+        }
     }, [
         isLoadingPortfolioData1,
         isLoadingPortfolioData2,
         isLoadingPortfolioData3,
+        walletAddress,
     ])
 
     // combine all portfolio data error states
     useEffect(() => {
-        setIsErrorPortfolioData(
-            isErrorPortfolioData1 ||
-                isErrorPortfolioData2 ||
-                isErrorPortfolioData3
-        )
-    }, [isErrorPortfolioData1, isErrorPortfolioData2, isErrorPortfolioData3])
+        if (walletAddress) {
+            setIsErrorPortfolioData(
+                isErrorPortfolioData1 ||
+                    isErrorPortfolioData2 ||
+                    isErrorPortfolioData3
+            )
+        }
+    }, [isErrorPortfolioData1, isErrorPortfolioData2, isErrorPortfolioData3, walletAddress])
+
+    // Clear portfolio data when wallet disconnects
+    useEffect(() => {
+        if (!walletAddress) {
+            setPortfolioData(PortfolioDataInit)
+            setIsLoadingPortfolioData(false)
+            setIsErrorPortfolioData(false)
+        }
+    }, [walletAddress])
 
     // combine all portfolio data subsets
     useEffect(() => {
-        setPortfolioData((prev: TPortfolio) => ({
-            ...prev,
-            ...portfolioData1,
-        }))
-    }, [portfolioData1])
+        if (walletAddress && portfolioData1) {
+            setPortfolioData((prev: TPortfolio) => ({
+                ...prev,
+                ...portfolioData1,
+            }))
+        }
+    }, [portfolioData1, walletAddress])
 
     useEffect(() => {
-        setPortfolioData((prev: TPortfolio) => ({
-            ...prev,
-            ...portfolioData2,
-        }))
-    }, [portfolioData2])
+        if (walletAddress && portfolioData2) {
+            setPortfolioData((prev: TPortfolio) => ({
+                ...prev,
+                ...portfolioData2,
+            }))
+        }
+    }, [portfolioData2, walletAddress])
 
     useEffect(() => {
-        setPortfolioData((prev: TPortfolio) => ({
-            ...prev,
-            ...portfolioData3,
-        }))
-    }, [portfolioData3])
+        if (walletAddress && portfolioData3) {
+            setPortfolioData((prev: TPortfolio) => ({
+                ...prev,
+                ...portfolioData3,
+            }))
+        }
+    }, [portfolioData3, walletAddress])
 
     return (
         <PositionsContext.Provider
