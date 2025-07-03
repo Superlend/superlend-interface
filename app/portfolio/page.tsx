@@ -15,7 +15,8 @@ import ConnectWalletButton from '@/components/ConnectWalletButton'
 import PositionsProvider from '@/context/positions-provider'
 import { useAccount } from 'wagmi'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
-import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { useWalletStatus } from '@/hooks/useWallet'
+import { WalletErrorBoundary } from '@/components/errors/WalletErrorBoundary'
 import Loading from './loading'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
@@ -25,20 +26,21 @@ import PointsWithCheckIn from '@/components/PointsWithCheckInCard'
 import PointsWithCheckInCard from '@/components/PointsWithCheckInCard'
 
 export default function Portfolio() {
-    const { isConnectingWallet, isWalletConnected, walletAddress } =
-        useWalletConnection()
+    const { isConnected, isConnecting, needsConnection } = useWalletStatus()
     const { isClient } = useIsClient()
     const { logEvent } = useAnalytics()
 
+
+
     useEffect(() => {
-        if (!isConnectingWallet) {
+        if (!isConnecting) {
             logEvent('portfolio_page_opened', {
-                wallet_address: walletAddress,
+                wallet_connected: isConnected,
             })
         }
-    }, [walletAddress, isWalletConnected, isConnectingWallet])
+    }, [isConnected, isConnecting])
 
-    if (!isClient || isConnectingWallet || (isClient && isConnectingWallet)) {
+    if (!isClient || isConnecting || (isClient && isConnecting)) {
         return (
             <MainContainer>
                 <LoadingSectionSkeleton className="h-[500px] w-full" />
@@ -46,7 +48,8 @@ export default function Portfolio() {
         )
     }
 
-    if (isClient && !isConnectingWallet && !isWalletConnected) {
+    // Show connect wallet banner when wallet connection is needed
+    if (isClient && needsConnection) {
         return (
             <div className="py-16">
                 <InfoBannerWithCta
@@ -64,8 +67,9 @@ export default function Portfolio() {
     }
 
     return (
-        <PortfolioProvider>
-            <MainContainer className="px-0 flex flex-col gap-6">
+        <WalletErrorBoundary>
+            <PortfolioProvider>
+                <MainContainer className="px-0 flex flex-col gap-6">
                 <section
                     id="your-portfolio"
                     className="portfolio-page-header flex flex-col md:flex-row gap-[16px] items-start md:items-center justify-between mb-6 px-5"
@@ -102,7 +106,8 @@ export default function Portfolio() {
                     transaction history
                     <ArrowRightIcon width={16} height={16} weight='2' className='stroke-white group-hover:opacity-75 group-active:opacity-75' />
                 </Button> */}
-            </MainContainer>
-        </PortfolioProvider>
+                </MainContainer>
+            </PortfolioProvider>
+        </WalletErrorBoundary>
     )
 }
