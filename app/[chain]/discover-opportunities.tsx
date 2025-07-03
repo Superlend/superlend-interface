@@ -18,7 +18,7 @@ import { ChartNoAxesColumnIncreasing, TrendingUp } from 'lucide-react'
 import { CHAIN_ID_MAPPER } from '@/constants'
 import useGetBoostRewards from '@/hooks/useGetBoostRewards'
 import { useGetEffectiveApy } from '@/hooks/useGetEffectiveApy'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+import { useGetLoopPairsFromAPI } from '@/hooks/useGetLoopPairsFromAPI'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 import { useContext } from 'react'
@@ -65,7 +65,7 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     const { allChainsData } = useContext<any>(AssetsDataContext)
     
     // Get loop pairs data for top 3 strategies
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
+    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairsFromAPI()
     
     // Get opportunities data for borrow APYs
     const { data: borrowOpportunitiesData, isLoading: isLoadingBorrowOpportunities } = useGetOpportunitiesData({

@@ -24,7 +24,7 @@ import ArrowRightIcon from './icons/arrow-right-icon'
 import { PlatformType } from '@/types/platform'
 import ImageWithBadge from './ImageWithBadge'
 import { motion } from 'framer-motion'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+import { useGetLoopPairsFromAPI } from '@/hooks/useGetLoopPairsFromAPI'
 import { TLoopPair } from '@/utils/createLoopPairs'
 import DoubleImage from '@/components/DoubleImage'
 
@@ -36,7 +36,7 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
             chain_ids: [],
             tokens: [],
         })
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
+    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairsFromAPI()
     const [isHovering, setIsHovering] = useState(false)
 
     function handleExcludeMorphoMarketsForLendAssets(opportunity: any) {
