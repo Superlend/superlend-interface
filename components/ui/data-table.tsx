@@ -192,9 +192,45 @@ export function DataTable<TData, TValue>({
         return {}
     }
 
+    // Calculate dynamic height based on rows and content
+    const calculateTableHeight = React.useMemo(() => {
+        if (!rows || rows.length === 0) {
+            return 400 // Default height for empty table
+        }
+        
+        const headerHeight = 60 // Approximate header height
+        const paginationHeight = 80 // Approximate pagination height
+        const baseRowHeight = 64 // Base row height for simple content (py-4 = 16px top + 16px bottom + content)
+        const complexRowHeight = 88 // Height for rows with complex content (avatars, stacked icons, multi-line text)
+        
+        // Determine if we have complex content that needs more height
+        const hasComplexContent = rows.some(row => {
+            const cells = row.getVisibleCells()
+            return cells.some(cell => {
+                const columnId = cell.column.id
+                // Check for columns that typically have complex content
+                return columnId === 'collateral_tokens' || 
+                       columnId === 'collateral_exposure' || 
+                       columnId === 'tokenSymbol' ||
+                       columnId === 'platformName' ||
+                       columnId === 'apy_current' ||
+                       columnId === 'maxAPY'
+            })
+        })
+        
+        const rowHeight = hasComplexContent ? complexRowHeight : baseRowHeight
+        const contentHeight = headerHeight + (rows.length * rowHeight) + paginationHeight
+        
+        // Set reasonable min and max heights with responsive adjustments
+        const minHeight = screenWidth < 768 ? 400 : 500 // Smaller minimum on mobile
+        const maxHeight = screenWidth < 768 ? 700 : 900 // Smaller maximum on mobile
+        
+        return Math.max(minHeight, Math.min(maxHeight, contentHeight))
+    }, [rows, screenWidth])
+
     return (
         <div className="bg-white bg-opacity-40 rounded-6 border border-transparent overflow-hidden">
-            <ScrollArea className="h-auto max-h-[620px]">
+            <ScrollArea className="h-auto" style={{ maxHeight: `${calculateTableHeight}px` }}>
                 <Table>
                     <TableHeader className="[&_tr]:border-0">
                         {table.getHeaderGroups().map((headerGroup) => (
