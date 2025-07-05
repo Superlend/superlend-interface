@@ -13,7 +13,7 @@ export type TUserDetails = {
 }
 
 export type TGetUserDetailsParams = {
-  user_address: string
+  user_address?: string
   authToken?: string
 }
 
@@ -22,7 +22,7 @@ export default function useGetUserDetails(params: TGetUserDetailsParams) {
   const { makeRequest } = useAuthRequest()
 
   const { data, isLoading, isError, refetch } = useQuery<TUserDetails, Error>({
-    queryKey: ['user-details', user_address],
+    queryKey: ['user-details', user_address, authToken],
     queryFn: async () => {
       try {
         const headers: Record<string, string> = {}
@@ -35,8 +35,8 @@ export default function useGetUserDetails(params: TGetUserDetailsParams) {
           method: 'GET',
           path: '/user',
           query: {
-            user_address,
-            wallet: user_address,
+            user_address: user_address!,
+            wallet: user_address!,
           },
           headers,
         })

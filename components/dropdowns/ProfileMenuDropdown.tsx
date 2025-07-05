@@ -99,9 +99,27 @@ export const ProfileMenuDropdown: FC<ProfileMenuDropdownProps> = ({
         logEvent('wallet_disconnect_clicked', {
             wallet_address: walletAddress,
         })
+        
+        // Clear localStorage before logout to ensure clean state
+        if (typeof window !== 'undefined') {
+            const keys = Object.keys(localStorage)
+            keys.forEach(key => {
+                if (key.startsWith('opportunities_') || 
+                    key.includes('portfolio') ||
+                    key.includes('user') ||
+                    key.includes('wallet')) {
+                    localStorage.removeItem(key)
+                }
+            })
+        }
+        
         logout()
             .then(() => {
                 setOpen(false)
+                // Force reload to ensure complete state reset
+                // setTimeout(() => {
+                //     window.location.reload()
+                // }, 100)
             })
             .finally(() => {
                 setIsLoggingOut(false)

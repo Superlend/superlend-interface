@@ -204,7 +204,7 @@ const RepayButton = ({
                         })
 
                         logUserEvent({
-                            user_address: walletAddress,
+                            user_address: walletAddress as `0x${string}`,
                             event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
                             platform_type: 'superlend_aggregator',
                             protocol_identifier: assetDetails?.protocol_identifier,
@@ -316,7 +316,7 @@ const RepayButton = ({
                     })
 
                     logUserEvent({
-                        user_address: walletAddress,
+                        user_address: walletAddress as `0x${string}`,
                         event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
                         platform_type: 'superlend_aggregator',
                         protocol_identifier: assetDetails?.protocol_identifier,
@@ -400,7 +400,7 @@ const RepayButton = ({
                     })
 
                     logUserEvent({
-                        user_address: walletAddress,
+                        user_address: walletAddress as `0x${string}`,
                         event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
                         platform_type: 'superlend_aggregator',
                         protocol_identifier: assetDetails?.protocol_identifier,
@@ -520,7 +520,7 @@ const RepayButton = ({
                 platform_name: assetDetails?.name,
                 chain_name:
                     CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                wallet_address: walletAddress,
+                wallet_address: walletAddress as `0x${string}`,
             })
 
             setRepayTx((prev: TRepayTx) => ({

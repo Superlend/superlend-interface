@@ -44,7 +44,7 @@ const RainingApples = () => {
 export default function AppleFarmRewardsBanner({ isLoading = false }: AppleFarmRewardsBannerProps) {
   const { walletAddress } = useWalletConnection()
   const { data: userRewardsData, isLoading: isUserRewardsLoading } = useGetMerklUserRewardsData({
-    walletAddress: walletAddress,
+    walletAddress: walletAddress as `0x${string}`,
   })
 
   const totalRewards: number = Number(userRewardsData?.[0]?.rewards?.[0]?.amount ?? 0) / 1e18

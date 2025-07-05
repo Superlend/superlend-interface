@@ -55,6 +55,7 @@ import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { BigNumber, ethers } from 'ethers'
 import { TScAmount } from '@/types'
+import { humaniseWagmiError } from '@/lib/humaniseWagmiError'
 import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
 import { useAuth } from '@/context/auth-provider'
 import GENERAL_ADAPTER_ABI from '@/data/abi/morphoGeneralAdapterABI.json'
@@ -145,7 +146,7 @@ const WithdrawButton = ({
             })
 
             logUserEvent({
-                user_address: walletAddress,
+                user_address: walletAddress as `0x${string}`,
                 event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
                 platform_type: 'superlend_aggregator',
                 protocol_identifier: assetDetails?.protocol_identifier,
@@ -593,9 +594,7 @@ const WithdrawButton = ({
         <div className="flex flex-col gap-2">
             {error && (
                 <CustomAlert
-                    description={
-                        (error as BaseError).shortMessage || error.message
-                    }
+                    description={humaniseWagmiError(error)}
                 />
             )}
             {/* {borrowTx.errorMessage.length > 0 && (
