@@ -27,6 +27,8 @@ import { AnalyticsProvider } from './analytics-provider'
 import { ShowAllMarketsProvider } from './show-all-markets-provider'
 import { AuthProvider } from './auth-provider'
 import { AaveV3DataProvider } from './aave-v3-data-provider'
+import { EthereumMulticallProvider } from './ethereum-multicall-provider'
+import SmartTokenBalancesProvider from './smart-token-balances-provider'
 import { usePrivyActiveWallet } from '@/hooks/usePrivyActiveWallet'
 
 // Set up queryClient
@@ -131,17 +133,19 @@ function ContextProvider({ children }: { children: ReactNode }) {
                 <QueryClientProvider client={queryClient}>
                     <WagmiProvider config={config}>
                         <PrivyWagmiSync>
-                            <AssetsDataProvider>
-                            <UserTokenBalancesProvider>
-                                <AaveV3DataProvider>
-                                    <ShowAllMarketsProvider>
-                                        <AuthProvider>
-                                            {children}
-                                        </AuthProvider>
-                                    </ShowAllMarketsProvider>
-                                </AaveV3DataProvider>
-                            </UserTokenBalancesProvider>
-                        </AssetsDataProvider>
+                            <EthereumMulticallProvider>
+                                <AssetsDataProvider>
+                                <SmartTokenBalancesProvider>
+                                    <AaveV3DataProvider>
+                                        <ShowAllMarketsProvider>
+                                            <AuthProvider>
+                                                {children}
+                                            </AuthProvider>
+                                        </ShowAllMarketsProvider>
+                                    </AaveV3DataProvider>
+                                </SmartTokenBalancesProvider>
+                            </AssetsDataProvider>
+                            </EthereumMulticallProvider>
                         </PrivyWagmiSync>
                     </WagmiProvider>
                 </QueryClientProvider>

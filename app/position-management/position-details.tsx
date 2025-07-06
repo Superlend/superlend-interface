@@ -38,8 +38,12 @@ import { useAccount } from 'wagmi'
 import { PlatformType } from '@/types/platform'
 import WithdrawAndRepayActionButton from './withdraw-and-repay'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { usePrivyActiveWallet } from '@/hooks/usePrivyActiveWallet'
 
 export default function PositionDetails() {
+    // Ensure Privy and Wagmi stay in sync
+    usePrivyActiveWallet()
+    
     const searchParams = useSearchParams()
     const { allChainsData } = useContext(AssetsDataContext)
     const chain_id = searchParams?.get('chain_id') || '1'

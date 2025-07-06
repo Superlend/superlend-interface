@@ -9,7 +9,7 @@ export function humaniseWagmiError(error: any): string {
 
   // Check for common error patterns
   if (errorMessage.includes('User rejected') || errorMessage.includes('user rejected')) {
-    return 'Transaction was cancelled by user'
+    return 'Transaction was cancelled in the wallet'
   }
 
   if (errorMessage.includes('insufficient funds') || errorMessage.includes('InsufficientFunds')) {

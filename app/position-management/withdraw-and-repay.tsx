@@ -29,7 +29,7 @@ import {
 } from '@/context/tx-provider'
 import { useAaveV3Data } from '../../hooks/protocols/useAaveV3Data'
 import { BigNumber } from 'ethers'
-import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { useSmartTokenBalancesContext } from '@/context/smart-token-balances-provider'
 import { calculateHealthFactorFromBalancesBigUnits } from '@aave/math-utils'
 import { valueToBigNumber } from '@aave/math-utils'
 import { ChainId } from '@/types/chain'
@@ -50,6 +50,7 @@ import {
 } from '@/lib/constants'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useERC20Balance } from '../../hooks/useERC20Balance'
+
 import { WithdrawOrRepayTxDialog } from '@/components/dialogs/WithdrawOrRepayTxDialog'
 import { Multicall } from 'ethereum-multicall'
 import {
@@ -138,7 +139,7 @@ export default function WithdrawAndRepayActionButton({
         isLoading: isLoadingErc20TokensBalanceData,
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
-    } = useUserTokenBalancesContext()
+    } = useSmartTokenBalancesContext()
     const { getVaultDataFromPlatformData } = useMorphoVaultData()
     const { getPositionDataFromPlatformData, getMarketDataFromPlatformData } =
         useMorphoMarketData()
@@ -221,7 +222,6 @@ export default function WithdrawAndRepayActionButton({
     const [selectedTokenDetails, setSelectedTokenDetails] =
         useState<ITokenDetails | null>(null)
     const { handleSwitchChain, walletAddress } = useWalletConnection()
-    const { data: erc20Balances } = useERC20Balance(walletAddress)
 
     const {
         data: portfolioData,
@@ -462,7 +462,7 @@ export default function WithdrawAndRepayActionButton({
 
         if (
             !!walletAddress &&
-            !!Object.keys(erc20Balances).length &&
+            !!Object.keys(erc20TokensBalanceData).length &&
             !!platformData.assets.length &&
             providerStatus.isReady
         ) {
@@ -501,15 +501,15 @@ export default function WithdrawAndRepayActionButton({
                             maxWithdrawAmounts[withdrawTokenAddress] =
                                 _maxWithdrawValue
                                     ? {
-                                          ..._maxWithdrawValue,
-                                          maxToWithdrawSCValue: '0',
-                                      }
+                                        ..._maxWithdrawValue,
+                                        maxToWithdrawSCValue: '0',
+                                    }
                                     : {
-                                          maxToWithdraw: '0',
-                                          maxToWithdrawFormatted: '0',
-                                          maxToWithdrawSCValue: '0',
-                                          user: {},
-                                      }
+                                        maxToWithdraw: '0',
+                                        maxToWithdrawFormatted: '0',
+                                        maxToWithdrawSCValue: '0',
+                                        user: {},
+                                    }
                         }
 
                         const maxRepayAmounts: Record<
@@ -532,11 +532,11 @@ export default function WithdrawAndRepayActionButton({
                             maxRepayAmounts[repayTokenAddress] = _maxRepayValue
                                 ? { ..._maxRepayValue, maxToRepaySCValue: '0' }
                                 : {
-                                      maxToRepay: '0',
-                                      maxToRepayFormatted: '0',
-                                      maxToRepaySCValue: '0',
-                                      user: {},
-                                  }
+                                    maxToRepay: '0',
+                                    maxToRepayFormatted: '0',
+                                    maxToRepaySCValue: '0',
+                                    user: {},
+                                }
                         }
 
                         setMaxRepayTokensAmount(maxRepayAmounts)
@@ -630,7 +630,7 @@ export default function WithdrawAndRepayActionButton({
                         repayToken.decimals
                     )
                     const balance = BigNumber.from(
-                        erc20Balances[Number(chain_id)][repayTokenAddress]
+                        erc20TokensBalanceData[Number(chain_id)][repayTokenAddress]
                             .balanceRaw
                     )
                     const maxRepay = balance.lte(maxDebt) ? balance : maxDebt
@@ -663,7 +663,7 @@ export default function WithdrawAndRepayActionButton({
         withdrawTx.isConfirmed,
         repayTx.isConfirmed,
         isSelectTokenDialogOpen,
-        erc20Balances,
+        erc20TokensBalanceData,
     ])
 
     // useEffect(() => {
@@ -877,7 +877,7 @@ export default function WithdrawAndRepayActionButton({
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[
             selectedTokenDetails?.address.toLowerCase() ??
-                tokenAddress.toLowerCase()
+            tokenAddress.toLowerCase()
         ]?.balanceFormatted ?? 0
     ).toString()
 
@@ -946,7 +946,7 @@ export default function WithdrawAndRepayActionButton({
     } => {
         const borrowTokenDetails =
             maxBorrowTokensAmount?.[
-                selectedBorrowTokenDetails?.token?.address ?? ''
+            selectedBorrowTokenDetails?.token?.address ?? ''
             ] ?? {}
 
         const { user } = borrowTokenDetails
@@ -1015,9 +1015,9 @@ export default function WithdrawAndRepayActionButton({
     // Check if user has any borrowings across all platforms and positions
     function checkUserHasBorrowings(): boolean {
         if (!portfolioData?.platforms?.length) return false
-        
-        return portfolioData.platforms.some(platform => 
-            platform.positions?.some(position => 
+
+        return portfolioData.platforms.some(platform =>
+            platform.positions?.some(position =>
                 position.type === 'borrow' && Number(position.amount) > 0
             )
         )
@@ -1025,21 +1025,20 @@ export default function WithdrawAndRepayActionButton({
 
     function getMaxWithdrawAmountForTx() {
         const userHasBorrowings = checkUserHasBorrowings()
-        
-       
+
         if (!userHasBorrowings) {
             // Use the exact deposited token amount without any conversions
-            const exactTokenAmount = hasSingleToken 
+            const exactTokenAmount = hasSingleToken
                 ? tokenDetails[0]?.tokenAmount?.toString() ?? '0'
                 : selectedTokenDetails?.tokenAmount?.toString() ?? '0'
-            
+
             // Format to remove any unnecessary precision for display
-            const decimals = hasSingleToken 
+            const decimals = hasSingleToken
                 ? tokenDetails[0]?.decimals ?? 0
                 : selectedTokenDetails?.decimals ?? 0
-            
+
             const formattedTokenAmount = Number(exactTokenAmount).toFixed(decimals).replace(/\.?0+$/, '')
-            
+
             return {
                 maxToWithdraw: exactTokenAmount,
                 maxToWithdrawFormatted: formattedTokenAmount,
@@ -1047,7 +1046,7 @@ export default function WithdrawAndRepayActionButton({
                 user: {},
             }
         }
-        
+
         const fallbackMaxWithdrawAmount = {
             maxToWithdraw: '0',
             maxToWithdrawFormatted: '0',
@@ -1090,9 +1089,9 @@ export default function WithdrawAndRepayActionButton({
         }
         const maxWithdrawAmount =
             maxWithdrawTokensAmount[
-                hasSingleToken
-                    ? tokenDetails[0].address
-                    : (selectedTokenDetails?.address ?? '')
+            hasSingleToken
+                ? tokenDetails[0].address
+                : (selectedTokenDetails?.address ?? '')
             ] ?? fallbackMaxWithdrawAmount
 
         return maxWithdrawAmount;
@@ -1110,7 +1109,7 @@ export default function WithdrawAndRepayActionButton({
             assetDetailsForTx.isVault
 
         // For repay, we should use the exact token amount (full debt) without any reductions
-        const exactTokenAmount = hasSingleToken 
+        const exactTokenAmount = hasSingleToken
             ? tokenDetails[0]?.tokenAmount?.toString() ?? '0'
             : selectedTokenDetails?.tokenAmount?.toString() ?? '0'
 
@@ -1124,10 +1123,10 @@ export default function WithdrawAndRepayActionButton({
         }
 
         const maxRepayAmount =
-        maxRepayTokensAmount[
+            maxRepayTokensAmount[
             hasSingleToken
                 ? tokenDetails[0].address
-                    : (selectedTokenDetails?.address ?? '')
+                : (selectedTokenDetails?.address ?? '')
             ] ?? fallbackMaxRepayAmount
 
         // If we have the exact token amount, override the max repay to ensure full debt can be repaid
@@ -1186,13 +1185,13 @@ export default function WithdrawAndRepayActionButton({
             )
                 ? false
                 : Number(amount) >
-                      Number(
-                          isWithdrawAction
-                              ? maxWithdrawAmountForTx.maxToWithdrawFormatted
-                              : maxRepayAmountForTx.maxToRepayFormatted
-                      ) ||
-                  Number(amount) <= 0 ||
-                  toManyDecimals,
+                Number(
+                    isWithdrawAction
+                        ? maxWithdrawAmountForTx.maxToWithdrawFormatted
+                        : maxRepayAmountForTx.maxToRepayFormatted
+                ) ||
+                Number(amount) <= 0 ||
+                toManyDecimals,
         [
             amount,
             maxWithdrawAmountForTx,
@@ -1208,21 +1207,21 @@ export default function WithdrawAndRepayActionButton({
     function getMaxDecimalsToDisplay(): number {
         return isWithdrawAction
             ? assetDetailsForTx?.asset?.token?.symbol
-                  .toLowerCase()
-                  .includes('btc') ||
-              assetDetailsForTx?.asset?.token?.symbol
-                  .toLowerCase()
-                  .includes('eth')
+                .toLowerCase()
+                .includes('btc') ||
+                assetDetailsForTx?.asset?.token?.symbol
+                    .toLowerCase()
+                    .includes('eth')
                 ? 4
                 : 2
             : selectedBorrowTokenDetails?.token?.symbol
-                    .toLowerCase()
-                    .includes('btc') ||
+                .toLowerCase()
+                .includes('btc') ||
                 selectedBorrowTokenDetails?.token?.symbol
                     .toLowerCase()
                     .includes('eth')
-              ? 4
-              : 2
+                ? 4
+                : 2
     }
 
     // Loading skeleton
@@ -1237,16 +1236,16 @@ export default function WithdrawAndRepayActionButton({
 
     const assetDetails = isMorphoProtocol
         ? {
-              ...assetDetailsForTx,
-              vault: !morphoVault ? null : morphoVault,
-              market: !morphoMarketData ? null : morphoMarketData.marketData,
-          }
+            ...assetDetailsForTx,
+            vault: !morphoVault ? null : morphoVault,
+            market: !morphoMarketData ? null : morphoMarketData.marketData,
+        }
         : isFluidVaultsProtocol
-          ? {
+            ? {
                 ...assetDetailsForTx,
                 fluid_vault_nftId: fluidVaultNftId,
             }
-          : assetDetailsForTx
+            : assetDetailsForTx
 
     function handleSelectAction() {
         setIsSelectTokenDialogOpen(true)

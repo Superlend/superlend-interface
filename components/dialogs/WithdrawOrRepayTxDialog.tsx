@@ -67,7 +67,7 @@ import { getChainDetails } from '@/app/position-management/helper-functions'
 import { useAssetsDataContext } from '@/context/data-provider'
 import ExternalLink from '@/components/ExternalLink'
 import { parseUnits } from 'ethers/lib/utils'
-import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { useSmartTokenBalancesContext } from '@/context/smart-token-balances-provider'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
 
@@ -186,7 +186,20 @@ export function WithdrawOrRepayTxDialog({
         isLoading: isLoadingErc20TokensBalanceData,
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
-    } = useUserTokenBalancesContext()
+        addTokensToFetch,
+    } = useSmartTokenBalancesContext()
+
+    // Request the specific token balance for this dialog
+    useEffect(() => {
+        if (localAssetDetails?.asset?.token?.address && chain_id) {
+            const tokenToFetch = [{
+                chainId: Number(chain_id),
+                tokenAddress: localAssetDetails.asset.token.address.toLowerCase()
+            }]
+            addTokensToFetch(tokenToFetch)
+            console.log('🎯 WithdrawOrRepayTxDialog: Requesting token balance for', tokenToFetch)
+        }
+    }, [localAssetDetails?.asset?.token?.address, chain_id, addTokensToFetch])
 
     const currentTokenBalanceInWallet = (
         erc20TokensBalanceData[Number(chain_id)]?.[localAssetDetails?.asset?.token?.address.toLowerCase()]

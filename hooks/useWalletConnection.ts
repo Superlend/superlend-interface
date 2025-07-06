@@ -2,8 +2,12 @@ import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useAccount } from 'wagmi'
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { usePrivyActiveWallet } from './usePrivyActiveWallet'
 
 export const useWalletConnection = () => {
+    // Ensure Privy and Wagmi stay in sync
+    usePrivyActiveWallet()
+    
     const { isConnecting: isConnectingWagmi, isConnected: isConnectedWagmi, address: walletAddressWagmi } = useAccount()
     const { user, ready, authenticated } = usePrivy()
     const queryClient = useQueryClient()
@@ -14,14 +18,15 @@ export const useWalletConnection = () => {
     
     // More strict wallet connection check - both Privy AND Wagmi must agree
     // If either shows disconnected, consider it disconnected to avoid race conditions
-    const privyConnected = !!user && authenticated
+    const privyConnected = !!user && authenticated && ready
     const wagmiConnected = isConnectedWagmi && !!walletAddressWagmi
     const isWalletConnected = privyConnected && wagmiConnected
     
     // Prioritize Privy's wallet address when authenticated, but ensure both agree
-    const walletAddress = (privyConnected && user?.wallet?.address) ? 
+    // Only return wallet address if BOTH systems agree it's connected
+    const walletAddress = (privyConnected && wagmiConnected && user?.wallet?.address) ? 
         user.wallet.address as `0x${string}` : 
-        (wagmiConnected ? walletAddressWagmi as `0x${string}` : undefined)
+        undefined
     
 
     const { wallets } = useWallets()

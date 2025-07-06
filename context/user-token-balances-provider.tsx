@@ -39,12 +39,30 @@ export default function UserTokenBalancesProvider({
     const { walletAddress, isWalletConnected } = useWalletConnection()
     const { allTokensData, allChainsData } = useAssetsDataContext()
 
+    // Check if we're on position management page to disable global fetching
+    const isPositionManagementPage = typeof window !== 'undefined' && 
+        window.location.pathname.includes('/position-management')
+
+    // Use optimized version that limits to specific chains to avoid excessive requests
+    // Only fetch for top 2 most popular chains by default to minimize requests
+    // Disable entirely on position management page since specific requests are used there
+    const priorityChains = isPositionManagementPage ? [] : [1, 137] // Ethereum, Polygon only
+    
+    // Log optimization status
+    if (isPositionManagementPage) {
+        console.log('🚫 Global token balance fetching disabled on position management page')
+    }
+    
     const {
         data: erc20TokensBalanceData,
         isLoading,
         isRefreshing,
         setIsRefreshing,
-    } = useERC20Balance(walletAddress as `0x${string}`)
+    } = useERC20Balance(
+        walletAddress as `0x${string}`,
+        undefined, // No specific tokens
+        priorityChains // Only priority chains
+    )
 
     useEffect(() => {
         setIsRefreshing(true)
