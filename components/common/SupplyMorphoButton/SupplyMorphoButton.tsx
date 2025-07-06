@@ -46,6 +46,8 @@ import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
 import { MathLib } from '@morpho-org/blue-sdk'
 import { zeroHash } from 'viem'
 import MORPHO_BUNDLER3_ABI from '@/data/abi/morphoBundler3ABI.json'
+import { useTransactionStatus, getTransactionErrorMessage } from '@/hooks/useTransactionStatus'
+import { humaniseWagmiError } from '@/lib/humaniseWagmiError'
 interface ISupplyMorphoButtonProps {
     disabled: boolean
     assetDetails: any // Replace with proper type
@@ -76,11 +78,10 @@ const SupplyMorphoButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            confirmations: 1,
-            hash,
-        })
+    
+    // Use the enhanced transaction status hook
+    const txStatus = useTransactionStatus(hash, 1)
+    
     const { address: walletAddress } = useAccount()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
     // const amountBN = useMemo(() => {
@@ -111,12 +112,12 @@ const SupplyMorphoButton = ({
     const getTxButtonText = (
         isPending: boolean,
         isConfirming: boolean,
-        isConfirmed: boolean
+        isSuccessful: boolean
     ) => {
         return txBtnStatus[
             isConfirming
                 ? 'confirming'
-                : isConfirmed
+                : isSuccessful
                   ? lendTx.status === 'view'
                       ? 'success'
                       : 'default'
@@ -126,7 +127,7 @@ const SupplyMorphoButton = ({
         ]
     }
 
-    const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+    const txBtnText = getTxButtonText(isPending, txStatus.isConfirming, txStatus.isSuccessful)
 
     useEffect(() => {
         getAccessTokenFromPrivy()
@@ -306,21 +307,88 @@ const SupplyMorphoButton = ({
             //         0,
             //     ],
             // })
-        } catch (error) {
-            error
+        } catch (error: any) {
+            // Handle immediate errors (like user rejection)
+            const errorMessage = humaniseWagmiError(error)
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: errorMessage,
+            }))
         }
     }, [amount, tokenDetails, platform, walletAddress, writeContractAsync])
+
+    // Handle transaction success/failure
+    useEffect(() => {
+        if (txStatus.isSuccessful) {
+            // Only set to 'view' if this was a supply transaction (not an approval)
+            if (lendTx.status === 'lend') {
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    status: 'view',
+                    errorMessage: '',
+                }))
+
+                const isCollateral = !tokenDetails.borrow_enabled
+                const eventType = isCollateral ? 'add_collateral_completed' : 'lend_completed'
+                
+                logEvent(eventType, {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name ?? assetDetails?.platform?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
+
+                logUserEvent({
+                    user_address: walletAddress as `0x${string}`,
+                    event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                    platform_type: 'superlend_aggregator',
+                    protocol_identifier: assetDetails?.protocol_identifier ?? assetDetails?.platform?.protocol_identifier,
+                    event_data: 'SUPPLY',
+                    authToken: accessToken || '',
+                })
+            } else if (lendTx.status === 'approve') {
+                // For approval transactions, transition to 'lend' status to trigger supply
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    status: 'lend',
+                    errorMessage: '',
+                }))
+
+                logEvent('approve_completed', {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name ?? assetDetails?.platform?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
+            }
+        } else if (txStatus.isFailed) {
+            const errorMessage = getTransactionErrorMessage(txStatus.receipt) || 'Transaction failed'
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: errorMessage,
+            }))
+        }
+    }, [txStatus.isSuccessful, txStatus.isFailed, txStatus.receipt])
 
     useEffect(() => {
         setLendTx((prev: any) => ({
             ...prev,
             isPending: isPending,
-            isConfirming: isConfirming,
-            isConfirmed: isConfirmed,
-            isRefreshingAllowance: isConfirmed,
-            // status: (isConfirmed && prev.status === 'lend' && hash) ? 'view' : prev.status,
+            isConfirming: txStatus.isConfirming,
+            isConfirmed: txStatus.isSuccessful,
+            isRefreshingAllowance: txStatus.isSuccessful,
         }))
-    }, [isPending, isConfirming, isConfirmed])
+    }, [isPending, txStatus.isConfirming, txStatus.isSuccessful])
 
     useEffect(() => {
         if (lendTx.status === 'view') return
@@ -396,8 +464,16 @@ const SupplyMorphoButton = ({
             }).catch((error) => {
                 console.log('Approve tx error: ', error)
             })
-        } catch (error) {
-            error
+        } catch (error: any) {
+            // Handle immediate errors (like user rejection)
+            const errorMessage = humaniseWagmiError(error)
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: errorMessage,
+            }))
         }
     }
 
@@ -649,7 +725,7 @@ const SupplyMorphoButton = ({
             <Button
                 disabled={
                     (isPending ||
-                        isConfirming ||
+                        txStatus.isConfirming ||
                         disabled ||
                         !morphoMarketData) &&
                     lendTx.status !== 'view'
@@ -668,7 +744,7 @@ const SupplyMorphoButton = ({
                 variant="primary"
             >
                 {txBtnText}
-                {lendTx.status !== 'view' && !isPending && !isConfirming && (
+                {lendTx.status !== 'view' && !isPending && !txStatus.isConfirming && (
                     <ArrowRightIcon
                         width={16}
                         height={16}

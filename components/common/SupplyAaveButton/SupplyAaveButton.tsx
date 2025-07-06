@@ -124,29 +124,48 @@ const SupplyAaveButton = ({
     // Handle transaction success/failure
     useEffect(() => {
         if (txStatus.isSuccessful) {
-            setLendTx((prev: TLendTx) => ({
-                ...prev,
-                status: 'view',
-                errorMessage: '',
-            }))
+            // Only set to 'view' if this was a supply transaction (not an approval)
+            if (lendTx.status === 'lend') {
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    status: 'view',
+                    errorMessage: '',
+                }))
 
-            logEvent('lend_completed', {
-                amount: amount.amountRaw,
-                token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.name,
-                chain_name:
-                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                wallet_address: walletAddress,
-            })
+                logEvent('lend_completed', {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
 
-            logUserEvent({
-                user_address: walletAddress as `0x${string}`,
-                event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
-                platform_type: 'superlend_aggregator',
-                protocol_identifier: assetDetails?.protocol_identifier,
-                event_data: 'SUPPLY',
-                authToken: accessToken || '',
-            })
+                logUserEvent({
+                    user_address: walletAddress as `0x${string}`,
+                    event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                    platform_type: 'superlend_aggregator',
+                    protocol_identifier: assetDetails?.protocol_identifier,
+                    event_data: 'SUPPLY',
+                    authToken: accessToken || '',
+                })
+            } else if (lendTx.status === 'approve') {
+                // For approval transactions, let the allowance refresh handle the transition
+                // The allowance useEffect will set status to 'lend' when allowance is sufficient
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    errorMessage: '',
+                }))
+
+                logEvent('approve_completed', {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
+            }
         } else if (txStatus.isFailed) {
             const errorMessage = getTransactionErrorMessage(txStatus.receipt) || 'Transaction failed'
             setLendTx((prev: TLendTx) => ({

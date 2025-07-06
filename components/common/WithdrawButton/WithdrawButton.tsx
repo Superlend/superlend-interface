@@ -60,6 +60,7 @@ import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
 import { useAuth } from '@/context/auth-provider'
 import GENERAL_ADAPTER_ABI from '@/data/abi/morphoGeneralAdapterABI.json'
 import MORPHO_BUNDLER3_ABI from '@/data/abi/morphoBundler3ABI.json'
+import { useTransactionStatus, getTransactionErrorMessage } from '@/hooks/useTransactionStatus'
 interface IWithdrawButtonProps {
     disabled: boolean
     assetDetails: any
@@ -80,6 +81,10 @@ const WithdrawButton = ({
         data: hash,
         error,
     } = useWriteContract()
+    
+    // Use the enhanced transaction status hook
+    const txStatus = useTransactionStatus(hash)
+    
     const { walletAddress } = useWalletConnection()
     const { withdrawTx, setWithdrawTx } = useTxContext() as TTxContext
     const { logUserEvent } = useLogNewUserEvent()
@@ -102,84 +107,132 @@ const WithdrawButton = ({
         default: 'Start withdrawing',
     }
 
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            hash,
-        })
-
     useEffect(() => {
         getAccessTokenFromPrivy()
     }, [])
 
-    useEffect(() => {
-        if (withdrawTx.status === 'withdraw' && isMorphoVault) {
-            onWithdraw()
-        }
-    }, [withdrawTx.status])
 
-    useEffect(() => {
-        if (withdrawTx.status === 'approve') return
 
-        if (hash) {
+    // Handle transaction success/failure
+    useEffect(() => {
+        if (txStatus.isSuccessful && withdrawTx.status !== 'view') {
+            // Only set to 'view' if this was a withdraw transaction (not an approval)
+            if (withdrawTx.status === 'withdraw') {
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    status: 'view',
+                    hash: hash || '',
+                    isConfirmed: true,
+                }))
+
+                logEvent('withdraw_completed', {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
+
+                logUserEvent({
+                    user_address: walletAddress as `0x${string}`,
+                    event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                    platform_type: 'superlend_aggregator',
+                    protocol_identifier: assetDetails?.protocol_identifier,
+                    event_data: 'WITHDRAW',
+                    authToken: accessToken || '',
+                })
+            } else if (withdrawTx.status === 'approve') {
+                // For approval transactions, transition to 'withdraw' status
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    status: 'withdraw',
+                    hash: hash || '',
+                    isConfirmed: true,
+                }))
+
+                logEvent('approve_completed', {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
+            } else {
+                // For single-step withdrawals (non-Morpho vaults), set to view
+                setWithdrawTx((prev: TWithdrawTx) => ({
+                    ...prev,
+                    status: 'view',
+                    hash: hash || '',
+                    isConfirmed: true,
+                }))
+
+                logEvent('withdraw_completed', {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
+
+                logUserEvent({
+                    user_address: walletAddress as `0x${string}`,
+                    event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                    platform_type: 'superlend_aggregator',
+                    protocol_identifier: assetDetails?.protocol_identifier,
+                    event_data: 'WITHDRAW',
+                    authToken: accessToken || '',
+                })
+            }
+        } else if (txStatus.isFailed && withdrawTx.status !== 'view') {
+            const errorMessage = getTransactionErrorMessage(txStatus.receipt) || 'Transaction failed'
             setWithdrawTx((prev: TWithdrawTx) => ({
                 ...prev,
-                status: 'view',
-                hash,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: errorMessage,
             }))
         }
+    }, [txStatus.isSuccessful, txStatus.isFailed, txStatus.receipt, hash, amount, assetDetails, walletAddress, withdrawTx.status])
 
-        if (hash && isConfirmed) {
-            setWithdrawTx((prev: TWithdrawTx) => ({
-                ...prev,
-                status: 'view',
-                hash,
-                isConfirmed: isConfirmed,
-            }))
-
-            logEvent('withdraw_completed', {
-                amount: amount.amountRaw,
-                token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.name,
-                chain_name:
-                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                wallet_address: walletAddress,
-            })
-
-            logUserEvent({
-                user_address: walletAddress as `0x${string}`,
-                event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
-                platform_type: 'superlend_aggregator',
-                protocol_identifier: assetDetails?.protocol_identifier,
-                event_data: 'WITHDRAW',
-                authToken: accessToken || '',
-            })
-        }
-    }, [hash, isConfirmed])
-
-    // Update the status(Loading states) of the lendTx based on the isPending and isConfirming states
+    // Update the status(Loading states) of the withdrawTx based on the isPending and txStatus states
     useEffect(() => {
-        setWithdrawTx((prev: TWithdrawTx) => ({
-            ...prev,
-            isPending: isPending,
-            isConfirming: isConfirming,
-            isConfirmed: isConfirmed,
-            isRefreshingAllowance: isConfirmed,
-        }))
-    }, [isPending, isConfirming, isConfirmed])
+        setWithdrawTx((prev: TWithdrawTx) => {
+            // Only update if values have actually changed
+            if (
+                prev.isPending !== isPending ||
+                prev.isConfirming !== txStatus.isConfirming ||
+                prev.isConfirmed !== txStatus.isSuccessful ||
+                prev.isRefreshingAllowance !== txStatus.isSuccessful
+            ) {
+                return {
+                    ...prev,
+                    isPending: isPending,
+                    isConfirming: txStatus.isConfirming,
+                    isConfirmed: txStatus.isSuccessful,
+                    isRefreshingAllowance: txStatus.isSuccessful,
+                }
+            }
+            return prev
+        })
+    }, [isPending, txStatus.isConfirming, txStatus.isSuccessful])
 
     const txBtnText =
         txBtnStatus[
-            isConfirming
+            txStatus.isConfirming
                 ? 'confirming'
-                : isConfirmed
+                : txStatus.isSuccessful
                   ? withdrawTx.status === 'view'
                       ? 'success'
                       : 'default'
                   : isPending
                     ? 'pending'
                     : !isPending &&
-                        !isConfirming &&
-                        !isConfirmed &&
+                        !txStatus.isConfirming &&
+                        !txStatus.isSuccessful &&
                         withdrawTx.status === 'view'
                       ? 'error'
                       : 'default'
@@ -224,14 +277,14 @@ const WithdrawButton = ({
                     ],
                 }).catch((error) => {
                     console.log('error', error)
+                    // Handle immediate errors (like user rejection)
+                    const errorMessage = humaniseWagmiError(error)
                     setWithdrawTx((prev: TWithdrawTx) => ({
                         ...prev,
                         isPending: false,
                         isConfirming: false,
                         isConfirmed: false,
-                        // errorMessage:
-                        //     error.message ||
-                        //     'Something went wrong, please try again',
+                        errorMessage: errorMessage,
                     }))
                 })
             } catch (error) {
@@ -300,16 +353,21 @@ const WithdrawButton = ({
         [writeContractAsync, assetDetails, handleCloseModal]
     )
 
-    const onApproveWithdrawMorphoVault = async (
+    const onApproveWithdrawMorphoVault = useCallback(async (
         assetDetails: any,
         amount: TScAmount
     ) => {
-        setWithdrawTx((prev: TWithdrawTx) => ({
-            ...prev,
-            status: 'approve',
-            hash: '',
-            errorMessage: '',
-        }))
+        setWithdrawTx((prev: TWithdrawTx) => {
+            if (prev.status !== 'approve' || prev.hash !== '' || prev.errorMessage !== '') {
+                return {
+                    ...prev,
+                    status: 'approve',
+                    hash: '',
+                    errorMessage: '',
+                }
+            }
+            return prev
+        })
 
         let vault = assetDetails?.vault as Vault
         let amountToWithdraw = amount.amountParsed
@@ -342,7 +400,7 @@ const WithdrawButton = ({
         }).catch((error) => {
             console.log('error', error)
         })
-    }
+    }, [assetDetails, amount, walletAddress, logEvent, writeContractAsync])
 
     const withdrawMorphoVault = useCallback(
         async (assetDetails: any, amount: TScAmount) => {
@@ -554,7 +612,7 @@ const WithdrawButton = ({
         []
     )
 
-    const onWithdraw = async () => {
+    const onWithdraw = useCallback(async () => {
         // if (isCompound) {
         //     await withdrawCompound(assetDetails?.asset?.token?.address, amount)
         //     return
@@ -588,7 +646,13 @@ const WithdrawButton = ({
             await withdrawFluidVault(assetDetails, amount)
             return
         }
-    }
+    }, [isAave, isMorphoVault, isMorphoMarket, isFluidLend, isFluidVault, assetDetails, amount, walletAddress, withdrawAave, withdrawMorphoVault, withdrawMorphoMarket, withdrawFluidLend, withdrawFluidVault])
+
+    useEffect(() => {
+        if (withdrawTx.status === 'withdraw' && isMorphoVault && !withdrawTx.isPending && !withdrawTx.isConfirming && withdrawTx.isConfirmed) {
+            onWithdraw()
+        }
+    }, [withdrawTx.status, isMorphoVault, withdrawTx.isPending, withdrawTx.isConfirming, withdrawTx.isConfirmed, onWithdraw])
 
     return (
         <div className="flex flex-col gap-2">
@@ -597,13 +661,13 @@ const WithdrawButton = ({
                     description={humaniseWagmiError(error)}
                 />
             )}
-            {/* {borrowTx.errorMessage.length > 0 && (
-                <CustomAlert description={borrowTx.errorMessage} />
-            )} */}
+            {(withdrawTx.errorMessage.length > 0 && !error) && (
+                <CustomAlert description={withdrawTx.errorMessage} />
+            )}
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={isPending || isConfirming || disabled}
+                disabled={isPending || txStatus.isConfirming || disabled}
                 onClick={() => {
                     if (withdrawTx.status === 'approve') {
                         onApproveWithdrawMorphoVault(assetDetails, amount)
@@ -617,7 +681,7 @@ const WithdrawButton = ({
                 {txBtnText}
                 {withdrawTx.status !== 'view' &&
                     !isPending &&
-                    !isConfirming && (
+                    !txStatus.isConfirming && (
                         <ArrowRightIcon
                             width={16}
                             height={16}
