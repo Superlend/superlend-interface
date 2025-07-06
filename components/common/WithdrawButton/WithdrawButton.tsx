@@ -661,7 +661,7 @@ const WithdrawButton = ({
                     description={humaniseWagmiError(error)}
                 />
             )}
-            {(withdrawTx.errorMessage.length > 0 && !error) && (
+            {((withdrawTx.errorMessage.length > 0) && !error) && (
                 <CustomAlert description={withdrawTx.errorMessage} />
             )}
             <Button
