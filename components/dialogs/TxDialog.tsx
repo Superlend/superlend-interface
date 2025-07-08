@@ -72,6 +72,7 @@ import { parseUnits } from 'ethers/lib/utils'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
 import { useIguanaDexData } from '@/hooks/protocols/useIguanaDexData'
+import { useTransactionStatus, getTransactionErrorMessage } from '@/hooks/useTransactionStatus'
 
 type TLoopAssetDetails = Omit<TAssetDetails, 'asset'> & {
     supplyAsset: TAssetDetails['asset'] & { emode_category?: number }
@@ -143,19 +144,19 @@ export function ConfirmationDialog({
         'borrow': borrowTx,
         'loop': loopTx,
     }
-    
+
     // Helper function to safely get tx status, with fallback for 'all' position type
     const getTxStatus = (type: TPositionType): TLendTx | TBorrowTx | TLoopTx => {
         if (type === 'all') return lendTx // Fallback to lendTx for 'all' case
         return positionTypeTxStatusMap[type as TTransactionType]
     }
-    
+
     // Helper function to convert position type to transaction type
     const getTransactionType = (type: TPositionType): TTransactionType => {
         if (type === 'all') return 'lend' // Default to 'lend' for 'all' case
         return type as TTransactionType
     }
-    
+
     const { logEvent } = useAnalytics()
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
     const searchParams = useSearchParams() || new URLSearchParams()
@@ -163,7 +164,36 @@ export function ConfirmationDialog({
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
     const isLendPositionType = positionType === 'lend'
-    const isTxFailed = getTxStatus(positionType).errorMessage.length > 0
+
+    // Enhanced transaction status detection using receipt-based approach
+    const getCurrentTxHash = () => {
+        if (positionType === 'lend') return lendTx.hash
+        if (positionType === 'borrow') return borrowTx.hash
+        if (positionType === 'loop') return loopTx.hash
+        return undefined
+    }
+
+    const txStatus = useTransactionStatus(getCurrentTxHash() as `0x${string}` | undefined, 2)
+
+    // Enhanced transaction status detection - properly distinguish success vs failure
+    const isTxSuccessful = useMemo(() => {
+        const currentTx = getTxStatus(positionType)
+        const hasErrorMessage = currentTx.errorMessage.length > 0
+
+        // Transaction is successful if it has a hash, is confirmed, the receipt shows success, AND there's no error message
+        // The error message check prevents showing success during sync gaps when immediate errors are detected but receipt isn't processed yet
+        return !!currentTx.hash && currentTx.isConfirmed && txStatus.isSuccessful && !hasErrorMessage
+    }, [positionType, txStatus.isSuccessful, lendTx.hash, lendTx.isConfirmed, lendTx.errorMessage, borrowTx.hash, borrowTx.isConfirmed, borrowTx.errorMessage, loopTx.hash, loopTx.isConfirmed, loopTx.errorMessage])
+
+    const isTxFailed = useMemo(() => {
+        const currentTx = getTxStatus(positionType)
+        const hasErrorMessage = currentTx.errorMessage.length > 0
+        const hasFailedReceipt = txStatus.isFailed
+
+        // Transaction is failed if either there's an error message OR the receipt shows failure
+        return hasErrorMessage || hasFailedReceipt
+    }, [positionType, txStatus.isFailed, lendTx.errorMessage, borrowTx.errorMessage, loopTx.errorMessage])
+
     const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
     const isMorphoMarkets = isMorpho && !assetDetails?.isVault
     const isMorphoVault = isMorpho && assetDetails?.isVault
@@ -228,7 +258,7 @@ export function ConfirmationDialog({
                             result?.routes[0]?.pools[0]?.fee?.toString() ??
                             '500',
                         ])
-                    } else{
+                    } else {
                         setPathTokens([
                             result?.routes[0]?.path[2]?.address,
                             result?.routes[0]?.path[1]?.address,
@@ -335,28 +365,22 @@ export function ConfirmationDialog({
     }
 
     function handleOpenChange(open: boolean) {
-        // When opening the dialog, reset the amount and the tx status
         setOpen(open)
-        // When closing the dialog, reset the amount and the tx status
-        if (
-            !open &&
-            (lendTx.status !== 'approve' || borrowTx.status !== 'borrow' || loopTx.status !== 'approve')
-        ) {
-            setAmount('')
-            // Only reset if transactions are completed (view status) or there are no pending retries
-            // Don't reset if user might want to retry a failed transaction
-            const shouldReset = (
-                (lendTx.status === 'view' && lendTx.isConfirmed) ||
-                (borrowTx.status === 'view' && borrowTx.isConfirmed) ||
-                (loopTx.status === 'view' && loopTx.isConfirmed) ||
-                // Only reset if no errors that user might want to retry
-                (!lendTx.errorMessage && !borrowTx.errorMessage && !loopTx.errorMessage)
-            )
 
-            if (shouldReset) {
+        if (open) {
+            // When opening the dialog, clear any existing error messages
+            // This ensures fresh state when user reopens after canceling/errors
+            if (lendTx.errorMessage || borrowTx.errorMessage || loopTx.errorMessage) {
+                resetLendBorrowTx()
+            }
+        } else {
+            // When closing the dialog, reset the amount and the tx status
+            if (lendTx.status !== 'approve' || borrowTx.status !== 'borrow' || loopTx.status !== 'approve') {
+                setAmount('')
+
                 setTimeout(() => {
                     resetLendBorrowTx()
-                }, 3000)
+                }, 500)
             }
         }
     }
@@ -566,13 +590,40 @@ export function ConfirmationDialog({
     ) : null
 
     function getHeaderText() {
-        if (positionType === 'loop') {
-            // Show "Looping Successful" when loop transaction is confirmed and successful
-            if (!isLoopTxInProgress && loopTx.isConfirmed && loopTx.status === 'view' && !!loopTx.hash) {
+        // Handle failed states first
+        if (isTxFailed) {
+            if (positionType === 'loop') {
+                return 'Looping Failed'
+            }
+            return isLendPositionType
+                ? isMorphoMarkets
+                    ? 'Add Collateral Failed'
+                    : isMorphoVault
+                        ? 'Supply to Vault Failed'
+                        : 'Lending Failed'
+                : 'Borrowing Failed'
+        }
+
+        // Handle successful states
+        if (isTxSuccessful) {
+            if (positionType === 'loop') {
                 return 'Looping Successful'
             }
+            return isLendPositionType
+                ? isMorphoMarkets
+                    ? 'Add Collateral Successful'
+                    : isMorphoVault
+                        ? 'Supply to Vault Successful'
+                        : 'Lending Successful'
+                : 'Borrowing Successful'
+        }
+
+        // Handle in-progress and review states
+        if (positionType === 'loop') {
             return 'Review Loop'
         }
+
+        // Default review states
         return isLendPositionType
             ? isMorphoMarkets
                 ? 'Add Collateral'
@@ -602,8 +653,7 @@ export function ConfirmationDialog({
                 )}
             {/* Confirmation details UI */}
             {isShowBlock({
-                lend: false,
-                borrow: false,
+                loop: loopTx.status === 'view' || (positionType === 'loop' && isTxFailed)
             }) && (
                     <div className="flex flex-col items-center justify-center gap-[6px]">
                         <ImageWithDefault
@@ -621,20 +671,23 @@ export function ConfirmationDialog({
                             {amount} {assetDetails?.asset?.token?.symbol}
                         </HeadingText>
                         {isShowBlock({
-                            lend: lendTx.status === 'view',
-                            borrow: borrowTx.status === 'view',
+                            lend: isTxSuccessful || isTxFailed,
+                            borrow: isTxSuccessful || isTxFailed,
+                            loop: isTxSuccessful || isTxFailed,
                         }) && (
                                 <Badge
                                     variant={isTxFailed ? 'destructive' : 'green'}
                                     className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
                                 >
-                                    {isLendPositionType && lendTx.status === 'view'
+                                    {isLendPositionType && (isTxSuccessful || (positionType === 'lend' && isTxFailed))
                                         ? isMorphoMarkets
                                             ? 'Add Collateral'
                                             : isMorphoVault
                                                 ? 'Supply to vault'
                                                 : 'Earn'
-                                        : 'Borrow'}{' '}
+                                        : positionType === 'loop'
+                                            ? 'Loop'
+                                            : 'Borrow'}{' '}
                                     {isTxFailed ? 'Failed' : 'Successful'}
                                     {!isTxFailed && (
                                         <CircleCheckIcon

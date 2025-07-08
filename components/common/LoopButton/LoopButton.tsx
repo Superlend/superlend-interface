@@ -569,7 +569,7 @@ const LoopButton = ({
                     description={getErrorText(error)}
                 />
             )}
-            {loopTx.errorMessage.length > 0 && (
+            {((loopTx.errorMessage.length > 0) && !error) && (
                 <CustomAlert description={loopTx.errorMessage} />
             )}
             <Button

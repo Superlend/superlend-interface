@@ -295,17 +295,17 @@ export default function PageHeader() {
     const appleFarmRewardAPY = Number(appleFarmRewardsAprs?.[relevantTokenAddress] ?? 0)
     const formattedSupplyAPY = baseSupplyAPY + appleFarmRewardAPY
 
-    console.log('Page Header APY calculation:', {
-        tokenSymbol: relevantTokenSymbol,
-        tokenAddress: relevantTokenAddress,
-        opportunityAPY,
-        platformSupplyAPY: pageHeaderStats?.supply_apy,
-        intrinsicAPY,
-        baseSupplyAPY,
-        appleFarmRewardAPY,
-        formattedSupplyAPY,
-        isDisplayOneToken
-    })
+    // console.log('Page Header APY calculation:', {
+    //     tokenSymbol: relevantTokenSymbol,
+    //     tokenAddress: relevantTokenAddress,
+    //     opportunityAPY,
+    //     platformSupplyAPY: pageHeaderStats?.supply_apy,
+    //     intrinsicAPY,
+    //     baseSupplyAPY,
+    //     appleFarmRewardAPY,
+    //     formattedSupplyAPY,
+    //     isDisplayOneToken
+    // })
 
     const formattedBorrowRate = (isMorphoVault || isFluidLend)
         ? 'N/A'

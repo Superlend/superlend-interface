@@ -27,7 +27,7 @@ function CompactCheckInButton() {
   const { logEvent } = useAnalytics()
   const [isCheckedIn, setIsCheckedIn] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const { accessToken } = useAuth()
+  const { accessToken, isLoadingToken } = useAuth()
 
   const {
     data: userDetails,
@@ -35,7 +35,7 @@ function CompactCheckInButton() {
     isError: isUserDetailsError,
     refetch: refetchUserDetails
   } = useGetUserDetails({
-    user_address: walletAddress,
+    user_address: walletAddress || undefined,
     authToken: accessToken || undefined
   })
 
@@ -92,6 +92,11 @@ function CompactCheckInButton() {
       return
     }
 
+    if (!walletAddress) {
+      toast.error('Wallet address not available')
+      return
+    }
+
     if (!accessToken) {
       toast.error('Authentication required. Please try again.')
       return
@@ -118,14 +123,15 @@ function CompactCheckInButton() {
       label={
         <Button
           onClick={handleCheckIn}
-          disabled={isCheckedIn || isLoading || isCheckInPending || isUserDetailsLoading}
+          disabled={isCheckedIn || isLoading || isCheckInPending || isUserDetailsLoading || isLoadingToken}
           variant={isCheckedIn ? "outline" : "default"}
           size="sm"
-          className={`w-[158px] h-7 px-2 text-xs flex items-center gap-1 disabled:opacity-100 ${(isUserDetailsLoading || isLoading || isCheckInPending) ? 'bg-gray-200 text-gray-500 border-gray-200 hover:bg-gray-200' : isCheckedIn ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-50' : 'bg-primary text-white hover:bg-primary/90'}`}
+          className={`w-[158px] h-7 px-2 text-xs flex items-center gap-1 disabled:opacity-100 ${(isUserDetailsLoading || isLoading || isCheckInPending || isLoadingToken) ? 'bg-gray-200 text-gray-500 border-gray-200 hover:bg-gray-200' : isCheckedIn ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-50' : 'bg-primary text-white hover:bg-primary/90'}`}
         >
-          {(isLoading || isCheckInPending) ? (
+          {(isLoading || isCheckInPending || isLoadingToken) ? (
             <span className="flex items-center">
-              <Loader2 className="w-3 h-3 animate-spin mr-1" /> Checking in...
+              <Loader2 className="w-3 h-3 animate-spin mr-1" /> 
+              {isLoadingToken ? 'Authenticating...' : 'Checking in...'}
             </span>
           ) : (
             <>
@@ -181,7 +187,7 @@ const AnimatedNumber = ({ value, label }: { value: string, label: string }) => {
 
 export default function PointsWithCheckInCard() {
   const { isWalletConnected, walletAddress } = useWalletConnection()
-  const { accessToken } = useAuth()
+  const { accessToken, isLoadingToken } = useAuth()
   const [isCheckedInWithin24Hours, setIsCheckedInWithin24Hours] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState({ hours: 0, minutes: 0, seconds: 0 })
 
@@ -189,8 +195,9 @@ export default function PointsWithCheckInCard() {
     data: userDetails,
     isLoading: isUserDetailsLoading,
     isError: isUserDetailsError,
+    refetch: refetchUserDetails
   } = useGetUserDetails({
-    user_address: walletAddress,
+    user_address: walletAddress || undefined,
     authToken: accessToken || undefined
   })
 
@@ -306,7 +313,7 @@ export default function PointsWithCheckInCard() {
               }
             />
           </div>
-          {isUserDetailsLoading && (
+          {(isUserDetailsLoading || isLoadingToken) && (
             <Skeleton className="w-24 h-4 rounded-4" />
           )}
           {isCheckedInWithin24Hours && (
@@ -331,8 +338,8 @@ export default function PointsWithCheckInCard() {
         {/* Bottom: Check-in time and buttons */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1">
-            {isUserDetailsLoading && <Skeleton className="w-24 h-7 rounded-4" />}
-            {!isUserDetailsLoading && <CompactCheckInButton />}
+            {(isUserDetailsLoading || isLoadingToken) && <Skeleton className="w-24 h-7 rounded-4" />}
+            {!isUserDetailsLoading && !isLoadingToken && <CompactCheckInButton />}
           </div>
 
           <Link href="/points" className="flex-1">
