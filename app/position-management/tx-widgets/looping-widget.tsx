@@ -59,12 +59,14 @@ interface LoopingWidgetProps {
     isLoading?: boolean
     platformData?: any
     portfolioData?: any
+    loopPair?: any
 }
 
-const LoopingWidget: FC<LoopingWidgetProps> = ({
+export const LoopingWidget: FC<LoopingWidgetProps> = ({
     isLoading = false,
     platformData,
     portfolioData,
+    loopPair,
 }) => {
     const searchParams = useSearchParams() || new URLSearchParams()
     const lendTokenAddressParam = searchParams.get('lend_token') || ''
@@ -422,14 +424,23 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
 
     useEffect(() => {
         if (providerStatus.isReady) {
-            // Get max leverage
-            getMaxLeverage({
-                chainId: ChainId.Etherlink,
-                uiPoolDataProviderAddress: uiPoolDataProviderAddress,
-                lendingPoolAddressProvider: lendingPoolAddressProvider,
-            }).then((results) => {
-                setMaxLeverage(results as any)
-            })
+            // If we have loop pair data, use its max leverage
+            if (loopPair?.strategy?.max_leverage) {
+                setMaxLeverage({
+                    [selectedLendToken?.address]: {
+                        [selectedBorrowToken?.address]: loopPair.strategy.max_leverage
+                    }
+                });
+            } else {
+                // Fallback to fetching max leverage
+                getMaxLeverage({
+                    chainId: ChainId.Etherlink,
+                    uiPoolDataProviderAddress: uiPoolDataProviderAddress,
+                    lendingPoolAddressProvider: lendingPoolAddressProvider,
+                }).then((results) => {
+                    setMaxLeverage(results as any)
+                })
+            }
 
             if (!!Number(lendAmount)) {
                 // Get borrow token amount for leverage
@@ -475,6 +486,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         lendAmount,
         selectedBorrowToken?.address,
         debouncedLeverage,
+        loopPair
     ])
 
     // Calculate user's current net APY whenever relevant parameters change
@@ -599,6 +611,14 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
 
     const isDisabledMaxButton = !isWalletConnected || Number(selectedLendTokenBalance) <= 0
 
+    // Check if user has an existing loop position
+    const hasLoopPosition = useMemo(() => {
+        return userPositions?.length > 0 && userPositions[0]?.positions?.some((position: any) => 
+            (position.type === 'lend' && position.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()) ||
+            (position.type === 'borrow' && position.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase())
+        )
+    }, [userPositions, lendTokenAddressParam, borrowTokenAddressParam])
+
     // Check if button should be disabled
     const diableActionButton =
         !isWalletConnected ||
@@ -614,6 +634,12 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
             setLeverage(1)
         }
         setLendAmount(amount)
+    }
+
+    // Function to handle close position
+    const handleClosePosition = () => {
+        // TODO: Implement close position logic when API is ready
+        console.log('Close position clicked - to be implemented')
     }
 
     // looping-widget
@@ -979,10 +1005,72 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                         </div>} */}
                 </CardContent>
 
-                <CardFooter className="p-0 pt-2">
+                <CardFooter className="p-0 pt-2 flex flex-col gap-2">
                     {!isWalletConnected ? (
                         <ConnectWalletButton />
+                    ) : hasLoopPosition ? (
+                        // Show both open and close position buttons when user has a position
+                        <div className="flex flex-col gap-2 w-full">
+                            <ConfirmationDialog
+                                disabled={diableActionButton}
+                                positionType="loop"
+                                loopAssetDetails={{
+                                    supplyAsset: {
+                                        token: selectedLendToken,
+                                        borrow_enabled: false,
+                                        ltv: 0,
+                                        remaining_borrow_cap: 0,
+                                        remaining_supply_cap: 0,
+                                        stable_borrow_apy: 0,
+                                        supply_apy: 0,
+                                        variable_borrow_apy: 0,
+                                        emode_category: loopPair?.lendReserve?.emode_category || 0,
+                                    },
+                                    borrowAsset: {
+                                        token: selectedBorrowToken,
+                                        borrow_enabled: true,
+                                        ltv: 0,
+                                        remaining_borrow_cap: 0,
+                                        remaining_supply_cap: 0,
+                                        emode_category: loopPair?.borrowReserve?.emode_category || 0,
+                                    },
+                                    ...platformData?.platform,
+                                    netAPY: portfolioNetAPY,
+                                    loopNetAPY: loopNetAPY.value,
+                                    lendReserve: loopPair?.lendReserve,
+                                    borrowReserve: loopPair?.borrowReserve,
+                                    strategy: loopPair?.strategy,
+                                }}
+                                lendAmount={lendAmount}
+                                borrowAmount={borrowAmount}
+                                borrowAmountRaw={borrowAmountRaw}
+                                flashLoanAmount={flashLoanAmount}
+                                balance={selectedLendTokenBalance}
+                                maxBorrowAmount={{
+                                    maxToBorrow: '0',
+                                    maxToBorrowFormatted: '0',
+                                    maxToBorrowSCValue: '0',
+                                    user: {},
+                                }}
+                                setAmount={setLendAmount}
+                                healthFactorValues={{
+                                    healthFactor: currentHealthFactor,
+                                    newHealthFactor: Number(borrowAmount) > 0 ? newHealthFactor : null,
+                                }}
+                                open={isLoopTxDialogOpen}
+                                setOpen={setIsLoopTxDialogOpen}
+                                leverage={leverage}
+                            />
+                            <Button
+                                variant="outline"
+                                className="w-full rounded-5"
+                                onClick={handleClosePosition}
+                            >
+                                Close Position
+                            </Button>
+                        </div>
                     ) : (
+                        // Show only open position button when user doesn't have a position
                         <ConfirmationDialog
                             disabled={diableActionButton}
                             positionType="loop"
@@ -996,6 +1084,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     stable_borrow_apy: 0,
                                     supply_apy: 0,
                                     variable_borrow_apy: 0,
+                                    emode_category: loopPair?.lendReserve?.emode_category || 0,
                                 },
                                 borrowAsset: {
                                     token: selectedBorrowToken,
@@ -1003,12 +1092,14 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     ltv: 0,
                                     remaining_borrow_cap: 0,
                                     remaining_supply_cap: 0,
+                                    emode_category: loopPair?.borrowReserve?.emode_category || 0,
                                 },
-                                // pathTokens, // Fetched in TxDialog
-                                // pathFees, // Fetched in TxDialog
                                 ...platformData?.platform,
                                 netAPY: portfolioNetAPY,
                                 loopNetAPY: loopNetAPY.value,
+                                lendReserve: loopPair?.lendReserve,
+                                borrowReserve: loopPair?.borrowReserve,
+                                strategy: loopPair?.strategy,
                             }}
                             lendAmount={lendAmount}
                             borrowAmount={borrowAmount}
@@ -1106,5 +1197,3 @@ function TokenSelector({
         </DropdownMenu>
     )
 }
-
-export default LoopingWidget

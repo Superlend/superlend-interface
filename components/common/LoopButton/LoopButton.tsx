@@ -5,42 +5,31 @@ import {
     useConnect,
     useWaitForTransactionReceipt,
     useWriteContract,
+    useReadContract,
 } from 'wagmi'
 import AAVE_APPROVE_ABI from '@/data/abi/aaveApproveABI.json'
 import AAVE_POOL_ABI from '@/data/abi/aavePoolABI.json'
-// import { getActionName } from '@/lib/getActionName'
-// import { Action } from '@/types/assetsTable'
-// import { AddressType } from '@/types/address'
+import STRATEGY_FACTORY_ABI from '@/data/abi/superlendStrategyFactoryABI.json'
+import STRATEGY_ABI from '@/data/abi/superlendStrategyABI.json'
 import { parseUnits } from 'ethers/lib/utils'
-// import toast from 'react-hot-toast'
 import {
-    APPROVE_MESSAGE,
     CHAIN_ID_MAPPER,
-    CONFIRM_ACTION_IN_WALLET_TEXT,
-    ERROR_TOAST_ICON_STYLES,
-    SOMETHING_WENT_WRONG_MESSAGE,
-    SUCCESS_MESSAGE,
 } from '@/constants'
 import { Button } from '@/components/ui/button'
 import {
-    TLendTx,
     TLoopTx,
     TTxContext,
     useTxContext,
 } from '@/context/tx-provider'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { ArrowRightIcon, LoaderCircle } from 'lucide-react'
-import { BigNumber } from 'ethers'
 import { getErrorText } from '@/lib/getErrorText'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
-import { ETH_ADDRESSES } from '@/lib/constants'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { TScAmount } from '@/types'
 import { useAuth } from '@/context/auth-provider'
 import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
-import CREDIT_DELEGATION_ABI from '@/data/abi/creditDelegationABI.json'
-import LOOPING_LEVERAGE_ABI from '@/data/abi/loopingLeverageABI.json'
 
 interface ILoopButtonProps {
     assetDetails: any
@@ -54,6 +43,13 @@ interface ILoopButtonProps {
     isLoading?: boolean
 }
 
+/**
+ * New Looping Flow:
+ * 1. Check if user has existing strategy using getUserStrategy
+ * 2. If no strategy exists, create one using createStrategy
+ * 3. Approve tokens to strategy contract
+ * 4. Open position through strategy contract (includes credit delegation)
+ */
 const LoopButton = ({
     assetDetails,
     poolContractAddress,
@@ -81,35 +77,61 @@ const LoopButton = ({
     const { loopTx, setLoopTx } = useTxContext() as TTxContext
     const { logUserEvent } = useLogNewUserEvent()
     const { accessToken, getAccessTokenFromPrivy } = useAuth()
-    const LOOPING_SC_LEVERAGE_ADDRESS =
-        '0xE2a9BC6785cDAB0156C032074a658117a5213352'
-    const DEBT_TOKENS: Record<string, string> = {
-        '0x796ea11fa2dd751ed01b53c372ffdb4aaa8f00f9':
-            '0x904a51d7b418d8d5f3739e421a6ed532d653f625',
-        '0x2c03058c8afc06713be23e58d2febc8337dbfe6a':
-            '0xf9279419830016c87be66617e6c5ea42a7204460',
-        '0xbfc94cd2b1e55999cfc7347a9313e88702b83d0f':
-            '0x87c4d41c0982f335e8eb6be30fd2ae91a6de31fb',
-        '0xfc24f770f94edbca6d6f885e12d4317320bcb401':
-            '0x2bc84b1f1e1b89521de08c966be1ca498f97a493',
-        '0xc9b53ab2679f573e480d01e0f49e2b5cfb7a3eab':
-            '0x1504d006b80b1616d2651e8d15d5d25a88efef58',
-    }
-    const debtToken = DEBT_TOKENS[assetDetails.borrowAsset.token.address]
+
+    // Contract addresses
+    const LOOPING_LEVERAGE_ADDRESS = '0x1c055a9609529F30b0917231F43aEAaD7C0264F6'
+    const STRATEGY_FACTORY_ADDRESS = '0x5739b234bCf3E7D1de2eC4EC3D0401917C6c366F'
+
+    // Track strategy contract address and flow state
+    const [strategyAddress, setStrategyAddress] = useState<string>('')
+    const [hasExistingStrategy, setHasExistingStrategy] = useState<boolean>(false)
+    const [isProcessingFlow, setIsProcessingFlow] = useState<boolean>(false)
     const isDisabledCta = loopTx.isPending || loopTx.isConfirming || disabled || !isWalletConnected
 
-    // const amountBN = useMemo(() => {
-    //     return amount ? BigNumber.from(amount.amountRaw) : BigNumber.from(0)
-    // }, [amount])
+    // Calculate eMode value based on loop pair data
+    const eModeValue = useMemo(() => {
+        // If we have loop pair data with reserves, use that
+        if (assetDetails?.lendReserve?.emode_category !== undefined && assetDetails?.borrowReserve?.emode_category !== undefined) {
+            const lendEmode = assetDetails.lendReserve.emode_category
+            const borrowEmode = assetDetails.borrowReserve.emode_category
+            const isCorrelated = assetDetails.strategy?.correlated
+
+            // If the pair is correlated and both tokens have the same emode category, use it
+            if (isCorrelated && lendEmode === borrowEmode && lendEmode > 0) {
+                return lendEmode
+            }
+            
+            // If not correlated or different emode categories, use 0 (no emode)
+            return 0
+        }
+
+        // Fallback to checking individual asset emode categories
+        if (assetDetails?.supplyAsset?.emode_category !== undefined && assetDetails?.borrowAsset?.emode_category !== undefined) {
+            const supplyEmode = assetDetails.supplyAsset.emode_category
+            const borrowEmode = assetDetails.borrowAsset.emode_category
+
+            // If both assets have the same emode category, use it
+            if (supplyEmode === borrowEmode && supplyEmode > 0) {
+                return supplyEmode
+            }
+        }
+
+        // Default to no emode
+        return 0
+    }, [assetDetails])
 
     const txBtnStatus: Record<string, string> = {
         pending:
             loopTx.status === 'approve'
                 ? 'Approving token...'
-                : 'Looping token...',
+                : loopTx.status === 'check_strategy'
+                ? 'Checking strategy...'
+                : loopTx.status === 'create_strategy'
+                ? 'Creating strategy...'
+                : 'Opening position...',
         confirming: 'Confirming...',
         success: 'Close',
-        default: loopTx.status === 'approve' ? 'Start looping' : 'Loop token',
+        default: 'Start Looping',
     }
 
     const getTxButtonText = (
@@ -117,7 +139,6 @@ const LoopButton = ({
         isConfirming: boolean,
         isConfirmed: boolean
     ) => {
-        // Use internal loopTx state flags instead of wagmi flags for consistent behavior
         return txBtnStatus[
             loopTx.isConfirming
                 ? 'confirming'
@@ -145,140 +166,84 @@ const LoopButton = ({
         }))
     }, [isPending, isConfirming, isConfirmed])
 
-    // Update the loopTx hash based on the transaction status
+    // Handle transaction completion and progression
     useEffect(() => {
-        if (
-            loopTx.status === 'approve' &&
-            hash &&
-            isConfirmed &&
-            !isPending &&
-            !isConfirming &&
-            hash !== loopTx.hash // Only transition for new transaction
-        ) {
-            if (loopTx.hasCreditDelegation) {
+        if (!hash || !isConfirmed || isPending || isConfirming) return
+
+        const handleTransactionCompletion = async () => {
+            if (loopTx.status === 'approve') {
                 setLoopTx((prev: TLoopTx) => ({
                     ...prev,
-                    status: 'credit_delegation',
-                    hash: hash, // Store the current hash to prevent re-triggering
-                    isPending: false,
-                    isConfirming: false,
-                    isConfirmed: false,
+                    hash: hash,
+                    status: 'open_position',
                 }))
-                return
+                
+                // Wait a bit to show approval success, then move to open position
+                setTimeout(async () => {
+                    await onOpenPosition()
+                }, 1000)
+            } else if (loopTx.status === 'create_strategy') {
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    hash: hash,
+                }))
+                
+                // Wait a bit to show strategy creation success, then move to approval
+                setTimeout(async () => {
+                    // Refetch strategy address after creation
+                    const { data: newStrategyAddress } = await refetchStrategy()
+                    if (newStrategyAddress && newStrategyAddress !== '0x0000000000000000000000000000000000000000') {
+                        setStrategyAddress(newStrategyAddress as string)
+                        await onApproveSupply(newStrategyAddress as string)
+                    }
+                }, 1000)
+            } else if (loopTx.status === 'open_position') {
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    hash: hash,
+                    status: 'view',
+                }))
+
+                logEvent('loop_completed', {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.supplyAsset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
+                
+                setIsProcessingFlow(false)
             }
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                status: 'loop',
-                hash: hash, // Store the current hash to prevent re-triggering
-                isPending: false,
-                isConfirming: false,
-                isConfirmed: false,
-            }))
-            return
         }
-        if (
-            loopTx.status === 'credit_delegation' &&
-            hash &&
-            isConfirmed &&
-            !isPending &&
-            !isConfirming &&
-            hash !== loopTx.hash // Only transition for new transaction
-        ) {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                hash: hash, // Store the current hash to prevent re-triggering
-                status: 'loop',
-                isPending: false,
-                isConfirming: false,
-                isConfirmed: false,
-            }))
-            return
-        }
-        if (
-            loopTx.status === 'loop' &&
-            hash &&
-            isConfirmed &&
-            !isPending &&
-            !isConfirming &&
-            hash !== loopTx.hash // Only transition if this is a new transaction hash
-        ) {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                hash: hash || '',
-                status: 'view',
-            }))
 
-            logEvent('loop_completed', {
-                amount: amount.amountRaw,
-                token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.name,
-                chain_name:
-                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                wallet_address: walletAddress,
-            })
-            return
-        }
-    }, [hash, loopTx.status, isConfirmed, isPending, isConfirming])
+        handleTransactionCompletion()
+    }, [hash, isConfirmed, isPending, isConfirming, loopTx.status])
 
-    // Handle transaction cancellation/failure
+    // Handle transaction cancellation/failure - only for actual blockchain transactions
     useEffect(() => {
-        // If transaction was pending/confirming but now stopped without being confirmed
-        // This indicates cancellation or failure
+        const isActualTransaction = loopTx.status === 'approve' || loopTx.status === 'create_strategy' || loopTx.status === 'open_position'
+        
         if (
+            isActualTransaction &&
             !isPending &&
             !isConfirming &&
             !isConfirmed &&
             !hash &&
             loopTx.status !== 'view' &&
-            (loopTx.isPending || loopTx.isConfirming)
+            (loopTx.isPending || loopTx.isConfirming) &&
+            !loopTx.hash // Don't trigger cancellation if we have a success hash
         ) {
-            console.log('Transaction cancelled or failed, keeping status:', loopTx.status)
-            // Keep the current status so user can retry, but reset the transaction flags
-            // Only set error message if there isn't already a more specific one
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
                 isPending: false,
                 isConfirming: false,
                 isConfirmed: false,
-                errorMessage: prev.errorMessage || 'Transaction was cancelled because the action was not confirmed in your wallet',
+                errorMessage: 'Transaction was cancelled because the action was not confirmed in your wallet',
             }))
+            setIsProcessingFlow(false)
         }
-    }, [isPending, isConfirming, isConfirmed, hash, loopTx.isPending, loopTx.isConfirming, loopTx.status])
-
-    // Auto-trigger next transaction step after successful completion
-    useEffect(() => {
-        // Only auto-trigger if the status change came from a successful transaction
-        // We can detect this by checking if we just transitioned and there's no pending user action
-        const shouldAutoTrigger =
-            !loopTx.isPending &&
-            !loopTx.isConfirming &&
-            !loopTx.errorMessage &&
-            loopTx.hash && // There's a transaction hash from the previous step
-            (loopTx.status === 'credit_delegation' || loopTx.status === 'loop')
-
-        if (shouldAutoTrigger) {
-            console.log('Auto-triggering next step for status:', loopTx.status)
-
-            if (loopTx.status === 'credit_delegation') {
-                // Clear hash first to prevent re-triggering, then call function
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    hash: '', // Clear hash to prevent re-triggering
-                }))
-                setTimeout(() => onCreditDeligation(), 100)
-                return
-            }
-            if (loopTx.status === 'loop') {
-                // Clear hash first to prevent re-triggering, then call function
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    hash: '', // Clear hash to prevent re-triggering
-                }))
-                setTimeout(() => onLoop(), 100)
-                return
-            }
-        }
-    }, [loopTx.status, loopTx.hash, loopTx.isPending, loopTx.isConfirming, loopTx.errorMessage])
+    }, [isPending, isConfirming, isConfirmed, hash, loopTx.isPending, loopTx.isConfirming, loopTx.status, loopTx.hash])
 
     // Check wallet connection before executing any transaction
     const checkWalletConnection = () => {
@@ -290,25 +255,147 @@ const LoopButton = ({
                 isConfirmed: false,
                 errorMessage: 'Please connect your wallet to continue',
             }))
+            setIsProcessingFlow(false)
             return false
         }
         return true
     }
 
-    // Approve the supply token
-    const onApproveSupply = async () => {
+    // Helper function to handle transaction errors
+    const handleTransactionError = (error: any, status: string) => {
+        const isUserRejection = error?.message?.includes('User rejected') ||
+            error?.message?.includes('user rejected') ||
+            error?.code === 4001 ||
+            error?.code === 'ACTION_REJECTED'
+
+        if (isUserRejection) {
+            console.log(`User rejected transaction at step: ${status}`)
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                status: status,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: '',
+            }))
+        } else {
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                status: status,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: error?.message?.includes('ConnectorNotConnectedError')
+                    ? 'Wallet connection lost. Please reconnect your wallet and try again.'
+                    : `Transaction failed. Please try again.`,
+            }))
+        }
+        setIsProcessingFlow(false)
+    }
+
+    // Use useReadContract to check for existing strategy
+    const { data: existingStrategyAddress, refetch: refetchStrategy } = useReadContract({
+        address: STRATEGY_FACTORY_ADDRESS as `0x${string}`,
+        abi: STRATEGY_FACTORY_ABI,
+        functionName: 'getUserStrategy',
+        args: walletAddress ? [
+            walletAddress,
+            poolContractAddress,
+            assetDetails?.supplyAsset?.token?.address,
+            assetDetails?.borrowAsset?.token?.address,
+            eModeValue
+        ] : undefined,
+        query: {
+            enabled: !!walletAddress && !!assetDetails?.supplyAsset?.token?.address
+        }
+    })
+
+    // Step 1: Check if user has existing strategy
+    const onCheckStrategy = async () => {
         if (!checkWalletConnection()) return
 
-        const decimals = assetDetails?.supplyAsset?.token?.decimals ?? 18
-        const parsedLendAmount = parseUnits(
-            amount?.lendAmount?.toString() ?? '0',
-            decimals
-        )
+        try {
+            console.log('Checking existing strategy with eMode:', eModeValue)
+            
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                status: 'check_strategy',
+                hash: '',
+                errorMessage: '',
+                isPending: true,
+                isConfirming: false,
+                isConfirmed: false,
+            }))
+
+            // Simulate checking process with a small delay
+            await new Promise(resolve => setTimeout(resolve, 800))
+
+            // Check for existing strategy
+            const { data: existingStrategy } = await refetchStrategy()
+            
+            if (existingStrategy && existingStrategy !== '0x0000000000000000000000000000000000000000') {
+                // Strategy exists, use it
+                setStrategyAddress(existingStrategy as string)
+                setHasExistingStrategy(true)
+                console.log('Found existing strategy:', existingStrategy)
+                
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'check_strategy',
+                    hash: 'strategy_found',
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                }))
+                
+                // Wait a bit to show the success message, then proceed to approval
+                setTimeout(async () => {
+                    await onApproveSupply(existingStrategy as string)
+                }, 1500)
+            } else {
+                // No strategy exists, will create one
+                setHasExistingStrategy(false)
+                console.log('No existing strategy found, will create new one')
+                
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'check_strategy',
+                    hash: 'check_complete',
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                }))
+                
+                // Wait a bit to show the success message, then proceed to create strategy
+                setTimeout(async () => {
+                    await onCreateStrategy()
+                }, 1500)
+            }
+            
+        } catch (error: any) {
+            console.error('onCheckStrategy error', error)
+            handleTransactionError(error, 'check_strategy')
+        }
+    }
+
+    // Step 2: Approve yield token to strategy contract
+    const onApproveSupply = async (strategyAddr: string) => {
+        if (!checkWalletConnection()) return
 
         try {
+            if (!strategyAddr) {
+                throw new Error('No strategy address available for approval')
+            }
+
+            const decimals = assetDetails?.supplyAsset?.token?.decimals ?? 18
+            const parsedLendAmount = parseUnits(
+                amount?.lendAmount?.toString() ?? '0',
+                decimals
+            )
+
             logEvent('approve_loop_initiated', {
                 amount: amount?.lendAmount ?? '0',
-                token_symbol: assetDetails?.asset?.token?.symbol ?? '',
+                token_symbol: assetDetails?.supplyAsset?.token?.symbol ?? '',
                 platform_name: assetDetails?.name ?? '',
                 chain_name:
                     CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
@@ -322,200 +409,128 @@ const LoopButton = ({
                 errorMessage: '',
             }))
 
+            console.log('Approving token to strategy:', strategyAddr)
+
             await writeContractAsync({
                 address: underlyingAssetAdress,
                 abi: AAVE_APPROVE_ABI,
                 functionName: 'approve',
-                args: [LOOPING_SC_LEVERAGE_ADDRESS, parsedLendAmount],
+                args: [strategyAddr, parsedLendAmount],
             })
         } catch (error: any) {
-            console.log('onApproveSupply error', error)
-
-            // Don't overwrite error message if user cancelled (rejection errors)
-            const isUserRejection = error?.message?.includes('User rejected') ||
-                error?.message?.includes('user rejected') ||
-                error?.code === 4001 ||
-                error?.code === 'ACTION_REJECTED'
-
-            if (!isUserRejection) {
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    status: 'approve', // Reset to initial status on error
-                    isPending: false,
-                    isConfirming: false,
-                    isConfirmed: false,
-                    errorMessage: error?.message?.includes(
-                        'ConnectorNotConnectedError'
-                    )
-                        ? 'Wallet connection lost. Please reconnect your wallet and try again.'
-                        : 'Transaction failed. Please try again.',
-                }))
-            } else {
-                // For user rejections, just reset the flags but let cancellation detection handle the error message
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    status: 'approve',
-                    isPending: false,
-                    isConfirming: false,
-                    isConfirmed: false,
-                }))
-            }
+            console.error('onApproveSupply error', error)
+            handleTransactionError(error, 'approve')
         }
     }
 
-    // Credit deligation function
-    const onCreditDeligation = async () => {
+    // Step 3: Create strategy (only if needed)
+    const onCreateStrategy = async () => {
         if (!checkWalletConnection()) return
 
-        const decimals = assetDetails?.borrowAsset?.token?.decimals ?? 18
-        const parsedBorrowAmount = parseUnits(
-            amount?.borrowAmount?.toString() ?? '0',
-            decimals
-        )
+        const createStrategyParams = {
+            loopingLeverage: LOOPING_LEVERAGE_ADDRESS,
+            pool: poolContractAddress,
+            yieldAsset: assetDetails.supplyAsset.token.address,
+            debtAsset: assetDetails.borrowAsset.token.address,
+            eMode: eModeValue
+        }
+
+        console.log('Creating strategy with params:', createStrategyParams)
 
         try {
-            logEvent('credit_delegation_initiated', {
-                amount: amount?.borrowAmount ?? '0',
-                token_symbol: assetDetails?.borrowAsset?.token?.symbol ?? '',
-                platform_name: assetDetails?.name ?? '',
-                chain_name:
-                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                wallet_address: walletAddress,
-            })
-
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
-                status: 'credit_delegation',
+                status: 'create_strategy',
                 hash: '',
                 errorMessage: '',
             }))
 
             await writeContractAsync({
-                address: debtToken as `0x${string}`,
-                abi: CREDIT_DELEGATION_ABI,
-                functionName: 'approveDelegation',
-                args: [LOOPING_SC_LEVERAGE_ADDRESS, parsedBorrowAmount],
+                address: STRATEGY_FACTORY_ADDRESS as `0x${string}`,
+                abi: STRATEGY_FACTORY_ABI,
+                functionName: 'createStrategy',
+                args: [
+                    createStrategyParams.loopingLeverage,
+                    createStrategyParams.pool,
+                    createStrategyParams.yieldAsset,
+                    createStrategyParams.debtAsset,
+                    createStrategyParams.eMode
+                ],
             })
+
+            console.log('Strategy creation transaction sent')
+
         } catch (error: any) {
-            console.log('onCreditDeligation error', error)
-
-            // Don't overwrite error message if user cancelled (rejection errors)
-            const isUserRejection = error?.message?.includes('User rejected') ||
-                error?.message?.includes('user rejected') ||
-                error?.code === 4001 ||
-                error?.code === 'ACTION_REJECTED'
-
-            if (!isUserRejection) {
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    status: 'credit_delegation', // Reset to current status on error for retry
-                    isPending: false,
-                    isConfirming: false,
-                    isConfirmed: false,
-                    errorMessage: error?.message?.includes(
-                        'ConnectorNotConnectedError'
-                    )
-                        ? 'Wallet connection lost. Please reconnect your wallet and try again.'
-                        : 'Credit delegation failed. Please try again.',
-                }))
-            } else {
-                // For user rejections, just reset the flags but let cancellation detection handle the error message
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    status: 'credit_delegation',
-                    isPending: false,
-                    isConfirming: false,
-                    isConfirmed: false,
-                }))
-            }
+            console.error('onCreateStrategy error', error)
+            handleTransactionError(error, 'create_strategy')
         }
     }
 
-    // Loop function
-    const onLoop = async () => {
+    // Step 4: Open position through strategy contract
+    const onOpenPosition = async () => {
         if (!checkWalletConnection()) return
 
-        const supplyToken = assetDetails?.supplyAsset?.token?.address ?? ''
-        const borrowToken = assetDetails?.borrowAsset?.token?.address ?? ''
-        const supplyAmount = parseUnits(
-            amount?.lendAmount?.toString() ?? '0',
-            assetDetails?.supplyAsset?.token?.decimals ?? 18
-        )
-        const flashLoanAmount = parseUnits(
-            amount?.flashLoanAmount?.toString() ?? '0',
-            assetDetails?.supplyAsset?.token?.decimals ?? 18
-        )
-        console.log('assetDetails', assetDetails)
-        const pathTokens: string[] = assetDetails?.pathTokens ?? []
-        const pathFees: string[] = assetDetails?.pathFees ?? []
-
-        console.log(LOOPING_SC_LEVERAGE_ADDRESS, {
-            LOOPING_SC_LEVERAGE_ADDRESS,
-            supplyToken,
-            borrowToken,
-            supplyAmount: supplyAmount.toString(),
-            flashLoanAmount: flashLoanAmount.toString(),
-            pathTokens,
-            pathFees,
-        })
-
         try {
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                status: 'open_position',
+                hash: '',
+                errorMessage: '',
+            }))
+
+            const supplyAmount = parseUnits(
+                amount?.lendAmount?.toString() ?? '0',
+                assetDetails?.supplyAsset?.token?.decimals ?? 18
+            )
+            const flashLoanAmount = parseUnits(
+                amount?.flashLoanAmount?.toString() ?? '0',
+                assetDetails?.supplyAsset?.token?.decimals ?? 18
+            )
+            const delegationAmount = parseUnits(
+                amount?.borrowAmount?.toString() ?? '0',
+                assetDetails?.borrowAsset?.token?.decimals ?? 18
+            )
+
+            console.log('Opening position with params:', {
+                strategyAddress: strategyAddress,
+                supplyAmount: supplyAmount.toString(),
+                flashLoanAmount: flashLoanAmount.toString(),
+                delegationAmount: delegationAmount.mul(120).div(100).toString(),
+                pathTokens: assetDetails.pathTokens || [],
+                pathFees: assetDetails.pathFees || [],
+                eMode: eModeValue
+            })
+
             await writeContractAsync({
-                address: LOOPING_SC_LEVERAGE_ADDRESS,
-                abi: LOOPING_LEVERAGE_ABI,
-                functionName: 'loop',
+                address: strategyAddress as `0x${string}`,
+                abi: STRATEGY_ABI,
+                functionName: 'openPosition',
                 args: [
-                    supplyToken,
-                    borrowToken,
                     supplyAmount.toBigInt(),
                     flashLoanAmount.toBigInt(),
-                    pathTokens,
-                    pathFees,
+                    assetDetails.pathTokens || [],
+                    assetDetails.pathFees || [],
+                    delegationAmount.mul(120).div(100).toBigInt()
                 ],
             })
         } catch (error: any) {
-            console.log('onLoop error', error)
-
-            // Don't overwrite error message if user cancelled (rejection errors)
-            const isUserRejection = error?.message?.includes('User rejected') ||
-                error?.message?.includes('user rejected') ||
-                error?.code === 4001 ||
-                error?.code === 'ACTION_REJECTED'
-
-            if (!isUserRejection) {
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    status: 'loop', // Keep in loop status for retry
-                    isPending: false,
-                    isConfirming: false,
-                    isConfirmed: false,
-                    errorMessage: error?.message?.includes(
-                        'ConnectorNotConnectedError'
-                    )
-                        ? 'Wallet connection lost. Please reconnect your wallet and try again.'
-                        : 'Loop transaction failed. Please try again.',
-                }))
-            } else {
-                // For user rejections, just reset the flags but let cancellation detection handle the error message
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    status: 'loop',
-                    isPending: false,
-                    isConfirming: false,
-                    isConfirmed: false,
-                }))
-            }
+            console.error('onOpenPosition error', error)
+            handleTransactionError(error, 'open_position')
         }
     }
 
-    // Handle the SC interaction
-    const handleSCInteraction = useCallback(() => {
-        console.log('Button clicked - Current loopTx status:', loopTx.status)
-        console.log('Button clicked - loopTx state:', loopTx)
+    // Handle the SC interaction - Single button starts the entire flow
+    const handleSCInteraction = useCallback(async () => {
+        console.log('Loop button clicked - Starting automated flow with eMode:', eModeValue)
 
         if (!checkWalletConnection()) return
 
-        // Clear any previous error message when user tries again
+        if (loopTx.status === 'view') {
+            handleCloseModal(false)
+            return
+        }
+
+        // Clear any previous error message
         if (loopTx.errorMessage) {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
@@ -523,38 +538,42 @@ const LoopButton = ({
             }))
         }
 
-        // For manual button clicks, always proceed (this handles retries and initial approve)
-        if (loopTx.status === 'approve') {
-            console.log('Manual: Calling onApproveSupply')
-            onApproveSupply()
-        } else if (loopTx.status === 'credit_delegation') {
-            console.log('Manual: Calling onCreditDeligation')
-            onCreditDeligation()
-        } else if (loopTx.status === 'loop') {
-            console.log('Manual: Calling onLoop')
-            onLoop()
-        } else {
-            console.log('Closing modal - unexpected status:', loopTx.status)
-            handleCloseModal(false)
+        // Set processing flag
+        setIsProcessingFlow(true)
+
+        // Start the automated flow
+        try {
+            // Reset to start of flow
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                status: 'check_strategy',
+                hash: '',
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: '',
+            }))
+
+            // Start with strategy check
+            await onCheckStrategy()
+        } catch (error: any) {
+            console.error('Error starting loop flow:', error)
+            handleTransactionError(error, 'check_strategy')
         }
-    }, [loopTx.status, loopTx.errorMessage, isWalletConnected, walletAddress])
+    }, [loopTx.status, loopTx.errorMessage, isWalletConnected, walletAddress, eModeValue])
 
     return (
         <div className="flex flex-col gap-2">
             {error && (
                 <CustomAlert
-                    description={
-                        error && error.message
-                            ? getErrorText(error)
-                            : SOMETHING_WENT_WRONG_MESSAGE
-                    }
+                    description={getErrorText(error)}
                 />
             )}
             {loopTx.errorMessage.length > 0 && (
                 <CustomAlert description={loopTx.errorMessage} />
             )}
             <Button
-                disabled={isDisabledCta}
+                disabled={isDisabledCta || isProcessingFlow}
                 onClick={handleSCInteraction}
                 className="group flex items-center gap-1 py-3 w-full rounded-5 uppercase"
                 variant="primary"

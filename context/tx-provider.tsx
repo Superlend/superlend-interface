@@ -63,7 +63,7 @@ const TxInitialState: TTxContext = {
         allowanceBN: BigNumber.from(0),
     },
     loopTx: {
-        status: 'approve',
+        status: 'check_strategy',
         hash: '',
         errorMessage: '',
         isPending: false,
@@ -124,29 +124,25 @@ export type TWithdrawTx = {
 }
 
 export type TLoopTx = {
-    status: 'approve' | 'credit_delegation' | 'loop' | 'view'
+    status: 'approve' | 'check_strategy' | 'create_strategy' | 'open_position' | 'view'
     hash: string
-    errorMessage: string
     isPending: boolean
     isConfirming: boolean
     isConfirmed: boolean
+    errorMessage: string
     hasCreditDelegation: boolean
 }
 
-export default function TxProvider({
-    children,
-}: {
-    children: React.ReactNode
-}) {
+export const TxProvider = ({ children }: { children: React.ReactNode }) => {
     const [lendTx, setLendTx] = useState<TLendTx>({
         status: 'approve',
         hash: '',
-        allowanceBN: BigNumber.from(0),
-        isRefreshingAllowance: false,
         errorMessage: '',
         isPending: false,
         isConfirming: false,
         isConfirmed: false,
+        allowanceBN: BigNumber.from(0),
+        isRefreshingAllowance: false,
     })
 
     const [borrowTx, setBorrowTx] = useState<TBorrowTx>({
@@ -156,6 +152,16 @@ export default function TxProvider({
         isPending: false,
         isConfirming: false,
         isConfirmed: false,
+    })
+
+    const [loopTx, setLoopTx] = useState<TLoopTx>({
+        status: 'check_strategy',
+        hash: '',
+        errorMessage: '',
+        isPending: false,
+        isConfirming: false,
+        isConfirmed: false,
+        hasCreditDelegation: false,
     })
 
     const [repayTx, setRepayTx] = useState<TRepayTx>({
@@ -178,16 +184,6 @@ export default function TxProvider({
         isConfirmed: false,
         isRefreshingAllowance: false,
         allowanceBN: BigNumber.from(0),
-    })
-
-    const [loopTx, setLoopTx] = useState<TLoopTx>({
-        status: 'approve',
-        hash: '',
-        errorMessage: '',
-        isPending: false,
-        isConfirming: false,
-        isConfirmed: false,
-        hasCreditDelegation: false,
     })
 
     const [isLendBorrowTxDialogOpen, setIsLendBorrowTxDialogOpen] =
@@ -225,3 +221,5 @@ export const useTxContext = () => {
         throw new Error('useTxContext must be used within an TxProvider')
     return context
 }
+
+export default TxProvider

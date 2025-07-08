@@ -26,7 +26,11 @@ import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { BodyText, Label } from '@/components/ui/typography'
 
-export default function LoopPositionOverview() {
+interface LoopPositionOverviewProps {
+    loopPair?: any
+}
+
+export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewProps) {
     const searchParams = useSearchParams()
     const chain_id = searchParams?.get('chain_id') || '1'
     const protocol_identifier = searchParams?.get('protocol_identifier') || ''
@@ -34,8 +38,7 @@ export default function LoopPositionOverview() {
     const borrowTokenAddressParam = searchParams?.get('borrow_token') || ''
     const { walletAddress, isWalletConnected } = useWalletConnection()
     const [activeTab, setActiveTab] = useState('overview')
-    const { getMaxLeverage, providerStatus, uiPoolDataProviderAddress, lendingPoolAddressProvider } = useAaveV3Data()
-    const [maxLeverage, setMaxLeverage] = useState<number>(0)
+    const { providerStatus, uiPoolDataProviderAddress, lendingPoolAddressProvider } = useAaveV3Data()
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
     const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
     const { findLoopOpportunity } = useLoopOpportunities()
@@ -43,14 +46,16 @@ export default function LoopPositionOverview() {
 
     // Get loop opportunity data for this specific token pair
     const loopOpportunityData = useMemo(() => {
+        if (loopPair) {
+            return loopPair;
+        }
         return findLoopOpportunity(lendTokenAddressParam, borrowTokenAddressParam, protocol_identifier)
-    }, [findLoopOpportunity, lendTokenAddressParam, borrowTokenAddressParam, protocol_identifier])
+    }, [loopPair, findLoopOpportunity, lendTokenAddressParam, borrowTokenAddressParam, protocol_identifier])
 
     const { data: platformData, isLoading: isLoadingPlatformData } = useGetPlatformData({
         protocol_identifier,
         chain_id: Number(chain_id),
     })
-
 
     const { data: portfolioData, isLoading: isLoadingPortfolioData } = useGetPortfolioData({
         user_address: walletAddress as `0x${string}`,
@@ -83,9 +88,27 @@ export default function LoopPositionOverview() {
         return foundOpportunity
     }, [opportunitiesData, chain_id, protocol_identifier])
 
-    // Get token details from platform data
+    // Get token details from platform data or loop pair data
     const lendTokenDetails = useMemo(() => {
-        if (!platformData?.assets) return null
+        if (loopPair?.lendReserve) {
+            const asset = loopPair.lendReserve;
+            const appleFarmReward = appleFarmRewardsAprs?.[asset.token.address] ?? 0;
+            const baseSupplyAPY = asset.apy.current;
+            const enhancedSupplyAPY = baseSupplyAPY + appleFarmReward;
+
+            return {
+                ...asset.token,
+                apy: enhancedSupplyAPY,
+                baseApy: baseSupplyAPY,
+                appleFarmReward: appleFarmReward,
+                ltv: asset.max_ltv,
+                remaining_supply_cap: asset.remaining_supply_cap,
+                totalSupply: Number(asset.liquidity) * asset.token.price_usd
+            };
+        }
+
+        // Fallback to platform data
+        if (!platformData?.assets) return null;
         const asset = platformData.assets.find((asset: TPlatformAsset) => 
             asset.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
         )
@@ -127,7 +150,24 @@ export default function LoopPositionOverview() {
     }, [platformData, lendTokenAddressParam, appleFarmRewardsAprs, findOpportunityData])
 
     const borrowTokenDetails = useMemo(() => {
-        if (!platformData?.assets) return null
+        if (loopPair?.borrowReserve) {
+            const asset = loopPair.borrowReserve;
+            const liquidityUSD = Number(asset.liquidity) * asset.token.price_usd;
+            const borrowsUSD = Number(asset.borrows) * asset.token.price_usd;
+            const availableLiquidityUSD = liquidityUSD - borrowsUSD;
+
+            return {
+                ...asset.token,
+                apy: asset.variable_borrow_rate,
+                borrow_enabled: true,
+                remaining_borrow_cap: asset.remaining_borrow_cap,
+                totalBorrow: borrowsUSD,
+                availableLiquidity: availableLiquidityUSD
+            };
+        }
+
+        // Fallback to platform data
+        if (!platformData?.assets) return null;
         const asset = platformData.assets.find((asset: TPlatformAsset) => 
             asset.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
         )
@@ -261,21 +301,6 @@ export default function LoopPositionOverview() {
         }
     }, [userPositions, lendTokenAddressParam, borrowTokenAddressParam])
 
-    useEffect(() => {
-        if (providerStatus.isReady) {
-            getMaxLeverage({
-                chainId: ChainId.Etherlink,
-                uiPoolDataProviderAddress: uiPoolDataProviderAddress,
-                lendingPoolAddressProvider: lendingPoolAddressProvider,
-            }).then((results) => {
-                const maxLeverage = (results?.[
-                    lendTokenAddressParam.toLowerCase()
-                ]?.[borrowTokenAddressParam.toLowerCase()] ?? 0)
-                setMaxLeverage(maxLeverage)
-            })
-        }
-    }, [providerStatus, lendTokenAddressParam, borrowTokenAddressParam])
-
     // Dynamic data for metrics
     const metrics = useMemo(() => {
         const borrowSymbol = borrowTokenDetails?.symbol || 'Unknown'
@@ -292,10 +317,8 @@ export default function LoopPositionOverview() {
         const appleFarmRewardAPY = lendTokenDetails?.appleFarmReward || 0
         const totalSupplyAPY = lendTokenDetails?.apy || 0
         
-        // Calculate base APY (reverse calculation for mTBILL/mBASIS)
-        const baseSupplyAPY = (lendSymbol?.toLowerCase() === 'mtbill' || lendSymbol?.toLowerCase() === 'mbasis') 
-            ? 0 
-            : totalSupplyAPY - appleFarmRewardAPY - intrinsicAPY
+        // Get max leverage from loop pair data
+        const maxLeverageValue = loopPair?.strategy?.max_leverage || 1;
         
         const baseMetrics = [
             {
@@ -326,7 +349,7 @@ export default function LoopPositionOverview() {
             },
             {
                 title: 'Max Leverage',
-                value: `${(maxLeverage || 1).toFixed(2)}x`,
+                value: `${maxLeverageValue.toFixed(2)}x`,
                 icon: TrendingUp,
                 tooltip: `Maximum leverage multiplier available for ${lendSymbol}/${borrowSymbol} loop positions. Higher leverage amplifies both potential returns and risks.`,
                 className: 'text-primary'
@@ -334,14 +357,14 @@ export default function LoopPositionOverview() {
         ]
 
         return baseMetrics
-    }, [lendTokenDetails, borrowTokenDetails, maxLeverage, mTbillAPY, mBasisAPY, hasAppleFarmRewards, lendTokenAddressParam, chain_id])
+    }, [lendTokenDetails, borrowTokenDetails, loopPair, mTbillAPY, mBasisAPY, hasAppleFarmRewards])
 
     // Dynamic loop data
     const loopData = useMemo(() => {
         if (userLoopPosition) {
             return {
                 ...userLoopPosition,
-                maxLeverage: parseFloat((maxLeverage || 4.0).toFixed(2)),
+                maxLeverage: parseFloat((loopPair?.strategy?.max_leverage || 4.0).toFixed(2)),
                 platform: {
                     name: platformData?.platform?.name || 'Unknown',
                     logo: platformData?.platform?.logo || '',
@@ -391,7 +414,7 @@ export default function LoopPositionOverview() {
             positionLTV: parseFloat((0).toFixed(4)),
             liquidationLTV: 80,
             liquidationPrice: parseFloat((0).toFixed(8)),
-            maxLeverage: parseFloat((maxLeverage || 4.0).toFixed(2)),
+            maxLeverage: parseFloat((loopPair?.strategy?.max_leverage || 4.0).toFixed(2)),
             utilizationRate: parseFloat((0).toFixed(4)),
             totalSupplied: parseFloat((0).toFixed(8)),
             totalBorrowed: parseFloat((0).toFixed(8)),
@@ -401,7 +424,7 @@ export default function LoopPositionOverview() {
                 chain_id: Number(chain_id)
             }
         }
-    }, [userLoopPosition, lendTokenDetails, borrowTokenDetails, maxLeverage, platformData, chain_id, lendTokenAddressParam, borrowTokenAddressParam])
+    }, [userLoopPosition, loopPair, platformData, chain_id, lendTokenAddressParam, borrowTokenAddressParam])
 
     const isLoading = isLoadingPlatformData || isLoadingPortfolioData || isLoadingAppleFarmRewards || isLoadingOpportunitiesData
 
