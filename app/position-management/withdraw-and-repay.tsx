@@ -555,11 +555,11 @@ export default function WithdrawAndRepayActionButton({
                     (a) => a.ltv > 0
                 )[0]
                 const borrowPositionDetails =
-                    portfolioData.platforms[0].positions.filter(
+                    portfolioData?.platforms[0]?.positions?.filter(
                         (p) => p.type === 'borrow'
                     )[0]
                 const lendPositionDetails =
-                    portfolioData.platforms[0].positions.filter(
+                    portfolioData?.platforms[0]?.positions?.filter(
                         (p) => p.type === 'lend'
                     )[0]
 
@@ -587,10 +587,11 @@ export default function WithdrawAndRepayActionButton({
                         (borrowPositionUSD * 100) / (lendTokenDetails?.ltv ?? 1)
                     const collatRequiredInToken =
                         collatRequiredInUsd /
-                        lendPositionDetails.token.price_usd
+                        (lendPositionDetails?.token?.price_usd ?? 1)
                     const amountToWithdraw = parseUnits(
                         (
-                            lendPositionDetails.amount - collatRequiredInToken
+                            (lendPositionDetails?.amount ?? 0) -
+                            collatRequiredInToken
                         ).toFixed(lendTokenDetails?.token?.decimals ?? 0),
                         lendTokenDetails?.token?.decimals ?? 0
                     ).toString()
