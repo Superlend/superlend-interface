@@ -145,7 +145,7 @@ const BorrowButton = ({
                 isConfirmed: prev.isConfirmed || txStatus.isSuccessful,
             }))
         }
-    }, [txStatus.isSuccessful, txStatus.isFailed, txStatus.isConfirming, txStatus.receipt, isPending, hash, amount, assetDetails, walletAddress, accessToken])
+    }, [txStatus.isSuccessful, txStatus.isFailed, txStatus.isConfirming, isPending, hash, walletAddress, accessToken])
 
     const txBtnText =
         txBtnStatus[
