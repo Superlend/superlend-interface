@@ -457,7 +457,7 @@ const SupplyFluidButton = ({
                     }
                 />
             )}
-            {lendTx.errorMessage.length > 0 && (
+            {((lendTx.errorMessage.length > 0) && !error) && (
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button

@@ -366,7 +366,7 @@ const BorrowButton = ({
                     }
                 />
             )}
-            {borrowTx.errorMessage.length > 0 && (
+            {((borrowTx.errorMessage.length > 0) && !error) && (
                 <CustomAlert description={borrowTx.errorMessage} />
             )}
             <Button

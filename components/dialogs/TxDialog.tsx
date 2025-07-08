@@ -141,19 +141,19 @@ export function ConfirmationDialog({
         'borrow': borrowTx,
         'loop': loopTx,
     }
-    
+
     // Helper function to safely get tx status, with fallback for 'all' position type
     const getTxStatus = (type: TPositionType): TLendTx | TBorrowTx | TLoopTx => {
         if (type === 'all') return lendTx // Fallback to lendTx for 'all' case
         return positionTypeTxStatusMap[type as TTransactionType]
     }
-    
+
     // Helper function to convert position type to transaction type
     const getTransactionType = (type: TPositionType): TTransactionType => {
         if (type === 'all') return 'lend' // Default to 'lend' for 'all' case
         return type as TTransactionType
     }
-    
+
     const { logEvent } = useAnalytics()
     const [hasAcknowledgedRisk, setHasAcknowledgedRisk] = useState(false)
     const searchParams = useSearchParams() || new URLSearchParams()
@@ -161,7 +161,7 @@ export function ConfirmationDialog({
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
     const isLendPositionType = positionType === 'lend'
-    
+
     // Enhanced transaction status detection using receipt-based approach
     const getCurrentTxHash = () => {
         if (positionType === 'lend') return lendTx.hash
@@ -169,28 +169,28 @@ export function ConfirmationDialog({
         if (positionType === 'loop') return loopTx.hash
         return undefined
     }
-    
+
     const txStatus = useTransactionStatus(getCurrentTxHash() as `0x${string}` | undefined, 2)
-    
+
     // Enhanced transaction status detection - properly distinguish success vs failure
     const isTxSuccessful = useMemo(() => {
         const currentTx = getTxStatus(positionType)
         const hasErrorMessage = currentTx.errorMessage.length > 0
-        
+
         // Transaction is successful if it has a hash, is confirmed, the receipt shows success, AND there's no error message
         // The error message check prevents showing success during sync gaps when immediate errors are detected but receipt isn't processed yet
         return !!currentTx.hash && currentTx.isConfirmed && txStatus.isSuccessful && !hasErrorMessage
     }, [positionType, txStatus.isSuccessful, lendTx.hash, lendTx.isConfirmed, lendTx.errorMessage, borrowTx.hash, borrowTx.isConfirmed, borrowTx.errorMessage, loopTx.hash, loopTx.isConfirmed, loopTx.errorMessage])
-    
+
     const isTxFailed = useMemo(() => {
         const currentTx = getTxStatus(positionType)
         const hasErrorMessage = currentTx.errorMessage.length > 0
         const hasFailedReceipt = txStatus.isFailed
-        
+
         // Transaction is failed if either there's an error message OR the receipt shows failure
         return hasErrorMessage || hasFailedReceipt
     }, [positionType, txStatus.isFailed, lendTx.errorMessage, borrowTx.errorMessage, loopTx.errorMessage])
-    
+
     const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
     const isMorphoMarkets = isMorpho && !assetDetails?.isVault
     const isMorphoVault = isMorpho && assetDetails?.isVault
@@ -255,7 +255,7 @@ export function ConfirmationDialog({
                             result?.routes[0]?.pools[0]?.fee?.toString() ??
                             '500',
                         ])
-                    } else{
+                    } else {
                         setPathTokens([
                             result?.routes[0]?.path[2]?.address,
                             result?.routes[0]?.path[1]?.address,
@@ -363,28 +363,22 @@ export function ConfirmationDialog({
     }
 
     function handleOpenChange(open: boolean) {
-        // When opening the dialog, reset the amount and the tx status
         setOpen(open)
-        // When closing the dialog, reset the amount and the tx status
-        if (
-            !open &&
-            (lendTx.status !== 'approve' || borrowTx.status !== 'borrow' || loopTx.status !== 'approve')
-        ) {
-            setAmount('')
-            // Only reset if transactions are completed (view status) or there are no pending retries
-            // Don't reset if user might want to retry a failed transaction
-            const shouldReset = (
-                (lendTx.status === 'view' && lendTx.isConfirmed) ||
-                (borrowTx.status === 'view' && borrowTx.isConfirmed) ||
-                (loopTx.status === 'view' && loopTx.isConfirmed) ||
-                // Only reset if no errors that user might want to retry
-                (!lendTx.errorMessage && !borrowTx.errorMessage && !loopTx.errorMessage)
-            )
 
-            if (shouldReset) {
+        if (open) {
+            // When opening the dialog, clear any existing error messages
+            // This ensures fresh state when user reopens after canceling/errors
+            if (lendTx.errorMessage || borrowTx.errorMessage || loopTx.errorMessage) {
+                resetLendBorrowTx()
+            }
+        } else {
+            // When closing the dialog, reset the amount and the tx status
+            if (lendTx.status !== 'approve' || borrowTx.status !== 'borrow' || loopTx.status !== 'approve') {
+                setAmount('')
+
                 setTimeout(() => {
                     resetLendBorrowTx()
-                }, 3000)
+                }, 500)
             }
         }
     }
@@ -605,7 +599,7 @@ export function ConfirmationDialog({
                         : 'Lending Failed'
                 : 'Borrowing Failed'
         }
-        
+
         // Handle successful states
         if (isTxSuccessful) {
             if (positionType === 'loop') {
@@ -619,12 +613,12 @@ export function ConfirmationDialog({
                         : 'Lending Successful'
                 : 'Borrowing Successful'
         }
-        
+
         // Handle in-progress and review states
         if (positionType === 'loop') {
             return 'Review Loop'
         }
-        
+
         // Default review states
         return isLendPositionType
             ? isMorphoMarkets
@@ -687,7 +681,7 @@ export function ConfirmationDialog({
                                             : isMorphoVault
                                                 ? 'Supply to vault'
                                                 : 'Earn'
-                                        : positionType === 'loop' 
+                                        : positionType === 'loop'
                                             ? 'Loop'
                                             : 'Borrow'}{' '}
                                     {isTxFailed ? 'Failed' : 'Successful'}

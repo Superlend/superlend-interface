@@ -628,7 +628,7 @@ const RepayButton = ({
                     }
                 />
             )}
-            {repayTx.errorMessage.length > 0 && (
+            {((repayTx.errorMessage.length > 0) && !error) && (
                 <CustomAlert description={repayTx.errorMessage} />
             )}
             <Button

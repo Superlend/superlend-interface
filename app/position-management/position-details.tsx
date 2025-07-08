@@ -51,7 +51,7 @@ export default function PositionDetails() {
     // const { address: walletAddress } = useAccount()
     const { isWalletConnected, walletAddress, isConnectingWallet } =
         useWalletConnection()
-    const { lendTx, borrowTx, setWithdrawTx } = useTxContext()
+    const { lendTx, borrowTx, loopTx, setWithdrawTx } = useTxContext()
     const [refresh, setRefresh] = useState(false)
 
     const {
@@ -79,7 +79,8 @@ export default function PositionDetails() {
     useEffect(() => {
         const isRefresh =
             (lendTx.status === 'view' && lendTx.isConfirmed) ||
-            (borrowTx.status === 'view' && borrowTx.isConfirmed)
+            (borrowTx.status === 'view' && borrowTx.isConfirmed) || 
+            (loopTx.status === 'view' && loopTx.isConfirmed)
         if (isRefresh) {
             setRefresh(true)
         }
@@ -88,6 +89,8 @@ export default function PositionDetails() {
         lendTx.isConfirmed,
         borrowTx.status,
         borrowTx.isConfirmed,
+        loopTx.status,
+        loopTx.isConfirmed,
     ])
 
     useEffect(() => {

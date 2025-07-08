@@ -698,7 +698,7 @@ const SupplyMorphoButton = ({
                     }
                 />
             )}
-            {lendTx.errorMessage.length > 0 && (
+            {((lendTx.errorMessage.length > 0) && !error) && (
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             {!morphoMarketData && (
