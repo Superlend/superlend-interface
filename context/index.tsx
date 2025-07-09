@@ -133,11 +133,11 @@ function ContextProvider({ children }: { children: ReactNode }) {
             >
                 <QueryClientProvider client={queryClient}>
                     <WagmiProvider config={config}>
+                            <EthereumMulticallProvider>
                         <AssetsDataProvider>
                             <LoopOpportunitiesProvider>
                                 <UserTokenBalancesProvider>
                         <PrivyWagmiSync>
-                            <EthereumMulticallProvider>
                                 <AssetsDataProvider>
                                 <SmartTokenBalancesProvider>
                                     <AaveV3DataProvider>
@@ -149,11 +149,11 @@ function ContextProvider({ children }: { children: ReactNode }) {
                                     </AaveV3DataProvider>
                                 </SmartTokenBalancesProvider>
                                     </AssetsDataProvider>
-                                    </EthereumMulticallProvider>
                                 </PrivyWagmiSync>
                                 </UserTokenBalancesProvider>
                             </LoopOpportunitiesProvider>
                         </AssetsDataProvider>
+                                    </EthereumMulticallProvider>
                     </WagmiProvider>
                 </QueryClientProvider>
             </PrivyProvider>
