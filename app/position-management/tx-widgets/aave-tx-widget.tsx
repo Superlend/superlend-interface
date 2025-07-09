@@ -56,7 +56,7 @@ import {
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 import { useAaveV3Data } from '../../../hooks/protocols/useAaveV3Data'
 import { BigNumber } from 'ethers'
-import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { useSmartTokenBalancesContext } from '@/context/smart-token-balances-provider'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { calculateHealthFactorFromBalancesBigUnits } from '@aave/math-utils'
 import { valueToBigNumber } from '@aave/math-utils'
@@ -88,7 +88,8 @@ export default function AaveV3TxWidget({
         isLoading: isLoadingErc20TokensBalanceData,
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
-    } = useUserTokenBalancesContext()
+        addTokensToFetch,
+    } = useSmartTokenBalancesContext()
     const [positionType, setPositionType] = useState<TPositionType>('lend')
     const [amount, setAmount] = useState('')
     const [maxBorrowAmount, setMaxBorrowAmount] = useState('0')
@@ -117,6 +118,17 @@ export default function AaveV3TxWidget({
     const protocol_identifier = searchParams?.get('protocol_identifier') || ''
     const positionTypeParam: TPositionType =
         (searchParams?.get('position_type') as TPositionType) || 'lend'
+
+    // Request platform tokens to be fetched when available
+    useEffect(() => {
+        if (platformData?.assets?.length && chain_id) {
+            const platformTokens = platformData.assets.map(asset => ({
+                chainId: Number(chain_id),
+                tokenAddress: asset.token.address
+            }))
+            addTokensToFetch(platformTokens)
+        }
+    }, [platformData, chain_id, addTokensToFetch])
     const { walletAddress, handleSwitchChain, isWalletConnected } =
         useWalletConnection()
     const {
@@ -359,9 +371,9 @@ export default function AaveV3TxWidget({
     }
 
     const getFormattedAssetDetails = (tokenAddress: string) => {
-        if (!!selectedPlatformDetails && hasPosition) {
-            return getAssetDetailsFromPortfolio(tokenAddress)
-        }
+        // if (!!selectedPlatformDetails && hasPosition) {
+        //     return getAssetDetailsFromPortfolio(tokenAddress)
+        // }
         return getAssetDetails(tokenAddress)
     }
 

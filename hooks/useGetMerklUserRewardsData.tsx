@@ -22,6 +22,7 @@ export const useGetMerklUserRewardsData = ({
         },
         staleTime: Infinity,
         refetchInterval: 60000,
+        enabled: !!walletAddress,
     })
     return { data, isLoading, isError }
 }

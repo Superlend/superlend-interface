@@ -20,6 +20,7 @@ import { getAddress } from 'ethers/lib/utils'
 import { IsAaveV3Legacy } from '@/lib/utils'
 import { useEthersMulticall } from '../hooks/useEthereumMulticall'
 import { useAccount } from 'wagmi'
+import { useWalletStatus } from '@/hooks/useWallet'
 
 // Types for the context
 type ReservesData = ReservesDataHumanized | ReservesDataHumanizedLegacy
@@ -105,6 +106,7 @@ export const AaveV3DataProvider: React.FC<AaveV3DataProviderProps> = ({
 }) => {
     const { address: walletAddress } = useAccount()
     const { providers } = useEthersMulticall()
+    const { isConnected } = useWalletStatus()
     
     // Cache state: chainId -> cached data
     const [cache, setCache] = useState<Record<number, CachedData>>({})
@@ -116,10 +118,18 @@ export const AaveV3DataProvider: React.FC<AaveV3DataProviderProps> = ({
         error: null as string | null,
     })
 
-    // Enhanced provider readiness check
+    // Enhanced provider readiness check - only initialize when wallet is connected
     useEffect(() => {
         const initializeProviders = async () => {
-            setProviderStatus((prev) => ({ ...prev, isInitializing: true }))
+            // Don't initialize providers if wallet isn't connected
+            if (!isConnected) {
+                setProviderStatus({
+                    isReady: false,
+                    isInitializing: false,
+                    error: 'Wallet not connected',
+                })
+                return
+            }
 
             if (!providers || Object.keys(providers).length === 0) {
                 setProviderStatus({
@@ -129,6 +139,8 @@ export const AaveV3DataProvider: React.FC<AaveV3DataProviderProps> = ({
                 })
                 return
             }
+
+            setProviderStatus((prev) => ({ ...prev, isInitializing: true }))
 
             try {
                 const chainIds = Object.keys(providers)
@@ -166,7 +178,7 @@ export const AaveV3DataProvider: React.FC<AaveV3DataProviderProps> = ({
         }
 
         initializeProviders()
-    }, [providers])
+    }, [providers, isConnected])
 
     // Helper function to check if cache is valid
     const isCacheValid = useCallback((chainId: number, currentCache: Record<number, CachedData>): boolean => {

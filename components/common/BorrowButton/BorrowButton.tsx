@@ -44,6 +44,9 @@ import { TScAmount } from '@/types'
 import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
 import { useAuth } from '@/context/auth-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { useTransactionStatus, getTransactionErrorMessage } from '@/hooks/useTransactionStatus'
+import { humaniseWagmiError } from '@/lib/humaniseWagmiError'
+
 interface IBorrowButtonProps {
     disabled: boolean
     assetDetails: any
@@ -71,14 +74,14 @@ const BorrowButton = ({
         data: hash,
         error,
     } = useWriteContract()
+    
+    // Use the enhanced transaction status hook
+    const txStatus = useTransactionStatus(hash)
+    
     const { walletAddress } = useWalletConnection()
     const { borrowTx, setBorrowTx } = useTxContext() as TTxContext
     const { logUserEvent } = useLogNewUserEvent()
     const { accessToken, getAccessTokenFromPrivy } = useAuth()
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            hash,
-        })
 
     // Protocol types
     const isCompound = assetDetails?.protocol_type === PlatformType.COMPOUND
@@ -94,22 +97,18 @@ const BorrowButton = ({
         getAccessTokenFromPrivy()
     }, [])
 
+    // Handle transaction status updates
     useEffect(() => {
-        if (hash) {
+        if (txStatus.isSuccessful) {
             setBorrowTx((prev: TBorrowTx) => ({
                 ...prev,
                 status: 'view',
-                hash,
+                hash: hash || '',
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: true,
             }))
-        }
-
-        if (hash && isConfirmed) {
-            setBorrowTx((prev: TBorrowTx) => ({
-                ...prev,
-                status: 'view',
-                hash,
-                isConfirmed: isConfirmed,
-            }))
+            
             logEvent('borrow_completed', {
                 amount,
                 token_symbol: assetDetails?.asset?.token?.symbol,
@@ -118,32 +117,41 @@ const BorrowButton = ({
                     CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
                 wallet_address: walletAddress,
             })
+            
             logUserEvent({
-                user_address: walletAddress,
+                user_address: walletAddress as `0x${string}`,
                 event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
                 platform_type: 'superlend_aggregator',
                 protocol_identifier: assetDetails?.protocol_identifier,
                 event_data: 'BORROW',
                 authToken: accessToken || '',
             })
+        } else if (txStatus.isFailed) {
+            const errorMessage = getTransactionErrorMessage(txStatus.receipt) || 'Transaction failed'
+            setBorrowTx((prev: TBorrowTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: errorMessage,
+            }))
+        } else {
+            // Handle pending and confirming states
+            setBorrowTx((prev: TBorrowTx) => ({
+                ...prev,
+                isPending: isPending,
+                isConfirming: txStatus.isConfirming,
+                // Only update isConfirmed if not already successful
+                isConfirmed: prev.isConfirmed || txStatus.isSuccessful,
+            }))
         }
-    }, [hash, isConfirmed])
-
-    // Update the status(Loading states) of the lendTx based on the isPending and isConfirming states
-    useEffect(() => {
-        setBorrowTx((prev: TBorrowTx) => ({
-            ...prev,
-            isPending: isPending,
-            isConfirming: isConfirming,
-            isConfirmed: isConfirmed,
-        }))
-    }, [isPending, isConfirming, isConfirmed])
+    }, [txStatus.isSuccessful, txStatus.isFailed, txStatus.isConfirming, isPending, hash, walletAddress, accessToken])
 
     const txBtnText =
         txBtnStatus[
-        isConfirming
+        txStatus.isConfirming
             ? 'confirming'
-            : isConfirmed
+            : txStatus.isSuccessful
                 ? 'success'
                 : isPending
                     ? 'pending'
@@ -201,11 +209,14 @@ const BorrowButton = ({
                         addressOfWallet,
                     ],
                 }).catch((error) => {
+                    // Handle immediate errors (like user rejection)
+                    const errorMessage = humaniseWagmiError(error)
                     setBorrowTx((prev: TBorrowTx) => ({
                         ...prev,
                         isPending: false,
                         isConfirming: false,
-                        errorMessage: error.message || 'Something went wrong',
+                        isConfirmed: false,
+                        errorMessage: errorMessage,
                     }))
                 })
             } catch (error) {
@@ -243,11 +254,14 @@ const BorrowButton = ({
                         walletAddress,
                     ],
                 }).catch((error) => {
+                    // Handle immediate errors (like user rejection)
+                    const errorMessage = humaniseWagmiError(error)
                     setBorrowTx((prev: TBorrowTx) => ({
                         ...prev,
                         isPending: false,
                         isConfirming: false,
-                        errorMessage: error.message || 'Something went wrong',
+                        isConfirmed: false,
+                        errorMessage: errorMessage,
                     }))
                 })
             } catch (error) {
@@ -290,9 +304,27 @@ const BorrowButton = ({
                         walletAddress,
                         walletAddress,
                     ],
+                }).catch((error) => {
+                    // Handle immediate errors (like user rejection)
+                    const errorMessage = humaniseWagmiError(error)
+                    setBorrowTx((prev: TBorrowTx) => ({
+                        ...prev,
+                        isPending: false,
+                        isConfirming: false,
+                        isConfirmed: false,
+                        errorMessage: errorMessage,
+                    }))
                 })
             } catch (error) {
-                error
+                // Handle immediate errors (like user rejection)
+                const errorMessage = humaniseWagmiError(error)
+                setBorrowTx((prev: TBorrowTx) => ({
+                    ...prev,
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    errorMessage: errorMessage,
+                }))
             }
         },
         [writeContractAsync, assetDetails, handleCloseModal]
@@ -334,13 +366,13 @@ const BorrowButton = ({
                     }
                 />
             )}
-            {/* {borrowTx.errorMessage.length > 0 && (
+            {((borrowTx.errorMessage.length > 0) && !error) && (
                 <CustomAlert description={borrowTx.errorMessage} />
-            )} */}
+            )}
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={isPending || isConfirming || disabled}
+                disabled={isPending || txStatus.isConfirming || disabled}
                 onClick={
                     borrowTx.status === 'borrow'
                         ? onBorrow
@@ -348,7 +380,7 @@ const BorrowButton = ({
                 }
             >
                 {txBtnText}
-                {borrowTx.status !== 'view' && !isPending && !isConfirming && (
+                {borrowTx.status !== 'view' && !isPending && !txStatus.isConfirming && (
                     <ArrowRightIcon
                         width={16}
                         height={16}

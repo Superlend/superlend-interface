@@ -22,6 +22,8 @@ import { Button } from '@/components/ui/button'
 import { ArrowRightIcon } from 'lucide-react'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { TTxContext, useTxContext } from '@/context/tx-provider'
+import { useTransactionStatus, getTransactionErrorMessage } from '@/hooks/useTransactionStatus'
+import { humaniseWagmiError } from '@/lib/humaniseWagmiError'
 // import { getErrorText } from '@utils/getErrorText'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
@@ -52,10 +54,8 @@ const SupplyERC20CompoundButton = ({
     // const { createToast } = useCreatePendingToast()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
 
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            hash,
-        })
+    // Use the enhanced transaction status hook
+    const txStatus = useTransactionStatus(hash, 2)
 
     const txBtnStatus: Record<string, string> = {
         pending: lastTx === 'mint' ? 'Approving token...' : 'Lending token...',
@@ -67,12 +67,12 @@ const SupplyERC20CompoundButton = ({
     const getTxButtonText = (
         isPending: boolean,
         isConfirming: boolean,
-        isConfirmed: boolean
+        isSuccessful: boolean
     ) => {
         return txBtnStatus[
             isConfirming
                 ? 'confirming'
-                : isConfirmed
+                : isSuccessful
                   ? lastTx === 'approve'
                       ? 'success'
                       : 'default'
@@ -82,62 +82,46 @@ const SupplyERC20CompoundButton = ({
         ]
     }
 
-    const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+    const txBtnText = getTxButtonText(isPending, txStatus.isConfirming, txStatus.isSuccessful)
 
+    // Handle transaction success/failure
     useEffect(() => {
-        const supply = async () => {
-            try {
-                setLastTx('approve')
-                // handleCloseModal(false)
-                // await toast.promise(
-                //   writeContractAsync({
-                //     address: cTokenAddress,
-                //     abi: COMPOUND_ABI,
-                //     functionName: 'mint',
-                //     args: [parseUnits(amount, decimals)],
-                //   }),
-                //   {
-                //     loading: CONFIRM_ACTION_IN_WALLET_TEXT,
-                //     success: SUCCESS_MESSAGE,
-                //     error: (error: { message: string }) => {
-                //       if (error && error.message) {
-                //         return getErrorText(error)
-                //       }
-                //       return SOMETHING_WENT_WRONG_MESSAGE
-                //     },
-                //   },
-                //   ERROR_TOAST_ICON_STYLES
-                // )
-                // toast.remove()
-                writeContractAsync({
-                    address: cTokenAddress as `0x${string}`,
-                    abi: COMPOUND_ABI,
-                    functionName: 'mint',
-                    args: [parseUnits(amount, decimals)],
-                })
-            } catch (error) {
-                // toast.remove()
-                error
+        if (txStatus.isSuccessful) {
+            if (lastTx === 'mint') {
+                setLendTx({ status: 'lend', hash: hash || '' })
+                supply()
+            } else if (lastTx === 'approve') {
+                setLendTx({ status: 'view', hash: hash || '' })
             }
+        } else if (txStatus.isFailed) {
+            const errorMessage = getTransactionErrorMessage(txStatus.receipt) || 'Transaction failed'
+            setLendTx({ 
+                status: 'view', 
+                hash: hash || '',
+                errorMessage: errorMessage
+            })
         }
+    }, [txStatus.isSuccessful, txStatus.isFailed, txStatus.receipt, lastTx, hash])
 
-        if (isConfirmed && lastTx === 'mint') {
-            setLendTx({ status: 'lend', hash: hash || '' })
-            void supply()
+    const supply = async () => {
+        try {
+            setLastTx('approve')
+            writeContractAsync({
+                address: cTokenAddress as `0x${string}`,
+                abi: COMPOUND_ABI,
+                functionName: 'mint',
+                args: [parseUnits(amount, decimals)],
+            })
+        } catch (error: any) {
+            // Handle immediate errors (like user rejection)
+            const errorMessage = humaniseWagmiError(error)
+            setLendTx({ 
+                status: 'view', 
+                hash: hash || '',
+                errorMessage: errorMessage
+            })
         }
-
-        if (isConfirmed && lastTx === 'approve') {
-            setLendTx({ status: 'view', hash: hash || '' })
-        }
-    }, [
-        isConfirmed,
-        amount,
-        cTokenAddress,
-        writeContractAsync,
-        lastTx,
-        decimals,
-        handleCloseModal,
-    ])
+    }
 
     const onApproveSupply = async () => {
         try {
@@ -175,9 +159,14 @@ const SupplyERC20CompoundButton = ({
                 functionName: 'approve',
                 args: [cTokenAddress, parseUnits(amount, decimals)],
             })
-        } catch (error) {
-            // toast.remove()
-            error
+        } catch (error: any) {
+            // Handle immediate errors (like user rejection)
+            const errorMessage = humaniseWagmiError(error)
+            setLendTx({ 
+                status: 'view', 
+                hash: hash || '',
+                errorMessage: errorMessage
+            })
         }
     }
     return (
@@ -192,7 +181,7 @@ const SupplyERC20CompoundButton = ({
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={isPending || isConfirming || disabled}
+                disabled={isPending || txStatus.isConfirming || disabled}
                 onClick={onApproveSupply}
             >
                 {txBtnText}

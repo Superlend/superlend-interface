@@ -14,6 +14,10 @@ import {
 } from '@/constants'
 import { Button } from '@/components/ui/button'
 import { ArrowRightIcon } from 'lucide-react'
+import { useTransactionStatus, getTransactionErrorMessage } from '@/hooks/useTransactionStatus'
+import { humaniseWagmiError } from '@/lib/humaniseWagmiError'
+import { useEffect, useState } from 'react'
+import CustomAlert from '@/components/alerts/CustomAlert'
 // import { getErrorText } from '@utils/getErrorText'
 // import { useCreatePendingToast } from '@hooks/useCreatePendingToast'
 
@@ -32,66 +36,66 @@ const SupplyETHCompoundButton = ({
     disabled,
     handleCloseModal,
 }: ISupplyETHCompoundButtonProps) => {
-    const { writeContractAsync, isPending } = useWriteContract()
+    const { writeContractAsync, isPending, data: hash, error } = useWriteContract()
+    const [errorMessage, setErrorMessage] = useState<string>('')
+    
+    // Use the enhanced transaction status hook
+    const txStatus = useTransactionStatus(hash, 2)
+    
+    // Handle transaction success/failure
+    useEffect(() => {
+        if (txStatus.isSuccessful) {
+            // Transaction succeeded, close modal
+            handleCloseModal(false)
+        } else if (txStatus.isFailed) {
+            const failureMessage = getTransactionErrorMessage(txStatus.receipt) || 'Transaction failed'
+            setErrorMessage(failureMessage)
+        }
+    }, [txStatus.isSuccessful, txStatus.isFailed, txStatus.receipt, handleCloseModal])
+    
     // const { createToast } = useCreatePendingToast()
 
     const onSupply = async () => {
         try {
-            // createToast()
-            // handleCloseModal(false)
-            // await toast.promise(
-            //   writeContractAsync({
-            //     address: cTokenAddress,
-            //     abi: COMPOUND_ABI,
-            //     functionName: 'mint',
-            //     args: [],
-            //     value: parseUnits(amount, decimals),
-            //   }),
-            //   {
-            //     loading: CONFIRM_ACTION_IN_WALLET_TEXT,
-            //     success: SUCCESS_MESSAGE,
-            //     error: (error: { message: string }) => {
-            //       if (error && error.message) {
-            //         return getErrorText(error)
-            //       }
-            //       return SOMETHING_WENT_WRONG_MESSAGE
-            //     },
-            //   },
-            //   ERROR_TOAST_ICON_STYLES
-            // )
-            // toast.remove()
-
-            // console.log("cTokenAddress", cTokenAddress);
-            // console.log("amount", amount);
-            // console.log("decimals", decimals);
-            // console.log("parseUnits", parseUnits(amount, decimals));
-
-            writeContractAsync({
+            // Clear any previous error
+            setErrorMessage('')
+            
+            await writeContractAsync({
                 address: cTokenAddress as `0x${string}`,
                 abi: COMPOUND_ABI,
                 functionName: 'mint',
                 args: [],
                 value: parseUnits(amount, decimals) as unknown as bigint,
             })
-        } catch (error) {
-            // toast.remove()
-            error
+        } catch (error: any) {
+            // Handle immediate errors (like user rejection)
+            const errorMsg = humaniseWagmiError(error)
+            setErrorMessage(errorMsg)
         }
     }
     return (
-        <Button
-            variant="primary"
-            className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-            disabled={isPending || disabled}
-            onClick={onSupply}
-        >
-            Lend
-            <ArrowRightIcon
-                width={16}
-                height={16}
-                className="stroke-white group-[:disabled]:opacity-50"
-            />
-        </Button>
+        <div className="flex flex-col gap-2">
+            {(error || errorMessage) && (
+                <CustomAlert
+                    description={errorMessage || (error?.message)}
+                />
+            )}
+            <Button
+                variant="primary"
+                className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
+                disabled={isPending || txStatus.isConfirming || disabled}
+                onClick={onSupply}
+            >
+                {txStatus.isConfirming ? 'Confirming...' : isPending ? 'Lending...' : 'Lend'}
+                {!isPending && !txStatus.isConfirming && (
+                    <ArrowRightIcon
+                        width={16}
+                        height={16}
+                        className="stroke-white group-[:disabled]:opacity-50"
+                    />
+                )}
+            </Button>
+        </div>
     )
 }
 

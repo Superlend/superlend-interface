@@ -40,7 +40,7 @@ import {
     handleSmallestValue,
 } from '@/components/dialogs/TxDialog'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
-import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { useSmartTokenBalancesContext } from '@/context/smart-token-balances-provider'
 import { useAaveV3Data } from '../../../hooks/protocols/useAaveV3Data'
 import { BigNumber } from 'ethers'
 import { ChainId } from '@/types/chain'
@@ -322,7 +322,19 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         erc20TokensBalanceData,
         isLoading: isLoadingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingTokensBalanceData,
-    } = useUserTokenBalancesContext()
+        addTokensToFetch,
+    } = useSmartTokenBalancesContext()
+
+    // Request platform tokens to be fetched when available
+    useEffect(() => {
+        if (platformData?.assets?.length && chain_id) {
+            const platformTokens = platformData.assets.map((asset: any) => ({
+                chainId: Number(chain_id),
+                tokenAddress: asset.token.address
+            }))
+            addTokensToFetch(platformTokens)
+        }
+    }, [platformData, chain_id, addTokensToFetch])
 
     // Get user positions from portfolio data using protocol identifier
     const userPositions = useMemo(
