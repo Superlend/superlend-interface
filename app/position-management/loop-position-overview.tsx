@@ -205,12 +205,18 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
         } : null
     }, [platformData, borrowTokenAddressParam, findOpportunityData])
 
-    // Get user positions from portfolio data
+    // Get user positions from portfolio data - specifically look for looped platforms
     const userPositions = useMemo(() => {
         if (!portfolioData?.platforms || !walletAddress) return []
-        return portfolioData.platforms.filter((platform) =>
-            platform?.protocol_identifier?.toLowerCase() === protocol_identifier?.toLowerCase()
-        )
+        
+        // Filter for looped platforms that match the protocol identifier
+        return portfolioData.platforms.filter((platform) => {
+            const isLoopPlatform = platform.name.toLowerCase().includes('looped') || 
+                                   platform.platform_name.toLowerCase().includes('loop')
+            const matchesProtocol = platform?.protocol_identifier?.toLowerCase() === protocol_identifier?.toLowerCase()
+            
+            return isLoopPlatform && matchesProtocol
+        })
     }, [portfolioData, protocol_identifier, walletAddress])
 
     // Feature flag to control multiple positions warning
@@ -236,12 +242,26 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
     const userLoopPosition = useMemo(() => {
         if (!userPositions.length) return null
         
-        console.log('userPositions', userPositions)
-        const platform = userPositions[0]
-        const lendPosition = platform.positions.find(p => 
+        // Find a looped platform that has both the lend and borrow tokens we're looking for
+        const matchingPlatform = userPositions.find(platform => {
+            const lendPosition = platform.positions.find(p => 
+                p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
+            )
+            const borrowPosition = platform.positions.find(p => 
+                p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
+            )
+            
+            return lendPosition && borrowPosition
+        })
+        
+        if (!matchingPlatform) return null
+        
+        console.log('matchingPlatform', matchingPlatform)
+        
+        const lendPosition = matchingPlatform.positions.find(p => 
             p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
         )
-        const borrowPosition = platform.positions.find(p => 
+        const borrowPosition = matchingPlatform.positions.find(p => 
             p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
         )
 
@@ -289,8 +309,8 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
                 amountUSD: parseFloat(borrowValueUSD.toFixed(8)),
                 apy: borrowPosition.apy
             },
-            healthFactor: parseFloat(platform.health_factor.toFixed(2)),
-            platformNetAPY: parseFloat(platform.net_apy.toFixed(2)), // Net APY from platform data
+            healthFactor: parseFloat(matchingPlatform.health_factor.toFixed(2)),
+            platformNetAPY: parseFloat(matchingPlatform.net_apy.toFixed(2)), // Net APY from platform data
             hasMultiplePositions: SHOW_MULTIPLE_POSITIONS_WARNING ? hasMultiplePositions : false,
             positionLTV: parseFloat(((borrowValueUSD / collateralValueUSD) * 100).toFixed(4)),
             liquidationLTV: liquidationThreshold,
@@ -373,57 +393,8 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
             }
         }
 
-        // Check if user has any positions on this platform (even if not the specific token pair)
-        const platformHealthFactor = userPositions.length > 0 && userPositions[0].health_factor != null ? parseFloat(userPositions[0].health_factor.toFixed(2)) : parseFloat((0).toFixed(2))
-        const platformNetAPYValue = userPositions.length > 0 && userPositions[0].net_apy != null ? parseFloat(userPositions[0].net_apy.toFixed(2)) : 0
-
-        // Fallback data for users without specific token pair positions
-        return {
-            netValue: parseFloat((0).toFixed(8)),
-            currentLeverage: parseFloat((1.0).toFixed(6)),
-            netAPY: parseFloat((lendTokenDetails?.apy || 0).toFixed(4)),
-            collateralAsset: {
-                token: lendTokenDetails || {
-                    symbol: 'Unknown',
-                    name: 'Unknown',
-                    logo: '',
-                    address: lendTokenAddressParam,
-                    decimals: 18,
-                    price_usd: 0
-                },
-                amount: parseFloat((0).toFixed(8)),
-                amountUSD: parseFloat((0).toFixed(8)),
-                apy: lendTokenDetails?.apy || 0
-            },
-            borrowAsset: {
-                token: borrowTokenDetails || {
-                    symbol: 'Unknown',
-                    name: 'Unknown', 
-                    logo: '',
-                    address: borrowTokenAddressParam,
-                    decimals: 18,
-                    price_usd: 0
-                },
-                amount: parseFloat((0).toFixed(8)),
-                amountUSD: parseFloat((0).toFixed(8)),
-                apy: borrowTokenDetails?.apy || 0
-            },
-            healthFactor: platformHealthFactor, // Use platform health factor if user has any positions
-            platformNetAPY: platformNetAPYValue, // Use platform Net APY if user has any positions
-            hasMultiplePositions: SHOW_MULTIPLE_POSITIONS_WARNING ? hasMultiplePositions : false,
-            positionLTV: parseFloat((0).toFixed(4)),
-            liquidationLTV: 80,
-            liquidationPrice: parseFloat((0).toFixed(8)),
-            maxLeverage: parseFloat((loopPair?.strategy?.max_leverage || 4.0).toFixed(2)),
-            utilizationRate: parseFloat((0).toFixed(4)),
-            totalSupplied: parseFloat((0).toFixed(8)),
-            totalBorrowed: parseFloat((0).toFixed(8)),
-            platform: {
-                name: platformData?.platform?.name || 'Unknown',
-                logo: platformData?.platform?.logo || '',
-                chain_id: Number(chain_id)
-            }
-        }
+        // No matching looped position found
+        return null
     }, [userLoopPosition, loopPair, platformData, chain_id, lendTokenAddressParam, borrowTokenAddressParam])
 
     const isLoading = isLoadingPlatformData || isLoadingPortfolioData || isLoadingAppleFarmRewards || isLoadingOpportunitiesData
@@ -445,21 +416,43 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
         {
             label: 'Position Details',
             value: 'details',
-            content: (
+            content: loopData ? (
                 <LoopPositionDetails
                     loopData={loopData}
                     isLoading={isLoading}
                 />
+            ) : (
+                <div className="flex items-center justify-center py-20">
+                    <div className="text-center">
+                        <BodyText level="body1" className="text-gray-600">
+                            No matching loop position found for this token pair.
+                        </BodyText>
+                        {/* <BodyText level="body3" className="text-gray-500 mt-2">
+                            You need to have both lend and borrow positions in a looped platform to view position details.
+                        </BodyText> */}
+                    </div>
+                </div>
             )
         },
         {
             label: 'Performance',
             value: 'performance',
-            content: (
+            content: loopData ? (
                 <LoopPerformance
                     loopData={loopData}
                     isLoading={isLoading}
                 />
+            ) : (
+                <div className="flex items-center justify-center py-20">
+                    <div className="text-center">
+                        <BodyText level="body1" className="text-gray-600">
+                            No matching loop position found for this token pair.
+                        </BodyText>
+                        <BodyText level="body3" className="text-gray-500 mt-2">
+                            You need to have both lend and borrow positions in a looped platform to view performance data.
+                        </BodyText>
+                    </div>
+                </div>
             )
         }
     ]

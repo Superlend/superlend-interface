@@ -5,7 +5,7 @@ import { TPositionType } from '@/types'
 import useDimensions from '@/hooks/useDimensions'
 import { ChevronDown } from 'lucide-react'
 
-export type TTypeToMatch = 'tab1' | 'tab2' | 'tab3'
+export type TTypeToMatch = 'tab1' | 'tab2' | 'tab3' | 'tab4'
 
 type TProps = {
     type: TTypeToMatch
@@ -14,11 +14,13 @@ type TProps = {
         tab1?: string
         tab2?: string
         tab3?: string
+        tab4?: string
     }
     showTab?: {
         tab1?: boolean
         tab2?: boolean
         tab3?: boolean
+        tab4?: boolean
     }
 }
 
@@ -26,12 +28,14 @@ const titleInitial = {
     tab1: 'Earn',
     tab2: 'Borrow',
     tab3: 'Loop',
+    tab4: 'Tab4',
 }
 
 const showTabInitial = {
     tab1: true,
     tab2: true,
     tab3: false,
+    tab4: false,
 }
 
 // Utility function to calculate recommended container width based on visible tabs
@@ -39,11 +43,11 @@ export const getToggleTabContainerWidth = (visibleTabsCount: number): string => 
     // Calculate based on: (min-width per tab × count) + padding + gaps
     // 2 tabs: 120px × 2 + 32px padding + 4px gap = ~280px → max-w-[350px]
     // 3 tabs: 100px × 3 + 32px padding + 8px gaps = ~340px → max-w-[450px]
-    // 4+ tabs: 90px × count + padding + gaps
+    // 4 tabs: 85px × 4 + 32px padding + 12px gaps = ~384px → max-w-[480px]
     
     if (visibleTabsCount <= 2) return 'sm:max-w-[350px]'
     if (visibleTabsCount === 3) return 'sm:max-w-[450px]'
-    return 'sm:max-w-[500px]'
+    return 'sm:max-w-[480px]'
 }
 
 // Helper function to count visible tabs from showTab prop
@@ -51,6 +55,7 @@ export const countVisibleTabs = (showTab?: {
     tab1?: boolean
     tab2?: boolean
     tab3?: boolean
+    tab4?: boolean
 }): number => {
     const actualShowTab = showTab || showTabInitial
     let count = 0
@@ -58,6 +63,7 @@ export const countVisibleTabs = (showTab?: {
     if (actualShowTab.tab1 ?? showTabInitial.tab1) count++
     if (actualShowTab.tab2 ?? showTabInitial.tab2) count++
     if (actualShowTab.tab3 ?? showTabInitial.tab3) count++
+    if (actualShowTab.tab4 ?? showTabInitial.tab4) count++
     
     return count
 }
@@ -72,6 +78,7 @@ const ToggleTab = ({ type, handleToggle, title, showTab }: TProps) => {
         tab1: 'tab1' as const,
         tab2: 'tab2' as const,
         tab3: 'tab3' as const,
+        tab4: 'tab4' as const,
     }
 
     function checkType(typeToMatch: TTypeToMatch): boolean {
@@ -104,6 +111,13 @@ const ToggleTab = ({ type, handleToggle, title, showTab }: TProps) => {
                 isActive: checkType('tab3')
             })
         }
+        if (actualShowTab.tab4 ?? showTabInitial.tab4) {
+            tabs.push({
+                key: 'tab4' as TTypeToMatch,
+                label: title?.tab4 || titleInitial.tab4,
+                isActive: checkType('tab4')
+            })
+        }
         
         return tabs
     }
@@ -121,7 +135,8 @@ const ToggleTab = ({ type, handleToggle, title, showTab }: TProps) => {
     const getButtonMinWidth = () => {
         if (visibleTabs.length === 2) return 'min-w-[120px]'
         if (visibleTabs.length === 3) return 'min-w-[100px]'
-        return 'min-w-[90px]'
+        if (visibleTabs.length === 4) return 'min-w-[85px]'
+        return 'min-w-[80px]'
     }
 
     const BUTTON_DEFAULT_STYLE = `flex items-center justify-center py-[8px] grow-1 ${getButtonMinWidth()} w-full flex-1 h-full my-auto hover:bg-white/45 uppercase font-semibold rounded-4`
@@ -206,6 +221,16 @@ const ToggleTab = ({ type, handleToggle, title, showTab }: TProps) => {
                     className={`${BUTTON_DEFAULT_STYLE} ${checkType('tab3') ? BUTTON_ACTIVE_STYLE : ''}`}
                 >
                     {title?.tab3 || titleInitial.tab3}
+                </Button>
+            )}
+            {(showTab ? (showTab?.tab4 ?? showTabInitial.tab4) : showTabInitial.tab4) && (
+                <Button
+                    variant={checkType('tab4') ? 'primary' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleToggle('tab4')}
+                    className={`${BUTTON_DEFAULT_STYLE} ${checkType('tab4') ? BUTTON_ACTIVE_STYLE : ''}`}
+                >
+                    {title?.tab4 || titleInitial.tab4}
                 </Button>
             )}
         </div>

@@ -2,7 +2,7 @@
 
 import AllPositionsFiltersDropdown from '@/components/dropdowns/AllPositionsFiltersDropdown'
 import SearchInput from '@/components/inputs/SearchInput'
-import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
+import ToggleTab, { TTypeToMatch, getToggleTabContainerWidth, countVisibleTabs } from '@/components/ToggleTab'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { DataTable } from '@/components/ui/all-positions-table'
@@ -10,7 +10,7 @@ import { BodyText, HeadingText } from '@/components/ui/typography'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { AssetsDataContext } from '@/context/data-provider'
 import { PositionsContext } from '@/context/positions-provider'
-import { columns, TPositionsTable } from '@/data/table/all-positions'
+import { columns, loopColumns, TPositionsTable, TLoopPositionsTable } from '@/data/table/all-positions'
 import useGetPortfolioData from '@/hooks/useGetPortfolioData'
 import { calculateScientificNotation } from '@/lib/utils'
 import { TPositionType } from '@/types'
@@ -83,7 +83,20 @@ export default function AllPositions() {
         }
     }, [sorting])
 
-    const POSITIONS = portfolioData?.platforms
+    // Filter platforms for loop positions
+    const isLoopPlatform = (platform: any) => {
+        return platform.name.toLowerCase().includes('looped') || 
+               platform.platform_name.toLowerCase().includes('loop')
+    }
+
+    // Filter regular positions (non-loop)
+    const isRegularPlatform = (platform: any) => {
+        return !isLoopPlatform(platform)
+    }
+
+    // Get regular positions
+    const REGULAR_POSITIONS = portfolioData?.platforms
+        ?.filter(isRegularPlatform)
         ?.flatMap((platform) => {
             return platform.positions
             .filter((position) => !(platform.protocol_type === 'euler' && !position.protocol_identifier))
@@ -106,10 +119,66 @@ export default function AllPositions() {
                 }
             })
         })
-        .flat(portfolioData?.platforms.length)
+        .flat(portfolioData?.platforms.filter(isRegularPlatform).length)
         .filter((position) => positionTypeParam === 'all' || position.type === positionTypeParam)
 
-    const rawTableData: TPositionsTable[] = POSITIONS?.map((item) => {
+    // Get loop positions
+    const LOOP_POSITIONS: TLoopPositionsTable[] = portfolioData?.platforms
+        ?.filter(isLoopPlatform)
+        ?.reduce((acc: TLoopPositionsTable[], platform) => {
+            const chainDetails = allChainsData.find(
+                (chain) => Number(chain.chain_id) === Number(platform.chain_id)
+            )
+            
+            // Find lend and borrow positions within this platform
+            const lendPosition = platform.positions.find(pos => pos.type === 'lend')
+            const borrowPosition = platform.positions.find(pos => pos.type === 'borrow')
+            
+            if (!lendPosition || !borrowPosition) return acc
+            
+            const lendAmount = lendPosition.amount * lendPosition.token.price_usd
+            const borrowAmount = borrowPosition.amount * borrowPosition.token.price_usd
+            
+            // Calculate leverage: lendAmount / (lendAmount - borrowAmount)
+            // If borrowAmount >= lendAmount, set leverage to a high value (100x)
+            const leverage = lendAmount > borrowAmount 
+                ? lendAmount / (lendAmount - borrowAmount)
+                : 100
+            
+            const loopPosition: TLoopPositionsTable = {
+                platform_id: platform.platform_name,
+                protocol_identifier: platform.protocol_identifier,
+                platformName: platform.name, // Use the descriptive name instead of platform_name
+                platformLogo: platform.logo,
+                chainName: chainDetails?.name ?? '',
+                chainLogo: chainDetails?.logo ?? '',
+                chain_id: platform.chain_id,
+                core_contract: (platform as any).core_contract || '',
+                lendTokenAddress: lendPosition.token.address,
+                lendTokenSymbol: lendPosition.token.symbol,
+                lendTokenName: lendPosition.token.name,
+                lendTokenLogo: lendPosition.token.logo,
+                lendAmount: lendAmount,
+                lendApy: lendPosition.apy,
+                borrowTokenAddress: borrowPosition.token.address,
+                borrowTokenSymbol: borrowPosition.token.symbol,
+                borrowTokenName: borrowPosition.token.name,
+                borrowTokenLogo: borrowPosition.token.logo,
+                borrowAmount: borrowAmount,
+                borrowApy: borrowPosition.apy,
+                leverage: leverage,
+                netApy: platform.net_apy,
+                pnl: platform.pnl,
+                healthFactor: platform.health_factor,
+                totalLiquidity: platform.total_liquidity,
+                totalBorrow: platform.total_borrow,
+            }
+            
+            acc.push(loopPosition)
+            return acc
+        }, []) || []
+
+    const rawTableData: TPositionsTable[] = REGULAR_POSITIONS?.map((item) => {
         return {
             tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,
@@ -141,7 +210,7 @@ export default function AllPositions() {
         }
     })
 
-    const filteredTableData = rawTableData.filter((position) => {
+    const filteredTableData = rawTableData?.filter((position) => {
         const isVault = position.isVault
         const isMorpho =
             position.platformName.toLowerCase() === PlatformType.MORPHO
@@ -163,19 +232,48 @@ export default function AllPositions() {
         return matchesTokenFilter && matchesPlatformFilter && matchesChainFilter
     })
 
-    const tableData = filteredTableData
+    const filteredLoopTableData = LOOP_POSITIONS?.filter((position) => {
+        const matchesTokenFilter =
+            filters.token_ids.length === 0 ||
+            filters.token_ids.includes(position.lendTokenSymbol) ||
+            filters.token_ids.includes(position.borrowTokenSymbol)
+        const matchesPlatformFilter =
+            filters.platform_ids.length === 0 ||
+            filters.platform_ids.includes(position.platformName)
+        const matchesChainFilter =
+            filters.chain_ids.length === 0 ||
+            filters.chain_ids
+                .map((chain) => chain.toString())
+                .includes(position.chain_id.toString())
+        return matchesTokenFilter && matchesPlatformFilter && matchesChainFilter
+    })
 
     function handleRowClick(rowData: any) {
-        const { tokenAddress, protocol_identifier, chain_id } = rowData
-        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
-        router.push(url)
-        logEvent('portfolio_asset_clicked', {
-            action: positionTypeParam,
-            token_symbol: rowData.tokenSymbol,
-            platform_name: rowData.platformName,
-            chain_name: rowData.chainName,
-            wallet_address: walletAddress,
-        })
+        if (positionTypeParam === 'loop') {
+            // For loop positions, navigate to loop position management
+            const { lendTokenAddress, borrowTokenAddress, protocol_identifier, chain_id, core_contract } = rowData
+            const url = `/position-management?lend_token=${lendTokenAddress}&borrow_token=${borrowTokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&core_contract=${core_contract}&position_type=loop`
+            router.push(url)
+            logEvent('portfolio_loop_position_clicked', {
+                lend_token_symbol: rowData.lendTokenSymbol,
+                borrow_token_symbol: rowData.borrowTokenSymbol,
+                platform_name: rowData.platformName,
+                chain_name: rowData.chainName,
+                wallet_address: walletAddress,
+            })
+        } else {
+            // For regular positions
+            const { tokenAddress, protocol_identifier, chain_id } = rowData
+            const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
+            router.push(url)
+            logEvent('portfolio_asset_clicked', {
+                action: positionTypeParam,
+                token_symbol: rowData.tokenSymbol,
+                platform_name: rowData.platformName,
+                chain_name: rowData.chainName,
+                wallet_address: walletAddress,
+            })
+        }
     }
 
     const toggleOpportunityType = (positionType: TPositionType): void => {
@@ -189,6 +287,19 @@ export default function AllPositions() {
     function handleClearSearch() {
         setSearchKeywords('')
     }
+
+    // Check if we have loop positions to show the loop tab
+    const hasLoopPositions = (LOOP_POSITIONS?.length || 0) > 0
+
+    // Calculate dynamic container width based on visible tabs
+    const showTabConfig = {
+        tab1: true,
+        tab2: true,
+        tab3: true,
+        tab4: hasLoopPositions,
+    }
+    const visibleTabsCount = countVisibleTabs(showTabConfig)
+    const containerWidth = getToggleTabContainerWidth(visibleTabsCount)
 
     return (
         <section
@@ -223,28 +334,27 @@ export default function AllPositions() {
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center max-lg:justify-between gap-[12px] w-full lg:w-auto">
-                        <div className="w-full sm:max-w-[350px]">
+                        <div className={`w-full ${containerWidth}`}>
                             <ToggleTab
-                                type={positionType === 'all' ? 'tab1' : positionType === 'lend' ? 'tab2' : 'tab3'}
+                                type={positionType === 'all' ? 'tab1' : positionType === 'lend' ? 'tab2' : positionType === 'borrow' ? 'tab3' : 'tab4'}
                                 handleToggle={(positionType: TTypeToMatch) => {
                                     toggleOpportunityType(
                                         positionType === 'tab1'
                                             ? 'all'
                                             : positionType === 'tab2'
                                             ? 'lend'
-                                            : 'borrow'
+                                            : positionType === 'tab3'
+                                            ? 'borrow'
+                                            : 'loop'
                                     )
                                 }}
                                 title={{
                                     tab1: 'All',
                                     tab2: 'Earn',
                                     tab3: 'Borrow',
+                                    tab4: 'Loop',
                                 }}
-                                showTab={{
-                                    tab1: true,
-                                    tab2: true,
-                                    tab3: true,
-                                }}
+                                showTab={showTabConfig}
                             />
                         </div>
                         <div className="sm:max-w-[156px] w-full">
@@ -264,18 +374,35 @@ export default function AllPositions() {
             </div>
             <div className="all-positions-content">
                 {!isLoadingPortfolioData && (
-                    <DataTable
-                        columns={columns}
-                        data={tableData}
-                        filters={searchKeywords}
-                        setFilters={setSearchKeywords}
-                        handleRowClick={handleRowClick}
-                        columnVisibility={columnVisibility}
-                        setColumnVisibility={setColumnVisibility}
-                        sorting={sorting}
-                        setSorting={setSorting}
-                        noDataMessage={'No positions'}
-                    />
+                    <>
+                        {positionTypeParam === 'loop' ? (
+                            <DataTable
+                                columns={loopColumns}
+                                data={filteredLoopTableData}
+                                filters={searchKeywords}
+                                setFilters={setSearchKeywords}
+                                handleRowClick={handleRowClick}
+                                columnVisibility={{}}
+                                setColumnVisibility={setColumnVisibility}
+                                sorting={sorting}
+                                setSorting={setSorting}
+                                noDataMessage="No loop positions"
+                            />
+                        ) : (
+                            <DataTable
+                                columns={columns}
+                                data={filteredTableData}
+                                filters={searchKeywords}
+                                setFilters={setSearchKeywords}
+                                handleRowClick={handleRowClick}
+                                columnVisibility={columnVisibility}
+                                setColumnVisibility={setColumnVisibility}
+                                sorting={sorting}
+                                setSorting={setSorting}
+                                noDataMessage="No positions"
+                            />
+                        )}
+                    </>
                 )}
                 {isLoadingPortfolioData && (
                     <LoadingSectionSkeleton className="h-[300px] md:h-[400px]" />

@@ -111,13 +111,15 @@ export const useIguanaDexData = () => {
                 TradeType.EXACT_INPUT,
                 {
                     gasPriceWei: () => viemClient.getGasPrice(),
-                    maxHops: 3,
+                    maxHops: 2,
                     maxSplits: 1,
                     poolProvider: SmartRouter.createStaticPoolProvider(pools),
                     quoteProvider,
                     quoterOptimization: true,
                 }
             )
+
+            console.log('IGUANA DEX: trade', trade)
 
             return trade
         } catch (error) {

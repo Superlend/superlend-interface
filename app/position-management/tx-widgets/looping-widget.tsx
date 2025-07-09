@@ -1073,13 +1073,13 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 setOpen={setIsLoopTxDialogOpen}
                                 leverage={leverage}
                             />
-                            <Button
+                            {/* <Button
                                 variant="outline"
                                 className="w-full rounded-5"
                                 onClick={handleClosePosition}
                             >
                                 Close Position
-                            </Button>
+                            </Button> */}
                         </div>
                     ) : (
                         // Show only open position button when user doesn't have a position

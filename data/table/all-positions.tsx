@@ -57,6 +57,35 @@ export type TPositionsTable = {
     positionType: string
 }
 
+export type TLoopPositionsTable = {
+    platform_id: string
+    protocol_identifier: string
+    platformName: string
+    platformLogo: string
+    chainName: string
+    chainLogo: string
+    chain_id: number
+    core_contract?: string
+    lendTokenAddress: string
+    lendTokenSymbol: string
+    lendTokenName: string
+    lendTokenLogo: string
+    lendAmount: number
+    lendApy: number
+    borrowTokenAddress: string
+    borrowTokenSymbol: string
+    borrowTokenName: string
+    borrowTokenLogo: string
+    borrowAmount: number
+    borrowApy: number
+    leverage: number
+    netApy: number
+    pnl: number
+    healthFactor: number
+    totalLiquidity: number
+    totalBorrow: number
+}
+
 export const columns: ColumnDef<TPositionsTable>[] = [
     {
         accessorKey: 'tokenSymbol',
@@ -402,5 +431,206 @@ export const columns: ColumnDef<TPositionsTable>[] = [
             )
         },
         // enableGlobalFilter: false,
+    },
+]
+
+export const loopColumns: ColumnDef<TLoopPositionsTable>[] = [
+    {
+        accessorKey: 'platformName',
+        header: 'Platform',
+        accessorFn: (item) => item.platformName,
+        cell: ({ row }) => {
+            const platformName: string = row.getValue('platformName')
+            const platformLogo = row.original.platformLogo || ''
+            const chainLogo = row.original.chainLogo || ''
+            const chainName = row.original.chainName || ''
+
+            return (
+                <span className="flex items-center gap-[8px]">
+                    <ImageWithBadge
+                        mainImg={platformLogo}
+                        badgeImg={chainLogo}
+                        mainImgAlt={platformName}
+                        badgeImgAlt={chainName}
+                    />
+                    <span className="flex flex-col gap-[0px]">
+                        <BodyText
+                            level="body2"
+                            weight="medium"
+                            className="truncate leading-0"
+                        >
+                            {platformName}
+                        </BodyText>
+                        <Label className="text-gray-800 leading-0 truncate max-w-[120px]">
+                            {capitalizeText(chainName)}
+                        </Label>
+                    </span>
+                </span>
+            )
+        },
+        enableSorting: false,
+    },
+    {
+        accessorKey: 'lendTokenSymbol',
+        header: 'Lend Token',
+        accessorFn: (item) => item.lendTokenSymbol,
+        cell: ({ row }) => {
+            const lendTokenSymbol: string = row.getValue('lendTokenSymbol') || ''
+            const lendTokenLogo = row.original.lendTokenLogo || ''
+            const lendTokenName = row.original.lendTokenName || ''
+            const lendAmount = row.original.lendAmount || 0
+            const lendApy = row.original.lendApy || 0
+
+            return (
+                <span className="flex items-center gap-[8px]">
+                    <ImageWithDefault
+                        src={lendTokenLogo}
+                        alt={lendTokenSymbol}
+                        width={24}
+                        height={24}
+                        className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]"
+                    />
+                    <span className="flex flex-col gap-[0px]">
+                        <BodyText level="body2" weight="medium" className="truncate leading-0">
+                            {lendTokenSymbol}
+                        </BodyText>
+                        <Label className="text-gray-800 leading-0 truncate max-w-[120px]">
+                            ${abbreviateNumber(lendAmount)} • {abbreviateNumber(lendApy)}%
+                        </Label>
+                    </span>
+                </span>
+            )
+        },
+        enableSorting: false,
+    },
+    {
+        accessorKey: 'borrowTokenSymbol',
+        header: 'Borrow Token',
+        accessorFn: (item) => item.borrowTokenSymbol,
+        cell: ({ row }) => {
+            const borrowTokenSymbol: string = row.getValue('borrowTokenSymbol') || ''
+            const borrowTokenLogo = row.original.borrowTokenLogo || ''
+            const borrowTokenName = row.original.borrowTokenName || ''
+            const borrowAmount = row.original.borrowAmount || 0
+            const borrowApy = row.original.borrowApy || 0
+
+            return (
+                <span className="flex items-center gap-[8px]">
+                    <ImageWithDefault
+                        src={borrowTokenLogo}
+                        alt={borrowTokenSymbol}
+                        width={24}
+                        height={24}
+                        className="w-[24px] h-[24px] max-w-[24px] max-h-[24px]"
+                    />
+                    <span className="flex flex-col gap-[0px]">
+                        <BodyText level="body2" weight="medium" className="truncate leading-0">
+                            {borrowTokenSymbol}
+                        </BodyText>
+                        <Label className="text-gray-800 leading-0 truncate max-w-[120px]">
+                            ${abbreviateNumber(borrowAmount)} • {abbreviateNumber(borrowApy)}%
+                        </Label>
+                    </span>
+                </span>
+            )
+        },
+        enableSorting: false,
+    },
+    {
+        accessorKey: 'leverage',
+        accessorFn: (item) => Number(item.leverage),
+        header: () => (
+            <InfoTooltip
+                side="bottom"
+                label={<TooltipText>Leverage</TooltipText>}
+                content={'Current leverage ratio calculated as Lend Amount / (Lend Amount - Borrow Amount).'}
+            />
+        ),
+        cell: ({ row }) => {
+            const leverage: number = Number(row.getValue('leverage'))
+            const sanitizedValue = leverage > 100 ? '100+' : leverage.toFixed(2)
+
+            return (
+                <BodyText level="body2" weight="medium">
+                    {sanitizedValue}x
+                </BodyText>
+            )
+        },
+    },
+    {
+        accessorKey: 'netApy',
+        accessorFn: (item) => Number(item.netApy),
+        header: () => (
+            <InfoTooltip
+                side="bottom"
+                label={<TooltipText>Net APY</TooltipText>}
+                content={'Net APY after borrowing costs and lending rewards.'}
+            />
+        ),
+        cell: ({ row }) => {
+            const netApy: number = Number(row.getValue('netApy'))
+            const sanitizedValue = isLowestValue(Number(netApy))
+                ? '<0.01'
+                : abbreviateNumber(Number(netApy))
+
+            return (
+                <BodyText level="body2" weight="medium">
+                    {`${sanitizedValue}%`}
+                </BodyText>
+            )
+        },
+    },
+    {
+        accessorKey: 'healthFactor',
+        accessorFn: (item) => Number(item.healthFactor),
+        header: () => (
+            <InfoTooltip
+                side="bottom"
+                label={<TooltipText>Health Factor</TooltipText>}
+                content={'Health factor indicates how safe your position is. Below 1.0 means liquidation risk.'}
+            />
+        ),
+        cell: ({ row }) => {
+            const healthFactor: number = Number(row.getValue('healthFactor'))
+            const isRisky = healthFactor < 1.2
+            const sanitizedValue = healthFactor > 100 ? '100+' : healthFactor.toFixed(2)
+
+            return (
+                <Badge variant={isRisky ? 'destructive' : 'green'}>
+                    {sanitizedValue}
+                </Badge>
+            )
+        },
+    },
+    {
+        accessorKey: 'pnl',
+        accessorFn: (item) => Number(item.pnl),
+        header: () => (
+            <InfoTooltip
+                side="bottom"
+                label={<TooltipText>PnL</TooltipText>}
+                content={'Profit and Loss of the loop position.'}
+            />
+        ),
+        cell: ({ row }) => {
+            const pnl: number = Number(row.getValue('pnl'))
+            const sanitizedValue = Math.abs(pnl) < 0.01
+                ? '< $0.01'
+                : `$${abbreviateNumber(Math.abs(pnl))}`
+
+            const getPrefixSign = () => {
+                return pnl < 0 ? '-' : pnl > 0 ? '+' : ''
+            }
+
+            const getBadgeVariant = () => {
+                return pnl < 0 ? 'destructive' : pnl > 0 ? 'green' : 'default'
+            }
+
+            return (
+                <Badge variant={getBadgeVariant()}>
+                    {getPrefixSign()} {sanitizedValue === '$0.00' ? 'N/A' : sanitizedValue}
+                </Badge>
+            )
+        },
     },
 ]
