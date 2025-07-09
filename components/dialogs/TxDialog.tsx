@@ -648,7 +648,7 @@ export function ConfirmationDialog({
                     // </DialogTitle>
                 )}
             {/* Confirmation details UI */}
-            {isShowBlock({
+            {/* {isShowBlock({
                 loop: loopTx.status === 'view' || (positionType === 'loop' && isTxFailed)
             }) && (
                     <div className="flex flex-col items-center justify-center gap-[6px]">
@@ -718,7 +718,7 @@ export function ConfirmationDialog({
                                 </Badge>
                             )}
                     </div>
-                )}
+                )} */}
         </>
     )
 
