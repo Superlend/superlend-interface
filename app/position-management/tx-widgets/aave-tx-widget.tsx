@@ -69,7 +69,7 @@ import {
     getMaxDecimalsToDisplay,
     handleSmallestValue,
 } from '@/components/dialogs/TxDialog'
-import LoopingWidget from './looping-widget'
+import { LoopingWidget } from './looping-widget'
 
 interface LendAndBorrowAssetsProps {
     isLoading: boolean

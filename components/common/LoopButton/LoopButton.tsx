@@ -388,10 +388,12 @@ const LoopButton = ({
             }
 
             const decimals = assetDetails?.supplyAsset?.token?.decimals ?? 18
-            const parsedLendAmount = parseUnits(
+            const parsedLendAmountBn = parseUnits(
                 amount?.lendAmount?.toString() ?? '0',
                 decimals
             )
+
+            const approveAmount = parsedLendAmountBn.toBigInt()
 
             logEvent('approve_loop_initiated', {
                 amount: amount?.lendAmount ?? '0',
@@ -411,12 +413,33 @@ const LoopButton = ({
 
             console.log('Approving token to strategy:', strategyAddr)
 
-            await writeContractAsync({
-                address: underlyingAssetAdress,
-                abi: AAVE_APPROVE_ABI,
-                functionName: 'approve',
-                args: [strategyAddr, parsedLendAmount],
-            })
+            try {
+                // 1) Try a direct approve first – many tokens allow increasing directly
+                await writeContractAsync({
+                    address: underlyingAssetAdress,
+                    abi: AAVE_APPROVE_ABI,
+                    functionName: 'approve',
+                    args: [strategyAddr, approveAmount],
+                })
+            } catch (directError: any) {
+                console.warn('Direct approve failed, attempting safeApprove reset-flow', directError?.message)
+
+                // 2) reset allowance to 0 (required by non-standard ERC-20 tokens)
+                await writeContractAsync({
+                    address: underlyingAssetAdress,
+                    abi: AAVE_APPROVE_ABI,
+                    functionName: 'approve',
+                    args: [strategyAddr, 0n],
+                })
+
+                // 3) approve desired amount
+                await writeContractAsync({
+                    address: underlyingAssetAdress,
+                    abi: AAVE_APPROVE_ABI,
+                    functionName: 'approve',
+                    args: [strategyAddr, approveAmount],
+                })
+            }
         } catch (error: any) {
             console.error('onApproveSupply error', error)
             handleTransactionError(error, 'approve')

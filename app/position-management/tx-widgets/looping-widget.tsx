@@ -33,6 +33,8 @@ import {
     abbreviateNumber,
     getLowestDisplayValue,
     hasLowestDisplayValuePrefix,
+    convertScientificToNormal,
+    formatTokenAmount,
 } from '@/lib/utils'
 import {
     ConfirmationDialog,
@@ -54,6 +56,8 @@ import BigNumberJS from 'bignumber.js'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import useGetMidasKpiData from '@/hooks/useGetMidasKpiData'
 import { useDebounce } from '@/hooks/useDebounce'
+import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
+import { TPositionType } from '@/types'
 
 interface LoopingWidgetProps {
     isLoading?: boolean
@@ -104,6 +108,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
     const [isLeverageChanging, setIsLeverageChanging] = useState<boolean>(false)
     const [newHealthFactor, setNewHealthFactor] = useState<number>(0)
     const [flashLoanAmount, setFlashLoanAmount] = useState<string>('0')
+    const [positionType, setPositionType] = useState<'increase' | 'decrease'>('increase')
     const { getMaxLeverage, getBorrowTokenAmountForLeverage, providerStatus, getUserData, getReservesData, refreshData, uiPoolDataProviderAddress, lendingPoolAddressProvider } =
         useAaveV3Data()
     const userData = getUserData(Number(chain_id))
@@ -615,35 +620,53 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
         setBorrowAmount('0')
     }
 
-    const isLeverageDisabled = !isWalletConnected ||
-        Number(lendAmount) <= 0 ||
-        (maxLeverage?.[
-            selectedLendToken?.address
-        ]?.[selectedBorrowToken?.address] ?? 0) <= 1
-
-    const isDisabledMaxButton = !isWalletConnected || Number(selectedLendTokenBalance) <= 0
-
     // Check if user has an existing loop position
     const hasLoopPosition = useMemo(() => {
-        return userPositions?.length > 0 && userPositions[0]?.positions?.some((position: any) => 
-            (position.type === 'lend' && position.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()) ||
-            (position.type === 'borrow' && position.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase())
+        if (!userPositions?.length) return false
+        
+        // Look for looped platforms that match the current token pair
+        const loopedPlatforms = userPositions.filter((platform: any) => 
+            platform.name.toLowerCase().includes('looped') || 
+            platform.platform_name.toLowerCase().includes('loop')
         )
+        
+        if (!loopedPlatforms.length) return false
+        
+        // Check if any looped platform has the specific token pair we're looking for
+        return loopedPlatforms.some((platform: any) => {
+            const lendPosition = platform.positions.find((p: any) => 
+                p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
+            )
+            const borrowPosition = platform.positions.find((p: any) => 
+                p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
+            )
+            
+            return lendPosition && borrowPosition
+        })
     }, [userPositions, lendTokenAddressParam, borrowTokenAddressParam])
+
+    // Update leverage slider disabled state to allow leverage changes for position adjustments
+    const isLeverageDisabled = !isWalletConnected ||
+        (!hasLoopPosition && !Number(lendAmount)) || // Simplified condition
+        (maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 0) <= 1
+
+    const isDisabledMaxButton = !isWalletConnected || Number(selectedLendTokenBalance) <= 0
 
     // Check if button should be disabled
     const diableActionButton =
         !isWalletConnected ||
         !selectedLendToken ||
-        !lendAmount ||
-        Number(lendAmount) <= 0 ||
+        (!lendAmount || Number(lendAmount) <= 0) && !hasLoopPosition || // Allow 0 amount for position changes
         Number(lendAmount) > Number(selectedLendTokenBalance) ||
         isLoadingBorrowAmount ||
         isLeverageChanging
 
     function handleLendAmountChange(amount: string = '') {
         if (!amount.length || !Number(amount)) {
-            setLeverage(1)
+            // Don't reset leverage to 1 if user has a position - they can adjust leverage without amount
+            if (!hasLoopPosition) {
+                setLeverage(1)
+            }
         }
         setLendAmount(amount)
     }
@@ -654,21 +677,147 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
         console.log('Close position clicked - to be implemented')
     }
 
+    // Get current position data from loop pair
+    const getCurrentPositionData = () => {
+        if (!hasLoopPosition || !userPositions?.length) return null
+
+        // Find the specific looped platform with the matching token pair
+        const loopedPlatforms = userPositions.filter((platform: any) => 
+            platform.name.toLowerCase().includes('looped') || 
+            platform.platform_name.toLowerCase().includes('loop')
+        )
+        
+        const matchingPlatform = loopedPlatforms.find((platform: any) => {
+            const lendPosition = platform.positions.find((p: any) => 
+                p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
+            )
+            const borrowPosition = platform.positions.find((p: any) => 
+                p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
+            )
+            
+            return lendPosition && borrowPosition
+        })
+
+        if (!matchingPlatform) return null
+
+        const lendPosition = matchingPlatform.positions.find((p: any) => 
+            p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
+        )
+        const borrowPosition = matchingPlatform.positions.find((p: any) => 
+            p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
+        )
+
+        if (!lendPosition || !borrowPosition) return null
+
+        const lendAmount = parseFloat(lendPosition.amount.toString())
+        const borrowAmount = parseFloat(borrowPosition.amount.toString())
+        const collateralValueUSD = lendAmount * lendPosition.token.price_usd
+        const borrowValueUSD = borrowAmount * borrowPosition.token.price_usd
+        const currentLeverage = collateralValueUSD > 0 ? collateralValueUSD / (collateralValueUSD - borrowValueUSD) : 1
+
+        return {
+            lendAmount,
+            borrowAmount,
+            collateralValueUSD,
+            borrowValueUSD,
+            currentLeverage,
+            healthFactor: matchingPlatform.health_factor,
+            currentAPY: matchingPlatform.net_apy
+        }
+    }
+
+    // Memoize current position data to avoid unnecessary re-renders and keep a
+    // stable reference while the user is interacting with the slider. Without
+    // this, the object reference would change on every render, causing the
+    // `useEffect` that initialises leverage to fire again and reset the value
+    // back to the current position leverage.
+    const currentPositionData = useMemo(() => {
+        return getCurrentPositionData()
+    // Depend only on values that can truly change the underlying data.
+    }, [hasLoopPosition, userPositions, lendTokenAddressParam, borrowTokenAddressParam])
+
+    // Calculate new position data based on changes
+    const calculateNewPositionData = () => {
+        if (!currentPositionData) return null
+
+        const additionalLendAmount = Number(lendAmount) || 0
+        const additionalBorrowAmount = Number(borrowAmount) || 0
+        
+        if (positionType === 'increase') {
+            return {
+                lendAmount: currentPositionData.lendAmount + additionalLendAmount,
+                borrowAmount: currentPositionData.borrowAmount + additionalBorrowAmount,
+                collateralValueUSD: currentPositionData.collateralValueUSD + (additionalLendAmount * (selectedLendToken?.price_usd || 0)),
+                borrowValueUSD: currentPositionData.borrowValueUSD + (additionalBorrowAmount * (selectedBorrowToken?.price_usd || 0)),
+                leverage: leverage,
+                healthFactor: newHealthFactor || currentPositionData.healthFactor,
+                estimatedAPY: loopNetAPY.value || '0.00%'
+            }
+        } else {
+            return {
+                lendAmount: Math.max(0, currentPositionData.lendAmount - additionalLendAmount),
+                borrowAmount: Math.max(0, currentPositionData.borrowAmount - additionalBorrowAmount),
+                collateralValueUSD: Math.max(0, currentPositionData.collateralValueUSD - (additionalLendAmount * (selectedLendToken?.price_usd || 0))),
+                borrowValueUSD: Math.max(0, currentPositionData.borrowValueUSD - (additionalBorrowAmount * (selectedBorrowToken?.price_usd || 0))),
+                leverage: leverage,
+                healthFactor: newHealthFactor || currentPositionData.healthFactor,
+                estimatedAPY: loopNetAPY.value || '0.00%'
+            }
+        }
+    }
+
+    const newPositionData = calculateNewPositionData()
+
+    // Initialise leverage only once per position load (or when the underlying
+    // current leverage actually changes). Using the memoised
+    // `currentPositionData.currentLeverage` as dependency prevents the slider
+    // from being reset while dragging.
+    useEffect(() => {
+        if (hasLoopPosition && currentPositionData) {
+            setLeverage(Math.round(currentPositionData.currentLeverage * 10) / 10)
+        }
+    }, [hasLoopPosition, currentPositionData?.currentLeverage])
+
     // looping-widget
     return (
         <section className="looping-widget flex flex-col gap-3">
-            <Card className="flex flex-col gap-3 p-4">
-                {/* <CardHeader className="p-0 pl-1">
-                    <CardTitle className="text-lg font-medium text-gray-800">
-                        Create New Loop Position
-                    </CardTitle>
-                </CardHeader> */}
+            {/* Toggle Tabs - only show when user has a position */}
+            {hasLoopPosition && (
+                <ToggleTab
+                    type={positionType === 'increase' ? 'tab1' : 'tab2'}
+                    handleToggle={(type: TTypeToMatch) => {
+                        if (type === 'tab1') {
+                            setPositionType('increase')
+                        } else {
+                            setPositionType('decrease')
+                        }
+                        setLendAmount('')
+                        setBorrowAmount('0')
+                        setLeverage(currentPositionData?.currentLeverage || 1)
+                    }}
+                    showTab={{
+                        tab1: true,
+                        tab2: true,
+                        tab3: false,
+                    }}
+                    title={{
+                        tab1: 'Increase Position',
+                        tab2: 'Decrease Position',
+                    }}
+                />
+            )}
 
-                <CardContent className="p-0 space-y-6">
+            <Card className="flex flex-col gap-3 p-4">
+                <CardContent className="p-0 space-y-4">
                     {/* Lend Position Section */}
                     <div className="space-y-1">
                         <div className="flex justify-between items-center mb-1 px-2">
-                            <Label size="medium">Lend</Label>
+                            <Label size="medium">
+                                {hasLoopPosition ? 
+                                    (positionType === 'increase' ? 'Add Collateral' : 'Remove Collateral') : 
+                                    'Lend'
+                                }
+                            </Label>
                             <BodyText
                                 level="body2"
                                 weight="normal"
@@ -715,6 +864,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                         selectedLendToken?.decimals || 18
                                     }
                                     title={lendAmount}
+                                    placeholder={hasLoopPosition ? "0" : "0"}
                                 />
                             </div>
 
@@ -727,12 +877,23 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 max
                             </Button>
                         </div>
+                        
+                        {hasLoopPosition && (
+                            <BodyText level="body3" className="text-gray-500 px-2">
+                                Leave empty to adjust leverage only
+                            </BodyText>
+                        )}
                     </div>
 
                     {/* Borrow Position Section */}
                     <div className="space-y-1">
                         <div className="flex justify-between items-center gap-2 mb-1 px-2">
-                            <Label size="medium">Borrow</Label>
+                            <Label size="medium">
+                                {hasLoopPosition ? 
+                                    (positionType === 'increase' ? 'Additional Borrow' : 'Repay Amount') : 
+                                    'Borrow'
+                                }
+                            </Label>
                             <Badge variant={'gray'} className='text-gray-600 rounded-4 px-2'>Read only</Badge>
                         </div>
 
@@ -804,32 +965,33 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                     {/* Leverage Slider */}
                     <div className="space-y-2 px-2">
                         <div className="flex justify-between items-center">
-                            <Label size="medium">Leverage</Label>
+                            <Label size="medium">
+                                {hasLoopPosition ? 'Target Leverage' : 'Leverage'}
+                            </Label>
                             <Badge variant="secondary">{leverage}x</Badge>
                         </div>
 
                         <div>
                             <Slider
-                                title={Number(lendAmount) === 0 ? 'Add Lend amount to enable leverage.' : ''}
+                                title={!isWalletConnected ? 'Connect wallet to enable leverage.' : ''}
                                 value={[leverage]}
                                 min={1}
                                 max={
-                                    Number(
-                                        abbreviateNumber(
-                                            maxLeverage?.[
-                                            selectedLendToken?.address
-                                            ]?.[selectedBorrowToken?.address] ??
-                                            1,
-                                            1
-                                        )
-                                    ) || 1
+                                    hasLoopPosition && currentPositionData
+                                        ? Math.max(currentPositionData.currentLeverage * 2, 4)
+                                        : Number(
+                                            maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 4
+                                          )
                                 }
                                 step={0.1}
-                                onValueChange={(values) =>
-                                    setLeverage(values[0])
-                                }
-                                disabled={isLeverageDisabled}
-                                className={`${isLeverageDisabled ? 'group disabled' : ''}`}
+                                onValueChange={(values) => {
+                                    const newValue = values[0]
+                                    if (typeof newValue === 'number' && !isNaN(newValue)) {
+                                        setLeverage(newValue)
+                                    }
+                                }}
+                                disabled={!isWalletConnected}
+                                className="cursor-pointer"
                             />
                             <div className="flex justify-between mt-3">
                                 <BodyText
@@ -844,245 +1006,215 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     weight="normal"
                                     className="text-gray-600"
                                 >
-                                    {abbreviateNumber(
-                                        maxLeverage?.[
-                                        selectedLendToken?.address
-                                        ]?.[selectedBorrowToken?.address] ?? 1,
-                                        1
-                                    )}
-                                    x
+                                    {hasLoopPosition && currentPositionData
+                                        ? Math.max(currentPositionData.currentLeverage * 2, 4).toFixed(1)
+                                        : Number(
+                                            maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 4
+                                          ).toFixed(1)
+                                    }x
                                 </BodyText>
                             </div>
                         </div>
                     </div>
 
-                    {/* Health Factor */}
-                    <div className="flex items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5">
-                        <BodyText
-                            level="body2"
-                            weight="normal"
-                            className="text-gray-600"
-                        >
-                            Health Factor
-                        </BodyText>
-                        {/* <BodyText
-                            level="body2"
-                            weight="medium"
-                            className={cn(
-                                'text-gray-800',
-                                Number(lendAmount) > 0 && getHealthFactorColor()
-                            )}
-                        >
-                            {getHealthFactorDisplay()}
-                        </BodyText> */}
-                        <div className="flex flex-col items-end justify-end gap-0">
-                            <div className="flex items-center gap-2">
-                                {currentHealthFactor &&
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className={`text-gray-800`}
-                                    >
-                                        {Number(currentHealthFactor) <
-                                            0 && (
-                                                <InfinityIcon className="w-4 h-4" />
-                                            )}
-                                        {Number(currentHealthFactor) >=
-                                            0 &&
-                                            currentHealthFactor.toFixed(
-                                                2
-                                            )}
-                                    </BodyText>}
-                                {(!!Number(currentHealthFactor) && !!Number(newHealthFactor) && Number(borrowAmount) > 0 && Number(lendAmount) > 0) &&
-                                    <ArrowRightIcon
-                                        width={16}
-                                        height={16}
-                                        className="stroke-gray-800"
-                                        strokeWidth={2.5}
-                                    />}
-                                {(!!Number(currentHealthFactor) && !!Number(newHealthFactor) && Number(borrowAmount) > 0 && Number(lendAmount) > 0) &&
-                                    <BodyText
-                                        level="body2"
-                                        weight="normal"
-                                        className={getHealthFactorColor()}
-                                    >
-                                        {newHealthFactor.toFixed(
-                                            2
-                                        )}
-                                    </BodyText>}
+                    {/* Current Position Overview - Show when user has a position */}
+                    {hasLoopPosition && currentPositionData && (
+                        <div className="p-4 bg-blue-50 rounded-5 border border-blue-200 mb-4">
+                            <div className="flex flex-col gap-3">
+                                <BodyText level="body2" weight="medium" className="text-blue-800">
+                                    Current Loop Position
+                                </BodyText>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="flex flex-col gap-1">
+                                        <BodyText level="body3" className="text-blue-600">
+                                            Collateral
+                                        </BodyText>
+                                        <BodyText level="body2" weight="medium" className="text-blue-800">
+                                            {formatTokenAmount(currentPositionData.lendAmount)} {selectedLendToken?.symbol}
+                                        </BodyText>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <BodyText level="body3" className="text-blue-600">
+                                            Borrowed
+                                        </BodyText>
+                                        <BodyText level="body2" weight="medium" className="text-blue-800">
+                                            {formatTokenAmount(currentPositionData.borrowAmount)} {selectedBorrowToken?.symbol}
+                                        </BodyText>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <BodyText level="body3" className="text-blue-600">
+                                            Leverage
+                                        </BodyText>
+                                        <BodyText level="body2" weight="medium" className="text-blue-800">
+                                            {currentPositionData.currentLeverage.toFixed(2)}x
+                                        </BodyText>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <BodyText level="body3" className="text-blue-600">
+                                            Health Factor
+                                        </BodyText>
+                                        <BodyText level="body2" weight="medium" className="text-blue-800">
+                                            {currentPositionData.healthFactor.toFixed(2)}
+                                        </BodyText>
+                                    </div>
+                                </div>
                             </div>
-                            <Label size="small" className="text-gray-600">
-                                Liquidation at &lt;1.0
-                            </Label>
                         </div>
-                    </div>
+                    )}
 
-                    {/* Current Net APY */}
-                    {/* <div className="flex items-center justify-between px-6 py-3 bg-gray-200 lg:bg-white rounded-5">
-                        <div className="flex items-center gap-2">
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                Net APY
+                    {/* Position Changes Preview - Show when user has a position */}
+                    {hasLoopPosition && currentPositionData && newPositionData && (Number(lendAmount) > 0 || leverage !== currentPositionData.currentLeverage) && (
+                        <div className="space-y-3 p-4 bg-gray-50 rounded-5 border border-gray-200 mb-4">
+                            <BodyText level="body2" weight="medium" className="text-gray-800">
+                                Position Changes Preview
                             </BodyText>
-                            <InfoTooltip
-                                content="Net APY from your existing positions on this platform"
-                            />
-                        </div>
-                        <BodyText
-                            level="body2"
-                            weight="medium"
-                            className={cn(
-                                "text-gray-800",
-                                portfolioNetAPY && (
-                                    portfolioNetAPY.startsWith('+')
-                                        ? 'text-green-600'
-                                        : portfolioNetAPY.startsWith('-')
-                                            ? 'text-red-600'
-                                            : 'text-gray-800'
-                                )
-                            )}
-                        >
-                            {portfolioNetAPY}
-                        </BodyText>
-                    </div> */}
+                            
+                            {/* Collateral Change */}
+                            <div className="flex items-center justify-between">
+                                <BodyText level="body3" className="text-gray-600">
+                                    Total Collateral
+                                </BodyText>
+                                <div className="flex items-center gap-2">
+                                    <BodyText level="body3" className="text-gray-800">
+                                        {formatTokenAmount(currentPositionData.lendAmount)} {selectedLendToken?.symbol}
+                                    </BodyText>
+                                    <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                    <BodyText level="body3" className="text-gray-800">
+                                        {formatTokenAmount(newPositionData.lendAmount)} {selectedLendToken?.symbol}
+                                    </BodyText>
+                                </div>
+                            </div>
 
-                    {/* Net APY of Loop */}
-                    <div className="flex items-center justify-between px-6 py-3 bg-gray-200 lg:bg-white rounded-5">
-                        <div className="flex items-center gap-2">
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                Net APY of Loop
-                            </BodyText>
-                            <InfoTooltip
-                                content="Projected Net APY for the new looping position"
-                            />
-                        </div>
-                        <BodyText
-                            level="body2"
-                            weight="medium"
-                            className={cn(
-                                "text-gray-800",
-                                loopNetAPY.value && !loopNetAPY.isLoading && (
-                                    loopNetAPY.value.startsWith('+')
-                                        ? 'text-green-600'
-                                        : loopNetAPY.value.startsWith('-')
-                                            ? 'text-red-600'
-                                            : 'text-gray-800'
-                                )
-                            )}
-                        >
-                            {loopNetAPY.isLoading ? (
-                                <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
-                            ) : (
-                                loopNetAPY.value || '0.00%'
-                            )}
-                        </BodyText>
-                    </div>
+                            {/* Borrowed Change */}
+                            <div className="flex items-center justify-between">
+                                <BodyText level="body3" className="text-gray-600">
+                                    Total Borrowed
+                                </BodyText>
+                                <div className="flex items-center gap-2">
+                                    <BodyText level="body3" className="text-gray-800">
+                                        {formatTokenAmount(currentPositionData.borrowAmount)} {selectedBorrowToken?.symbol}
+                                    </BodyText>
+                                    <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                    <BodyText level="body3" className="text-gray-800">
+                                        {formatTokenAmount(newPositionData.borrowAmount)} {selectedBorrowToken?.symbol}
+                                    </BodyText>
+                                </div>
+                            </div>
 
-                    {/* <div className="flex items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5">
-                        <div className="flex items-center gap-2">
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                borrow in USD
-                            </BodyText>
+                            {/* Leverage Change */}
+                            <div className="flex items-center justify-between">
+                                <BodyText level="body3" className="text-gray-600">
+                                    Leverage
+                                </BodyText>
+                                <div className="flex items-center gap-2">
+                                    <BodyText level="body3" className="text-gray-800">
+                                        {currentPositionData.currentLeverage.toFixed(2)}x
+                                    </BodyText>
+                                    <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                    <BodyText level="body3" className="text-gray-800">
+                                        {newPositionData.leverage.toFixed(2)}x
+                                    </BodyText>
+                                </div>
+                            </div>
                         </div>
-                        <BodyText
-                            level="body2"
-                            weight="medium"
-                            className="text-gray-800"
-                        >
-                            ${selectedLendToken && lendAmount ? (Number(lendAmount) * selectedLendToken.price_usd * (leverage - 1)).toFixed(2) : '0.00'}
-                        </BodyText>
-                    </div> */}
-                    {/* {(isLoadingTradePath || isLoadingBorrowAmount) &&
-                        <div className="flex items-center justify-start gap-2">
-                            <LoaderCircle className="animate-spin w-4 h-4 text-secondary-500" />
-                            <BodyText
-                                level="body3"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                {isLoadingTradePath && 'Fetching trade path...'}
-                                {isLoadingBorrowAmount && 'Fetching borrow amount...'}
-                            </BodyText>
-                        </div>} */}
+                    )}
                 </CardContent>
+
+                {/* Health Factor & APY Card */}
+                <Card className="p-4 bg-white bg-opacity-60 mb-4">
+                    <div className="flex flex-col gap-4">
+                        {/* Health Factor */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <BodyText level="body2" weight="medium" className="text-gray-600">
+                                    Health Factor
+                                </BodyText>
+                                <InfoTooltip content="A numeric representation of position safety. Below 1.0 triggers liquidation." />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {hasLoopPosition && currentPositionData && (
+                                    <>
+                                        <BodyText level="body2" weight="medium" className="text-gray-800">
+                                            {currentPositionData.healthFactor.toFixed(2)}
+                                        </BodyText>
+                                        {(Number(lendAmount) > 0 || leverage !== currentPositionData.currentLeverage) && newHealthFactor > 0 && (
+                                            <>
+                                                <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                                <BodyText level="body2" weight="medium" className={getHealthFactorColor()}>
+                                                    {newHealthFactor.toFixed(2)}
+                                                </BodyText>
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                                {!hasLoopPosition && (
+                                    <BodyText level="body2" weight="medium" className={getHealthFactorColor()}>
+                                        {getHealthFactorDisplay()}
+                                    </BodyText>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Net APY */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <BodyText level="body2" weight="medium" className="text-gray-600">
+                                    Net APY
+                                </BodyText>
+                                <InfoTooltip content="Projected Net APY for the loop position after changes" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {hasLoopPosition && currentPositionData && (
+                                    <>
+                                        <BodyText level="body2" weight="medium" className="text-gray-800">
+                                            {currentPositionData.currentAPY >= 0 ? '+' : ''}{currentPositionData.currentAPY.toFixed(2)}%
+                                        </BodyText>
+                                        {(Number(lendAmount) > 0 || leverage !== currentPositionData.currentLeverage) && loopNetAPY.value !== '0.00%' && (
+                                            <>
+                                                <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                                <BodyText 
+                                                    level="body2" 
+                                                    weight="medium" 
+                                                    className={cn(
+                                                        loopNetAPY.value.startsWith('+') ? 'text-green-600' : 
+                                                        loopNetAPY.value.startsWith('-') ? 'text-red-600' : 'text-gray-800'
+                                                    )}
+                                                >
+                                                    {loopNetAPY.value}
+                                                </BodyText>
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                                {!hasLoopPosition && (
+                                    <BodyText 
+                                        level="body2" 
+                                        weight="medium" 
+                                        className={cn(
+                                            loopNetAPY.value.startsWith('+') ? 'text-green-600' : 
+                                            loopNetAPY.value.startsWith('-') ? 'text-red-600' : 'text-gray-800'
+                                        )}
+                                    >
+                                        {loopNetAPY.isLoading ? (
+                                            <LoaderCircle className="animate-spin w-4 h-4 text-primary" />
+                                        ) : (
+                                            loopNetAPY.value || '0.00%'
+                                        )}
+                                    </BodyText>
+                                )}
+                            </div>
+                        </div>
+
+                        <BodyText level="body3" className="text-gray-600">
+                            Liquidation at Health Factor &lt;1.0
+                        </BodyText>
+                    </div>
+                </Card>
 
                 <CardFooter className="p-0 pt-2 flex flex-col gap-2">
                     {!isWalletConnected ? (
                         <ConnectWalletButton />
-                    ) : hasLoopPosition ? (
-                        // Show both open and close position buttons when user has a position
-                        <div className="flex flex-col gap-2 w-full">
-                            <ConfirmationDialog
-                                disabled={diableActionButton}
-                                positionType="loop"
-                                loopAssetDetails={{
-                                    supplyAsset: {
-                                        token: selectedLendToken,
-                                        borrow_enabled: false,
-                                        ltv: 0,
-                                        remaining_borrow_cap: 0,
-                                        remaining_supply_cap: 0,
-                                        stable_borrow_apy: 0,
-                                        supply_apy: 0,
-                                        variable_borrow_apy: 0,
-                                        emode_category: loopPair?.lendReserve?.emode_category || 0,
-                                    },
-                                    borrowAsset: {
-                                        token: selectedBorrowToken,
-                                        borrow_enabled: true,
-                                        ltv: 0,
-                                        remaining_borrow_cap: 0,
-                                        remaining_supply_cap: 0,
-                                        emode_category: loopPair?.borrowReserve?.emode_category || 0,
-                                    },
-                                    ...platformData?.platform,
-                                    netAPY: portfolioNetAPY,
-                                    loopNetAPY: loopNetAPY.value,
-                                    lendReserve: loopPair?.lendReserve,
-                                    borrowReserve: loopPair?.borrowReserve,
-                                    strategy: loopPair?.strategy,
-                                }}
-                                lendAmount={lendAmount}
-                                borrowAmount={borrowAmount}
-                                borrowAmountRaw={borrowAmountRaw}
-                                flashLoanAmount={flashLoanAmount}
-                                balance={selectedLendTokenBalance}
-                                maxBorrowAmount={{
-                                    maxToBorrow: '0',
-                                    maxToBorrowFormatted: '0',
-                                    maxToBorrowSCValue: '0',
-                                    user: {},
-                                }}
-                                setAmount={setLendAmount}
-                                healthFactorValues={{
-                                    healthFactor: currentHealthFactor,
-                                    newHealthFactor: Number(borrowAmount) > 0 ? newHealthFactor : null,
-                                }}
-                                open={isLoopTxDialogOpen}
-                                setOpen={setIsLoopTxDialogOpen}
-                                leverage={leverage}
-                            />
-                            {/* <Button
-                                variant="outline"
-                                className="w-full rounded-5"
-                                onClick={handleClosePosition}
-                            >
-                                Close Position
-                            </Button> */}
-                        </div>
                     ) : (
-                        // Show only open position button when user doesn't have a position
                         <ConfirmationDialog
                             disabled={diableActionButton}
                             positionType="loop"
@@ -1106,8 +1238,10 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     remaining_supply_cap: 0,
                                     emode_category: loopPair?.borrowReserve?.emode_category || 0,
                                 },
+                                pathTokens: [],
+                                pathFees: [],
                                 ...platformData?.platform,
-                                netAPY: portfolioNetAPY,
+                                netAPY: hasLoopPosition ? `${currentPositionData?.currentAPY.toFixed(2)}%` : '0.00%',
                                 loopNetAPY: loopNetAPY.value,
                                 lendReserve: loopPair?.lendReserve,
                                 borrowReserve: loopPair?.borrowReserve,
@@ -1126,7 +1260,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                             }}
                             setAmount={setLendAmount}
                             healthFactorValues={{
-                                healthFactor: currentHealthFactor,
+                                healthFactor: hasLoopPosition ? currentPositionData?.healthFactor : 0,
                                 newHealthFactor: Number(borrowAmount) > 0 ? newHealthFactor : null,
                             }}
                             open={isLoopTxDialogOpen}

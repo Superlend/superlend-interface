@@ -639,7 +639,8 @@ export function ConfirmationDialog({
             {isShowBlock({
                 lend: true,
                 borrow: true,
-                loop: true,
+                // Show for loop only if a non-zero supply amount was entered
+                loop: Number(lendAmount) > 0,
             }) && (
                     // <DialogTitle asChild>
                     <HeadingText
@@ -656,7 +657,7 @@ export function ConfirmationDialog({
                 loop: loopTx.status === 'view' || (positionType === 'loop' && isTxFailed)
             }) && (
                     <div className="flex flex-col items-center justify-center gap-[6px]">
-                        <ImageWithDefault
+                        {/* <ImageWithDefault
                             src={assetDetails?.asset?.token?.logo}
                             alt={assetDetails?.asset?.token?.symbol}
                             width={40}
@@ -669,7 +670,7 @@ export function ConfirmationDialog({
                             className="text-gray-800 truncate max-w-[200px]"
                         >
                             {amount} {assetDetails?.asset?.token?.symbol}
-                        </HeadingText>
+                        </HeadingText> */}
                         {isShowBlock({
                             lend: isTxSuccessful || isTxFailed,
                             borrow: isTxSuccessful || isTxFailed,
@@ -730,10 +731,12 @@ export function ConfirmationDialog({
     const contentBody = (
         <div className="flex flex-col gap-3 max-w-full overflow-hidden">
             {/* Block 1 */}
+            {/* Asset detail for supply token */}
             {isShowBlock({
                 lend: true,
                 borrow: true,
-                loop: true,
+                // Show for loop only if the user supplied a non-zero amount
+                loop: Number(lendAmount) > 0,
             }) && (
                     getSelectedAssetDetailsUI({
                         tokenLogo: assetDetails?.asset?.token?.logo || loopAssetDetails?.supplyAsset?.token?.logo || '',
@@ -747,8 +750,10 @@ export function ConfirmationDialog({
                     })
                 )}
             {/* Block 2 - Loop Borrow Asset Details */}
+            {/* Asset detail for borrow token */}
             {isShowBlock({
-                loop: true,
+                // Show this block only if a borrow amount is present (> 0)
+                loop: Number(borrowAmount) > 0,
             }) && (
                     getSelectedAssetDetailsUI({
                         tokenLogo: loopAssetDetails?.borrowAsset?.token?.logo || '',
@@ -1402,11 +1407,12 @@ export function ConfirmationDialog({
                 )}
             {/* Loop Create Strategy */}
             {isShowBlock({
-                loop:
-                    loopTx.status === 'create_strategy' ||
-                    loopTx.status === 'open_position' ||
-                    loopTx.status === 'view',
-            }) && (loopTx.hash === 'check_complete' || loopTx.status !== 'check_strategy') && (
+                // Show the "Strategy created" section only when the transaction
+                // has actually gone through the `create_strategy` step. This
+                // prevents showing a misleading message when an existing
+                // strategy is reused (i.e. `strategy_found` flow).
+                loop: loopTx.status === 'create_strategy',
+            }) && (
                     <div className="py-2">
                         {isLoopTxInProgress && loopTx.status === 'create_strategy' && (
                             <div className="flex items-center justify-between gap-2">
@@ -1521,12 +1527,12 @@ export function ConfirmationDialog({
                         {(!isLoopTxInProgress && loopTx.isConfirmed && loopTx.status === 'view' && !!loopTx.hash && !loopTx.errorMessage) && (
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center justify-start gap-2">
-                                    <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                    {/* <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
                                         <Check
                                             className="w-5 h-5 stroke-[#013220]/75"
                                             strokeWidth={1.5}
                                         />
-                                    </div>
+                                    </div> */}
                                     <BodyText
                                         level="body2"
                                         weight="medium"
