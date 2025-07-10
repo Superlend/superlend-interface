@@ -962,7 +962,7 @@ export function ConfirmationDialog({
                     )}
 
                 {/* Current Net APY */}
-                {isShowBlock({
+                {/* {isShowBlock({
                     loop: true,
                 }) && (
                         <div className="flex items-center justify-between gap-2 w-full py-3">
@@ -994,7 +994,7 @@ export function ConfirmationDialog({
                                 }
                             </BodyText>
                         </div>
-                    )}
+                    )} */}
 
                 {/* Net APY of Loop */}
                 {isShowBlock({

@@ -133,27 +133,27 @@ function ContextProvider({ children }: { children: ReactNode }) {
             >
                 <QueryClientProvider client={queryClient}>
                     <WagmiProvider config={config}>
-                            <EthereumMulticallProvider>
-                        <AssetsDataProvider>
-                            <LoopOpportunitiesProvider>
-                                <UserTokenBalancesProvider>
-                        <PrivyWagmiSync>
-                                <AssetsDataProvider>
-                                <SmartTokenBalancesProvider>
-                                    <AaveV3DataProvider>
-                                        <ShowAllMarketsProvider>
-                                            <AuthProvider>
-                                                {children}
-                                            </AuthProvider>
-                                        </ShowAllMarketsProvider>
-                                    </AaveV3DataProvider>
-                                </SmartTokenBalancesProvider>
-                                    </AssetsDataProvider>
-                                </PrivyWagmiSync>
-                                </UserTokenBalancesProvider>
-                            </LoopOpportunitiesProvider>
-                        </AssetsDataProvider>
-                                    </EthereumMulticallProvider>
+                        <EthereumMulticallProvider>
+                            <AssetsDataProvider>
+                                <LoopOpportunitiesProvider>
+                                    {/* <UserTokenBalancesProvider> */}
+                                        <PrivyWagmiSync>
+                                            {/* <AssetsDataProvider> */}
+                                                <SmartTokenBalancesProvider>
+                                                    <AaveV3DataProvider>
+                                                        <ShowAllMarketsProvider>
+                                                            <AuthProvider>
+                                                                {children}
+                                                            </AuthProvider>
+                                                        </ShowAllMarketsProvider>
+                                                    </AaveV3DataProvider>
+                                                </SmartTokenBalancesProvider>
+                                            {/* </AssetsDataProvider> */}
+                                        </PrivyWagmiSync>
+                                    {/* </UserTokenBalancesProvider> */}
+                                </LoopOpportunitiesProvider>
+                            </AssetsDataProvider>
+                        </EthereumMulticallProvider>
                     </WagmiProvider>
                 </QueryClientProvider>
             </PrivyProvider>

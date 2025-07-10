@@ -918,7 +918,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                     </div>
 
                     {/* Current Net APY */}
-                    <div className="flex items-center justify-between px-6 py-3 bg-gray-200 lg:bg-white rounded-5">
+                    {/* <div className="flex items-center justify-between px-6 py-3 bg-gray-200 lg:bg-white rounded-5">
                         <div className="flex items-center gap-2">
                             <BodyText
                                 level="body2"
@@ -947,7 +947,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                         >
                             {portfolioNetAPY}
                         </BodyText>
-                    </div>
+                    </div> */}
 
                     {/* Net APY of Loop */}
                     <div className="flex items-center justify-between px-6 py-3 bg-gray-200 lg:bg-white rounded-5">
