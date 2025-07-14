@@ -62,8 +62,8 @@ const LoopButton = ({
     const LOOPING_LEVERAGE_ADDRESS = '0x1c055a9609529F30b0917231F43aEAaD7C0264F6'
     const STRATEGY_FACTORY_ADDRESS = '0x5739b234bCf3E7D1de2eC4EC3D0401917C6c366F'
 
-    const [strategyAddress, setStrategyAddress] = useState<string>('')
-    const [hasExistingStrategy, setHasExistingStrategy] = useState<boolean>(false)
+    const [strategyAddress, setStrategyAddress] = useState<string>(assetDetails?.strategyAddress || '')
+    const [hasExistingStrategy, setHasExistingStrategy] = useState<boolean>(!!assetDetails?.strategyAddress)
     const [isProcessingFlow, setIsProcessingFlow] = useState<boolean>(false)
     const [isApproved, setIsApproved] = useState<boolean>(false)
     const isDisabledCta = loopTx.isPending || loopTx.isConfirming || disabled || !isWalletConnected
@@ -78,6 +78,14 @@ const LoopButton = ({
     useEffect(() => {
         amountRef.current = amount
     }, [amount])
+
+    // Update strategy address when assetDetails changes
+    useEffect(() => {
+        if (assetDetails?.strategyAddress) {
+            setStrategyAddress(assetDetails.strategyAddress)
+            setHasExistingStrategy(true)
+        }
+    }, [assetDetails?.strategyAddress])
 
     const eModeValue = useMemo(() => {
         if (assetDetails?.lendReserve?.emode_category !== undefined && assetDetails?.borrowReserve?.emode_category !== undefined) {
@@ -113,11 +121,31 @@ const LoopButton = ({
     }
 
     const getTxButtonText = (isPending: boolean, isConfirming: boolean, isConfirmed: boolean) => {
-        return txBtnStatus[
-            loopTx.isConfirming ? 'confirming' : 
-            loopTx.isConfirmed && loopTx.status === 'view' ? 'success' : 
-            loopTx.isPending ? 'pending' : 'default'
-        ]
+        // Check if this is a leverage-only change
+        const isLeverageOnlyChange = Number(amountRef.current?.lendAmount || 0) === 0 && hasExistingStrategy
+        
+        if (isLeverageOnlyChange && loopTx.status === 'check_strategy') {
+            return 'Adjusting leverage...'
+        }
+        
+        if (isLeverageOnlyChange && loopTx.status === 'open_position') {
+            return 'Adjusting leverage...'
+        }
+        
+        const status = loopTx.isConfirming ? 'confirming' : 
+                     loopTx.isConfirmed && loopTx.status === 'view' ? 'success' : 
+                     loopTx.isPending ? 'pending' : 'default'
+        
+        if (status === 'default' && isLeverageOnlyChange) {
+            return 'Adjust Leverage'
+        }
+        
+        // For existing strategies, show "Open Position" instead of "Start Looping"
+        if (status === 'default' && hasExistingStrategy) {
+            return 'Open Position'
+        }
+        
+        return txBtnStatus[status]
     }
 
     const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
@@ -221,6 +249,8 @@ const LoopButton = ({
             )
 
             console.log('=== Opening Loop Position ===')
+            console.log('Strategy address being used:', strategyAddress)
+            console.log('Is leverage-only change:', Number(amountRef.current?.lendAmount || 0) === 0)
             console.log('Contract call parameters:', {
                 supplyAmount: supplyAmount.toString(),
                 flashLoanAmount: flashLoanAmount.toString(),
@@ -259,7 +289,11 @@ const LoopButton = ({
             const decimals = assetDetailsRef.current?.supplyAsset?.token?.decimals ?? 18
             const lendAmountToApprove = amountRef.current?.lendAmount?.toString() ?? '0'
             
+            // For leverage-only changes, skip approval and go directly to open position
             if (Number(lendAmountToApprove) === 0 || lendAmountToApprove === '') {
+                console.log('=== Leverage-Only Change - Skipping Approval ===')
+                console.log('Lend amount is 0, skipping approval and going directly to open position')
+                
                 setLoopTx((prev: TLoopTx) => ({
                     ...prev,
                     status: 'approve',
@@ -371,6 +405,54 @@ const LoopButton = ({
     const onCheckStrategy = useCallback(async () => {
         if (!checkWalletConnection()) return
 
+        console.log('=== Starting Strategy Check ===')
+        console.log('Asset details strategy address:', assetDetailsRef.current?.strategyAddress)
+        console.log('Current strategy address state:', strategyAddress)
+
+        // If we already have a strategy address from assetDetails, skip the check
+        if (assetDetailsRef.current?.strategyAddress) {
+            console.log('=== Using Existing Strategy from AssetDetails ===')
+            console.log('Strategy address from assetDetails:', assetDetailsRef.current.strategyAddress)
+            
+            setStrategyAddress(assetDetailsRef.current.strategyAddress)
+            setHasExistingStrategy(true)
+            
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                status: 'check_strategy',
+                hash: 'strategy_found',
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+            }))
+            
+            // For leverage-only changes, skip approval and go directly to open position
+            const isLeverageOnlyChange = Number(amountRef.current?.lendAmount || 0) === 0
+            console.log('Is leverage-only change:', isLeverageOnlyChange)
+            console.log('Lend amount:', amountRef.current?.lendAmount)
+            
+            if (isLeverageOnlyChange) {
+                console.log('=== Leverage-Only Change Detected ===')
+                console.log('Skipping approval and going directly to open position')
+                
+                setTimeout(async () => {
+                    setLoopTx((prev: TLoopTx) => ({
+                        ...prev,
+                        status: 'open_position',
+                    }))
+                    await onOpenPosition()
+                }, 1500)
+            } else {
+                console.log('=== Non-Leverage Change - Going Through Approval ===')
+                setTimeout(async () => {
+                    await onApproveSupply(assetDetailsRef.current.strategyAddress)
+                }, 1500)
+            }
+            return
+        }
+
+        console.log('=== No Strategy in AssetDetails - Checking Factory ===')
+
         try {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
@@ -385,8 +467,12 @@ const LoopButton = ({
             await new Promise(resolve => setTimeout(resolve, 800))
 
             const { data: existingStrategy } = await refetchStrategy()
+            console.log('Strategy found from factory:', existingStrategy)
             
             if (existingStrategy && existingStrategy !== '0x0000000000000000000000000000000000000000') {
+                console.log('=== Existing Strategy Found in Factory ===')
+                console.log('Strategy address from factory:', existingStrategy)
+                
                 setStrategyAddress(existingStrategy as string)
                 setHasExistingStrategy(true)
                 
@@ -399,10 +485,10 @@ const LoopButton = ({
                     isConfirmed: false,
                 }))
                 
-                setTimeout(async () => {
-                    await onApproveSupply(existingStrategy as string)
-                }, 1500)
+                // Let the transaction completion handler proceed with the flow
+                console.log('=== Strategy Found - Letting Transaction Handler Proceed ===')
             } else {
+                console.log('=== No Existing Strategy Found - Creating New Strategy ===')
                 setHasExistingStrategy(false)
                 
                 setLoopTx((prev: TLoopTx) => ({
@@ -423,27 +509,71 @@ const LoopButton = ({
             console.error('onCheckStrategy error', error)
             handleTransactionError(error, 'check_strategy')
         }
-    }, [walletAddress, refetchStrategy, eModeValue, setLoopTx, onApproveSupply, onCreateStrategy, handleTransactionError])
+    }, [walletAddress, refetchStrategy, eModeValue, setLoopTx, onApproveSupply, onCreateStrategy, handleTransactionError, onOpenPosition])
 
     useEffect(() => {
+        // For strategy check completion, we don't have a hash but we still need to handle it
+        if (loopTx.status === 'check_strategy' && loopTx.hash === 'strategy_found' && !isPending && !isConfirming) {
+            const handleTransactionCompletion = async () => {
+                // Strategy was found from factory, proceed with the flow
+                console.log('=== Strategy Found from Factory - Proceeding with Flow ===')
+                const isLeverageOnlyChange = Number(amountRef.current?.lendAmount || 0) === 0
+                
+                if (isLeverageOnlyChange) {
+                    console.log('=== Leverage-Only Change with Found Strategy ===')
+                    setTimeout(async () => {
+                        setLoopTx((prev: TLoopTx) => ({
+                            ...prev,
+                            status: 'open_position',
+                        }))
+                        await onOpenPosition()
+                    }, 1500)
+                } else {
+                    console.log('=== Non-Leverage Change with Found Strategy ===')
+                    setTimeout(async () => {
+                        await onApproveSupply(strategyAddress)
+                    }, 1500)
+                }
+            }
+            handleTransactionCompletion()
+            return
+        }
+
         if (!hash || !isConfirmed || isPending || isConfirming) return
 
         const handleTransactionCompletion = async () => {
             if (loopTx.status === 'approve' && !isApproved) {
-                setIsApproved(true)
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    approveHash: hash,
-                    hash: '',
-                }))
-                
-                setTimeout(async () => {
+                // Handle approval completion
+                if (loopTx.hash === 'approval_skipped') {
+                    // Approval was skipped for leverage-only change
+                    console.log('=== Approval Skipped - Proceeding to Open Position ===')
+                    setIsApproved(true)
                     setLoopTx((prev: TLoopTx) => ({
                         ...prev,
                         status: 'open_position',
+                        hash: '',
                     }))
-                    await onOpenPosition()
-                }, 1500)
+                    
+                    setTimeout(async () => {
+                        await onOpenPosition()
+                    }, 1500)
+                } else {
+                    // Normal approval completion
+                    setIsApproved(true)
+                    setLoopTx((prev: TLoopTx) => ({
+                        ...prev,
+                        approveHash: hash,
+                        hash: '',
+                    }))
+                    
+                    setTimeout(async () => {
+                        setLoopTx((prev: TLoopTx) => ({
+                            ...prev,
+                            status: 'open_position',
+                        }))
+                        await onOpenPosition()
+                    }, 1500)
+                }
 
             } else if (loopTx.status === 'create_strategy') {
                 setLoopTx((prev: TLoopTx) => ({
@@ -508,6 +638,9 @@ const LoopButton = ({
     const handleSCInteraction = useCallback(async () => {
         console.log('=== Loop Button Clicked ===')
         console.log('Starting automated flow with eMode:', eModeValue)
+        console.log('Asset details strategy address:', assetDetailsRef.current?.strategyAddress)
+        console.log('Current strategy address state:', strategyAddress)
+        console.log('Has existing strategy:', hasExistingStrategy)
 
         if (!checkWalletConnection()) return
 
@@ -524,7 +657,56 @@ const LoopButton = ({
         }
 
         setIsProcessingFlow(true)
+        console.log('assetDetailsRef:', assetDetailsRef)
+        // If we have an existing strategy address, skip the strategy check entirely
+        if (assetDetailsRef.current?.strategyAddress) {
+            console.log('=== Existing Strategy Found - Skipping Strategy Check ===')
+            console.log('Strategy address:', assetDetailsRef.current.strategyAddress)
+            
+            setStrategyAddress(assetDetailsRef.current.strategyAddress)
+            setHasExistingStrategy(true)
+            
+            // Check if this is a leverage-only change
+            const isLeverageOnlyChange = Number(amountRef.current?.lendAmount || 0) === 0
+            console.log('Is leverage-only change:', isLeverageOnlyChange)
+            console.log('Lend amount:', amountRef.current?.lendAmount)
+            
+            if (isLeverageOnlyChange) {
+                console.log('=== Leverage-Only Change - Going Directly to Open Position ===')
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'open_position',
+                    hash: '',
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    errorMessage: '',
+                }))
+                
+                setTimeout(async () => {
+                    await onOpenPosition()
+                }, 1000)
+            } else {
+                console.log('=== Non-Leverage Change - Going Through Approval ===')
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'approve',
+                    hash: '',
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                    errorMessage: '',
+                }))
+                
+                setTimeout(async () => {
+                    await onApproveSupply(assetDetailsRef.current.strategyAddress)
+                }, 1000)
+            }
+            return
+        }
 
+        // Only do strategy check if we don't have an existing strategy
+        console.log('=== No Existing Strategy - Starting Strategy Check ===')
         try {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
@@ -542,7 +724,7 @@ const LoopButton = ({
             console.error('Error starting loop flow:', error)
             handleTransactionError(error, 'check_strategy')
         }
-    }, [loopTx.status, loopTx.errorMessage, isWalletConnected, walletAddress, eModeValue, onCheckStrategy, handleTransactionError, handleCloseModal, setLoopTx])
+    }, [loopTx.status, loopTx.errorMessage, isWalletConnected, walletAddress, eModeValue, onCheckStrategy, handleTransactionError, handleCloseModal, setLoopTx, strategyAddress, hasExistingStrategy, onOpenPosition, onApproveSupply])
 
     return (
         <div className="flex flex-col gap-2">

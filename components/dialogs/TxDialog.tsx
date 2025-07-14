@@ -45,6 +45,7 @@ import {
     useTxContext,
     TBorrowTx,
     TLoopTx,
+    TUnloopTx,
 } from '@/context/tx-provider'
 import { BigNumber } from 'ethers'
 import CustomAlert from '@/components/alerts/CustomAlert'
@@ -69,7 +70,7 @@ import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import InfoTooltip from '../tooltips/InfoTooltip'
 import ImageWithBadge from '../ImageWithBadge'
 import ExternalLink from '../ExternalLink'
-import { parseUnits } from 'ethers/lib/utils'
+import { parseUnits, formatUnits } from 'ethers/lib/utils'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
 import { useIguanaDexData } from '@/hooks/protocols/useIguanaDexData'
@@ -85,6 +86,7 @@ type TLoopAssetDetails = Omit<TAssetDetails, 'asset'> & {
     lendReserve?: any
     borrowReserve?: any
     strategy?: any
+    strategyAddress?: string
 }
 
 interface IConfirmationDialogProps {
@@ -118,6 +120,16 @@ interface IConfirmationDialogProps {
     newPositionData?: any
     hasLoopPosition?: boolean
     setShouldLogCalculation?: (shouldLog: boolean) => void
+    unloopParameters?: {
+        repayAmountToken: string
+        aTokenAmount: string
+        withdrawAmount: string
+        swapDetails: {
+            fromToken: string
+            toToken: string
+            amountToSwap: string
+        }
+    } | null
 }
 
 export function ConfirmationDialog({
@@ -143,15 +155,17 @@ export function ConfirmationDialog({
     newPositionData,
     hasLoopPosition,
     setShouldLogCalculation,
+    unloopParameters,
 }: IConfirmationDialogProps) {
-    const { lendTx, setLendTx, borrowTx, setBorrowTx, withdrawTx, repayTx, loopTx, setLoopTx } = useTxContext() as TTxContext
-    const positionTypeTxStatusMap: Record<TTransactionType, TLendTx | TBorrowTx | TLoopTx> = {
+    const { lendTx, setLendTx, borrowTx, setBorrowTx, withdrawTx, repayTx, loopTx, setLoopTx, unloopTx, setUnloopTx } = useTxContext() as TTxContext
+    const positionTypeTxStatusMap: Record<TTransactionType, TLendTx | TBorrowTx | TLoopTx | TUnloopTx> = {
         'lend': lendTx,
         'borrow': borrowTx,
         'loop': loopTx,
+        'unloop': unloopTx,
     }
 
-    const getTxStatus = (type: TPositionType): TLendTx | TBorrowTx | TLoopTx => {
+    const getTxStatus = (type: TPositionType): TLendTx | TBorrowTx | TLoopTx | TUnloopTx => {
         if (type === 'all') return lendTx
         return positionTypeTxStatusMap[type as TTransactionType]
     }
@@ -168,11 +182,13 @@ export function ConfirmationDialog({
     const { width: screenWidth } = useDimensions()
     const isDesktop = screenWidth > 768
     const isLendPositionType = positionType === 'lend'
+    const isUnloopMode = positionType === 'unloop'
 
     const getCurrentTxHash = () => {
         if (positionType === 'lend') return lendTx.hash
         if (positionType === 'borrow') return borrowTx.hash
         if (positionType === 'loop') return loopTx.hash
+        if (positionType === 'unloop') return unloopTx.hash
         return undefined
     }
 
@@ -214,7 +230,14 @@ export function ConfirmationDialog({
         { 
             ...loopAssetDetails, 
             pathTokens: pathTokens,
-            pathFees: pathFees
+            pathFees: pathFees,
+            strategyAddress: currentPositionData?.strategyAddress || loopAssetDetails?.strategyAddress || ''
+        } : positionType === 'unloop' ? 
+        {
+            ...loopAssetDetails,
+            pathTokens: pathTokens,
+            pathFees: pathFees,
+            strategyAddress: currentPositionData?.strategyAddress || loopAssetDetails?.strategyAddress || ''
         } : assetDetails
 
     const lendTxCompleted: boolean = (lendTx.isConfirmed && !!lendTx.hash && lendTx.status === 'view')
@@ -223,12 +246,27 @@ export function ConfirmationDialog({
     useEffect(() => {
         setHasAcknowledgedRisk(false)
         if (open) {
+            console.log('=== Dialog Opening ===')
+            console.log('Dialog state:', {
+                positionType,
+                isUnloopMode,
+                loopAssetDetails: !!loopAssetDetails,
+                assetDetails: !!assetDetails,
+                lendAmount,
+                borrowAmount,
+                amount
+            })
             handleSwitchChain(Number(chain_id))
         }
     }, [open])
 
     useEffect(() => {
         if (!open || !loopAssetDetails?.borrowAsset || !loopAssetDetails?.supplyAsset) {
+            return
+        }
+
+        // Only fetch trade path for loop and unloop operations
+        if (positionType !== 'loop' && positionType !== 'unloop') {
             return
         }
 
@@ -240,17 +278,17 @@ export function ConfirmationDialog({
         let effectiveBorrowAmountRaw = borrowAmountRaw
         
         if (isLeverageOnlyChange) {
-            if (Number(borrowAmountRaw) > 0) {
-                effectiveBorrowAmountRaw = borrowAmountRaw
-            } else if (newPositionData && currentPositionData) {
+           
+            if (newPositionData && currentPositionData) {
                 const currentBorrowAmount = Number(currentPositionData.borrowAmount)
                 const newBorrowAmount = Number(newPositionData.borrowAmount)
                 const borrowAmountDifference = Math.abs(newBorrowAmount - currentBorrowAmount)
-                
+                console.log('Borrow amount difference:', borrowAmountDifference, newBorrowAmount, currentBorrowAmount, borrowAmountDifference > 0.000001)
                 if (borrowAmountDifference > 0.000001) {
                     const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
                     const formattedDifference = borrowAmountDifference.toFixed(decimals)
                     effectiveBorrowAmountRaw = parseUnits(formattedDifference, decimals).toString()
+                    console.log('Effective borrow amount raw:', effectiveBorrowAmountRaw)
                 } else {
                     const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
                     effectiveBorrowAmountRaw = parseUnits('0.001', decimals).toString()
@@ -261,8 +299,46 @@ export function ConfirmationDialog({
             }
         }
         
-        const shouldFetchTradePath = Number(borrowAmountRaw) > 0 || (isLeverageOnlyChange && Number(effectiveBorrowAmountRaw) > 0)
-        const tradePathKey = `${loopAssetDetails?.borrowAsset?.token?.address}-${loopAssetDetails?.supplyAsset?.token?.address}-${effectiveBorrowAmountRaw}`
+        // For unloop, we need to check if there's a withdraw amount (which represents the amount to be withdrawn)
+        // Also need to ensure we have valid amounts before fetching
+        const shouldFetchTradePath = positionType === 'unloop' ? 
+            true : // Always fetch trade path for unloop operations
+            Number(borrowAmountRaw) > 0 || (isLeverageOnlyChange && Number(effectiveBorrowAmountRaw) > 0)
+        
+        // For unloop, we need to calculate the trade path amount based on the withdraw amount
+        // The trade path should be from borrow asset to supply asset (for repaying)
+        let tradePathAmount = effectiveBorrowAmountRaw
+        if (positionType === 'unloop') {
+            // For unloop, we need to calculate how much we need to repay
+            // This is typically the borrow amount, but we need to ensure it's valid
+            if (Number(borrowAmount) > 0) {
+                const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
+                tradePathAmount = parseUnits(borrowAmount, decimals).toString()
+            } else {
+                // If no specific borrow amount, use a small amount for trade path calculation
+                const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
+                tradePathAmount = parseUnits('0.001', decimals).toString()
+            }
+        }
+        
+        const tradePathKey = positionType === 'unloop' ?
+            `${loopAssetDetails?.borrowAsset?.token?.address}-${loopAssetDetails?.supplyAsset?.token?.address}-${tradePathAmount}` :
+            `${loopAssetDetails?.borrowAsset?.token?.address}-${loopAssetDetails?.supplyAsset?.token?.address}-${effectiveBorrowAmountRaw}`
+        
+        console.log('=== Trade Path Fetching Logic ===')
+        console.log('Trade path conditions:', {
+            positionType,
+            shouldFetchTradePath,
+            amount,
+            borrowAmount,
+            borrowAmountRaw,
+            effectiveBorrowAmountRaw,
+            tradePathAmount,
+            isLeverageOnlyChange,
+            tradePathKey,
+            lastTradePathKey,
+            isLoadingTradePath
+        })
         
         if (shouldFetchTradePath && tradePathKey !== lastTradePathKey && !isLoadingTradePath) {
             setLastTradePathKey(tradePathKey)
@@ -270,10 +346,12 @@ export function ConfirmationDialog({
             
             console.log('=== Getting Trade Path ===')
             console.log('Trade path parameters:', {
+                positionType,
                 borrowAsset: loopAssetDetails?.borrowAsset?.token?.address,
                 supplyAsset: loopAssetDetails?.supplyAsset?.token?.address,
                 borrowAmountRaw,
                 effectiveBorrowAmountRaw,
+                tradePathAmount,
                 isLeverageOnlyChange,
                 tradePathKey
             })
@@ -281,7 +359,7 @@ export function ConfirmationDialog({
             getTradePath(
                 loopAssetDetails?.borrowAsset?.token?.address,
                 loopAssetDetails?.supplyAsset?.token?.address,
-                effectiveBorrowAmountRaw
+                tradePathAmount
             )
                 .then((result: any) => {
                     if (!result || !result.routes || !result.routes[0] || !result.routes[0].pools) {
@@ -290,6 +368,11 @@ export function ConfirmationDialog({
                         setPathFees(['500'])
                         return
                     }
+
+                    console.log('Trade path search parameters:', 
+                        loopAssetDetails?.borrowAsset?.token?.address,
+                        loopAssetDetails?.supplyAsset?.token?.address,
+                        tradePathAmount)
 
                     const route = result.routes[0]
                     const poolsLength = route.pools.length
@@ -329,25 +412,67 @@ export function ConfirmationDialog({
 
                     setPathTokens(newPathTokens)
                     setPathFees(newPathFees)
+                    
+                    // Add debugging for unloop transactions
+                    if (positionType === 'unloop') {
+                        console.log('=== Unloop Trade Path Set ===')
+                        console.log('Setting pathTokens and pathFees for unloop:', {
+                            pathTokens: newPathTokens,
+                            pathFees: newPathFees,
+                            pathTokensLength: newPathTokens.length,
+                            pathFeesLength: newPathFees.length
+                        })
+                    }
                 })
                 .catch((error) => {
                     console.error('Error fetching trade path:', error)
+                    console.log('Setting default pathTokens and pathFees due to error')
                     setPathTokens([])
                     setPathFees(['500'])
+                    
+                    // Add debugging for unloop transactions
+                    if (positionType === 'unloop') {
+                        console.log('=== Unloop Trade Path Error ===')
+                        console.log('Setting default pathTokens and pathFees for unloop due to error:', {
+                            pathTokens: [],
+                            pathFees: ['500']
+                        })
+                    }
                 })
                 .finally(() => {
                     setIsLoadingTradePath(false)
-                    setLoopTx((prev: TLoopTx) => ({
-                        ...prev,
-                        hasCreditDelegation: true,
-                    }))
+                    if (positionType === 'loop') {
+                        setLoopTx((prev: TLoopTx) => ({
+                            ...prev,
+                            hasCreditDelegation: true,
+                        }))
+                    }
+                    
+                    // Add debugging for unloop transactions
+                    if (positionType === 'unloop') {
+                        console.log('=== Unloop Trade Path Loading Complete ===')
+                        console.log('Trade path loading completed for unloop, isLoadingTradePath set to false')
+                    }
                 })
         } else if (!shouldFetchTradePath) {
             setIsLoadingTradePath(false)
             setLastTradePathKey('')
+            
+            // Add debugging for unloop transactions
+            if (positionType === 'unloop') {
+                console.log('=== Unloop Trade Path Skipped ===')
+                console.log('Trade path fetching skipped for unloop:', {
+                    shouldFetchTradePath,
+                    amount,
+                    borrowAmount,
+                    tradePathKey,
+                    lastTradePathKey
+                })
+            }
         }
     }, [
         open,
+        positionType,
         loopAssetDetails?.borrowAsset?.token?.address,
         loopAssetDetails?.supplyAsset?.token?.address,
         borrowAmountRaw,
@@ -357,6 +482,8 @@ export function ConfirmationDialog({
         leverage,
         lendAmount,
         newPositionData?.borrowAmount,
+        amount, // Add amount for unloop transactions
+        borrowAmount, // Add borrowAmount for unloop transactions
     ])
 
     function resetLendBorrowTx() {
@@ -383,6 +510,15 @@ export function ConfirmationDialog({
         setLoopTx((prev: TLoopTx) => ({
             ...prev,
             status: 'check_strategy',
+            hash: '',
+            isPending: false,
+            isConfirming: false,
+            isConfirmed: false,
+            errorMessage: '',
+        }))
+        setUnloopTx((prev: TUnloopTx) => ({
+            ...prev,
+            status: 'close_position',
             hash: '',
             isPending: false,
             isConfirming: false,
@@ -488,6 +624,72 @@ export function ConfirmationDialog({
             
             return finalParams
         }
+        
+        if (positionType === 'unloop') {
+            const amountParsed = parseUnits(
+                amount === '' ? '0' : amount,
+                loopAssetDetails?.borrowAsset?.token?.decimals ?? 0
+            ).toString()
+            
+            console.log('=== Unloop Call Parameters (Button Pressed) ===')
+            console.log('Input amounts:', {
+                borrowAmount,
+                lendAmount,
+                withdrawAmount: amount
+            })
+            
+            // For unloop, we need to calculate the correct parameters
+            // Based on the smart contract test, closePosition expects:
+            // repayAmount, swapPathTokens, swapPathFees, aTokenAmount, withdrawAmount
+            
+            // If we have calculated unloop parameters, use them
+            if (unloopParameters) {
+                console.log('Using calculated unloop parameters:', unloopParameters)
+                
+                const finalParams = {
+                    amountRaw: amount,
+                    scValue: amount,
+                    amountParsed,
+                    borrowAmount: formatUnits(
+                        BigNumber.from(unloopParameters.repayAmountToken).toBigInt(),
+                        loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
+                    ),
+                    lendAmount: formatUnits(
+                        BigNumber.from(unloopParameters.aTokenAmount).toBigInt(),
+                        loopAssetDetails?.supplyAsset?.token?.decimals ?? 18
+                    ),
+                    withdrawAmount: formatUnits(
+                        BigNumber.from(unloopParameters.withdrawAmount).toBigInt(),
+                        loopAssetDetails?.supplyAsset?.token?.decimals ?? 18
+                    ),
+                    repayAmountToken: unloopParameters.repayAmountToken,
+                    aTokenAmount: unloopParameters.aTokenAmount,
+                    withdrawAmountToken: unloopParameters.withdrawAmount,
+                }
+                
+                console.log('Final parameters for unloop call (calculated):', finalParams)
+                console.log('=== End Unloop Call Parameters ===')
+                
+                return finalParams
+            }
+            
+            // Fallback to original logic if no calculated parameters
+            const isFullClose = Number(amount) >= Number(lendAmount) * 0.99 // Allow small rounding differences
+            
+            const finalParams = {
+                amountRaw: amount,
+                scValue: amount,
+                amountParsed,
+                borrowAmount: isFullClose ? borrowAmount : amount, // For full close, repay all borrow
+                lendAmount: isFullClose ? lendAmount : amount, // For full close, withdraw all collateral
+                withdrawAmount: amount,
+            }
+            
+            console.log('Final parameters for unloop call (fallback):', finalParams)
+            console.log('=== End Unloop Call Parameters ===')
+            
+            return finalParams
+        }
         return { amountRaw: '0', scValue: '0', amountParsed: '0' }
     }
 
@@ -495,18 +697,18 @@ export function ConfirmationDialog({
         setOpen(open)
 
         if (open) {
-            if (lendTx.errorMessage || borrowTx.errorMessage || loopTx.errorMessage) {
+            if (lendTx.errorMessage || borrowTx.errorMessage || loopTx.errorMessage || unloopTx.errorMessage) {
                 resetLendBorrowTx()
             }
             
             setLastTradePathKey('')
             setIsLoadingTradePath(false)
             
-            if (positionType === 'loop' && setShouldLogCalculation) {
+            if ((positionType === 'loop' || positionType === 'unloop') && setShouldLogCalculation) {
                 setShouldLogCalculation(false)
             }
         } else {
-            if (lendTx.status !== 'approve' || borrowTx.status !== 'borrow' || loopTx.status !== 'approve') {
+            if (lendTx.status !== 'approve' || borrowTx.status !== 'borrow' || loopTx.status !== 'approve' || unloopTx.status !== 'close_position') {
                 setAmount('')
 
                 setTimeout(() => {
@@ -517,13 +719,13 @@ export function ConfirmationDialog({
             setLastTradePathKey('')
             setIsLoadingTradePath(false)
             
-            if (positionType === 'loop' && setShouldLogCalculation) {
+            if ((positionType === 'loop' || positionType === 'unloop') && setShouldLogCalculation) {
                 setShouldLogCalculation(false)
             }
         }
     }
 
-    function isShowBlock(action: { lend?: boolean; borrow?: boolean; loop?: boolean }) {
+    function isShowBlock(action: { lend?: boolean; borrow?: boolean; loop?: boolean; unloop?: boolean }) {
         if (positionType === 'all') return false
         return action[positionType as Exclude<TPositionType, 'all'>]
     }
@@ -535,10 +737,12 @@ export function ConfirmationDialog({
     const isLendTxInProgress = lendTx.isPending || lendTx.isConfirming
     const isBorrowTxInProgress = borrowTx.isPending || borrowTx.isConfirming
     const isLoopTxInProgress = loopTx.isPending || loopTx.isConfirming
+    const isUnloopTxInProgress = unloopTx.isPending || unloopTx.isConfirming
 
     const isTxInProgress = positionType === 'lend' ? isLendTxInProgress : 
                           positionType === 'borrow' ? isBorrowTxInProgress : 
-                          positionType === 'loop' ? isLoopTxInProgress : false
+                          positionType === 'loop' ? isLoopTxInProgress : 
+                          positionType === 'unloop' ? isUnloopTxInProgress : false
 
     const lendTxSpinnerColor = lendTx.isPending ? 'text-secondary-500' : 'text-primary'
     const borrowTxSpinnerColor = borrowTx.isPending ? 'text-secondary-500' : 'text-primary'
@@ -581,12 +785,14 @@ export function ConfirmationDialog({
             default: 'Earn',
             borrow: 'Borrow',
             loop: 'Loop',
+            unloop: 'Unloop',
         }
 
         const key = isLendPositionType ? 
                    `${isMorphoMarkets ? 'morpho-markets' : 
                      isMorphoVault ? 'morpho-vault' : 'default'}` : 
-                   positionType === 'loop' ? 'loop' : 'borrow'
+                   positionType === 'loop' ? 'loop' : 
+                   positionType === 'unloop' ? 'unloop' : 'borrow'
         return buttonTextMap[key]
     }
 
@@ -684,6 +890,9 @@ export function ConfirmationDialog({
             if (positionType === 'loop') {
                 return 'Looping Failed'
             }
+            if (positionType === 'unloop') {
+                return 'Unlooping Failed'
+            }
             return isLendPositionType ? 
                    isMorphoMarkets ? 'Add Collateral Failed' : 
                    isMorphoVault ? 'Supply to Vault Failed' : 'Lending Failed' : 'Borrowing Failed'
@@ -693,6 +902,9 @@ export function ConfirmationDialog({
             if (positionType === 'loop') {
                 return 'Looping Successful'
             }
+            if (positionType === 'unloop') {
+                return 'Unlooping Successful'
+            }
             return isLendPositionType ? 
                    isMorphoMarkets ? 'Add Collateral Successful' : 
                    isMorphoVault ? 'Supply to Vault Successful' : 'Lending Successful' : 'Borrowing Successful'
@@ -700,6 +912,10 @@ export function ConfirmationDialog({
 
         if (positionType === 'loop') {
             return 'Review Loop'
+        }
+        
+        if (positionType === 'unloop') {
+            return 'Review Unloop'
         }
 
         return isLendPositionType ? 
@@ -709,14 +925,14 @@ export function ConfirmationDialog({
 
     const contentHeader = (
         <>
-            {isShowBlock({ lend: true, borrow: true, loop: Number(lendAmount) > 0 }) && (
+            {isShowBlock({ lend: true, borrow: true, loop: Number(lendAmount) > 0, unloop: Number(lendAmount) > 0 }) && (
                 <HeadingText level="h4" weight="medium" className="text-gray-800 text-center capitalize">
                     {getHeaderText()}
                 </HeadingText>
             )}
-            {isShowBlock({ loop: loopTx.status === 'view' || (positionType === 'loop' && isTxFailed) }) && (
+            {isShowBlock({ loop: loopTx.status === 'view' || (positionType === 'loop' && isTxFailed), unloop: unloopTx.status === 'view' || (positionType === 'unloop' && isTxFailed) }) && (
                 <div className="flex flex-col items-center justify-center gap-[6px]">
-                    {isShowBlock({ lend: isTxSuccessful || isTxFailed, borrow: isTxSuccessful || isTxFailed, loop: isTxSuccessful || isTxFailed }) && (
+                    {isShowBlock({ lend: isTxSuccessful || isTxFailed, borrow: isTxSuccessful || isTxFailed, loop: isTxSuccessful || isTxFailed, unloop: isTxSuccessful || isTxFailed }) && (
                         <Badge
                             variant={isTxFailed ? 'destructive' : 'green'}
                             className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
@@ -724,7 +940,8 @@ export function ConfirmationDialog({
                             {isLendPositionType && (isTxSuccessful || (positionType === 'lend' && isTxFailed)) ? 
                              isMorphoMarkets ? 'Add Collateral' : 
                              isMorphoVault ? 'Supply to vault' : 'Earn' : 
-                             positionType === 'loop' ? 'Loop' : 'Borrow'}{' '}
+                             positionType === 'loop' ? 'Loop' : 
+                             positionType === 'unloop' ? 'Unloop' : 'Borrow'}{' '}
                             {isTxFailed ? 'Failed' : 'Successful'}
                             {!isTxFailed && (
                                 <CircleCheckIcon width={16} height={16} className="stroke-[#00AD31]" />
@@ -790,6 +1007,7 @@ export function ConfirmationDialog({
                 lend: true,
                 borrow: true,
                 loop: Number(lendAmount) > 0 || (hasLoopPosition && currentPositionData && newPositionData && Math.abs(newPositionData.lendAmount - currentPositionData.lendAmount) > 0.000001),
+                unloop: Number(lendAmount) > 0 || (hasLoopPosition && currentPositionData && newPositionData && Math.abs(newPositionData.lendAmount - currentPositionData.lendAmount) > 0.000001),
             }) && (
                 getSelectedAssetDetailsUI({
                     tokenLogo: assetDetails?.asset?.token?.logo || loopAssetDetails?.supplyAsset?.token?.logo || '',
@@ -804,6 +1022,7 @@ export function ConfirmationDialog({
             )}
             {isShowBlock({
                 loop: Number(borrowAmount) > 0 || (hasLoopPosition && currentPositionData && newPositionData && Math.abs(newPositionData.borrowAmount - currentPositionData.borrowAmount) > 0.000001),
+                unloop: Number(borrowAmount) > 0 || (hasLoopPosition && currentPositionData && newPositionData && Math.abs(newPositionData.borrowAmount - currentPositionData.borrowAmount) > 0.000001),
             }) && (
                 getSelectedAssetDetailsUI({
                     tokenLogo: loopAssetDetails?.borrowAsset?.token?.logo || '',
@@ -830,7 +1049,7 @@ export function ConfirmationDialog({
                         </BodyText>
                     </div>
                 )}
-                {isShowBlock({ loop: true }) && (
+                {isShowBlock({ loop: true, unloop: true }) && (
                     <div className={`flex items-center justify-between w-full py-3`}>
                         <BodyText level="body2" weight="normal" className="text-gray-600">
                             Leverage
@@ -843,6 +1062,7 @@ export function ConfirmationDialog({
 
                 {isShowBlock({
                     loop: hasLoopPosition && currentPositionData && newPositionData && (Number(lendAmount) > 0 || Number(leverage) !== currentPositionData.currentLeverage),
+                    unloop: hasLoopPosition && currentPositionData && newPositionData && (Number(lendAmount) > 0 || Number(leverage) !== currentPositionData.currentLeverage),
                 }) && (
                     <>
                         <div className="flex flex-col gap-3 w-full">
@@ -937,6 +1157,7 @@ export function ConfirmationDialog({
                 {isShowBlock({
                     borrow: borrowTx.status === 'borrow' || borrowTx.status === 'view',
                     loop: true,
+                    unloop: true,
                 }) && (
                     <div className="flex items-center justify-between w-full py-2">
                         <BodyText level="body2" weight="normal" className="text-gray-600">
@@ -969,7 +1190,7 @@ export function ConfirmationDialog({
                     </div>
                 )}
 
-                {isShowBlock({ loop: true }) && (
+                {isShowBlock({ loop: true, unloop: true }) && (
                     <div className="flex items-center justify-between gap-2 w-full py-3">
                         <div className="flex items-center gap-2">
                             <BodyText level="body2" weight="normal" className="text-gray-600">
@@ -1304,30 +1525,65 @@ export function ConfirmationDialog({
                 </div>
             )}
             {showPointsEarnedBanner && <TxPointsEarnedBanner />}
-            <ActionButton
-                disabled={isDisableActionButton}
-                ctaText={isLoadingTradePath ? 'Fetching trade path...' : null}
-                isLoading={isLoadingTradePath}
-                handleCloseModal={handleOpenChange}
-                asset={(() => {
-                    const finalAsset = assetDetailsForActionButton
-                    if (positionType === 'loop' && finalAsset && 'pathTokens' in finalAsset && 'pathFees' in finalAsset) {
+            {/* Only render ActionButton when trade path is not loading */}
+            {isLoadingTradePath ? (
+                <div className="flex items-center justify-center py-6">
+                    <LoaderCircle className="animate-spin w-8 h-8 text-primary" />
+                </div>
+            ) : (
+                <ActionButton
+                    disabled={isDisableActionButton}
+                    ctaText={isLoadingTradePath ? 'Fetching trade path...' : null}
+                    isLoading={isLoadingTradePath}
+                    handleCloseModal={handleOpenChange}
+                    asset={(() => {
+                        const finalAsset = assetDetailsForActionButton
                         console.log('=== ActionButton Parameters ===')
-                        console.log('ActionButton asset details for loop:', {
-                            pathTokens: finalAsset.pathTokens,
-                            pathFees: finalAsset.pathFees,
-                            hasPathTokens: Array.isArray(finalAsset.pathTokens),
-                            hasPathFees: Array.isArray(finalAsset.pathFees),
-                            pathTokensLength: finalAsset.pathTokens?.length,
-                            pathFeesLength: finalAsset.pathFees?.length
+                        console.log('ActionButton parameters:', {
+                            positionType,
+                            isUnloopMode,
+                            disabled: isDisableActionButton,
+                            isLoadingTradePath,
+                            asset: finalAsset,
+                            amount: getActionButtonAmount(),
+                            pathTokens: finalAsset && 'pathTokens' in finalAsset ? finalAsset.pathTokens : undefined,
+                            pathFees: finalAsset && 'pathFees' in finalAsset ? finalAsset.pathFees : undefined
                         })
-                    }
-                    return finalAsset
-                })()}
-                amount={getActionButtonAmount()}
-                setActionType={setActionType}
-                actionType={positionType === 'all' ? 'lend' : positionType as Exclude<TPositionType, 'all'>}
-            />
+                        if (positionType === 'loop' && finalAsset && 'pathTokens' in finalAsset && 'pathFees' in finalAsset) {
+                            console.log('ActionButton asset details for loop:', {
+                                pathTokens: finalAsset.pathTokens,
+                                pathFees: finalAsset.pathFees,
+                                hasPathTokens: Array.isArray(finalAsset.pathTokens),
+                                hasPathFees: Array.isArray(finalAsset.pathFees),
+                                pathTokensLength: finalAsset.pathTokens?.length,
+                                pathFeesLength: finalAsset.pathFees?.length
+                            })
+                        }
+                        if (positionType === 'unloop' && finalAsset && 'pathTokens' in finalAsset && 'pathFees' in finalAsset) {
+                            console.log('ActionButton asset details for unloop:', {
+                                pathTokens: finalAsset.pathTokens,
+                                pathFees: finalAsset.pathFees,
+                                hasPathTokens: Array.isArray(finalAsset.pathTokens),
+                                hasPathFees: Array.isArray(finalAsset.pathFees),
+                                pathTokensLength: finalAsset.pathTokens?.length,
+                                pathFeesLength: finalAsset.pathFees?.length
+                            })
+                        }
+                        // Add debugging for strategy address
+                        if (positionType === 'loop' || positionType === 'unloop') {
+                            console.log('=== Strategy Address Debug ===')
+                            console.log('LoopAssetDetails strategy:', loopAssetDetails?.strategy)
+                            console.log('LoopAssetDetails strategyAddress:', (loopAssetDetails as any)?.strategyAddress)
+                            console.log('Final asset strategyAddress:', (finalAsset as any)?.strategyAddress)
+                            console.log('Final asset strategy:', (finalAsset as any)?.strategy)
+                        }
+                        return finalAsset
+                    })()}
+                    amount={getActionButtonAmount()}
+                    setActionType={setActionType}
+                    actionType={positionType === 'all' ? 'lend' : positionType as Exclude<TPositionType, 'all'>}
+                />
+            )}
         </div>
     )
 
@@ -1373,7 +1629,7 @@ function getTxInProgressText({
 }: {
     amount: string
     tokenName: string
-    txStatus: TLendTx | TBorrowTx | TLoopTx
+    txStatus: TLendTx | TBorrowTx | TLoopTx | TUnloopTx
     positionType: TPositionType
     actionTitle: string
 }) {
@@ -1387,6 +1643,7 @@ function getTxInProgressText({
             approve: `Approve spending ${formattedText} from your wallet`,
             lend: `Approve transaction for ${actionTitle}ing ${formattedText} from your wallet`,
             borrow: `Approve transaction for ${actionTitle}ing ${formattedText} from your wallet`,
+            close_position: `Approve transaction for closing position`,
         }
     } else if (isConfirming) {
         textByStatus = {
@@ -1394,6 +1651,7 @@ function getTxInProgressText({
             lend: `Confirming transaction for ${actionTitle}ing ${formattedText} from your wallet`,
             borrow: `Confirming transaction for ${actionTitle}ing ${formattedText} from your wallet`,
             view: `Confirming transaction for ${actionTitle}ing ${formattedText} from your wallet`,
+            close_position: `Confirming transaction for closing position`,
         }
     }
     return textByStatus[txStatus.status]

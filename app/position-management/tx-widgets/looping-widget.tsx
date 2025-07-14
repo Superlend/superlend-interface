@@ -49,6 +49,7 @@ import useGetMidasKpiData from '@/hooks/useGetMidasKpiData'
 import { useDebounce } from '@/hooks/useDebounce'
 import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
 import { TPositionType } from '@/types'
+import { calculateUnloopParameters } from '../helper-functions'
 
 interface LoopingWidgetProps {
     isLoading?: boolean
@@ -69,6 +70,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
     const chain_id = searchParams.get('chain_id') || 1
     const protocol_identifier = searchParams.get('protocol_identifier') || ''
     const [isLoopTxDialogOpen, setIsLoopTxDialogOpen] = useState(false)
+    const [isUnloopMode, setIsUnloopMode] = useState(false)
 
     const { walletAddress, handleSwitchChain, isWalletConnected, isConnectingWallet } = useWalletConnection()
     const { hasAppleFarmRewards, appleFarmRewardsAprs } = useAppleFarmRewards()
@@ -89,6 +91,18 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
     const [newHealthFactor, setNewHealthFactor] = useState<number>(0)
     const [flashLoanAmount, setFlashLoanAmount] = useState<string>('0')
     const [positionType, setPositionType] = useState<'increase' | 'decrease'>('increase')
+    const [withdrawAmount, setWithdrawAmount] = useState<string>('0')
+    const [maxWithdrawable, setMaxWithdrawable] = useState<string>('0')
+    const [unloopParameters, setUnloopParameters] = useState<{
+        repayAmountToken: string
+        aTokenAmount: string
+        withdrawAmount: string
+        swapDetails: {
+            fromToken: string
+            toToken: string
+            amountToSwap: string
+        }
+    } | null>(null)
     const { 
         getMaxLeverage, 
         getBorrowTokenAmountForLeverage, 
@@ -358,7 +372,9 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
             borrowValueUSD,
             currentLeverage,
             healthFactor: matchingPlatform.health_factor,
-            currentAPY: matchingPlatform.net_apy
+            currentAPY: matchingPlatform.net_apy,
+            strategyAddress: matchingPlatform.core_contract || '', // Extract strategy address from portfolio data
+            platform: matchingPlatform
         }
     }
 
@@ -395,6 +411,8 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
             setFlashLoanAmount('0')
             setLeverage(1)
             setNewHealthFactor(0)
+            setWithdrawAmount('0')
+            setIsUnloopMode(false)
         }
     }, [isLoopTxDialogOpen])
 
@@ -578,9 +596,113 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
         return 'text-gray-800'
     }
 
+    const calculateMaxWithdrawable = () => {
+        if (!currentPositionData || !selectedLendToken) return '0'
+        
+        // For unloop, calculate max withdrawable based on leverage change
+        if (positionType === 'decrease' && leverage < currentPositionData.currentLeverage) {
+            try {
+                // Calculate how much we can withdraw when reducing leverage
+                const currentEquityUSD = currentPositionData.collateralValueUSD - currentPositionData.borrowValueUSD
+                const targetCollateralUSD = currentEquityUSD * leverage
+                const targetBorrowUSD = targetCollateralUSD - currentEquityUSD
+                
+                // Calculate the difference in collateral that can be withdrawn
+                const collateralDifferenceUSD = currentPositionData.collateralValueUSD - targetCollateralUSD
+                const collateralDifferenceTokens = collateralDifferenceUSD / (selectedLendToken?.price_usd || 1)
+                
+                return Math.max(0, collateralDifferenceTokens).toFixed(selectedLendToken.decimals || 6)
+            } catch (error) {
+                console.error('Error calculating max withdrawable:', error)
+                return '0'
+            }
+        }
+        
+        // For full close (leverage = 1), return the full collateral amount
+        if (positionType === 'decrease' && leverage === 1) {
+            return currentPositionData.lendAmount.toFixed(selectedLendToken.decimals || 6)
+        }
+        
+        // Default case: return current collateral amount
+        return currentPositionData.lendAmount.toFixed(selectedLendToken.decimals || 6)
+    }
+
+    useEffect(() => {
+        if (positionType === 'decrease' && currentPositionData && leverage !== currentPositionData.currentLeverage) {
+            try {
+                const params = calculateUnloopParameters({
+                    currentLendAmount: currentPositionData.lendAmount.toString(),
+                    currentBorrowAmount: currentPositionData.borrowAmount.toString(),
+                    lendTokenDetails: {
+                        address: selectedLendToken?.address || '',
+                        priceUsd: selectedLendToken?.price_usd || 0,
+                        decimals: selectedLendToken?.decimals || 18,
+                    },
+                    borrowTokenDetails: {
+                        address: selectedBorrowToken?.address || '',
+                        priceUsd: selectedBorrowToken?.price_usd || 0,
+                        decimals: selectedBorrowToken?.decimals || 18,
+                    },
+                    desiredLeverage: leverage,
+                })
+
+                setUnloopParameters(params)
+                
+                // Update the amounts based on calculated parameters
+                const withdrawAmountFormatted = formatUnits(
+                    BigNumber.from(params.withdrawAmount).toBigInt(),
+                    selectedLendToken?.decimals || 18
+                )
+                const repayAmountFormatted = formatUnits(
+                    BigNumber.from(params.repayAmountToken).toBigInt(),
+                    selectedBorrowToken?.decimals || 18
+                )
+
+                setWithdrawAmount(withdrawAmountFormatted)
+                setBorrowAmount(repayAmountFormatted)
+                setBorrowAmountRaw(params.repayAmountToken)
+                setFlashLoanAmount('0') // No flash loan needed for unloop
+
+                console.log('=== Unloop Parameters Calculated ===')
+                console.log('Leverage change from', currentPositionData.currentLeverage, 'to', leverage)
+                console.log('Calculated parameters:', {
+                    withdrawAmount: withdrawAmountFormatted,
+                    repayAmount: repayAmountFormatted,
+                    aTokenAmount: formatUnits(BigNumber.from(params.aTokenAmount).toBigInt(), selectedLendToken?.decimals || 18),
+                    swapDetails: params.swapDetails
+                })
+
+            } catch (error) {
+                console.error('Error calculating unloop parameters:', error)
+                setUnloopParameters(null)
+            }
+        } else if (positionType === 'decrease' && currentPositionData && leverage === currentPositionData.currentLeverage) {
+            // Reset to current position if no leverage change
+            setUnloopParameters(null)
+            setWithdrawAmount('0')
+            setBorrowAmount('0')
+            setBorrowAmountRaw('0')
+            setFlashLoanAmount('0')
+        }
+    }, [positionType, currentPositionData, leverage, selectedLendToken, selectedBorrowToken])
+
+    // Update maxWithdrawable when leverage changes
+    useEffect(() => {
+        if (positionType === 'decrease' && currentPositionData && selectedLendToken) {
+            const newMaxWithdrawable = calculateMaxWithdrawable()
+            setMaxWithdrawable(newMaxWithdrawable)
+        }
+    }, [positionType, currentPositionData, leverage, selectedLendToken])
+
     const handleMaxClick = () => {
         if (selectedLendToken && Number(selectedLendTokenBalance) > 0) {
             setLendAmount(selectedLendTokenBalance)
+        }
+    }
+
+    const handleMaxWithdrawClick = () => {
+        if (positionType === 'decrease' && Number(maxWithdrawable) > 0) {
+            setWithdrawAmount(maxWithdrawable)
         }
     }
 
@@ -610,14 +732,22 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
         (!hasLoopPosition && !Number(lendAmount)) ||
         (maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 0) <= 1
 
-    const isDisabledMaxButton = !isWalletConnected || Number(selectedLendTokenBalance) <= 0
+    const isDisabledMaxButton = !isWalletConnected || 
+        (positionType === 'increase' && Number(selectedLendTokenBalance) <= 0) ||
+        (positionType === 'decrease' && Number(maxWithdrawable) <= 0)
 
     const diableActionButton = !isWalletConnected ||
         !selectedLendToken ||
-        (!lendAmount || Number(lendAmount) <= 0) && !hasLoopPosition ||
-        Number(lendAmount) > Number(selectedLendTokenBalance) ||
+        (positionType === 'increase' && (!lendAmount || Number(lendAmount) <= 0) && !hasLoopPosition) ||
+        (positionType === 'decrease' && (!withdrawAmount || Number(withdrawAmount) <= 0) && leverage === currentPositionData?.currentLeverage && !unloopParameters) ||
+        (positionType === 'increase' && Number(lendAmount) > Number(selectedLendTokenBalance)) ||
+        (positionType === 'decrease' && Number(withdrawAmount) > Number(maxWithdrawable)) ||
+        (isUnloopMode && (!borrowAmount || Number(borrowAmount) <= 0)) ||
         isLoadingBorrowAmount ||
-        isLeverageChanging
+        isLeverageChanging ||
+        (positionType === 'decrease' && Number(maxWithdrawable) <= 0 && leverage === currentPositionData?.currentLeverage) ||
+        (isUnloopMode && isLoadingBorrowAmount) ||
+        (positionType === 'decrease' && !unloopParameters && leverage !== currentPositionData?.currentLeverage) // Only disable if no unloop parameters AND leverage changed
 
     function handleLendAmountChange(amount: string = '') {
         if (!amount.length || !Number(amount)) {
@@ -628,8 +758,45 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
         setLendAmount(amount)
     }
 
+    function handleWithdrawAmountChange(amount: string = '') {
+        setWithdrawAmount(amount)
+    }
+
     const handleClosePosition = () => {
-        console.log('Close position clicked - to be implemented')
+        console.log('=== Close Position Clicked ===')
+        console.log('Current position data:', currentPositionData)
+        
+        if (!currentPositionData) {
+            console.log('No current position data available')
+            return
+        }
+        
+        // For close position, set leverage to 1 (full unloop)
+        setLeverage(1)
+        setPositionType('decrease')
+        
+        // The useEffect above will handle calculating the unloop parameters
+        // and the dialog will open automatically when parameters are ready
+        
+        console.log('Setting leverage to 1 for full position close')
+    }
+
+    // Remove the TokenSelector component and replace with fixed token display for withdraw
+    const getWithdrawTokenDisplay = () => {
+        return (
+            <div className="flex items-center gap-1">
+                <ImageWithDefault
+                    src={selectedLendToken?.logo || ''}
+                    alt={selectedLendToken?.symbol || ''}
+                    width={24}
+                    height={24}
+                    className="rounded-full max-w-[24px] max-h-[24px]"
+                />
+                <BodyText level="body2" weight="medium" className="text-gray-800">
+                    {selectedLendToken?.symbol || 'Select token'}
+                </BodyText>
+            </div>
+        )
     }
 
     const calculateNewPositionData = () => {
@@ -730,6 +897,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                             setPositionType('decrease')
                         }
                         setLendAmount('')
+                        setWithdrawAmount('0')
                         setBorrowAmount('0')
                         setLeverage(roundLeverageUp(currentPositionData?.currentLeverage || 1))
                         setHasUserChangedLeverage(false) 
@@ -752,14 +920,19 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                         <div className="flex justify-between items-center mb-1 px-2">
                             <Label size="medium">
                                 {hasLoopPosition ? 
-                                    (positionType === 'increase' ? 'Add Collateral' : 'Remove Collateral') : 
+                                    (positionType === 'increase' ? 'Add Collateral' : 'Withdraw Amount') : 
                                     'Lend'
                                 }
                             </Label>
                             <BodyText level="body2" weight="normal" className="text-gray-600">
-                                Balance:{' '}
+                                {positionType === 'decrease' ? 'Max Withdrawable:' : 'Balance:'}{' '}
                                 {isLoadingErc20TokensBalanceData ? (
                                     <LoaderCircle className="text-primary w-4 h-4 animate-spin inline" />
+                                ) : positionType === 'decrease' ? (
+                                    handleSmallestValue(
+                                        maxWithdrawable,
+                                        selectedLendToken ? getMaxDecimalsToDisplay(selectedLendToken.symbol) : 2
+                                    )
                                 ) : (
                                     handleSmallestValue(
                                         selectedLendTokenBalance,
@@ -770,11 +943,15 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                         </div>
 
                         <div className="border rounded-5 border-gray-200 py-1 px-4 flex items-center gap-3 bg-gray-100">
-                            <TokenSelector
-                                selectedToken={selectedLendToken}
-                                availableTokens={availableLendTokens}
-                                handleTokenSelect={handTokenSwap}
-                            />
+                            {positionType === 'decrease' ? (
+                                getWithdrawTokenDisplay()
+                            ) : (
+                                <TokenSelector
+                                    selectedToken={selectedLendToken}
+                                    availableTokens={availableLendTokens}
+                                    handleTokenSelect={handTokenSwap}
+                                />
+                            )}
 
                             <BodyText level="body2" weight="normal" className="capitalize text-gray-500">
                                 |
@@ -782,10 +959,10 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
 
                             <div className="flex flex-col flex-1 gap-[4px]">
                                 <CustomNumberInput
-                                    amount={lendAmount}
-                                    setAmount={handleLendAmountChange}
+                                    amount={positionType === 'decrease' ? withdrawAmount : lendAmount}
+                                    setAmount={positionType === 'decrease' ? handleWithdrawAmountChange : handleLendAmountChange}
                                     maxDecimals={selectedLendToken?.decimals || 18}
-                                    title={lendAmount}
+                                    title={positionType === 'decrease' ? withdrawAmount : lendAmount}
                                     placeholder={hasLoopPosition ? "0" : "0"}
                                 />
                             </div>
@@ -793,7 +970,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                             <Button
                                 variant="link"
                                 className="uppercase text-[14px] font-medium"
-                                onClick={handleMaxClick}
+                                onClick={positionType === 'decrease' ? handleMaxWithdrawClick : handleMaxClick}
                                 disabled={isDisabledMaxButton}
                             >
                                 max
@@ -802,7 +979,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                         
                         {hasLoopPosition && (
                             <BodyText level="body3" className="text-gray-500 px-2">
-                                Leave empty to adjust leverage only
+                                {positionType === 'increase' ? 'Leave empty to adjust leverage only' : 'Adjust leverage to calculate withdraw amount'}
                             </BodyText>
                         )}
                     </div>
@@ -883,8 +1060,12 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 title={!isWalletConnected ? 'Connect wallet to enable leverage.' : ''}
                                 value={[leverage]}
                                 min={(() => {
-                                    if (hasLoopPosition && currentPositionData && positionType === 'increase') {
-                                        return roundLeverageUp(currentPositionData.currentLeverage)
+                                    if (hasLoopPosition && currentPositionData) {
+                                        if (positionType === 'increase') {
+                                            return roundLeverageUp(currentPositionData.currentLeverage)
+                                        } else {
+                                            return 1 // In decrease mode, min is 1x
+                                        }
                                     }
                                     return 1
                                 })()}
@@ -893,7 +1074,11 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                         maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 4
                                     )
                                     if (hasLoopPosition && currentPositionData) {
-                                        return Math.min(pairMax, currentPositionData.currentLeverage * 2)
+                                        if (positionType === 'increase') {
+                                            return Math.min(pairMax, currentPositionData.currentLeverage * 2)
+                                        } else {
+                                            return roundLeverageUp(currentPositionData.currentLeverage) // In decrease mode, max is current leverage
+                                        }
                                     }
                                     return pairMax
                                 })()}
@@ -901,8 +1086,13 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 onValueChange={(values) => {
                                     const newValue = values[0]
                                     if (typeof newValue === 'number' && !isNaN(newValue)) {
-                                        if (hasLoopPosition && currentPositionData && positionType === 'increase' && newValue < roundLeverageUp(currentPositionData.currentLeverage)) {
-                                            return
+                                        if (hasLoopPosition && currentPositionData) {
+                                            if (positionType === 'increase' && newValue < roundLeverageUp(currentPositionData.currentLeverage)) {
+                                                return
+                                            }
+                                            if (positionType === 'decrease' && newValue > roundLeverageUp(currentPositionData.currentLeverage)) {
+                                                return
+                                            }
                                         }
                                         setLeverage(roundLeverageUp(newValue))
                                         setHasUserChangedLeverage(true)
@@ -914,15 +1104,21 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                             <div className="flex justify-between mt-3">
                                 <BodyText level="body3" weight="normal" className="text-gray-600">
                                     {(() => {
-                                        if (hasLoopPosition && currentPositionData && positionType === 'increase') {
-                                            return `${roundLeverageUp(currentPositionData.currentLeverage).toFixed(1)}x`
+                                        if (hasLoopPosition && currentPositionData) {
+                                            if (positionType === 'increase') {
+                                                return `${roundLeverageUp(currentPositionData.currentLeverage).toFixed(1)}x`
+                                            } else {
+                                                return '1x'
+                                            }
                                         }
                                         return '1x'
                                     })()}
                                 </BodyText>
                                 <BodyText level="body3" weight="normal" className="text-gray-600">
                                     {hasLoopPosition && currentPositionData
-                                        ? Math.max(currentPositionData.currentLeverage * 2, 4).toFixed(1)
+                                        ? positionType === 'increase' 
+                                            ? Math.max(currentPositionData.currentLeverage * 2, 4).toFixed(1)
+                                            : roundLeverageUp(currentPositionData.currentLeverage).toFixed(1)
                                         : Number(
                                             maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 4
                                           ).toFixed(1)
@@ -930,9 +1126,12 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 </BodyText>
                             </div>
                             
-                            {hasLoopPosition && positionType === 'increase' && (
+                            {hasLoopPosition && (
                                 <BodyText level="body3" className="text-gray-500 px-2 mt-2">
-                                    In increase mode, leverage can only be increased. Switch to decrease mode to reduce leverage.
+                                    {positionType === 'increase' 
+                                        ? 'In increase mode, leverage can only be increased. Switch to decrease mode to reduce leverage.'
+                                        : 'In decrease mode, leverage can only be decreased. Switch to increase mode to add leverage.'
+                                    }
                                 </BodyText>
                             )}
                         </div>
@@ -977,6 +1176,15 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                             {currentPositionData.healthFactor.toFixed(2)}
                                         </BodyText>
                                     </div>
+                                </div>
+                                <div className="flex gap-2 mt-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleClosePosition}
+                                        className="flex-1"
+                                    >
+                                        Close Position
+                                    </Button>
                                 </div>
                             </div>
                         </Card>
@@ -1144,7 +1352,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                     ) : (
                         <ConfirmationDialog
                             disabled={diableActionButton}
-                            positionType="loop"
+                            positionType={isUnloopMode ? "unloop" : (positionType === 'decrease' ? "unloop" : "loop")}
                             loopAssetDetails={{
                                 supplyAsset: {
                                     token: selectedLendToken,
@@ -1173,8 +1381,10 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 lendReserve: loopPair?.lendReserve,
                                 borrowReserve: loopPair?.borrowReserve,
                                 strategy: loopPair?.strategy,
+                                strategyAddress: loopPair?.strategy?.address || '',
+                                unloopParameters: unloopParameters,
                             }}
-                            lendAmount={lendAmount}
+                            lendAmount={positionType === 'decrease' ? withdrawAmount : lendAmount}
                             borrowAmount={borrowAmount}
                             borrowAmountRaw={borrowAmountRaw}
                             flashLoanAmount={flashLoanAmount}
@@ -1185,7 +1395,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 maxToBorrowSCValue: '0',
                                 user: {},
                             }}
-                            setAmount={setLendAmount}
+                            setAmount={positionType === 'decrease' ? setWithdrawAmount : setLendAmount}
                             healthFactorValues={{
                                 healthFactor: hasLoopPosition ? currentPositionData?.healthFactor : 0,
                                 newHealthFactor: Number(borrowAmount) > 0 ? newHealthFactor : null,
@@ -1197,6 +1407,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                             newPositionData={newPositionData}
                             hasLoopPosition={hasLoopPosition}
                             setShouldLogCalculation={setShouldLogCalculation}
+                            unloopParameters={unloopParameters}
                         />
                     )}
                 </CardFooter>

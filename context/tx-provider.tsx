@@ -14,6 +14,8 @@ export type TTxContext = {
     setWithdrawTx: any
     loopTx: TLoopTx
     setLoopTx: any
+    unloopTx: TUnloopTx
+    setUnloopTx: any
     isLendBorrowTxDialogOpen: boolean
     setIsLendBorrowTxDialogOpen: any
     isWithdrawRepayTxDialogOpen: boolean
@@ -73,6 +75,15 @@ const TxInitialState: TTxContext = {
         hasCreditDelegation: false,
     },
     setLoopTx: () => { },
+    unloopTx: {
+        status: 'close_position',
+        hash: '',
+        errorMessage: '',
+        isPending: false,
+        isConfirming: false,
+        isConfirmed: false,
+    },
+    setUnloopTx: () => { },
     setWithdrawTx: () => { },
     isLendBorrowTxDialogOpen: false,
     setIsLendBorrowTxDialogOpen: () => { },
@@ -135,6 +146,15 @@ export type TLoopTx = {
     hasCreditDelegation: boolean
 }
 
+export type TUnloopTx = {
+    status: 'check_strategy' | 'close_position' | 'view'
+    hash: string
+    isPending: boolean
+    isConfirming: boolean
+    isConfirmed: boolean
+    errorMessage: string
+}
+
 export const TxProvider = ({ children }: { children: React.ReactNode }) => {
     const [lendTx, setLendTx] = useState<TLendTx>({
         status: 'approve',
@@ -165,6 +185,15 @@ export const TxProvider = ({ children }: { children: React.ReactNode }) => {
         isConfirming: false,
         isConfirmed: false,
         hasCreditDelegation: false,
+    })
+
+    const [unloopTx, setUnloopTx] = useState<TUnloopTx>({
+        status: 'close_position',
+        hash: '',
+        errorMessage: '',
+        isPending: false,
+        isConfirming: false,
+        isConfirmed: false,
     })
 
     const [repayTx, setRepayTx] = useState<TRepayTx>({
@@ -207,6 +236,8 @@ export const TxProvider = ({ children }: { children: React.ReactNode }) => {
                 setWithdrawTx,
                 loopTx,
                 setLoopTx,
+                unloopTx,
+                setUnloopTx,
                 isLendBorrowTxDialogOpen,
                 setIsLendBorrowTxDialogOpen,
                 isWithdrawRepayTxDialogOpen,

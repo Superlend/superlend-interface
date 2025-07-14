@@ -12,19 +12,27 @@ import LoopEducationSection from './loop-education-section'
 import LoopMetricsCards from './loop-metrics-cards'
 import LoopPositionDetails from './loop-position-details'
 import LoopPerformance from './loop-performance'
-import { abbreviateNumber, roundLeverageUp } from '@/lib/utils'
-import { DollarSign, TrendingUp, TrendingDown, Target, Percent } from 'lucide-react'
+import { abbreviateNumber, roundLeverageUp, cn, convertScientificToNormal, formatTokenAmount, getLowestDisplayValue, hasLowestDisplayValuePrefix, isLowestValue } from '@/lib/utils'
+import { DollarSign, TrendingUp, TrendingDown, Target, Percent, ArrowRightIcon, LoaderCircle } from 'lucide-react'
 import { useAaveV3Data } from '@/hooks/protocols/useAaveV3Data'
 import { ChainId } from '@/types/chain'
 import { AssetsDataContext } from '@/context/data-provider'
 import { TPlatformAsset } from '@/types/platform'
+import { TToken } from '@/types'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import { useLoopOpportunities } from '@/context/loop-opportunities-provider'
 import useGetMidasKpiData from '@/hooks/useGetMidasKpiData'
 import { motion } from 'framer-motion'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
-import { BodyText, Label } from '@/components/ui/typography'
+import { BodyText, Label, HeadingText } from '@/components/ui/typography'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { getRiskFactor, getLiquidationRisk } from '@/lib/utils'
+import { getChainDetails, calculateUnloopParameters } from './helper-functions'
+import { BigNumber } from 'ethers'
+import { formatUnits } from 'ethers/lib/utils'
 
 interface LoopPositionOverviewProps {
     loopPair?: any
@@ -335,6 +343,34 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
 
     const isLoading = isLoadingPlatformData || isLoadingPortfolioData || isLoadingAppleFarmRewards || isLoadingOpportunitiesData
 
+    // Calculate unloop parameters if user has a position
+    const unloopParameters = useMemo(() => {
+        if (!userLoopPosition || !loopPair) return null
+        
+        try {
+            const params = calculateUnloopParameters({
+                currentLendAmount: userLoopPosition.collateralAsset.amount.toString(),
+                currentBorrowAmount: userLoopPosition.borrowAsset.amount.toString(),
+                lendTokenDetails: {
+                    address: userLoopPosition.collateralAsset.token.address,
+                    priceUsd: userLoopPosition.collateralAsset.token.price_usd,
+                    decimals: userLoopPosition.collateralAsset.token.decimals,
+                },
+                borrowTokenDetails: {
+                    address: userLoopPosition.borrowAsset.token.address,
+                    priceUsd: userLoopPosition.borrowAsset.token.price_usd,
+                    decimals: userLoopPosition.borrowAsset.token.decimals,
+                },
+                desiredLeverage: 1, // For position overview, show what would happen if leverage is reduced to 1
+            })
+            
+            return params
+        } catch (error) {
+            console.error('Error calculating unloop parameters for overview:', error)
+            return null
+        }
+    }, [userLoopPosition, loopPair])
+
     const tabs = [
         {
             label: 'Overview',
@@ -401,6 +437,84 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
             />
+            
+            {unloopParameters && (
+                <Card className="p-4 bg-white bg-opacity-60">
+                    <CardHeader className="p-0 pb-3">
+                        <CardTitle className="text-lg font-medium text-gray-800">
+                            Unloop Preview
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <BodyText level="body3" className="text-gray-600">
+                                Repay Amount
+                            </BodyText>
+                            <div className="flex items-center gap-2">
+                                <ImageWithDefault
+                                    src={userLoopPosition?.borrowAsset.token.logo || ''}
+                                    alt={userLoopPosition?.borrowAsset.token.symbol || ''}
+                                    width={16}
+                                    height={16}
+                                    className="rounded-full"
+                                />
+                                <BodyText level="body2" weight="medium" className="text-gray-800">
+                                    {formatUnits(
+                                        BigNumber.from(unloopParameters.repayAmountToken).toBigInt(),
+                                        userLoopPosition?.borrowAsset.token.decimals || 18
+                                    )} {userLoopPosition?.borrowAsset.token.symbol}
+                                </BodyText>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                            <BodyText level="body3" className="text-gray-600">
+                                Withdraw Amount
+                            </BodyText>
+                            <div className="flex items-center gap-2">
+                                <ImageWithDefault
+                                    src={userLoopPosition?.collateralAsset.token.logo || ''}
+                                    alt={userLoopPosition?.collateralAsset.token.symbol || ''}
+                                    width={16}
+                                    height={16}
+                                    className="rounded-full"
+                                />
+                                <BodyText level="body2" weight="medium" className="text-gray-800">
+                                    {formatUnits(
+                                        BigNumber.from(unloopParameters.withdrawAmount).toBigInt(),
+                                        userLoopPosition?.collateralAsset.token.decimals || 18
+                                    )} {userLoopPosition?.collateralAsset.token.symbol}
+                                </BodyText>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                            <BodyText level="body3" className="text-gray-600">
+                                aToken Amount
+                            </BodyText>
+                            <div className="flex items-center gap-2">
+                                <ImageWithDefault
+                                    src={userLoopPosition?.collateralAsset.token.logo || ''}
+                                    alt={userLoopPosition?.collateralAsset.token.symbol || ''}
+                                    width={16}
+                                    height={16}
+                                    className="rounded-full"
+                                />
+                                <BodyText level="body2" weight="medium" className="text-gray-800">
+                                    {formatUnits(
+                                        BigNumber.from(unloopParameters.aTokenAmount).toBigInt(),
+                                        userLoopPosition?.collateralAsset.token.decimals || 18
+                                    )} {userLoopPosition?.collateralAsset.token.symbol}
+                                </BodyText>
+                            </div>
+                        </div>
+                        
+                        <BodyText level="body3" className="text-gray-500">
+                            These are the calculated amounts for a full unloop (leverage = 1x)
+                        </BodyText>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     )
 }

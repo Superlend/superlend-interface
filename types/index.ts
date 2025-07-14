@@ -2,9 +2,9 @@ import { WarningMessages } from '@/constants'
 import { Period } from './periodButtons'
 import { ProtocolType } from './platform'
 
-export type TPositionType = 'all' | 'lend' | 'borrow' | 'loop'
-export type TTransactionType = 'lend' | 'borrow' | 'loop' // Excludes 'all' for transaction operations
-export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay' | 'collateral' | 'loop'
+export type TPositionType = 'all' | 'lend' | 'borrow' | 'loop' | 'unloop'
+export type TTransactionType = 'lend' | 'borrow' | 'loop' | 'unloop' // Excludes 'all' for transaction operations
+export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay' | 'collateral' | 'loop' | 'unloop'
 export type TAddress = `0x${string}`
 
 export type TScAmount = {
@@ -14,6 +14,7 @@ export type TScAmount = {
     lendAmount?: string
     borrowAmount?: string
     flashLoanAmount?: string
+    withdrawAmount?: string
 }
 
 export type TToken = {

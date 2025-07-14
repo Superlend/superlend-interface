@@ -18,6 +18,7 @@ import { TPositionType, TScAmount, TActionType } from '@/types'
 import RepayButton from '../RepayButton'
 import SupplyFluidButton from '../SupplyFluidButton'
 import LoopButton from '../LoopButton'
+import UnloopButton from '../UnloopButton'
 
 interface IActionButtonSelectComponent {
     disabled?: boolean
@@ -76,7 +77,24 @@ const ActionButton = ({
         )
     }
     
-    if (asset.protocol_type === PlatformType.AAVE) {
+    if (actionType === 'unloop') {
+        return (
+            <UnloopButton
+                disabled={disabled}
+                handleCloseModal={handleCloseModal}
+                strategyAddress={asset?.strategyAddress}
+                amount={amount}
+                assetDetails={{
+                    ...asset,
+                    unloopParameters: asset?.unloopParameters
+                }}
+                ctaText={ctaText}
+                isLoading={isLoading}
+            />
+        )
+    }
+    
+    if (asset?.protocol_type === PlatformType.AAVE) {
         if (actionType === 'lend') {
             return (
                 <SupplyAaveButton
@@ -108,7 +126,7 @@ const ActionButton = ({
         }
     }
     
-    if (asset.protocol_type === PlatformType.MORPHO && actionType === 'lend') {
+    if (asset?.protocol_type === PlatformType.MORPHO && actionType === 'lend') {
         return (
             <SupplyMorphoButton
                 disabled={disabled}
@@ -120,7 +138,7 @@ const ActionButton = ({
         )
     }
     
-    if (asset.protocol_type === PlatformType.FLUID && actionType === 'lend') {
+    if (asset?.protocol_type === PlatformType.FLUID && actionType === 'lend') {
         return (
             <SupplyFluidButton
                 disabled={disabled}
