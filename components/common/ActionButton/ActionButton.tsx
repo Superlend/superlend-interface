@@ -88,6 +88,14 @@ const ActionButton = ({
             )
         }
         if (actionType === 'loop') {
+            console.log('ActionButton passing asset details to LoopButton:', {
+                pathTokens: asset.pathTokens,
+                pathFees: asset.pathFees,
+                hasPathTokens: Array.isArray(asset.pathTokens),
+                hasPathFees: Array.isArray(asset.pathFees),
+                pathTokensLength: asset.pathTokens?.length,
+                pathFeesLength: asset.pathFees?.length
+            })
             return (
                 <LoopButton
                     disabled={disabled}

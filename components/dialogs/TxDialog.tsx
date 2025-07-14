@@ -25,6 +25,7 @@ import {
     getLowestDisplayValue,
     hasExponent,
     hasLowestDisplayValuePrefix,
+    roundLeverageUp,
 } from '@/lib/utils'
 import { BodyText, HeadingText, Label } from '@/components/ui/typography'
 import {
@@ -114,6 +115,10 @@ interface IConfirmationDialogProps {
     setOpen: (open: boolean) => void
     setActionType?: (actionType: TPositionType) => void
     leverage?: number
+    currentPositionData?: any
+    newPositionData?: any
+    hasLoopPosition?: boolean
+    setShouldLogCalculation?: (shouldLog: boolean) => void
 }
 
 // MAIN COMPONENT
@@ -136,6 +141,10 @@ export function ConfirmationDialog({
     setOpen,
     setActionType,
     leverage,
+    currentPositionData,
+    newPositionData,
+    hasLoopPosition,
+    setShouldLogCalculation,
 }: IConfirmationDialogProps) {
     const { lendTx, setLendTx, borrowTx, setBorrowTx, withdrawTx, repayTx, loopTx, setLoopTx } =
         useTxContext() as TTxContext
@@ -211,8 +220,15 @@ export function ConfirmationDialog({
     const [isLoadingTradePath, setIsLoadingTradePath] = useState<boolean>(false)
     const [pathTokens, setPathTokens] = useState<string[]>([])
     const [pathFees, setPathFees] = useState<string[]>([])
+    const [lastTradePathKey, setLastTradePathKey] = useState<string>('')
 
-    const assetDetailsForActionButton = positionType === 'loop' ? { ...loopAssetDetails, pathTokens, pathFees } : assetDetails
+    const assetDetailsForActionButton = positionType === 'loop' ? 
+        { 
+            ...loopAssetDetails, 
+            // Explicitly override pathTokens and pathFees with state values
+            pathTokens: pathTokens,
+            pathFees: pathFees
+        } : assetDetails
 
     // Get Discord dialog state
     const lendTxCompleted: boolean = (lendTx.isConfirmed && !!lendTx.hash && lendTx.status === 'view')
@@ -228,53 +244,147 @@ export function ConfirmationDialog({
     }, [open])
 
     useEffect(() => {
-        if (
-            open &&
-            !!loopAssetDetails?.borrowAsset &&
-            !!loopAssetDetails?.supplyAsset &&
-            Number(borrowAmountRaw) > 0
-        ) {
+        // Only run when dialog is open and we have the necessary data
+        if (!open || !loopAssetDetails?.borrowAsset || !loopAssetDetails?.supplyAsset) {
+            return
+        }
+
+        // Check if this is a leverage-only change (no new collateral added)
+        const isLeverageOnlyChange = hasLoopPosition && 
+            currentPositionData && 
+            (Number(lendAmount) === 0 || lendAmount === '') && 
+            leverage !== currentPositionData.currentLeverage
+        
+        // Calculate effective borrow amount for leverage-only changes
+        let effectiveBorrowAmountRaw = borrowAmountRaw
+        
+        if (isLeverageOnlyChange) {
+            // For leverage-only changes, we should use the borrowAmountRaw directly if it's available
+            // This comes from the LoopingWidget's leverage calculation
+            if (Number(borrowAmountRaw) > 0) {
+                effectiveBorrowAmountRaw = borrowAmountRaw
+                console.log('Using borrowAmountRaw for leverage-only change:', borrowAmountRaw)
+            } else if (newPositionData && currentPositionData) {
+                // Fallback: calculate the difference if newPositionData is available
+                const currentBorrowAmount = Number(currentPositionData.borrowAmount)
+                const newBorrowAmount = Number(newPositionData.borrowAmount)
+                const borrowAmountDifference = Math.abs(newBorrowAmount - currentBorrowAmount)
+                
+                // Only proceed if there's a meaningful difference (> 0.000001)
+                if (borrowAmountDifference > 0.000001) {
+                    // Convert to raw amount with proper decimals using parseUnits
+                    const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
+                    
+                    // Format the difference to the correct number of decimal places to prevent parseUnits errors
+                    const formattedDifference = borrowAmountDifference.toFixed(decimals)
+                    effectiveBorrowAmountRaw = parseUnits(formattedDifference, decimals).toString()
+                    console.log('Using calculated difference for leverage-only change:', effectiveBorrowAmountRaw)
+                } else {
+                    // Use a minimal amount for very small differences
+                    const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
+                    effectiveBorrowAmountRaw = parseUnits('0.001', decimals).toString()
+                    console.log('Using minimal amount for leverage-only change:', effectiveBorrowAmountRaw)
+                }
+            } else {
+                // If we don't have enough data, use a minimal amount to ensure trade path is fetched
+                const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
+                effectiveBorrowAmountRaw = parseUnits('0.001', decimals).toString()
+                console.log('Using fallback minimal amount for leverage-only change:', effectiveBorrowAmountRaw)
+            }
+        }
+        
+        // Only fetch trade path if we have a meaningful amount
+        const shouldFetchTradePath = Number(borrowAmountRaw) > 0 || (isLeverageOnlyChange && Number(effectiveBorrowAmountRaw) > 0)
+        
+        // Create a unique key for this trade path request to prevent duplicates
+        const tradePathKey = `${loopAssetDetails?.borrowAsset?.token?.address}-${loopAssetDetails?.supplyAsset?.token?.address}-${effectiveBorrowAmountRaw}`
+        
+        if (shouldFetchTradePath && tradePathKey !== lastTradePathKey && !isLoadingTradePath) {
+            setLastTradePathKey(tradePathKey)
             setIsLoadingTradePath(true)
-            console.log('Getting trade path', loopAssetDetails?.borrowAsset?.token?.address, loopAssetDetails?.supplyAsset?.token?.address, borrowAmountRaw)
+            console.log('Getting trade path', {
+                borrowAsset: loopAssetDetails?.borrowAsset?.token?.address,
+                supplyAsset: loopAssetDetails?.supplyAsset?.token?.address,
+                borrowAmountRaw,
+                effectiveBorrowAmountRaw,
+                isLeverageOnlyChange,
+                tradePathKey,
+                hasNewPositionData: !!newPositionData,
+                hasCurrentPositionData: !!currentPositionData
+            })
+            
             getTradePath(
                 loopAssetDetails?.borrowAsset?.token?.address,
                 loopAssetDetails?.supplyAsset?.token?.address,
-                borrowAmountRaw
+                effectiveBorrowAmountRaw
             )
                 .then((result: any) => {
                     console.log('Trade path result', result)
+                    console.log('Trade path result structure:', {
+                        hasResult: !!result,
+                        hasRoutes: !!result?.routes,
+                        routesLength: result?.routes?.length,
+                        firstRoute: result?.routes?.[0],
+                        poolsLength: result?.routes?.[0]?.pools?.length,
+                        pathLength: result?.routes?.[0]?.path?.length
+                    })
 
-                    if (result.routes[0]?.pools?.length === 1) {
+                    // Ensure we have a valid result and route
+                    if (!result || !result.routes || !result.routes[0] || !result.routes[0].pools) {
+                        console.warn('Invalid trade path result structure, using default values')
                         setPathTokens([])
-                        setPathFees([
-                            result?.routes[0]?.pools[0]?.fee?.toString() ??
-                            '500',
-                        ])
-                    } else if (result.routes[0]?.pools?.length === 2) {
-                        setPathTokens([result?.routes[0]?.path[1]?.address])
-                        setPathFees([
-                            result?.routes[0]?.pools[1]?.fee?.toString() ??
-                            '500',
-                            result?.routes[0]?.pools[0]?.fee?.toString() ??
-                            '500',
-                        ])
-                    } else {
-                        setPathTokens([
-                            result?.routes[0]?.path[2]?.address,
-                            result?.routes[0]?.path[1]?.address,
-                        ])
-                        setPathFees([
-                            result?.routes[0]?.pools[2]?.fee?.toString() ??
-                            '500',
-                            result?.routes[0]?.pools[1]?.fee?.toString() ??
-                            '500',
-                            result?.routes[0]?.pools[0]?.fee?.toString() ??
-                            '500',
-                        ])
+                        setPathFees(['500'])
+                        return
                     }
+
+                    const route = result.routes[0]
+                    const poolsLength = route.pools.length
+
+                    let newPathTokens: string[] = []
+                    let newPathFees: string[] = []
+
+                    if (poolsLength === 1) {
+                        console.log('Setting path for 1 pool (direct swap)')
+                        newPathTokens = []
+                        newPathFees = [route.pools[0]?.fee?.toString() ?? '500']
+                    } else if (poolsLength === 2) {
+                        console.log('Setting path for 2 pools')
+                        newPathTokens = [route.path[1]?.address]
+                        newPathFees = [
+                            route.pools[1]?.fee?.toString() ?? '500',
+                            route.pools[0]?.fee?.toString() ?? '500',
+                        ]
+                    } else if (poolsLength >= 3) {
+                        console.log('Setting path for 3+ pools')
+                        newPathTokens = [
+                            route.path[2]?.address,
+                            route.path[1]?.address,
+                        ]
+                        newPathFees = [
+                            route.pools[2]?.fee?.toString() ?? '500',
+                            route.pools[1]?.fee?.toString() ?? '500',
+                            route.pools[0]?.fee?.toString() ?? '500',
+                        ]
+                    } else {
+                        console.warn('Unexpected pools length:', poolsLength)
+                        newPathTokens = []
+                        newPathFees = ['500']
+                    }
+
+                    console.log('Setting pathTokens and pathFees:', {
+                        pathTokens: newPathTokens,
+                        pathFees: newPathFees
+                    })
+
+                    setPathTokens(newPathTokens)
+                    setPathFees(newPathFees)
                 })
                 .catch((error) => {
                     console.error('Error fetching trade path\n', error)
+                    console.log('Setting default pathTokens and pathFees due to error')
+                    // Set default values on error to ensure transaction can still proceed
+                    setPathTokens([])
+                    setPathFees(['500'])
                 })
                 .finally(() => {
                     setIsLoadingTradePath(false)
@@ -283,12 +393,23 @@ export function ConfirmationDialog({
                         hasCreditDelegation: true,
                     }))
                 })
+        } else if (!shouldFetchTradePath) {
+            // Reset loading state and clear the last key if we don't need to fetch
+            setIsLoadingTradePath(false)
+            setLastTradePathKey('')
         }
     }, [
         open,
         loopAssetDetails?.borrowAsset?.token?.address,
         loopAssetDetails?.supplyAsset?.token?.address,
         borrowAmountRaw,
+        // Use more stable identifiers instead of the full objects
+        hasLoopPosition,
+        currentPositionData?.currentLeverage,
+        currentPositionData?.borrowAmount,
+        leverage,
+        lendAmount,
+        newPositionData?.borrowAmount, // Add this to ensure we re-fetch when newPositionData changes
     ])
 
     function resetLendBorrowTx() {
@@ -352,14 +473,82 @@ export function ConfirmationDialog({
                 amount === '' ? '0' : amount,
                 loopAssetDetails?.borrowAsset?.token?.decimals ?? 0
             ).toString()
-            return {
+            
+            // Check if this is a leverage-only change (no new collateral added)
+            const isLeverageOnlyChange = hasLoopPosition && 
+                currentPositionData && 
+                (Number(lendAmount) === 0 || lendAmount === '') && 
+                leverage !== currentPositionData.currentLeverage
+            
+            let effectiveLendAmount = lendAmount
+            let effectiveBorrowAmount = borrowAmount
+            let effectiveFlashLoanAmount = flashLoanAmount
+            
+            // Only log when loop button is actually pressed
+            if (loopTx.status !== 'check_strategy') {
+                console.log('=== Loop Call Parameters (Button Pressed) ===')
+                console.log('Input amounts:', {
+                    lendAmount,
+                    borrowAmount,
+                    flashLoanAmount,
+                    leverage,
+                    isLeverageOnlyChange
+                })
+            }
+            
+            if (isLeverageOnlyChange) {
+                // For leverage-only changes, we don't add new collateral (keep lendAmount as 0)
+                // But we need to calculate the position adjustments
+                effectiveLendAmount = '0' // Keep as 0 for approval
+                
+                if (newPositionData) {
+                    // Calculate total borrow amount for new position
+                    const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
+                    const currentBorrowAmount = Number(currentPositionData.borrowAmount)
+                    const borrowAmountFormatted = Number(newPositionData.borrowAmount)
+                    const borrowAmountDifference = borrowAmountFormatted - currentBorrowAmount
+                    // console.log('borrowAmountDifference', borrowAmountDifference)
+                    effectiveBorrowAmount = borrowAmountDifference.toFixed(decimals)
+                    
+                    // For leverage-only, flash loan comes from existing collateral rebalancing
+                    const currentCollateral = currentPositionData.lendAmount
+                    const newCollateral = newPositionData.lendAmount
+                    const collateralDifference = newCollateral - currentCollateral
+                    
+                    if (collateralDifference > 0) {
+                        // Need more collateral - flash loan
+                        const supplyDecimals = loopAssetDetails?.supplyAsset?.token?.decimals ?? 18
+                        effectiveFlashLoanAmount = Number(collateralDifference).toFixed(supplyDecimals)
+                    } else {
+                        // Reducing collateral - no flash loan needed
+                        effectiveFlashLoanAmount = '0'
+                    }
+                }
+                
+                if (loopTx.status !== 'check_strategy') {
+                    console.log('Leverage-only change calculated amounts:', {
+                        effectiveLendAmount, // Should be 0
+                        effectiveBorrowAmount,
+                        effectiveFlashLoanAmount
+                    })
+                }
+            }
+            
+            const finalParams = {
                 amountRaw: amount,
                 scValue: amount,
                 amountParsed,
-                lendAmount: lendAmount,
-                borrowAmount: borrowAmount,
-                flashLoanAmount: flashLoanAmount,
+                lendAmount: effectiveLendAmount,
+                borrowAmount: effectiveBorrowAmount,
+                flashLoanAmount: effectiveFlashLoanAmount,
             }
+            
+            if (loopTx.status !== 'check_strategy') {
+                console.log('Final parameters for loop call:', finalParams)
+                console.log('=== End Loop Call Parameters ===')
+            }
+            
+            return finalParams
         }
         return { amountRaw: '0', scValue: '0', amountParsed: '0' }
     }
@@ -373,6 +562,15 @@ export function ConfirmationDialog({
             if (lendTx.errorMessage || borrowTx.errorMessage || loopTx.errorMessage) {
                 resetLendBorrowTx()
             }
+            
+            // Reset trade path state for fresh calculations
+            setLastTradePathKey('')
+            setIsLoadingTradePath(false)
+            
+            // Set shouldLogCalculation for loop transactions when dialog opens
+            if (positionType === 'loop' && setShouldLogCalculation) {
+                setShouldLogCalculation(false)
+            }
         } else {
             // When closing the dialog, reset the amount and the tx status
             if (lendTx.status !== 'approve' || borrowTx.status !== 'borrow' || loopTx.status !== 'approve') {
@@ -381,6 +579,15 @@ export function ConfirmationDialog({
                 setTimeout(() => {
                     resetLendBorrowTx()
                 }, 500)
+            }
+            
+            // Reset trade path state when dialog closes
+            setLastTradePathKey('')
+            setIsLoadingTradePath(false)
+            
+            // Reset shouldLogCalculation when dialog closes
+            if (positionType === 'loop' && setShouldLogCalculation) {
+                setShouldLogCalculation(false)
             }
         }
     }
@@ -727,6 +934,45 @@ export function ConfirmationDialog({
         </>
     )
 
+    // Calculate effective amounts for loop positions
+    const getEffectiveLendAmount = () => {
+        if (positionType !== 'loop' || !hasLoopPosition || !currentPositionData || !newPositionData) {
+            return lendAmount
+        }
+        
+        // Calculate the total change in collateral
+        const collateralChange = newPositionData.lendAmount - currentPositionData.lendAmount
+        return collateralChange.toString()
+    }
+
+    const getEffectiveBorrowAmount = () => {
+        if (positionType !== 'loop' || !hasLoopPosition || !currentPositionData || !newPositionData) {
+            return borrowAmount
+        }
+        
+        // Calculate the total change in borrow amount
+        const borrowChange = newPositionData.borrowAmount - currentPositionData.borrowAmount
+        return Math.abs(borrowChange).toString()
+    }
+
+    const getEffectiveLendAmountUsd = () => {
+        if (positionType !== 'loop') {
+            return inputUsdAmount
+        }
+        
+        const effectiveAmount = Number(getEffectiveLendAmount())
+        return effectiveAmount * Number(loopAssetDetails?.supplyAsset?.token?.price_usd ?? 0)
+    }
+
+    const getEffectiveBorrowAmountUsd = () => {
+        if (positionType !== 'loop') {
+            return 0
+        }
+        
+        const effectiveAmount = Number(getEffectiveBorrowAmount())
+        return effectiveAmount * Number(loopAssetDetails?.borrowAsset?.token?.price_usd ?? 0)
+    }
+
     // SUB_COMPONENT: Content body UI
     const contentBody = (
         <div className="flex flex-col gap-3 max-w-full overflow-hidden">
@@ -735,8 +981,8 @@ export function ConfirmationDialog({
             {isShowBlock({
                 lend: true,
                 borrow: true,
-                // Show for loop only if the user supplied a non-zero amount
-                loop: Number(lendAmount) > 0,
+                // Show for loop if there's any collateral change or new lend amount
+                loop: Number(lendAmount) > 0 || (hasLoopPosition && currentPositionData && newPositionData && Math.abs(newPositionData.lendAmount - currentPositionData.lendAmount) > 0.000001),
             }) && (
                     getSelectedAssetDetailsUI({
                         tokenLogo: assetDetails?.asset?.token?.logo || loopAssetDetails?.supplyAsset?.token?.logo || '',
@@ -745,15 +991,15 @@ export function ConfirmationDialog({
                         chainLogo: chainDetails?.logo || '',
                         chainName: chainDetails?.name || '',
                         platformName: assetDetails?.name || loopAssetDetails?.name || '',
-                        tokenAmountInUsd: positionType === 'loop' ? lendInputUsdAmount : inputUsdAmount,
-                        tokenAmount: positionType === 'loop' ? lendAmount : amount,
+                        tokenAmountInUsd: positionType === 'loop' ? getEffectiveLendAmountUsd() : inputUsdAmount,
+                        tokenAmount: positionType === 'loop' ? getEffectiveLendAmount() : amount,
                     })
                 )}
             {/* Block 2 - Loop Borrow Asset Details */}
             {/* Asset detail for borrow token */}
             {isShowBlock({
-                // Show this block only if a borrow amount is present (> 0)
-                loop: Number(borrowAmount) > 0,
+                // Show this block if there's any borrow amount change
+                loop: Number(borrowAmount) > 0 || (hasLoopPosition && currentPositionData && newPositionData && Math.abs(newPositionData.borrowAmount - currentPositionData.borrowAmount) > 0.000001),
             }) && (
                     getSelectedAssetDetailsUI({
                         tokenLogo: loopAssetDetails?.borrowAsset?.token?.logo || '',
@@ -762,8 +1008,8 @@ export function ConfirmationDialog({
                         chainLogo: chainDetails?.logo || '',
                         chainName: chainDetails?.name || '',
                         platformName: loopAssetDetails?.name || '',
-                        tokenAmountInUsd: borrowInputUsdAmount,
-                        tokenAmount: borrowAmount,
+                        tokenAmountInUsd: getEffectiveBorrowAmountUsd(),
+                        tokenAmount: getEffectiveBorrowAmount(),
                     })
                 )}
             {/* Block 3 */}
@@ -807,70 +1053,86 @@ export function ConfirmationDialog({
                                 Leverage
                             </BodyText>
                             <Badge variant="secondary">
-                                {leverage}x
+                                {roundLeverageUp(typeof leverage === 'number' ? leverage : 1).toFixed(1)}x
                             </Badge>
                         </div>
                     )}
+
+                {/* Position Changes Preview for Loop - Show when user has a position */}
                 {isShowBlock({
-                    lend: !isMorphoMarkets,
-                    borrow: true,
+                    loop: hasLoopPosition && currentPositionData && newPositionData && (Number(lendAmount) > 0 || Number(leverage) !== currentPositionData.currentLeverage),
                 }) && (
-                        <div className="flex items-center justify-between w-full py-3">
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                Current APY
-                            </BodyText>
-                            <Badge variant="green">
-                                {abbreviateNumber(
-                                    isLendPositionType
-                                        ? Number(
-                                            (assetDetails?.asset?.supply_apy) ??
-                                            0
-                                        )
-                                        : Number(
-                                            (assetDetails?.asset?.variable_borrow_apy) ??
-                                            0
-                                        )
-                                )}
-                                %
-                            </Badge>
-                        </div>
+                        <>
+                            {/* <div className="w-full border-t border-gray-300 my-3"></div> */}
+                            <div className="flex flex-col gap-3 w-full">
+                                <BodyText level="body2" weight="medium" className="text-gray-800">
+                                    Position Changes Preview
+                                </BodyText>
+                                
+                                {/* Collateral Change */}
+                                <div className="flex items-center justify-between">
+                                    <BodyText level="body3" className="text-gray-600">
+                                        Total Collateral
+                                    </BodyText>
+                                    <div className="flex items-center gap-2">
+                                        <BodyText level="body3" className="text-gray-800">
+                                            {(currentPositionData.lendAmount || 0).toFixed(4)} {loopAssetDetails?.supplyAsset?.token?.symbol}
+                                        </BodyText>
+                                        {currentPositionData.lendAmount?.toFixed(4) !== newPositionData.lendAmount?.toFixed(4) && (
+                                            <>
+                                                <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                                <BodyText level="body3" className="text-gray-800">
+                                                    {(newPositionData.lendAmount || 0).toFixed(4)} {loopAssetDetails?.supplyAsset?.token?.symbol}
+                                                </BodyText>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Borrowed Change */}
+                                <div className="flex items-center justify-between">
+                                    <BodyText level="body3" className="text-gray-600">
+                                        Total Borrowed
+                                    </BodyText>
+                                    <div className="flex items-center gap-2">
+                                        <BodyText level="body3" className="text-gray-800">
+                                            {(currentPositionData.borrowAmount || 0).toFixed(4)} {loopAssetDetails?.borrowAsset?.token?.symbol}
+                                        </BodyText>
+                                        {currentPositionData.borrowAmount?.toFixed(4) !== newPositionData.borrowAmount?.toFixed(4) && (
+                                            <>
+                                                <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                                <BodyText level="body3" className="text-gray-800">
+                                                    {(newPositionData.borrowAmount || 0).toFixed(4)} {loopAssetDetails?.borrowAsset?.token?.symbol}
+                                                </BodyText>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Leverage Change */}
+                                <div className="flex items-center justify-between">
+                                    <BodyText level="body3" className="text-gray-600">
+                                        Leverage
+                                    </BodyText>
+                                    <div className="flex items-center gap-2">
+                                        <BodyText level="body3" className="text-gray-800">
+                                            {roundLeverageUp(currentPositionData.currentLeverage || 1).toFixed(1)}x
+                                        </BodyText>
+                                        {roundLeverageUp(currentPositionData.currentLeverage || 1).toFixed(1) !== roundLeverageUp(newPositionData.leverage || 1).toFixed(1) && (
+                                            <>
+                                                <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                                <BodyText level="body3" className="text-gray-800">
+                                                    {roundLeverageUp(newPositionData.leverage || 1).toFixed(1)}x
+                                                </BodyText>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            {/* <div className="w-full border-t border-gray-300 my-3"></div>/ */}
+                        </>
                     )}
-                {/* {isShowBlock({
-                    lend: !isMorphoMarkets,
-                    borrow: true,
-                }) && (
-                        <div className="flex items-center justify-between w-full py-3">
-                            <BodyText
-                                level="body2"
-                                weight="normal"
-                                className="text-gray-600"
-                            >
-                                7D Avg APY
-                            </BodyText>
-                            <Badge variant="green">
-                                {abbreviateNumber(
-                                    isLendPositionType
-                                        ? Number(
-                                            (assetDetails?.asset
-                                                ?.variable_borrow_apy ||
-                                                assetDetails?.variable_borrow_apy) ??
-                                            0
-                                        )
-                                        : Number(
-                                            (assetDetails?.asset
-                                                ?.variable_borrow_apy ||
-                                                assetDetails?.variable_borrow_apy) ??
-                                            0
-                                        )
-                                )}
-                                %
-                            </Badge>
-                        </div>
-                    )} */}
+
                 {isShowBlock({
                     borrow:
                         borrowTx.status === 'borrow' ||
@@ -1336,10 +1598,10 @@ export function ConfirmationDialog({
                                         Approval successful
                                     </BodyText>
                                 </div>
-                                {loopTx.hash && loopTx.status === 'approve' && (
+                                {(loopTx.approveHash || loopTx.hash) && (loopTx.status === 'approve' || loopTx.status === 'open_position' || loopTx.status === 'view') && (
                                     <ExternalLink
                                         href={getExplorerLink(
-                                            loopTx.hash,
+                                            loopTx.approveHash || loopTx.hash,
                                             loopAssetDetails?.chain_id ?? 1
                                         )}
                                     >
@@ -1570,7 +1832,20 @@ export function ConfirmationDialog({
                 ctaText={isLoadingTradePath ? 'Fetching trade path...' : null}
                 isLoading={isLoadingTradePath}
                 handleCloseModal={handleOpenChange}
-                asset={assetDetailsForActionButton}
+                asset={(() => {
+                    const finalAsset = assetDetailsForActionButton
+                    if (positionType === 'loop' && finalAsset && 'pathTokens' in finalAsset && 'pathFees' in finalAsset) {
+                        console.log('ActionButton asset details for loop:', {
+                            pathTokens: finalAsset.pathTokens,
+                            pathFees: finalAsset.pathFees,
+                            hasPathTokens: Array.isArray(finalAsset.pathTokens),
+                            hasPathFees: Array.isArray(finalAsset.pathFees),
+                            pathTokensLength: finalAsset.pathTokens?.length,
+                            pathFeesLength: finalAsset.pathFees?.length
+                        })
+                    }
+                    return finalAsset
+                })()}
                 amount={getActionButtonAmount()}
                 setActionType={setActionType}
                 actionType={positionType === 'all' ? 'lend' : positionType as Exclude<TPositionType, 'all'>}

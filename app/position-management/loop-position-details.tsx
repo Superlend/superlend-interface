@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { BodyText, HeadingText } from '@/components/ui/typography'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, abbreviateNumber, getRiskFactor, getLiquidationRisk, convertScientificToNormal, isLowestValue, getLowestDisplayValue, hasLowestDisplayValuePrefix, formatTokenAmount } from '@/lib/utils'
+import { cn, abbreviateNumber, getRiskFactor, getLiquidationRisk, convertScientificToNormal, isLowestValue, getLowestDisplayValue, hasLowestDisplayValuePrefix, formatTokenAmount, roundLeverageUp } from '@/lib/utils'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
@@ -88,16 +88,16 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
         ? baseSupplyAPY + appleFarmRewardAPY 
         : loopData.collateralAsset.apy 
 
-    console.log('Position Details APY calculation:', {
-        tokenSymbol: loopData.collateralAsset.token.symbol,
-        tokenAddress: loopData.collateralAsset.token.address,
-        opportunityAPY,
-        baseSupplyAPY,
-        appleFarmRewardAPY,
-        enhancedSupplyAPY,
-        originalApy: loopData.collateralAsset.apy,
-        baseApy: loopData.collateralAsset.baseApy
-    })
+    // console.log('Position Details APY calculation:', {
+    //     tokenSymbol: loopData.collateralAsset.token.symbol,
+    //     tokenAddress: loopData.collateralAsset.token.address,
+    //     opportunityAPY,
+    //     baseSupplyAPY,
+    //     appleFarmRewardAPY,
+    //     enhancedSupplyAPY,
+    //     originalApy: loopData.collateralAsset.apy,
+    //     baseApy: loopData.collateralAsset.baseApy
+    // })
 
     // Calculate risk metrics
     const liquidationPercentage = (loopData.positionLTV / loopData.liquidationLTV) * 100
@@ -411,7 +411,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
                                     <InfoTooltip content={`Your current leverage multiplier for this position${loopData.hasMultiplePositions ? '. This calculation may be approximate due to multiple positions on the platform.' : ''}`} />
                                 </div>
                                 <HeadingText level="h4" weight="medium" className="text-primary">
-                                    {loopData.currentLeverage}x
+                                    {roundLeverageUp(loopData.currentLeverage).toFixed(1)}x
                                 </HeadingText>
                             </div>
                             

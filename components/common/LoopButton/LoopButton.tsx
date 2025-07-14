@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import {
     BaseError,
     useAccount,
@@ -64,10 +64,13 @@ const LoopButton = ({
     const { logEvent } = useAnalytics()
     const { isWalletConnected, walletAddress } = useWalletConnection()
     const {
+        writeContract,
         writeContractAsync,
         isPending,
         data: hash,
         error,
+        status,
+        reset,
     } = useWriteContract()
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
         useWaitForTransactionReceipt({
@@ -86,7 +89,31 @@ const LoopButton = ({
     const [strategyAddress, setStrategyAddress] = useState<string>('')
     const [hasExistingStrategy, setHasExistingStrategy] = useState<boolean>(false)
     const [isProcessingFlow, setIsProcessingFlow] = useState<boolean>(false)
+    const [isApproved, setIsApproved] = useState<boolean>(false)
     const isDisabledCta = loopTx.isPending || loopTx.isConfirming || disabled || !isWalletConnected
+
+    const assetDetailsRef = useRef(assetDetails);
+    useEffect(() => {
+        assetDetailsRef.current = assetDetails;
+    }, [assetDetails]);
+
+    const amountRef = useRef(amount);
+    useEffect(() => {
+        amountRef.current = amount;
+    }, [amount]);
+
+    // Debug: Log assetDetails when they change
+    useEffect(() => {
+        console.log('LoopButton received assetDetails:', {
+            pathTokens: assetDetails?.pathTokens,
+            pathFees: assetDetails?.pathFees,
+            hasPathTokens: Array.isArray(assetDetails?.pathTokens),
+            hasPathFees: Array.isArray(assetDetails?.pathFees),
+            pathTokensLength: assetDetails?.pathTokens?.length,
+            pathFeesLength: assetDetails?.pathFees?.length,
+            allKeys: Object.keys(assetDetails || {})
+        })
+    }, [assetDetails?.pathTokens, assetDetails?.pathFees])
 
     // Calculate eMode value based on loop pair data
     const eModeValue = useMemo(() => {
@@ -164,86 +191,8 @@ const LoopButton = ({
             isConfirming: isConfirming,
             isConfirmed: isConfirmed,
         }))
-    }, [isPending, isConfirming, isConfirmed])
+    }, [isPending, isConfirming, isConfirmed, setLoopTx])
 
-    // Handle transaction completion and progression
-    useEffect(() => {
-        if (!hash || !isConfirmed || isPending || isConfirming) return
-
-        const handleTransactionCompletion = async () => {
-            if (loopTx.status === 'approve') {
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    hash: hash,
-                    status: 'open_position',
-                }))
-                
-                // Wait a bit to show approval success, then move to open position
-                setTimeout(async () => {
-                    await onOpenPosition()
-                }, 1000)
-            } else if (loopTx.status === 'create_strategy') {
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    hash: hash,
-                }))
-                
-                // Wait a bit to show strategy creation success, then move to approval
-                setTimeout(async () => {
-                    // Refetch strategy address after creation
-                    const { data: newStrategyAddress } = await refetchStrategy()
-                    if (newStrategyAddress && newStrategyAddress !== '0x0000000000000000000000000000000000000000') {
-                        setStrategyAddress(newStrategyAddress as string)
-                        await onApproveSupply(newStrategyAddress as string)
-                    }
-                }, 1000)
-            } else if (loopTx.status === 'open_position') {
-                setLoopTx((prev: TLoopTx) => ({
-                    ...prev,
-                    hash: hash,
-                    status: 'view',
-                }))
-
-                logEvent('loop_completed', {
-                    amount: amount.amountRaw,
-                    token_symbol: assetDetails?.supplyAsset?.token?.symbol,
-                    platform_name: assetDetails?.name,
-                    chain_name:
-                        CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                    wallet_address: walletAddress,
-                })
-                
-                setIsProcessingFlow(false)
-            }
-        }
-
-        handleTransactionCompletion()
-    }, [hash, isConfirmed, isPending, isConfirming, loopTx.status])
-
-    // Handle transaction cancellation/failure - only for actual blockchain transactions
-    useEffect(() => {
-        const isActualTransaction = loopTx.status === 'approve' || loopTx.status === 'create_strategy' || loopTx.status === 'open_position'
-        
-        if (
-            isActualTransaction &&
-            !isPending &&
-            !isConfirming &&
-            !isConfirmed &&
-            !hash &&
-            loopTx.status !== 'view' &&
-            (loopTx.isPending || loopTx.isConfirming) &&
-            !loopTx.hash // Don't trigger cancellation if we have a success hash
-        ) {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                isPending: false,
-                isConfirming: false,
-                isConfirmed: false,
-                errorMessage: 'Transaction was cancelled because the action was not confirmed in your wallet',
-            }))
-            setIsProcessingFlow(false)
-        }
-    }, [isPending, isConfirming, isConfirmed, hash, loopTx.isPending, loopTx.isConfirming, loopTx.status, loopTx.hash])
 
     // Check wallet connection before executing any transaction
     const checkWalletConnection = () => {
@@ -262,7 +211,7 @@ const LoopButton = ({
     }
 
     // Helper function to handle transaction errors
-    const handleTransactionError = (error: any, status: string) => {
+    const handleTransactionError = useCallback((error: any, status: string) => {
         const isUserRejection = error?.message?.includes('User rejected') ||
             error?.message?.includes('user rejected') ||
             error?.code === 4001 ||
@@ -291,7 +240,7 @@ const LoopButton = ({
             }))
         }
         setIsProcessingFlow(false)
-    }
+    }, [setLoopTx])
 
     // Use useReadContract to check for existing strategy
     const { data: existingStrategyAddress, refetch: refetchStrategy } = useReadContract({
@@ -301,17 +250,230 @@ const LoopButton = ({
         args: walletAddress ? [
             walletAddress,
             poolContractAddress,
-            assetDetails?.supplyAsset?.token?.address,
-            assetDetails?.borrowAsset?.token?.address,
+            assetDetailsRef.current?.supplyAsset?.token?.address,
+            assetDetailsRef.current?.borrowAsset?.token?.address,
             eModeValue
         ] : undefined,
         query: {
-            enabled: !!walletAddress && !!assetDetails?.supplyAsset?.token?.address
+            enabled: !!walletAddress && !!assetDetailsRef.current?.supplyAsset?.token?.address
         }
     })
 
+    // Step 4: Open position through strategy contract
+    const onOpenPosition = useCallback(async () => {
+        if (!checkWalletConnection()) return
+
+        try {
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                status: 'open_position',
+                hash: '',
+                errorMessage: '',
+            }))
+
+            const supplyAmount = parseUnits(
+                amountRef.current?.lendAmount?.toString() ?? '0',
+                assetDetailsRef.current?.supplyAsset?.token?.decimals ?? 18
+            )
+            const flashLoanAmount = parseUnits(
+                amountRef.current?.flashLoanAmount?.toString() ?? '0',
+                assetDetailsRef.current?.supplyAsset?.token?.decimals ?? 18
+            )
+            const delegationAmount = parseUnits(
+                amountRef.current?.borrowAmount?.toString() ?? '0',
+                assetDetailsRef.current?.borrowAsset?.token?.decimals ?? 18
+            )
+
+            console.log('=== Opening Loop Position ===')
+            console.log('Contract call parameters:', {
+                supplyAmount: supplyAmount.toString(),
+                flashLoanAmount: flashLoanAmount.toString(),
+                delegationAmount: delegationAmount.toString(),
+                delegationWith20Percent: delegationAmount.mul(120).div(100).toString(),
+                pathTokens: assetDetailsRef.current.pathTokens || [],
+                pathFees: assetDetailsRef.current.pathFees || []
+            })
+
+            await writeContractAsync({
+                address: strategyAddress as `0x${string}`,
+                abi: STRATEGY_ABI,
+                functionName: 'openPosition',
+                args: [
+                    supplyAmount.toBigInt(),
+                    flashLoanAmount.toBigInt(),
+                    assetDetailsRef.current.pathTokens || [],
+                    assetDetailsRef.current.pathFees || [],
+                    delegationAmount.mul(120).div(100).toBigInt()
+                ],
+            })
+        } catch (error: any) {
+            console.error('onOpenPosition error', error)
+            handleTransactionError(error, 'open_position')
+        }
+    }, [
+        strategyAddress, 
+        walletAddress, 
+        setLoopTx, 
+        writeContractAsync, 
+        handleTransactionError
+    ])
+
+    // Step 2: Approve yield token to strategy contract
+    const onApproveSupply = useCallback(async (strategyAddr: string) => {
+        if (!checkWalletConnection()) return
+
+        try {
+            if (!strategyAddr) {
+                throw new Error('No strategy address available for approval')
+            }
+
+            const decimals = assetDetailsRef.current?.supplyAsset?.token?.decimals ?? 18
+            const lendAmountToApprove = amountRef.current?.lendAmount?.toString() ?? '0'
+            
+            // If lendAmount is 0 or empty, skip approval and go directly to position opening
+            if (Number(lendAmountToApprove) === 0 || lendAmountToApprove === '') {
+                console.log('Skipping approval - no new collateral to approve (leverage-only change)')
+                
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    status: 'approve',
+                    hash: 'approval_skipped',
+                    approveHash: 'approval_skipped',
+                    isPending: false,
+                    isConfirming: false,
+                    isConfirmed: false,
+                }))
+                
+                // Wait a bit to show the skipped status, then proceed to open position
+                setTimeout(async () => {
+                    setLoopTx((prev: TLoopTx) => ({
+                        ...prev,
+                        status: 'open_position',
+                        hash: '',
+                    }))
+                    await onOpenPosition()
+                }, 1000)
+                
+                return
+            }
+
+            // Round the amount to the token's decimal places to avoid precision errors
+            const roundedAmount = Number(lendAmountToApprove).toFixed(decimals)
+            const parsedLendAmountBn = parseUnits(roundedAmount, decimals)
+            const approveAmount = parsedLendAmountBn.toBigInt()
+
+            logEvent('approve_loop_initiated', {
+                amount: amountRef.current?.lendAmount ?? '0',
+                token_symbol: assetDetailsRef.current?.supplyAsset?.token?.symbol ?? '',
+                platform_name: assetDetailsRef.current?.name ?? '',
+                chain_name:
+                    CHAIN_ID_MAPPER[Number(assetDetailsRef.current?.chain_id) as ChainId],
+                wallet_address: walletAddress,
+            })
+
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                status: 'approve',
+                hash: '',
+                errorMessage: '',
+            }))
+
+            console.log('Approving token to strategy:', strategyAddr, 'Amount:', roundedAmount)
+
+            try {
+                // 1) Try a direct approve first – many tokens allow increasing directly
+                await writeContractAsync({
+                    address: underlyingAssetAdress,
+                    abi: AAVE_APPROVE_ABI,
+                    functionName: 'approve',
+                    args: [strategyAddr, approveAmount],
+                })
+            } catch (directError: any) {
+                console.warn('Direct approve failed, attempting safeApprove reset-flow', directError?.message)
+
+                // 2) reset allowance to 0 (required by non-standard ERC-20 tokens)
+                await writeContractAsync({
+                    address: underlyingAssetAdress,
+                    abi: AAVE_APPROVE_ABI,
+                    functionName: 'approve',
+                    args: [strategyAddr, BigInt(0)],
+                })
+
+                // 3) approve desired amount
+                await writeContractAsync({
+                    address: underlyingAssetAdress,
+                    abi: AAVE_APPROVE_ABI,
+                    functionName: 'approve',
+                    args: [strategyAddr, approveAmount],
+                })
+            }
+        } catch (error: any) {
+            console.error('onApproveSupply error', error)
+            handleTransactionError(error, 'approve')
+        }
+    }, [
+        walletAddress,
+        underlyingAssetAdress,
+        logEvent,
+        setLoopTx,
+        writeContractAsync,
+        onOpenPosition,
+        handleTransactionError
+    ])
+    
+    // Step 3: Create strategy (only if needed)
+    const onCreateStrategy = useCallback(async () => {
+        if (!checkWalletConnection()) return
+
+        const createStrategyParams = {
+            loopingLeverage: LOOPING_LEVERAGE_ADDRESS,
+            pool: poolContractAddress,
+            yieldAsset: assetDetailsRef.current.supplyAsset.token.address,
+            debtAsset: assetDetailsRef.current.borrowAsset.token.address,
+            eMode: eModeValue
+        }
+
+        console.log('Creating strategy with params:', createStrategyParams)
+
+        try {
+            setLoopTx((prev: TLoopTx) => ({
+                ...prev,
+                status: 'create_strategy',
+                hash: '',
+                errorMessage: '',
+            }))
+
+            await writeContractAsync({
+                address: STRATEGY_FACTORY_ADDRESS as `0x${string}`,
+                abi: STRATEGY_FACTORY_ABI,
+                functionName: 'createStrategy',
+                args: [
+                    createStrategyParams.loopingLeverage,
+                    createStrategyParams.pool,
+                    createStrategyParams.yieldAsset,
+                    createStrategyParams.debtAsset,
+                    createStrategyParams.eMode
+                ],
+            })
+
+            console.log('Strategy creation transaction sent')
+
+        } catch (error: any) {
+            console.error('onCreateStrategy error', error)
+            handleTransactionError(error, 'create_strategy')
+        }
+    }, [
+        walletAddress,
+        poolContractAddress,
+        eModeValue,
+        setLoopTx,
+        writeContractAsync,
+        onApproveSupply,
+        handleTransactionError
+    ])
+    
     // Step 1: Check if user has existing strategy
-    const onCheckStrategy = async () => {
+    const onCheckStrategy = useCallback(async () => {
         if (!checkWalletConnection()) return
 
         try {
@@ -376,171 +538,101 @@ const LoopButton = ({
             console.error('onCheckStrategy error', error)
             handleTransactionError(error, 'check_strategy')
         }
-    }
+    }, [
+        walletAddress,
+        refetchStrategy,
+        eModeValue,
+        setLoopTx,
+        onApproveSupply,
+        onCreateStrategy,
+        handleTransactionError
+    ])
 
-    // Step 2: Approve yield token to strategy contract
-    const onApproveSupply = async (strategyAddr: string) => {
-        if (!checkWalletConnection()) return
+    // Handle transaction completion and progression
+    useEffect(() => {
+        if (!hash || !isConfirmed || isPending || isConfirming) return
 
-        try {
-            if (!strategyAddr) {
-                throw new Error('No strategy address available for approval')
+        const handleTransactionCompletion = async () => {
+            if (loopTx.status === 'approve' && !isApproved) {
+                setIsApproved(true) // Prevent re-triggering
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    approveHash: hash,
+                    hash: '', // Clear hash to prevent re-triggering
+                }))
+                
+                // Wait a bit to show approval success, then move to open position
+                setTimeout(async () => {
+                    setLoopTx((prev: TLoopTx) => ({
+                        ...prev,
+                        status: 'open_position',
+                    }))
+                    await onOpenPosition()
+                }, 1500)
+
+            } else if (loopTx.status === 'create_strategy') {
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    hash: '', // Clear hash
+                }))
+                
+                // Wait a bit to show strategy creation success, then move to approval
+                setTimeout(async () => {
+                    // Refetch strategy address after creation
+                    const { data: newStrategyAddress } = await refetchStrategy()
+                    if (newStrategyAddress && newStrategyAddress !== '0x0000000000000000000000000000000000000000') {
+                        setStrategyAddress(newStrategyAddress as string)
+                        await onApproveSupply(newStrategyAddress as string)
+                    }
+                }, 1500)
+
+            } else if (loopTx.status === 'open_position') {
+                setLoopTx((prev: TLoopTx) => ({
+                    ...prev,
+                    hash: hash,
+                    status: 'view',
+                }))
+
+                logEvent('loop_completed', {
+                    amount: amountRef.current.amountRaw,
+                    token_symbol: assetDetailsRef.current?.supplyAsset?.token?.symbol,
+                    platform_name: assetDetailsRef.current?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[Number(assetDetailsRef.current?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
+                
+                setIsProcessingFlow(false)
             }
+        }
 
-            const decimals = assetDetails?.supplyAsset?.token?.decimals ?? 18
-            const parsedLendAmountBn = parseUnits(
-                amount?.lendAmount?.toString() ?? '0',
-                decimals
-            )
+        handleTransactionCompletion()
+    }, [hash, isConfirmed, isPending, isConfirming, loopTx.status, onOpenPosition, onApproveSupply, refetchStrategy, setLoopTx, logEvent, walletAddress, isApproved])
 
-            const approveAmount = parsedLendAmountBn.toBigInt()
-
-            logEvent('approve_loop_initiated', {
-                amount: amount?.lendAmount ?? '0',
-                token_symbol: assetDetails?.supplyAsset?.token?.symbol ?? '',
-                platform_name: assetDetails?.name ?? '',
-                chain_name:
-                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                wallet_address: walletAddress,
-            })
-
+    // Handle transaction cancellation/failure - only for actual blockchain transactions
+    useEffect(() => {
+        const isActualTransaction = loopTx.status === 'approve' || loopTx.status === 'create_strategy' || loopTx.status === 'open_position'
+        
+        if (
+            isActualTransaction &&
+            !isPending &&
+            !isConfirming &&
+            !isConfirmed &&
+            !hash &&
+            loopTx.status !== 'view' &&
+            (loopTx.isPending || loopTx.isConfirming) &&
+            !loopTx.hash // Don't trigger cancellation if we have a success hash
+        ) {
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
-                status: 'approve',
-                hash: '',
-                errorMessage: '',
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: 'Transaction was cancelled because the action was not confirmed in your wallet',
             }))
-
-            console.log('Approving token to strategy:', strategyAddr)
-
-            try {
-                // 1) Try a direct approve first – many tokens allow increasing directly
-                await writeContractAsync({
-                    address: underlyingAssetAdress,
-                    abi: AAVE_APPROVE_ABI,
-                    functionName: 'approve',
-                    args: [strategyAddr, approveAmount],
-                })
-            } catch (directError: any) {
-                console.warn('Direct approve failed, attempting safeApprove reset-flow', directError?.message)
-
-                // 2) reset allowance to 0 (required by non-standard ERC-20 tokens)
-                await writeContractAsync({
-                    address: underlyingAssetAdress,
-                    abi: AAVE_APPROVE_ABI,
-                    functionName: 'approve',
-                    args: [strategyAddr, 0n],
-                })
-
-                // 3) approve desired amount
-                await writeContractAsync({
-                    address: underlyingAssetAdress,
-                    abi: AAVE_APPROVE_ABI,
-                    functionName: 'approve',
-                    args: [strategyAddr, approveAmount],
-                })
-            }
-        } catch (error: any) {
-            console.error('onApproveSupply error', error)
-            handleTransactionError(error, 'approve')
+            setIsProcessingFlow(false)
         }
-    }
-
-    // Step 3: Create strategy (only if needed)
-    const onCreateStrategy = async () => {
-        if (!checkWalletConnection()) return
-
-        const createStrategyParams = {
-            loopingLeverage: LOOPING_LEVERAGE_ADDRESS,
-            pool: poolContractAddress,
-            yieldAsset: assetDetails.supplyAsset.token.address,
-            debtAsset: assetDetails.borrowAsset.token.address,
-            eMode: eModeValue
-        }
-
-        console.log('Creating strategy with params:', createStrategyParams)
-
-        try {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                status: 'create_strategy',
-                hash: '',
-                errorMessage: '',
-            }))
-
-            await writeContractAsync({
-                address: STRATEGY_FACTORY_ADDRESS as `0x${string}`,
-                abi: STRATEGY_FACTORY_ABI,
-                functionName: 'createStrategy',
-                args: [
-                    createStrategyParams.loopingLeverage,
-                    createStrategyParams.pool,
-                    createStrategyParams.yieldAsset,
-                    createStrategyParams.debtAsset,
-                    createStrategyParams.eMode
-                ],
-            })
-
-            console.log('Strategy creation transaction sent')
-
-        } catch (error: any) {
-            console.error('onCreateStrategy error', error)
-            handleTransactionError(error, 'create_strategy')
-        }
-    }
-
-    // Step 4: Open position through strategy contract
-    const onOpenPosition = async () => {
-        if (!checkWalletConnection()) return
-
-        try {
-            setLoopTx((prev: TLoopTx) => ({
-                ...prev,
-                status: 'open_position',
-                hash: '',
-                errorMessage: '',
-            }))
-
-            const supplyAmount = parseUnits(
-                amount?.lendAmount?.toString() ?? '0',
-                assetDetails?.supplyAsset?.token?.decimals ?? 18
-            )
-            const flashLoanAmount = parseUnits(
-                amount?.flashLoanAmount?.toString() ?? '0',
-                assetDetails?.supplyAsset?.token?.decimals ?? 18
-            )
-            const delegationAmount = parseUnits(
-                amount?.borrowAmount?.toString() ?? '0',
-                assetDetails?.borrowAsset?.token?.decimals ?? 18
-            )
-
-            console.log('Opening position with params:', {
-                strategyAddress: strategyAddress,
-                supplyAmount: supplyAmount.toString(),
-                flashLoanAmount: flashLoanAmount.toString(),
-                delegationAmount: delegationAmount.mul(120).div(100).toString(),
-                pathTokens: assetDetails.pathTokens || [],
-                pathFees: assetDetails.pathFees || [],
-                eMode: eModeValue
-            })
-
-            await writeContractAsync({
-                address: strategyAddress as `0x${string}`,
-                abi: STRATEGY_ABI,
-                functionName: 'openPosition',
-                args: [
-                    supplyAmount.toBigInt(),
-                    flashLoanAmount.toBigInt(),
-                    assetDetails.pathTokens || [],
-                    assetDetails.pathFees || [],
-                    delegationAmount.mul(120).div(100).toBigInt()
-                ],
-            })
-        } catch (error: any) {
-            console.error('onOpenPosition error', error)
-            handleTransactionError(error, 'open_position')
-        }
-    }
+    }, [isPending, isConfirming, isConfirmed, hash, loopTx.isPending, loopTx.isConfirming, loopTx.status, loopTx.hash, setLoopTx])
 
     // Handle the SC interaction - Single button starts the entire flow
     const handleSCInteraction = useCallback(async () => {
@@ -576,6 +668,7 @@ const LoopButton = ({
                 isConfirmed: false,
                 errorMessage: '',
             }))
+            setIsApproved(false) // Reset approval flag
 
             // Start with strategy check
             await onCheckStrategy()
@@ -583,7 +676,7 @@ const LoopButton = ({
             console.error('Error starting loop flow:', error)
             handleTransactionError(error, 'check_strategy')
         }
-    }, [loopTx.status, loopTx.errorMessage, isWalletConnected, walletAddress, eModeValue])
+    }, [loopTx.status, loopTx.errorMessage, isWalletConnected, walletAddress, eModeValue, onCheckStrategy, handleTransactionError, handleCloseModal, setLoopTx])
 
     return (
         <div className="flex flex-col gap-2">

@@ -65,6 +65,7 @@ const TxInitialState: TTxContext = {
     loopTx: {
         status: 'check_strategy',
         hash: '',
+        approveHash: '', // Add approveHash to initial state
         errorMessage: '',
         isPending: false,
         isConfirming: false,
@@ -126,6 +127,7 @@ export type TWithdrawTx = {
 export type TLoopTx = {
     status: 'approve' | 'check_strategy' | 'create_strategy' | 'open_position' | 'view'
     hash: string
+    approveHash: string // Store approve transaction hash separately
     isPending: boolean
     isConfirming: boolean
     isConfirmed: boolean
@@ -157,6 +159,7 @@ export const TxProvider = ({ children }: { children: React.ReactNode }) => {
     const [loopTx, setLoopTx] = useState<TLoopTx>({
         status: 'check_strategy',
         hash: '',
+        approveHash: '', // Add approveHash to useState initial value
         errorMessage: '',
         isPending: false,
         isConfirming: false,

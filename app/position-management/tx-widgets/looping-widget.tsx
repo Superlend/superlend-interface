@@ -35,6 +35,7 @@ import {
     hasLowestDisplayValuePrefix,
     convertScientificToNormal,
     formatTokenAmount,
+    roundLeverageUp,
 } from '@/lib/utils'
 import {
     ConfirmationDialog,
@@ -104,6 +105,8 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
     const [isLoadingBorrowAmount, setIsLoadingBorrowAmount] =
         useState<boolean>(false)
     const [leverage, setLeverage] = useState<number>(1)
+    const [hasUserChangedLeverage, setHasUserChangedLeverage] = useState<boolean>(false)
+    const [shouldLogCalculation, setShouldLogCalculation] = useState<boolean>(false)
     const debouncedLeverage = useDebounce(leverage, 1000) // 1 second debounce
     const [isLeverageChanging, setIsLeverageChanging] = useState<boolean>(false)
     const [newHealthFactor, setNewHealthFactor] = useState<number>(0)
@@ -356,6 +359,86 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
         [portfolioData, platformData]
     )
 
+    // Check if user has an existing loop position
+    const hasLoopPosition = useMemo(() => {
+        if (!userPositions?.length) return false
+        
+        // Look for looped platforms that match the current token pair
+        const loopedPlatforms = userPositions.filter((platform: any) => 
+            platform.name.toLowerCase().includes('looped') || 
+            platform.platform_name.toLowerCase().includes('loop')
+        )
+        
+        if (!loopedPlatforms.length) return false
+        
+        // Check if any looped platform has the specific token pair we're looking for
+        return loopedPlatforms.some((platform: any) => {
+            const lendPosition = platform.positions.find((p: any) => 
+                p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
+            )
+            const borrowPosition = platform.positions.find((p: any) => 
+                p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
+            )
+            
+            return lendPosition && borrowPosition
+        })
+    }, [userPositions, lendTokenAddressParam, borrowTokenAddressParam])
+
+    // Get current position data from loop pair
+    const getCurrentPositionData = () => {
+        if (!hasLoopPosition || !userPositions?.length) return null
+
+        // Find the specific looped platform with the matching token pair
+        const loopedPlatforms = userPositions.filter((platform: any) => 
+            platform.name.toLowerCase().includes('looped') || 
+            platform.platform_name.toLowerCase().includes('loop')
+        )
+        
+        const matchingPlatform = loopedPlatforms.find((platform: any) => {
+            const lendPosition = platform.positions.find((p: any) => 
+                p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
+            )
+            const borrowPosition = platform.positions.find((p: any) => 
+                p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
+            )
+            
+            return lendPosition && borrowPosition
+        })
+
+        if (!matchingPlatform) return null
+
+        const lendPosition = matchingPlatform.positions.find((p: any) => 
+            p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
+        )
+        const borrowPosition = matchingPlatform.positions.find((p: any) => 
+            p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
+        )
+
+        if (!lendPosition || !borrowPosition) return null
+
+        const lendAmount = parseFloat(lendPosition.amount.toString())
+        const borrowAmount = parseFloat(borrowPosition.amount.toString())
+        const collateralValueUSD = lendAmount * lendPosition.token.price_usd
+        const borrowValueUSD = borrowAmount * borrowPosition.token.price_usd
+        const currentLeverage = roundLeverageUp(collateralValueUSD > 0 ? collateralValueUSD / (collateralValueUSD - borrowValueUSD) : 1)
+
+        return {
+            lendAmount,
+            borrowAmount,
+            collateralValueUSD,
+            borrowValueUSD,
+            currentLeverage,
+            healthFactor: matchingPlatform.health_factor,
+            currentAPY: matchingPlatform.net_apy
+        }
+    }
+
+   
+    const currentPositionData = useMemo(() => {
+        return getCurrentPositionData()
+    // Depend only on values that can truly change the underlying data.
+    }, [hasLoopPosition, userPositions, lendTokenAddressParam, borrowTokenAddressParam])
+
     // Format user positions
     const [currentHealthFactor] = useMemo(
         () =>
@@ -459,18 +542,39 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                 })
             }
 
-            if (!!Number(lendAmount)) {
+            // Check if this is a leverage-only change (user has position but no new collateral)
+            const isLeverageOnlyChange = hasLoopPosition && 
+                currentPositionData && 
+                (Number(lendAmount) === 0 || lendAmount === '') && 
+                leverage !== currentPositionData.currentLeverage
+
+            // Calculate borrow amount if:
+            // 1. User is adding collateral (lendAmount > 0), OR
+            // 2. User is changing leverage only (isLeverageOnlyChange)
+            if (!!Number(lendAmount) || isLeverageOnlyChange) {
                 // Get borrow token amount for leverage
                 setIsLoadingBorrowAmount(true)
+                
+                // For leverage-only changes, use a minimal amount for the supply token amount
+                // The calculation will be based on the current position + leverage change
+                const supplyTokenAmount = !!Number(lendAmount) ? 
+                    parseUnits(lendAmount, selectedLendToken?.decimals || 18).toString() :
+                    parseUnits('0.001', selectedLendToken?.decimals || 18).toString() // Minimal amount for leverage-only changes
+                
+                console.log('Calculating borrow amount for leverage:', {
+                    lendAmount,
+                    leverage,
+                    isLeverageOnlyChange,
+                    supplyTokenAmount,
+                    currentLeverage: currentPositionData?.currentLeverage
+                })
+                
                 getBorrowTokenAmountForLeverage({
                     chainId: ChainId.Etherlink,
                     uiPoolDataProviderAddress: uiPoolDataProviderAddress,
                     lendingPoolAddressProvider: lendingPoolAddressProvider,
                     supplyToken: selectedLendToken?.address || '',
-                    supplyTokenAmount: parseUnits(
-                        lendAmount,
-                        selectedLendToken?.decimals || 18
-                    ).toString(),
+                    supplyTokenAmount: supplyTokenAmount,
                     leverage: debouncedLeverage,
                     borrowToken: selectedBorrowToken?.address || '',
                     _walletAddress: walletAddress,
@@ -503,7 +607,10 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
         lendAmount,
         selectedBorrowToken?.address,
         debouncedLeverage,
-        loopPair
+        loopPair,
+        hasLoopPosition,
+        currentPositionData?.currentLeverage, // Add this to ensure we recalculate when position changes
+        leverage // Add this to ensure we recalculate when leverage changes
     ])
 
     // Calculate user's current net APY whenever relevant parameters change
@@ -620,31 +727,6 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
         setBorrowAmount('0')
     }
 
-    // Check if user has an existing loop position
-    const hasLoopPosition = useMemo(() => {
-        if (!userPositions?.length) return false
-        
-        // Look for looped platforms that match the current token pair
-        const loopedPlatforms = userPositions.filter((platform: any) => 
-            platform.name.toLowerCase().includes('looped') || 
-            platform.platform_name.toLowerCase().includes('loop')
-        )
-        
-        if (!loopedPlatforms.length) return false
-        
-        // Check if any looped platform has the specific token pair we're looking for
-        return loopedPlatforms.some((platform: any) => {
-            const lendPosition = platform.positions.find((p: any) => 
-                p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
-            )
-            const borrowPosition = platform.positions.find((p: any) => 
-                p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
-            )
-            
-            return lendPosition && borrowPosition
-        })
-    }, [userPositions, lendTokenAddressParam, borrowTokenAddressParam])
-
     // Update leverage slider disabled state to allow leverage changes for position adjustments
     const isLeverageDisabled = !isWalletConnected ||
         (!hasLoopPosition && !Number(lendAmount)) || // Simplified condition
@@ -677,93 +759,88 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
         console.log('Close position clicked - to be implemented')
     }
 
-    // Get current position data from loop pair
-    const getCurrentPositionData = () => {
-        if (!hasLoopPosition || !userPositions?.length) return null
-
-        // Find the specific looped platform with the matching token pair
-        const loopedPlatforms = userPositions.filter((platform: any) => 
-            platform.name.toLowerCase().includes('looped') || 
-            platform.platform_name.toLowerCase().includes('loop')
-        )
-        
-        const matchingPlatform = loopedPlatforms.find((platform: any) => {
-            const lendPosition = platform.positions.find((p: any) => 
-                p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
-            )
-            const borrowPosition = platform.positions.find((p: any) => 
-                p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
-            )
-            
-            return lendPosition && borrowPosition
-        })
-
-        if (!matchingPlatform) return null
-
-        const lendPosition = matchingPlatform.positions.find((p: any) => 
-            p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
-        )
-        const borrowPosition = matchingPlatform.positions.find((p: any) => 
-            p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
-        )
-
-        if (!lendPosition || !borrowPosition) return null
-
-        const lendAmount = parseFloat(lendPosition.amount.toString())
-        const borrowAmount = parseFloat(borrowPosition.amount.toString())
-        const collateralValueUSD = lendAmount * lendPosition.token.price_usd
-        const borrowValueUSD = borrowAmount * borrowPosition.token.price_usd
-        const currentLeverage = collateralValueUSD > 0 ? collateralValueUSD / (collateralValueUSD - borrowValueUSD) : 1
-
-        return {
-            lendAmount,
-            borrowAmount,
-            collateralValueUSD,
-            borrowValueUSD,
-            currentLeverage,
-            healthFactor: matchingPlatform.health_factor,
-            currentAPY: matchingPlatform.net_apy
-        }
-    }
-
-    // Memoize current position data to avoid unnecessary re-renders and keep a
-    // stable reference while the user is interacting with the slider. Without
-    // this, the object reference would change on every render, causing the
-    // `useEffect` that initialises leverage to fire again and reset the value
-    // back to the current position leverage.
-    const currentPositionData = useMemo(() => {
-        return getCurrentPositionData()
-    // Depend only on values that can truly change the underlying data.
-    }, [hasLoopPosition, userPositions, lendTokenAddressParam, borrowTokenAddressParam])
-
     // Calculate new position data based on changes
     const calculateNewPositionData = () => {
         if (!currentPositionData) return null
 
         const additionalLendAmount = Number(lendAmount) || 0
-        const additionalBorrowAmount = Number(borrowAmount) || 0
+        const targetLeverage = leverage
+        const currentLeverage = currentPositionData.currentLeverage
         
-        if (positionType === 'increase') {
-            return {
-                lendAmount: currentPositionData.lendAmount + additionalLendAmount,
-                borrowAmount: currentPositionData.borrowAmount + additionalBorrowAmount,
-                collateralValueUSD: currentPositionData.collateralValueUSD + (additionalLendAmount * (selectedLendToken?.price_usd || 0)),
-                borrowValueUSD: currentPositionData.borrowValueUSD + (additionalBorrowAmount * (selectedBorrowToken?.price_usd || 0)),
-                leverage: leverage,
-                healthFactor: newHealthFactor || currentPositionData.healthFactor,
-                estimatedAPY: loopNetAPY.value || '0.00%'
-            }
-        } else {
-            return {
-                lendAmount: Math.max(0, currentPositionData.lendAmount - additionalLendAmount),
-                borrowAmount: Math.max(0, currentPositionData.borrowAmount - additionalBorrowAmount),
-                collateralValueUSD: Math.max(0, currentPositionData.collateralValueUSD - (additionalLendAmount * (selectedLendToken?.price_usd || 0))),
-                borrowValueUSD: Math.max(0, currentPositionData.borrowValueUSD - (additionalBorrowAmount * (selectedBorrowToken?.price_usd || 0))),
-                leverage: leverage,
-                healthFactor: newHealthFactor || currentPositionData.healthFactor,
-                estimatedAPY: loopNetAPY.value || '0.00%'
-            }
+        if (shouldLogCalculation) {
+            console.log('=== Position Change Calculation Debug ===')
+            console.log('Current Position:', {
+                lendAmount: currentPositionData.lendAmount,
+                borrowAmount: currentPositionData.borrowAmount,
+                collateralValueUSD: currentPositionData.collateralValueUSD,
+                borrowValueUSD: currentPositionData.borrowValueUSD,
+                currentLeverage: currentLeverage,
+                currentEquity: currentPositionData.collateralValueUSD - currentPositionData.borrowValueUSD
+            })
+            
+            console.log('User Inputs:', {
+                additionalLendAmount,
+                targetLeverage,
+                leverageChange: targetLeverage - currentLeverage,
+                lendTokenPrice: selectedLendToken?.price_usd,
+                borrowTokenPrice: selectedBorrowToken?.price_usd
+            })
         }
+
+        // Current position values
+        const currentCollateralUSD = currentPositionData.collateralValueUSD
+        const currentBorrowUSD = currentPositionData.borrowValueUSD
+        const currentEquityUSD = currentCollateralUSD - currentBorrowUSD
+        
+        // Calculate new equity (current equity + any new collateral added)
+        const newCollateralFromUser = additionalLendAmount * (selectedLendToken?.price_usd || 0)
+        const newTotalEquityUSD = currentEquityUSD + newCollateralFromUser
+        
+        if (shouldLogCalculation) {
+            console.log('Equity Calculation:', {
+                currentEquityUSD,
+                newCollateralFromUser,
+                newTotalEquityUSD
+            })
+        }
+
+        // Calculate new position based on target leverage
+        // Formula: newCollateralUSD = newEquityUSD * targetLeverage
+        const newTotalCollateralUSD = newTotalEquityUSD * targetLeverage
+        const newTotalBorrowUSD = newTotalCollateralUSD - newTotalEquityUSD
+        
+        // Convert back to token amounts
+        const newTotalCollateralTokens = newTotalCollateralUSD / (selectedLendToken?.price_usd || 1)
+        const newTotalBorrowTokens = newTotalBorrowUSD / (selectedBorrowToken?.price_usd || 1)
+
+        if (shouldLogCalculation) {
+            console.log('New Position Calculation:', {
+                newTotalEquityUSD,
+                targetLeverage,
+                newTotalCollateralUSD,
+                newTotalBorrowUSD,
+                newTotalCollateralTokens,
+                newTotalBorrowTokens,
+                calculatedLeverage: newTotalEquityUSD > 0 ? newTotalCollateralUSD / newTotalEquityUSD : 1
+            })
+        }
+
+        const result = {
+            lendAmount: newTotalCollateralTokens,
+            borrowAmount: newTotalBorrowTokens,
+            collateralValueUSD: newTotalCollateralUSD,
+            borrowValueUSD: newTotalBorrowUSD,
+            leverage: roundLeverageUp(newTotalEquityUSD > 0 ? newTotalCollateralUSD / newTotalEquityUSD : targetLeverage),
+            healthFactor: newHealthFactor || currentPositionData.healthFactor,
+            estimatedAPY: loopNetAPY.value || '0.00%'
+        }
+        
+        if (shouldLogCalculation) {
+            console.log('Final Result:', result)
+            console.log('=== End Position Calculation Debug ===')
+        }
+        
+        return result
     }
 
     const newPositionData = calculateNewPositionData()
@@ -772,11 +849,12 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
     // current leverage actually changes). Using the memoised
     // `currentPositionData.currentLeverage` as dependency prevents the slider
     // from being reset while dragging.
+    // Only reset leverage if user hasn't manually changed it
     useEffect(() => {
-        if (hasLoopPosition && currentPositionData) {
-            setLeverage(Math.round(currentPositionData.currentLeverage * 10) / 10)
+        if (hasLoopPosition && currentPositionData && !hasUserChangedLeverage) {
+            setLeverage(roundLeverageUp(currentPositionData.currentLeverage))
         }
-    }, [hasLoopPosition, currentPositionData?.currentLeverage])
+    }, [hasLoopPosition, currentPositionData?.currentLeverage, hasUserChangedLeverage])
 
     // looping-widget
     return (
@@ -793,7 +871,8 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                         }
                         setLendAmount('')
                         setBorrowAmount('0')
-                        setLeverage(currentPositionData?.currentLeverage || 1)
+                        setLeverage(roundLeverageUp(currentPositionData?.currentLeverage || 1))
+                        setHasUserChangedLeverage(false) 
                     }}
                     showTab={{
                         tab1: true,
@@ -968,26 +1047,40 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                             <Label size="medium">
                                 {hasLoopPosition ? 'Target Leverage' : 'Leverage'}
                             </Label>
-                            <Badge variant="secondary">{leverage}x</Badge>
+                            <Badge variant="secondary">{roundLeverageUp(leverage)}x</Badge>
                         </div>
 
                         <div>
                             <Slider
                                 title={!isWalletConnected ? 'Connect wallet to enable leverage.' : ''}
                                 value={[leverage]}
-                                min={1}
-                                max={
-                                    hasLoopPosition && currentPositionData
-                                        ? Math.max(currentPositionData.currentLeverage * 2, 4)
-                                        : Number(
-                                            maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 4
-                                          )
-                                }
+                                min={(() => {
+                                    // In increase mode with existing position, don't allow leverage below current
+                                    if (hasLoopPosition && currentPositionData && positionType === 'increase') {
+                                        return roundLeverageUp(currentPositionData.currentLeverage)
+                                    }
+                                    return 1
+                                })()}
+                                max={(() => {
+                                    const pairMax = Number(
+                                        maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 4
+                                    )
+                                    if (hasLoopPosition && currentPositionData) {
+                                        // Let user go up to 2× current leverage but never cross pairMax
+                                        return Math.min(pairMax, currentPositionData.currentLeverage * 2)
+                                    }
+                                    return pairMax
+                                })()}
                                 step={0.1}
                                 onValueChange={(values) => {
                                     const newValue = values[0]
                                     if (typeof newValue === 'number' && !isNaN(newValue)) {
-                                        setLeverage(newValue)
+                                        // In increase mode, don't allow setting leverage below current
+                                        if (hasLoopPosition && currentPositionData && positionType === 'increase' && newValue < roundLeverageUp(currentPositionData.currentLeverage)) {
+                                            return // Block the change
+                                        }
+                                        setLeverage(roundLeverageUp(newValue))
+                                        setHasUserChangedLeverage(true) // Mark that user has manually changed leverage
                                     }
                                 }}
                                 disabled={!isWalletConnected}
@@ -999,7 +1092,13 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     weight="normal"
                                     className="text-gray-600"
                                 >
-                                    1x
+                                    {(() => {
+                                        // In increase mode with existing position, show current leverage as minimum
+                                        if (hasLoopPosition && currentPositionData && positionType === 'increase') {
+                                            return `${roundLeverageUp(currentPositionData.currentLeverage).toFixed(1)}x`
+                                        }
+                                        return '1x'
+                                    })()}
                                 </BodyText>
                                 <BodyText
                                     level="body3"
@@ -1014,109 +1113,130 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     }x
                                 </BodyText>
                             </div>
+                            
+                            {/* Help text for leverage restrictions */}
+                            {hasLoopPosition && positionType === 'increase' && (
+                                <BodyText level="body3" className="text-gray-500 px-2 mt-2">
+                                    In increase mode, leverage can only be increased. Switch to decrease mode to reduce leverage.
+                                </BodyText>
+                            )}
                         </div>
                     </div>
 
                     {/* Current Position Overview - Show when user has a position */}
                     {hasLoopPosition && currentPositionData && (
-                        <div className="p-4 bg-blue-50 rounded-5 border border-blue-200 mb-4">
+                        <Card className="p-4 bg-white bg-opacity-60 mb-4">
                             <div className="flex flex-col gap-3">
-                                <BodyText level="body2" weight="medium" className="text-blue-800">
+                                <BodyText level="body2" weight="medium" className="text-gray-800">
                                     Current Loop Position
                                 </BodyText>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="flex flex-col gap-1">
-                                        <BodyText level="body3" className="text-blue-600">
+                                        <BodyText level="body3" className="text-gray-600">
                                             Collateral
                                         </BodyText>
-                                        <BodyText level="body2" weight="medium" className="text-blue-800">
+                                        <BodyText level="body2" weight="medium" className="text-gray-800">
                                             {formatTokenAmount(currentPositionData.lendAmount)} {selectedLendToken?.symbol}
                                         </BodyText>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <BodyText level="body3" className="text-blue-600">
+                                        <BodyText level="body3" className="text-gray-600">
                                             Borrowed
                                         </BodyText>
-                                        <BodyText level="body2" weight="medium" className="text-blue-800">
+                                        <BodyText level="body2" weight="medium" className="text-gray-800">
                                             {formatTokenAmount(currentPositionData.borrowAmount)} {selectedBorrowToken?.symbol}
                                         </BodyText>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <BodyText level="body3" className="text-blue-600">
+                                        <BodyText level="body3" className="text-gray-600">
                                             Leverage
                                         </BodyText>
-                                        <BodyText level="body2" weight="medium" className="text-blue-800">
-                                            {currentPositionData.currentLeverage.toFixed(2)}x
+                                        <BodyText level="body2" weight="medium" className="text-gray-800">
+                                            {roundLeverageUp(currentPositionData.currentLeverage).toFixed(1)}x
                                         </BodyText>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <BodyText level="body3" className="text-blue-600">
+                                        <BodyText level="body3" className="text-gray-600">
                                             Health Factor
                                         </BodyText>
-                                        <BodyText level="body2" weight="medium" className="text-blue-800">
+                                        <BodyText level="body2" weight="medium" className="text-gray-800">
                                             {currentPositionData.healthFactor.toFixed(2)}
                                         </BodyText>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </Card>
                     )}
 
                     {/* Position Changes Preview - Show when user has a position */}
                     {hasLoopPosition && currentPositionData && newPositionData && (Number(lendAmount) > 0 || leverage !== currentPositionData.currentLeverage) && (
-                        <div className="space-y-3 p-4 bg-gray-50 rounded-5 border border-gray-200 mb-4">
-                            <BodyText level="body2" weight="medium" className="text-gray-800">
-                                Position Changes Preview
-                            </BodyText>
-                            
-                            {/* Collateral Change */}
-                            <div className="flex items-center justify-between">
-                                <BodyText level="body3" className="text-gray-600">
-                                    Total Collateral
+                        <Card className="p-4 bg-white bg-opacity-60 mb-4">
+                            <div className="flex flex-col gap-3">
+                                <BodyText level="body2" weight="medium" className="text-gray-800">
+                                    Position Changes Preview
                                 </BodyText>
-                                <div className="flex items-center gap-2">
-                                    <BodyText level="body3" className="text-gray-800">
-                                        {formatTokenAmount(currentPositionData.lendAmount)} {selectedLendToken?.symbol}
+                                
+                                {/* Collateral Change */}
+                                <div className="flex items-center justify-between">
+                                    <BodyText level="body3" className="text-gray-600">
+                                        Total Collateral
                                     </BodyText>
-                                    <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
-                                    <BodyText level="body3" className="text-gray-800">
-                                        {formatTokenAmount(newPositionData.lendAmount)} {selectedLendToken?.symbol}
-                                    </BodyText>
+                                    <div className="flex items-center gap-2">
+                                        <BodyText level="body3" className="text-gray-800">
+                                            {formatTokenAmount(currentPositionData.lendAmount)} {selectedLendToken?.symbol}
+                                        </BodyText>
+                                        {formatTokenAmount(currentPositionData.lendAmount) !== formatTokenAmount(newPositionData.lendAmount) && (
+                                            <>
+                                                <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                                <BodyText level="body3" className="text-gray-800">
+                                                    {formatTokenAmount(newPositionData.lendAmount)} {selectedLendToken?.symbol}
+                                                </BodyText>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* Borrowed Change */}
-                            <div className="flex items-center justify-between">
-                                <BodyText level="body3" className="text-gray-600">
-                                    Total Borrowed
-                                </BodyText>
-                                <div className="flex items-center gap-2">
-                                    <BodyText level="body3" className="text-gray-800">
-                                        {formatTokenAmount(currentPositionData.borrowAmount)} {selectedBorrowToken?.symbol}
+                                {/* Borrowed Change */}
+                                <div className="flex items-center justify-between">
+                                    <BodyText level="body3" className="text-gray-600">
+                                        Total Borrowed
                                     </BodyText>
-                                    <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
-                                    <BodyText level="body3" className="text-gray-800">
-                                        {formatTokenAmount(newPositionData.borrowAmount)} {selectedBorrowToken?.symbol}
-                                    </BodyText>
+                                    <div className="flex items-center gap-2">
+                                        <BodyText level="body3" className="text-gray-800">
+                                            {formatTokenAmount(currentPositionData.borrowAmount)} {selectedBorrowToken?.symbol}
+                                        </BodyText>
+                                        {formatTokenAmount(currentPositionData.borrowAmount) !== formatTokenAmount(newPositionData.borrowAmount) && (
+                                            <>
+                                                <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                                <BodyText level="body3" className="text-gray-800">
+                                                    {formatTokenAmount(newPositionData.borrowAmount)} {selectedBorrowToken?.symbol}
+                                                </BodyText>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* Leverage Change */}
-                            <div className="flex items-center justify-between">
-                                <BodyText level="body3" className="text-gray-600">
-                                    Leverage
-                                </BodyText>
-                                <div className="flex items-center gap-2">
-                                    <BodyText level="body3" className="text-gray-800">
-                                        {currentPositionData.currentLeverage.toFixed(2)}x
+                                {/* Leverage Change */}
+                                <div className="flex items-center justify-between">
+                                    <BodyText level="body3" className="text-gray-600">
+                                        Leverage
                                     </BodyText>
-                                    <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
-                                    <BodyText level="body3" className="text-gray-800">
-                                        {newPositionData.leverage.toFixed(2)}x
-                                    </BodyText>
+                                    <div className="flex items-center gap-2">
+                                        <BodyText level="body3" className="text-gray-800">
+                                            {roundLeverageUp(currentPositionData.currentLeverage).toFixed(1)}x
+                                        </BodyText>
+                                        {roundLeverageUp(currentPositionData.currentLeverage).toFixed(1) !== roundLeverageUp(newPositionData.leverage).toFixed(1) && (
+                                            <>
+                                                <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                                <BodyText level="body3" className="text-gray-800">
+                                                    {roundLeverageUp(newPositionData.leverage).toFixed(1)}x
+                                                </BodyText>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </Card>
                     )}
                 </CardContent>
 
@@ -1238,6 +1358,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     remaining_supply_cap: 0,
                                     emode_category: loopPair?.borrowReserve?.emode_category || 0,
                                 },
+                                // Initialize with empty arrays - TxDialog will override these with fetched trade path
                                 pathTokens: [],
                                 pathFees: [],
                                 ...platformData?.platform,
@@ -1266,6 +1387,10 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                             open={isLoopTxDialogOpen}
                             setOpen={setIsLoopTxDialogOpen}
                             leverage={leverage}
+                            currentPositionData={currentPositionData}
+                            newPositionData={newPositionData}
+                            hasLoopPosition={hasLoopPosition}
+                            setShouldLogCalculation={setShouldLogCalculation}
                         />
                     )}
                 </CardFooter>

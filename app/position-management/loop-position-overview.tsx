@@ -12,7 +12,7 @@ import LoopEducationSection from './loop-education-section'
 import LoopMetricsCards from './loop-metrics-cards'
 import LoopPositionDetails from './loop-position-details'
 import LoopPerformance from './loop-performance'
-import { abbreviateNumber } from '@/lib/utils'
+import { abbreviateNumber, roundLeverageUp } from '@/lib/utils'
 import { DollarSign, TrendingUp, TrendingDown, Target, Percent } from 'lucide-react'
 import { useAaveV3Data } from '@/hooks/protocols/useAaveV3Data'
 import { ChainId } from '@/types/chain'
@@ -256,7 +256,7 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
         
         if (!matchingPlatform) return null
         
-        console.log('matchingPlatform', matchingPlatform)
+        // console.log('matchingPlatform', matchingPlatform)
         
         const lendPosition = matchingPlatform.positions.find(p => 
             p.type === 'lend' && p.token.address.toLowerCase() === lendTokenAddressParam.toLowerCase()
@@ -265,8 +265,8 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
             p.type === 'borrow' && p.token.address.toLowerCase() === borrowTokenAddressParam.toLowerCase()
         )
 
-        console.log('lendPosition', lendPosition)
-        console.log('borrowPosition', borrowPosition)
+        // console.log('lendPosition', lendPosition)
+        // console.log('borrowPosition', borrowPosition)
 
         if (!lendPosition || !borrowPosition) return null
 
@@ -283,7 +283,7 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
         
         // Ensure we don't divide by zero or very small numbers that could cause issues
         const leverageDenominator = collateralValueUSD - borrowValueUSD
-        const currentLeverage = leverageDenominator > 0.000001 ? collateralValueUSD / leverageDenominator : 1
+        const currentLeverage = roundLeverageUp(leverageDenominator > 0.000001 ? collateralValueUSD / leverageDenominator : 1)
         const netAPY = (lendPosition.apy * currentLeverage) - (borrowPosition.apy * (currentLeverage - 1))
 
         // Calculate liquidation price with proper handling of small amounts
@@ -294,7 +294,7 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
 
         return {
             netValue: parseFloat(netValue.toFixed(8)), // Maintain precision up to 8 decimal places
-            currentLeverage: parseFloat(currentLeverage.toFixed(6)),
+            currentLeverage: parseFloat(currentLeverage.toFixed(1)),
             netAPY: parseFloat(netAPY.toFixed(4)),
             collateralAsset: {
                 token: lendPosition.token,
@@ -310,7 +310,7 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
                 apy: borrowPosition.apy
             },
             healthFactor: parseFloat(matchingPlatform.health_factor.toFixed(2)),
-            platformNetAPY: parseFloat(matchingPlatform.net_apy.toFixed(2)), // Net APY from platform data
+            platformNetAPY: parseFloat(matchingPlatform.net_apy.toFixed(2)), 
             hasMultiplePositions: SHOW_MULTIPLE_POSITIONS_WARNING ? hasMultiplePositions : false,
             positionLTV: parseFloat(((borrowValueUSD / collateralValueUSD) * 100).toFixed(4)),
             liquidationLTV: liquidationThreshold,
@@ -382,6 +382,7 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
     // Dynamic loop data
     const loopData = useMemo(() => {
         if (userLoopPosition) {
+            console.log('userLoopPosition', userLoopPosition)
             return {
                 ...userLoopPosition,
                 maxLeverage: parseFloat((loopPair?.strategy?.max_leverage || 4.0).toFixed(2)),

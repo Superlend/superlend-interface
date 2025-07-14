@@ -599,3 +599,14 @@ export function formatTokenAmount(amount: number | string, decimals: number = 8)
     // For amounts between 0.001 and 1, show with appropriate decimal places
     return numAmount.toFixed(6).replace(/\.?0+$/, '')
 }
+
+/**
+ * Rounds leverage to 1 decimal place, always rounding UP
+ * Examples: 11.82 → 11.9, 11.91 → 12.0, 11.80 → 11.8
+ */
+export function roundLeverageUp(leverage: number): number {
+    if (isNaN(leverage) || leverage <= 0) return 1
+    
+    // Round up to next 0.1 decimal place
+    return Math.ceil(leverage * 10) / 10
+}
