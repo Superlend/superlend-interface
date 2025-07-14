@@ -50,6 +50,7 @@ const ActionButton = ({
             />
         )
     }
+    
     if (actionType === 'repay') {
         return (
             <RepayButton
@@ -63,6 +64,7 @@ const ActionButton = ({
             />
         )
     }
+    
     if (actionType === 'withdraw') {
         return (
             <WithdrawButton
@@ -73,6 +75,7 @@ const ActionButton = ({
             />
         )
     }
+    
     if (asset.protocol_type === PlatformType.AAVE) {
         if (actionType === 'lend') {
             return (
@@ -87,15 +90,8 @@ const ActionButton = ({
                 />
             )
         }
+        
         if (actionType === 'loop') {
-            console.log('ActionButton passing asset details to LoopButton:', {
-                pathTokens: asset.pathTokens,
-                pathFees: asset.pathFees,
-                hasPathTokens: Array.isArray(asset.pathTokens),
-                hasPathFees: Array.isArray(asset.pathFees),
-                pathTokensLength: asset.pathTokens?.length,
-                pathFeesLength: asset.pathFees?.length
-            })
             return (
                 <LoopButton
                     disabled={disabled}
@@ -111,23 +107,7 @@ const ActionButton = ({
             )
         }
     }
-    // if (
-    //     asset.protocol_type === PlatformType.COMPOUND &&
-    //     asset.asset.token.symbol === 'cETH'
-    // ) {
-    //     return (
-    //         <SupplyETHCompoundButton
-    //             disabled={disabled}
-    //             handleCloseModal={handleCloseModal}
-    //             cTokenAddress={asset.core_contract}
-    //             amount={amount}
-    //             decimals={countCompoundDecimals(
-    //                 asset.asset.token.decimals,
-    //                 asset.asset.token.decimals
-    //             )}
-    //         />
-    //     )
-    // }
+    
     if (asset.protocol_type === PlatformType.MORPHO && actionType === 'lend') {
         return (
             <SupplyMorphoButton
@@ -139,6 +119,7 @@ const ActionButton = ({
             />
         )
     }
+    
     if (asset.protocol_type === PlatformType.FLUID && actionType === 'lend') {
         return (
             <SupplyFluidButton
@@ -153,6 +134,7 @@ const ActionButton = ({
             />
         )
     }
+    
     return null
 }
 
