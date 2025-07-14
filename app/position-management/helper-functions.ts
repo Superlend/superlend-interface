@@ -122,108 +122,169 @@ export function calculateUnloopParameters({
 }) {
     const PRICE_DECIMALS = 8
 
-    // Calculate current leverage
     const getCurrentLeverage = () => {
-        const currentLendTokenValueinUsd = Number(
-            formatUnits(
-                BigNumber.from(currentLendAmount)
-                    .mul((lendTokenDetails.priceUsd * 10 ** PRICE_DECIMALS).toFixed())
-                    .toString(),
-                lendTokenDetails.decimals + PRICE_DECIMALS
+        try {
+            // Ensure we're working with BigNumber compatible values
+            const lendAmountBN = BigNumber.from(currentLendAmount)
+            const borrowAmountBN = BigNumber.from(currentBorrowAmount)
+            
+            // Convert price to BigNumber with proper decimals
+            const lendPriceBN = BigNumber.from(
+                (lendTokenDetails.priceUsd * 10 ** PRICE_DECIMALS).toFixed(0)
             )
-        )
-
-        const currentBorrowTokenValueinUsd = Number(
-            formatUnits(
-                BigNumber.from(currentBorrowAmount)
-                    .mul((borrowTokenDetails.priceUsd * 10 ** PRICE_DECIMALS).toFixed())
-                    .toString(),
-                borrowTokenDetails.decimals + PRICE_DECIMALS
+            const borrowPriceBN = BigNumber.from(
+                (borrowTokenDetails.priceUsd * 10 ** PRICE_DECIMALS).toFixed(0)
             )
-        )
 
-        const currentPrincipalAmountInUsd = currentLendTokenValueinUsd - currentBorrowTokenValueinUsd
+            // Calculate USD values
+            const currentLendTokenValueinUsd = Number(
+                formatUnits(
+                    lendAmountBN.mul(lendPriceBN),
+                    lendTokenDetails.decimals + PRICE_DECIMALS
+                )
+            )
 
-        const currentPrincipalAmountInToken = parseUnits(
-            (currentPrincipalAmountInUsd / lendTokenDetails.priceUsd)
+            const currentBorrowTokenValueinUsd = Number(
+                formatUnits(
+                    borrowAmountBN.mul(borrowPriceBN),
+                    borrowTokenDetails.decimals + PRICE_DECIMALS
+                )
+            )
+
+            const currentPrincipalAmountInUsd = currentLendTokenValueinUsd - currentBorrowTokenValueinUsd
+
+            // Convert principal back to token amount with proper decimal handling
+            const principalInTokens = (currentPrincipalAmountInUsd / lendTokenDetails.priceUsd)
                 .toFixed(lendTokenDetails.decimals)
-                .toString(),
-            lendTokenDetails.decimals
-        ).toString()
+            
+            const currentPrincipalAmountInToken = parseUnits(
+                principalInTokens,
+                lendTokenDetails.decimals
+            ).toString()
 
-        const currentLeverage = Number(currentLendTokenValueinUsd) / 
-            (Number(currentLendTokenValueinUsd) - Number(currentBorrowTokenValueinUsd))
+            const currentLeverage = currentLendTokenValueinUsd > 0 ? 
+                currentLendTokenValueinUsd / (currentLendTokenValueinUsd - currentBorrowTokenValueinUsd) : 1
 
-        return {
-            currentLeverage,
-            currentPrincipalAmountInToken,
-            currentPrincipalAmountInUsd,
+            return {
+                currentLeverage,
+                currentPrincipalAmountInToken,
+                currentPrincipalAmountInUsd,
+            }
+        } catch (error) {
+            console.error('Error in getCurrentLeverage:', error)
+            // Return safe default values
+            return {
+                currentLeverage: 1,
+                currentPrincipalAmountInToken: '0',
+                currentPrincipalAmountInUsd: 0,
+            }
         }
     }
 
     const paramsForDesiredLeverage = (desiredLeverage: number) => {
-        const {
-            currentLeverage,
-            currentPrincipalAmountInToken,
-            currentPrincipalAmountInUsd,
-        } = getCurrentLeverage()
+        try {
+            const {
+                currentLeverage,
+                currentPrincipalAmountInToken,
+                currentPrincipalAmountInUsd,
+            } = getCurrentLeverage()
 
-        // For unloop, desired leverage should be less than current leverage
-        if (desiredLeverage > currentLeverage) {
-            throw new Error("Desired leverage cannot be greater than current leverage for unloop")
-        }
+            if (desiredLeverage > currentLeverage) {
+                throw new Error("Desired leverage cannot be greater than current leverage for unloop")
+            }
 
-        const desiredLendAmountToken = BigNumber.from(currentPrincipalAmountInToken)
-            .mul((desiredLeverage * 100).toFixed())
-            .div(100)
+            // Handle the case where principal amount is very small
+            if (currentPrincipalAmountInUsd < 0.000001) {
+                return {
+                    repayAmountToken: '0',
+                    swapDetails: {
+                        fromToken: lendTokenDetails.address,
+                        toToken: borrowTokenDetails.address,
+                        amountToSwap: '0',
+                    },
+                    aTokenAmount: '0',
+                    withdrawAmount: '1',
+                }
+            }
 
-        const desiredLendAmountUsd = Number(
-            formatUnits(
-                desiredLendAmountToken
-                    .mul((lendTokenDetails.priceUsd * 10 ** PRICE_DECIMALS).toFixed())
-                    .toString(),
-                lendTokenDetails.decimals + PRICE_DECIMALS
+            const desiredLendAmountToken = BigNumber.from(currentPrincipalAmountInToken)
+                .mul(BigNumber.from((desiredLeverage * 100).toFixed(0)))
+                .div(100)
+
+            const desiredLendAmountUsd = Number(
+                formatUnits(
+                    desiredLendAmountToken
+                        .mul(BigNumber.from((lendTokenDetails.priceUsd * 10 ** PRICE_DECIMALS).toFixed(0)))
+                        .toString(),
+                    lendTokenDetails.decimals + PRICE_DECIMALS
+                )
             )
-        )
 
-        const desiredBorrowAmountUsd = desiredLendAmountUsd - currentPrincipalAmountInUsd
+            const desiredBorrowAmountUsd = desiredLendAmountUsd - currentPrincipalAmountInUsd
 
-        const desiredBorrowAmountToken = parseUnits(
-            (desiredBorrowAmountUsd / borrowTokenDetails.priceUsd)
-                .toFixed(borrowTokenDetails.decimals)
-                .toString(),
-            borrowTokenDetails.decimals
-        )
+            // Handle very small borrow amounts
+            if (Math.abs(desiredBorrowAmountUsd) < 0.000001) {
+                return {
+                    repayAmountToken: '0',
+                    swapDetails: {
+                        fromToken: lendTokenDetails.address,
+                        toToken: borrowTokenDetails.address,
+                        amountToSwap: '0',
+                    },
+                    aTokenAmount: '0',
+                    withdrawAmount: '1',
+                }
+            }
 
-        const diffInLendAmountToken = BigNumber.from(currentLendAmount).sub(desiredLendAmountToken)
-        const diffInLendAmountUsd = Number(
-            formatUnits(
-                diffInLendAmountToken
-                    .mul((lendTokenDetails.priceUsd * 10 ** PRICE_DECIMALS).toFixed())
-                    .toString(),
-                lendTokenDetails.decimals + PRICE_DECIMALS
+            const desiredBorrowAmountToken = parseUnits(
+                Math.abs(desiredBorrowAmountUsd / borrowTokenDetails.priceUsd)
+                    .toFixed(borrowTokenDetails.decimals),
+                borrowTokenDetails.decimals
             )
-        )
-        const diffInBorrowAmountToken = parseUnits(
-            (diffInLendAmountUsd / borrowTokenDetails.priceUsd)
-                .toFixed(borrowTokenDetails.decimals)
-                .toString(),
-            borrowTokenDetails.decimals
-        )
 
-        const amountToSwap = diffInBorrowAmountToken
-            .mul(BigNumber.from(10000 + 50))
-            .div(BigNumber.from(10000))
+            const diffInLendAmountToken = BigNumber.from(currentLendAmount).sub(desiredLendAmountToken)
+            const diffInLendAmountUsd = Number(
+                formatUnits(
+                    diffInLendAmountToken
+                        .mul(BigNumber.from((lendTokenDetails.priceUsd * 10 ** PRICE_DECIMALS).toFixed(0)))
+                        .toString(),
+                    lendTokenDetails.decimals + PRICE_DECIMALS
+                )
+            )
 
-        return {
-            repayAmountToken: diffInBorrowAmountToken.toString(),
-            swapDetails: {
-                fromToken: lendTokenDetails.address,
-                toToken: borrowTokenDetails.address,
-                amountToSwap: amountToSwap.toString(),
-            },
-            aTokenAmount: diffInLendAmountToken.toString(),
-            withdrawAmount: diffInLendAmountToken.toString(),
+            const diffInBorrowAmountToken = parseUnits(
+                Math.abs(diffInLendAmountUsd / borrowTokenDetails.priceUsd)
+                    .toFixed(borrowTokenDetails.decimals),
+                borrowTokenDetails.decimals
+            )
+
+            const amountToSwap = diffInBorrowAmountToken
+                .mul(BigNumber.from(10000 + 50))
+                .div(BigNumber.from(10000))
+
+            return {
+                repayAmountToken: diffInBorrowAmountToken.toString(),
+                swapDetails: {
+                    fromToken: lendTokenDetails.address,
+                    toToken: borrowTokenDetails.address,
+                    amountToSwap: amountToSwap.toString(),
+                },
+                aTokenAmount: diffInLendAmountToken.mul(BigNumber.from(100 + 2)).div(BigNumber.from(100)).toString(),
+                withdrawAmount: "1",
+            }
+        } catch (error) {
+            console.error('Error in paramsForDesiredLeverage:', error)
+            // Return safe default values
+            return {
+                repayAmountToken: '0',
+                swapDetails: {
+                    fromToken: lendTokenDetails.address,
+                    toToken: borrowTokenDetails.address,
+                    amountToSwap: '0',
+                },
+                aTokenAmount: '0',
+                withdrawAmount: '1',
+            }
         }
     }
 
