@@ -429,9 +429,9 @@ export default function LoopPositionOverview({ loopPair, children }: LoopPositio
                         <BodyText level="body1" className="text-gray-600">
                             No matching loop position found for this token pair.
                         </BodyText>
-                        <BodyText level="body3" className="text-gray-500 mt-2">
+                        {/* <BodyText level="body3" className="text-gray-500 mt-2">
                             You need to have both lend and borrow positions in a looped platform to view performance data.
-                        </BodyText>
+                        </BodyText> */}
                     </div>
                 </div>
             )
