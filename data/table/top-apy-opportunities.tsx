@@ -294,7 +294,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
     },
     {
         accessorKey: 'apy_current',
-        accessorFn: (item) => Number(item.apy_current) + (item.has_apple_farm_rewards ? Number(item.apple_farm_apr) : 0),
+        accessorFn: (item) => Number(item.apy_current),
         header: () => {
             const searchParams = useSearchParams()
             const positionTypeParam =
@@ -329,36 +329,9 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
-            const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
-            const appleFarmApr = Number(row.original.apple_farm_apr)
-            const hasAppleFarmRewards = row.original.has_apple_farm_rewards
 
             const apyCurrent = Number(row.getValue('apy_current'))
             const apyCurrentFormatted = (apyCurrent > 0 && apyCurrent < 0.01) ? '<0.01' : abbreviateNumber(apyCurrent)
-
-            const appleFarmBaseRate = Number(row.original.apy_current)
-            const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
-                ? '<0.01'
-                : abbreviateNumber(appleFarmBaseRate)
-            const netAppleFarmAPY = Number(row.original.apy_current) + Number(appleFarmApr ?? 0)
-            const netAppleFarmAPYFormatted = netAppleFarmAPY > 0 && netAppleFarmAPY < 0.01
-                ? '<0.01'
-                : abbreviateNumber(netAppleFarmAPY)
-
-            const appleFarmRewards = [
-                {
-                    asset: {
-                        address: row.original.tokenAddress as `0x${string}`,
-                        name: "APR",
-                        symbol: row.original.tokenSymbol,
-                        logo: '/images/apple-farm-favicon.ico',
-                        decimals: 0,
-                        price_usd: 0,
-                    },
-                    supply_apy: appleFarmApr,
-                    borrow_apy: 0,
-                }
-            ]
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -400,23 +373,39 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 )
             }
 
+            // Check if there's an Apple Farm reward in the rewards array
+            const hasAppleFarmReward = rewards?.some(reward => 
+                reward.asset.symbol === 'APPL' || 
+                reward.asset.name.toLowerCase().includes('apple')
+            )
+
             return (
                 <span className="flex items-center gap-1">
                     <BodyText level={'body2'} weight={'medium'}>
-                        {`${(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend') ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
+                        {`${apyCurrentFormatted}%`}
                     </BodyText>
                     {/* REWARDS */}
                     {(hasRewards && !(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend')) && (
                         <InfoTooltip
                             label={
                                 <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                                    <ImageWithDefault
-                                        src="/icons/sparkles.svg"
-                                        alt="Rewards"
-                                        width={22}
-                                        height={22}
-                                        className="cursor-pointer hover:scale-110"
-                                    />
+                                    {hasAppleFarmReward ? (
+                                        <ImageWithDefault
+                                            src="/images/apple-farm-favicon.ico"
+                                            alt="Apple Farm Rewards"
+                                            width={22}
+                                            height={22}
+                                            className="cursor-pointer hover:scale-110"
+                                        />
+                                    ) : (
+                                        <ImageWithDefault
+                                            src="/icons/sparkles.svg"
+                                            alt="Rewards"
+                                            width={22}
+                                            height={22}
+                                            className="cursor-pointer hover:scale-110"
+                                        />
+                                    )}
                                 </span>
                             }
                             content={getRewardsTooltipContent({
@@ -424,32 +413,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 rewards: rewards || [],
                                 apyCurrent: apyCurrent || 0,
                                 positionTypeParam,
-                            })}
-                        />
-                    )}
-                    {/* APPLE FARM REWARDS */}
-                    {(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend') && (
-                        <InfoTooltip
-                            label={
-                                <motion.div
-                                    initial={{ rotate: 0 }}
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
-                                    whileHover={{ rotate: -360 }}
-                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                >
-                                    <ImageWithDefault
-                                        src="/images/apple-farm-favicon.ico"
-                                        alt="Etherlink Rewards"
-                                        width={16}
-                                        height={16}
-                                    />
-                                </motion.div>
-                            }
-                            content={getAppleFarmAPYTooltipContent({
-                                baseAPY: appleFarmBaseRate,
-                                appleFarmAPR: appleFarmApr,
-                                totalAPY: netAppleFarmAPY,
                             })}
                         />
                     )}
@@ -857,41 +820,68 @@ function getRewardsTooltipContent({
                     weight="medium"
                     className="text-gray-800"
                 >
-                    {baseRateFormatted}%
+                    {baseRateFormatted === '0' ? '0.00' : baseRateFormatted}%
                 </BodyText>
             </div>
-            {rewards?.map((reward: TReward) => (
-                <div
-                    key={reward.asset.address}
-                    className="flex items-center justify-between gap-[100px] py-2"
-                    style={{ gap: '70px' }}
-                >
-                    <div className="flex items-center gap-1">
-                        <ImageWithDefault
-                            src={reward?.asset?.logo || ''}
-                            width={14}
-                            height={14}
-                            alt={reward?.asset?.name || ''}
-                            className="inline-block rounded-full object-contain"
-                        />
-                        <Label
-                            weight="medium"
-                            className="truncate text-gray-800 max-w-[100px] truncate"
-                            title={reward?.asset?.name || ''}
-                        >
-                            {reward?.asset?.name || ''}
-                        </Label>
-                    </div>
-                    <BodyText
-                        level="body3"
-                        weight="medium"
-                        className="text-gray-800"
+            {rewards?.map((reward: TReward) => {
+                const isAppleFarm = reward.asset.symbol === 'APPL' || reward.asset.name.toLowerCase().includes('apple')
+                const rewardAPY = isLend ? reward.supply_apy : reward.borrow_apy
+                
+                if (rewardAPY === 0) return null
+                
+                return (
+                    <div
+                        key={reward.asset.address}
+                        className="flex items-center justify-between gap-[100px] py-2"
+                        style={{ gap: '70px' }}
                     >
-                        {baseRateOperator}{' '}
-                        {`${(Math.floor(Number(isLend ? reward.supply_apy : reward.borrow_apy) * 100) / 100).toFixed(2)}%`}
-                    </BodyText>
-                </div>
-            ))}
+                        <div className="flex items-center gap-1">
+                            {isAppleFarm ? (
+                                <ImageWithDefault
+                                    src="/images/apple-farm-favicon.ico"
+                                    width={14}
+                                    height={14}
+                                    alt="Apple Farm"
+                                    className="inline-block rounded-full object-contain"
+                                />
+                            ) : reward?.asset?.name?.toLowerCase().includes('intrinsic') ? (
+                                <ImageWithDefault
+                                    src="/icons/sparkles.svg"
+                                    width={14}
+                                    height={14}
+                                    alt="Intrinsic APY"
+                                    className="inline-block rounded-full object-contain"
+                                />
+                            ) : (
+                                <ImageWithDefault
+                                    src={reward?.asset?.logo || ''}
+                                    width={14}
+                                    height={14}
+                                    alt={reward?.asset?.name || ''}
+                                    className="inline-block rounded-full object-contain"
+                                />
+                            )}
+                            <Label
+                                weight="medium"
+                                className="truncate text-gray-800 max-w-[100px] truncate"
+                                title={reward?.asset?.name || ''}
+                            >
+                                {isAppleFarm ? 'Apple Farm APR' : 
+                                 reward?.asset?.name?.toLowerCase().includes('intrinsic') ? 'Intrinsic APY' : 
+                                 (reward?.asset?.name || '')}
+                            </Label>
+                        </div>
+                        <BodyText
+                            level="body3"
+                            weight="medium"
+                            className="text-gray-800"
+                        >
+                            {baseRateOperator}{' '}
+                            {`${(Math.floor(rewardAPY * 100) / 100).toFixed(2)}%`}
+                        </BodyText>
+                    </div>
+                )
+            })}
             <div
                 className="flex items-center justify-between gap-[100px] py-2"
                 style={{ gap: '70px' }}
@@ -907,7 +897,7 @@ function getRewardsTooltipContent({
                     weight="medium"
                     className="text-gray-800"
                 >
-                    = {abbreviateNumber(apyCurrent)}%
+                    = {apyCurrent === 0 ? '0.00' : abbreviateNumber(apyCurrent)}%
                 </BodyText>
             </div>
         </div>

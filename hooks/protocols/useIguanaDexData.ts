@@ -105,19 +105,50 @@ export const useIguanaDexData = () => {
 
 
             const pools = [...v2Pools, ...v3Pools]
-            const trade = await SmartRouter.getBestTrade(
-                amount,
-                swapTo,
-                TradeType.EXACT_INPUT,
-                {
-                    gasPriceWei: () => viemClient.getGasPrice(),
-                    maxHops: 3,
-                    maxSplits: 1,
-                    poolProvider: SmartRouter.createStaticPoolProvider(pools),
-                    quoteProvider,
-                    quoterOptimization: true,
-                }
-            )
+            
+            // Try both 2 hops and 3 hops simultaneously for efficiency
+            const [trade2HopResult, trade3HopResult] = await Promise.allSettled([
+                SmartRouter.getBestTrade(
+                    amount,
+                    swapTo,
+                    TradeType.EXACT_INPUT,
+                    {
+                        gasPriceWei: () => viemClient.getGasPrice(),
+                        maxHops: 2,
+                        maxSplits: 1,
+                        poolProvider: SmartRouter.createStaticPoolProvider(pools),
+                        quoteProvider,
+                        quoterOptimization: true,
+                    }
+                ),
+                SmartRouter.getBestTrade(
+                    amount,
+                    swapTo,
+                    TradeType.EXACT_INPUT,
+                    {
+                        gasPriceWei: () => viemClient.getGasPrice(),
+                        maxHops: 3,
+                        maxSplits: 1,
+                        poolProvider: SmartRouter.createStaticPoolProvider(pools),
+                        quoteProvider,
+                        quoterOptimization: true,
+                    }
+                )
+            ])
+
+            // Prefer 2 hop trade if successful, otherwise use 3 hop trade
+            let trade = null
+            if (trade2HopResult.status === 'fulfilled' && trade2HopResult.value) {
+                trade = trade2HopResult.value
+                console.log('IGUANA DEX: Using 2 hop trade', trade)
+            } else if (trade3HopResult.status === 'fulfilled' && trade3HopResult.value) {
+                trade = trade3HopResult.value
+                console.log('IGUANA DEX: Using 3 hop trade (2 hop failed)', trade)
+            } else {
+                console.log('IGUANA DEX: Both 2 hop and 3 hop trades failed')
+                console.log('2 hop error:', trade2HopResult.status === 'rejected' ? trade2HopResult.reason : 'No trade found')
+                console.log('3 hop error:', trade3HopResult.status === 'rejected' ? trade3HopResult.reason : 'No trade found')
+            }
 
             return trade
         } catch (error) {

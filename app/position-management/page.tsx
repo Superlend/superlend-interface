@@ -22,11 +22,27 @@ import { AppleFarmRewardsProvider } from '@/context/apple-farm-rewards-provider'
 import { useSearchParams } from 'next/navigation'
 import FlatTabs from '@/components/tabs/flat-tabs'
 import LoopPositionOverview from './loop-position-overview'
+import { useGetLoopPairsFromAPI } from '@/hooks/useGetLoopPairsFromAPI'
 
 export default function PositionManagementPage() {
     const searchParams = useSearchParams()
     const positionTypeParam = searchParams?.get('position_type') || ''
+    const lendTokenParam = searchParams?.get('lend_token') || ''
+    const borrowTokenParam = searchParams?.get('borrow_token') || ''
     const isLoopPosition = positionTypeParam === 'loop'
+
+    // Fetch loop pairs data
+    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairsFromAPI()
+
+    // Find the matching loop pair
+    const currentLoopPair = React.useMemo(() => {
+        if (!loopPairs?.length || !lendTokenParam || !borrowTokenParam) return null
+
+        return loopPairs.find(pair => 
+            pair.tokenAddress.toLowerCase() === lendTokenParam.toLowerCase() &&
+            pair.borrowToken.address.toLowerCase() === borrowTokenParam.toLowerCase()
+        )
+    }, [loopPairs, lendTokenParam, borrowTokenParam])
 
     return (
         <PositionManagementProvider>
@@ -43,12 +59,12 @@ export default function PositionManagementPage() {
                             }
                             {isLoopPosition &&
                                 <div className="flex flex-col gap-[16px] order-last xl:order-first">
-                                    <LoopPositionOverview />
+                                    <LoopPositionOverview loopPair={currentLoopPair} />
                                 </div>
                             }
                             <div className="order-first xl:order-last">
                                 <PortfolioProvider>
-                                    <AssetTxWidget />
+                                    <AssetTxWidget loopPair={currentLoopPair} />
                                 </PortfolioProvider>
                             </div>
                             {/* <BlogCard /> */}

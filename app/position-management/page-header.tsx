@@ -43,6 +43,7 @@ import { PlatformType } from '@/types/platform'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
+import { useLoopOpportunities } from '@/context/loop-opportunities-provider'
 import { Percent, TrendingUp } from 'lucide-react'
 import useGetMidasKpiData from '@/hooks/useGetMidasKpiData'
 
@@ -65,7 +66,13 @@ export default function PageHeader() {
     const isLoopPosition = positionTypeParam === 'loop'
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
     const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
+    const { findLoopOpportunity } = useLoopOpportunities()
     const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
+
+    // Get loop opportunity data for loop positions
+    const loopOpportunityData = isLoopPosition ? 
+        findLoopOpportunity(lendTokenAddress, borrowTokenAddress, protocol_identifier) : 
+        null
 
     // Get opportunities data to access updated APY values (includes Midas API updates)
     const { data: opportunitiesData } = useGetOpportunitiesData({
@@ -288,17 +295,17 @@ export default function PageHeader() {
     const appleFarmRewardAPY = Number(appleFarmRewardsAprs?.[relevantTokenAddress] ?? 0)
     const formattedSupplyAPY = baseSupplyAPY + appleFarmRewardAPY
 
-    console.log('Page Header APY calculation:', {
-        tokenSymbol: relevantTokenSymbol,
-        tokenAddress: relevantTokenAddress,
-        opportunityAPY,
-        platformSupplyAPY: pageHeaderStats?.supply_apy,
-        intrinsicAPY,
-        baseSupplyAPY,
-        appleFarmRewardAPY,
-        formattedSupplyAPY,
-        isDisplayOneToken
-    })
+    // console.log('Page Header APY calculation:', {
+    //     tokenSymbol: relevantTokenSymbol,
+    //     tokenAddress: relevantTokenAddress,
+    //     opportunityAPY,
+    //     platformSupplyAPY: pageHeaderStats?.supply_apy,
+    //     intrinsicAPY,
+    //     baseSupplyAPY,
+    //     appleFarmRewardAPY,
+    //     formattedSupplyAPY,
+    //     isDisplayOneToken
+    // })
 
     const formattedBorrowRate = (isMorphoVault || isFluidLend)
         ? 'N/A'
@@ -549,38 +556,59 @@ export default function PageHeader() {
                                                             )}%
                                                     </BodyText>
                                                 </Badge>
-                                                {/* Apple Farm Rewards Icon */}
-                                                {(Number(chain_id) === ChainId.Etherlink && 
-                                                  hasAppleFarmRewards(relevantTokenAddress) && 
-                                                  appleFarmRewardAPY > 0) && (
+                                                {/* APY Breakdown Icon */}
+                                                {isLoopPosition && loopOpportunityData?.lendReserve?.rewards?.length ? (
                                                     <InfoTooltip
                                                         label={
-                                                            <motion.div
-                                                                initial={{ rotate: 0 }}
-                                                                animate={{ rotate: 360 }}
-                                                                transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
-                                                                whileHover={{ rotate: -360 }}
-                                                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                                            >
+                                                            <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                                                                 <ImageWithDefault
-                                                                    src="/images/apple-farm-favicon.ico"
-                                                                    alt="Apple Farm Rewards"
+                                                                    src="/icons/sparkles.svg"
+                                                                    alt="APY Breakdown"
                                                                     width={16}
                                                                     height={16}
+                                                                    className="cursor-pointer hover:scale-110"
                                                                 />
-                                                            </motion.div>
+                                                            </span>
                                                         }
-                                                        content={getSupplyAPYBreakdownTooltip({
-                                                            baseSupplyAPY: (relevantTokenSymbol?.toLowerCase() === 'mtbill' || relevantTokenSymbol?.toLowerCase() === 'mbasis') 
-                                                                ? 0 
-                                                                : formattedSupplyAPY - appleFarmRewardAPY - intrinsicAPY,
-                                                            intrinsicAPY: intrinsicAPY,
-                                                            appleFarmAPY: appleFarmRewardAPY,
-                                                            totalSupplyAPY: formattedSupplyAPY,
+                                                        content={getLoopAPYBreakdownTooltip({
+                                                            lendReserve: loopOpportunityData.lendReserve,
                                                             tokenSymbol: relevantTokenSymbol,
-                                                            hasOpportunityAPY: opportunityAPY !== null,
                                                         })}
                                                     />
+                                                ) : (
+                                                    /* Apple Farm Rewards Icon for non-loop positions */
+                                                    (Number(chain_id) === ChainId.Etherlink && 
+                                                      hasAppleFarmRewards(relevantTokenAddress) && 
+                                                      appleFarmRewardAPY > 0) && (
+                                                        <InfoTooltip
+                                                            label={
+                                                                <motion.div
+                                                                    initial={{ rotate: 0 }}
+                                                                    animate={{ rotate: 360 }}
+                                                                    transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
+                                                                    whileHover={{ rotate: -360 }}
+                                                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                                                >
+                                                                    <ImageWithDefault
+                                                                        src="/images/apple-farm-favicon.ico"
+                                                                        alt="Apple Farm Rewards"
+                                                                        width={16}
+                                                                        height={16}
+                                                                    />
+                                                                </motion.div>
+                                                            }
+                                                            content={getSupplyAPYBreakdownTooltip({
+                                                                baseSupplyAPY: (relevantTokenSymbol?.toLowerCase() === 'mtbill' || relevantTokenSymbol?.toLowerCase() === 'mbasis') 
+                                                                    ? 0 
+                                                                    : formattedSupplyAPY - appleFarmRewardAPY - intrinsicAPY,
+                                                                intrinsicAPY: intrinsicAPY,
+                                                                appleFarmAPY: appleFarmRewardAPY,
+                                                                totalSupplyAPY: formattedSupplyAPY,
+                                                                tokenSymbol: relevantTokenSymbol,
+                                                                hasOpportunityAPY: opportunityAPY !== null,
+                                                            })}
+                                                        />
+                                                    )
                                                 )}
                                             </div>
                                         </div>
@@ -781,6 +809,129 @@ function LoadingSkeleton() {
             <div className="flex items-center gap-[8px]">
                 <Skeleton className="w-[28px] h-[28px] rounded-full" />
                 <Skeleton className="w-[60px] h-[28px] rounded-4" />
+            </div>
+        </div>
+    )
+}
+
+/**
+ * Get loop APY breakdown tooltip content from API data
+ * @param lendReserve
+ * @param tokenSymbol
+ * @returns loop APY breakdown tooltip content
+ */
+function getLoopAPYBreakdownTooltip({
+    lendReserve,
+    tokenSymbol,
+}: {
+    lendReserve: any
+    tokenSymbol: string
+}) {
+    const baseAPY = lendReserve.apy.current - (lendReserve.rewards?.reduce((total: number, reward: any) => total + reward.supply_apy, 0) || 0)
+    const totalAPY = lendReserve.apy.current
+
+    return (
+        <div className="flex flex-col divide-y divide-gray-800">
+            <BodyText
+                level="body1"
+                weight="medium"
+                className="py-2 text-gray-800"
+            >
+                Supply APY Breakdown
+            </BodyText>
+            <div
+                className="flex items-center justify-between gap-[70px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <Percent className="w-[14px] h-[14px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">
+                        Base APY
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    {baseAPY === 0 ? '0.00' : abbreviateNumber(baseAPY, 2)}%
+                </BodyText>
+            </div>
+            {lendReserve.rewards?.map((reward: any, index: number) => {
+                const isAppleFarm = reward.asset.symbol === 'APPL' || reward.asset.name.toLowerCase().includes('apple')
+                const supplyAPY = reward.supply_apy || 0
+                
+                if (supplyAPY === 0) return null
+                
+                return (
+                    <div
+                        key={`${reward.asset.address}_${index}`}
+                        className="flex items-center justify-between gap-[70px] py-2"
+                        style={{ gap: '70px' }}
+                    >
+                        <div className="flex items-center gap-1">
+                            {isAppleFarm ? (
+                                <ImageWithDefault
+                                    src="/images/apple-farm-favicon.ico"
+                                    width={14}
+                                    height={14}
+                                    alt="Apple Farm"
+                                    className="inline-block rounded-full object-contain"
+                                />
+                            ) : reward.asset.name?.toLowerCase().includes('intrinsic') ? (
+                                <ImageWithDefault
+                                    src="/icons/sparkles.svg"
+                                    width={14}
+                                    height={14}
+                                    alt="Intrinsic APY"
+                                    className="inline-block rounded-full object-contain"
+                                />
+                            ) : (
+                                <ImageWithDefault
+                                    src={reward.asset.logo}
+                                    width={14}
+                                    height={14}
+                                    alt={reward.asset.name}
+                                    className="inline-block rounded-full object-contain"
+                                />
+                            )}
+                            <Label
+                                weight="medium"
+                                className="truncate text-gray-800 max-w-[100px] truncate"
+                                title={reward.asset.name}
+                            >
+                                {isAppleFarm ? 'Apple Farm APR' : 
+                                 reward.asset.name?.toLowerCase().includes('intrinsic') ? 'Intrinsic APY' : 
+                                 reward.asset.symbol}
+                            </Label>
+                        </div>
+                        <BodyText
+                            level="body3"
+                            weight="medium"
+                            className="text-gray-800"
+                        >
+                            + {abbreviateNumber(supplyAPY, 2)}%
+                        </BodyText>
+                    </div>
+                )
+            })}
+            <div
+                className="flex items-center justify-between gap-[100px] py-2"
+                style={{ gap: '70px' }}
+            >
+                <div className="flex items-center gap-1">
+                    <TrendingUp className="w-[14px] h-[14px] text-gray-800" />
+                    <Label weight="medium" className="text-gray-800">
+                        Total APY
+                    </Label>
+                </div>
+                <BodyText
+                    level="body3"
+                    weight="medium"
+                    className="text-gray-800"
+                >
+                    = {totalAPY === 0 ? '0.00' : abbreviateNumber(totalAPY, 2)}%
+                </BodyText>
             </div>
         </div>
     )

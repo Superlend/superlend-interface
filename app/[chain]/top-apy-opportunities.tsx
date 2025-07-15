@@ -33,7 +33,7 @@ import RainingApples from '@/components/animations/RainingApples'
 import RainingPolygons from '@/components/animations/RainingPolygons'
 import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+import { useGetLoopPairsFromAPI } from '@/hooks/useGetLoopPairsFromAPI'
 import { RefreshCw } from 'lucide-react'
 import DiscoverOpportunities from './discover-opportunities'
 import { Switch } from '@/components/ui/switch'
@@ -134,7 +134,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         })
     
     // Get loop pairs when position type is 'loop'
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
+    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairsFromAPI()
     const { allChainsData } = useContext<any>(AssetsDataContext)
     const [showRainingApples, setShowRainingApples] = useState(false)
     const [showRainingPolygons, setShowRainingPolygons] = useState(false)
@@ -504,27 +504,10 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                 return true // No filtering if not loop or filter not active
             }
             
-            const lendToken = opportunity.tokenSymbol
-            const borrowToken = (opportunity as any).borrowToken?.symbol
+            // Use API correlated flag instead of hardcoded pairs
+            const loopPair = opportunity as any
+            const isCorrelated = loopPair.strategy?.correlated === true
             
-            console.log('Checking correlation for:', {
-                lendToken,
-                borrowToken,
-                pairId: (opportunity as any).pairId,
-                showCorrelatedPairsParam
-            })
-            
-            if (!borrowToken) {
-                console.log('No borrow token found')
-                return false
-            }
-            
-            const isCorrelated = CORRELATED_PAIRS.some(pair => 
-                (pair.pair1 === lendToken && pair.pair2 === borrowToken) ||
-                (pair.pair1 === borrowToken && pair.pair2 === lendToken)
-            )
-            
-            console.log('Is correlated:', isCorrelated)
             return isCorrelated
         })()
 

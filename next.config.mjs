@@ -32,6 +32,9 @@ const nextConfig = {
             {
                 hostname: 'app.aave.com',
             },
+            {
+                hostname: 'github.com',
+            },
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'attachment',

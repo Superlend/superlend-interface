@@ -1,5 +1,5 @@
 import { request } from './request'
-import { TGetOpportunitiesParams, TOpportunity } from '@/types'
+import { TGetOpportunitiesParams, TOpportunity, TGetLoopOpportunitiesParams, TLoopOpportunityResponse } from '@/types'
 import { normalizeOpportunitiesResponse } from '@/lib/opportunities-response-mapper'
 
 export async function getOpportunitiesData(params: TGetOpportunitiesParams): Promise<TOpportunity[]> {
@@ -24,6 +24,28 @@ export async function getOpportunitiesData(params: TGetOpportunitiesParams): Pro
 
     // Automatically detect and normalize response format
     return normalizeOpportunitiesResponse(response)
+}
+
+export async function getLoopOpportunitiesData(params: TGetLoopOpportunitiesParams): Promise<TLoopOpportunityResponse[]> {
+    const {
+        chain_ids = [],
+        tokens = [],
+        trend = true,
+        limit = 0,
+    } = params
+
+    const response = await request<any>({
+        method: 'POST',
+        path: `/opportunities/loop`,
+        body: {
+            chain_ids,
+            tokens,
+            trend,
+            limit,
+        },
+    })
+
+    return response.data || response
 }
 
 // Midas KPI data types

@@ -35,7 +35,7 @@ import InfoTooltip from '../tooltips/InfoTooltip'
 import TooltipText from '../tooltips/TooltipText'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+import { useGetLoopPairsFromAPI } from '@/hooks/useGetLoopPairsFromAPI'
 
 export default function DiscoverFiltersDropdown({ chain, positionType }: { chain?: string, positionType?: string }) {
     const searchParams = useSearchParams()
@@ -63,7 +63,7 @@ export default function DiscoverFiltersDropdown({ chain, positionType }: { chain
     const positionTypeParam = positionType || searchParams?.get('position_type') || 'lend'
     
     // Get loop pairs data to determine available tokens dynamically
-    const { pairs: loopPairs } = useGetLoopPairs()
+    const { pairs: loopPairs } = useGetLoopPairsFromAPI()
 
     // Set initial chain_ids for etherlink and clear filters when switching
     // useEffect(() => {

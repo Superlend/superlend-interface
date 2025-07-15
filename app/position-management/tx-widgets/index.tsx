@@ -10,7 +10,7 @@ import { useWalletConnection } from '@/hooks/useWalletConnection'
 import AaveV3TxWidget from './aave-tx-widget'
 import MorphoTxWidget from './morpho-tx-widget'
 import FluidTxWidget from './fluid-tx-widget'
-import LoopingWidget from './looping-widget'
+import { LoopingWidget } from './looping-widget'
 import { ChainId } from '@/types/chain'
 import { useTxContext } from '@/context/tx-provider'
 import { TTxContext } from '@/context/tx-provider'
@@ -20,7 +20,11 @@ import { TPortfolio } from '@/types/queries/portfolio'
 import { WhalesSupportDialog } from '@/components/dialogs/WhalesSupportDialog'
 import { MORPHO_BLUE_API_CHAINIDS } from '../../../lib/constants'
 
-export const AssetTxWidget: FC = () => {
+interface AssetTxWidgetProps {
+    loopPair?: any
+}
+
+export const AssetTxWidget: FC<AssetTxWidgetProps> = ({ loopPair }) => {
     const { portfolioData: portfolioContextData } = useContext(PortfolioContext)
     const searchParams = useSearchParams()
     // const tokenAddress = searchParams.get('token') || ''
@@ -91,6 +95,7 @@ export const AssetTxWidget: FC = () => {
                 isLoading={isLoading}
                 platformData={platformData}
                 portfolioData={portfolioData}
+                loopPair={loopPair}
             />
         )
     }

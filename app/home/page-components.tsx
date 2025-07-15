@@ -22,7 +22,7 @@ import { TChain } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import MarketsExplorerBanner from '@/components/MarketsExplorerBanner'
 import { AppleFarmRewardsProvider } from '@/context/apple-farm-rewards-provider'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+import { useGetLoopPairsFromAPI } from '@/hooks/useGetLoopPairsFromAPI'
 
 interface ISelectedToken {
     address: string
@@ -64,7 +64,7 @@ export default function HomePageComponents() {
         })
     
     // Import loop pairs hook for counting
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
+    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairsFromAPI()
     const { logEvent } = useAnalytics()
 
     const formattedTokensList = formattedTokenBalances.map((tokenBalance) => {

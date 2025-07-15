@@ -43,6 +43,8 @@ import { ETH_ADDRESSES } from '@/lib/constants'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { TScAmount } from '@/types'
 import { useAuth } from '@/context/auth-provider'
+import { useTransactionStatus, getTransactionErrorMessage } from '@/hooks/useTransactionStatus'
+import { humaniseWagmiError } from '@/lib/humaniseWagmiError'
 import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
 
 interface IRepayButtonProps {
@@ -71,11 +73,10 @@ const RepayButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            confirmations: 2,
-            hash,
-        })
+    
+    // Use the enhanced transaction status hook
+    const txStatus = useTransactionStatus(hash, 2)
+    
     const { walletAddress } = useWalletConnection()
     const { repayTx, setRepayTx } = useTxContext() as TTxContext
     const { logUserEvent } = useLogNewUserEvent()
@@ -99,12 +100,12 @@ const RepayButton = ({
     const getTxButtonText = (
         isPending: boolean,
         isConfirming: boolean,
-        isConfirmed: boolean
+        isSuccessful: boolean
     ) => {
         return txBtnStatus[
             isConfirming
                 ? 'confirming'
-                : isConfirmed
+                : isSuccessful
                     ? repayTx.status === 'view'
                         ? 'success'
                         : 'default'
@@ -114,11 +115,45 @@ const RepayButton = ({
         ]
     }
 
-    const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+    const txBtnText = getTxButtonText(isPending, txStatus.isConfirming, txStatus.isSuccessful)
+
+    // Memoize logging data to prevent unnecessary re-renders
+    const repayCompletedLogData = useMemo(() => ({
+        amount: amount.amountRaw,
+        token_symbol: assetDetails?.asset?.token?.symbol,
+        platform_name: assetDetails?.name,
+        chain_name: CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+        wallet_address: walletAddress,
+    }), [amount.amountRaw, assetDetails?.asset?.token?.symbol, assetDetails?.name, assetDetails?.chain_id, walletAddress])
 
     useEffect(() => {
         getAccessTokenFromPrivy()
     }, [])
+
+    // Initialize transaction status based on token type
+    useEffect(() => {
+        if (repayTx.status === 'view' || repayTx.status === 'approve' || repayTx.status === 'repay') {
+            return; // Don't re-initialize if already set
+        }
+
+        if (ETH_ADDRESSES.includes(underlyingAssetAdress)) {
+            // For ETH/native tokens, no approval needed
+            setRepayTx((prev: TRepayTx) => ({
+                ...prev,
+                status: 'repay',
+                hash: '',
+                errorMessage: '',
+            }))
+        } else {
+            // For ERC20 tokens, start with approval
+            setRepayTx((prev: TRepayTx) => ({
+                ...prev,
+                status: 'approve',
+                hash: '',
+                errorMessage: '',
+            }))
+        }
+    }, [underlyingAssetAdress, repayTx.status])
 
     useEffect(() => {
         if (repayTx.status === 'repay' && !ETH_ADDRESSES.includes(underlyingAssetAdress)) {
@@ -186,25 +221,14 @@ const RepayButton = ({
                     ],
                 })
                     .then((data) => {
+                        // Transaction initiated successfully, let useEffect handle completion
                         setRepayTx((prev: TRepayTx) => ({
                             ...prev,
-                            status: 'view',
                             errorMessage: '',
                         }))
 
-                        logEvent('repay_completed', {
-                            amount: amount.amountRaw,
-                            token_symbol: assetDetails?.asset?.token?.symbol,
-                            platform_name: assetDetails?.name,
-                            chain_name:
-                                CHAIN_ID_MAPPER[
-                                Number(assetDetails?.chain_id) as ChainId
-                                ],
-                            wallet_address: walletAddress,
-                        })
-
                         logUserEvent({
-                            user_address: walletAddress,
+                            user_address: walletAddress as `0x${string}`,
                             event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
                             platform_type: 'superlend_aggregator',
                             protocol_identifier: assetDetails?.protocol_identifier,
@@ -226,6 +250,7 @@ const RepayButton = ({
                             isPending: false,
                             isConfirming: false,
                             isConfirmed: false,
+                            status: 'repay', // Reset to repay status for retry
                             errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
                         }))
                     })
@@ -243,9 +268,9 @@ const RepayButton = ({
                     isPending: false,
                     isConfirming: false,
                     isConfirmed: false,
+                    status: 'repay', // Reset to repay status for retry
                     errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
                 }))
-                error
             }
         },
         [
@@ -298,25 +323,14 @@ const RepayButton = ({
                     : BigInt('0'),
             })
                 .then((data) => {
+                    // Transaction initiated successfully, let useEffect handle completion
                     setRepayTx((prev: TRepayTx) => ({
                         ...prev,
-                        status: 'view',
                         errorMessage: '',
                     }))
 
-                    logEvent('repay_completed', {
-                        amount: amount.amountRaw,
-                        token_symbol: assetDetails?.asset?.token?.symbol,
-                        platform_name: assetDetails?.name,
-                        chain_name:
-                            CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
-                            ],
-                        wallet_address: walletAddress,
-                    })
-
                     logUserEvent({
-                        user_address: walletAddress,
+                        user_address: walletAddress as `0x${string}`,
                         event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
                         platform_type: 'superlend_aggregator',
                         protocol_identifier: assetDetails?.protocol_identifier,
@@ -330,6 +344,7 @@ const RepayButton = ({
                         isPending: false,
                         isConfirming: false,
                         isConfirmed: false,
+                        status: 'repay', // Reset to repay status for retry
                         // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
                     }))
                 })
@@ -339,6 +354,7 @@ const RepayButton = ({
                 isPending: false,
                 isConfirming: false,
                 isConfirmed: false,
+                status: 'repay', // Reset to repay status for retry
                 // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
             }))
         }
@@ -382,25 +398,14 @@ const RepayButton = ({
                 ],
             })
                 .then((data) => {
+                    // Transaction initiated successfully, let useEffect handle completion
                     setRepayTx((prev: TRepayTx) => ({
                         ...prev,
-                        status: 'view',
                         errorMessage: '',
                     }))
 
-                    logEvent('repay_completed', {
-                        amount: amount.amountRaw,
-                        token_symbol: assetDetails?.asset?.token?.symbol,
-                        platform_name: assetDetails?.name,
-                        chain_name:
-                            CHAIN_ID_MAPPER[
-                            Number(assetDetails?.chain_id) as ChainId
-                            ],
-                        wallet_address: walletAddress,
-                    })
-
                     logUserEvent({
-                        user_address: walletAddress,
+                        user_address: walletAddress as `0x${string}`,
                         event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
                         platform_type: 'superlend_aggregator',
                         protocol_identifier: assetDetails?.protocol_identifier,
@@ -414,6 +419,7 @@ const RepayButton = ({
                         isPending: false,
                         isConfirming: false,
                         isConfirmed: false,
+                        status: 'repay', // Reset to repay status for retry
                         // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
                     }))
                 })
@@ -423,6 +429,7 @@ const RepayButton = ({
                 isPending: false,
                 isConfirming: false,
                 isConfirmed: false,
+                status: 'repay', // Reset to repay status for retry
                 // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
             }))
         }
@@ -436,15 +443,52 @@ const RepayButton = ({
         decimals,
     ])
 
+    // Handle transaction success/failure
+    useEffect(() => {
+        if (txStatus.isSuccessful) {
+            if (repayTx.status === 'approve') {
+                // Approval successful, move to repay
+                setRepayTx((prev: TRepayTx) => ({
+                    ...prev,
+                    status: 'repay',
+                    hash: hash || '',
+                    isConfirmed: true,
+                }))
+            } else if (repayTx.status === 'repay') {
+                // Repay successful, move to view
+                setRepayTx((prev: TRepayTx) => ({
+                    ...prev,
+                    status: 'view',
+                    hash: hash || '',
+                    isConfirmed: true,
+                }))
+                
+                logEvent('repay_completed', repayCompletedLogData)
+            }
+        } else if (txStatus.isFailed) {
+            const errorMessage = getTransactionErrorMessage(txStatus.receipt) || 'Transaction failed'
+            setRepayTx((prev: TRepayTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: errorMessage,
+                // Reset status to retry - keep the same status to allow retry
+                status: repayTx.status === 'approve' ? 'approve' : 'repay',
+            }))
+        }
+    }, [txStatus.isSuccessful, txStatus.isFailed, txStatus.receipt, hash, repayTx.status, logEvent, repayCompletedLogData])
+
+    // Update the status(Loading states) of the repayTx based on the isPending and txStatus states
     useEffect(() => {
         setRepayTx((prev: TRepayTx) => ({
             ...prev,
             isPending: isPending,
-            isConfirming: isConfirming,
-            isConfirmed: isConfirmed,
-            isRefreshingAllowance: isConfirmed,
+            isConfirming: txStatus.isConfirming,
+            isConfirmed: txStatus.isSuccessful,
+            isRefreshingAllowance: txStatus.isSuccessful,
         }))
-    }, [isPending, isConfirming, isConfirmed])
+    }, [isPending, txStatus.isConfirming, txStatus.isSuccessful])
 
     // useEffect(() => {
     //     if (repayTx.status === 'view') return
@@ -473,32 +517,19 @@ const RepayButton = ({
     //     }
     // }, [repayTx.allowanceBN])
 
+    // Update hash when transaction is initiated
     useEffect(() => {
         if (
             (repayTx.status === 'approve' || repayTx.status === 'repay') &&
-            hash
+            hash &&
+            repayTx.hash !== hash
         ) {
             setRepayTx((prev: TRepayTx) => ({
                 ...prev,
                 hash: hash || '',
             }))
         }
-        if (repayTx.status === 'view' && hash) {
-            setRepayTx((prev: TRepayTx) => ({
-                ...prev,
-                hash: hash || '',
-            }))
-
-            logEvent('repay_completed', {
-                amount: amount.amountRaw,
-                token_symbol: assetDetails?.asset?.token?.symbol,
-                platform_name: assetDetails?.name,
-                chain_name:
-                    CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                wallet_address: walletAddress,
-            })
-        }
-    }, [hash, repayTx.status])
+    }, [hash, repayTx.status, repayTx.hash])
 
     const onApproveSupply = async () => {
         // if (!isConnected) {
@@ -520,7 +551,7 @@ const RepayButton = ({
                 platform_name: assetDetails?.name,
                 chain_name:
                     CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
-                wallet_address: walletAddress,
+                wallet_address: walletAddress as `0x${string}`,
             })
 
             setRepayTx((prev: TRepayTx) => ({
@@ -536,21 +567,27 @@ const RepayButton = ({
                 functionName: 'approve',
                 args: [poolContractAddress, amount.amountParsed],
             }).catch((error) => {
+                // Handle immediate errors (like user rejection)
+                const errorMessage = humaniseWagmiError(error)
                 setRepayTx((prev: TRepayTx) => ({
                     ...prev,
                     isPending: false,
                     isConfirming: false,
                     isConfirmed: false,
-                    // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+                    errorMessage: errorMessage,
+                    status: 'approve', // Reset to approve status for retry
                 }))
             })
         } catch (error: any) {
+            // Handle immediate errors (like user rejection)
+            const errorMessage = humaniseWagmiError(error)
             setRepayTx((prev: TRepayTx) => ({
                 ...prev,
                 isPending: false,
                 isConfirming: false,
                 isConfirmed: false,
-                // errorMessage: SOMETHING_WENT_WRONG_MESSAGE,
+                errorMessage: errorMessage,
+                status: 'approve', // Reset to approve status for retry
             }))
         }
     }
@@ -591,11 +628,11 @@ const RepayButton = ({
                     }
                 />
             )}
-            {repayTx.errorMessage.length > 0 && (
+            {((repayTx.errorMessage.length > 0) && !error) && (
                 <CustomAlert description={repayTx.errorMessage} />
             )}
             <Button
-                disabled={isPending || isConfirming || disabled}
+                disabled={isPending || txStatus.isConfirming || disabled}
                 onClick={() => {
                     if (repayTx.status === 'approve') {
                         onApproveSupply()
@@ -609,7 +646,7 @@ const RepayButton = ({
                 variant="primary"
             >
                 {txBtnText}
-                {repayTx.status !== 'view' && !isPending && !isConfirming && (
+                {repayTx.status !== 'view' && !isPending && !txStatus.isConfirming && (
                     <ArrowRightIcon
                         width={16}
                         height={16}

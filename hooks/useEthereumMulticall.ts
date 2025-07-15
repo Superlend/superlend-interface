@@ -1,14 +1,12 @@
 import { BigNumber } from 'ethers'
-import { useEffect, useState } from 'react'
 import {
     ContractCallContext,
     ContractCallResults,
     Multicall,
 } from 'ethereum-multicall'
 import { MULTICALL_ADDRESSES } from '../lib/constants'
-import { createDirectProviders } from '@/lib/direct-providers'
 import { providers } from 'ethers'
-import { SUPPORTED_CHAIN_IDS } from '@/constants'
+import { useEthereumMulticallContext } from '../context/ethereum-multicall-provider'
 
 // Override Multicall to optimize RPC calls
 export class OptimizedMulticall extends Multicall {
@@ -61,89 +59,6 @@ export class OptimizedMulticall extends Multicall {
 }
 
 export const useEthersMulticall = () => {
-    const [providers, setProviders] = useState<Record<number, providers.JsonRpcProvider>>({})
-    const [multicall, setMulticall] = useState<Record<number, OptimizedMulticall>>({})
-    const [isLoading, setIsLoading] = useState<Boolean>(false)
-    const [isError, setIsError] = useState(false)
-
-    const initalizeEthMulticall = () => {
-        try {
-            setIsLoading(true)
-            
-            // Create direct providers instead of proxy providers
-            const _providers = createDirectProviders();
-            
-            const _multicall: Record<number, OptimizedMulticall> = {}
-            for (const chain of Object.keys(_providers)) {
-                const chainId = Number(chain)
-                _multicall[chainId] = new OptimizedMulticall({
-                    ethersProvider: _providers[chainId],
-                    tryAggregate: true,
-                    multicallCustomContractAddress:
-                        MULTICALL_ADDRESSES[Number(chain)],
-                })
-            }
-            setMulticall(_multicall)
-            setProviders(_providers)
-            setIsLoading(false)
-
-            return _multicall
-        } catch (error) {
-            console.log(error)
-            setIsError(true)
-            setIsLoading(false)
-        }
-    }
-
-    const ethMulticall = (
-        calldata: ContractCallContext[],
-        chainId: number,
-        _multicall?: OptimizedMulticall
-    ): Promise<ContractCallResults> => {
-        let multicallProvider: OptimizedMulticall = _multicall || multicall[chainId]
-        if (!multicallProvider) {
-            return undefined as any
-        }
-        return new Promise(async (resolve, reject) => {
-            try {
-                const result = await multicallProvider.call(calldata)
-                resolve(result)
-            } catch (error) {
-                reject(error)
-            }
-        })
-    }
-
-    const fetchNativeBalance = (
-        address: string,
-        chainId: number
-    ): Promise<BigNumber> => {
-        const provider = providers[chainId]
-        if (!provider) return undefined as any
-
-        return new Promise(async (resolve, reject) => {
-            try {
-                const result = await provider.getBalance(address)
-                resolve(result)
-            } catch (error) {
-                reject(error)
-            }
-        })
-    }
-
-    useEffect(() => {
-        if (!Object.keys(providers).length || !Object.keys(multicall).length) {
-            initalizeEthMulticall()
-        }
-    }, [providers, multicall, isError])
-
-    return {
-        providers,
-        setProviders,
-        multicall,
-        setMulticall,
-        ethMulticall,
-        fetchNativeBalance,
-        initalizeEthMulticall,
-    }
+    // Use the shared context instead of creating new instances
+    return useEthereumMulticallContext()
 }

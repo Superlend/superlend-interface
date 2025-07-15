@@ -33,7 +33,7 @@ import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+import { useGetLoopPairsFromAPI } from '@/hooks/useGetLoopPairsFromAPI'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -68,7 +68,7 @@ export default function Opportunities({
     const { appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards, hasAppleFarmRewards } = useAppleFarmRewards()
     
     // Get loop pairs when position type is 'loop'
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
+    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairsFromAPI()
 
     useEffect(() => {
         setColumnVisibility(() => {

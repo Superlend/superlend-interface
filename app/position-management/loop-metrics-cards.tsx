@@ -65,26 +65,21 @@ export default function LoopMetricsCards({ metrics, isLoading }: LoopMetricsCard
                                         >
                                             {metric.value}
                                         </HeadingText>
-                                        {/* Apple Farm Rewards Icon for Supply APY */}
-                                        {metric.hasAppleFarmRewards && (
+                                        {/* Loop APY Breakdown Icon for Supply APY */}
+                                        {metric.hasLoopBreakdown && (
                                             <InfoTooltip
                                                 label={
-                                                    <motion.div
-                                                        initial={{ rotate: 0 }}
-                                                        animate={{ rotate: 360 }}
-                                                        transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
-                                                        whileHover={{ rotate: -360 }}
-                                                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                                    >
+                                                    <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                                                         <ImageWithDefault
-                                                            src="/images/apple-farm-favicon.ico"
-                                                            alt="Apple Farm Rewards"
+                                                            src="/icons/sparkles.svg"
+                                                            alt="APY Breakdown"
                                                             width={16}
                                                             height={16}
+                                                            className="cursor-pointer hover:scale-110"
                                                         />
-                                                    </motion.div>
+                                                    </span>
                                                 }
-                                                content={metric.appleFarmTooltip}
+                                                content={metric.loopBreakdownTooltip}
                                             />
                                         )}
                                     </div>

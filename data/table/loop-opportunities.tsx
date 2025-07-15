@@ -287,88 +287,13 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
         },
         cell: ({ row }) => {
-            const searchParams = useSearchParams()
-            const positionTypeParam = 'loop' // Always loop for this table
-            const { hasAppleFarmRewards, appleFarmRewardsAprs } = useAppleFarmRewards()
-            const hasRewards =
-                row.original?.additional_rewards &&
-                row.original?.rewards.length > 0
-            // Declare tooltip content related variables
-            let baseRate, baseRateFormatted, rewards, totalRewards
-            const isLend = true // Loop is always lend context for supply token
-            const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
-                row.original?.platformId.split('-')[0].toLowerCase()
-            )
-            const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
-            const hasAppleFarmRewardsForToken = hasAppleFarmRewards(row.original.tokenAddress)
-            const appleFarmApr = Number(appleFarmRewardsAprs?.[row.original.tokenAddress] ?? 0)
-
-            const apyCurrent = Number(row.original.apy_current || 0)
+            const loopPair = row.original as TLoopPair
+            const maxAPY = loopPair.strategy?.max_apy.current || 0
+            const maxAPYFormatted = (Math.abs(maxAPY) > 0 && Math.abs(maxAPY) < 0.01) ? '<0.01' : abbreviateNumber(maxAPY)
             
-            // Get Max APY which already includes Apple Farm rewards (from createLoopPairs)
-            const maxAPY = (row.original as any).maxAPY || apyCurrent
-            const maxAPYFormatted = (maxAPY > 0 && maxAPY < 0.01) ? '<0.01' : abbreviateNumber(maxAPY)
-
-            // For tooltip: break down the max APY
-            const baseAPY = Number(row.original.apy_current || 0)
-            const baseAPYFormatted = baseAPY < 0.01 && baseAPY > 0
-                ? '<0.01'
-                : abbreviateNumber(baseAPY)
-
-            const appleFarmRewards = [
-                {
-                    asset: {
-                        address: row.original.tokenAddress as `0x${string}`,
-                        name: "Apple Farm APR",
-                        symbol: row.original.tokenSymbol,
-                        logo: '/images/apple-farm-favicon.ico',
-                        decimals: 0,
-                        price_usd: 0,
-                    },
-                    supply_apy: appleFarmApr,
-                    borrow_apy: 0,
-                }
-            ]
-
-            if (hasRewards) {
-                // Update rewards grouped by asset address
-                rewards = getRewardsGroupedByAsset(row.original?.rewards)
-                // Get total rewards
-                totalRewards = rewards.reduce(
-                    (acc, curr) =>
-                        acc +
-                        Number(isLend ? curr.supply_apy : curr.borrow_apy),
-                    0
-                )
-                // Lend base rate = APY - Asset Total Rewards
-                const lendBaseRate = apyCurrent - totalRewards
-                // Borrow base rate = APY + Asset Total Rewards
-                const borrowBaseRate = apyCurrent + totalRewards
-                baseRate = Number(isLend ? lendBaseRate : borrowBaseRate)
-                baseRateFormatted =
-                    baseRate < 0.01 && baseRate > 0
-                        ? '<0.01'
-                        : abbreviateNumber(baseRate)
-            }
-
-            if (
-                maxAPYFormatted === '0.00' &&
-                !isPairBasedProtocol &&
-                !isLend
-            ) {
-                return (
-                    <InfoTooltip
-                        label={
-                            <TooltipText>
-                                <BodyText level={'body2'} weight={'medium'}>
-                                    {`${maxAPYFormatted}%`}
-                                </BodyText>
-                            </TooltipText>
-                        }
-                        content={'This asset is non-borrowable'}
-                    />
-                )
-            }
+            // Get strategy breakdown for tooltip
+            const strategyBreakdown = loopPair.strategy?.breakdown || []
+            const hasBreakdown = strategyBreakdown.length > 0
 
             return (
                 <span className="flex items-center gap-1">
@@ -377,54 +302,37 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         weight={'medium'}
                         className={maxAPY > 0 ? 'text-green-600' : 'text-red-600'}
                     >
-                        {`${maxAPYFormatted}%`}
+                        {maxAPY >= 0 ? '' : '-'}{`${Math.abs(Number(maxAPYFormatted))}%`}
                     </BodyText>
-                    {/* REGULAR REWARDS */}
-                    {hasRewards && (
+                    {hasBreakdown && (
                         <InfoTooltip
                             label={
                                 <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                                    <ImageWithDefault
-                                        src="/icons/sparkles.svg"
-                                        alt="Rewards"
-                                        width={22}
-                                        height={22}
-                                        className="cursor-pointer hover:scale-110"
-                                    />
+                                    {strategyBreakdown.some(item => 
+                                        item.asset.symbol === 'APPL' || 
+                                        item.asset.name.toLowerCase().includes('apple')
+                                    ) ? (
+                                        <ImageWithDefault
+                                            src="/images/apple-farm-favicon.ico"
+                                            alt="Apple Farm Rewards"
+                                            width={22}
+                                            height={22}
+                                            className="cursor-pointer hover:scale-110"
+                                        />
+                                    ) : (
+                                        <ImageWithDefault
+                                            src="/icons/sparkles.svg"
+                                            alt="Strategy Breakdown"
+                                            width={22}
+                                            height={22}
+                                            className="cursor-pointer hover:scale-110"
+                                        />
+                                    )}
                                 </span>
                             }
-                            content={getRewardsTooltipContent({
-                                baseRateFormatted: baseRateFormatted || '',
-                                rewards: rewards || [],
-                                apyCurrent: apyCurrent || 0,
-                                positionTypeParam,
-                            })}
-                        />
-                    )}
-                    {/* APPLE FARM REWARDS */}
-                    {(isEtherlinkChain && hasAppleFarmRewardsForToken) && (
-                        <InfoTooltip
-                            label={
-                                <motion.div
-                                    initial={{ rotate: 0 }}
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
-                                    whileHover={{ rotate: -360 }}
-                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                >
-                                    <ImageWithDefault
-                                        src="/images/apple-farm-favicon.ico"
-                                        alt="Apple Farm Rewards"
-                                        width={16}
-                                        height={16}
-                                    />
-                                </motion.div>
-                            }
-                            content={getMaxAPYTooltipContent({
-                                baseAPYFormatted: baseAPYFormatted || '',
-                                appleFarmRewards: appleFarmRewards || [],
-                                maxAPY: maxAPY || 0,
-                                positionTypeParam: 'loop',
+                            content={getStrategyBreakdownTooltip({
+                                breakdown: strategyBreakdown,
+                                maxAPY: maxAPY,
                             })}
                         />
                     )}
@@ -434,36 +342,28 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         enableGlobalFilter: false,
     },
     {
-        accessorKey: 'apy_avg_7days',
-        accessorFn: (item) => Number(item.apy_avg_7days),
+        accessorKey: 'max_apy_7d',
+        accessorFn: (item) => {
+            const loopPair = item as TLoopPair
+            return loopPair.strategy?.max_apy.avg_7days || 0
+        },
         header: () => {
-            const searchParams = useSearchParams()
-            const positionTypeParam =
-                searchParams?.get('position_type') || 'lend'
-            const lendTooltipContent =
-                '% 7 day average interest you earn on deposits over a year. This exludes rewards.'
-            const borrowTooltipContent =
-                '% 7 day average interest you pay for your borrows over a year. This exludes rewards.'
-            const tooltipContent =
-                positionTypeParam === 'lend'
-                    ? lendTooltipContent
-                    : borrowTooltipContent
-
             return (
                 <InfoTooltip
                     side="bottom"
-                    label={<TooltipText>7D Base APY</TooltipText>}
-                    content={tooltipContent}
+                    label={<TooltipText>7D Max APY</TooltipText>}
+                    content={'7-day average of maximum APY achievable with this loop strategy.'}
                 />
             )
         },
         cell: ({ row }) => {
-            const apy7DayAvg = Number(row.getValue('apy_avg_7days'))
-            const apy7DayAvgFormatted = abbreviateNumber(apy7DayAvg)
+            const loopPair = row.original as TLoopPair
+            const maxApy7d = loopPair.strategy?.max_apy.avg_7days || 0
+            const maxApy7dFormatted = (Math.abs(maxApy7d) > 0 && Math.abs(maxApy7d) < 0.01) ? '<0.01' : abbreviateNumber(maxApy7d)
 
             return (
                 <BodyText level={'body2'} weight={'medium'}>
-                    {`${apy7DayAvgFormatted}%`}
+                    {maxApy7d >= 0 ? '' : '-'}{`${Math.abs(Number(maxApy7dFormatted))}%`}
                 </BodyText>
             )
         },
@@ -530,6 +430,33 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             return (
                 <BodyText level={'body2'} weight={'medium'}>
                     ${abbreviateNumber(Number(value))}
+                </BodyText>
+            )
+        },
+        enableGlobalFilter: false,
+    },
+    {
+        accessorKey: 'max_leverage',
+        accessorFn: (item) => {
+            const loopPair = item as TLoopPair
+            return loopPair.strategy?.max_leverage || 1
+        },
+        header: () => (
+            <InfoTooltip
+                side="bottom"
+                label={<TooltipText>Max Leverage</TooltipText>}
+                content={
+                    'Maximum leverage multiplier available for this loop strategy.'
+                }
+            />
+        ),
+        cell: ({ row }) => {
+            const loopPair = row.original as TLoopPair
+            const maxLeverage = loopPair.strategy?.max_leverage || 1
+
+            return (
+                <BodyText level={'body2'} weight={'medium'}>
+                    {maxLeverage.toFixed(1)}x
                 </BodyText>
             )
         },
@@ -769,28 +696,25 @@ function getFormattedBaseRate(value: number) {
 }
 
 /**
- * Get max APY tooltip content with Apple Farm rewards breakdown
- * @param baseAPYFormatted
- * @param appleFarmRewards
+ * Get strategy breakdown tooltip content
+ * @param breakdown
  * @param maxAPY
- * @param positionTypeParam
- * @returns max APY tooltip content
+ * @returns strategy breakdown tooltip content
  */
-function getMaxAPYTooltipContent({
-    baseAPYFormatted,
-    appleFarmRewards,
+function getStrategyBreakdownTooltip({
+    breakdown,
     maxAPY,
-    positionTypeParam,
 }: {
-    baseAPYFormatted: string
-    appleFarmRewards: TReward[]
+    breakdown: any[]
     maxAPY: number
-    positionTypeParam: string
 }) {
-    // Calculate loop APY by subtracting Apple Farm rewards from max APY
-    const appleFarmAPY = appleFarmRewards?.reduce((total, reward) => total + Number(reward.supply_apy), 0) || 0
-    const loopAPY = maxAPY - appleFarmAPY
-    const loopAPYFormatted = (loopAPY > 0 && loopAPY < 0.01) ? '<0.01' : abbreviateNumber(loopAPY)
+    // Group items by type
+    const supplyToken = breakdown.find(item => item.supply_apy > 0 && !item.asset.name.toLowerCase().includes('apple'))
+    const borrowToken = breakdown.find(item => item.borrow_apy > 0)
+    const appleFarmReward = breakdown.find(item => 
+        item.asset.symbol === 'APPL' || 
+        item.asset.name.toLowerCase().includes('apple')
+    )
 
     return (
         <div className="flex flex-col divide-y divide-gray-800">
@@ -799,46 +723,28 @@ function getMaxAPYTooltipContent({
                 weight="medium"
                 className="py-2 text-gray-800"
             >
-                Max APY Breakdown
+                Strategy Breakdown
             </BodyText>
-            <div
-                className="flex items-center justify-between gap-[70px] py-2"
-                style={{ gap: '70px' }}
-            >
-                <div className="flex items-center gap-1">
-                    <ChartNoAxesColumnIncreasing className="w-[14px] h-[14px] text-gray-800" />
-                    <Label weight="medium" className="text-gray-800">
-                        Loop APY
-                    </Label>
-                </div>
-                <BodyText
-                    level="body3"
-                    weight="medium"
-                    className="text-gray-800"
-                >
-                    {loopAPYFormatted}%
-                </BodyText>
-            </div>
-            {appleFarmRewards?.map((reward: TReward) => (
+            {/* Supply Token APY */}
+            {supplyToken && (
                 <div
-                    key={reward.asset.address}
-                    className="flex items-center justify-between gap-[100px] py-2"
+                    className="flex items-center justify-between gap-[70px] py-2"
                     style={{ gap: '70px' }}
                 >
                     <div className="flex items-center gap-1">
                         <ImageWithDefault
-                            src={reward?.asset?.logo || ''}
+                            src={supplyToken.asset.logo}
                             width={14}
                             height={14}
-                            alt={reward?.asset?.name || ''}
+                            alt={supplyToken.asset.name}
                             className="inline-block rounded-full object-contain"
                         />
                         <Label
                             weight="medium"
                             className="truncate text-gray-800 max-w-[100px] truncate"
-                            title={reward?.asset?.name || ''}
+                            title={supplyToken.asset.name}
                         >
-                            {reward?.asset?.name || ''}
+                            {supplyToken.asset.symbol}
                         </Label>
                     </div>
                     <BodyText
@@ -846,10 +752,73 @@ function getMaxAPYTooltipContent({
                         weight="medium"
                         className="text-gray-800"
                     >
-                        + {`${(Math.floor(Number(reward.supply_apy) * 100) / 100).toFixed(2)}%`}
+                        + {abbreviateNumber(supplyToken.supply_apy || 0, 2)}%
                     </BodyText>
                 </div>
-            ))}
+            )}
+            {/* Borrow Token APY */}
+            {borrowToken && (
+                <div
+                    className="flex items-center justify-between gap-[70px] py-2"
+                    style={{ gap: '70px' }}
+                >
+                    <div className="flex items-center gap-1">
+                        <ImageWithDefault
+                            src={borrowToken.asset.logo}
+                            width={14}
+                            height={14}
+                            alt={borrowToken.asset.name}
+                            className="inline-block rounded-full object-contain"
+                        />
+                        <Label
+                            weight="medium"
+                            className="truncate text-gray-800 max-w-[100px] truncate"
+                            title={borrowToken.asset.name}
+                        >
+                            {borrowToken.asset.symbol}
+                        </Label>
+                    </div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-800"
+                    >
+                        - {abbreviateNumber(borrowToken.borrow_apy || 0, 2)}%
+                    </BodyText>
+                </div>
+            )}
+            {/* Apple Farm Rewards */}
+            {appleFarmReward && appleFarmReward.supply_apy > 0 && (
+                <div
+                    className="flex items-center justify-between gap-[70px] py-2"
+                    style={{ gap: '70px' }}
+                >
+                    <div className="flex items-center gap-1">
+                        <ImageWithDefault
+                            src="/images/apple-farm-favicon.ico"
+                            width={14}
+                            height={14}
+                            alt="Apple Farm"
+                            className="inline-block rounded-full object-contain"
+                        />
+                        <Label
+                            weight="medium"
+                            className="truncate text-gray-800 max-w-[100px] truncate"
+                            title="Apple Farm APR"
+                        >
+                            Apple Farm APR
+                        </Label>
+                    </div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-800"
+                    >
+                        + {abbreviateNumber(appleFarmReward.supply_apy || 0, 2)}%
+                    </BodyText>
+                </div>
+            )}
+            {/* Net APY */}
             <div
                 className="flex items-center justify-between gap-[100px] py-2"
                 style={{ gap: '70px' }}
@@ -857,7 +826,7 @@ function getMaxAPYTooltipContent({
                 <div className="flex items-center gap-1">
                     <TrendingUp className="w-[14px] h-[14px] text-gray-800" />
                     <Label weight="medium" className="text-gray-800">
-                        Max APY
+                        Net APY
                     </Label>
                 </div>
                 <BodyText
@@ -865,7 +834,7 @@ function getMaxAPYTooltipContent({
                     weight="medium"
                     className="text-gray-800"
                 >
-                    = {abbreviateNumber(maxAPY)}%
+                    = {maxAPY === 0 ? '0.00' : abbreviateNumber(maxAPY, 2)}%
                 </BodyText>
             </div>
         </div>

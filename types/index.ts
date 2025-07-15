@@ -2,9 +2,9 @@ import { WarningMessages } from '@/constants'
 import { Period } from './periodButtons'
 import { ProtocolType } from './platform'
 
-export type TPositionType = 'all' | 'lend' | 'borrow' | 'loop'
-export type TTransactionType = 'lend' | 'borrow' | 'loop' // Excludes 'all' for transaction operations
-export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay' | 'collateral' | 'loop'
+export type TPositionType = 'all' | 'lend' | 'borrow' | 'loop' | 'unloop'
+export type TTransactionType = 'lend' | 'borrow' | 'loop' | 'unloop' // Excludes 'all' for transaction operations
+export type TActionType = 'lend' | 'borrow' | 'withdraw' | 'repay' | 'collateral' | 'loop' | 'unloop'
 export type TAddress = `0x${string}`
 
 export type TScAmount = {
@@ -14,6 +14,7 @@ export type TScAmount = {
     lendAmount?: string
     borrowAmount?: string
     flashLoanAmount?: string
+    withdrawAmount?: string
 }
 
 export type TToken = {
@@ -325,3 +326,85 @@ export type TGetTokensParams = {
 }
 
 // Queries END =====================================
+
+export interface TLoopOpportunityReward {
+    supply_apy: number
+    borrow_apy: number
+    asset: {
+        address: string
+        name: string
+        symbol: string
+        decimals: number
+        logo: string
+        price_usd: number
+    }
+}
+
+export interface TLoopOpportunityToken {
+    address: string
+    name: string
+    symbol: string
+    decimals: number
+    logo: string
+    price_usd: number
+}
+
+export interface TLoopOpportunityReserve {
+    token: TLoopOpportunityToken
+    max_ltv: number
+    emode_category: number
+    emode_ltv: number
+    liquidity: string
+    borrows: string
+    utilization_rate: number
+    apy: {
+        current: number
+        avg_7days: number
+    }
+    rewards?: TLoopOpportunityReward[]
+}
+
+export interface TLoopOpportunityBreakdown {
+    supply_apy: number
+    borrow_apy: number
+    asset: {
+        address: string
+        name: string
+        symbol: string
+        decimals: number
+        logo: string
+        price_usd: number
+        coin_gecko_id?: string
+    }
+}
+
+export interface TLoopOpportunityStrategy {
+    max_leverage: number
+    correlated: boolean
+    max_apy: {
+        current: number
+        avg_7days: number
+    }
+    breakdown: TLoopOpportunityBreakdown[]
+}
+
+export interface TLoopOpportunityResponse {
+    platform: {
+        name: string
+        protocol_identifier: string
+        platform_name: string
+        core_contract: string
+        logo: string
+    }
+    lendReserve: TLoopOpportunityReserve
+    borrowReserve: TLoopOpportunityReserve
+    strategy: TLoopOpportunityStrategy
+}
+
+export interface TGetLoopOpportunitiesParams {
+    chain_ids?: number[]
+    tokens?: string[]
+    trend?: boolean
+    limit?: number
+    enabled?: boolean
+}

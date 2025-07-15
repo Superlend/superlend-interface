@@ -133,9 +133,29 @@ export function DataTable<TData, TValue>({
         return {}
     }
 
+    // Calculate dynamic height based on number of rows
+    const calculateTableHeight = React.useMemo(() => {
+        const rows = table.getRowModel().rows
+        
+        if (!rows || rows.length === 0) {
+            return 400 // Default height for empty table
+        }
+        
+        const headerHeight = 60 // Approximate header height
+        const paginationHeight = 80 // Approximate pagination height when visible
+        const rowHeight = 72 // Row height including padding (py-4)
+        const contentHeight = headerHeight + (rows.length * rowHeight) + (rows.length > 0 ? paginationHeight : 0)
+        
+        // Set reasonable min and max heights
+        const minHeight = 300
+        const maxHeight = screenWidth < 768 ? 600 : 700
+        
+        return Math.max(minHeight, Math.min(maxHeight, contentHeight))
+    }, [table.getRowModel().rows, screenWidth])
+
     return (
         <div className="bg-white bg-opacity-40 rounded-6 border border-transparent overflow-hidden">
-            <ScrollArea className="h-[calc(100vh-250px)] max-h-[500px]">
+            <ScrollArea className="h-auto" style={{ maxHeight: `${calculateTableHeight}px` }}>
                 <Table>
                     <TableHeader className="[&_tr]:border-0">
                         {table.getHeaderGroups().map((headerGroup) => (
