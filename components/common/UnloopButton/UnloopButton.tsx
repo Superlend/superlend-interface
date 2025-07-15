@@ -213,7 +213,8 @@ const UnloopButton = ({
                 withdrawAmount = parseUnits(amountRef.current?.withdrawAmount?.toString() ?? '0', assetDetailsRef.current?.supplyAsset?.token?.decimals ?? 18)
             }
 
-            console.log('=== Unloop Contract Call Parameters === \n',{
+            // Log contract call parameters for closePosition
+            console.log('=== Unloop Contract Call Parameters ===', {
                 strategyAddress: strategyToUse,
                 repayAmount: repayAmount.toString(),
                 swapPathTokens: assetDetailsRef.current.pathTokens || [],
@@ -221,15 +222,6 @@ const UnloopButton = ({
                 aTokenAmount: aTokenAmount.toString(),
                 withdrawAmount: withdrawAmount.toString(),
             })
-            // console.log('=== Unloop Contract Call Parameters Modified === \n',{
-            //     strategyAddress: strategyToUse,
-            //     repayAmount: repayAmount.mul(BigNumber.from(100 + 2)).div(BigNumber.from(100)).toString(),
-            //     swapPathTokens: assetDetailsRef.current.pathTokens || [],
-            //     swapPathFees: assetDetailsRef.current.pathFees || [],
-            //     aTokenAmount: aTokenAmount.toString(),
-            //     withdrawAmount: BigNumber.from("115792089237316195423570985008687907853269984665640564039457584007913129639935").toString(),
-            // })
-            // uint max as withdraw amount
 
             await writeContractAsync({
                 address: strategyToUse as `0x${string}`,
@@ -244,7 +236,6 @@ const UnloopButton = ({
                 ],
             })
         } catch (error: any) {
-            console.error('onClosePosition error', error)
             handleTransactionError(error, 'close_position')
         }
     }, [checkWalletConnection, writeContractAsync, handleTransactionError])

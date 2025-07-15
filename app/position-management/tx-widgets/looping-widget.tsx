@@ -71,6 +71,7 @@ interface LoopingWidgetProps {
     platformData?: any
     portfolioData?: any
     loopPair?: any
+    onPositionRefresh?: () => void
 }
 
 export const LoopingWidget: FC<LoopingWidgetProps> = ({
@@ -78,6 +79,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
     platformData,
     portfolioData,
     loopPair,
+    onPositionRefresh,
 }): JSX.Element => {
     const searchParams = useSearchParams() || new URLSearchParams()
     const lendTokenAddressParam = searchParams.get('lend_token') || ''
@@ -278,7 +280,6 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
             return `${netAPYValue >= 0 ? '+' : ''}${netAPYValue.toFixed(2)}%`
 
         } catch (error) {
-            console.error('Error calculating user current net APY:', error)
             return '0.00%'
         }
     }
@@ -480,6 +481,28 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
         setSelectedBorrowToken(defaultBorrowToken)
     }, [!!availableLendTokens.length, !!availableBorrowTokens.length])
 
+    // Max Leverage Calculation for Loop Strategies:
+    // 
+    // The maximum leverage for a loop strategy is calculated using the formula:
+    // maxLeverage = 1 / (1 - LTV)
+    // 
+    // Where LTV (Loan-to-Value) comes from the collateral asset's baseLTVasCollateral value.
+    // For example:
+    // - If LTV = 80% (0.8), then maxLeverage = 1 / (1 - 0.8) = 1 / 0.2 = 5x
+    // - If LTV = 75% (0.75), then maxLeverage = 1 / (1 - 0.75) = 1 / 0.25 = 4x
+    // 
+    // This calculation ensures that the user's position remains safely collateralized
+    // while maximizing the leverage multiplier effect. The system prevents over-leveraging
+    // by limiting the maximum amount that can be borrowed relative to the collateral value.
+    //
+    // The calculation is performed for each collateral-borrow token pair, considering:
+    // 1. Collateral asset's LTV ratio from the lending protocol
+    // 2. Whether borrowing is enabled for the debt token
+    // 3. eMode category compatibility (if applicable)
+    // 
+    // Calculate additional borrow amount for loop positions
+    // This is the core calculation that determines how much additional borrowing is needed
+    // based on the leverage multiplier and current position (if any)
     useEffect(() => {
         if (providerStatus.isReady) {
             if (loopPair?.strategy?.max_leverage) {
@@ -498,7 +521,6 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                 })
             }
 
-            // Only calculate borrow amount for increase position, not for decrease
             const isLeverageOnlyChange = hasLoopPosition && 
                 currentPositionData && 
                 (Number(lendAmount) === 0 || lendAmount === '') && 
@@ -507,17 +529,25 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
             if (positionType === 'increase' && (!!Number(lendAmount) || isLeverageOnlyChange)) {
                 setIsLoadingBorrowAmount(true)
                 
+                // For leverage-only changes, use a minimal amount for calculation
                 const supplyTokenAmount = !!Number(lendAmount) ? 
                     parseUnits(lendAmount, selectedLendToken?.decimals || 18).toString() :
                     parseUnits('0.001', selectedLendToken?.decimals || 18).toString()
                 
+                // Additional Borrow Amount Calculation:
+                // The getBorrowTokenAmountForLeverage function calculates how much additional 
+                // borrowing is needed to achieve the target leverage. It considers:
+                // 1. Current collateral + new collateral (if adding more)
+                // 2. Target leverage multiplier
+                // 3. Current debt (if position exists)
+                // 4. Price differences between collateral and debt tokens
                 getBorrowTokenAmountForLeverage({
                     chainId: ChainId.Etherlink,
                     uiPoolDataProviderAddress: uiPoolDataProviderAddress,
                     lendingPoolAddressProvider: lendingPoolAddressProvider,
                     supplyToken: selectedLendToken?.address || '',
                     supplyTokenAmount: supplyTokenAmount,
-                    leverage: debouncedLeverage,
+                    leverage: debouncedLeverage - 0.1,
                     borrowToken: selectedBorrowToken?.address || '',
                     _walletAddress: walletAddress,
                 })
@@ -548,7 +578,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
         hasLoopPosition,
         currentPositionData?.currentLeverage,
         leverage,
-        positionType // Add positionType dependency
+        positionType
     ])
 
     useEffect(() => {
@@ -702,7 +732,6 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                 
                 return Math.max(0, collateralDifferenceTokens).toFixed(selectedLendToken.decimals || 6)
             } catch (error) {
-                console.error('Error calculating max withdrawable:', error)
                 return '0'
             }
         }
@@ -736,8 +765,10 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                         priceUsd: selectedBorrowToken?.price_usd || 0,
                         decimals: selectedBorrowToken?.decimals || 18,
                     },
-                    desiredLeverage: leverage,
+                    desiredLeverageinput: leverage,
                 })
+
+                console.log('=== Unloop Parameters === \n',leverage, params)
 
                 // If leverage is 1, it means we're doing a full close
                 if (leverage === 1) {
@@ -756,13 +787,12 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                 }
                 setFlashLoanAmount('0')
 
-            } catch (error) {
-                console.error('Error calculating unloop parameters:', error)
-                setUnloopParameters(null)
-                setWithdrawAmount('0')
-                setBorrowAmountRaw('0')
-                setFlashLoanAmount('0')
-            }
+                    } catch (error) {
+            setUnloopParameters(null)
+            setWithdrawAmount('0')
+            setBorrowAmountRaw('0')
+            setFlashLoanAmount('0')
+        }
         } else if (positionType === 'decrease' && currentPositionData && leverage === currentPositionData.currentLeverage) {
             setUnloopParameters(null)
             setWithdrawAmount('0')
@@ -874,7 +904,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                     priceUsd: selectedBorrowToken?.price_usd || 0,
                     decimals: selectedBorrowToken?.decimals || 18,
                 },
-                desiredLeverage: 1,
+                desiredLeverageinput: 1,
             })
 
             const closePositionParams = {
@@ -891,7 +921,6 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
             setIsLoopTxDialogOpen(true)
 
         } catch (error) {
-            console.error('Error calculating close position parameters:', error)
             setUnloopParameters(null)
             setWithdrawAmount('0')
             setBorrowAmountRaw('0')
@@ -989,15 +1018,13 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
 
             <Card className="flex flex-col gap-3 p-4">
                 <CardContent className="p-0 space-y-4">
-                    <div className="space-y-1">
-                        <div className="flex justify-between items-center mb-1 px-2">
-                            <Label size="medium">
-                                {hasLoopPosition ? 
-                                    (positionType === 'increase' ? 'Add Collateral' : 'Withdraw Amount') : 
-                                    'Lend'
-                                }
-                            </Label>
-                            {positionType === 'increase' && (
+                    {/* Hide withdraw amount input field in decrease mode */}
+                    {positionType !== 'decrease' && (
+                        <div className="space-y-1">
+                            <div className="flex justify-between items-center mb-1 px-2">
+                                <Label size="medium">
+                                    {hasLoopPosition ? 'Add Collateral' : 'Lend'}
+                                </Label>
                                 <BodyText level="body2" weight="normal" className="text-gray-600">
                                     Balance:{' '}
                                     {isLoadingErc20TokensBalanceData ? (
@@ -1009,33 +1036,27 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                         )
                                     )}
                                 </BodyText>
-                            )}
-                        </div>
-
-                        <div className="border rounded-5 border-gray-200 py-1 px-4 flex items-center gap-3 bg-gray-100">
-                            <div className="flex items-center gap-1">
-                                <ImageWithDefault
-                                    src={selectedLendToken?.logo || ''}
-                                    alt={selectedLendToken?.symbol || ''}
-                                    width={24}
-                                    height={24}
-                                    className="rounded-full max-w-[24px] max-h-[24px]"
-                                />
-                                <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    {selectedLendToken?.symbol || 'Select token'}
-                                </BodyText>
                             </div>
 
-                            <BodyText level="body2" weight="normal" className="capitalize text-gray-500">
-                                |
-                            </BodyText>
-
-                            <div className="flex flex-col flex-1 gap-[4px]">
-                                {positionType === 'decrease' ? (
-                                    <BodyText level="body2" weight="medium" className="text-gray-800 py-2">
-                                        {formatTokenAmount(Number(withdrawAmount))} {selectedLendToken?.symbol}
+                            <div className="border rounded-5 border-gray-200 py-1 px-4 flex items-center gap-3 bg-gray-100">
+                                <div className="flex items-center gap-1">
+                                    <ImageWithDefault
+                                        src={selectedLendToken?.logo || ''}
+                                        alt={selectedLendToken?.symbol || ''}
+                                        width={24}
+                                        height={24}
+                                        className="rounded-full max-w-[24px] max-h-[24px]"
+                                    />
+                                    <BodyText level="body2" weight="medium" className="text-gray-800">
+                                        {selectedLendToken?.symbol || 'Select token'}
                                     </BodyText>
-                                ) : (
+                                </div>
+
+                                <BodyText level="body2" weight="normal" className="capitalize text-gray-500">
+                                    |
+                                </BodyText>
+
+                                <div className="flex flex-col flex-1 gap-[4px]">
                                     <CustomNumberInput
                                         amount={lendAmount}
                                         setAmount={handleLendAmountChange}
@@ -1043,10 +1064,8 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                         title={lendAmount}
                                         placeholder={hasLoopPosition ? "0" : "0"}
                                     />
-                                )}
-                            </div>
+                                </div>
 
-                            {positionType === 'increase' && (
                                 <Button
                                     variant="link"
                                     className="uppercase text-[14px] font-medium"
@@ -1055,15 +1074,15 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 >
                                     max
                                 </Button>
+                            </div>
+                            
+                            {hasLoopPosition && (
+                                <BodyText level="body3" className="text-gray-500 px-2">
+                                    Leave empty to adjust leverage only
+                                </BodyText>
                             )}
                         </div>
-                        
-                        {hasLoopPosition && (
-                            <BodyText level="body3" className="text-gray-500 px-2">
-                                {positionType === 'increase' ? 'Leave empty to adjust leverage only' : 'Adjust leverage to calculate withdraw amount'}
-                            </BodyText>
-                        )}
-                    </div>
+                    )}
 
                     <div className="space-y-1">
                         <div className="flex justify-between items-center gap-2 mb-1 px-2">
@@ -1196,14 +1215,21 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                     })()}
                                 </BodyText>
                                 <BodyText level="body3" weight="normal" className="text-gray-600">
-                                    {hasLoopPosition && currentPositionData
-                                        ? positionType === 'increase' 
-                                            ? Math.max(currentPositionData.currentLeverage * 2, 4).toFixed(1)
-                                            : roundLeverageUp(currentPositionData.currentLeverage).toFixed(1)
-                                        : Number(
+                                    {(() => {
+                                        const pairMax = Number(
                                             maxLeverage?.[selectedLendToken?.address]?.[selectedBorrowToken?.address] ?? 4
-                                          ).toFixed(1)
-                                    }x
+                                        )
+                                        if (hasLoopPosition && currentPositionData) {
+                                            if (positionType === 'increase') {
+                                                // Max leverage for increase mode: minimum of pair max and current * 2
+                                                return Math.min(pairMax, currentPositionData.currentLeverage * 2).toFixed(1)
+                                            } else {
+                                                // Max leverage for decrease mode: current leverage
+                                                return roundLeverageUp(currentPositionData.currentLeverage).toFixed(1)
+                                            }
+                                        }
+                                        return pairMax.toFixed(1)
+                                    })()}x
                                 </BodyText>
                             </div>
                             
@@ -1489,6 +1515,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                             hasLoopPosition={hasLoopPosition}
                             setShouldLogCalculation={setShouldLogCalculation}
                             unloopParameters={unloopParameters}
+                            onPositionRefresh={onPositionRefresh}
                         />
                     )}
                 </CardFooter>

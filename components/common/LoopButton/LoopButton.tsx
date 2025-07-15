@@ -248,6 +248,17 @@ const LoopButton = ({
                 assetDetailsRef.current?.borrowAsset?.token?.decimals ?? 18
             )
 
+            // Log contract call parameters for openPosition
+            console.log('=== Loop Contract Call Parameters ===', {
+                strategyAddress: strategyAddress,
+                supplyAmount: supplyAmount.toString(),
+                flashLoanAmount: flashLoanAmount.toString(),
+                pathTokens: assetDetailsRef.current.pathTokens || [],
+                pathFees: assetDetailsRef.current.pathFees || [],
+                delegationAmount: delegationAmount.toString(),
+                delegationAmountWith20Percent: delegationAmount.mul(120).div(100).toString()
+            })
+
             await writeContractAsync({
                 address: strategyAddress as `0x${string}`,
                 abi: STRATEGY_ABI,
@@ -261,7 +272,6 @@ const LoopButton = ({
                 ],
             })
         } catch (error: any) {
-            console.error('onOpenPosition error', error)
             handleTransactionError(error, 'open_position')
         }
     }, [strategyAddress, walletAddress, setLoopTx, writeContractAsync, handleTransactionError])
@@ -343,7 +353,6 @@ const LoopButton = ({
                 })
             }
         } catch (error: any) {
-            console.error('onApproveSupply error', error)
             handleTransactionError(error, 'approve')
         }
     }, [walletAddress, underlyingAssetAdress, logEvent, setLoopTx, writeContractAsync, onOpenPosition, handleTransactionError])
@@ -380,7 +389,6 @@ const LoopButton = ({
                 ],
             })
         } catch (error: any) {
-            console.error('onCreateStrategy error', error)
             handleTransactionError(error, 'create_strategy')
         }
     }, [walletAddress, poolContractAddress, eModeValue, setLoopTx, writeContractAsync, onApproveSupply, handleTransactionError])
@@ -464,7 +472,6 @@ const LoopButton = ({
             }
             
         } catch (error: any) {
-            console.error('onCheckStrategy error', error)
             handleTransactionError(error, 'check_strategy')
         }
     }, [walletAddress, refetchStrategy, eModeValue, setLoopTx, onApproveSupply, onCreateStrategy, handleTransactionError, onOpenPosition])
@@ -658,7 +665,6 @@ const LoopButton = ({
 
             await onCheckStrategy()
         } catch (error: any) {
-            console.error('Error starting loop flow:', error)
             handleTransactionError(error, 'check_strategy')
         }
     }, [loopTx.status, loopTx.errorMessage, isWalletConnected, walletAddress, eModeValue, onCheckStrategy, handleTransactionError, handleCloseModal, setLoopTx, strategyAddress, hasExistingStrategy, onOpenPosition, onApproveSupply])

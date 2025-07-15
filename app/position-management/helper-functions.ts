@@ -104,7 +104,7 @@ export function calculateUnloopParameters({
     currentBorrowAmount,
     lendTokenDetails,
     borrowTokenDetails,
-    desiredLeverage,
+    desiredLeverageinput,
 }: {
     currentLendAmount: string
     currentBorrowAmount: string
@@ -118,10 +118,12 @@ export function calculateUnloopParameters({
         priceUsd: number
         decimals: number
     }
-    desiredLeverage: number
+    desiredLeverageinput: number
 }) {
     const PRICE_DECIMALS = 8
 
+    const desiredLeverage = desiredLeverageinput;
+    
     const getCurrentLeverage = () => {
         try {
             // Ensure we're working with BigNumber compatible values
@@ -221,20 +223,6 @@ export function calculateUnloopParameters({
             )
 
             const desiredBorrowAmountUsd = desiredLendAmountUsd - currentPrincipalAmountInUsd
-
-            // Handle very small borrow amounts
-            if (Math.abs(desiredBorrowAmountUsd) < 0.000001) {
-                return {
-                    repayAmountToken: '0',
-                    swapDetails: {
-                        fromToken: lendTokenDetails.address,
-                        toToken: borrowTokenDetails.address,
-                        amountToSwap: '0',
-                    },
-                    aTokenAmount: '0',
-                    withdrawAmount: '1',
-                }
-            }
 
             const desiredBorrowAmountToken = parseUnits(
                 Math.abs(desiredBorrowAmountUsd / borrowTokenDetails.priceUsd)

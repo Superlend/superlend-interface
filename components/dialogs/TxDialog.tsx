@@ -112,6 +112,7 @@ interface IConfirmationDialogProps {
             amountToSwap: string
         }
     } | null
+    onPositionRefresh?: () => void
 }
 
 // Helper functions
@@ -219,6 +220,7 @@ function getSelectedAssetDetailsUI({
     platformName,
     tokenAmountInUsd,
     tokenAmount,
+    tokenDecimals,
 }: {
     tokenLogo: string
     tokenName: string
@@ -228,6 +230,7 @@ function getSelectedAssetDetailsUI({
     platformName: string
     tokenAmountInUsd: number
     tokenAmount: string
+    tokenDecimals?: number
 }) {
     const tooltipContent = getTooltipContent({
         tokenSymbol,
@@ -236,6 +239,31 @@ function getSelectedAssetDetailsUI({
         chainName,
         chainLogo,
     })
+
+    // Format token amount based on token's decimals
+    const formatTokenAmount = (amount: string, decimals?: number) => {
+        const numAmount = Number(amount)
+        if (numAmount === 0) return '0'
+        
+        // Use token decimals if provided, otherwise use up to 6 decimals but respect common token patterns
+        let displayDecimals = decimals || 6
+        
+        // For stablecoins (usually 6 decimals), show fewer decimal places
+        if (tokenSymbol?.toLowerCase().includes('usdt') || 
+            tokenSymbol?.toLowerCase().includes('usdc') || 
+            tokenSymbol?.toLowerCase().includes('dai')) {
+            displayDecimals = Math.min(displayDecimals, 6)
+        }
+        
+        // For very small amounts, show more decimals
+        if (numAmount < 0.01) {
+            displayDecimals = Math.min(displayDecimals, 8)
+        }
+        
+        return numAmount.toFixed(displayDecimals).replace(/\.?0+$/, '')
+    }
+
+    const formattedAmount = formatTokenAmount(tokenAmount, tokenDecimals)
 
     return (
         <div className="flex items-center gap-2 px-6 py-2 bg-gray-200 lg:bg-white rounded-5 w-full">
@@ -257,8 +285,8 @@ function getSelectedAssetDetailsUI({
             />
             <div className="flex flex-col items-start gap-0 w-fit">
                 <HeadingText level="h3" weight="medium" className="text-gray-800 flex items-center gap-1">
-                    <span className="inline-block truncate max-w-[200px]" title={tokenAmount}>
-                        {Number(tokenAmount).toFixed(decimalPlacesCount(tokenAmount))}
+                    <span className="inline-block truncate max-w-[200px]" title={formattedAmount}>
+                        {formattedAmount}
                     </span>
                     <span className="inline-block truncate max-w-[100px]" title={tokenSymbol}>
                         {tokenSymbol}
@@ -313,6 +341,7 @@ export function ConfirmationDialog({
     hasLoopPosition,
     setShouldLogCalculation,
     unloopParameters,
+    onPositionRefresh,
 }: IConfirmationDialogProps) {
     const { lendTx, setLendTx, borrowTx, setBorrowTx, withdrawTx, repayTx, loopTx, setLoopTx, unloopTx, setUnloopTx } = useTxContext() as TTxContext
     const positionTypeTxStatusMap: Record<TTransactionType, any> = { // TLendTx | TBorrowTx | TLoopTx | TUnloopTx
@@ -351,6 +380,11 @@ export function ConfirmationDialog({
     const getActionButtonText = () => {
         if (isLoadingTradePath) {
             return 'Fetching trade path...'
+        }
+        
+        // Check if transaction is successful and show "Close"
+        if (isTxSuccessful) {
+            return 'Close'
         }
         
         if (positionType === 'loop') {
@@ -421,16 +455,6 @@ export function ConfirmationDialog({
     useEffect(() => {
         setHasAcknowledgedRisk(false)
         if (open) {
-            // console.log('=== Dialog Opening ===')
-            // console.log('Dialog state:', {
-            //     positionType,
-            //     isUnloopMode,
-            //     loopAssetDetails: !!loopAssetDetails,
-            //     assetDetails: !!assetDetails,
-            //     lendAmount,
-            //     borrowAmount,
-            //     amount
-            // })
             handleSwitchChain(Number(chain_id))
         }
     }, [open])
@@ -506,7 +530,6 @@ export function ConfirmationDialog({
                 )
                     .then((result: any) => {
                         if (!result || !result.routes || !result.routes[0] || !result.routes[0].pools) {
-                            console.warn('Invalid trade path result structure, using default values')
                             setPathTokens([])
                             setPathFees(['500'])
                             return
@@ -538,7 +561,6 @@ export function ConfirmationDialog({
                                 route.pools[0]?.fee?.toString() ?? '500',
                             ]
                         } else {
-                            console.warn('Unexpected pools length:', poolsLength)
                             newPathTokens = []
                             newPathFees = ['500']
                         }
@@ -666,16 +688,7 @@ export function ConfirmationDialog({
             let effectiveBorrowAmount = borrowAmount
             let effectiveFlashLoanAmount = flashLoanAmount
             
-            if (loopTx.status !== 'check_strategy') {
-                // console.log('=== Loop Call Parameters (Button Pressed) ===')
-                console.log('Input amounts:', {
-                    lendAmount,
-                    borrowAmount,
-                    flashLoanAmount,
-                    leverage,
-                    isLeverageOnlyChange
-                })
-            }
+
             
             if (isLeverageOnlyChange) {
                 effectiveLendAmount = '0'
@@ -699,13 +712,7 @@ export function ConfirmationDialog({
                     }
                 }
                 
-                if (loopTx.status !== 'check_strategy') {
-                    console.log('Leverage-only change calculated amounts:', {
-                        effectiveLendAmount,
-                        effectiveBorrowAmount,
-                        effectiveFlashLoanAmount
-                    })
-                }
+
             }
             
             const finalParams = {
@@ -717,10 +724,7 @@ export function ConfirmationDialog({
                 flashLoanAmount: effectiveFlashLoanAmount,
             }
             
-            if (loopTx.status !== 'check_strategy') {
-                console.log('Final parameters for loop call:', finalParams)
-                // console.log('=== End Loop Call Parameters ===')
-            }
+
             
             return finalParams
         }
@@ -731,12 +735,7 @@ export function ConfirmationDialog({
                 loopAssetDetails?.borrowAsset?.token?.decimals ?? 0
             ).toString()
             
-            // console.log('=== Unloop Call Parameters (Button Pressed) ===')
-            console.log('Input amounts:', {
-                borrowAmount,
-                lendAmount,
-                withdrawAmount: amount
-            })
+
             
             // For unloop, we need to calculate the correct parameters
             // Based on the smart contract test, closePosition expects:
@@ -744,7 +743,6 @@ export function ConfirmationDialog({
             
             // If we have calculated unloop parameters, use them
             if (unloopParameters) {
-                console.log('Using calculated unloop parameters:', unloopParameters)
                 
                 const finalParams = {
                     amountRaw: amount,
@@ -767,9 +765,6 @@ export function ConfirmationDialog({
                     withdrawAmountToken: unloopParameters.withdrawAmount,
                 }
                 
-                console.log('Final parameters for unloop call (calculated):', finalParams)
-                // console.log('=== End Unloop Call Parameters ===')
-                
                 return finalParams
             }
             
@@ -784,9 +779,6 @@ export function ConfirmationDialog({
                 lendAmount: isFullClose ? lendAmount : amount, // For full close, withdraw all collateral
                 withdrawAmount: amount,
             }
-            
-            console.log('Final parameters for unloop call (fallback):', finalParams)
-            // console.log('=== End Unloop Call Parameters ===')
             
             return finalParams
         }
@@ -806,6 +798,14 @@ export function ConfirmationDialog({
                 setShouldLogCalculation(false)
             }
         } else {
+            // Check if we had a successful transaction before closing
+            const hadSuccessfulTransaction = isTxSuccessful && (
+                (positionType === 'loop' && loopTx.status === 'view' && loopTx.hash && !loopTx.errorMessage) ||
+                (positionType === 'unloop' && unloopTx.status === 'view' && unloopTx.hash && !unloopTx.errorMessage) ||
+                (positionType === 'lend' && lendTx.status === 'view' && lendTx.hash && !lendTx.errorMessage) ||
+                (positionType === 'borrow' && borrowTx.status === 'view' && borrowTx.hash && !borrowTx.errorMessage)
+            )
+
             if (lendTx.status !== 'approve' || borrowTx.status !== 'borrow' || loopTx.status !== 'approve' || unloopTx.status !== 'close_position') {
                 setAmount('')
 
@@ -820,6 +820,13 @@ export function ConfirmationDialog({
             
             if ((positionType === 'loop' || positionType === 'unloop') && setShouldLogCalculation) {
                 setShouldLogCalculation(false)
+            }
+
+            // Refresh position data if we had a successful transaction
+            if (hadSuccessfulTransaction && onPositionRefresh) {
+                setTimeout(() => {
+                    onPositionRefresh()
+                }, 1000) // Small delay to ensure transaction has propagated
             }
         }
     }
@@ -1052,7 +1059,8 @@ export function ConfirmationDialog({
         }
         
         const collateralChange = newPositionData.lendAmount - currentPositionData.lendAmount
-        return collateralChange.toString()
+        const decimals = loopAssetDetails?.supplyAsset?.token?.decimals || 6
+        return Math.abs(collateralChange) < 0.000001 ? '0' : collateralChange.toFixed(decimals).replace(/\.?0+$/, '')
     }
 
     const getEffectiveBorrowAmount = () => {
@@ -1061,7 +1069,8 @@ export function ConfirmationDialog({
         }
         
         const borrowChange = newPositionData.borrowAmount - currentPositionData.borrowAmount
-        return Math.abs(borrowChange).toString()
+        const decimals = loopAssetDetails?.borrowAsset?.token?.decimals || 6
+        return Math.abs(borrowChange) < 0.000001 ? '0' : Math.abs(borrowChange).toFixed(decimals).replace(/\.?0+$/, '')
     }
 
     const getEffectiveLendAmountUsd = () => {
@@ -1084,11 +1093,12 @@ export function ConfirmationDialog({
 
     const contentBody = (
         <div className="flex flex-col gap-3 max-w-full overflow-hidden">
+            {/* Show token details for loop (increase) and regular lend/borrow operations */}
             {isShowBlock({
                 lend: true,
                 borrow: true,
                 loop: Number(lendAmount) > 0 || (hasLoopPosition && currentPositionData && newPositionData && Math.abs(newPositionData.lendAmount - currentPositionData.lendAmount) > 0.000001),
-                unloop: Number(lendAmount) > 0 || (hasLoopPosition && currentPositionData && newPositionData && Math.abs(newPositionData.lendAmount - currentPositionData.lendAmount) > 0.000001),
+                unloop: false, // Don't show for unloop/decrease
             }) && (
                 getSelectedAssetDetailsUI({
                     tokenLogo: assetDetails?.asset?.token?.logo || loopAssetDetails?.supplyAsset?.token?.logo || '',
@@ -1099,11 +1109,12 @@ export function ConfirmationDialog({
                     platformName: assetDetails?.name || loopAssetDetails?.name || '',
                     tokenAmountInUsd: positionType === 'loop' ? getEffectiveLendAmountUsd() : inputUsdAmount,
                     tokenAmount: positionType === 'loop' ? getEffectiveLendAmount() : amount,
+                    tokenDecimals: assetDetails?.asset?.token?.decimals || loopAssetDetails?.supplyAsset?.token?.decimals,
                 })
             )}
             {isShowBlock({
                 loop: Number(borrowAmount) > 0 || (hasLoopPosition && currentPositionData && newPositionData && Math.abs(newPositionData.borrowAmount - currentPositionData.borrowAmount) > 0.000001),
-                unloop: Number(borrowAmount) > 0 || (hasLoopPosition && currentPositionData && newPositionData && Math.abs(newPositionData.borrowAmount - currentPositionData.borrowAmount) > 0.000001),
+                unloop: false, // Don't show for unloop/decrease
             }) && (
                 getSelectedAssetDetailsUI({
                     tokenLogo: loopAssetDetails?.borrowAsset?.token?.logo || '',
@@ -1114,8 +1125,81 @@ export function ConfirmationDialog({
                     platformName: loopAssetDetails?.name || '',
                     tokenAmountInUsd: getEffectiveBorrowAmountUsd(),
                     tokenAmount: getEffectiveBorrowAmount(),
+                    tokenDecimals: loopAssetDetails?.borrowAsset?.token?.decimals,
                 })
             )}
+            {/* Position Changes Preview Card - Show first for unloop/decrease */}
+            {isShowBlock({
+                loop: hasLoopPosition && currentPositionData && newPositionData && (Number(lendAmount) > 0 || Number(leverage) !== currentPositionData.currentLeverage),
+                unloop: hasLoopPosition && currentPositionData && newPositionData && (Number(lendAmount) > 0 || Number(leverage) !== currentPositionData.currentLeverage),
+            }) && (
+                <div className="flex flex-col items-center justify-between px-6 py-4 bg-gray-200 lg:bg-white rounded-5">
+                    <div className="flex flex-col gap-3 w-full">
+                        <BodyText level="body2" weight="medium" className="text-gray-800">
+                            Position Changes Preview
+                        </BodyText>
+                        
+                        <div className="flex items-center justify-between">
+                            <BodyText level="body3" className="text-gray-600">
+                                Total Collateral
+                            </BodyText>
+                            <div className="flex items-center gap-2">
+                                <BodyText level="body3" className="text-gray-800">
+                                    {((currentPositionData.lendAmount || 0).toFixed(loopAssetDetails?.supplyAsset?.token?.decimals || 6)).replace(/\.?0+$/, '')} {loopAssetDetails?.supplyAsset?.token?.symbol}
+                                </BodyText>
+                                {currentPositionData.lendAmount?.toFixed(loopAssetDetails?.supplyAsset?.token?.decimals || 6) !== newPositionData.lendAmount?.toFixed(loopAssetDetails?.supplyAsset?.token?.decimals || 6) && (
+                                    <>
+                                        <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                        <BodyText level="body3" className="text-gray-800">
+                                            {((newPositionData.lendAmount || 0).toFixed(loopAssetDetails?.supplyAsset?.token?.decimals || 6)).replace(/\.?0+$/, '')} {loopAssetDetails?.supplyAsset?.token?.symbol}
+                                        </BodyText>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <BodyText level="body3" className="text-gray-600">
+                                Total Borrowed
+                            </BodyText>
+                            <div className="flex items-center gap-2">
+                                <BodyText level="body3" className="text-gray-800">
+                                    {((currentPositionData.borrowAmount || 0).toFixed(loopAssetDetails?.borrowAsset?.token?.decimals || 6)).replace(/\.?0+$/, '')} {loopAssetDetails?.borrowAsset?.token?.symbol}
+                                </BodyText>
+                                {currentPositionData.borrowAmount?.toFixed(loopAssetDetails?.borrowAsset?.token?.decimals || 6) !== newPositionData.borrowAmount?.toFixed(loopAssetDetails?.borrowAsset?.token?.decimals || 6) && (
+                                    <>
+                                        <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                        <BodyText level="body3" className="text-gray-800">
+                                            {((newPositionData.borrowAmount || 0).toFixed(loopAssetDetails?.borrowAsset?.token?.decimals || 6)).replace(/\.?0+$/, '')} {loopAssetDetails?.borrowAsset?.token?.symbol}
+                                        </BodyText>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <BodyText level="body3" className="text-gray-600">
+                                Leverage
+                            </BodyText>
+                            <div className="flex items-center gap-2">
+                                <BodyText level="body3" className="text-gray-800">
+                                    {roundLeverageUp(currentPositionData.currentLeverage || 1).toFixed(1)}x
+                                </BodyText>
+                                {roundLeverageUp(currentPositionData.currentLeverage || 1).toFixed(1) !== roundLeverageUp(newPositionData.leverage || 1).toFixed(1) && (
+                                    <>
+                                        <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
+                                        <BodyText level="body3" className="text-gray-800">
+                                            {roundLeverageUp(newPositionData.leverage || 1).toFixed(1)}x
+                                        </BodyText>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Main Information Card */}
             <div className="flex flex-col items-center justify-between px-6 py-2 bg-gray-200 lg:bg-white rounded-5 divide-y divide-gray-400">
                 {isShowBlock({ lend: isMorphoMarkets }) && (
                     <div className={`flex items-center justify-between w-full py-3`}>
@@ -1139,76 +1223,6 @@ export function ConfirmationDialog({
                             {roundLeverageUp(typeof leverage === 'number' ? leverage : 1).toFixed(1)}x
                         </Badge>
                     </div>
-                )}
-
-                {isShowBlock({
-                    loop: hasLoopPosition && currentPositionData && newPositionData && (Number(lendAmount) > 0 || Number(leverage) !== currentPositionData.currentLeverage),
-                    unloop: hasLoopPosition && currentPositionData && newPositionData && (Number(lendAmount) > 0 || Number(leverage) !== currentPositionData.currentLeverage),
-                }) && (
-                    <>
-                        <div className="flex flex-col gap-3 w-full">
-                            <BodyText level="body2" weight="medium" className="text-gray-800">
-                                Position Changes Preview
-                            </BodyText>
-                            
-                            <div className="flex items-center justify-between">
-                                <BodyText level="body3" className="text-gray-600">
-                                    Total Collateral
-                                </BodyText>
-                                <div className="flex items-center gap-2">
-                                    <BodyText level="body3" className="text-gray-800">
-                                        {(currentPositionData.lendAmount || 0).toFixed(4)} {loopAssetDetails?.supplyAsset?.token?.symbol}
-                                    </BodyText>
-                                    {currentPositionData.lendAmount?.toFixed(4) !== newPositionData.lendAmount?.toFixed(4) && (
-                                        <>
-                                            <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
-                                            <BodyText level="body3" className="text-gray-800">
-                                                {(newPositionData.lendAmount || 0).toFixed(4)} {loopAssetDetails?.supplyAsset?.token?.symbol}
-                                            </BodyText>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <BodyText level="body3" className="text-gray-600">
-                                    Total Borrowed
-                                </BodyText>
-                                <div className="flex items-center gap-2">
-                                    <BodyText level="body3" className="text-gray-800">
-                                        {(currentPositionData.borrowAmount || 0).toFixed(4)} {loopAssetDetails?.borrowAsset?.token?.symbol}
-                                    </BodyText>
-                                    {currentPositionData.borrowAmount?.toFixed(4) !== newPositionData.borrowAmount?.toFixed(4) && (
-                                        <>
-                                            <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
-                                            <BodyText level="body3" className="text-gray-800">
-                                                {(newPositionData.borrowAmount || 0).toFixed(4)} {loopAssetDetails?.borrowAsset?.token?.symbol}
-                                            </BodyText>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <BodyText level="body3" className="text-gray-600">
-                                    Leverage
-                                </BodyText>
-                                <div className="flex items-center gap-2">
-                                    <BodyText level="body3" className="text-gray-800">
-                                        {roundLeverageUp(currentPositionData.currentLeverage || 1).toFixed(1)}x
-                                    </BodyText>
-                                    {roundLeverageUp(currentPositionData.currentLeverage || 1).toFixed(1) !== roundLeverageUp(newPositionData.leverage || 1).toFixed(1) && (
-                                        <>
-                                            <ArrowRightIcon width={16} height={16} className="stroke-gray-600" />
-                                            <BodyText level="body3" className="text-gray-800">
-                                                {roundLeverageUp(newPositionData.leverage || 1).toFixed(1)}x
-                                            </BodyText>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </>
                 )}
 
                 {isShowBlock({

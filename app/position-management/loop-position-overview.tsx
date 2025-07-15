@@ -36,9 +36,10 @@ import { formatUnits } from 'ethers/lib/utils'
 
 interface LoopPositionOverviewProps {
     loopPair?: any
+    children?: React.ReactNode
 }
 
-export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewProps) {
+export default function LoopPositionOverview({ loopPair, children }: LoopPositionOverviewProps) {
     const searchParams = useSearchParams()
     const chain_id = searchParams?.get('chain_id') || '1'
     const protocol_identifier = searchParams?.get('protocol_identifier') || ''
@@ -64,7 +65,7 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
         chain_id: Number(chain_id),
     })
 
-    const { data: portfolioData, isLoading: isLoadingPortfolioData } = useGetPortfolioData({
+    const { data: portfolioData, isLoading: isLoadingPortfolioData, refetch: refetchPortfolio } = useGetPortfolioData({
         user_address: walletAddress as `0x${string}`,
         platform_id: [protocol_identifier],
         chain_id: [String(chain_id)],
@@ -343,6 +344,17 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
 
     const isLoading = isLoadingPlatformData || isLoadingPortfolioData || isLoadingAppleFarmRewards || isLoadingOpportunitiesData
 
+    // Function to refresh position data after transactions
+    const refreshPositionData = React.useCallback(async () => {
+        if (walletAddress && isWalletConnected) {
+            try {
+                await refetchPortfolio()
+            } catch (error) {
+                console.error('Error refreshing position data:', error)
+            }
+        }
+    }, [walletAddress, isWalletConnected, refetchPortfolio])
+
     // Calculate unloop parameters if user has a position
     const unloopParameters = useMemo(() => {
         if (!userLoopPosition || !loopPair) return null
@@ -361,7 +373,7 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
                     priceUsd: userLoopPosition.borrowAsset.token.price_usd,
                     decimals: userLoopPosition.borrowAsset.token.decimals,
                 },
-                desiredLeverage: 1, // For position overview, show what would happen if leverage is reduced to 1
+                desiredLeverageinput: 1, // For position overview, show what would happen if leverage is reduced to 1
             })
             
             return params
@@ -438,83 +450,16 @@ export default function LoopPositionOverview({ loopPair }: LoopPositionOverviewP
                 onTabChange={setActiveTab}
             />
             
-            {unloopParameters && (
-                <Card className="p-4 bg-white bg-opacity-60">
-                    <CardHeader className="p-0 pb-3">
-                        <CardTitle className="text-lg font-medium text-gray-800">
-                            Unloop Preview
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <BodyText level="body3" className="text-gray-600">
-                                Repay Amount
-                            </BodyText>
-                            <div className="flex items-center gap-2">
-                                <ImageWithDefault
-                                    src={userLoopPosition?.borrowAsset.token.logo || ''}
-                                    alt={userLoopPosition?.borrowAsset.token.symbol || ''}
-                                    width={16}
-                                    height={16}
-                                    className="rounded-full"
-                                />
-                                <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    {formatUnits(
-                                        BigNumber.from(unloopParameters.repayAmountToken).toBigInt(),
-                                        userLoopPosition?.borrowAsset.token.decimals || 18
-                                    )} {userLoopPosition?.borrowAsset.token.symbol}
-                                </BodyText>
-                            </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                            <BodyText level="body3" className="text-gray-600">
-                                Withdraw Amount
-                            </BodyText>
-                            <div className="flex items-center gap-2">
-                                <ImageWithDefault
-                                    src={userLoopPosition?.collateralAsset.token.logo || ''}
-                                    alt={userLoopPosition?.collateralAsset.token.symbol || ''}
-                                    width={16}
-                                    height={16}
-                                    className="rounded-full"
-                                />
-                                <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    {formatUnits(
-                                        BigNumber.from(unloopParameters.withdrawAmount).toBigInt(),
-                                        userLoopPosition?.collateralAsset.token.decimals || 18
-                                    )} {userLoopPosition?.collateralAsset.token.symbol}
-                                </BodyText>
-                            </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                            <BodyText level="body3" className="text-gray-600">
-                                aToken Amount
-                            </BodyText>
-                            <div className="flex items-center gap-2">
-                                <ImageWithDefault
-                                    src={userLoopPosition?.collateralAsset.token.logo || ''}
-                                    alt={userLoopPosition?.collateralAsset.token.symbol || ''}
-                                    width={16}
-                                    height={16}
-                                    className="rounded-full"
-                                />
-                                <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    {formatUnits(
-                                        BigNumber.from(unloopParameters.aTokenAmount).toBigInt(),
-                                        userLoopPosition?.collateralAsset.token.decimals || 18
-                                    )} {userLoopPosition?.collateralAsset.token.symbol}
-                                </BodyText>
-                            </div>
-                        </div>
-                        
-                        <BodyText level="body3" className="text-gray-500">
-                            These are the calculated amounts for a full unloop (leverage = 1x)
-                        </BodyText>
-                    </CardContent>
-                </Card>
-            )}
+            {/* Render children with refresh function */}
+            {children && React.Children.map(children, (child) => {
+                if (React.isValidElement(child)) {
+                    return React.cloneElement(child, {
+                        onPositionRefresh: refreshPositionData,
+                        ...child.props
+                    })
+                }
+                return child
+            })}
         </div>
     )
 }
