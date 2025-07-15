@@ -64,11 +64,8 @@ import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { TPortfolio } from '@/types/queries/portfolio'
-import {
-    ConfirmationDialog,
-    getMaxDecimalsToDisplay,
-    handleSmallestValue,
-} from '@/components/dialogs/TxDialog'
+import { ConfirmationDialog } from '@/components/dialogs/TxDialog'
+import { getMaxDecimalsToDisplay, handleSmallestValue } from '@/lib/format-utils'
 import { LoopingWidget } from './looping-widget'
 
 interface LendAndBorrowAssetsProps {

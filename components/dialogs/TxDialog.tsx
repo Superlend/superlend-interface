@@ -124,7 +124,7 @@ function getTruncatedTxHash(hash: string) {
     return `${hash.slice(0, 7)}...${hash.slice(-4)}`
 }
 
-function getTooltipContent({
+export function getTooltipContent({
     tokenSymbol,
     tokenLogo,
     tokenName,

@@ -17,10 +17,8 @@ import { LoaderCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
-import {
-    ConfirmationDialog,
-    handleSmallestValue,
-} from '@/components/dialogs/TxDialog'
+import { ConfirmationDialog } from '@/components/dialogs/TxDialog'
+import { handleSmallestValue } from '@/lib/format-utils'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import CustomNumberInput from '@/components/inputs/CustomNumberInput'
 import { Button } from '@/components/ui/button'
