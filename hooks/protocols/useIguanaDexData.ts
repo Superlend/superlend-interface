@@ -13,7 +13,7 @@ import CREDIT_DELEGATION_ABI from '../../data/abi/creditDelegationABI.json'
 import LOOPING_LEVERAGE_ABI from '../../data/abi/loopingLeverageABI.json'
 
 const nodeUrl =
-    'https://plend-etherlink-mainnet-djs2w.zeeve.net/TuychDxGCScIED1nCk0m/rpc'
+    'https://rpc.ankr.com/etherlink_mainnet/57f94c53e584e77fbf5ce59bced57d6f99806ed3b174989c1cd259e2400fd409'
 
 const IguanaSubgraphV2 =
     'https://api.studio.thegraph.com/query/69431/exchange-v2-etherlink/version/latest'
@@ -114,7 +114,7 @@ export const useIguanaDexData = () => {
                     TradeType.EXACT_INPUT,
                     {
                         gasPriceWei: () => viemClient.getGasPrice(),
-                        maxHops: 2,
+                        maxHops: 3,
                         maxSplits: 1,
                         poolProvider: SmartRouter.createStaticPoolProvider(pools),
                         quoteProvider,

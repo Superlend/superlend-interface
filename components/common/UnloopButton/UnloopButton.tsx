@@ -216,7 +216,7 @@ const UnloopButton = ({
             // Log contract call parameters for closePosition
             console.log('=== Unloop Contract Call Parameters ===', {
                 strategyAddress: strategyToUse,
-                repayAmount: repayAmount.toString(),
+                repayAmount: repayAmount.mul(BigNumber.from(100 + 2)).div(BigNumber.from(100)).toString(),
                 swapPathTokens: assetDetailsRef.current.pathTokens || [],
                 swapPathFees: assetDetailsRef.current.pathFees || [],
                 aTokenAmount: aTokenAmount.toString(),
@@ -228,7 +228,7 @@ const UnloopButton = ({
                 abi: STRATEGY_ABI,
                 functionName: 'closePosition',
                 args: [
-                    repayAmount.toBigInt(),
+                    repayAmount.mul(BigNumber.from(100 + 2)).div(BigNumber.from(100)).toBigInt(),
                     assetDetailsRef.current.pathTokens || [],
                     assetDetailsRef.current.pathFees || [],
                     aTokenAmount.toBigInt(),

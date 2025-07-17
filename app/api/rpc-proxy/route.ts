@@ -438,7 +438,7 @@ function getRpcUrlForChain(chainId: number): string | null {
     1088: `https://metis-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
     8453: `https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
     42161: `https://arb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-    42793: `https://plend-etherlink-mainnet-djs2w.zeeve.net/TuychDxGCScIED1nCk0m/rpc`,
+    42793: `https://rpc.ankr.com/etherlink_mainnet/57f94c53e584e77fbf5ce59bced57d6f99806ed3b174989c1cd259e2400fd409`,
     43114: `https://avax-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
     534352: `https://scroll-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
     59144: `https://linea-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,

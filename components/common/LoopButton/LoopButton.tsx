@@ -388,6 +388,7 @@ const LoopButton = ({
                 hash: '',
                 errorMessage: '',
             }))
+            console.log('=== Create Strategy Params ===', createStrategyParams)
 
             await writeContractAsync({
                 address: STRATEGY_FACTORY_ADDRESS as `0x${string}`,
@@ -412,7 +413,7 @@ const LoopButton = ({
         if (assetDetailsRef.current?.strategyAddress) {
             setStrategyAddress(assetDetailsRef.current.strategyAddress)
             setHasExistingStrategy(true)
-            
+            console.log('=== Existing Strategy ===', assetDetailsRef.current.strategyAddress)
             setLoopTx((prev: TLoopTx) => ({
                 ...prev,
                 status: 'check_strategy',
@@ -458,7 +459,7 @@ const LoopButton = ({
             if (existingStrategy && existingStrategy !== '0x0000000000000000000000000000000000000000') {
                 setStrategyAddress(existingStrategy as string)
                 setHasExistingStrategy(true)
-                
+                console.log('=== Existing Strategy ===', existingStrategy)
                 setLoopTx((prev: TLoopTx) => ({
                     ...prev,
                     status: 'check_strategy',
