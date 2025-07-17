@@ -36,7 +36,11 @@ export default function LoopPositionOverview() {
     const { getMaxLeverage, providerStatus, uiPoolDataProviderAddress, lendingPoolAddressProvider } = useAaveV3Data()
     const [maxLeverage, setMaxLeverage] = useState<number>(0)
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
-    const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
+    const { 
+        hasAppleFarmRewards, 
+        // appleFarmRewardsAprs, 
+        // isLoading: isLoadingAppleFarmRewards 
+    } = useAppleFarmRewards()
     const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
 
     const { data: platformData, isLoading: isLoadingPlatformData } = useGetPlatformData({
@@ -92,17 +96,17 @@ export default function LoopPositionOverview() {
             parseFloat(opportunityData.platform.apy.current) : 
             (asset.supply_apy || 0)
             
-        const appleFarmReward = appleFarmRewardsAprs?.[asset.token.address] ?? 0
-        const enhancedSupplyAPY = baseSupplyAPY + appleFarmReward
+        // const appleFarmReward = appleFarmRewardsAprs?.[asset.token.address] ?? 0
+        const enhancedSupplyAPY = baseSupplyAPY
         
-        console.log('lendTokenDetails APY calculation:', {
-            tokenSymbol: asset.token.symbol,
-            platformSupplyAPY: asset.supply_apy,
-            opportunityAPY: opportunityData?.platform.apy.current,
-            baseSupplyAPY,
-            appleFarmReward,
-            enhancedSupplyAPY
-        })
+        // console.log('lendTokenDetails APY calculation:', {
+        //     tokenSymbol: asset.token.symbol,
+        //     platformSupplyAPY: asset.supply_apy,
+        //     opportunityAPY: opportunityData?.platform.apy.current,
+        //     baseSupplyAPY,
+        //     // appleFarmReward,
+        //     enhancedSupplyAPY
+        // })
         
         const totalSupplyUSD = opportunityData ? 
             Number(opportunityData.platform.liquidity) * Number(opportunityData.token.price_usd) : 
@@ -112,12 +116,17 @@ export default function LoopPositionOverview() {
             ...asset.token,
             apy: enhancedSupplyAPY,
             baseApy: baseSupplyAPY, // Keep original for reference
-            appleFarmReward: appleFarmReward,
+            // appleFarmReward: appleFarmReward,
             ltv: asset.ltv, // Loan-to-value ratio
             remaining_supply_cap: asset.remaining_supply_cap, // Available supply capacity
             totalSupply: totalSupplyUSD // Total supply in USD from opportunities data
         }
-    }, [platformData, lendTokenAddressParam, appleFarmRewardsAprs, findOpportunityData])
+    }, [
+        platformData, 
+        lendTokenAddressParam, 
+        // appleFarmRewardsAprs, 
+        findOpportunityData
+    ])
 
     const borrowTokenDetails = useMemo(() => {
         if (!platformData?.assets) return null
@@ -282,13 +291,13 @@ export default function LoopPositionOverview() {
             intrinsicAPY = mBasisAPY || 0
         }
         
-        const appleFarmRewardAPY = lendTokenDetails?.appleFarmReward || 0
+        // const appleFarmRewardAPY = lendTokenDetails?.appleFarmReward || 0
         const totalSupplyAPY = lendTokenDetails?.apy || 0
         
         // Calculate base APY (reverse calculation for mTBILL/mBASIS)
         const baseSupplyAPY = (lendSymbol?.toLowerCase() === 'mtbill' || lendSymbol?.toLowerCase() === 'mbasis') 
             ? 0 
-            : totalSupplyAPY - appleFarmRewardAPY - intrinsicAPY
+            : totalSupplyAPY - intrinsicAPY
         
         const baseMetrics = [
             {
@@ -302,19 +311,19 @@ export default function LoopPositionOverview() {
                 title: 'Supply APY',
                 value: lendTokenDetails ? `${lendTokenDetails.apy.toFixed(2)}%` : '0.00%',
                 icon: Target,
-                tooltip: `Current APY earned for supplying ${lendSymbol} as collateral${lendTokenDetails?.appleFarmReward && lendTokenDetails.appleFarmReward > 0 ? ` (includes ${lendTokenDetails.appleFarmReward.toFixed(2)}% rewards bonus)` : ''}. This rate is applied to your leveraged position.`,
+                tooltip: `Current APY earned for supplying ${lendSymbol} as collateral. This rate is applied to your leveraged position.`,
                 className: 'text-green-600',
                 // Add Apple Farm icon and tooltip for enhanced display
                 hasAppleFarmRewards: Number(chain_id) === ChainId.Etherlink && 
-                                   hasAppleFarmRewards(lendTokenAddressParam) && 
-                                   appleFarmRewardAPY > 0,
-                appleFarmTooltip: getSupplyAPYBreakdownTooltip({
-                    baseSupplyAPY,
-                    intrinsicAPY,
-                    appleFarmAPY: appleFarmRewardAPY,
-                    totalSupplyAPY,
-                    tokenSymbol: lendSymbol,
-                })
+                                   hasAppleFarmRewards(lendTokenAddressParam) 
+                                //    appleFarmRewardAPY > 0,
+                // appleFarmTooltip: getSupplyAPYBreakdownTooltip({
+                //     baseSupplyAPY,
+                //     intrinsicAPY,
+                //     appleFarmAPY: appleFarmRewardAPY,
+                //     totalSupplyAPY,
+                //     tokenSymbol: lendSymbol,
+                // })
             },
             {
                 title: 'Total Supply',
@@ -402,7 +411,7 @@ export default function LoopPositionOverview() {
         }
     }, [userLoopPosition, lendTokenDetails, borrowTokenDetails, maxLeverage, platformData, chain_id, lendTokenAddressParam, borrowTokenAddressParam])
 
-    const isLoading = isLoadingPlatformData || isLoadingPortfolioData || isLoadingAppleFarmRewards || isLoadingOpportunitiesData
+    const isLoading = isLoadingPlatformData || isLoadingPortfolioData || isLoadingOpportunitiesData
 
     const tabs = [
         {

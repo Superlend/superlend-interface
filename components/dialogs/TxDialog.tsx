@@ -64,7 +64,7 @@ import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { getChainDetails } from '@/app/position-management/helper-functions'
 import { useAssetsDataContext } from '@/context/data-provider'
-import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
+// import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import InfoTooltip from '../tooltips/InfoTooltip'
 import ImageWithBadge from '../ImageWithBadge'
 import ExternalLink from '../ExternalLink'
@@ -169,7 +169,7 @@ export function ConfirmationDialog({
     const isFluidVault = isFluid && assetDetails?.isVault
     const { walletAddress, handleSwitchChain } = useWalletConnection()
     const { allChainsData } = useAssetsDataContext()
-    const { hasAppleFarmRewards, appleFarmRewardsAprs } = useAppleFarmRewards()
+    // const { hasAppleFarmRewards, appleFarmRewardsAprs } = useAppleFarmRewards()
     const chainDetails = getChainDetails({
         allChainsData,
         chainIdToMatch: assetDetails?.chain_id ?? loopAssetDetails?.chain_id ?? 1,

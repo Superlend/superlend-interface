@@ -646,7 +646,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             id="top-apy-opportunities"
             className="top-apy-opportunities-container flex flex-col gap-[24px] px-5"
         >
-            {showRainingApples && <RainingApples />}
+            {/* {showRainingApples && <RainingApples />} */}
             {showRainingPolygons && <RainingPolygons />}
             <div className="top-apy-opportunities-header flex items-end lg:items-center justify-between gap-[12px]">
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">
