@@ -376,6 +376,13 @@ export function ConfirmationDialog({
     const isMorpho = assetDetails?.protocol_type === PlatformType.MORPHO
     const isMorphoMarkets = isMorpho && !assetDetails?.isVault
     const isMorphoVault = isMorpho && assetDetails?.isVault
+    
+    // Loop-specific variables
+    const hasExistingStrategy = !!loopAssetDetails?.core_contract || !!currentPositionData?.core_contract
+    const isLeverageOnlyChange = hasLoopPosition && 
+        currentPositionData && 
+        (Number(lendAmount) === 0 || lendAmount === '') && 
+        leverage !== currentPositionData.currentLeverage
 
     const getActionButtonText = () => {
         if (isLoadingTradePath) {
@@ -461,75 +468,78 @@ export function ConfirmationDialog({
 
     useEffect(() => {
         if (!open || !loopAssetDetails?.borrowAsset || !loopAssetDetails?.supplyAsset) {
+            console.log('TxDialog: Early return - missing required data', {
+                open,
+                borrowAsset: loopAssetDetails?.borrowAsset,
+                supplyAsset: loopAssetDetails?.supplyAsset
+            })
             return
         }
 
         // Only fetch trade path for loop and unloop operations
         if (positionType !== 'loop' && positionType !== 'unloop') {
+            console.log('TxDialog: Early return - not loop/unloop operation', { positionType })
             return
         }
 
         // If we already have path tokens and fees, don't refetch
         if (pathTokens.length > 0 && pathFees.length > 0) {
+            console.log('TxDialog: Already have path data, skipping fetch', { pathTokens, pathFees })
             return
         }
 
-        const isLeverageOnlyChange = hasLoopPosition && 
-            currentPositionData && 
-            (Number(lendAmount) === 0 || lendAmount === '') && 
-            leverage !== currentPositionData.currentLeverage
-        
-        let effectiveBorrowAmountRaw = borrowAmountRaw
-        
-        if (isLeverageOnlyChange) {
-           
-            if (newPositionData && currentPositionData) {
-                const currentBorrowAmount = Number(currentPositionData.borrowAmount)
-                const newBorrowAmount = Number(newPositionData.borrowAmount)
-                const borrowAmountDifference = Math.abs(newBorrowAmount - currentBorrowAmount)
-                if (borrowAmountDifference > 0.000001) {
-                    const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
-                    const formattedDifference = borrowAmountDifference.toFixed(decimals)
-                    effectiveBorrowAmountRaw = parseUnits(formattedDifference, decimals).toString()
-                } else {
-                    const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
-                    effectiveBorrowAmountRaw = parseUnits('0.001', decimals).toString()
-                }
-            } else {
-                const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
-                effectiveBorrowAmountRaw = parseUnits('0.001', decimals).toString()
-            }
+        // Prevent fetching if already loading
+        if (isLoadingTradePath) {
+            console.log('TxDialog: Already loading trade path, skipping')
+            return
         }
+
+        // Calculate trade path amount once
+        let tradePathAmount: string
         
-        // Always fetch trade path for loop/unloop operations
-        let tradePathAmount = effectiveBorrowAmountRaw
         if (positionType === 'unloop' && unloopParameters) {
             // Use the repay amount from unloop parameters
             tradePathAmount = unloopParameters.repayAmountToken
         } else {
-            // If no unloop parameters or in loop mode, use a small amount for trade path calculation
+            // For loop operations, use a small fixed amount for trade path calculation
             const decimals = loopAssetDetails?.borrowAsset?.token?.decimals ?? 18
             tradePathAmount = parseUnits('0.001', decimals).toString()
         }
         
-        const tradePathKey = positionType === 'unloop' ?
-            `${loopAssetDetails?.borrowAsset?.token?.address}-${loopAssetDetails?.supplyAsset?.token?.address}-${tradePathAmount}` :
-            `${loopAssetDetails?.borrowAsset?.token?.address}-${loopAssetDetails?.supplyAsset?.token?.address}-${effectiveBorrowAmountRaw}`
+        const tradePathKey = `${loopAssetDetails?.borrowAsset?.token?.address}-${loopAssetDetails?.supplyAsset?.token?.address}-${tradePathAmount}`
         
-        // Always fetch if we haven't fetched this exact path
-        if (tradePathKey !== lastTradePathKey && !isLoadingTradePath) {
+        console.log('TxDialog: Attempting to fetch trade path', {
+            tradePathKey,
+            lastTradePathKey,
+            borrowAsset: loopAssetDetails?.borrowAsset?.token?.address,
+            supplyAsset: loopAssetDetails?.supplyAsset?.token?.address,
+            tradePathAmount,
+            positionType
+        })
+        
+        // Only fetch if we haven't fetched this exact path
+        if (tradePathKey !== lastTradePathKey) {
+            console.log('TxDialog: Fetching new trade path', { tradePathKey, lastTradePathKey })
             setLastTradePathKey(tradePathKey)
             setIsLoadingTradePath(true)
             
-            // Add a small delay to prevent rapid successive calls
-            setTimeout(() => {
+            // Add debouncing to prevent rapid successive calls
+            const timeoutId = setTimeout(() => {
+                console.log('TxDialog: Calling getTradePath', {
+                    fromToken: loopAssetDetails?.borrowAsset?.token?.address,
+                    toToken: loopAssetDetails?.supplyAsset?.token?.address,
+                    amount: tradePathAmount
+                })
+                
                 getTradePath(
                     loopAssetDetails?.borrowAsset?.token?.address,
                     loopAssetDetails?.supplyAsset?.token?.address,
                     tradePathAmount
                 )
                     .then((result: any) => {
+                        console.log('TxDialog: getTradePath result', result)
                         if (!result || !result.routes || !result.routes[0] || !result.routes[0].pools) {
+                            console.log('TxDialog: No valid trade path found, using defaults')
                             setPathTokens([])
                             setPathFees(['500'])
                             return
@@ -565,14 +575,17 @@ export function ConfirmationDialog({
                             newPathFees = ['500']
                         }
 
+                        console.log('TxDialog: Setting path data', { newPathTokens, newPathFees })
                         setPathTokens(newPathTokens)
                         setPathFees(newPathFees)
                     })
                     .catch((error) => {
+                        console.error('TxDialog: getTradePath error', error)
                         setPathTokens([])
                         setPathFees(['500'])
                     })
                     .finally(() => {
+                        console.log('TxDialog: Trade path fetch completed')
                         setIsLoadingTradePath(false)
                         if (positionType === 'loop') {
                             setLoopTx((prev: TLoopTx) => ({
@@ -581,21 +594,19 @@ export function ConfirmationDialog({
                             }))
                         }
                     })
-            }, 100)
+            }, 300) // Increased debounce time to 300ms
+
+            // Cleanup timeout on unmount or dependency change
+            return () => clearTimeout(timeoutId)
+        } else {
+            console.log('TxDialog: Trade path already fetched for this key', { tradePathKey })
         }
     }, [
         open,
         positionType,
         loopAssetDetails?.borrowAsset?.token?.address,
         loopAssetDetails?.supplyAsset?.token?.address,
-        borrowAmountRaw,
-        hasLoopPosition,
-        currentPositionData?.currentLeverage,
-        currentPositionData?.borrowAmount,
-        leverage,
-        lendAmount,
-        newPositionData?.borrowAmount,
-        unloopParameters,
+        unloopParameters?.repayAmountToken, // Only depend on the actual parameter we use
     ])
 
     // Reset trade path state when closing dialog
@@ -607,6 +618,17 @@ export function ConfirmationDialog({
             setIsLoadingTradePath(false)
         }
     }, [open])
+
+    // Cleanup effect to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            // Cleanup on unmount
+            setPathTokens([])
+            setPathFees([])
+            setLastTradePathKey('')
+            setIsLoadingTradePath(false)
+        }
+    }, [])
 
     function resetLendBorrowTx() {
         setLendTx((prev: any) => ({ // TLendTx
@@ -817,6 +839,8 @@ export function ConfirmationDialog({
             // Reset trade path state when closing
             setLastTradePathKey('')
             setIsLoadingTradePath(false)
+            setPathTokens([])
+            setPathFees([])
             
             if ((positionType === 'loop' || positionType === 'unloop') && setShouldLogCalculation) {
                 setShouldLogCalculation(false)
@@ -852,9 +876,6 @@ export function ConfirmationDialog({
 
     const lendTxSpinnerColor = lendTx.isPending ? 'text-secondary-500' : 'text-primary'
     const borrowTxSpinnerColor = borrowTx.isPending ? 'text-secondary-500' : 'text-primary'
-
-    const canDisplayExplorerLinkWhileLoading = getTxStatus(positionType).hash.length > 0 && 
-                                             (getTxStatus(positionType).isConfirming || getTxStatus(positionType).isPending)
 
     function getNewHfColor() {
         const newHealthFactor = Number(healthFactorValues?.newHealthFactor ?? Number.MAX_VALUE)
@@ -947,29 +968,7 @@ export function ConfirmationDialog({
                                isMorphoMarkets || isMorphoVault ? 'supply' : 'lend' : 'borrow',
                 })}
             </BodyText>
-            {canDisplayExplorerLinkWhileLoading && (
-                <div className="flex items-center justify-between w-full py-[16px] bg-gray-200 lg:bg-white rounded-5 px-[24px]">
-                    <BodyText level="body2" weight="normal" className="text-gray-600">
-                        View on explorer
-                    </BodyText>
-                    <div className="flex items-center gap-[4px]">
-                        <BodyText level="body2" weight="medium" className="text-gray-800 flex items-center gap-[4px]">
-                            <a
-                                href={getExplorerLink(
-                                    getTxStatus(positionType).hash,
-                                    assetDetails?.chain_id ?? 1
-                                )}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-secondary-500"
-                            >
-                                {getTruncatedTxHash(getTxStatus(positionType).hash)}
-                            </a>
-                            <ArrowUpRightIcon width={16} height={16} className="stroke-secondary-500" />
-                        </BodyText>
-                    </div>
-                </div>
-            )}
+
         </div>
     ) : null
 
@@ -1013,11 +1012,9 @@ export function ConfirmationDialog({
 
     const contentHeader = (
         <>
-            {isShowBlock({ lend: true, borrow: true, loop: Number(lendAmount) > 0, unloop: Number(lendAmount) > 0 }) && (
-                <HeadingText level="h4" weight="medium" className="text-gray-800 text-center capitalize">
-                    {getHeaderText()}
-                </HeadingText>
-            )}
+            <HeadingText level="h4" weight="medium" className="text-gray-800 text-center capitalize">
+                {getHeaderText() || 'Review'}
+            </HeadingText>
             {isShowBlock({ loop: loopTx.status === 'view' || (positionType === 'loop' && isTxFailed), unloop: unloopTx.status === 'view' || (positionType === 'unloop' && isTxFailed) }) && (
                 <div className="flex flex-col items-center justify-center gap-[6px]">
                     {isShowBlock({ lend: isTxSuccessful || isTxFailed, borrow: isTxSuccessful || isTxFailed, loop: isTxSuccessful || isTxFailed, unloop: isTxSuccessful || isTxFailed }) && (
@@ -1444,23 +1441,23 @@ export function ConfirmationDialog({
                     )}
                 </div>
             )}
+
             {isShowBlock({
-                loop: loopTx.status === 'approve' || loopTx.status === 'create_strategy' || 
-                      loopTx.status === 'open_position' || loopTx.status === 'view',
+                unloop: unloopTx.status === 'close_position' || unloopTx.status === 'view',
             }) && (
                 <div className="py-2">
-                    {isLoopTxInProgress && loopTx.status === 'approve' && (
+                    {isUnloopTxInProgress && unloopTx.status === 'close_position' && (
                         <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center justify-start gap-2">
                                 <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
                                 <BodyText level="body2" weight="normal" className="text-gray-600">
-                                    {loopTx.isPending && 'Waiting for confirmation...'}
-                                    {loopTx.isConfirming && 'Approving...'}
+                                    {unloopTx.isPending && 'Waiting for confirmation...'}
+                                    {unloopTx.isConfirming && 'Closing position...'}
                                 </BodyText>
                             </div>
-                            {loopTx.hash && loopTx.status === 'approve' && (
+                            {unloopTx.hash && unloopTx.status === 'close_position' && (
                                 <ExternalLink
-                                    href={getExplorerLink(loopTx.hash, loopAssetDetails?.chain_id ?? 1)}
+                                    href={getExplorerLink(unloopTx.hash, loopAssetDetails?.chain_id ?? 1)}
                                 >
                                     <BodyText level="body2" weight="normal" className="text-inherit">
                                         View on explorer
@@ -1469,146 +1466,19 @@ export function ConfirmationDialog({
                             )}
                         </div>
                     )}
-                    {(loopTx.status === 'approve' && !isLoopTxInProgress && loopTx.hash && !loopTx.errorMessage) ||
-                     (loopTx.status === 'create_strategy' && !isLoopTxInProgress) ||
-                     (loopTx.status === 'open_position') ||
-                     (loopTx.status === 'view') ? (
+                    {(!isUnloopTxInProgress && unloopTx.isConfirmed && unloopTx.status === 'view' && !!unloopTx.hash && !unloopTx.errorMessage) && (
                         <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center justify-start gap-2">
                                 <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
                                     <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
                                 </div>
                                 <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    Approval successful
+                                    Unloop successful
                                 </BodyText>
                             </div>
-                            {(loopTx.approveHash || loopTx.hash) && (loopTx.status === 'approve' || loopTx.status === 'open_position' || loopTx.status === 'view') && (
+                            {!!unloopTx.hash && (
                                 <ExternalLink
-                                    href={getExplorerLink(
-                                        loopTx.approveHash || loopTx.hash,
-                                        loopAssetDetails?.chain_id ?? 1
-                                    )}
-                                >
-                                    <BodyText level="body2" weight="normal" className="text-inherit">
-                                        View on explorer
-                                    </BodyText>
-                                </ExternalLink>
-                            )}
-                        </div>
-                    ) : null}
-                </div>
-            )}
-            {isShowBlock({
-                loop: loopTx.status === 'check_strategy' || loopTx.status === 'create_strategy' || 
-                      loopTx.status === 'open_position' || loopTx.status === 'view',
-            }) && (
-                <div className="py-2">
-                    {loopTx.status === 'check_strategy' && isLoopTxInProgress && (
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center justify-start gap-2">
-                                <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
-                                <BodyText level="body2" weight="normal" className="text-gray-600">
-                                    Checking for existing strategy...
-                                </BodyText>
-                            </div>
-                        </div>
-                    )}
-                    {(loopTx.status === 'check_strategy' && !isLoopTxInProgress && loopTx.hash && !loopTx.errorMessage) ||
-                     (loopTx.status === 'create_strategy') ||
-                     (loopTx.status === 'open_position') ||
-                     (loopTx.status === 'view') ? (
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center justify-start gap-2">
-                                <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                    <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
-                                </div>
-                                <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    {loopTx.hash === 'strategy_found' ? 'Strategy found' : 'Strategy check complete'}
-                                </BodyText>
-                            </div>
-                        </div>
-                    ) : null}
-                </div>
-            )}
-            {isShowBlock({ loop: loopTx.status === 'create_strategy' }) && (
-                <div className="py-2">
-                    {isLoopTxInProgress && loopTx.status === 'create_strategy' && (
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center justify-start gap-2">
-                                <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
-                                <BodyText level="body2" weight="normal" className="text-gray-600">
-                                    {loopTx.isPending && 'Waiting for confirmation...'}
-                                    {loopTx.isConfirming && 'Creating strategy...'}
-                                </BodyText>
-                            </div>
-                            {loopTx.hash && loopTx.status === 'create_strategy' && (
-                                <ExternalLink
-                                    href={getExplorerLink(loopTx.hash, loopAssetDetails?.chain_id ?? 1)}
-                                >
-                                    <BodyText level="body2" weight="normal" className="text-inherit">
-                                        View on explorer
-                                    </BodyText>
-                                </ExternalLink>
-                            )}
-                        </div>
-                    )}
-                    {(loopTx.status === 'create_strategy' && !isLoopTxInProgress && loopTx.hash && !loopTx.errorMessage) ||
-                     (loopTx.status === 'open_position') ||
-                     (loopTx.status === 'view') ? (
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center justify-start gap-2">
-                                <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
-                                    <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
-                                </div>
-                                <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    Strategy created successfully
-                                </BodyText>
-                            </div>
-                            {loopTx.hash && loopTx.status === 'create_strategy' && (
-                                <ExternalLink
-                                    href={getExplorerLink(loopTx.hash, loopAssetDetails?.chain_id ?? 1)}
-                                >
-                                    <BodyText level="body2" weight="normal" className="text-inherit">
-                                        View on explorer
-                                    </BodyText>
-                                </ExternalLink>
-                            )}
-                        </div>
-                    ) : null}
-                </div>
-            )}
-            {isShowBlock({ loop: loopTx.status === 'open_position' || loopTx.status === 'view' }) && (
-                <div className="py-2">
-                    {isLoopTxInProgress && loopTx.status === 'open_position' && (
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center justify-start gap-2">
-                                <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
-                                <BodyText level="body2" weight="normal" className="text-gray-600">
-                                    {loopTx.isPending && 'Waiting for confirmation...'}
-                                    {loopTx.isConfirming && 'Opening position...'}
-                                </BodyText>
-                            </div>
-                            {loopTx.hash && loopTx.status === 'open_position' && (
-                                <ExternalLink
-                                    href={getExplorerLink(loopTx.hash, loopAssetDetails?.chain_id ?? 1)}
-                                >
-                                    <BodyText level="body2" weight="normal" className="text-inherit">
-                                        View on explorer
-                                    </BodyText>
-                                </ExternalLink>
-                            )}
-                        </div>
-                    )}
-                    {(!isLoopTxInProgress && loopTx.isConfirmed && loopTx.status === 'view' && !!loopTx.hash && !loopTx.errorMessage) && (
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center justify-start gap-2">
-                                <BodyText level="body2" weight="medium" className="text-gray-800">
-                                    Loop successful
-                                </BodyText>
-                            </div>
-                            {!!loopTx.hash && (
-                                <ExternalLink
-                                    href={getExplorerLink(loopTx.hash, loopAssetDetails?.chain_id ?? 1)}
+                                    href={getExplorerLink(unloopTx.hash, loopAssetDetails?.chain_id ?? 1)}
                                 >
                                     <BodyText level="body2" weight="normal" className="text-inherit">
                                         View on explorer
@@ -1620,6 +1490,190 @@ export function ConfirmationDialog({
                 </div>
             )}
             {showPointsEarnedBanner && <TxPointsEarnedBanner />}
+            
+            {/* Only show Loop Transaction Steps after user starts the flow */}
+            {(() => {
+                // Show stepper as soon as user clicks Loop button (when any transaction activity begins)
+                const hasStartedLoopFlow = loopTx.isPending || loopTx.isConfirming || loopTx.isConfirmed || loopTx.status === 'check_strategy' || loopTx.status === 'create_strategy' || loopTx.status === 'open_position' || loopTx.status === 'view';
+                return isShowBlock({ loop: true }) && hasStartedLoopFlow;
+            })() && (
+                <div className="flex flex-col gap-3">
+                    {/* Step 1: Check Strategy */}
+                    <div className="">
+                        {loopTx.status === 'check_strategy' && isLoopTxInProgress && (
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
+                                    <BodyText level="body2" weight="normal" className="text-gray-600">
+                                        Checking for existing strategy...
+                                    </BodyText>
+                                </div>
+                            </div>
+                        )}
+                        {(loopTx.status === 'check_strategy' && !isLoopTxInProgress && loopTx.hash && !loopTx.errorMessage) ||
+                         (loopTx.status === 'create_strategy') ||
+                         (loopTx.status === 'approve') ||
+                         (loopTx.status === 'open_position') ||
+                         (loopTx.status === 'view') ? (
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                        <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
+                                    </div>
+                                    <BodyText level="body2" weight="medium" className="text-gray-800">
+                                        {loopTx.hash === 'strategy_found' ? 'Strategy found' : 'Strategy check complete'}
+                                    </BodyText>
+                                </div>
+                            </div>
+                        ) : null}
+                    </div>
+                    {/* Step 2: Create Strategy (only show if strategy doesn't exist) */}
+                    {(!loopAssetDetails?.strategyAddress && !hasExistingStrategy) && (
+                        <div className="">
+                            {isLoopTxInProgress && loopTx.status === 'create_strategy' && (
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center justify-start gap-2">
+                                        <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
+                                        <BodyText level="body2" weight="normal" className="text-gray-600">
+                                            {loopTx.isPending && 'Waiting for confirmation...'}
+                                            {loopTx.isConfirming && 'Creating strategy...'}
+                                        </BodyText>
+                                    </div>
+                                    {loopTx.hash && loopTx.status === 'create_strategy' && (
+                                        <ExternalLink
+                                            href={getExplorerLink(loopTx.hash, loopAssetDetails?.chain_id ?? 1)}
+                                        >
+                                            <BodyText level="body2" weight="normal" className="text-inherit">
+                                                View on explorer
+                                            </BodyText>
+                                        </ExternalLink>
+                                    )}
+                                </div>
+                            )}
+                            {(loopTx.status === 'create_strategy' && !isLoopTxInProgress && loopTx.hash && !loopTx.errorMessage) ||
+                             (loopTx.status === 'approve') ||
+                             (loopTx.status === 'open_position') ||
+                             (loopTx.status === 'view') ? (
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center justify-start gap-2">
+                                        <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                            <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
+                                        </div>
+                                        <BodyText level="body2" weight="medium" className="text-gray-800">
+                                            Strategy created successfully
+                                        </BodyText>
+                                    </div>
+                                    {loopTx.hash && loopTx.status === 'create_strategy' && (
+                                        <ExternalLink
+                                            href={getExplorerLink(loopTx.hash, loopAssetDetails?.chain_id ?? 1)}
+                                        >
+                                            <BodyText level="body2" weight="normal" className="text-inherit">
+                                                View on explorer
+                                            </BodyText>
+                                        </ExternalLink>
+                                    )}
+                                </div>
+                            ) : null}
+                        </div>
+                    )}
+                    {/* Step 3: Approve (only show if not leverage-only change) */}
+                    {(!isLeverageOnlyChange || Number(amount) > 0) && (
+                        <div className="">
+                            {isLoopTxInProgress && loopTx.status === 'approve' && (
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center justify-start gap-2">
+                                        <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
+                                        <BodyText level="body2" weight="normal" className="text-gray-600">
+                                            {loopTx.isPending && 'Waiting for confirmation...'}
+                                            {loopTx.isConfirming && 'Approving...'}
+                                        </BodyText>
+                                    </div>
+                                    {loopTx.hash && loopTx.status === 'approve' && (
+                                        <ExternalLink
+                                            href={getExplorerLink(loopTx.hash, loopAssetDetails?.chain_id ?? 1)}
+                                        >
+                                            <BodyText level="body2" weight="normal" className="text-inherit">
+                                                View on explorer
+                                            </BodyText>
+                                        </ExternalLink>
+                                    )}
+                                </div>
+                            )}
+                            {(loopTx.status === 'approve' && !isLoopTxInProgress && loopTx.hash && !loopTx.errorMessage) ||
+                             (loopTx.status === 'open_position') ||
+                             (loopTx.status === 'view') ? (
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center justify-start gap-2">
+                                        <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                            <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
+                                        </div>
+                                        <BodyText level="body2" weight="medium" className="text-gray-800">
+                                            Approval successful
+                                        </BodyText>
+                                    </div>
+                                    {(loopTx.approveHash || loopTx.hash) && (loopTx.status === 'approve' || loopTx.status === 'open_position' || loopTx.status === 'view') && (
+                                        <ExternalLink
+                                            href={getExplorerLink(
+                                                loopTx.approveHash || loopTx.hash,
+                                                loopAssetDetails?.chain_id ?? 1
+                                            )}
+                                        >
+                                            <BodyText level="body2" weight="normal" className="text-inherit">
+                                                View on explorer
+                                            </BodyText>
+                                        </ExternalLink>
+                                    )}
+                                </div>
+                            ) : null}
+                        </div>
+                    )}
+                    {/* Step 4: Open Position */}
+                    <div className="">
+                        {isLoopTxInProgress && loopTx.status === 'open_position' && (
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <LoaderCircle className="animate-spin w-8 h-8 text-secondary-500" />
+                                    <BodyText level="body2" weight="normal" className="text-gray-600">
+                                        {loopTx.isPending && 'Waiting for confirmation...'}
+                                        {loopTx.isConfirming && 'Opening position...'}
+                                    </BodyText>
+                                </div>
+                                {loopTx.hash && loopTx.status === 'open_position' && (
+                                    <ExternalLink
+                                        href={getExplorerLink(loopTx.hash, loopAssetDetails?.chain_id ?? 1)}
+                                    >
+                                        <BodyText level="body2" weight="normal" className="text-inherit">
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                )}
+                            </div>
+                        )}
+                        {(!isLoopTxInProgress && loopTx.isConfirmed && loopTx.status === 'view' && !!loopTx.hash && !loopTx.errorMessage) && (
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-start gap-2">
+                                    <div className="w-8 h-8 bg-[#00AD31] bg-opacity-15 rounded-full flex items-center justify-center">
+                                        <Check className="w-5 h-5 stroke-[#013220]/75" strokeWidth={1.5} />
+                                    </div>
+                                    <BodyText level="body2" weight="medium" className="text-gray-800">
+                                        {positionType === 'loop' ? 'Loop successful' : 'Unloop successful'}
+                                    </BodyText>
+                                </div>
+                                {!!loopTx.hash && (
+                                    <ExternalLink
+                                        href={getExplorerLink(loopTx.hash, loopAssetDetails?.chain_id ?? 1)}
+                                    >
+                                        <BodyText level="body2" weight="normal" className="text-inherit">
+                                            View on explorer
+                                        </BodyText>
+                                    </ExternalLink>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+            
             {/* Always render ActionButton but with proper loading states */}
             <ActionButton
                 disabled={isDisableActionButton || isLoadingTradePath}

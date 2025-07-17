@@ -81,7 +81,7 @@ export const useIguanaDexData = () => {
             })
             const amount = CurrencyAmount.fromRawAmount(swapFrom, amountToSell)
 
-            console.log('IGUANA DEX: amount', amount, "swapFrom", swapFrom, "swapTo", swapTo)
+            console.log('IGUANA DEX: amount', amount, "swapFrom", swapFrom, "swapTo", swapTo, "amountToSell", amountToSell)
 
             const [v2Pools, v3Pools] = await Promise.all([
                 SmartRouter.getV2CandidatePools({
@@ -107,7 +107,7 @@ export const useIguanaDexData = () => {
             const pools = [...v2Pools, ...v3Pools]
             
             // Try both 2 hops and 3 hops simultaneously for efficiency
-            const [trade2HopResult, trade3HopResult] = await Promise.allSettled([
+            const [trade2HopResult] = await Promise.allSettled([
                 SmartRouter.getBestTrade(
                     amount,
                     swapTo,
@@ -121,20 +121,21 @@ export const useIguanaDexData = () => {
                         quoterOptimization: true,
                     }
                 ),
-                SmartRouter.getBestTrade(
-                    amount,
-                    swapTo,
-                    TradeType.EXACT_INPUT,
-                    {
-                        gasPriceWei: () => viemClient.getGasPrice(),
-                        maxHops: 3,
-                        maxSplits: 1,
-                        poolProvider: SmartRouter.createStaticPoolProvider(pools),
-                        quoteProvider,
-                        quoterOptimization: true,
-                    }
-                )
+                // SmartRouter.getBestTrade(
+                //     amount,
+                //     swapTo,
+                //     TradeType.EXACT_INPUT,
+                //     {
+                //         gasPriceWei: () => viemClient.getGasPrice(),
+                //         maxHops: 3,
+                //         maxSplits: 1,
+                //         poolProvider: SmartRouter.createStaticPoolProvider(pools),
+                //         quoteProvider,
+                //         quoterOptimization: true,
+                //     }
+                // )
             ])
+            const trade3HopResult = trade2HopResult;
 
             // Prefer 2 hop trade if successful, otherwise use 3 hop trade
             let trade = null

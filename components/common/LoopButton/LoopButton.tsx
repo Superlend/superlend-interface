@@ -315,12 +315,25 @@ const LoopButton = ({
             const parsedLendAmountBn = parseUnits(roundedAmount, decimals)
             const approveAmount = parsedLendAmountBn.toBigInt()
 
+            // Log approve call parameters
+            // console.log('=== Approve Contract Call Parameters ===', {
+            //     tokenAddress: underlyingAssetAdress,
+            //     spenderAddress: strategyAddr,
+            //     approveAmount: approveAmount.toString(),
+            //     decimals: decimals,
+            //     lendAmountToApprove: lendAmountToApprove,
+            //     roundedAmount: roundedAmount,
+            //     tokenSymbol: assetDetailsRef.current?.supplyAsset?.token?.symbol ?? '',
+            //     strategyAddress: strategyAddr
+            // })
+
             logEvent('approve_loop_initiated', {
-                amount: amountRef.current?.lendAmount ?? '0',
+                amount: approveAmount,
                 token_symbol: assetDetailsRef.current?.supplyAsset?.token?.symbol ?? '',
                 platform_name: assetDetailsRef.current?.name ?? '',
                 chain_name: CHAIN_ID_MAPPER[Number(assetDetailsRef.current?.chain_id) as ChainId],
                 wallet_address: walletAddress,
+                strategy_address: strategyAddr,
             })
 
             setLoopTx((prev: TLoopTx) => ({

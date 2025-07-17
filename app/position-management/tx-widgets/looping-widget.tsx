@@ -304,14 +304,14 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
     } = useSmartTokenBalancesContext()
 
     useEffect(() => {
-        if (platformData?.assets?.length && chain_id) {
+        if (platformData?.assets?.length && chain_id && addTokensToFetch) {
             const platformTokens = platformData.assets.map((asset: any) => ({
                 chainId: Number(chain_id),
                 tokenAddress: asset.token.address
             }))
             addTokensToFetch(platformTokens)
         }
-    }, [platformData, chain_id, addTokensToFetch])
+    }, [platformData?.assets, chain_id, addTokensToFetch])
 
     const userPositions = useMemo(
         () =>
@@ -421,7 +421,11 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
 
     useEffect(() => {
         if (!isLoopTxDialogOpen && loopTx.status !== 'approve') {
-            setLendAmount('')
+            // Only reset lendAmount if user hasn't entered any amount
+            // Don't reset if user has entered an amount, even if leverage changes
+            if (!Number(lendAmount) && lendAmount === '') {
+                setLendAmount('')
+            }
             setBorrowAmount('0')
             setBorrowAmountRaw('0')
             setFlashLoanAmount('0')
@@ -433,7 +437,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
             setWithdrawAmount('0')
             // Don't reset isUnloopMode here - it should be based on positionType
         }
-    }, [isLoopTxDialogOpen, hasUserChangedLeverage])
+    }, [isLoopTxDialogOpen, hasUserChangedLeverage, hasLoopPosition, currentPositionData, leverage])
 
     // Set isUnloopMode based on position type
     useEffect(() => {
@@ -526,10 +530,20 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                 (Number(lendAmount) === 0 || lendAmount === '') && 
                 leverage !== currentPositionData.currentLeverage
 
-            if (positionType === 'increase' && (!!Number(lendAmount) || isLeverageOnlyChange)) {
+            // Only calculate borrow amount if we're in increase mode and have valid data
+            if (positionType === 'increase' && 
+                selectedLendToken?.address && 
+                selectedBorrowToken?.address && 
+                (!!Number(lendAmount) || isLeverageOnlyChange)) {
+                
+                // Prevent excessive calls by checking if we're already loading
+                if (isLoadingBorrowAmount) {
+                    return
+                }
+
                 setIsLoadingBorrowAmount(true)
                 
-                // For leverage-only changes, use a minimal amount for calculation
+                // Always use the user's actual input amount, never reset it
                 const supplyTokenAmount = !!Number(lendAmount) ? 
                     parseUnits(lendAmount, selectedLendToken?.decimals || 18).toString() :
                     parseUnits('0.001', selectedLendToken?.decimals || 18).toString()
@@ -547,7 +561,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                     lendingPoolAddressProvider: lendingPoolAddressProvider,
                     supplyToken: selectedLendToken?.address || '',
                     supplyTokenAmount: supplyTokenAmount,
-                    leverage: debouncedLeverage - 0.1,
+                    leverage: debouncedLeverage,
                     borrowToken: selectedBorrowToken?.address || '',
                     _walletAddress: walletAddress,
                 })
@@ -555,11 +569,27 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                         setNewHealthFactor(Number(result?.healthFactor ?? 0))
                         setBorrowAmount(result.amountFormatted)
                         setBorrowAmountRaw(result.amount)
-                        setFlashLoanAmount(result.flashLoanAmountFormatted ?? '0')
+                        // Handle the case where flashLoanAmountFormatted might not exist
+                        const flashLoanAmountFormatted = 'flashLoanAmountFormatted' in result ? 
+                            (result as any).flashLoanAmountFormatted : '0'
+                        setFlashLoanAmount(flashLoanAmountFormatted)
+                    })
+                    .catch((error) => {
+                        console.error('Error calculating borrow amount:', error)
+                        setNewHealthFactor(0)
+                        setBorrowAmount('0')
+                        setBorrowAmountRaw('0')
+                        setFlashLoanAmount('0')
                     })
                     .finally(() => {
                         setIsLoadingBorrowAmount(false)
                     })
+            } else {
+                // Reset values when not calculating
+                setNewHealthFactor(0)
+                setBorrowAmount('0')
+                setBorrowAmountRaw('0')
+                setFlashLoanAmount('0')
             }
             return
         }
@@ -571,8 +601,8 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
     }, [
         providerStatus.isReady,
         selectedLendToken?.address,
-        lendAmount,
         selectedBorrowToken?.address,
+        lendAmount,
         debouncedLeverage,
         loopPair,
         hasLoopPosition,
@@ -996,6 +1026,21 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                 refetchPortfolio()
             }, 1000) // Small delay to ensure transaction has propagated
         }
+
+        // Clear states when dialog closes
+        if (!isOpen) {
+            // Reset user interaction flags
+            setHasUserChangedLeverage(false)
+            setShouldLogCalculation(false)
+            
+            // Reset calculation states
+            setIsLoadingBorrowAmount(false)
+            setIsLeverageChanging(false)
+            setNewHealthFactor(0)
+            
+            // Reset unloop parameters
+            setUnloopParameters(null)
+        }
     }
 
     return (
@@ -1252,7 +1297,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 </BodyText>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="flex flex-col gap-1">
-                                        <BodyText level="body3" className="text-gray-600">
+                                        <BodyText level="body2" weight="medium" className="text-gray-600">
                                             Collateral
                                         </BodyText>
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
@@ -1260,7 +1305,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                         </BodyText>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <BodyText level="body3" className="text-gray-600">
+                                        <BodyText level="body2" weight="medium" className="text-gray-600">
                                             Borrowed
                                         </BodyText>
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
@@ -1268,7 +1313,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                         </BodyText>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <BodyText level="body3" className="text-gray-600">
+                                        <BodyText level="body2" weight="medium" className="text-gray-600">
                                             Leverage
                                         </BodyText>
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
@@ -1276,7 +1321,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                         </BodyText>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <BodyText level="body3" className="text-gray-600">
+                                        <BodyText level="body2" weight="medium" className="text-gray-600">
                                             Health Factor
                                         </BodyText>
                                         <BodyText level="body2" weight="medium" className="text-gray-800">
@@ -1305,8 +1350,8 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 </BodyText>
                                 
                                 <div className="flex items-center justify-between">
-                                    <BodyText level="body3" className="text-gray-600">
-                                        Total Collateral
+                                    <BodyText level="body2" weight="medium" className="text-gray-600">
+                                        Supplied
                                     </BodyText>
                                     <div className="flex items-center gap-2">
                                         <BodyText level="body3" className="text-gray-800">
@@ -1324,8 +1369,8 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                    <BodyText level="body3" className="text-gray-600">
-                                        Total Borrowed
+                                    <BodyText level="body2" weight="medium" className="text-gray-600">
+                                        Borrowed
                                     </BodyText>
                                     <div className="flex items-center gap-2">
                                         <BodyText level="body3" className="text-gray-800">
@@ -1343,7 +1388,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                    <BodyText level="body3" className="text-gray-600">
+                                    <BodyText level="body2" weight="medium" className="text-gray-600">
                                         Leverage
                                     </BodyText>
                                     <div className="flex items-center gap-2">
@@ -1447,7 +1492,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                             </div>
                         </div>
 
-                        <BodyText level="body3" className="text-gray-600">
+                        <BodyText level="body2" weight="medium" className="text-gray-600">
                             Liquidation at Health Factor &lt;1.0
                         </BodyText>
                     </div>
@@ -1460,6 +1505,7 @@ export const LoopingWidget: FC<LoopingWidgetProps> = ({
                         <ConfirmationDialog
                             disabled={diableActionButton}
                             positionType={isUnloopMode ? "unloop" : (positionType === 'decrease' ? "unloop" : "loop")}
+                            amount={positionType === 'decrease' ? withdrawAmount : lendAmount}
                             loopAssetDetails={{
                                 supplyAsset: {
                                     token: selectedLendToken,
