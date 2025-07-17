@@ -65,8 +65,12 @@ export default function Opportunities({
     const [isTableLoading, setIsTableLoading] = useState(false)
     const { allChainsData } = useContext<any>(AssetsDataContext)
     const { walletAddress } = useWalletConnection()
-    const { appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards, hasAppleFarmRewards } = useAppleFarmRewards()
-    
+    const {
+        // appleFarmRewardsAprs, 
+        // isLoading: isLoadingAppleFarmRewards, 
+        hasAppleFarmRewards
+    } = useAppleFarmRewards()
+
     // Get loop pairs when position type is 'loop'
     const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
 
@@ -102,7 +106,7 @@ export default function Opportunities({
                     const selectedTokenAddress = selectedToken.address.toLowerCase()
                     const lendTokenAddress = pair.tokenAddress.toLowerCase()
                     const borrowTokenAddress = pair.borrowToken?.address.toLowerCase()
-                    
+
                     // Show pair if selected token is either the lend token or borrow token
                     return lendTokenAddress === selectedTokenAddress || borrowTokenAddress === selectedTokenAddress
                 })
@@ -143,18 +147,26 @@ export default function Opportunities({
                 collateral_exposure: item.platform.collateral_exposure,
                 collateral_tokens: item.platform.collateral_tokens,
                 available_liquidity: item.platform.available_liquidity,
-                apple_farm_apr: appleFarmRewardsAprs[item.token.address] ?? 0,
+                apple_farm_apr: 0,
                 has_apple_farm_rewards: hasAppleFarmRewards(item.token.address) && positionType === 'lend',
             }
         })
-    }, [positionType, loopPairs, opportunitiesData, allChainsData, appleFarmRewardsAprs, hasAppleFarmRewards, selectedToken])
+    }, [
+        positionType,
+        loopPairs,
+        opportunitiesData,
+        allChainsData,
+        // appleFarmRewardsAprs,
+        hasAppleFarmRewards,
+        selectedToken
+    ])
 
     // Filter table data based on search filters
     const tableData = useMemo(() => {
         if (!filters.trim()) return rawTableData
 
         const searchTerm = filters.toLowerCase()
-        
+
         return rawTableData.filter(item => {
             // For loop pairs, search in both lend token and borrow token
             if (positionType === 'loop' && 'borrowToken' in item) {
@@ -167,7 +179,7 @@ export default function Opportunities({
                     item.platformName.toLowerCase().includes(searchTerm)
                 )
             }
-            
+
             // For lend/borrow, search in token and platform
             return (
                 item.tokenSymbol.toLowerCase().includes(searchTerm) ||

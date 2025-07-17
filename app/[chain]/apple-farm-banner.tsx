@@ -7,7 +7,7 @@ import { ArrowRightIcon, InfoIcon } from 'lucide-react'
 
 export default function AppleFarmBanner() {
   return (
-    <Link href="https://www.applefarm.xyz" target="_blank" rel="noopener noreferrer">
+    <Link href="https://x.com/etherlink/status/1944766446472745064" target="_blank" rel="noopener noreferrer">
       <Card className="relative overflow-hidden bg-gradient-to-r from-[#F5FFF7] via-[#EDFBEF] to-[#EDFBEF] md:to-[#00985b] hover:shadow-md transition-all duration-300 cursor-pointer group">
         <div className="flex items-center justify-between p-6 gap-4">
           <div className="flex flex-col gap-2 z-10">
@@ -20,18 +20,18 @@ export default function AppleFarmBanner() {
                 className="object-contain"
               />
               <HeadingText level="h4" weight="medium" className="text-gray-800">
-                Apple Farm is Live on Etherlink!
+                Apple Farm Season 2 Coming Soon on Etherlink!
               </HeadingText>
             </div>
             <BodyText level="body2" weight="normal" className="text-gray-600 max-w-[600px]">
               An onchain incentive platform that rewards users who provide liquidity for key token pairs, supply to lending markets, and trade on selected DeFi protocols.
             </BodyText>
-            <BodyText level="body2" weight="normal" className="text-gray-600 flex items-center gap-1 max-w-[600px]">
+            {/* <BodyText level="body2" weight="normal" className="text-gray-600 flex items-center gap-1 max-w-[600px]">
               <InfoIcon className="w-4 h-4 text-secondary-500 -ml-0.5" />
               Note: Direct looping strategies are not eligible for Apple rewards.
-            </BodyText>
+            </BodyText> */}
             <div className="flex items-center gap-2 text-emerald-600 font-medium mt-1">
-              Season One Rewards: $3,000,000
+              Season Two Rewards: Coming Soon
               <ArrowRightIcon className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </div>
           </div>

@@ -5,12 +5,10 @@ import ImageWithBadge from '@/components/ImageWithBadge'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import AvatarCircles from '@/components/ui/avatar-circles'
-import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { BodyText, Label } from '@/components/ui/typography'
 import { PAIR_BASED_PROTOCOLS } from '@/constants'
 import { useAssetsDataContext } from '@/context/data-provider'
-import useDimensions from '@/hooks/useDimensions'
 import {
     abbreviateNumber,
     capitalizeText,
@@ -446,11 +444,17 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                     />
                                 </motion.div>
                             }
-                            content={getAppleFarmAPYTooltipContent({
-                                baseAPY: appleFarmBaseRate,
-                                appleFarmAPR: appleFarmApr,
-                                totalAPY: netAppleFarmAPY,
-                            })}
+                            content={
+                                <BodyText level={'body2'} weight={'medium'}>
+                                    Earn retroactive rewards by supplying XTZ (WXTZ)
+                                    <ExternalLink
+                                        href='https://x.com/etherlink/status/1945151432224862441?t=h3ADH9AyuHivPaQeSwbMvA&s=19'
+                                        className="w-fit gap-0.5 ml-1"
+                                    >
+                                        Learn more
+                                    </ExternalLink>
+                                </BodyText>
+                            }
                         />
                     )}
                 </span>
