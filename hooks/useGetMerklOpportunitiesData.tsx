@@ -5,8 +5,10 @@ import { useQuery } from "@tanstack/react-query"
 
 export const useGetMerklOpportunitiesData = ({
     campaignId,
+    enabled = true,
 }: {
     campaignId: string
+    enabled?: boolean
 }) => {
     const { data, isLoading, isError } = useQuery<TMerklOpportunity[], Error>({
         queryKey: ['merkl-opportunities-data', campaignId],
@@ -22,6 +24,7 @@ export const useGetMerklOpportunitiesData = ({
         },
         staleTime: Infinity,
         refetchInterval: 60000,
+        enabled,
     })
     return { data, isLoading, isError }
 }

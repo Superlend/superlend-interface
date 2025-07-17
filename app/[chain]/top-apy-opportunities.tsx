@@ -60,21 +60,21 @@ const CORRELATED_PAIRS = [
     // Stablecoins - highly correlated
     { pair1: 'USDC', pair2: 'USDT' },
     { pair1: 'USDT', pair2: 'USDC' },
-    
+
     // RWA Tokens - both Midas tokens, correlated
     { pair1: 'mTBILL', pair2: 'USDT' },
     { pair1: 'USDT', pair2: 'mTBILL' },
     // RWA Tokens - both Midas tokens, correlated
     { pair1: 'mBASIS', pair2: 'USDT' },
     { pair1: 'USDT', pair2: 'mBASIS' },
-    
+
     // RWA Tokens - both Midas tokens, correlated
     { pair1: 'mTBILL', pair2: 'USDC' },
     { pair1: 'USDC', pair2: 'mTBILL' },
     // RWA Tokens - both Midas tokens, correlated
     { pair1: 'mBASIS', pair2: 'USDC' },
     { pair1: 'USDC', pair2: 'mBASIS' },
-    
+
     // Major Cryptos - both major crypto assets, somewhat correlated
     // { pair1: 'WETH', pair2: 'WBTC' },
     // { pair1: 'WBTC', pair2: 'WETH' },
@@ -132,7 +132,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         useGetOpportunitiesData({
             type: isActiveTab('loop') ? 'lend' : positionTypeParam as TPositionType,
         })
-    
+
     // Get loop pairs when position type is 'loop'
     const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
     const { allChainsData } = useContext<any>(AssetsDataContext)
@@ -141,7 +141,11 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
     const pathname = usePathname() || ''
     const IS_POLYGON_MARKET = pathname.includes('polygon')
-    const { appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards, hasAppleFarmRewards } = useAppleFarmRewards()
+    const {
+        // appleFarmRewardsAprs, 
+        // isLoading: isLoadingAppleFarmRewards, 
+        hasAppleFarmRewards
+    } = useAppleFarmRewards()
 
     function isActiveTab(tabId: 'lend' | 'borrow' | 'loop') {
         return positionTypeParam === tabId
@@ -359,66 +363,73 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
         // For lend/borrow, use the existing transformation logic
         return opportunitiesData.map((item) => {
-        const platformName = item.platform.platform_name?.split('-')[0]?.toLowerCase()
-        const isAaveV3 = PlatformType.AAVE.includes(platformName)
-        const isCompound = PlatformType.COMPOUND.includes(platformName)
-        const isMorpho = PlatformType.MORPHO.includes(platformName)
-        const isFluid = PlatformType.FLUID.includes(platformName)
-        const isSuperlend = PlatformType.SUPERLEND.includes(platformName)
-        const isEuler = PlatformType.EULER.includes(platformName)
+            const platformName = item.platform.platform_name?.split('-')[0]?.toLowerCase()
+            const isAaveV3 = PlatformType.AAVE.includes(platformName)
+            const isCompound = PlatformType.COMPOUND.includes(platformName)
+            const isMorpho = PlatformType.MORPHO.includes(platformName)
+            const isFluid = PlatformType.FLUID.includes(platformName)
+            const isSuperlend = PlatformType.SUPERLEND.includes(platformName)
+            const isEuler = PlatformType.EULER.includes(platformName)
 
-        const liquidityInUSD = Number(item.platform.liquidity) * Number(item.token.price_usd)
-        const borrowsInUSD = Number(item.platform.borrows) * Number(item.token.price_usd)
+            const liquidityInUSD = Number(item.platform.liquidity) * Number(item.token.price_usd)
+            const borrowsInUSD = Number(item.platform.borrows) * Number(item.token.price_usd)
 
-        let availableLiquidity = 0;
-        if (isAaveV3 || isSuperlend || isEuler) {
-            availableLiquidity = liquidityInUSD - borrowsInUSD
-        } else if (isCompound) {
-            availableLiquidity = liquidityInUSD - borrowsInUSD
-        } else if (isMorpho) {
-            availableLiquidity = liquidityInUSD - Number(item.platform.borrows)
-        } else if (isFluid) {
-            availableLiquidity = (Number(item.platform.liquidity) * Number(item.platform.collateral_token_price)) - borrowsInUSD
-        }
+            let availableLiquidity = 0;
+            if (isAaveV3 || isSuperlend || isEuler) {
+                availableLiquidity = liquidityInUSD - borrowsInUSD
+            } else if (isCompound) {
+                availableLiquidity = liquidityInUSD - borrowsInUSD
+            } else if (isMorpho) {
+                availableLiquidity = liquidityInUSD - Number(item.platform.borrows)
+            } else if (isFluid) {
+                availableLiquidity = (Number(item.platform.liquidity) * Number(item.platform.collateral_token_price)) - borrowsInUSD
+            }
 
-        const tokenHasAppleFarmRewards = hasAppleFarmRewards(item.token.address) && positionTypeParam === 'lend'
+            const tokenHasAppleFarmRewards = hasAppleFarmRewards(item.token.address) && positionTypeParam === 'lend'
 
-        return {
-            tokenAddress: item.token.address,
-            tokenSymbol: item.token.symbol,
-            tokenName: item.token.name,
-            tokenLogo: item.token.logo,
-            chainLogo: allChainsData?.filter(
-                (chain: TChain) => chain.chain_id === Number(item.chain_id)
-            )[0]?.logo,
-            chain_id: item.chain_id,
-            chainName:
-                allChainsData.find(
-                    (chain: any) =>
-                        Number(chain.chain_id) === Number(item.chain_id)
-                )?.name || '',
-            protocol_identifier: item.platform.protocol_identifier,
-            platformName: `${item.platform.platform_name.split('-')[0]}`,
-            platformWithMarketName: `${item.platform.name}`,
-            platformId: `${item.platform.platform_name}`,
-            platformLogo: item.platform.logo,
-            apy_current: String(item.platform.apy.current),
-            apy_avg_7days: String(item.platform.apy.avg_7days),
-            max_ltv: item.platform.max_ltv,
-            deposits: `${Number(item.platform.liquidity) * Number(item.token.price_usd)}`,
-            borrows: `${Number(item.platform.borrows) * Number(item.token.price_usd)}`,
-            utilization: String(item.platform.utilization_rate),
-            additional_rewards: item.platform.additional_rewards,
-            rewards: item.platform.rewards,
-            isVault: item.platform.isVault || false,
-            collateral_exposure: item.platform.collateral_exposure,
-            collateral_tokens: item.platform.collateral_tokens,
-            available_liquidity: availableLiquidity,
-            apple_farm_apr: appleFarmRewardsAprs[item.token.address] ?? 0,
-            has_apple_farm_rewards: tokenHasAppleFarmRewards,
-        }
+            return {
+                tokenAddress: item.token.address,
+                tokenSymbol: item.token.symbol,
+                tokenName: item.token.name,
+                tokenLogo: item.token.logo,
+                chainLogo: allChainsData?.filter(
+                    (chain: TChain) => chain.chain_id === Number(item.chain_id)
+                )[0]?.logo,
+                chain_id: item.chain_id,
+                chainName:
+                    allChainsData.find(
+                        (chain: any) =>
+                            Number(chain.chain_id) === Number(item.chain_id)
+                    )?.name || '',
+                protocol_identifier: item.platform.protocol_identifier,
+                platformName: `${item.platform.platform_name.split('-')[0]}`,
+                platformWithMarketName: `${item.platform.name}`,
+                platformId: `${item.platform.platform_name}`,
+                platformLogo: item.platform.logo,
+                apy_current: String(item.platform.apy.current),
+                apy_avg_7days: String(item.platform.apy.avg_7days),
+                max_ltv: item.platform.max_ltv,
+                deposits: `${Number(item.platform.liquidity) * Number(item.token.price_usd)}`,
+                borrows: `${Number(item.platform.borrows) * Number(item.token.price_usd)}`,
+                utilization: String(item.platform.utilization_rate),
+                additional_rewards: item.platform.additional_rewards,
+                rewards: item.platform.rewards,
+                isVault: item.platform.isVault || false,
+                collateral_exposure: item.platform.collateral_exposure,
+                collateral_tokens: item.platform.collateral_tokens,
+                available_liquidity: availableLiquidity,
+                apple_farm_apr: 0,
+                has_apple_farm_rewards: tokenHasAppleFarmRewards,
+            }
         })
-    }, [positionTypeParam, loopPairs, opportunitiesData, allChainsData, appleFarmRewardsAprs, hasAppleFarmRewards])
+    }, [
+        positionTypeParam,
+        loopPairs,
+        opportunitiesData,
+        allChainsData,
+        // appleFarmRewardsAprs, 
+        // hasAppleFarmRewards
+    ])
 
     function handleFilterTableRowsByPlatformIds(
         opportunity: TOpportunityTable
@@ -503,27 +514,27 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             if (positionTypeParam !== 'loop' || !showCorrelatedPairsParam) {
                 return true // No filtering if not loop or filter not active
             }
-            
+
             const lendToken = opportunity.tokenSymbol
             const borrowToken = (opportunity as any).borrowToken?.symbol
-            
+
             console.log('Checking correlation for:', {
                 lendToken,
                 borrowToken,
                 pairId: (opportunity as any).pairId,
                 showCorrelatedPairsParam
             })
-            
+
             if (!borrowToken) {
                 console.log('No borrow token found')
                 return false
             }
-            
-            const isCorrelated = CORRELATED_PAIRS.some(pair => 
+
+            const isCorrelated = CORRELATED_PAIRS.some(pair =>
                 (pair.pair1 === lendToken && pair.pair2 === borrowToken) ||
                 (pair.pair1 === borrowToken && pair.pair2 === lendToken)
             )
-            
+
             console.log('Is correlated:', isCorrelated)
             return isCorrelated
         })()
@@ -544,7 +555,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             const chainFilter = opportunity.chain_id === ChainId.Etherlink
             return handleExcludeMorphoMarketsByParamFlag(opportunity) && chainFilter && commonFilters && matchesCorrelatedPairs
         }
-        
+
         // Default fallback (shouldn't reach here)
         return commonFilters
     }
@@ -739,7 +750,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                         <DiscoverFiltersDropdown chain={chain} positionType={positionTypeParam} />
                     </div>
                 </div>
-                
+
             </div>
 
             {showAllMarkets && <DiscoverOpportunities chain={chain} positionType={positionTypeParam} />}
