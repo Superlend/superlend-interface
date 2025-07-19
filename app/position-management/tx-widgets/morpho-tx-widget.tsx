@@ -646,8 +646,8 @@ function MorphoMarkets({
                             {isLoadingErc20TokensBalanceData ? (
                                 <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
                             ) : (
-                                getLowestDisplayValue(
-                                    Number(balance ?? 0),
+                                handleSmallestValue(
+                                    (balance ?? 0).toString(),
                                     getMaxDecimalsToDisplay()
                                 )
                             )}
@@ -1060,8 +1060,8 @@ function MorphoVaults({
                             {isLoadingErc20TokensBalanceData ? (
                                 <LoaderCircle className="text-primary w-4 h-4 animate-spin" />
                             ) : (
-                                getLowestDisplayValue(
-                                    Number(balance ?? 0),
+                                handleSmallestValue(
+                                    (balance ?? 0).toString(),
                                     getMaxDecimalsToDisplay()
                                 )
                             )}
