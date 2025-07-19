@@ -45,6 +45,7 @@ import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesDa
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import { Percent, TrendingUp } from 'lucide-react'
 import useGetMidasKpiData from '@/hooks/useGetMidasKpiData'
+import ExternalLink from '@/components/ExternalLink'
 
 type TTokenDetails = {
     address: string
@@ -64,7 +65,11 @@ export default function PageHeader() {
     const borrowTokenAddress = searchParams?.get('borrow_token') || ''
     const isLoopPosition = positionTypeParam === 'loop'
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
-    const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
+    const {
+        hasAppleFarmRewards,
+        // appleFarmRewardsAprs, 
+        // isLoading: isLoadingAppleFarmRewards 
+    } = useAppleFarmRewards()
     const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
 
     // Get opportunities data to access updated APY values (includes Midas API updates)
@@ -75,12 +80,12 @@ export default function PageHeader() {
     // Helper function to find opportunity data for enhanced APY calculation
     const findOpportunityAPY = (tokenAddress: string) => {
         if (!opportunitiesData?.length || !tokenAddress) return null
-        const opportunity = opportunitiesData.find(item => 
+        const opportunity = opportunitiesData.find(item =>
             item.token.address.toLowerCase() === tokenAddress.toLowerCase() &&
             item.chain_id === Number(chain_id) &&
             item.platform.protocol_identifier === protocol_identifier
         )
-        
+
         // Debug logging for Midas tokens
         if (opportunity && (opportunity.token.symbol.toUpperCase() === 'MTBILL' || opportunity.token.symbol.toUpperCase() === 'MBASIS')) {
             console.log(`Found opportunity APY for ${opportunity.token.symbol} in page header:`, {
@@ -89,7 +94,7 @@ export default function PageHeader() {
                 tokenSymbol: opportunity.token.symbol
             })
         }
-        
+
         return opportunity ? parseFloat(opportunity.platform.apy.current) : null
     }
 
@@ -268,10 +273,10 @@ export default function PageHeader() {
     const relevantTokenAddress = isDisplayOneToken ? tokenDetails?.address : collateralTokenDetails?.address
     const relevantTokenSymbol = isDisplayOneToken ? tokenDetails?.symbol : collateralTokenDetails?.symbol
     const opportunityAPY = findOpportunityAPY(relevantTokenAddress)
-    
+
     // Get base APY from opportunities data or platform data
     let baseSupplyAPY = opportunityAPY !== null ? opportunityAPY : Number(pageHeaderStats?.supply_apy || 0)
-    
+
     // Add Midas intrinsic APY for mTBILL and mBASIS tokens
     let intrinsicAPY = 0
     if (relevantTokenSymbol?.toLowerCase() === 'mtbill') {
@@ -279,14 +284,14 @@ export default function PageHeader() {
     } else if (relevantTokenSymbol?.toLowerCase() === 'mbasis') {
         intrinsicAPY = mBasisAPY || 0
     }
-    
+
     // If we have opportunity APY (from Midas API), it already includes intrinsic APY, so don't double-add it
     if (opportunityAPY === null && intrinsicAPY > 0) {
         baseSupplyAPY += intrinsicAPY
     }
-    
-    const appleFarmRewardAPY = Number(appleFarmRewardsAprs?.[relevantTokenAddress] ?? 0)
-    const formattedSupplyAPY = baseSupplyAPY + appleFarmRewardAPY
+
+    // const appleFarmRewardAPY = Number(appleFarmRewardsAprs?.[relevantTokenAddress] ?? 0)
+    const formattedSupplyAPY = baseSupplyAPY
 
     // console.log('Page Header APY calculation:', {
     //     tokenSymbol: relevantTokenSymbol,
@@ -295,7 +300,7 @@ export default function PageHeader() {
     //     platformSupplyAPY: pageHeaderStats?.supply_apy,
     //     intrinsicAPY,
     //     baseSupplyAPY,
-    //     appleFarmRewardAPY,
+    //     // appleFarmRewardAPY,
     //     formattedSupplyAPY,
     //     isDisplayOneToken
     // })
@@ -550,38 +555,40 @@ export default function PageHeader() {
                                                     </BodyText>
                                                 </Badge>
                                                 {/* Apple Farm Rewards Icon */}
-                                                {(Number(chain_id) === ChainId.Etherlink && 
-                                                  hasAppleFarmRewards(relevantTokenAddress) && 
-                                                  appleFarmRewardAPY > 0) && (
-                                                    <InfoTooltip
-                                                        label={
-                                                            <motion.div
-                                                                initial={{ rotate: 0 }}
-                                                                animate={{ rotate: 360 }}
-                                                                transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
-                                                                whileHover={{ rotate: -360 }}
-                                                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                                            >
-                                                                <ImageWithDefault
-                                                                    src="/images/apple-farm-favicon.ico"
-                                                                    alt="Apple Farm Rewards"
-                                                                    width={16}
-                                                                    height={16}
-                                                                />
-                                                            </motion.div>
-                                                        }
-                                                        content={getSupplyAPYBreakdownTooltip({
-                                                            baseSupplyAPY: (relevantTokenSymbol?.toLowerCase() === 'mtbill' || relevantTokenSymbol?.toLowerCase() === 'mbasis') 
-                                                                ? 0 
-                                                                : formattedSupplyAPY - appleFarmRewardAPY - intrinsicAPY,
-                                                            intrinsicAPY: intrinsicAPY,
-                                                            appleFarmAPY: appleFarmRewardAPY,
-                                                            totalSupplyAPY: formattedSupplyAPY,
-                                                            tokenSymbol: relevantTokenSymbol,
-                                                            hasOpportunityAPY: opportunityAPY !== null,
-                                                        })}
-                                                    />
-                                                )}
+                                                {(Number(chain_id) === ChainId.Etherlink &&
+                                                    hasAppleFarmRewards(relevantTokenAddress)
+                                                    //   appleFarmRewardAPY > 0
+                                                ) && (
+                                                        <InfoTooltip
+                                                            label={
+                                                                <motion.div
+                                                                    initial={{ rotate: 0 }}
+                                                                    animate={{ rotate: 360 }}
+                                                                    transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
+                                                                    whileHover={{ rotate: -360 }}
+                                                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                                                >
+                                                                    <ImageWithDefault
+                                                                        src="/images/apple-farm-favicon.ico"
+                                                                        alt="Apple Farm Rewards"
+                                                                        width={16}
+                                                                        height={16}
+                                                                    />
+                                                                </motion.div>
+                                                            }
+                                                            content={
+                                                                <BodyText level={'body2'} weight={'medium'}>
+                                                                    Earn retroactive rewards by supplying XTZ (WXTZ)
+                                                                    <ExternalLink
+                                                                        href='https://x.com/etherlink/status/1945151432224862441?t=h3ADH9AyuHivPaQeSwbMvA&s=19'
+                                                                        className="w-fit gap-0.5 ml-1"
+                                                                    >
+                                                                        Learn more
+                                                                    </ExternalLink>
+                                                                </BodyText>
+                                                            }
+                                                        />
+                                                    )}
                                             </div>
                                         </div>
                                         <span className="hidden xs:inline-block text-gray">

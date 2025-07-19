@@ -15,7 +15,7 @@ export function useGetLoopPairs(waitForAllData: boolean = false) {
     let appleFarmRewardsAprs: Record<string, number | undefined> | undefined
     try {
         const appleFarmContext = useAppleFarmRewards()
-        appleFarmRewardsAprs = appleFarmContext.appleFarmRewardsAprs
+        // appleFarmRewardsAprs = appleFarmContext.appleFarmRewardsAprs
     } catch (error) {
         // Provider not available, use undefined
         appleFarmRewardsAprs = undefined
@@ -65,7 +65,7 @@ export function useGetLoopPairs(waitForAllData: boolean = false) {
     let isLoadingAppleFarmRewards = false
     try {
         const appleFarmContext = useAppleFarmRewards()
-        isLoadingAppleFarmRewards = appleFarmContext.isLoading
+        // isLoadingAppleFarmRewards = appleFarmContext.isLoading
     } catch (error) {
         // Provider not available, assume loaded
         isLoadingAppleFarmRewards = false

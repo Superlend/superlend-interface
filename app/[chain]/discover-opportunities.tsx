@@ -61,7 +61,11 @@ const opportunity9ProtocolIdentifier = "0xd68cf3aa73c75811ca1665efe01a10524ed5ad
 export default function DiscoverOpportunities({ chain, positionType }: { chain: string, positionType: string }) {
     const { logEvent } = useAnalytics()
     const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
-    const { hasAppleFarmRewards, appleFarmRewardsAprs, isLoading: isLoadingAppleFarmRewards } = useAppleFarmRewards()
+    const { 
+        hasAppleFarmRewards, 
+        // appleFarmRewardsAprs, 
+        // isLoading: isLoadingAppleFarmRewards 
+    } = useAppleFarmRewards()
     const { allChainsData } = useContext<any>(AssetsDataContext)
     
     // Get loop pairs data for top 3 strategies
@@ -400,8 +404,8 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     const asset1Data = opportunity1PlatformData?.assets?.find((asset: any) =>
         asset?.token?.address === opportunity1TokenAddress
     )
-    const asset1AppleFarmRewardsApy = appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0
-    const asset1LendRate = Number(asset1Data?.supply_apy || 0) + (asset1AppleFarmRewardsApy ?? 0)
+    // const asset1AppleFarmRewardsApy = appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0
+    const asset1LendRate = Number(asset1Data?.supply_apy || 0)
     const asset1DataSupplyApy = Number(asset1Data?.supply_apy || 0)
     // Description
     const description1 = `${abbreviateNumber(asset1LendRate)}% APY`
@@ -481,20 +485,20 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
         ? '<0.01'
         : appleFarmBaseRate.toFixed(2)
 
-    const appleFarmRewards = [
-        {
-            asset: {
-                address: opportunity1TokenAddress as `0x${string}`,
-                name: "APR",
-                symbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token?.symbol || "",
-                logo: '/images/apple-farm-favicon.ico',
-                decimals: 0,
-                price_usd: 0,
-            },
-            supply_apy: appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0,
-            borrow_apy: 0,
-        }
-    ]
+    // const appleFarmRewards = [
+    //     {
+    //         asset: {
+    //             address: opportunity1TokenAddress as `0x${string}`,
+    //             name: "APR",
+    //             symbol: getAssetDetails(opportunity1PlatformData, opportunity1TokenAddress)?.token?.symbol || "",
+    //             logo: '/images/apple-farm-favicon.ico',
+    //             decimals: 0,
+    //             price_usd: 0,
+    //         },
+    //         supply_apy: appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0,
+    //         borrow_apy: 0,
+    //     }
+    // ]
 
     const isLoading: { [key: number]: boolean } = {
         1: isLoading1,
@@ -521,7 +525,7 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
                         key={opportunity.id}
                         className="group overflow-hidden relative bg-white rounded-5 px-5 py-6 lg:hover:shadow-md lg:hover:shadow-gray-200/50 lg:hover:rounded-7 active:scale-95 transition-all duration-300 cursor-pointer"
                     >
-                        {index === 0 && positionType === 'lend' && <RainingApples />}
+                        {/* {index === 0 && positionType === 'lend' && <RainingApples />} */}
                         <Link
                             href={opportunity.link}
                             target={opportunity?.linkTarget ?? '_self'}
@@ -610,7 +614,7 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
                                                     }
                                                     content={getRewardsTooltipContent({
                                                         baseRateFormatted: appleFarmBaseRateFormatted || '',
-                                                        rewards: appleFarmRewards || [],
+                                                        rewards: [],
                                                         apyCurrent: asset1LendRate || 0,
                                                         positionTypeParam: 'lend',
                                                         netApyIcon: '/images/apple-farm-favicon.ico',
@@ -706,40 +710,40 @@ function getRedirectLink(tokenAddress: string, protocolIdentifier: string, chain
     return `/position-management?token=${tokenAddress}&protocol_identifier=${protocolIdentifier}&chain_id=${chainId}&position_type=${positionType}`
 }
 
-const RainingApples = () => {
-    const apples = Array.from({ length: 20 }, (_, i) => ({
-        id: i,
-        left: `${Math.random() * 100}%`,
-        delay: `${Math.random() * 3}s`,
-        size: 16 + Math.random() * 8,
-    }));
+// const RainingApples = () => {
+//     const apples = Array.from({ length: 20 }, (_, i) => ({
+//         id: i,
+//         left: `${Math.random() * 100}%`,
+//         delay: `${Math.random() * 3}s`,
+//         size: 16 + Math.random() * 8,
+//     }));
 
-    return (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none group-hover:[&>div>div>img]:scale-150 transition-all duration-300">
-            {apples.map((apple) => (
-                <div
-                    key={apple.id}
-                    className="absolute animate-fall"
-                    style={{
-                        left: apple.left,
-                        top: '-30px',
-                        animationDelay: apple.delay,
-                    }}
-                >
-                    <div className="animate-spin">
-                        <Image
-                            src="/images/logos/apple-green.png"
-                            alt="falling apple"
-                            width={apple.size}
-                            height={apple.size}
-                            className="object-contain transition-transform duration-300"
-                        />
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-};
+//     return (
+//         <div className="absolute inset-0 overflow-hidden pointer-events-none group-hover:[&>div>div>img]:scale-150 transition-all duration-300">
+//             {apples.map((apple) => (
+//                 <div
+//                     key={apple.id}
+//                     className="absolute animate-fall"
+//                     style={{
+//                         left: apple.left,
+//                         top: '-30px',
+//                         animationDelay: apple.delay,
+//                     }}
+//                 >
+//                     <div className="animate-spin">
+//                         <Image
+//                             src="/images/logos/apple-green.png"
+//                             alt="falling apple"
+//                             width={apple.size}
+//                             height={apple.size}
+//                             className="object-contain transition-transform duration-300"
+//                         />
+//                     </div>
+//                 </div>
+//             ))}
+//         </div>
+//     );
+// };
 
 // Add this new component before the RainingApples component
 const ProtocolLogosGrid = ({ images }: { images: string[] }) => {
