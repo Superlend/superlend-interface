@@ -2,13 +2,22 @@
 
 import { useEffect } from 'react';
 import { prefetchBlockchainData } from '@/lib/blockchain-prefetch';
+import { useWalletStatus } from '@/hooks/useWallet';
 
 /**
  * Component that prefetches blockchain data for commonly used chains
  * to reduce API calls and the risk of rate limiting
+ * Only runs when a wallet is connected
  */
 export function BlockchainDataPrefetcher() {
+  const { isConnected } = useWalletStatus();
+
   useEffect(() => {
+    // Only prefetch when wallet is connected
+    if (!isConnected) {
+      return;
+    }
+
     // Most commonly used chains (adjust based on your app's needs)
     const commonChains = [1, 10, 137, 42161, 8453];
     
@@ -26,7 +35,7 @@ export function BlockchainDataPrefetcher() {
       clearTimeout(initialTimer);
       clearInterval(intervalId);
     };
-  }, []);
+  }, [isConnected]);
   
   // This component doesn't render anything
   return null;

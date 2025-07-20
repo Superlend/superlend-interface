@@ -27,6 +27,9 @@ import { AnalyticsProvider } from './analytics-provider'
 import { ShowAllMarketsProvider } from './show-all-markets-provider'
 import { AuthProvider } from './auth-provider'
 import { AaveV3DataProvider } from './aave-v3-data-provider'
+import { EthereumMulticallProvider } from './ethereum-multicall-provider'
+import SmartTokenBalancesProvider from './smart-token-balances-provider'
+import { usePrivyActiveWallet } from '@/hooks/usePrivyActiveWallet'
 
 // Set up queryClient
 const queryClient = new QueryClient()
@@ -104,6 +107,20 @@ const privyConfig = {
         linea,
         sonic,
     ],
+    // Enhanced wallet connection settings
+    embeddedWallets: {
+        createOnLogin: 'off' as const,
+    },
+    // Force fresh authentication on each connection
+    mfa: {
+        noPromptOnMfaRequired: false,
+    },
+}
+
+// Component that ensures Privy and Wagmi stay in sync
+function PrivyWagmiSync({ children }: { children: ReactNode }) {
+    usePrivyActiveWallet()
+    return <>{children}</>
 }
 
 function ContextProvider({ children }: { children: ReactNode }) {
@@ -115,17 +132,21 @@ function ContextProvider({ children }: { children: ReactNode }) {
             >
                 <QueryClientProvider client={queryClient}>
                     <WagmiProvider config={config}>
-                        <AssetsDataProvider>
-                            <UserTokenBalancesProvider>
-                                <AaveV3DataProvider>
-                                    <ShowAllMarketsProvider>
-                                        <AuthProvider>
-                                            {children}
-                                        </AuthProvider>
-                                    </ShowAllMarketsProvider>
-                                </AaveV3DataProvider>
-                            </UserTokenBalancesProvider>
-                        </AssetsDataProvider>
+                        <PrivyWagmiSync>
+                            <EthereumMulticallProvider>
+                                <AssetsDataProvider>
+                                <SmartTokenBalancesProvider>
+                                    <AaveV3DataProvider>
+                                        <ShowAllMarketsProvider>
+                                            <AuthProvider>
+                                                {children}
+                                            </AuthProvider>
+                                        </ShowAllMarketsProvider>
+                                    </AaveV3DataProvider>
+                                </SmartTokenBalancesProvider>
+                            </AssetsDataProvider>
+                            </EthereumMulticallProvider>
+                        </PrivyWagmiSync>
                     </WagmiProvider>
                 </QueryClientProvider>
             </PrivyProvider>

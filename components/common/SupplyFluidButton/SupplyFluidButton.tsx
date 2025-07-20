@@ -34,6 +34,8 @@ import FLUID_VAULTS_ABI from '@/data/abi/fluidVaultsABI.json'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import useLogNewUserEvent from '@/hooks/points/useLogNewUserEvent'
 import { useAuth } from '@/context/auth-provider'
+import { useTransactionStatus, getTransactionErrorMessage } from '@/hooks/useTransactionStatus'
+import { humaniseWagmiError } from '@/lib/humaniseWagmiError'
 
 interface ISupplyFluidButtonProps {
     assetDetails: any
@@ -69,11 +71,10 @@ const SupplyFluidButton = ({
         data: hash,
         error,
     } = useWriteContract()
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            confirmations: 1,
-            hash,
-        })
+    
+    // Use the enhanced transaction status hook
+    const txStatus = useTransactionStatus(hash, 1)
+    
     const { walletAddress } = useWalletConnection()
     const { lendTx, setLendTx } = useTxContext() as TTxContext
     const { logUserEvent } = useLogNewUserEvent()
@@ -105,12 +106,12 @@ const SupplyFluidButton = ({
     const getTxButtonText = (
         isPending: boolean,
         isConfirming: boolean,
-        isConfirmed: boolean
+        isSuccessful: boolean
     ) => {
         return txBtnStatus[
             isConfirming
                 ? 'confirming'
-                : isConfirmed
+                : isSuccessful
                   ? lendTx.status === 'view'
                       ? 'success'
                       : 'default'
@@ -120,7 +121,7 @@ const SupplyFluidButton = ({
         ]
     }
 
-    const txBtnText = getTxButtonText(isPending, isConfirming, isConfirmed)
+    const txBtnText = getTxButtonText(isPending, txStatus.isConfirming, txStatus.isSuccessful)
 
     useEffect(() => {
         getAccessTokenFromPrivy()
@@ -280,15 +281,75 @@ const SupplyFluidButton = ({
         }
     }, [amount, tokenDetails, platform, walletAddress, writeContractAsync])
 
+    // Handle transaction success/failure
+    useEffect(() => {
+        if (txStatus.isSuccessful) {
+            // Only set to 'view' if this was a supply transaction (not an approval)
+            if (lendTx.status === 'lend') {
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    status: 'view',
+                    hash: hash || '',
+                    errorMessage: '',
+                }))
+
+                logEvent('lend_completed', {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
+
+                logUserEvent({
+                    user_address: walletAddress as `0x${string}`,
+                    event_type: 'SUPERLEND_AGGREGATOR_TRANSACTION',
+                    platform_type: 'superlend_aggregator',
+                    protocol_identifier: assetDetails?.protocol_identifier,
+                    event_data: 'SUPPLY',
+                    authToken: accessToken || '',
+                })
+            } else if (lendTx.status === 'approve') {
+                // For approval transactions, transition to 'lend' status to trigger supply
+                setLendTx((prev: TLendTx) => ({
+                    ...prev,
+                    status: 'lend',
+                    hash: hash || '',
+                    errorMessage: '',
+                }))
+
+                logEvent('approve_completed', {
+                    amount: amount.amountRaw,
+                    token_symbol: assetDetails?.asset?.token?.symbol,
+                    platform_name: assetDetails?.name,
+                    chain_name:
+                        CHAIN_ID_MAPPER[Number(assetDetails?.chain_id) as ChainId],
+                    wallet_address: walletAddress,
+                })
+            }
+        } else if (txStatus.isFailed) {
+            const errorMessage = getTransactionErrorMessage(txStatus.receipt) || 'Transaction failed'
+            setLendTx((prev: TLendTx) => ({
+                ...prev,
+                isPending: false,
+                isConfirming: false,
+                isConfirmed: false,
+                errorMessage: errorMessage,
+            }))
+        }
+    }, [txStatus.isSuccessful, txStatus.isFailed, txStatus.receipt, hash, amount, assetDetails, walletAddress])
+
+    // Update the status(Loading states) of the lendTx based on the isPending and txStatus states
     useEffect(() => {
         setLendTx((prev: any) => ({
             ...prev,
             isPending: isPending,
-            isConfirming: isConfirming,
-            isConfirmed: isConfirmed,
-            isRefreshingAllowance: isConfirmed,
+            isConfirming: txStatus.isConfirming,
+            isConfirmed: txStatus.isSuccessful,
+            isRefreshingAllowance: txStatus.isSuccessful,
         }))
-    }, [isPending, isConfirming, isConfirmed])
+    }, [isPending, txStatus.isConfirming, txStatus.isSuccessful])
 
     // useEffect(() => {
     //     if (lendTx.status === 'view') return
@@ -396,11 +457,11 @@ const SupplyFluidButton = ({
                     }
                 />
             )}
-            {lendTx.errorMessage.length > 0 && (
+            {((lendTx.errorMessage.length > 0) && !error) && (
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button
-                disabled={isPending || isConfirming || disabled}
+                disabled={isPending || txStatus.isConfirming || disabled}
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()
@@ -419,7 +480,7 @@ const SupplyFluidButton = ({
                 variant="primary"
             >
                 {txBtnText}
-                {lendTx.status !== 'view' && !isPending && !isConfirming && (
+                {lendTx.status !== 'view' && !isPending && !txStatus.isConfirming && (
                     <ArrowRightIcon
                         width={16}
                         height={16}

@@ -77,6 +77,11 @@ export default function PortfolioProvider({
 
     // Combine results from all completed queries, allowing partial data display
     const portfolioData = useMemo(() => {
+        // If wallet is not connected, always return initial empty state
+        if (!walletAddress) {
+            return PortfolioDataInit
+        }
+
         // Get data from all successful queries, even if some are still loading
         const completedQueries = chainQueries.filter(query => !query.isLoading && !query.isError && query.data)
 
@@ -100,13 +105,16 @@ export default function PortfolioProvider({
             total_borrowed: totalBorrowed,
             total_supplied: totalSupplied
         }
-    }, [chainQueries])
+    }, [chainQueries, walletAddress])
 
     // Consider loading only if ALL queries are loading OR we have no completed queries yet
-    const isLoadingPortfolioData = chainQueries.every(query => query.isLoading) ||
+    // But if wallet is not connected, we're not loading
+    const isLoadingPortfolioData = walletAddress ? (
+        chainQueries.every(query => query.isLoading) ||
         chainQueries.filter(query => !query.isLoading && !query.isError).length === 0
+    ) : false
 
-    const isErrorPortfolioData = chainQueries.every(query => query.isError)
+    const isErrorPortfolioData = walletAddress ? chainQueries.every(query => query.isError) : false
 
     return (
         <PortfolioContext.Provider

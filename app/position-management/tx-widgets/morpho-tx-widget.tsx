@@ -4,7 +4,7 @@ import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { BodyText } from '@/components/ui/typography'
-import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { useSmartTokenBalancesContext } from '@/context/smart-token-balances-provider'
 import {
     abbreviateNumber,
     checkDecimalPlaces,
@@ -468,7 +468,19 @@ function MorphoMarkets({
         isLoading: isLoadingErc20TokensBalanceData,
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
-    } = useUserTokenBalancesContext()
+        addTokensToFetch,
+    } = useSmartTokenBalancesContext()
+
+    // Request platform tokens to be fetched when available
+    useEffect(() => {
+        if (platformData?.assets?.length && chain_id) {
+            const platformTokens = platformData.assets.map(asset => ({
+                chainId: Number(chain_id),
+                tokenAddress: asset.token.address
+            }))
+            addTokensToFetch(platformTokens)
+        }
+    }, [platformData, chain_id, addTokensToFetch])
 
     const morphoLendTokenDetails = platformData?.assets.find(
         (asset) => asset.borrow_enabled === false
@@ -978,7 +990,19 @@ function MorphoVaults({
         isLoading: isLoadingErc20TokensBalanceData,
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
-    } = useUserTokenBalancesContext()
+        addTokensToFetch,
+    } = useSmartTokenBalancesContext()
+
+    // Request platform tokens to be fetched when available
+    useEffect(() => {
+        if (platformData?.assets?.length && chain_id) {
+            const platformTokens = platformData.assets.map(asset => ({
+                chainId: Number(chain_id),
+                tokenAddress: asset.token.address
+            }))
+            addTokensToFetch(platformTokens)
+        }
+    }, [platformData, chain_id, addTokensToFetch])
 
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[

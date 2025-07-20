@@ -67,9 +67,10 @@ import { getChainDetails } from '@/app/position-management/helper-functions'
 import { useAssetsDataContext } from '@/context/data-provider'
 import ExternalLink from '@/components/ExternalLink'
 import { parseUnits } from 'ethers/lib/utils'
-import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { useSmartTokenBalancesContext } from '@/context/smart-token-balances-provider'
 import { ETH_ADDRESSES } from '@/lib/constants'
 import TxPointsEarnedBanner from '../TxPointsEarnedBanner'
+import { useTransactionStatus, getTransactionErrorMessage } from '@/hooks/useTransactionStatus'
 
 function normalizeScientificNotation(value: string | number, decimals: number = 18): string {
     try {
@@ -81,31 +82,31 @@ function normalizeScientificNotation(value: string | number, decimals: number = 
         }
 
         const num = Number(strValue)
-        
+
         // If the number is not valid, return '0'
         if (isNaN(num) || !isFinite(num)) {
             return '0'
         }
-        
+
         // If the number is extremely small (less than 1e-18), return "0"
         if (Math.abs(num) < 1e-18) {
             return '0'
         }
-        
+
         // Use toFixed to avoid scientific notation and limit precision
         // Use Math.min to ensure we don't exceed the token's decimal places
         const fixedDecimals = Math.min(decimals, 18)
         const result = num.toFixed(fixedDecimals)
-        
+
         // Remove trailing zeros and decimal point if not needed
         const cleaned = result.replace(/\.?0+$/, '') || '0'
-        
+
         // Double check the result doesn't contain scientific notation
         if (cleaned.includes('e')) {
             // Fallback: if still in scientific notation, convert using BigNumber approach
             return '0'
         }
-        
+
         return cleaned
     } catch (error) {
         console.error('Error normalizing scientific notation:', error, 'value:', value)
@@ -171,9 +172,32 @@ export function WithdrawOrRepayTxDialog({
     // const [amount, setAmount] = useState('')
     const isDesktop = screenWidth > 768
     const isWithdrawAction = actionType === 'withdraw'
-    const isTxFailed = isWithdrawAction
-        ? withdrawTx.errorMessage.length > 0
-        : repayTx.errorMessage.length > 0
+    
+    // Enhanced transaction status detection using receipt-based approach
+    const getCurrentTxHash = () => {
+        return isWithdrawAction ? withdrawTx.hash : repayTx.hash
+    }
+    
+    const txStatus = useTransactionStatus(getCurrentTxHash() as `0x${string}` | undefined, 2)
+    
+    // Enhanced transaction status detection - properly distinguish success vs failure
+    const isTxSuccessful = useMemo(() => {
+        const currentTx = isWithdrawAction ? withdrawTx : repayTx
+        const hasErrorMessage = currentTx.errorMessage.length > 0
+        
+        // Transaction is successful if it has a hash, is confirmed, the receipt shows success, AND there's no error message
+        // The error message check prevents showing success during sync gaps when immediate errors are detected but receipt isn't processed yet
+        return !!currentTx.hash && currentTx.isConfirmed && txStatus.isSuccessful && !hasErrorMessage
+    }, [isWithdrawAction, txStatus.isSuccessful, withdrawTx.hash, withdrawTx.isConfirmed, withdrawTx.errorMessage, repayTx.hash, repayTx.isConfirmed, repayTx.errorMessage])
+    
+    const isTxFailed = useMemo(() => {
+        const currentTx = isWithdrawAction ? withdrawTx : repayTx
+        const hasErrorMessage = currentTx.errorMessage.length > 0
+        const hasFailedReceipt = txStatus.isFailed
+        
+        // Transaction is failed if either there's an error message OR the receipt shows failure
+        return hasErrorMessage || hasFailedReceipt
+    }, [isWithdrawAction, txStatus.isFailed, withdrawTx.errorMessage, repayTx.errorMessage])
     const { handleSwitchChain, isWalletConnected, walletAddress } =
         useWalletConnection()
     const { allChainsData } = useAssetsDataContext()
@@ -186,7 +210,20 @@ export function WithdrawOrRepayTxDialog({
         isLoading: isLoadingErc20TokensBalanceData,
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
-    } = useUserTokenBalancesContext()
+        addTokensToFetch,
+    } = useSmartTokenBalancesContext()
+
+    // Request the specific token balance for this dialog
+    useEffect(() => {
+        if (localAssetDetails?.asset?.token?.address && chain_id) {
+            const tokenToFetch = [{
+                chainId: Number(chain_id),
+                tokenAddress: localAssetDetails.asset.token.address.toLowerCase()
+            }]
+            addTokensToFetch(tokenToFetch)
+            console.log('🎯 WithdrawOrRepayTxDialog: Requesting token balance for', tokenToFetch)
+        }
+    }, [localAssetDetails?.asset?.token?.address, chain_id, addTokensToFetch])
 
     const currentTokenBalanceInWallet = (
         erc20TokensBalanceData[Number(chain_id)]?.[localAssetDetails?.asset?.token?.address.toLowerCase()]
@@ -194,22 +231,37 @@ export function WithdrawOrRepayTxDialog({
     ).toString()
 
     const maxAmount = isWithdrawAction
-        ? (localUserHasNoBorrowings 
+        ? (localUserHasNoBorrowings
             ? normalizeScientificNotation(localMaxWithdrawAmount.maxToWithdrawFormatted, localAssetDetails?.asset?.token?.decimals ?? 18)
             : normalizeScientificNotation(
-                (Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals), 
+                (Number(localMaxWithdrawAmount.maxToWithdrawFormatted) * SLIPPAGE_PERCENTAGE).toFixed(localAssetDetails?.asset?.token?.decimals),
                 localAssetDetails?.asset?.token?.decimals ?? 18
-              ))
+            ))
         : normalizeScientificNotation(localMaxRepayAmount.maxToRepayFormatted, localAssetDetails?.asset?.token?.decimals ?? 18)  // For repay, always use the full amount without slippage
 
-    const isMorphoVaultsProtocol = !!localAssetDetails?.vault 
+    const isMorphoVaultsProtocol = !!localAssetDetails?.vault
 
     const withdrawTxCompleted = withdrawTx.isConfirmed && withdrawTx.hash && withdrawTx.status === 'view'
     const repayTxCompleted = repayTx.isConfirmed && repayTx.hash && repayTx.status === 'view'
     const showPointsEarnedBanner = withdrawTxCompleted || repayTxCompleted
 
+    function getHeaderText() {
+        // Handle failed states first
+        if (isTxFailed) {
+            return isWithdrawAction ? 'Withdraw Failed' : 'Repay Failed'
+        }
+        
+        // Handle successful completion states
+        if (isTxSuccessful) {
+            return isWithdrawAction ? 'Withdraw Successful' : 'Repay Successful'
+        }
+        
+        // Default review states
+        return isWithdrawAction ? 'Withdraw Token' : 'Repay Borrowing'
+    }
+
     useEffect(() => {
-        if (isWithdrawAction) {
+        if (isWithdrawAction && isOpen) {
             if (isMorphoVaultsProtocol) {
                 setWithdrawTx((prev: TWithdrawTx) => ({
                     ...prev,
@@ -344,7 +396,7 @@ export function WithdrawOrRepayTxDialog({
 
     const currentPositionAmountInUSD = Number(localPositionTokenAmount) * Number(localAssetDetails?.asset?.token?.price_usd)
     const inputAmountInUSD = (Number(amount) * Number(localAssetDetails?.asset?.token?.price_usd))
-    
+
     // For repay actions, if user is repaying the maximum amount, remaining should be exactly 0
     const isMaxRepay = !isWithdrawAction && Number(amount) === Number(localMaxRepayAmount.maxToRepayFormatted)
     const newPositionAmountInUSD = isMaxRepay ? 0 : currentPositionAmountInUSD - inputAmountInUSD
@@ -468,7 +520,7 @@ export function WithdrawOrRepayTxDialog({
                         weight="medium"
                         className="text-gray-800 text-center capitalize"
                     >
-                        {isWithdrawAction ? 'Withdraw Token' : `Repay Borrowing`}
+                        {getHeaderText()}
                     </HeadingText>
                     // </DialogTitle>
                 )}
@@ -500,9 +552,7 @@ export function WithdrawOrRepayTxDialog({
                                     variant={isTxFailed ? 'destructive' : 'green'}
                                     className="capitalize flex items-center gap-[4px] font-medium text-[14px]"
                                 >
-                                    {isWithdrawAction && withdrawTx.status === 'view'
-                                        ? 'Withdraw'
-                                        : 'Repay'}{' '}
+                                    {isWithdrawAction ? 'Withdraw' : 'Repay'}{' '}
                                     {isTxFailed ? 'Failed' : 'Successful'}
                                     {!isTxFailed && (
                                         <CircleCheckIcon
@@ -1300,19 +1350,19 @@ const getActionButtonAmount = ({
     if (actionType === 'repay') {
         // Check if user is trying to repay the maximum amount (full debt)
         const isMaxRepay = Number(amount) === Number(maxRepayAmount.maxToRepayFormatted)
-        
+
         // For max repay, use exact amount without slippage to ensure full debt is repaid
         // For partial repay, apply slippage
-        const amountWithSlippage = isMaxRepay 
+        const amountWithSlippage = isMaxRepay
             ? amount  // Use exact amount for max repay
             : (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
-            
+
         const normalizedAmount = normalizeScientificNotation(amountWithSlippage, assetDetails?.asset?.token?.decimals ?? 18)
         const amountParsed = parseUnits(
             amount === '' ? '0' : normalizedAmount,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
-        
+
         return {
             amountRaw: amountWithSlippage,
             amountParsed,
@@ -1321,19 +1371,19 @@ const getActionButtonAmount = ({
                 : '-' + amountParsed.toString(),
         }
     }
-    
+
     if (actionType === 'withdraw') {
         // For withdrawal with no borrowings, use the exact amount without any conversions to avoid precision loss
-        const amountWithSlippage = (userHasNoBorrowings) 
+        const amountWithSlippage = (userHasNoBorrowings)
             ? amount  // Use exact amount for users with no borrowings
             : (Number(amount) * SLIPPAGE_PERCENTAGE).toFixed(assetDetails?.asset?.token?.decimals)
-            
+
         const normalizedAmount = normalizeScientificNotation(amountWithSlippage, assetDetails?.asset?.token?.decimals ?? 18)
         const amountParsed = parseUnits(
             amount === '' ? '0' : normalizedAmount,
             assetDetails?.asset?.token?.decimals ?? 0
         ).toString()
-        
+
         const v = {
             amountRaw: amountWithSlippage,
             amountParsed,
