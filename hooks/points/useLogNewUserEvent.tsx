@@ -64,9 +64,15 @@ export default function useLogNewUserEvent() {
         throw error
       }
     },
-    onSuccess: () => {
-      // Invalidate user details query to refresh data after logging an event
-      queryClient.invalidateQueries({ queryKey: ['user-details'] })
+    onSuccess: (data, variables) => {
+      // Invalidate user details queries for the specific user and auth token
+      queryClient.invalidateQueries({ 
+        queryKey: ['user-details', variables.user_address, variables.authToken] 
+      })
+      // Also invalidate all user-details queries as fallback
+      queryClient.invalidateQueries({ 
+        queryKey: ['user-details'] 
+      })
     },
   })
 

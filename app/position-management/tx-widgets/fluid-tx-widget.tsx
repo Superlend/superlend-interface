@@ -4,7 +4,7 @@ import ToggleTab, { TTypeToMatch } from '@/components/ToggleTab'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { BodyText } from '@/components/ui/typography'
-import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { useSmartTokenBalancesContext } from '@/context/smart-token-balances-provider'
 import {
     abbreviateNumber,
     checkDecimalPlaces,
@@ -166,7 +166,19 @@ function FluidLend({
         isLoading: isLoadingErc20TokensBalanceData,
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
-    } = useUserTokenBalancesContext()
+        addTokensToFetch,
+    } = useSmartTokenBalancesContext()
+
+    // Request platform tokens to be fetched when available
+    useEffect(() => {
+        if (platformData?.assets?.length && chain_id) {
+            const platformTokens = platformData.assets.map(asset => ({
+                chainId: Number(chain_id),
+                tokenAddress: asset.token.address
+            }))
+            addTokensToFetch(platformTokens)
+        }
+    }, [platformData, chain_id, addTokensToFetch])
 
     const balance = (
         erc20TokensBalanceData[Number(chain_id)]?.[
@@ -598,7 +610,19 @@ function FluidVaults({
         isLoading: isLoadingErc20TokensBalanceData,
         // isRefreshing: isRefreshingErc20TokensBalanceData,
         setIsRefreshing: setIsRefreshingErc20TokensBalanceData,
-    } = useUserTokenBalancesContext()
+        addTokensToFetch,
+    } = useSmartTokenBalancesContext()
+
+    // Request platform tokens to be fetched when available
+    useEffect(() => {
+        if (platformData?.assets?.length && chain_id) {
+            const platformTokens = platformData.assets.map(asset => ({
+                chainId: Number(chain_id),
+                tokenAddress: asset.token.address
+            }))
+            addTokensToFetch(platformTokens)
+        }
+    }, [platformData, chain_id, addTokensToFetch])
 
     useEffect(() => {
         if (fluidLendTokenDetails) {
@@ -606,11 +630,25 @@ function FluidVaults({
                 ? fluidLendTokenDetails
                 : fluidBorrowTokenDetails
             setSelectedAssetTokenDetails(tokenDetails ?? null)
+            
+            // Debug platform tokens
+            // console.log('🔍 Platform Token Details:', {
+            //     fluidLendTokenDetails,
+            //     fluidBorrowTokenDetails,
+            //     selectedTokenDetails: tokenDetails,
+            //     platformAssets: platformData?.assets?.map(asset => ({
+            //         address: asset.token.address,
+            //         symbol: asset.token.symbol,
+            //         borrowEnabled: asset.borrow_enabled
+            //     }))
+            // })
         }
     }, [
         fluidLendTokenDetails,
         fluidBorrowTokenDetails,
         setSelectedAssetTokenDetails,
+        platformData,
+        positionType
     ])
 
     const balance = (
@@ -618,6 +656,20 @@ function FluidVaults({
             (selectedAssetTokenDetails?.token?.address ?? '').toLowerCase()
         ]?.balanceFormatted ?? 0
     ).toString()
+
+    // Debug logging for balance issues
+    // useEffect(() => {
+    //     console.log('🔍 Fluid Widget Balance Debug:', {
+    //         chainId: Number(chain_id),
+    //         selectedTokenAddress: selectedAssetTokenDetails?.token?.address?.toLowerCase(),
+    //         selectedTokenSymbol: selectedAssetTokenDetails?.token?.symbol,
+    //         erc20TokensBalanceData,
+    //         availableChains: Object.keys(erc20TokensBalanceData || {}),
+    //         availableTokensForChain: erc20TokensBalanceData[Number(chain_id)] ? Object.keys(erc20TokensBalanceData[Number(chain_id)]) : [],
+    //         balance,
+    //         isLoading: isLoadingErc20TokensBalanceData
+    //     })
+    // }, [chain_id, selectedAssetTokenDetails, erc20TokensBalanceData, balance, isLoadingErc20TokensBalanceData])
 
     // TODO: Loading helper text add support for borrow
     const isLoadingHelperText = isLendPositionType(positionType)

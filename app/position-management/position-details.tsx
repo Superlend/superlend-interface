@@ -38,8 +38,12 @@ import { useAccount } from 'wagmi'
 import { PlatformType } from '@/types/platform'
 import WithdrawAndRepayActionButton from './withdraw-and-repay'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
+import { usePrivyActiveWallet } from '@/hooks/usePrivyActiveWallet'
 
 export default function PositionDetails() {
+    // Ensure Privy and Wagmi stay in sync
+    usePrivyActiveWallet()
+    
     const searchParams = useSearchParams()
     const { allChainsData } = useContext(AssetsDataContext)
     const chain_id = searchParams?.get('chain_id') || '1'
@@ -47,7 +51,7 @@ export default function PositionDetails() {
     // const { address: walletAddress } = useAccount()
     const { isWalletConnected, walletAddress, isConnectingWallet } =
         useWalletConnection()
-    const { lendTx, borrowTx, setWithdrawTx } = useTxContext()
+    const { lendTx, borrowTx, loopTx, setWithdrawTx } = useTxContext()
     const [refresh, setRefresh] = useState(false)
 
     const {
@@ -75,7 +79,8 @@ export default function PositionDetails() {
     useEffect(() => {
         const isRefresh =
             (lendTx.status === 'view' && lendTx.isConfirmed) ||
-            (borrowTx.status === 'view' && borrowTx.isConfirmed)
+            (borrowTx.status === 'view' && borrowTx.isConfirmed) || 
+            (loopTx.status === 'view' && loopTx.isConfirmed)
         if (isRefresh) {
             setRefresh(true)
         }
@@ -84,6 +89,8 @@ export default function PositionDetails() {
         lendTx.isConfirmed,
         borrowTx.status,
         borrowTx.isConfirmed,
+        loopTx.status,
+        loopTx.isConfirmed,
     ])
 
     useEffect(() => {
