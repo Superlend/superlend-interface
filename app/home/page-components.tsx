@@ -17,7 +17,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { PlatformType } from '@/types/platform'
 import useUpdateSearchParams from '@/hooks/useUpdateSearchParams'
 import { useSearchParams } from 'next/navigation'
-import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
+import { TTokenBalance, useSmartTokenBalancesContext } from '@/context/smart-token-balances-provider'
 import { TChain } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import MarketsExplorerBanner from '@/components/MarketsExplorerBanner'
@@ -41,11 +41,10 @@ export default function HomePageComponents() {
     const { isConnectingWallet, walletAddress, isWalletConnected } =
         useWalletConnection()
     const {
-        erc20TokensBalanceData,
         isLoading: isLoadingErc20TokensBalanceData,
         isRefreshing: isRefreshingErc20TokensBalanceData,
         formattedTokenBalances,
-    } = useUserTokenBalancesContext()
+    } = useSmartTokenBalancesContext()
     const updateSearchParams = useUpdateSearchParams()
     const searchParams = useSearchParams()
     const tokenAddressParam = searchParams?.get('token_address')
@@ -67,7 +66,7 @@ export default function HomePageComponents() {
     const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
     const { logEvent } = useAnalytics()
 
-    const formattedTokensList = formattedTokenBalances.map((tokenBalance) => {
+    const formattedTokensList = formattedTokenBalances.map((tokenBalance: TTokenBalance) => {
         return {
             ...tokenBalance.token,
             chain_id: tokenBalance.chain?.chain_id,
@@ -89,7 +88,7 @@ export default function HomePageComponents() {
 
     const tokenBalance =
         formattedTokenBalances.find(
-            (tokenBalance) =>
+            (tokenBalance: TTokenBalance) =>
                 tokenBalance.token.address === selectedToken?.address
         )?.token?.balance || 0
 

@@ -32,9 +32,11 @@ const Header: React.FC = () => {
     const { width: screenWidth } = useDimensions()
     const isDesktop = useMemo(() => screenWidth > 768, [screenWidth])
     const tabs: TTab[] = [
-        { id: 1, name: 'Home', href: '/', icon: HomeIcon },
-        { id: 2, name: 'Discover', href: getRedirectionLink('/discover'), icon: CompassIcon },
-        { id: 3, name: 'Portfolio', href: '/portfolio', icon: PieChartIcon },
+        // { id: 1, name: 'Home', href: '/', icon: HomeIcon },
+        { id: 1, name: 'Discover', href: getRedirectionLink('/discover'), icon: CompassIcon },
+        { id: 2, name: 'Earn', href: getRedirectionLink('/earn'), icon: CompassIcon },
+        { id: 3, name: 'Multiply', href: getRedirectionLink('/multiply'), icon: CompassIcon },
+        { id: 4, name: 'Portfolio', href: '/portfolio', icon: PieChartIcon },
         // { id: 4, name: 'Points', href: '/points', icon: RewardsIcon },
     ]
 
@@ -157,7 +159,7 @@ const Header: React.FC = () => {
                                 size="lg"
                                 className={`${isSelected(tab) ? BUTTON_ACTIVE_DESKTOP_STYLES : BUTTON_INACTIVE_DESKTOP_STYLES}`}
                             >
-                                {tab.id === 3 &&
+                                {tab.href.includes('portfolio') &&
                                     <Badge className="absolute -top-2 -right-2 bg-secondary-100 w-6 h-6 text-white text-[11px] font-bold rounded-full overflow-hidden pointer-events-none">
                                         <div className="absolute inset-0 pointer-events-none">
                                             <div className="absolute inset-0 animate-shine bg-gradient-to-br from-white/0 via-white/70 to-white/0 -translate-x-full" />

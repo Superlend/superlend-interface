@@ -11,7 +11,6 @@ import useIsClient from '@/hooks/useIsClient'
 //     useAppKitState,
 // } from '@reown/appkit/react'
 import { usePrivy } from '@privy-io/react-auth'
-import { useUserTokenBalancesContext } from '@/context/user-token-balances-provider'
 import { ProfileMenuDropdown } from './dropdowns/ProfileMenuDropdown'
 import { useAssetsDataContext } from '@/context/data-provider'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'

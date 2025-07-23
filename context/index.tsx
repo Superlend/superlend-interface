@@ -3,7 +3,6 @@
 import React, { type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AssetsDataProvider from './data-provider'
-import UserTokenBalancesProvider from './user-token-balances-provider'
 import { PrivyClientConfig, PrivyProvider } from '@privy-io/react-auth'
 import { createConfig, WagmiProvider } from '@privy-io/wagmi'
 import {
@@ -135,16 +134,16 @@ function ContextProvider({ children }: { children: ReactNode }) {
                         <PrivyWagmiSync>
                             <EthereumMulticallProvider>
                                 <AssetsDataProvider>
-                                <SmartTokenBalancesProvider>
-                                    <AaveV3DataProvider>
-                                        <ShowAllMarketsProvider>
-                                            <AuthProvider>
-                                                {children}
-                                            </AuthProvider>
-                                        </ShowAllMarketsProvider>
-                                    </AaveV3DataProvider>
-                                </SmartTokenBalancesProvider>
-                            </AssetsDataProvider>
+                                    <SmartTokenBalancesProvider>
+                                        <AaveV3DataProvider>
+                                            <ShowAllMarketsProvider>
+                                                <AuthProvider>
+                                                    {children}
+                                                </AuthProvider>
+                                            </ShowAllMarketsProvider>
+                                        </AaveV3DataProvider>
+                                    </SmartTokenBalancesProvider>
+                                </AssetsDataProvider>
                             </EthereumMulticallProvider>
                         </PrivyWagmiSync>
                     </WagmiProvider>
