@@ -444,17 +444,11 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                     />
                                 </motion.div>
                             }
-                            content={
-                                <BodyText level={'body2'} weight={'medium'}>
-                                    Earn retroactive rewards by supplying XTZ (WXTZ)
-                                    <ExternalLink
-                                        href='https://x.com/etherlink/status/1945151432224862441?t=h3ADH9AyuHivPaQeSwbMvA&s=19'
-                                        className="w-fit gap-0.5 ml-1"
-                                    >
-                                        Learn more
-                                    </ExternalLink>
-                                </BodyText>
-                            }
+                            content={getAppleFarmAPYTooltipContent({
+                                baseAPY: appleFarmBaseRate,
+                                appleFarmAPR: appleFarmApr,
+                                totalAPY: netAppleFarmAPY,
+                            })}
                         />
                     )}
                 </span>

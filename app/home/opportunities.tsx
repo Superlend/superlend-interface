@@ -66,8 +66,8 @@ export default function Opportunities({
     const { allChainsData } = useContext<any>(AssetsDataContext)
     const { walletAddress } = useWalletConnection()
     const {
-        // appleFarmRewardsAprs, 
-        // isLoading: isLoadingAppleFarmRewards, 
+        appleFarmRewardsAprs, 
+        isLoading: isLoadingAppleFarmRewards, 
         hasAppleFarmRewards
     } = useAppleFarmRewards()
 
@@ -147,7 +147,7 @@ export default function Opportunities({
                 collateral_exposure: item.platform.collateral_exposure,
                 collateral_tokens: item.platform.collateral_tokens,
                 available_liquidity: item.platform.available_liquidity,
-                apple_farm_apr: 0,
+                apple_farm_apr: appleFarmRewardsAprs[item.token.address] ?? 0,
                 has_apple_farm_rewards: hasAppleFarmRewards(item.token.address) && positionType === 'lend',
             }
         })
@@ -156,7 +156,7 @@ export default function Opportunities({
         loopPairs,
         opportunitiesData,
         allChainsData,
-        // appleFarmRewardsAprs,
+        appleFarmRewardsAprs,
         hasAppleFarmRewards,
         selectedToken
     ])

@@ -29,7 +29,6 @@ import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import useIsClient from '@/hooks/useIsClient'
-import RainingApples from '@/components/animations/RainingApples'
 import RainingPolygons from '@/components/animations/RainingPolygons'
 import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
@@ -39,6 +38,7 @@ import DiscoverOpportunities from './discover-opportunities'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/typography'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import RainingApples from '@/components/animations/RainingApples'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -142,8 +142,8 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const pathname = usePathname() || ''
     const IS_POLYGON_MARKET = pathname.includes('polygon')
     const {
-        // appleFarmRewardsAprs, 
-        // isLoading: isLoadingAppleFarmRewards, 
+        appleFarmRewardsAprs, 
+        isLoading: isLoadingAppleFarmRewards, 
         hasAppleFarmRewards
     } = useAppleFarmRewards()
 
@@ -418,7 +418,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                 collateral_exposure: item.platform.collateral_exposure,
                 collateral_tokens: item.platform.collateral_tokens,
                 available_liquidity: availableLiquidity,
-                apple_farm_apr: 0,
+                apple_farm_apr: appleFarmRewardsAprs[item.token.address] ?? 0,
                 has_apple_farm_rewards: tokenHasAppleFarmRewards,
             }
         })
@@ -427,8 +427,8 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         loopPairs,
         opportunitiesData,
         allChainsData,
-        // appleFarmRewardsAprs, 
-        // hasAppleFarmRewards
+        appleFarmRewardsAprs, 
+        hasAppleFarmRewards
     ])
 
     function handleFilterTableRowsByPlatformIds(
@@ -646,7 +646,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             id="top-apy-opportunities"
             className="top-apy-opportunities-container flex flex-col gap-[24px] px-5"
         >
-            {/* {showRainingApples && <RainingApples />} */}
+            {showRainingApples && <RainingApples />}
             {showRainingPolygons && <RainingPolygons />}
             <div className="top-apy-opportunities-header flex items-end lg:items-center justify-between gap-[12px]">
                 <div className="top-apy-opportunities-header-left shrink-0 w-full lg:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-[20px] lg:gap-[12px]">

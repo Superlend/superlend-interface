@@ -51,7 +51,7 @@ export default function AppleFarmRewardsBanner({ isLoading = false }: AppleFarmR
 
   return (
     <Card className="relative overflow-hidden bg-gradient-to-r from-[#F5FFF7] via-[#EDFBEF] to-[#EDFBEF] md:to-[#00985b] hover:shadow-md transition-all duration-300">
-      {/* <RainingApples /> */}
+      <RainingApples />
       <div className="flex flex-wrap items-center justify-between p-6 gap-4">
         <div className="flex flex-col gap-2 z-10">
           <div className="flex items-center gap-3">

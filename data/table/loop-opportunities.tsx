@@ -289,7 +289,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         cell: ({ row }) => {
             const searchParams = useSearchParams()
             const positionTypeParam = 'loop' // Always loop for this table
-            const { hasAppleFarmRewards } = useAppleFarmRewards()
+            const { hasAppleFarmRewards, appleFarmRewardsAprs } = useAppleFarmRewards()
             const hasRewards =
                 row.original?.additional_rewards &&
                 row.original?.rewards.length > 0
@@ -301,7 +301,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
             const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
             const hasAppleFarmRewardsForToken = hasAppleFarmRewards(row.original.tokenAddress)
-            // const appleFarmApr = Number(appleFarmRewardsAprs?.[row.original.tokenAddress] ?? 0)
+            const appleFarmApr = Number(appleFarmRewardsAprs?.[row.original.tokenAddress] ?? 0)
 
             const apyCurrent = Number(row.original.apy_current || 0)
             
@@ -315,20 +315,20 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                 ? '<0.01'
                 : abbreviateNumber(baseAPY)
 
-            // const appleFarmRewards = [
-            //     {
-            //         asset: {
-            //             address: row.original.tokenAddress as `0x${string}`,
-            //             name: "Apple Farm APR",
-            //             symbol: row.original.tokenSymbol,
-            //             logo: '/images/apple-farm-favicon.ico',
-            //             decimals: 0,
-            //             price_usd: 0,
-            //         },
-            //         supply_apy: appleFarmApr,
-            //         borrow_apy: 0,
-            //     }
-            // ]
+            const appleFarmRewards = [
+                {
+                    asset: {
+                        address: row.original.tokenAddress as `0x${string}`,
+                        name: "Apple Farm APR",
+                        symbol: row.original.tokenSymbol,
+                        logo: '/images/apple-farm-favicon.ico',
+                        decimals: 0,
+                        price_usd: 0,
+                    },
+                    supply_apy: appleFarmApr,
+                    borrow_apy: 0,
+                }
+            ]
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -422,7 +422,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             }
                             content={getMaxAPYTooltipContent({
                                 baseAPYFormatted: baseAPYFormatted || '',
-                                appleFarmRewards: [],
+                                appleFarmRewards: appleFarmRewards || [],
                                 maxAPY: maxAPY || 0,
                                 positionTypeParam: 'loop',
                             })}
