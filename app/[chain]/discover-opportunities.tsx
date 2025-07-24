@@ -526,7 +526,6 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
                         key={opportunity.id}
                         className="group overflow-hidden relative bg-white rounded-5 px-5 py-6 lg:hover:shadow-md lg:hover:shadow-gray-200/50 lg:hover:rounded-7 active:scale-95 transition-all duration-300 cursor-pointer"
                     >
-                        {index === 0 && positionType === 'lend' && <RainingApples />}
                         <Link
                             href={opportunity.link}
                             target={opportunity?.linkTarget ?? '_self'}
