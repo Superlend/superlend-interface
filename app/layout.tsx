@@ -85,7 +85,7 @@ export default function RootLayout({
                         <BlockchainDataPrefetcher />
                         
                         {/* Zoho Chat Widget - Conditionally hidden during onboarding */}
-                        <ZohoChatWidget />
+                        {/* <ZohoChatWidget /> */}
                         
                         <EasterEgg />
                         <Header />
