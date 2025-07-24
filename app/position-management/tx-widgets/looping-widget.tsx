@@ -80,7 +80,7 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
         isConnectingWallet,
     } = useWalletConnection()
     
-    // const { hasAppleFarmRewards, appleFarmRewardsAprs } = useAppleFarmRewards()
+    const { hasAppleFarmRewards, appleFarmRewardsAprs } = useAppleFarmRewards()
     
     const [availableLendTokens, setAvailableLendTokens] = useState<TToken[]>([])
     const [availableBorrowTokens, setAvailableBorrowTokens] = useState<
@@ -186,10 +186,10 @@ const LoopingWidget: FC<LoopingWidgetProps> = ({
 
         // Add Apple Farm rewards as a flat bonus (not leveraged)
         const isEtherlinkChain = Number(chain_id) === ChainId.Etherlink
-        // if (isEtherlinkChain && hasAppleFarmRewards(selectedLendToken.address)) {
-        //     const appleFarmAPY = appleFarmRewardsAprs?.[selectedLendToken.address.toLowerCase()] || 0
-        //     netAPYValue += appleFarmAPY
-        // }
+        if (isEtherlinkChain && hasAppleFarmRewards(selectedLendToken.address)) {
+            const appleFarmAPY = appleFarmRewardsAprs?.[selectedLendToken.address.toLowerCase()] || 0
+            netAPYValue += appleFarmAPY
+        }
 
         // Format to 2 decimal places with % sign
         const formattedValue = Math.abs(netAPYValue) < 0.01 && netAPYValue !== 0

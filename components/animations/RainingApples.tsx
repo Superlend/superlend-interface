@@ -58,3 +58,38 @@ const RainingApples = () => {
 };
 
 export default RainingApples; 
+
+// const RainingApples = () => {
+//     const apples = Array.from({ length: 20 }, (_, i) => ({
+//         id: i,
+//         left: `${Math.random() * 100}%`,
+//         delay: `${Math.random() * 3}s`,
+//         size: 16 + Math.random() * 8,
+//     }));
+
+//     return (
+//         <div className="absolute inset-0 overflow-hidden pointer-events-none group-hover:[&>div>div>img]:scale-150 transition-all duration-300">
+//             {apples.map((apple) => (
+//                 <div
+//                     key={apple.id}
+//                     className="absolute animate-fall"
+//                     style={{
+//                         left: apple.left,
+//                         top: '-30px',
+//                         animationDelay: apple.delay,
+//                     }}
+//                 >
+//                     <div className="animate-spin">
+//                         <Image
+//                             src="/images/logos/apple-green.png"
+//                             alt="falling apple"
+//                             width={apple.size}
+//                             height={apple.size}
+//                             className="object-contain transition-transform duration-300"
+//                         />
+//                     </div>
+//                 </div>
+//             ))}
+//         </div>
+//     );
+// };

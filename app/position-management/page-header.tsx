@@ -67,8 +67,8 @@ export default function PageHeader() {
     const { allChainsData, allTokensData } = useContext(AssetsDataContext)
     const {
         hasAppleFarmRewards,
-        // appleFarmRewardsAprs, 
-        // isLoading: isLoadingAppleFarmRewards 
+        appleFarmRewardsAprs,
+        isLoading: isLoadingAppleFarmRewards
     } = useAppleFarmRewards()
     const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
 
@@ -290,8 +290,8 @@ export default function PageHeader() {
         baseSupplyAPY += intrinsicAPY
     }
 
-    // const appleFarmRewardAPY = Number(appleFarmRewardsAprs?.[relevantTokenAddress] ?? 0)
-    const formattedSupplyAPY = baseSupplyAPY
+    const appleFarmRewardAPY = Number(appleFarmRewardsAprs?.[relevantTokenAddress] ?? 0)
+    const formattedSupplyAPY = baseSupplyAPY + appleFarmRewardAPY
 
     // console.log('Page Header APY calculation:', {
     //     tokenSymbol: relevantTokenSymbol,
@@ -576,17 +576,16 @@ export default function PageHeader() {
                                                                     />
                                                                 </motion.div>
                                                             }
-                                                            content={
-                                                                <BodyText level={'body2'} weight={'medium'}>
-                                                                    Earn retroactive rewards by supplying XTZ (WXTZ)
-                                                                    <ExternalLink
-                                                                        href='https://x.com/etherlink/status/1945151432224862441?t=h3ADH9AyuHivPaQeSwbMvA&s=19'
-                                                                        className="w-fit gap-0.5 ml-1"
-                                                                    >
-                                                                        Learn more
-                                                                    </ExternalLink>
-                                                                </BodyText>
-                                                            }
+                                                            content={getSupplyAPYBreakdownTooltip({
+                                                                baseSupplyAPY: (relevantTokenSymbol?.toLowerCase() === 'mtbill' || relevantTokenSymbol?.toLowerCase() === 'mbasis')
+                                                                    ? 0
+                                                                    : formattedSupplyAPY - appleFarmRewardAPY - intrinsicAPY,
+                                                                intrinsicAPY: intrinsicAPY,
+                                                                appleFarmAPY: appleFarmRewardAPY,
+                                                                totalSupplyAPY: formattedSupplyAPY,
+                                                                tokenSymbol: relevantTokenSymbol,
+                                                                hasOpportunityAPY: opportunityAPY !== null,
+                                                            })}
                                                         />
                                                     )}
                                             </div>

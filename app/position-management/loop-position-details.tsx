@@ -24,8 +24,8 @@ interface LoopPositionDetailsProps {
 export default function LoopPositionDetails({ loopData, isLoading }: LoopPositionDetailsProps) {
     const { 
         hasAppleFarmRewards, 
-        // appleFarmRewardsAprs, 
-        // isLoading: isLoadingAppleFarmRewards 
+        appleFarmRewardsAprs, 
+        isLoading: isLoadingAppleFarmRewards 
     } = useAppleFarmRewards()
     const searchParams = useSearchParams()
     const chain_id = searchParams?.get('chain_id') || '1'
@@ -57,7 +57,7 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
         return opportunity ? parseFloat(opportunity.platform.apy.current) : null
     }
 
-    if (isLoading) {
+    if (isLoading || isLoadingAppleFarmRewards) {
         return (
             <div className="flex flex-col gap-6">
                 <Card className="bg-white bg-opacity-40">
@@ -84,13 +84,13 @@ export default function LoopPositionDetails({ loopData, isLoading }: LoopPositio
     // Enhanced supply APY calculation with opportunity data (includes Midas API updates)
     const opportunityAPY = findOpportunityAPY(loopData.collateralAsset.token.address)
     const baseSupplyAPY = opportunityAPY !== null ? opportunityAPY : (loopData.collateralAsset.baseApy || loopData.collateralAsset.apy || 0)
-    // const appleFarmRewardAPY = appleFarmRewardsAprs?.[loopData.collateralAsset.token.address] ?? 0
+    const appleFarmRewardAPY = appleFarmRewardsAprs?.[loopData.collateralAsset.token.address] ?? 0
     
     // If baseApy exists, it means we have an active position and need to add apple farm rewards
     // If baseApy doesn't exist, the apy already includes apple farm rewards (no position case)
     // But if we have opportunity APY (Midas API data), use that as base and add apple farm rewards
     const enhancedSupplyAPY = (opportunityAPY !== null || loopData.collateralAsset.baseApy) 
-        ? baseSupplyAPY 
+        ? (baseSupplyAPY + appleFarmRewardAPY)
         : loopData.collateralAsset.apy 
 
     // console.log('Position Details APY calculation:', {
