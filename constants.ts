@@ -346,4 +346,5 @@ export const ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS = {
     wbtc: "0xbfc94cd2b1e55999cfc7347a9313e88702b83d0f",
     usdt: "0x2c03058c8afc06713be23e58d2febc8337dbfe6a",
     // weth: "0xfc24f770f94edbca6d6f885e12d4317320bcb401",
+    lbtc: "0xecac9c5f704e954931349da37f60e39f515c11c1"
 }

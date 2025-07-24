@@ -24,6 +24,7 @@ const APPLE_FARM_REWARDS_CAMPAIGN_IDS = {
     WBTC: '0x46cd8f91631692117fe8a1a993b5693940da473f48086415bfb8efb669dcdd4f',
     USDT: '0xbebb1d216e5681060e35fc7e54dfbc6ec43bec52723e9afd1f262e187242bb94',
     // WETH: '0xd1cc7c4f0734f461cd74b65d163d65960760e57631016bc6bf0269f13212c40f',
+    LBTC: '0x317e5fa441f69dbc830f7f4aa9bebdd5db2119e138d3efd0b77925c88e375303'
 }
 
 export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> = ({ children }) => {
@@ -55,6 +56,10 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
     //     useGetMerklOpportunitiesData({
     //         campaignId: APPLE_FARM_REWARDS_CAMPAIGN_IDS.WETH,
     //     });
+    const { data: lbtcOpportunityData, isLoading: isLoadingLBTCCOpportunityData } =
+        useGetMerklOpportunitiesData({
+            campaignId: APPLE_FARM_REWARDS_CAMPAIGN_IDS.LBTC,
+        });
 
     const isLoading =
         isLoadingMBasisOpportunityData ||
@@ -62,7 +67,8 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
         isLoadingXTZOpportunityData ||
         isLoadingUSDCOpportunityData ||
         isLoadingWBTCCOpportunityData ||
-        isLoadingUSDTCOpportunityData
+        isLoadingUSDTCOpportunityData ||
+        isLoadingLBTCCOpportunityData
         // isLoadingWETHOpportunityData;
 
     const appleFarmRewardsAprs = useMemo(() => {
@@ -73,6 +79,7 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
             [ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS['usdc']]: usdcOpportunityData?.[0]?.Opportunity?.apr,
             [ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS['wbtc']]: wbtcOpportunityData?.[0]?.Opportunity?.apr,
             [ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS['usdt']]: usdtOpportunityData?.[0]?.Opportunity?.apr,
+            [ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS['lbtc']]: lbtcOpportunityData?.[0]?.Opportunity?.apr,
             // [ELIGIBLE_TOKENS_FOR_APPLE_FARM_REWARDS['weth']]: wethOpportunityData?.[0]?.Opportunity?.apr,
         };
     }, [
@@ -82,6 +89,7 @@ export const AppleFarmRewardsProvider: React.FC<AppleFarmRewardsProviderProps> =
         usdcOpportunityData,
         wbtcOpportunityData,
         usdtOpportunityData,
+        lbtcOpportunityData,
         // wethOpportunityData,
     ]);
 
