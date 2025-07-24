@@ -37,7 +37,7 @@ export default function NotFound() {
                             className="uppercase w-full min-[426px]:w-fit p-0"
                         >
                             <Link
-                                href={'/'}
+                                href={'/discover'}
                                 className="w-full h-full py-[13px] px-[21px]"
                             >
                                 Go to home
