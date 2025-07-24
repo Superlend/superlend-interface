@@ -320,7 +320,8 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
     useEffect(() => {
         const hasShownAnimation = sessionStorage.getItem('has_shown_apple_animation');
-        if (!hasShownAnimation && chainIdsParam.includes('42793')) {
+        // Only show on etherlink route, not when chainIdsParam includes '42793' from other routes
+        if (!hasShownAnimation && (pathname === '/etherlink' || pathname.endsWith('/etherlink')) && chainIdsParam.includes('42793')) {
             setShowRainingApples(true);
             sessionStorage.setItem('has_shown_apple_animation', 'true');
 
@@ -330,7 +331,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
             return () => clearTimeout(timer);
         }
-    }, []);
+    }, [chainIdsParam, pathname]);
 
     useEffect(() => {
         const hasShownPolygonAnimation = sessionStorage.getItem('has_shown_polygon_animation');
