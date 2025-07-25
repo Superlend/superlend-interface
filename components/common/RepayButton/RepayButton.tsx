@@ -595,7 +595,7 @@ const RepayButton = ({
                 <CustomAlert description={repayTx.errorMessage} />
             )}
             <Button
-                disabled={isPending || isConfirming || disabled}
+                disabled={(isPending || isConfirming || disabled) && repayTx.status !== 'view'}
                 onClick={() => {
                     if (repayTx.status === 'approve') {
                         onApproveSupply()

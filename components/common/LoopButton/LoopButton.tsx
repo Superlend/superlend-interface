@@ -96,7 +96,7 @@ const LoopButton = ({
             '0x1504d006b80b1616d2651e8d15d5d25a88efef58',
     }
     const debtToken = DEBT_TOKENS[assetDetails.borrowAsset.token.address]
-    const isDisabledCta = loopTx.isPending || loopTx.isConfirming || disabled || !isWalletConnected
+    const isDisabledCta = (loopTx.isPending || loopTx.isConfirming || disabled || !isWalletConnected) && loopTx.status !== 'view'
 
     // const amountBN = useMemo(() => {
     //     return amount ? BigNumber.from(amount.amountRaw) : BigNumber.from(0)

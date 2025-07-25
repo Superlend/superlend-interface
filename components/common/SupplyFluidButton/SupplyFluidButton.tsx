@@ -400,7 +400,7 @@ const SupplyFluidButton = ({
                 <CustomAlert description={lendTx.errorMessage} />
             )}
             <Button
-                disabled={isPending || isConfirming || disabled}
+                disabled={(isPending || isConfirming || disabled) && lendTx.status !== 'view'}
                 onClick={() => {
                     if (lendTx.status === 'approve') {
                         onApproveSupply()

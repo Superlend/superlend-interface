@@ -604,7 +604,7 @@ const WithdrawButton = ({
             <Button
                 variant="primary"
                 className="group flex items-center gap-[4px] py-3 w-full rounded-5 uppercase"
-                disabled={isPending || isConfirming || disabled}
+                disabled={(isPending || isConfirming || disabled) && withdrawTx.status !== 'view'}
                 onClick={() => {
                     if (withdrawTx.status === 'approve') {
                         onApproveWithdrawMorphoVault(assetDetails, amount)
