@@ -380,7 +380,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                         {`${maxAPYFormatted}%`}
                     </BodyText>
                     {/* REGULAR REWARDS */}
-                    {hasRewards && (
+                    {/* {hasRewards && (
                         <InfoTooltip
                             label={
                                 <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
@@ -400,7 +400,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 positionTypeParam,
                             })}
                         />
-                    )}
+                    )} */}
                     {/* APPLE FARM REWARDS */}
                     {(isEtherlinkChain && hasAppleFarmRewardsForToken) && (
                         <InfoTooltip
