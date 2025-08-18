@@ -335,6 +335,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const apyCurrentFormatted = (apyCurrent > 0 && apyCurrent < 0.01) ? '<0.01' : abbreviateNumber(apyCurrent)
 
             const appleFarmBaseRate = Number(row.original.apy_current)
+            // console.log('appleFarmBaseRate', {appleFarmBaseRate,row})
             const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
                 ? '<0.01'
                 : abbreviateNumber(appleFarmBaseRate)

@@ -275,7 +275,7 @@ export default function PageHeader() {
     const opportunityAPY = findOpportunityAPY(relevantTokenAddress)
 
     // Get base APY from opportunities data or platform data
-    let baseSupplyAPY = opportunityAPY !== null ? opportunityAPY : Number(pageHeaderStats?.supply_apy || 0)
+    let baseSupplyAPY = !!Number(opportunityAPY) ? Number(opportunityAPY) : Number(pageHeaderStats?.supply_apy || 0)
 
     // Add Midas intrinsic APY for mTBILL and mBASIS tokens
     let intrinsicAPY = 0
@@ -286,7 +286,7 @@ export default function PageHeader() {
     }
 
     // If we have opportunity APY (from Midas API), it already includes intrinsic APY, so don't double-add it
-    if (opportunityAPY === null && intrinsicAPY > 0) {
+    if (!Number(opportunityAPY) && intrinsicAPY > 0) {
         baseSupplyAPY += intrinsicAPY
     }
 
@@ -577,9 +577,7 @@ export default function PageHeader() {
                                                                 </motion.div>
                                                             }
                                                             content={getSupplyAPYBreakdownTooltip({
-                                                                baseSupplyAPY: (relevantTokenSymbol?.toLowerCase() === 'mtbill' || relevantTokenSymbol?.toLowerCase() === 'mbasis')
-                                                                    ? 0
-                                                                    : formattedSupplyAPY - appleFarmRewardAPY - intrinsicAPY,
+                                                                baseSupplyAPY: formattedSupplyAPY - appleFarmRewardAPY,
                                                                 intrinsicAPY: intrinsicAPY,
                                                                 appleFarmAPY: appleFarmRewardAPY,
                                                                 totalSupplyAPY: formattedSupplyAPY,
@@ -898,7 +896,7 @@ function getSupplyAPYBreakdownTooltip({
                 </BodyText>
             </div>
             {/* Intrinsic APY for mTBILL and mBASIS */}
-            {intrinsicAPY > 0 && (tokenSymbol?.toLowerCase() === 'mtbill' || tokenSymbol?.toLowerCase() === 'mbasis') && (
+            {/* {intrinsicAPY > 0 && (tokenSymbol?.toLowerCase() === 'mtbill' || tokenSymbol?.toLowerCase() === 'mbasis') && (
                 <div
                     className="flex items-center justify-between gap-[70px] py-2"
                     style={{ gap: '70px' }}
@@ -917,7 +915,7 @@ function getSupplyAPYBreakdownTooltip({
                         + {abbreviateNumber(intrinsicAPY, 2)}%
                     </BodyText>
                 </div>
-            )}
+            )} */}
             {appleFarmAPY > 0 && (
                 <div
                     className="flex items-center justify-between gap-[100px] py-2"

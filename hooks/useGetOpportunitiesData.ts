@@ -33,7 +33,7 @@ export default function useGetOpportunitiesData(
     // Create a cache key based on params
     const cacheKey = `opportunities_${params.type}_${params.chain_ids || 'all'}_${params.tokens || 'all'}`
     
-    // Function to update Midas token APYs
+    // Function to update Midas token APYs and adjust APY for chain_id 42793
     const updateMidasTokenAPYs = useCallback((opportunities: TOpportunity[]) => {
         if ((params.type !== 'lend' && params.type !== 'loop') || (!mBasisAPY && !mTbillAPY)) {
             return opportunities
@@ -56,19 +56,74 @@ export default function useGetOpportunitiesData(
             }
             
             if (tokenSymbol === 'MTBILL' && mTbillAPY !== null) {
+                // console.log('MTBILL APY', mTbillAPY)
+                // console.log('MTBILL opportunity', opportunity)
+                const totalRewardsAPY = opportunity.platform.rewards.reduce((sum, reward) => {
+                    return sum + (reward.supply_apy || 0)
+                }, 0)
+                
+                const currentAPY = parseFloat(opportunity.platform.apy.current) || 0
+                const adjustedAPY = Math.max(0, currentAPY - totalRewardsAPY + mTbillAPY)
+                // console.log('MTBILL adjustedAPY', {adjustedAPY,currentAPY,totalRewardsAPY,opportunity})
+                
                 return {
                     ...opportunity,
                     platform: {
                         ...opportunity.platform,
                         apy: {
                             ...opportunity.platform.apy,
-                            current: mTbillAPY.toString()
+                            current: adjustedAPY.toString()
+                        }
+                    }
+                }
+            }
+            if (tokenSymbol.toUpperCase() === 'STXTZ') {
+                // console.log('STXTZ APY', mTbillAPY)
+                // console.log('STXTZ opportunity', opportunity)
+                const totalRewardsAPY = opportunity.platform.rewards.reduce((sum, reward) => {
+                    return sum + (reward.supply_apy || 0)
+                }, 0)
+                
+                const currentAPY = parseFloat(opportunity.platform.apy.current) || 0
+                const adjustedAPY = Math.max(0, currentAPY - totalRewardsAPY)
+                // console.log('STXTZ adjustedAPY', {adjustedAPY,currentAPY,totalRewardsAPY,opportunity})
+                
+                return {
+                    ...opportunity,
+                    platform: {
+                        ...opportunity.platform,
+                        apy: {
+                            ...opportunity.platform.apy,
+                            current: currentAPY.toString()
+                        }
+                    }
+                }
+            }
+
+            // Adjust APY for chain_id 42793 by subtracting sum of supply_apy from rewards
+            if (opportunity.chain_id === 42793 && opportunity.platform.rewards && opportunity.platform.rewards.length > 0) {
+                const totalRewardsAPY = opportunity.platform.rewards.reduce((sum, reward) => {
+                    return sum + (reward.supply_apy || 0)
+                }, 0)
+                
+                const currentAPY = parseFloat(opportunity.platform.apy.current) || 0
+                const adjustedAPY = Math.max(0, currentAPY - totalRewardsAPY)
+                // console.log('adjustedAPY', {adjustedAPY,currentAPY,totalRewardsAPY,opportunity})
+                return {
+                    ...opportunity,
+                    platform: {
+                        ...opportunity.platform,
+                        apy: {
+                            ...opportunity.platform.apy,
+                            current: adjustedAPY.toString()
                         }
                     }
                 }
             }
             
+            // console.log('opportunity data response', opportunity)
             return opportunity
+
         })
     }, [params.type, mBasisAPY, mTbillAPY])
     
