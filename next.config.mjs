@@ -37,8 +37,6 @@ const nextConfig = {
         contentDispositionType: 'attachment',
         contentSecurityPolicy:
             "default-src 'self'; script-src 'none'; sandbox;",
-        contentSecurityPolicy:
-            "default-src 'self'; script-src 'none'; sandbox;",
         minimumCacheTTL: 60 * 60 * 24 * 14, // 14 days
     },
     webpack: (config) => {
