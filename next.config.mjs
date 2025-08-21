@@ -7,43 +7,33 @@ const nextConfig = {
         remotePatterns: [
             {
                 hostname: 'superlend-assets.s3.ap-south-1.amazonaws.com',
-                minimumCacheTTL: DAYS14_IN_SECONDS,
             },
             {
                 hostname: 'coin-images.coingecko.com',
-                minimumCacheTTL: DAYS30_IN_SECONDS,
             },
             {
                 hostname: 'cdn.morpho.org',
-                minimumCacheTTL: DAYS30_IN_SECONDS,
             },
             {
                 hostname: 'www.etherlink.com',
-                minimumCacheTTL: DAYS30_IN_SECONDS,
             },
             {
                 hostname: 'raw.githubusercontent.com',
-                minimumCacheTTL: DAYS30_IN_SECONDS,
             },
             {
                 hostname: 'superlend-public-assets.s3.ap-south-1.amazonaws.com',
-                minimumCacheTTL: DAYS14_IN_SECONDS,
             },
             {
                 hostname: 'cdn.whisk.so',
-                minimumCacheTTL: DAYS30_IN_SECONDS,
             },
             {
                 hostname: 'cryptologos.cc',
-                minimumCacheTTL: DAYS30_IN_SECONDS,
             },
             {
                 hostname: 'funds.superlend.xyz',
-                minimumCacheTTL: DAYS14_IN_SECONDS,
             },
             {
                 hostname: 'app.aave.com',
-                minimumCacheTTL: DAYS30_IN_SECONDS,
             },
         ],
         dangerouslyAllowSVG: true,
