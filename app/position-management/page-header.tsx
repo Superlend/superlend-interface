@@ -43,7 +43,7 @@ import { PlatformType } from '@/types/platform'
 import CustomAlert from '@/components/alerts/CustomAlert'
 import { useGetMerklOpportunitiesData } from '@/hooks/useGetMerklOpportunitiesData'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
-import { Percent, TrendingUp } from 'lucide-react'
+import { Bitcoin, Percent, TrendingUp } from 'lucide-react'
 import useGetMidasKpiData from '@/hooks/useGetMidasKpiData'
 import ExternalLink from '@/components/ExternalLink'
 
@@ -71,6 +71,7 @@ export default function PageHeader() {
         isLoading: isLoadingAppleFarmRewards
     } = useAppleFarmRewards()
     const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
+    const isLbtcSupplyToken = tokenAddress === '0xecac9c5f704e954931349da37f60e39f515c11c1' && positionTypeParam === 'lend';
 
     // Get opportunities data to access updated APY values (includes Midas API updates)
     const { data: opportunitiesData } = useGetOpportunitiesData({
@@ -583,6 +584,7 @@ export default function PageHeader() {
                                                                 totalSupplyAPY: formattedSupplyAPY,
                                                                 tokenSymbol: relevantTokenSymbol,
                                                                 hasOpportunityAPY: opportunityAPY !== null,
+                                                                // showLombardPoints: isLbtcSupplyToken,
                                                             })}
                                                         />
                                                     )}
@@ -860,6 +862,7 @@ function getSupplyAPYBreakdownTooltip({
     totalSupplyAPY,
     tokenSymbol,
     hasOpportunityAPY,
+    showLombardPoints,
 }: {
     baseSupplyAPY: number
     intrinsicAPY: number
@@ -867,13 +870,14 @@ function getSupplyAPYBreakdownTooltip({
     totalSupplyAPY: number
     tokenSymbol: string
     hasOpportunityAPY: boolean
+    showLombardPoints?: boolean
 }) {
     return (
-        <div className="flex flex-col divide-y divide-gray-800">
+        <div className="flex flex-col">
             <BodyText
                 level="body1"
                 weight="medium"
-                className="py-2 text-gray-800"
+                className="py-2 text-gray-800 border-b border-gray-700"
             >
                 Supply APY Breakdown
             </BodyText>
@@ -964,6 +968,28 @@ function getSupplyAPYBreakdownTooltip({
                     = {abbreviateNumber(totalSupplyAPY, 2)}%
                 </BodyText>
             </div>
+            {showLombardPoints && (
+                <div
+                    className="flex items-center justify-between gap-[70px] pt-3 pb-2 border-t border-gray-700"
+                    style={{ gap: '70px' }}
+                >
+                    <div className="flex items-center gap-1">
+                        <div className="bg-green-600 w-[14px] h-[14px] rounded-full flex items-center justify-center">
+                            <Bitcoin className="w-[12px] h-[12px] text-gray-200" />
+                        </div>
+                        <Label weight="medium" className="text-gray-800">
+                            Lombard Points
+                        </Label>
+                    </div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-800"
+                    >
+                        25% <span className="font-bold">Lux</span>
+                    </BodyText>
+                </div>
+            )}
         </div>
     )
 }

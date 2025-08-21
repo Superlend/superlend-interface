@@ -227,6 +227,7 @@ export type TOpportunityTable = {
     available_liquidity: number
     apple_farm_apr: number
     has_apple_farm_rewards: boolean
+    positionType: TPositionType
 }
 
 // Platform
@@ -322,6 +323,88 @@ export type TPlatformHistory = {
 export type TGetTokensParams = {
     chain_id?: string[]
     token?: string[]
+}
+
+export interface TLoopOpportunityReward {
+    supply_apy: number
+    borrow_apy: number
+    asset: {
+        address: string
+        name: string
+        symbol: string
+        decimals: number
+        logo: string
+        price_usd: number
+    }
+}
+
+export interface TLoopOpportunityToken {
+    address: string
+    name: string
+    symbol: string
+    decimals: number
+    logo: string
+    price_usd: number
+}
+
+export interface TLoopOpportunityReserve {
+    token: TLoopOpportunityToken
+    max_ltv: number
+    emode_category: number
+    emode_ltv: number
+    liquidity: string
+    borrows: string
+    utilization_rate: number
+    apy: {
+        current: number
+        avg_7days: number
+    }
+    rewards?: TLoopOpportunityReward[]
+}
+
+export interface TLoopOpportunityBreakdown {
+    supply_apy: number
+    borrow_apy: number
+    asset: {
+        address: string
+        name: string
+        symbol: string
+        decimals: number
+        logo: string
+        price_usd: number
+        coin_gecko_id?: string
+    }
+}
+
+export interface TLoopOpportunityStrategy {
+    max_leverage: number
+    correlated: boolean
+    max_apy: {
+        current: number
+        avg_7days: number
+    }
+    breakdown: TLoopOpportunityBreakdown[]
+}
+
+export interface TLoopOpportunityResponse {
+    platform: {
+        name: string
+        protocol_identifier: string
+        platform_name: string
+        core_contract: string
+        logo: string
+    }
+    lendReserve: TLoopOpportunityReserve
+    borrowReserve: TLoopOpportunityReserve
+    strategy: TLoopOpportunityStrategy
+}
+
+export interface TGetLoopOpportunitiesParams {
+    chain_ids?: number[]
+    tokens?: string[]
+    trend?: boolean
+    limit?: number
+    enabled?: boolean
 }
 
 // Queries END =====================================

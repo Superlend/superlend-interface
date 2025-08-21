@@ -5,6 +5,7 @@ import ImageWithBadge from '@/components/ImageWithBadge'
 import ImageWithDefault from '@/components/ImageWithDefault'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import AvatarCircles from '@/components/ui/avatar-circles'
+import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { BodyText, Label } from '@/components/ui/typography'
 import { PAIR_BASED_PROTOCOLS } from '@/constants'
@@ -22,22 +23,20 @@ import { ChainId } from '@/types/chain'
 import { PlatformType } from '@/types/platform'
 import { ColumnDef } from '@tanstack/react-table'
 import { motion } from 'framer-motion'
-import { ChartNoAxesColumnIncreasing, Percent, ShieldAlertIcon, TrendingUp } from 'lucide-react'
+import { Bitcoin, ChartNoAxesColumnIncreasing, Percent, ShieldAlertIcon, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-export const columns: ColumnDef<TOpportunityTable>[] = [
+export const getColumns = (allTokensData: any, searchParams: URLSearchParams): ColumnDef<TOpportunityTable>[] => [
     {
         accessorKey: 'tokenSymbol',
         header: () => "Token",
         accessorFn: (item) => item.tokenSymbol,
         cell: ({ row }) => {
-            const searchParams = useSearchParams()
             const isMorphoShiftToken =
                 row.original.tokenAddress ===
                 '0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559'
-            const positionTypeParam =
-                searchParams?.get('position_type') || 'lend'
+            const positionType = row.original.positionType
             const tokenSymbol: string = row.getValue('tokenSymbol')
             const tokenLogo = row.original.tokenLogo
             const tokenAddress = row.original.tokenAddress
@@ -102,7 +101,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 token: tokenAddress,
                                 chain_id: chainId,
                                 protocol_identifier: protocolIdentifier,
-                                position_type: positionTypeParam,
+                                position_type: positionType,
                             },
                         }}
                         className="truncate"
@@ -115,7 +114,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             {tokenSymbol}
                         </BodyText>
                     </Link>
-                    {isMorphoShiftToken && positionTypeParam === 'lend' && (
+                    {isMorphoShiftToken && positionType === 'lend' && (
                         <InfoTooltip
                             label={
                                 <ImageWithDefault
@@ -138,12 +137,11 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         id: 'collateral_tokens',
         header: "Collateral",
         cell: ({ row }) => {
-            const { allTokensData } = useAssetsDataContext()
             const MAX_ITEMS_TO_SHOW = 5
             const collateralTokensData = row.original.collateral_tokens ?? [];
 
             const filteredCollateralTokensData = collateralTokensData.filter((tokenAddress: `0x${string}`) => {
-                const token = allTokensData[row.original.chain_id].find(
+                const token = allTokensData[row.original.chain_id]?.find(
                     (asset: any) =>
                         asset?.address?.toLowerCase() ===
                         tokenAddress?.toLowerCase()
@@ -153,7 +151,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
 
             const tokenImages = filteredCollateralTokensData?.map(
                 (tokenAddress: `0x${string}`) =>
-                    allTokensData[row.original.chain_id].find(
+                    allTokensData[row.original.chain_id]?.find(
                         (asset: any) =>
                             asset?.address?.toLowerCase() ===
                             tokenAddress?.toLowerCase()
@@ -162,7 +160,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
 
             const tokenDetails = filteredCollateralTokensData?.map(
                 (tokenAddress: `0x${string}`) => {
-                    const token = allTokensData[row.original.chain_id].find(
+                    const token = allTokensData[row.original.chain_id]?.find(
                         (asset: any) =>
                             asset?.address?.toLowerCase() ===
                             tokenAddress?.toLowerCase()
@@ -195,8 +193,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 <div className="flex flex-col gap-2">
                                     {moreItemsData
                                         .filter((token) => !!token && !!token.name)
-                                        .map((token: any) => (
-                                            <div className="flex items-center gap-2">
+                                        .map((token: any, index: number) => (
+                                            <div key={index} className="flex items-center gap-2">
                                                 <ImageWithDefault
                                                     src={token.logo}
                                                     width={16}
@@ -248,9 +246,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                     ? platformWithMarketName
                     : platformWithMarketName.split(' ').slice(1).join(' ')
             const platformLogo = row.original.platformLogo
-            const searchParams = useSearchParams()
-            const positionTypeParam =
-                searchParams?.get('position_type') || 'lend'
+            const positionTypeParam = row.original.positionType
             // const morphoLabel =
             //     isMorpho && isVault ? 'Morpho Vaults' : 'Morpho Markets'
             // const formattedPlatformName = isMorpho ? morphoLabel : platformName
@@ -294,7 +290,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorKey: 'apy_current',
         accessorFn: (item) => Number(item.apy_current) + (item.has_apple_farm_rewards ? Number(item.apple_farm_apr) : 0),
         header: () => {
-            const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams?.get('position_type') || 'lend'
             const lendTooltipContent =
@@ -315,9 +310,7 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             )
         },
         cell: ({ row }) => {
-            const searchParams = useSearchParams()
-            const positionTypeParam =
-                searchParams?.get('position_type') || 'lend'
+            const positionTypeParam = row.original.positionType
             const hasRewards =
                 row.original?.additional_rewards &&
                 row.original?.rewards.length > 0
@@ -327,6 +320,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
             const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
+            const isLbtcSupplyToken = false
+            // isLbtcSupplyToken = row.original.tokenAddress === '0xecac9c5f704e954931349da37f60e39f515c11c1' && positionTypeParam === 'lend';
             const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
             const appleFarmApr = Number(row.original.apple_farm_apr)
             const hasAppleFarmRewards = row.original.has_apple_farm_rewards
@@ -449,7 +444,21 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                                 baseAPY: appleFarmBaseRate,
                                 appleFarmAPR: appleFarmApr,
                                 totalAPY: netAppleFarmAPY,
+                                // showLombardPoints: isLbtcSupplyToken,
                             })}
+                        />
+                    )}
+                    {isLbtcSupplyToken && (
+                        <InfoTooltip
+                            label={
+                            <Badge className='flex items-center gap-1 rounded-3 px-2'>
+                                <div className="bg-green-600 w-[14px] h-[14px] rounded-full flex items-center justify-center">
+                                    <Bitcoin className="w-[12px] h-[12px] text-gray-200" />
+                                </div>
+                                <span className="text-gray-800">25% <span className="font-bold">Lux</span></span>
+                            </Badge>
+                            }
+                            content="Lux points"
                         />
                     )}
                 </span>
@@ -461,7 +470,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorKey: 'apy_avg_7days',
         accessorFn: (item) => Number(item.apy_avg_7days),
         header: () => {
-            const searchParams = useSearchParams()
             const positionTypeParam =
                 searchParams?.get('position_type') || 'lend'
             const lendTooltipContent =
@@ -611,7 +619,6 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
         accessorKey: 'collateral_exposure',
         header: 'Collateral Exposure',
         cell: ({ row }) => {
-            const { allTokensData } = useAssetsDataContext()
             const MAX_ITEMS_TO_SHOW = 5
             const collateralExposureData = row.original.collateral_exposure ?? [];
             const filteredCollateralExposureData = collateralExposureData?.filter((tokenAddress: `0x${string}`) => {
@@ -665,8 +672,8 @@ export const columns: ColumnDef<TOpportunityTable>[] = [
                             <div className="flex flex-col gap-2">
                                 {moreItemsData
                                     .filter((token) => !!token && !!token.name)
-                                    .map((token: any) => (
-                                        <div className="flex items-center gap-2">
+                                    .map((token: any, index: number) => (
+                                        <div key={index} className="flex items-center gap-2">
                                             <ImageWithDefault
                                                 src={token.logo}
                                                 width={16}
@@ -833,11 +840,11 @@ function getRewardsTooltipContent({
     const isLend = positionTypeParam === 'lend'
 
     return (
-        <div className="flex flex-col divide-y divide-gray-800">
+        <div className="flex flex-col">
             <BodyText
                 level="body1"
                 weight="medium"
-                className="py-2 text-gray-800"
+                className="py-2 text-gray-800 pb-2 border-b border-gray-800"
             >
                 Rate & Rewards
             </BodyText>
@@ -924,17 +931,19 @@ function getAppleFarmAPYTooltipContent({
     baseAPY,
     appleFarmAPR,
     totalAPY,
+    showLombardPoints,
 }: {
     baseAPY: number
     appleFarmAPR: number
     totalAPY: number
+    showLombardPoints?: boolean
 }) {
     return (
-        <div className="flex flex-col divide-y divide-gray-800">
+        <div className="flex flex-col">
             <BodyText
                 level="body1"
                 weight="medium"
-                className="py-2 text-gray-800"
+                className="pt-2 pb-1.5 text-gray-800 border-b border-gray-700"
             >
                 APY Breakdown
             </BodyText>
@@ -998,6 +1007,28 @@ function getAppleFarmAPYTooltipContent({
                     = {abbreviateNumber(totalAPY)}%
                 </BodyText>
             </div>
+            {showLombardPoints && (
+                <div
+                    className="flex items-center justify-between gap-[70px] pt-3 pb-2 border-t border-gray-700"
+                    style={{ gap: '70px' }}
+                >
+                    <div className="flex items-center gap-1">
+                        <div className="bg-green-600 w-[14px] h-[14px] rounded-full flex items-center justify-center">
+                            <Bitcoin className="w-[12px] h-[12px] text-gray-200" />
+                        </div>
+                        <Label weight="medium" className="text-gray-800">
+                            Lombard Points
+                        </Label>
+                    </div>
+                    <BodyText
+                        level="body3"
+                        weight="medium"
+                        className="text-gray-800"
+                    >
+                        25% <span className="font-bold">Lux</span>
+                    </BodyText>
+                </div>
+            )}
         </div>
     )
 }
