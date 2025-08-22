@@ -320,8 +320,7 @@ export const getColumns = (allTokensData: any, searchParams: URLSearchParams): C
             const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
-            const isLbtcSupplyToken = row.original.tokenAddress === '0xecac9c5f704e954931349da37f60e39f515c11c1' && positionTypeParam === 'lend'
-            // isLbtcSupplyToken = row.original.tokenAddress === '0xecac9c5f704e954931349da37f60e39f515c11c1' && positionTypeParam === 'lend';
+            const isLbtcSupplyTokenOnEtherlink = row.original.tokenAddress === '0xecac9c5f704e954931349da37f60e39f515c11c1' && positionTypeParam === 'lend' && Number(row.original.chain_id) === ChainId.Etherlink
             const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
             const appleFarmApr = Number(row.original.apple_farm_apr)
             const hasAppleFarmRewards = row.original.has_apple_farm_rewards
@@ -461,11 +460,11 @@ export const getColumns = (allTokensData: any, searchParams: URLSearchParams): C
                                     baseAPY: appleFarmBaseRate,
                                     appleFarmAPR: appleFarmApr,
                                     totalAPY: netAppleFarmAPY,
-                                    showLombardPoints: isLbtcSupplyToken,
+                                    showLombardPointsOnEtherlink: isLbtcSupplyTokenOnEtherlink,
                                 })}
                             />
                         )}
-                    {isLbtcSupplyToken && (
+                    {isLbtcSupplyTokenOnEtherlink && (
                         <InfoTooltip
                             label={
                                 // <Badge className="flex items-center gap-1 rounded-3 px-2">
@@ -964,12 +963,12 @@ function getAppleFarmAPYTooltipContent({
     baseAPY,
     appleFarmAPR,
     totalAPY,
-    showLombardPoints,
+    showLombardPointsOnEtherlink,
 }: {
     baseAPY: number
     appleFarmAPR: number
     totalAPY: number
-    showLombardPoints?: boolean
+    showLombardPointsOnEtherlink?: boolean
 }) {
     return (
         <div className="flex flex-col">
@@ -1040,7 +1039,7 @@ function getAppleFarmAPYTooltipContent({
                     = {abbreviateNumber(totalAPY)}%
                 </BodyText>
             </div>
-            {showLombardPoints && (
+            {showLombardPointsOnEtherlink && (
                 <div
                     className="flex items-center justify-between gap-[70px] pt-3 pb-2 border-t border-gray-700/90"
                     style={{ gap: '70px' }}

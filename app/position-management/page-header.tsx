@@ -71,7 +71,7 @@ export default function PageHeader() {
         isLoading: isLoadingAppleFarmRewards
     } = useAppleFarmRewards()
     const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
-    const isLbtcSupplyToken = tokenAddress === '0xecac9c5f704e954931349da37f60e39f515c11c1' && positionTypeParam === 'lend';
+    const isLbtcSupplyTokenOnEtherlink = tokenAddress === '0xecac9c5f704e954931349da37f60e39f515c11c1' && positionTypeParam === 'lend' && Number(chain_id) === ChainId.Etherlink;
 
     // Get opportunities data to access updated APY values (includes Midas API updates)
     const { data: opportunitiesData } = useGetOpportunitiesData({
@@ -584,7 +584,7 @@ export default function PageHeader() {
                                                                 totalSupplyAPY: formattedSupplyAPY,
                                                                 tokenSymbol: relevantTokenSymbol,
                                                                 hasOpportunityAPY: opportunityAPY !== null,
-                                                                showLombardPoints: isLbtcSupplyToken,
+                                                                showLombardPointsOnEtherlink: isLbtcSupplyTokenOnEtherlink,
                                                             })}
                                                         />
                                                     )}
@@ -862,7 +862,7 @@ function getSupplyAPYBreakdownTooltip({
     totalSupplyAPY,
     tokenSymbol,
     hasOpportunityAPY,
-    showLombardPoints,
+    showLombardPointsOnEtherlink,
 }: {
     baseSupplyAPY: number
     intrinsicAPY: number
@@ -870,7 +870,7 @@ function getSupplyAPYBreakdownTooltip({
     totalSupplyAPY: number
     tokenSymbol: string
     hasOpportunityAPY: boolean
-    showLombardPoints?: boolean
+    showLombardPointsOnEtherlink?: boolean
 }) {
     return (
         <div className="flex flex-col">
@@ -968,7 +968,7 @@ function getSupplyAPYBreakdownTooltip({
                     = {abbreviateNumber(totalSupplyAPY, 2)}%
                 </BodyText>
             </div>
-            {showLombardPoints && (
+            {showLombardPointsOnEtherlink && (
                 <div
                     className="flex items-center justify-between gap-[70px] pt-3 pb-2 border-t border-gray-700"
                     style={{ gap: '70px' }}
