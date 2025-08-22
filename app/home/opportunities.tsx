@@ -149,6 +149,7 @@ export default function Opportunities({
                 available_liquidity: item.platform.available_liquidity,
                 apple_farm_apr: appleFarmRewardsAprs[item.token.address] ?? 0,
                 has_apple_farm_rewards: hasAppleFarmRewards(item.token.address) && positionType === 'lend',
+                positionType: positionType,
             }
         })
     }, [

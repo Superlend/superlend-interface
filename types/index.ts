@@ -227,6 +227,7 @@ export type TOpportunityTable = {
     available_liquidity: number
     apple_farm_apr: number
     has_apple_farm_rewards: boolean
+    positionType: TPositionType
 }
 
 // Platform
