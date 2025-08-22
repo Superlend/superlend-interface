@@ -52,6 +52,7 @@ export function createLoopPairs(
         const availableLiquidity = liquidityInUSD - borrowsInUSD
 
         const lendOpp: TOpportunityTable = {
+            positionType: 'lend',
             tokenAddress: item.token.address,
             tokenSymbol: item.token.symbol,
             tokenName: item.token.name,
