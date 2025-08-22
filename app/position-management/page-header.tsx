@@ -985,7 +985,7 @@ function getSupplyAPYBreakdownTooltip({
                             className="inline-block rounded-full object-contain"
                         />
                         <Label weight="medium" className="text-gray-800">
-                            LBTC
+                            Lombard
                         </Label>
                     </div>
                     <BodyText
@@ -993,7 +993,7 @@ function getSupplyAPYBreakdownTooltip({
                         weight="medium"
                         className="text-gray-800"
                     >
-                        Lux Points
+                        3x LUX
                     </BodyText>
                 </div>
             )}

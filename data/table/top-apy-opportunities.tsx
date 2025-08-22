@@ -491,8 +491,7 @@ export const getColumns = (allTokensData: any, searchParams: URLSearchParams): C
                                     className="inline-block rounded-full object-contain"
                                 />
                             }
-                            content="Earn retroactive rewards by supplying LBTC"
-                            // "Lux points will be distributed retroactively to users who have supplied LBTC to the pool."
+                            content="Earn 3x LUX by supplying LBTC"
                         />
                     )}
                 </span>
@@ -1055,7 +1054,7 @@ function getAppleFarmAPYTooltipContent({
                             className="inline-block rounded-full object-contain"
                         />
                         <Label weight="medium" className="text-gray-800">
-                            LBTC
+                            Lombard
                         </Label>
                     </div>
                     <BodyText
@@ -1063,7 +1062,7 @@ function getAppleFarmAPYTooltipContent({
                         weight="medium"
                         className="text-gray-800"
                     >
-                        Lux Points
+                        3x LUX
                     </BodyText>
                 </div>
             )}
