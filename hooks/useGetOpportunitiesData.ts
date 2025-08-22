@@ -24,10 +24,9 @@ export default function useGetOpportunitiesData(
     // Fetch Midas KPI data for lend and loop requests
     const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
     
-    // Convert 'loop' type to 'lend' for API compatibility
     const apiParams = {
         ...params,
-        type: params.type === 'loop' ? 'lend' : params.type
+        type: params.type
     }
     
     // Create a cache key based on params
@@ -143,11 +142,10 @@ export default function useGetOpportunitiesData(
     useEffect(() => {
         if (currentCacheKeyRef.current && currentCacheKeyRef.current !== cacheKey) {
             // Cache key changed, reset state for new tab
-            setCachedData([])
-            setLastFetchTime(null)
+            // Don't clear cached data or reset initialization - let TanStack Query handle it
             setManualRefreshRequested(false)
             setIsManualRefreshing(false)
-            hasInitializedRef.current = false
+            // hasInitializedRef.current = false  // Keep this as true to avoid localStorage reload
         }
         currentCacheKeyRef.current = cacheKey
     }, [cacheKey])
@@ -277,18 +275,18 @@ export default function useGetOpportunitiesData(
         refetch()
     }, [refetch])
 
-    // Return cached data if available and we have fresh cache, otherwise return fresh data
+    // Return fresh TanStack Query data first, fallback to cached data
     // Always apply Midas APY updates to the returned data
-    const baseData = hasFreshCache() && cachedData.length > 0 ? cachedData : (data || cachedData || [])
+    const baseData = data || (hasFreshCache() && cachedData.length > 0 ? cachedData : [])
     const dataToReturn = updateMidasTokenAPYs(baseData)
 
     return { 
         data: dataToReturn, 
-        isLoading: isLoading && cachedData.length === 0, // Only show loading if no cached data
+        isLoading: isLoading && !data && dataToReturn.length === 0, // Only show loading if no data available
         isError, 
         refetch: manualRefresh,
         lastFetchTime,
         shouldAutoRefresh: shouldAutoRefresh(),
-        isRefreshing: isManualRefreshing || (isLoading && cachedData.length > 0)
+        isRefreshing: isManualRefreshing || (isLoading && dataToReturn.length > 0)
     }
 }

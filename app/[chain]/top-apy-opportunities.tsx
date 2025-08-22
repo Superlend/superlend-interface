@@ -10,7 +10,7 @@ import React, {
 } from 'react'
 import ToggleTab, { TTypeToMatch, getToggleTabContainerWidth, countVisibleTabs } from '@/components/ToggleTab'
 import { HeadingText } from '@/components/ui/typography'
-import { columns } from '@/data/table/top-apy-opportunities'
+import { getColumns } from '@/data/table/top-apy-opportunities'
 import { columns as columnsForLoops } from '@/data/table/loop-opportunities'
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
@@ -39,6 +39,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/typography'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import RainingApples from '@/components/animations/RainingApples'
+import { useGetLoopPairsFromAPI } from '@/hooks/useGetLoopPairsFromAPI'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -108,7 +109,9 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const searchParams = useSearchParams()
     const positionTypeParam = searchParams?.get('position_type') || 'lend'
     const tokenIdsParam = searchParams?.get('token_ids')?.split(',') || []
-    const chainIdsParam = searchParams?.get('chain_ids')?.split(',') || []
+    const chainIdsParam = useMemo(() => {
+        return searchParams?.get('chain_ids')?.split(',') || []
+    }, [searchParams])
     const platformIdsParam = searchParams?.get('protocol_ids')?.split(',') || []
     const keywordsParam = searchParams?.get('keywords') || ''
     const pageParam = searchParams?.get('page') || '0'
@@ -130,12 +133,13 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const [isTableLoading, setIsTableLoading] = useState(false)
     const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData, refetch, lastFetchTime, shouldAutoRefresh, isRefreshing } =
         useGetOpportunitiesData({
-            type: isActiveTab('loop') ? 'lend' : positionTypeParam as TPositionType,
+            type: positionTypeParam as TPositionType,
+            enabled: positionTypeParam !== 'loop',
         })
 
     // Get loop pairs when position type is 'loop'
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
-    const { allChainsData } = useContext<any>(AssetsDataContext)
+    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairsFromAPI()
+    const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext)
     const [showRainingApples, setShowRainingApples] = useState(false)
     const [showRainingPolygons, setShowRainingPolygons] = useState(false)
     const { showAllMarkets, isLoading: isStateLoading } = useShowAllMarkets()
@@ -388,7 +392,12 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
             const tokenHasAppleFarmRewards = hasAppleFarmRewards(item.token.address) && positionTypeParam === 'lend'
 
+            // if(item.token.address === '0x796ea11fa2dd751ed01b53c372ffdb4aaa8f00f9') {
+            //     console.log('item', item)
+            // }
+
             return {
+                positionType: positionTypeParam as TPositionType,
                 tokenAddress: item.token.address,
                 tokenSymbol: item.token.symbol,
                 tokenName: item.token.name,
@@ -635,8 +644,8 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     }
 
     const filteredColumns = useMemo(() => {
-        return positionTypeParam === 'loop' ? columnsForLoops : columns
-    }, [positionTypeParam])
+        return positionTypeParam === 'loop' ? columnsForLoops : getColumns(allTokensData, searchParams)
+    }, [positionTypeParam, allTokensData, searchParams])
 
     if (isStateLoading || isLoadingOpportunitiesData) {
         return <LoadingSectionSkeleton className="h-[500px] md:h-[600px]" />

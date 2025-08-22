@@ -1,4 +1,4 @@
-import { TOpportunity, TOpportunityTable } from '@/types'
+import { TLoopOpportunityReserve, TLoopOpportunityStrategy, TOpportunity, TOpportunityTable, TPositionType } from '@/types'
 import { TPlatform } from '@/types/platform'
 import { TChain, ChainId } from '@/types/chain'
 
@@ -13,6 +13,10 @@ export type TLoopPair = TOpportunityTable & {
     }
     pairId: string
     maxAPY: number // Interim: using lend APY as placeholder
+    lendReserve?: TLoopOpportunityReserve
+    borrowReserve?: TLoopOpportunityReserve
+    strategy?: TLoopOpportunityStrategy
+    emode_category?: number 
 }
 
 
@@ -84,6 +88,7 @@ export function createLoopPairs(
             collateral_tokens: item.platform.collateral_tokens,
             apple_farm_apr: 0, // TODO: Add apple farm logic if needed
             has_apple_farm_rewards: false, // TODO: Add apple farm logic if needed
+            positionType: 'loop',
         }
 
         borrowableTokens.forEach(borrowAsset => {

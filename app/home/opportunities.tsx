@@ -33,7 +33,7 @@ import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+import { useGetLoopPairsFromAPI } from '@/hooks/useGetLoopPairsFromAPI'
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -72,7 +72,7 @@ export default function Opportunities({
     } = useAppleFarmRewards()
 
     // Get loop pairs when position type is 'loop'
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
+    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairsFromAPI()
 
     useEffect(() => {
         setColumnVisibility(() => {
@@ -149,6 +149,7 @@ export default function Opportunities({
                 available_liquidity: item.platform.available_liquidity,
                 apple_farm_apr: appleFarmRewardsAprs[item.token.address] ?? 0,
                 has_apple_farm_rewards: hasAppleFarmRewards(item.token.address) && positionType === 'lend',
+                positionType: positionType
             }
         })
     }, [
