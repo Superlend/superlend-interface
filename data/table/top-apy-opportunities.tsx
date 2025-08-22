@@ -320,7 +320,7 @@ export const getColumns = (allTokensData: any, searchParams: URLSearchParams): C
             const isPairBasedProtocol = PAIR_BASED_PROTOCOLS.includes(
                 row.original?.platformId.split('-')[0].toLowerCase()
             )
-            const isLbtcSupplyToken = false
+            const isLbtcSupplyToken = row.original.tokenAddress === '0xecac9c5f704e954931349da37f60e39f515c11c1' && positionTypeParam === 'lend'
             // isLbtcSupplyToken = row.original.tokenAddress === '0xecac9c5f704e954931349da37f60e39f515c11c1' && positionTypeParam === 'lend';
             const isEtherlinkChain = row.original.chain_id === ChainId.Etherlink
             const appleFarmApr = Number(row.original.apple_farm_apr)
@@ -397,68 +397,102 @@ export const getColumns = (allTokensData: any, searchParams: URLSearchParams): C
             return (
                 <span className="flex items-center gap-1">
                     <BodyText level={'body2'} weight={'medium'}>
-                        {`${(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend') ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
+                        {`${isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend' ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
                     </BodyText>
                     {/* REWARDS */}
-                    {(hasRewards && !(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend')) && (
-                        <InfoTooltip
-                            label={
-                                <span onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                                    <ImageWithDefault
-                                        src="/icons/sparkles.svg"
-                                        alt="Rewards"
-                                        width={22}
-                                        height={22}
-                                        className="cursor-pointer hover:scale-110"
-                                    />
-                                </span>
-                            }
-                            content={getRewardsTooltipContent({
-                                baseRateFormatted: baseRateFormatted || '',
-                                rewards: rewards || [],
-                                apyCurrent: apyCurrent || 0,
-                                positionTypeParam,
-                            })}
-                        />
-                    )}
+                    {hasRewards &&
+                        !(
+                            isEtherlinkChain &&
+                            hasAppleFarmRewards &&
+                            positionTypeParam === 'lend'
+                        ) && (
+                            <InfoTooltip
+                                label={
+                                    <span
+                                        onClick={(e: React.MouseEvent) =>
+                                            e.stopPropagation()
+                                        }
+                                    >
+                                        <ImageWithDefault
+                                            src="/icons/sparkles.svg"
+                                            alt="Rewards"
+                                            width={22}
+                                            height={22}
+                                            className="cursor-pointer hover:scale-110"
+                                        />
+                                    </span>
+                                }
+                                content={getRewardsTooltipContent({
+                                    baseRateFormatted: baseRateFormatted || '',
+                                    rewards: rewards || [],
+                                    apyCurrent: apyCurrent || 0,
+                                    positionTypeParam,
+                                })}
+                            />
+                        )}
                     {/* APPLE FARM REWARDS */}
-                    {(isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend') && (
-                        <InfoTooltip
-                            label={
-                                <motion.div
-                                    initial={{ rotate: 0 }}
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 1.5, repeat: 0, ease: "easeInOut" }}
-                                    whileHover={{ rotate: -360 }}
-                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                >
-                                    <ImageWithDefault
-                                        src="/images/apple-farm-favicon.ico"
-                                        alt="Etherlink Rewards"
-                                        width={16}
-                                        height={16}
-                                    />
-                                </motion.div>
-                            }
-                            content={getAppleFarmAPYTooltipContent({
-                                baseAPY: appleFarmBaseRate,
-                                appleFarmAPR: appleFarmApr,
-                                totalAPY: netAppleFarmAPY,
-                                // showLombardPoints: isLbtcSupplyToken,
-                            })}
-                        />
-                    )}
+                    {isEtherlinkChain &&
+                        hasAppleFarmRewards &&
+                        positionTypeParam === 'lend' && (
+                            <InfoTooltip
+                                label={
+                                    <motion.div
+                                        initial={{ rotate: 0 }}
+                                        animate={{ rotate: 360 }}
+                                        transition={{
+                                            duration: 1.5,
+                                            repeat: 0,
+                                            ease: 'easeInOut',
+                                        }}
+                                        whileHover={{ rotate: -360 }}
+                                        onClick={(e: React.MouseEvent) =>
+                                            e.stopPropagation()
+                                        }
+                                    >
+                                        <ImageWithDefault
+                                            src="/images/apple-farm-favicon.ico"
+                                            alt="Etherlink Rewards"
+                                            width={16}
+                                            height={16}
+                                        />
+                                    </motion.div>
+                                }
+                                content={getAppleFarmAPYTooltipContent({
+                                    baseAPY: appleFarmBaseRate,
+                                    appleFarmAPR: appleFarmApr,
+                                    totalAPY: netAppleFarmAPY,
+                                    showLombardPoints: isLbtcSupplyToken,
+                                })}
+                            />
+                        )}
                     {isLbtcSupplyToken && (
                         <InfoTooltip
                             label={
-                            <Badge className='flex items-center gap-1 rounded-3 px-2'>
-                                <div className="bg-green-600 w-[14px] h-[14px] rounded-full flex items-center justify-center">
-                                    <Bitcoin className="w-[12px] h-[12px] text-gray-200" />
-                                </div>
-                                <span className="text-gray-800">25% <span className="font-bold">Lux</span></span>
-                            </Badge>
+                                // <Badge className="flex items-center gap-1 rounded-3 px-2">
+                                //     {/* <div className="bg-green-600 w-[14px] h-[14px] rounded-full flex items-center justify-center">
+                                //     <Bitcoin className="w-[12px] h-[12px] text-gray-200" />
+                                // </div> */}
+                                //     <ImageWithDefault
+                                //         src="/images/logos/lombard.png"
+                                //         width={14}
+                                //         height={14}
+                                //         alt="LBTC"
+                                //         className="inline-block rounded-full object-contain"
+                                //     />
+                                //     <span className="text-gray-800">
+                                //         Lux Points
+                                //     </span>
+                                // </Badge>
+                                <ImageWithDefault
+                                    src="/images/logos/lombard.png"
+                                    width={16}
+                                    height={16}
+                                    alt="LBTC"
+                                    className="inline-block rounded-full object-contain"
+                                />
                             }
-                            content="Lux points"
+                            content="Earn retroactive rewards by supplying LBTC"
+                            // "Lux points will be distributed retroactively to users who have supplied LBTC to the pool."
                         />
                     )}
                 </span>
@@ -943,7 +977,7 @@ function getAppleFarmAPYTooltipContent({
             <BodyText
                 level="body1"
                 weight="medium"
-                className="pt-2 pb-1.5 text-gray-800 border-b border-gray-700"
+                className="pt-2 pb-1.5 text-gray-800 border-b border-gray-700/90"
             >
                 APY Breakdown
             </BodyText>
@@ -1009,15 +1043,19 @@ function getAppleFarmAPYTooltipContent({
             </div>
             {showLombardPoints && (
                 <div
-                    className="flex items-center justify-between gap-[70px] pt-3 pb-2 border-t border-gray-700"
+                    className="flex items-center justify-between gap-[70px] pt-3 pb-2 border-t border-gray-700/90"
                     style={{ gap: '70px' }}
                 >
                     <div className="flex items-center gap-1">
-                        <div className="bg-green-600 w-[14px] h-[14px] rounded-full flex items-center justify-center">
-                            <Bitcoin className="w-[12px] h-[12px] text-gray-200" />
-                        </div>
+                        <ImageWithDefault
+                            src="/images/logos/lombard.png"
+                            width={14}
+                            height={14}
+                            alt="LBTC"
+                            className="inline-block rounded-full object-contain"
+                        />
                         <Label weight="medium" className="text-gray-800">
-                            Lombard Points
+                            LBTC
                         </Label>
                     </div>
                     <BodyText
@@ -1025,7 +1063,7 @@ function getAppleFarmAPYTooltipContent({
                         weight="medium"
                         className="text-gray-800"
                     >
-                        25% <span className="font-bold">Lux</span>
+                        Lux Points
                     </BodyText>
                 </div>
             )}

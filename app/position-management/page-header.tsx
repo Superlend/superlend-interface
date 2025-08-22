@@ -584,7 +584,7 @@ export default function PageHeader() {
                                                                 totalSupplyAPY: formattedSupplyAPY,
                                                                 tokenSymbol: relevantTokenSymbol,
                                                                 hasOpportunityAPY: opportunityAPY !== null,
-                                                                // showLombardPoints: isLbtcSupplyToken,
+                                                                showLombardPoints: isLbtcSupplyToken,
                                                             })}
                                                         />
                                                     )}
@@ -974,11 +974,18 @@ function getSupplyAPYBreakdownTooltip({
                     style={{ gap: '70px' }}
                 >
                     <div className="flex items-center gap-1">
-                        <div className="bg-green-600 w-[14px] h-[14px] rounded-full flex items-center justify-center">
+                        {/* <div className="bg-green-600 w-[14px] h-[14px] rounded-full flex items-center justify-center">
                             <Bitcoin className="w-[12px] h-[12px] text-gray-200" />
-                        </div>
+                        </div> */}
+                        <ImageWithDefault
+                            src="/images/logos/lombard.png"
+                            width={14}
+                            height={14}
+                            alt="LBTC"
+                            className="inline-block rounded-full object-contain"
+                        />
                         <Label weight="medium" className="text-gray-800">
-                            Lombard Points
+                            LBTC
                         </Label>
                     </div>
                     <BodyText
@@ -986,7 +993,7 @@ function getSupplyAPYBreakdownTooltip({
                         weight="medium"
                         className="text-gray-800"
                     >
-                        25% <span className="font-bold">Lux</span>
+                        Lux Points
                     </BodyText>
                 </div>
             )}
