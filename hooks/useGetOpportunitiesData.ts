@@ -5,6 +5,7 @@ import { TGetOpportunitiesParams, TOpportunity } from '@/types'
 import { useQuery } from '@tanstack/react-query'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import useGetMidasKpiData from './useGetMidasKpiData'
+import useGetIntrinsicApyData from './useGetIntrinsicApyData'
 
 interface CachedOpportunitiesData {
     data: TOpportunity[]
@@ -24,6 +25,9 @@ export default function useGetOpportunitiesData(
     // Fetch Midas KPI data for lend and loop requests
     const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
     
+    // Fetch intrinsic APY data including LBTC APY
+    const { lbtcApyEstimated } = useGetIntrinsicApyData()
+    
     // Convert 'loop' type to 'lend' for API compatibility
     const apiParams = {
         ...params,
@@ -33,14 +37,35 @@ export default function useGetOpportunitiesData(
     // Create a cache key based on params
     const cacheKey = `opportunities_${params.type}_${params.chain_ids || 'all'}_${params.tokens || 'all'}`
     
-    // Function to update Midas token APYs and adjust APY for chain_id 42793
-    const updateMidasTokenAPYs = useCallback((opportunities: TOpportunity[]) => {
-        if ((params.type !== 'lend' && params.type !== 'loop') || (!mBasisAPY && !mTbillAPY)) {
+    // Function to update intrinsic token APYs including Midas and LBTC, and adjust APY for chain_id 42793
+    const updateIntrinsicTokenAPYs = useCallback((opportunities: TOpportunity[]) => {
+        if ((params.type !== 'lend' && params.type !== 'loop') || (!mBasisAPY && !mTbillAPY && !lbtcApyEstimated)) {
             return opportunities
         }
 
         return opportunities.map(opportunity => {
             const tokenSymbol = opportunity.token.symbol.toUpperCase()
+            
+            // Handle LBTC intrinsic APY addition - only for LBTC on Etherlink chain with Superlend platform
+            if (tokenSymbol === 'LBTC' && 
+                lbtcApyEstimated !== null && 
+                opportunity.chain_id === 42793 && // Etherlink chain
+                opportunity.platform.platform_name?.toLowerCase().includes('superlend')) {
+                
+                const currentAPY = parseFloat(opportunity.platform.apy.current) || 0
+                const adjustedAPY = currentAPY + lbtcApyEstimated
+                
+                return {
+                    ...opportunity,
+                    platform: {
+                        ...opportunity.platform,
+                        apy: {
+                            ...opportunity.platform.apy,
+                            current: adjustedAPY.toString()
+                        }
+                    }
+                }
+            }
             
             if (tokenSymbol === 'MBASIS' && mBasisAPY !== null) {
                 return {
@@ -125,7 +150,7 @@ export default function useGetOpportunitiesData(
             return opportunity
 
         })
-    }, [params.type, mBasisAPY, mTbillAPY])
+    }, [params.type, mBasisAPY, mTbillAPY, lbtcApyEstimated])
     
     // Check if data should be refreshed (10 minutes = 600000ms)
     const shouldAutoRefresh = useCallback(() => {
@@ -159,7 +184,7 @@ export default function useGetOpportunitiesData(
             if (cached) {
                 try {
                     const parsedCache: CachedOpportunitiesData = JSON.parse(cached)
-                    const updatedData = updateMidasTokenAPYs(parsedCache.data)
+                    const updatedData = updateIntrinsicTokenAPYs(parsedCache.data)
                     setCachedData(updatedData)
                     setLastFetchTime(parsedCache.timestamp)
                     
@@ -178,7 +203,7 @@ export default function useGetOpportunitiesData(
             }
             hasInitializedRef.current = true
         }
-    }, [cacheKey, updateMidasTokenAPYs])
+    }, [cacheKey, updateIntrinsicTokenAPYs])
 
     const { data, isLoading, isError, refetch } = useQuery<
         TOpportunity[],
@@ -217,7 +242,7 @@ export default function useGetOpportunitiesData(
                 }
                 
                 // Update Midas token APYs
-                const updatedData = updateMidasTokenAPYs(filteredData)
+                const updatedData = updateIntrinsicTokenAPYs(filteredData)
                 
                 // Cache the updated data with timestamp
                 if (typeof window !== 'undefined') {
@@ -280,7 +305,7 @@ export default function useGetOpportunitiesData(
     // Return cached data if available and we have fresh cache, otherwise return fresh data
     // Always apply Midas APY updates to the returned data
     const baseData = hasFreshCache() && cachedData.length > 0 ? cachedData : (data || cachedData || [])
-    const dataToReturn = updateMidasTokenAPYs(baseData)
+    const dataToReturn = updateIntrinsicTokenAPYs(baseData)
 
     return { 
         data: dataToReturn, 

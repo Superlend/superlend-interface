@@ -328,30 +328,23 @@ export const getColumns = (allTokensData: any, searchParams: URLSearchParams): C
             const apyCurrent = Number(row.getValue('apy_current'))
             const apyCurrentFormatted = (apyCurrent > 0 && apyCurrent < 0.01) ? '<0.01' : abbreviateNumber(apyCurrent)
 
-            const appleFarmBaseRate = Number(row.original.apy_current)
-            // console.log('appleFarmBaseRate', {appleFarmBaseRate,row})
+            // For LBTC tokens with Apple Farm rewards, apy_current already includes Apple Farm APR
+            // Get base rate for breakdown display
+            let appleFarmBaseRate = Number(row.original.apy_current)
+            let netAppleFarmAPY = Number(row.original.apy_current) + Number(appleFarmApr ?? 0)
+            
+            if (isLbtcSupplyTokenOnEtherlink && hasAppleFarmRewards) {
+                // For LBTC: Base rate = total - apple farm, Total = current (no double add)
+                appleFarmBaseRate = Number(row.original.apy_current) - Number(appleFarmApr ?? 0)
+                netAppleFarmAPY = Number(row.original.apy_current) // Don't double add
+            }
+            
             const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
                 ? '<0.01'
                 : abbreviateNumber(appleFarmBaseRate)
-            const netAppleFarmAPY = Number(row.original.apy_current) + Number(appleFarmApr ?? 0)
             const netAppleFarmAPYFormatted = netAppleFarmAPY > 0 && netAppleFarmAPY < 0.01
                 ? '<0.01'
                 : abbreviateNumber(netAppleFarmAPY)
-
-            const appleFarmRewards = [
-                {
-                    asset: {
-                        address: row.original.tokenAddress as `0x${string}`,
-                        name: "APR",
-                        symbol: row.original.tokenSymbol,
-                        logo: '/images/apple-farm-favicon.ico',
-                        decimals: 0,
-                        price_usd: 0,
-                    },
-                    supply_apy: appleFarmApr,
-                    borrow_apy: 0,
-                }
-            ]
 
             if (hasRewards) {
                 // Update rewards grouped by asset address
@@ -394,86 +387,97 @@ export const getColumns = (allTokensData: any, searchParams: URLSearchParams): C
             }
 
             return (
-                <span className="flex items-center gap-1">
-                    <BodyText level={'body2'} weight={'medium'}>
-                        {`${isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend' ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
-                    </BodyText>
-                    {/* REWARDS */}
-                    {hasRewards &&
-                        !(
-                            isEtherlinkChain &&
+                <span className="flex flex-col items-start gap-1">
+                    <span className="flex items-center gap-1">
+                        <BodyText level={'body2'} weight={'medium'}>
+                            {`${isEtherlinkChain && hasAppleFarmRewards && positionTypeParam === 'lend' ? netAppleFarmAPYFormatted : apyCurrentFormatted}%`}
+                        </BodyText>
+                        {/* REWARDS */}
+                        {hasRewards &&
+                            !(
+                                isEtherlinkChain &&
+                                hasAppleFarmRewards &&
+                                positionTypeParam === 'lend'
+                            ) && (
+                                <InfoTooltip
+                                    label={
+                                        <span
+                                            onClick={(e: React.MouseEvent) =>
+                                                e.stopPropagation()
+                                            }
+                                        >
+                                            <ImageWithDefault
+                                                src="/icons/sparkles.svg"
+                                                alt="Rewards"
+                                                width={22}
+                                                height={22}
+                                                className="cursor-pointer hover:scale-110"
+                                            />
+                                        </span>
+                                    }
+                                    content={getRewardsTooltipContent({
+                                        baseRateFormatted:
+                                            baseRateFormatted || '',
+                                        rewards: rewards || [],
+                                        apyCurrent: apyCurrent || 0,
+                                        positionTypeParam,
+                                    })}
+                                />
+                            )}
+                        {/* APPLE FARM REWARDS */}
+                        {isEtherlinkChain &&
                             hasAppleFarmRewards &&
-                            positionTypeParam === 'lend'
-                        ) && (
-                            <InfoTooltip
-                                label={
-                                    <span
-                                        onClick={(e: React.MouseEvent) =>
-                                            e.stopPropagation()
-                                        }
-                                    >
-                                        <ImageWithDefault
-                                            src="/icons/sparkles.svg"
-                                            alt="Rewards"
-                                            width={22}
-                                            height={22}
-                                            className="cursor-pointer hover:scale-110"
-                                        />
-                                    </span>
-                                }
-                                content={getRewardsTooltipContent({
-                                    baseRateFormatted: baseRateFormatted || '',
-                                    rewards: rewards || [],
-                                    apyCurrent: apyCurrent || 0,
-                                    positionTypeParam,
-                                })}
-                            />
-                        )}
-                    {/* APPLE FARM REWARDS */}
-                    {isEtherlinkChain &&
-                        hasAppleFarmRewards &&
-                        positionTypeParam === 'lend' && (
-                            <InfoTooltip
-                                label={
-                                    <motion.div
-                                        initial={{ rotate: 0 }}
-                                        animate={{ rotate: 360 }}
-                                        transition={{
-                                            duration: 1.5,
-                                            repeat: 0,
-                                            ease: 'easeInOut',
-                                        }}
-                                        whileHover={{ rotate: -360 }}
-                                        onClick={(e: React.MouseEvent) =>
-                                            e.stopPropagation()
-                                        }
-                                    >
-                                        <ImageWithDefault
-                                            src="/images/apple-farm-favicon.ico"
-                                            alt="Etherlink Rewards"
-                                            width={16}
-                                            height={16}
-                                        />
-                                    </motion.div>
-                                }
-                                content={getAppleFarmAPYTooltipContent({
-                                    baseAPY: appleFarmBaseRate,
-                                    appleFarmAPR: appleFarmApr,
-                                    totalAPY: netAppleFarmAPY,
-                                    showLombardPointsOnEtherlink: isLbtcSupplyTokenOnEtherlink,
-                                })}
-                            />
-                        )}
+                            positionTypeParam === 'lend' && (
+                                <InfoTooltip
+                                    label={
+                                        <motion.div
+                                            initial={{ rotate: 0 }}
+                                            animate={{ rotate: 360 }}
+                                            transition={{
+                                                duration: 1.5,
+                                                repeat: 0,
+                                                ease: 'easeInOut',
+                                            }}
+                                            whileHover={{ rotate: -360 }}
+                                            onClick={(e: React.MouseEvent) =>
+                                                e.stopPropagation()
+                                            }
+                                        >
+                                            <ImageWithDefault
+                                                src="/images/apple-farm-favicon.ico"
+                                                alt="Etherlink Rewards"
+                                                width={16}
+                                                height={16}
+                                            />
+                                        </motion.div>
+                                    }
+                                    content={getAppleFarmAPYTooltipContent({
+                                        baseAPY: appleFarmBaseRate,
+                                        appleFarmAPR: appleFarmApr,
+                                        totalAPY: netAppleFarmAPY,
+                                        showLombardPointsOnEtherlink:
+                                            isLbtcSupplyTokenOnEtherlink,
+                                    })}
+                                />
+                            )}
+                    </span>
                     {isLbtcSupplyTokenOnEtherlink && (
                         <InfoTooltip
                             label={
-                                <ImageWithDefault
+                                <Badge 
+                                variant="gray" 
+                                size="sm"
+                                className="flex items-center gap-1 rounded-full px-2"
+                                >
+                                    3x LUX
+                                    <ImageWithDefault
                                     src="/images/logos/lombard.png"
-                                    width={16}
-                                    height={16}
+                                    width={14}
+                                    height={14}
                                     alt="LBTC"
                                     className="inline-block rounded-full object-contain"
                                 />
+                                </Badge>
                             }
                             content="Earn 3x LUX by supplying LBTC"
                         />
