@@ -390,10 +390,6 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
             const tokenHasAppleFarmRewards = hasAppleFarmRewards(item.token.address) && positionTypeParam === 'lend'
 
-            // if(item.token.address === '0x796ea11fa2dd751ed01b53c372ffdb4aaa8f00f9') {
-            //     console.log('item', item)
-            // }
-
             return {
                 positionType: positionTypeParam as TPositionType,
                 tokenAddress: item.token.address,

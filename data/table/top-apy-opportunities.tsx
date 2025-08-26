@@ -328,11 +328,20 @@ export const getColumns = (allTokensData: any, searchParams: URLSearchParams): C
             const apyCurrent = Number(row.getValue('apy_current'))
             const apyCurrentFormatted = (apyCurrent > 0 && apyCurrent < 0.01) ? '<0.01' : abbreviateNumber(apyCurrent)
 
-            const appleFarmBaseRate = Number(row.original.apy_current)
+            // For LBTC tokens with Apple Farm rewards, apy_current already includes Apple Farm APR
+            // Get base rate for breakdown display
+            let appleFarmBaseRate = Number(row.original.apy_current)
+            let netAppleFarmAPY = Number(row.original.apy_current) + Number(appleFarmApr ?? 0)
+            
+            if (isLbtcSupplyTokenOnEtherlink && hasAppleFarmRewards) {
+                // For LBTC: Base rate = total - apple farm, Total = current (no double add)
+                appleFarmBaseRate = Number(row.original.apy_current) - Number(appleFarmApr ?? 0)
+                netAppleFarmAPY = Number(row.original.apy_current) // Don't double add
+            }
+            
             const appleFarmBaseRateFormatted = appleFarmBaseRate < 0.01 && appleFarmBaseRate > 0
                 ? '<0.01'
                 : abbreviateNumber(appleFarmBaseRate)
-            const netAppleFarmAPY = Number(row.original.apy_current) + Number(appleFarmApr ?? 0)
             const netAppleFarmAPYFormatted = netAppleFarmAPY > 0 && netAppleFarmAPY < 0.01
                 ? '<0.01'
                 : abbreviateNumber(netAppleFarmAPY)

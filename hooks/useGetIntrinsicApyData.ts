@@ -21,10 +21,10 @@ export default function useGetIntrinsicApyData() {
         isError,
         refetch,
         // Helper getters for easy access
-        mBasisAPY: data?.data?.mBasisAPY ? parseFloat(data.data.mBasisAPY) : null,
-        mTbillAPY: data?.data?.mTbillAPY ? parseFloat(data.data.mTbillAPY) : null,
-        stXTZ: data?.data?.stXTZ ? parseFloat(data.data.stXTZ) : null,
-        mMEV: data?.data?.mMEV ? parseFloat(data.data.mMEV) : null,
+        // mBasisAPY: data?.data?.mBasisAPY ? parseFloat(data.data.mBasisAPY) : null,
+        // mTbillAPY: data?.data?.mTbillAPY ? parseFloat(data.data.mTbillAPY) : null,
+        // stXTZ: data?.data?.stXTZ ? parseFloat(data.data.stXTZ) : null,
+        // mMEV: data?.data?.mMEV ? parseFloat(data.data.mMEV) : null,
         lbtcApyEstimated: data?.data?.lbtcApyEstimated || null, // Already in percentage format
     }
 }
