@@ -7,9 +7,13 @@ import { BodyText } from './ui/typography'
 import { motion, AnimatePresence } from 'framer-motion'
 import useGetBoostRewards from '@/hooks/useGetBoostRewards'
 import { useGetEffectiveApy } from '@/hooks/useGetEffectiveApy'
+import useSuperfundsData from '@/hooks/useSuperfundsData'
 import { abbreviateNumber } from '@/lib/utils'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useOnboardingContext } from '@/components/providers/OnboardingProvider'
+import { base } from 'viem/chains'
+import { BASE_FLUID_LENDING_RESOLVER_ADDRESS, SUPERFUND_USDC_VAULT_ADDRESS, USDC_DECIMALS } from '@/constants'
+import { Skeleton } from './ui/skeleton'
 const BANNER_VARIANTS = ['gradient', 'accent', 'dark', 'highlight', 'navy', 'forest', 'neon', 'pastel', 'midnight'] as const
 type BannerVariant = (typeof BANNER_VARIANTS)[number]
 
@@ -20,6 +24,13 @@ interface BannerStyle {
     highlight: string
 }
 
+const BASE_CONFIG = {
+    chain: base,
+    rpcUrl: '/api/rpc/base',
+    vaultAddress: SUPERFUND_USDC_VAULT_ADDRESS,
+    fluidLendingResolverAddress: BASE_FLUID_LENDING_RESOLVER_ADDRESS,
+}
+
 export default function TopBanner() {
     const [isVisible, setIsVisible] = useState(false)
     const { logEvent } = useAnalytics()
@@ -27,17 +38,20 @@ export default function TopBanner() {
     const [currentVariantIndex, setCurrentVariantIndex] = useState(BANNER_VARIANTS.length - 1)
     const [isMobile, setIsMobile] = useState(false)
     const variant = BANNER_VARIANTS[currentVariantIndex]
-    const BASE_CHAIN_ID = 8453
-    const BASE_VAULT_ADDRESS = '0x10076ed296571cE4Fde5b1FDF0eB9014a880e47B'
     const { data: effectiveApyData, isLoading: isLoadingEffectiveApy, isError: isErrorEffectiveApy } = useGetEffectiveApy({
-        vault_address: BASE_VAULT_ADDRESS as `0x${string}`,
-        chain_id: BASE_CHAIN_ID
+        vault_address: BASE_CONFIG.vaultAddress as `0x${string}`,
+        chain_id: BASE_CONFIG.chain.id
     })
     const { data: BOOST_APY, isLoading: isLoadingBoostRewards, error: errorBoostRewards } = useGetBoostRewards({
-        vaultAddress: BASE_VAULT_ADDRESS as `0x${string}`,
-        chainId: BASE_CHAIN_ID
+        vaultAddress: BASE_CONFIG.vaultAddress as `0x${string}`,
+        chainId: BASE_CONFIG.chain.id
     })
-    const TOTAL_VAULT_APY = abbreviateNumber(Number(effectiveApyData?.total_apy ?? 0) + Number((BOOST_APY?.[0]?.boost_apy ?? 0) / 100))
+    const { data: superfundsData, isLoading: isLoadingSuperfundsData, isError: isErrorSuperfundsData } = useSuperfundsData()
+
+    const superfundsSpotAPY = superfundsData?.spotAPY ?? 0
+
+    const TOTAL_VAULT_APY = abbreviateNumber(Number(superfundsSpotAPY ?? 0) + Number(effectiveApyData?.rewards_apy ?? 0) + Number((BOOST_APY?.[0]?.boost_apy ?? 0) / 100))
+    const isLoading = isLoadingEffectiveApy || isLoadingBoostRewards || isLoadingSuperfundsData
 
     useEffect(() => {
         // Add initial delay before showing the banner
@@ -307,7 +321,10 @@ export default function TopBanner() {
                                         </motion.div>
                                     </motion.div>
                                     <BodyText level="body2" className={`${currentVariant.text} text-center sm:text-left`}>
-                                        Maximize your USDC returns with SuperFund - Earn up to <span className={currentVariant.highlight}>{TOTAL_VAULT_APY}% APY</span> across trusted lending protocols
+                                        Maximize your USDC returns with SuperFund - Earn up to 
+                                        {isLoading && <Skeleton className="w-10 h-4 mx-1 inline-block rounded-2" />}
+                                        {!isLoading && <span className={`${currentVariant.highlight} mx-1`}>{TOTAL_VAULT_APY}% APY</span>}
+                                        across trusted lending protocols
                                     </BodyText>
                                 </div>
                                 <motion.div

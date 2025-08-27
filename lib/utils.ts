@@ -1,8 +1,7 @@
-import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks } from '@/constants'
+import { chainNamesBasedOnAaveMarkets, platformWebsiteLinks, SEC_IN_YEAR } from '@/constants'
 import { Period } from '@/types/periodButtons'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-export const SEC_IN_YEAR = 31536000;
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
