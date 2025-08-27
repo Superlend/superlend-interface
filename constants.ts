@@ -355,3 +355,10 @@ export const SEC_IN_YEAR = 31536000
 export const USDC_DECIMALS = 6
 export const SUPERFUND_USDC_VAULT_ADDRESS = '0x10076ed296571cE4Fde5b1FDF0eB9014a880e47B'
 export const BASE_FLUID_LENDING_RESOLVER_ADDRESS = '0x3aF6FBEc4a2FE517F56E402C65e3f4c3e18C1D86'
+
+export const BASE_CONFIG = {
+    chain: base,
+    rpcUrl: '/api/rpc/base',
+    vaultAddress: SUPERFUND_USDC_VAULT_ADDRESS,
+    fluidLendingResolverAddress: BASE_FLUID_LENDING_RESOLVER_ADDRESS,
+}

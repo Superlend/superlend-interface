@@ -11,8 +11,7 @@ import useSuperfundsData from '@/hooks/useSuperfundsData'
 import { abbreviateNumber } from '@/lib/utils'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useOnboardingContext } from '@/components/providers/OnboardingProvider'
-import { base } from 'viem/chains'
-import { BASE_FLUID_LENDING_RESOLVER_ADDRESS, SUPERFUND_USDC_VAULT_ADDRESS, USDC_DECIMALS } from '@/constants'
+import { BASE_CONFIG } from '@/constants'
 import { Skeleton } from './ui/skeleton'
 const BANNER_VARIANTS = ['gradient', 'accent', 'dark', 'highlight', 'navy', 'forest', 'neon', 'pastel', 'midnight'] as const
 type BannerVariant = (typeof BANNER_VARIANTS)[number]
@@ -22,13 +21,6 @@ interface BannerStyle {
     button: string
     text: string
     highlight: string
-}
-
-const BASE_CONFIG = {
-    chain: base,
-    rpcUrl: '/api/rpc/base',
-    vaultAddress: SUPERFUND_USDC_VAULT_ADDRESS,
-    fluidLendingResolverAddress: BASE_FLUID_LENDING_RESOLVER_ADDRESS,
 }
 
 export default function TopBanner() {
@@ -49,9 +41,8 @@ export default function TopBanner() {
     const { data: superfundsData, isLoading: isLoadingSuperfundsData, isError: isErrorSuperfundsData } = useSuperfundsData()
 
     const superfundsSpotAPY = superfundsData?.spotAPY ?? 0
-
-    const TOTAL_VAULT_APY = abbreviateNumber(Number(superfundsSpotAPY ?? 0) + Number(effectiveApyData?.rewards_apy ?? 0) + Number((BOOST_APY?.[0]?.boost_apy ?? 0) / 100))
     const isLoading = isLoadingEffectiveApy || isLoadingBoostRewards || isLoadingSuperfundsData
+    const TOTAL_VAULT_APY = abbreviateNumber(Number(superfundsSpotAPY ?? 0) + Number(effectiveApyData?.rewards_apy ?? 0) + Number((BOOST_APY?.[0]?.boost_apy ?? 0) / 100))
 
     useEffect(() => {
         // Add initial delay before showing the banner

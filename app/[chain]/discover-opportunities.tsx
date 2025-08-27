@@ -15,14 +15,15 @@ import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { abbreviateNumber, convertAPRtoAPY } from '@/lib/utils'
 import { TReward } from '@/types'
 import { ChartNoAxesColumnIncreasing, TrendingUp } from 'lucide-react'
-import { CHAIN_ID_MAPPER } from '@/constants'
+import { BASE_CONFIG, CHAIN_ID_MAPPER } from '@/constants'
 import useGetBoostRewards from '@/hooks/useGetBoostRewards'
 import { useGetEffectiveApy } from '@/hooks/useGetEffectiveApy'
 import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 import { useContext } from 'react'
-import RainingApples from '@/components/animations/RainingApples'
+import useSuperfundsData from '@/hooks/useSuperfundsData'
+import { ChainId } from '@/types/chain'
 const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
 const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 
@@ -78,17 +79,17 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     })
     
     const SUPERFUNDS_DOMAIN = 'https://funds.superlend.xyz'
-    const BASE_CHAIN_ID = 8453
-    const BASE_VAULT_ADDRESS = '0x10076ed296571cE4Fde5b1FDF0eB9014a880e47B'
     const { data: effectiveApyData, isLoading: isLoadingEffectiveApy, isError: isErrorEffectiveApy } = useGetEffectiveApy({
-        vault_address: BASE_VAULT_ADDRESS as `0x${string}`,
-        chain_id: BASE_CHAIN_ID
+        vault_address: BASE_CONFIG.vaultAddress as `0x${string}`,
+        chain_id: BASE_CONFIG.chain.id
     })
     const { data: BOOST_APY, isLoading: isLoadingBoostRewards, error: errorBoostRewards } = useGetBoostRewards({
-        vaultAddress: BASE_VAULT_ADDRESS as `0x${string}`,
-        chainId: BASE_CHAIN_ID
+        vaultAddress: BASE_CONFIG.vaultAddress as `0x${string}`,
+        chainId: BASE_CONFIG.chain.id
     })
-    const TOTAL_VAULT_APY = abbreviateNumber(Number(effectiveApyData?.total_apy ?? 0) + Number((BOOST_APY?.[0]?.boost_apy ?? 0) / 100))
+    const { data: superfundsData, isLoading: isLoadingSuperfundsData, isError: isErrorSuperfundsData } = useSuperfundsData()
+    const superfundsSpotAPY = superfundsData?.spotAPY ?? 0
+    const TOTAL_VAULT_APY = abbreviateNumber(Number(superfundsSpotAPY ?? 0) + Number(effectiveApyData?.rewards_apy ?? 0) + Number((BOOST_APY?.[0]?.boost_apy ?? 0) / 100))
     // Platform Data
     const { data: opportunity1PlatformData, isLoading: isLoading1 } =
         useGetPlatformData({
@@ -415,8 +416,8 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     const asset1ChainName = opportunity1PlatformData?.platform?.chain_id
         ? CHAIN_ID_MAPPER[opportunity1PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER]
         : "Unknown"
-    const asset2ChainName = BASE_CHAIN_ID
-        ? CHAIN_ID_MAPPER[BASE_CHAIN_ID as keyof typeof CHAIN_ID_MAPPER]
+    const asset2ChainName = ChainId.Base
+        ? CHAIN_ID_MAPPER[ChainId.Base as keyof typeof CHAIN_ID_MAPPER]
         : "Unknown"
 
     // Opportunities
