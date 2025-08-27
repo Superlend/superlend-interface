@@ -292,6 +292,16 @@ export default function PageHeader() {
     }
 
     const appleFarmRewardAPY = Number(appleFarmRewardsAprs?.[relevantTokenAddress] ?? 0)
+
+    // For LBTC tokens with Apple Farm rewards, apy_current already includes Apple Farm APR
+    // Get base rate for breakdown display
+    baseSupplyAPY = (() => {
+        if(relevantTokenAddress === '0xecac9c5f704e954931349da37f60e39f515c11c1') {
+            return baseSupplyAPY - appleFarmRewardAPY
+        }
+        return baseSupplyAPY
+    })()
+
     const formattedSupplyAPY = baseSupplyAPY + appleFarmRewardAPY
 
     // console.log('Page Header APY calculation:', {
