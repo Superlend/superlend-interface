@@ -22,5 +22,6 @@ export default function useGetMidasKpiData() {
         refetch,
         mBasisAPY: data?.mBasisAPY ? parseFloat(data.mBasisAPY) * 100 : null, // Convert to percentage
         mTbillAPY: data?.mTbillAPY ? parseFloat(data.mTbillAPY) * 100 : null, // Convert to percentage
+        mMevAPY: data?.mMevAPY ? parseFloat(data.mMevAPY) * 100 : null, // Convert to percentage
     }
 } 
