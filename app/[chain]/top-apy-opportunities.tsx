@@ -417,7 +417,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                 borrows: `${Number(item.platform.borrows) * Number(item.token.price_usd)}`,
                 utilization: String(item.platform.utilization_rate),
                 additional_rewards: item.platform.additional_rewards,
-                rewards: item.platform.rewards,
+                rewards: item.platform.rewards.filter((reward) => reward.asset.symbol !== 'Intrinsic APY'),
                 isVault: item.platform.isVault || false,
                 collateral_exposure: item.platform.collateral_exposure,
                 collateral_tokens: item.platform.collateral_tokens,

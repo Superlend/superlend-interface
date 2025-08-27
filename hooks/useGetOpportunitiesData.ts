@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import useGetMidasKpiData from './useGetMidasKpiData'
 import useGetIntrinsicApyData from './useGetIntrinsicApyData'
+import { ChainId } from '@/types/chain'
 
 interface CachedOpportunitiesData {
     data: TOpportunity[]
@@ -23,7 +24,7 @@ export default function useGetOpportunitiesData(
     const currentCacheKeyRef = useRef<string>('')
     
     // Fetch Midas KPI data for lend and loop requests
-    const { mBasisAPY, mTbillAPY } = useGetMidasKpiData()
+    const { mBasisAPY, mTbillAPY, mMevAPY } = useGetMidasKpiData()
     
     // Fetch intrinsic APY data including LBTC APY
     const { lbtcApyEstimated } = useGetIntrinsicApyData()
@@ -33,7 +34,7 @@ export default function useGetOpportunitiesData(
         ...params,
         type: params.type === 'loop' ? 'lend' : params.type
     }
-    
+
     // Create a cache key based on params
     const cacheKey = `opportunities_${params.type}_${params.chain_ids || 'all'}_${params.tokens || 'all'}`
     
@@ -47,10 +48,9 @@ export default function useGetOpportunitiesData(
             const tokenSymbol = opportunity.token.symbol.toUpperCase()
             
             // Handle LBTC intrinsic APY addition - only for LBTC on Etherlink chain with Superlend platform
-            if (tokenSymbol === 'LBTC' && 
+            if (tokenSymbol === 'LBTC' &&
                 lbtcApyEstimated !== null && 
-                opportunity.chain_id === 42793 && // Etherlink chain
-                opportunity.platform.platform_name?.toLowerCase().includes('superlend')) {
+                opportunity.chain_id === ChainId.Etherlink) {
                 
                 const currentAPY = parseFloat(opportunity.platform.apy.current) || 0
                 const adjustedAPY = currentAPY + lbtcApyEstimated
@@ -66,7 +66,18 @@ export default function useGetOpportunitiesData(
                     }
                 }
             }
-            
+            if (tokenSymbol === 'MMEV' && mMevAPY !== null) {
+                return {
+                    ...opportunity,
+                    platform: {
+                        ...opportunity.platform,
+                        apy: {
+                            ...opportunity.platform.apy,
+                            current: mMevAPY.toString()
+                        }
+                    }
+                }
+            }
             if (tokenSymbol === 'MBASIS' && mBasisAPY !== null) {
                 return {
                     ...opportunity,
@@ -79,7 +90,6 @@ export default function useGetOpportunitiesData(
                     }
                 }
             }
-            
             if (tokenSymbol === 'MTBILL' && mTbillAPY !== null) {
                 // console.log('MTBILL APY', mTbillAPY)
                 // console.log('MTBILL opportunity', opportunity)
@@ -126,7 +136,7 @@ export default function useGetOpportunitiesData(
             }
 
             // Adjust APY for chain_id 42793 by subtracting sum of supply_apy from rewards
-            if (opportunity.chain_id === 42793 && opportunity.platform.rewards && opportunity.platform.rewards.length > 0) {
+            if (opportunity.chain_id === ChainId.Etherlink && opportunity.platform.rewards && opportunity.platform.rewards.length > 0) {
                 const totalRewardsAPY = opportunity.platform.rewards.reduce((sum, reward) => {
                     return sum + (reward.supply_apy || 0)
                 }, 0)
@@ -304,16 +314,23 @@ export default function useGetOpportunitiesData(
 
     // Return cached data if available and we have fresh cache, otherwise return fresh data
     // Always apply Midas APY updates to the returned data
-    const baseData = hasFreshCache() && cachedData.length > 0 ? cachedData : (data || cachedData || [])
+    
+    // TEMPORARILY DISABLED FOR TESTING: Cached data usage commented out
+    // const baseData = hasFreshCache() && cachedData.length > 0 ? cachedData : (data || cachedData || [])
+    const baseData = data || [] // Force fresh data only, ignore cached data
     const dataToReturn = updateIntrinsicTokenAPYs(baseData)
 
     return { 
         data: dataToReturn, 
-        isLoading: isLoading && cachedData.length === 0, // Only show loading if no cached data
+        // TEMPORARILY DISABLED FOR TESTING: Cached data consideration in loading state commented out
+        // isLoading: isLoading && cachedData.length === 0, // Only show loading if no cached data
+        isLoading: isLoading, // Force normal loading state, ignore cached data
         isError, 
         refetch: manualRefresh,
         lastFetchTime,
         shouldAutoRefresh: shouldAutoRefresh(),
-        isRefreshing: isManualRefreshing || (isLoading && cachedData.length > 0)
+        // TEMPORARILY DISABLED FOR TESTING: Cached data consideration in refreshing state commented out
+        // isRefreshing: isManualRefreshing || (isLoading && cachedData.length > 0)
+        isRefreshing: isManualRefreshing || isLoading // Force normal refreshing state, ignore cached data
     }
 }

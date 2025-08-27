@@ -4,7 +4,7 @@ export interface IntrinsicApyData {
     // mBasisAPY: string
     // mTbillAPY: string
     // stXTZ: string
-    // mMEV: string
+    mMEV: string
     lbtcApyEstimated?: number
 }
 
