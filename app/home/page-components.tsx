@@ -9,7 +9,8 @@ import { SelectTokenByChain as SelectTokenByChainDialog } from '@/components/dia
 import { usePositionsContext } from '@/context/positions-provider'
 import { useAssetsDataContext } from '@/context/data-provider'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
-import { TPositionType, TToken } from '@/types'
+import { TToken } from '@/types'
+type TPositionType = 'lend' | 'borrow';
 import { usePortfolioDataContext } from '@/context/portfolio-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import Opportunities from './opportunities'
@@ -22,7 +23,7 @@ import { TChain } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import MarketsExplorerBanner from '@/components/MarketsExplorerBanner'
 import { AppleFarmRewardsProvider } from '@/context/apple-farm-rewards-provider'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+
 
 interface ISelectedToken {
     address: string
@@ -50,21 +51,19 @@ export default function HomePageComponents() {
     const searchParams = useSearchParams()
     const tokenAddressParam = searchParams?.get('token_address')
     const chainIdParam = searchParams?.get('chain_id')
-    const [positionType, setPositionType] = useState<TPositionType>('lend')
+    const [positionType, setPositionType] = useState<'lend' | 'borrow'>('lend')
     const [openSelectTokenDialog, setOpenSelectTokenDialog] = useState(false)
     const [selectedToken, setSelectedToken] = useState<any>(null)
     const [showOpportunitiesTable, setShowOpportunitiesTable] = useState(false)
     const [filters, setFilters] = useState('')
     const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData } =
         useGetOpportunitiesData({
-            type: positionType === 'loop' ? 'lend' : positionType,
+            type: positionType,
             chain_ids: [Number(selectedToken?.chain_id)],
             tokens: [selectedToken?.symbol || ''],
             enabled: !!selectedToken,
         })
     
-    // Import loop pairs hook for counting
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
     const { logEvent } = useAnalytics()
 
     const formattedTokensList = formattedTokenBalances.map((tokenBalance) => {
@@ -154,10 +153,6 @@ export default function HomePageComponents() {
     }
 
     function handleFilterTableRows(opportunity: any) {
-        // For loop positions, don't apply Morpho filtering
-        if (positionType === 'loop') {
-            return true
-        }
         return positionType === 'borrow'
             ? handleExcludeMorphoVaultsForBorrowAssets(opportunity)
             : handleExcludeMorphoMarketsForLendAssets(opportunity)
@@ -167,25 +162,7 @@ export default function HomePageComponents() {
         handleFilterTableRows
     )
 
-    // Calculate the actual opportunities count that will be displayed
-    const actualOpportunitiesData = useMemo(() => {
-        if (positionType === 'loop') {
-            // For loop positions, use filtered loop pairs
-            if (selectedToken) {
-                return loopPairs.filter((pair: any) => {
-                    const selectedTokenAddress = selectedToken.address.toLowerCase()
-                    const lendTokenAddress = pair.tokenAddress.toLowerCase()
-                    const borrowTokenAddress = pair.borrowToken?.address.toLowerCase()
-                    
-                    // Show pair if selected token is either the lend token or borrow token
-                    return lendTokenAddress === selectedTokenAddress || borrowTokenAddress === selectedTokenAddress
-                })
-            }
-            return loopPairs
-        }
-        // For lend/borrow, use filtered opportunities data
-        return filteredOpportunitiesData
-    }, [positionType, selectedToken, loopPairs, filteredOpportunitiesData])
+    const actualOpportunitiesData = useMemo(() => filteredOpportunitiesData, [filteredOpportunitiesData])
 
     return (
         <MainContainer className="mt-20 md:mt-24">
@@ -193,25 +170,16 @@ export default function HomePageComponents() {
                 <div className="relative z-10 w-full max-w-[350px] sm:max-w-[450px]">
                     <ToggleTab
                         type={
-                            positionType === 'lend'
-                                ? 'tab1'
-                                : positionType === 'borrow'
-                                ? 'tab2'
-                                : 'tab3'
+                            positionType === 'lend' ? 'tab1' : 'tab2'
                         }
                         handleToggle={(positionType: TTypeToMatch) => {
                             handlePositionTypeToggle(
-                                positionType === 'tab1'
-                                    ? 'lend'
-                                    : positionType === 'tab2'
-                                    ? 'borrow'
-                                    : 'loop'
+                                positionType === 'tab1' ? 'lend' : 'borrow'
                             )
                         }}
                         showTab={{
                             tab1: true,
                             tab2: true,
-                            tab3: true,
                         }}
                     />
                 </div>
@@ -238,7 +206,7 @@ export default function HomePageComponents() {
                             setShowOpportunitiesTable={
                                 setShowOpportunitiesTable
                             }
-                            isLoadingOpportunities={positionType === 'loop' ? isLoadingLoopPairs : isLoadingOpportunitiesData}
+                            isLoadingOpportunities={isLoadingOpportunitiesData}
                         />
                     </motion.div>
                     <AnimatePresence>
@@ -279,7 +247,7 @@ export default function HomePageComponents() {
                     isLoading={
                         isLoadingErc20TokensBalanceData || isConnectingWallet
                     }
-                    positionType={positionType as 'lend' | 'borrow' | 'loop'}
+                    positionType={positionType}
                 />
                 {!showOpportunitiesTable && (
                     <div className="w-full max-w-[400px] mt-5">

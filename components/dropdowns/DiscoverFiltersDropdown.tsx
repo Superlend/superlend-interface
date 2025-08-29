@@ -35,7 +35,7 @@ import InfoTooltip from '../tooltips/InfoTooltip'
 import TooltipText from '../tooltips/TooltipText'
 import { ChainId } from '@/types/chain'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+// import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
 
 export default function DiscoverFiltersDropdown({ chain, positionType }: { chain?: string, positionType?: string }) {
     const searchParams = useSearchParams()
@@ -63,7 +63,7 @@ export default function DiscoverFiltersDropdown({ chain, positionType }: { chain
     const positionTypeParam = positionType || searchParams?.get('position_type') || 'lend'
     
     // Get loop pairs data to determine available tokens dynamically
-    const { pairs: loopPairs } = useGetLoopPairs()
+    // const { pairs: loopPairs } = useGetLoopPairs()
 
     // Set initial chain_ids for etherlink and clear filters when switching
     // useEffect(() => {
@@ -188,26 +188,12 @@ export default function DiscoverFiltersDropdown({ chain, positionType }: { chain
         return categories
     }, [chain, positionTypeParam])
 
-    const loopAvailableTokens = useMemo(() => {
-        if (positionTypeParam !== 'loop' || !loopPairs?.length) return []
-        
-        const tokenSet = new Set<string>()
-        loopPairs.forEach((pair: any) => {
-            tokenSet.add(pair.tokenSymbol)
-            if (pair.borrowToken?.symbol) {
-                tokenSet.add(pair.borrowToken.symbol)
-            }
-        })
-        
-        return Array.from(tokenSet)
-    }, [positionTypeParam, loopPairs])
+
 
     const FILTER_OPTIONS: any = {
         token: {
             type: 'token',
-            options: positionTypeParam === 'loop' && loopAvailableTokens.length > 0 
-                ? allTokenOptions.filter((token: any) => loopAvailableTokens.includes(token.token_id))
-                : allTokenOptions,
+            options: allTokenOptions,
         },
         chain: {
             type: 'chain',
@@ -281,8 +267,7 @@ export default function DiscoverFiltersDropdown({ chain, positionType }: { chain
         selectStablecoins,
         showCorrelatedPairs,
         handleCorrelatedPairsToggle,
-        positionTypeParam,
-        loopAvailableTokens,
+        positionTypeParam
     }
 
     if (isDesktop) {

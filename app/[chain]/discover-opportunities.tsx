@@ -18,7 +18,7 @@ import { ChartNoAxesColumnIncreasing, TrendingUp } from 'lucide-react'
 import { BASE_CONFIG, CHAIN_ID_MAPPER } from '@/constants'
 import useGetBoostRewards from '@/hooks/useGetBoostRewards'
 import { useGetEffectiveApy } from '@/hooks/useGetEffectiveApy'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+// import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
 import { AssetsDataContext } from '@/context/data-provider'
 import { useContext } from 'react'
@@ -71,7 +71,7 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     const { allChainsData } = useContext<any>(AssetsDataContext)
     
     // Get loop pairs data for top 3 strategies
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
+    // const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
     
     // Get opportunities data for borrow APYs
     const { data: borrowOpportunitiesData, isLoading: isLoadingBorrowOpportunities } = useGetOpportunitiesData({
@@ -310,98 +310,98 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     }
 
     // Get top 3 loop strategies by APY
-    const getTop3LoopStrategies = () => {
-        if (!loopPairs || loopPairs.length === 0) {
-            // Fallback to static loop opportunities if no dynamic data is available
-            return [
-                {
-                    id: 7,
-                    label: 'Loop with weETH',
-                    tokenSymbol: 'weETH/WETH',
-                    platformName: 'Superlend',
-                    chainName: 'Etherlink',
-                    description: 'Leverage your staking rewards',
-                    tokenImage: `/images/tokens/weeth.png`,
-                    borrowTokenImage: `${imageBaseUrl}/tokens/weth.png`,
-                    platformImage: `${imageBaseUrl}/superlend.svg`,
-                    link: getRedirectLink(
-                        opportunity7TokenAddress,
-                        opportunity7ProtocolIdentifier,
-                        opportunity7ChainId,
-                        'loop',
-                        '0xfc24f770f94edbca6d6f885e12d4317320bcb401' // WETH on Etherlink
-                    ),
-                    maxAPY: 0,
-                    isLoopPair: true
-                },
-                {
-                    id: 8,
-                    label: 'Loop with ezETH',
-                    tokenSymbol: 'ezETH/WETH',
-                    platformName: 'Superlend',
-                    chainName: 'Etherlink',
-                    description: 'Maximize your yield with looping',
-                    tokenImage: `/images/tokens/ezeth.png`,
-                    borrowTokenImage: `${imageBaseUrl}/tokens/weth.png`,
-                    platformImage: `${imageBaseUrl}/superlend.svg`,
-                    link: getRedirectLink(
-                        opportunity8TokenAddress,
-                        opportunity8ProtocolIdentifier,
-                        opportunity8ChainId,
-                        'loop',
-                        '0xfc24f770f94edbca6d6f885e12d4317320bcb401' // WETH on Etherlink
-                    ),
-                    maxAPY: 0,
-                    isLoopPair: true
-                },
-                {
-                    id: 9,
-                    label: 'Loop with wusdl',
-                    tokenSymbol: 'wusdl/USDC',
-                    platformName: 'Superlend',
-                    chainName: 'Etherlink',
-                    description: 'Loop stablecoins for enhanced yield',
-                    tokenImage: `${morphoImageBaseUrl}/wusdl.svg`,
-                    borrowTokenImage: `/images/tokens/usdc.webp`,
-                    platformImage: `${imageBaseUrl}/superlend.svg`,
-                    link: getRedirectLink(
-                        opportunity9TokenAddress,
-                        opportunity9ProtocolIdentifier,
-                        opportunity9ChainId,
-                        'loop',
-                        '0x2c03058c8afc06713be23e58d2febc8337dbfe6a' // USDC on Etherlink
-                    ),
-                    maxAPY: 0,
-                    isLoopPair: true
-                },
-            ]
-        }
+    // const getTop3LoopStrategies = () => {
+    //     if (!loopPairs || loopPairs.length === 0) {
+    //         // Fallback to static loop opportunities if no dynamic data is available
+    //         return [
+    //             {
+    //                 id: 7,
+    //                 label: 'Loop with weETH',
+    //                 tokenSymbol: 'weETH/WETH',
+    //                 platformName: 'Superlend',
+    //                 chainName: 'Etherlink',
+    //                 description: 'Leverage your staking rewards',
+    //                 tokenImage: `/images/tokens/weeth.png`,
+    //                 borrowTokenImage: `${imageBaseUrl}/tokens/weth.png`,
+    //                 platformImage: `${imageBaseUrl}/superlend.svg`,
+    //                 link: getRedirectLink(
+    //                     opportunity7TokenAddress,
+    //                     opportunity7ProtocolIdentifier,
+    //                     opportunity7ChainId,
+    //                     'loop',
+    //                     '0xfc24f770f94edbca6d6f885e12d4317320bcb401' // WETH on Etherlink
+    //                 ),
+    //                 maxAPY: 0,
+    //                 isLoopPair: true
+    //             },
+    //             {
+    //                 id: 8,
+    //                 label: 'Loop with ezETH',
+    //                 tokenSymbol: 'ezETH/WETH',
+    //                 platformName: 'Superlend',
+    //                 chainName: 'Etherlink',
+    //                 description: 'Maximize your yield with looping',
+    //                 tokenImage: `/images/tokens/ezeth.png`,
+    //                 borrowTokenImage: `${imageBaseUrl}/tokens/weth.png`,
+    //                 platformImage: `${imageBaseUrl}/superlend.svg`,
+    //                 link: getRedirectLink(
+    //                     opportunity8TokenAddress,
+    //                     opportunity8ProtocolIdentifier,
+    //                     opportunity8ChainId,
+    //                     'loop',
+    //                     '0xfc24f770f94edbca6d6f885e12d4317320bcb401' // WETH on Etherlink
+    //                 ),
+    //                 maxAPY: 0,
+    //                 isLoopPair: true
+    //             },
+    //             {
+    //                 id: 9,
+    //                 label: 'Loop with wusdl',
+    //                 tokenSymbol: 'wusdl/USDC',
+    //                 platformName: 'Superlend',
+    //                 chainName: 'Etherlink',
+    //                 description: 'Loop stablecoins for enhanced yield',
+    //                 tokenImage: `${morphoImageBaseUrl}/wusdl.svg`,
+    //                 borrowTokenImage: `/images/tokens/usdc.webp`,
+    //                 platformImage: `${imageBaseUrl}/superlend.svg`,
+    //                 link: getRedirectLink(
+    //                     opportunity9TokenAddress,
+    //                     opportunity9ProtocolIdentifier,
+    //                     opportunity9ChainId,
+    //                     'loop',
+    //                     '0x2c03058c8afc06713be23e58d2febc8337dbfe6a' // USDC on Etherlink
+    //                 ),
+    //                 maxAPY: 0,
+    //                 isLoopPair: true
+    //             },
+    //         ]
+    //     }
         
-        // Sort by maxAPY and take top 3
-        return loopPairs
-            .sort((a, b) => b.maxAPY - a.maxAPY)
-            .slice(0, 3)
-            .map((pair, index) => ({
-                id: 7 + index,
-                label: `Loop ${pair.tokenSymbol}/${pair.borrowToken.symbol}`,
-                tokenSymbol: `${pair.tokenSymbol}/${pair.borrowToken.symbol}`,
-                platformName: pair.platformName,
-                chainName: pair.chainName,
-                description: `${abbreviateNumber(pair.maxAPY)}% Max APY`,
-                tokenImage: pair.tokenLogo,
-                borrowTokenImage: pair.borrowToken.logo,
-                platformImage: pair.platformLogo,
-                link: getRedirectLink(
-                    pair.tokenAddress,
-                    pair.protocol_identifier,
-                    pair.chain_id,
-                    'loop',
-                    pair.borrowToken.address
-                ),
-                maxAPY: pair.maxAPY,
-                isLoopPair: true
-            }))
-    }
+    //     // Sort by maxAPY and take top 3
+    //     return loopPairs
+    //         .sort((a, b) => b.maxAPY - a.maxAPY)
+    //         .slice(0, 3)
+    //         .map((pair, index) => ({
+    //             id: 7 + index,
+    //             label: `Loop ${pair.tokenSymbol}/${pair.borrowToken.symbol}`,
+    //             tokenSymbol: `${pair.tokenSymbol}/${pair.borrowToken.symbol}`,
+    //             platformName: pair.platformName,
+    //             chainName: pair.chainName,
+    //             description: `${abbreviateNumber(pair.maxAPY)}% Max APY`,
+    //             tokenImage: pair.tokenLogo,
+    //             borrowTokenImage: pair.borrowToken.logo,
+    //             platformImage: pair.platformLogo,
+    //             link: getRedirectLink(
+    //                 pair.tokenAddress,
+    //                 pair.protocol_identifier,
+    //                 pair.chain_id,
+    //                 'loop',
+    //                 pair.borrowToken.address
+    //             ),
+    //             maxAPY: pair.maxAPY,
+    //             isLoopPair: true
+    //         }))
+    // }
 
     const asset1Data = opportunity1PlatformData?.assets?.find((asset: any) =>
         asset?.token?.address === opportunity1TokenAddress
@@ -423,8 +423,7 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     // Opportunities
     const opportunities: {
         lend: any[],
-        borrow: any[],
-        loop: any[],
+        borrow: any[]
     } = {
             lend: [
                 {
@@ -478,8 +477,7 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
                     ),
                 },
             ],
-            borrow: getTop3BorrowOpportunities(),
-            loop: getTop3LoopStrategies(),
+            borrow: getTop3BorrowOpportunities()
         }
 
     const appleFarmBaseRate = asset1DataSupplyApy
@@ -509,9 +507,6 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
         4: isLoadingBorrowOpportunities,
         5: isLoadingBorrowOpportunities,
         6: isLoadingBorrowOpportunities,
-        7: isLoadingLoopPairs,
-        8: isLoadingLoopPairs,
-        9: isLoadingLoopPairs,
     }
 
     const cardsToRender = opportunities[positionType as keyof typeof opportunities] || opportunities.lend;

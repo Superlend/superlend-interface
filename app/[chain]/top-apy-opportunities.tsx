@@ -11,12 +11,13 @@ import React, {
 import ToggleTab, { TTypeToMatch, getToggleTabContainerWidth, countVisibleTabs } from '@/components/ToggleTab'
 import { HeadingText } from '@/components/ui/typography'
 import { getColumns } from '@/data/table/top-apy-opportunities'
-import { columns as columnsForLoops } from '@/data/table/loop-opportunities'
+
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
-import { TOpportunityTable, TPositionType } from '@/types'
+import { TOpportunityTable } from '@/types'
+type TPositionType = 'lend' | 'borrow';
 import { ChainId, TChain } from '@/types/chain'
 import { DataTable } from '@/components/ui/data-table'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
@@ -32,7 +33,7 @@ import useIsClient from '@/hooks/useIsClient'
 import RainingPolygons from '@/components/animations/RainingPolygons'
 import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+
 import { RefreshCw } from 'lucide-react'
 import DiscoverOpportunities from './discover-opportunities'
 import { Switch } from '@/components/ui/switch'
@@ -55,30 +56,7 @@ const EXCLUDEED_PROTOCOLS_LIST = [
     '0xe75f6fff3eec59db6ac1df4fcccf63b72cc053f78e3156b9eb78d12f5ac47367',
 ]
 
-// Define correlated pairs for loop strategies
-const CORRELATED_PAIRS = [
-    // Stablecoins - highly correlated
-    { pair1: 'USDC', pair2: 'USDT' },
-    { pair1: 'USDT', pair2: 'USDC' },
 
-    // RWA Tokens - both Midas tokens, correlated
-    { pair1: 'mTBILL', pair2: 'USDT' },
-    { pair1: 'USDT', pair2: 'mTBILL' },
-    // RWA Tokens - both Midas tokens, correlated
-    { pair1: 'mBASIS', pair2: 'USDT' },
-    { pair1: 'USDT', pair2: 'mBASIS' },
-
-    // RWA Tokens - both Midas tokens, correlated
-    { pair1: 'mTBILL', pair2: 'USDC' },
-    { pair1: 'USDC', pair2: 'mTBILL' },
-    // RWA Tokens - both Midas tokens, correlated
-    { pair1: 'mBASIS', pair2: 'USDC' },
-    { pair1: 'USDC', pair2: 'mBASIS' },
-
-    // Major Cryptos - both major crypto assets, somewhat correlated
-    // { pair1: 'WETH', pair2: 'WBTC' },
-    // { pair1: 'WBTC', pair2: 'WETH' },
-]
 
 // Utility function to format time difference
 const formatTimeAgo = (timestamp: number): string => {
@@ -132,11 +110,10 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     const [isTableLoading, setIsTableLoading] = useState(false)
     const { data: opportunitiesData, isLoading: isLoadingOpportunitiesData, refetch, lastFetchTime, shouldAutoRefresh, isRefreshing } =
         useGetOpportunitiesData({
-            type: isActiveTab('loop') ? 'lend' : positionTypeParam as TPositionType,
+            type: positionTypeParam as TPositionType,
         })
 
     // Get loop pairs when position type is 'loop'
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
     const { allChainsData, allTokensData } = useContext<any>(AssetsDataContext)
     const [showRainingApples, setShowRainingApples] = useState(false)
     const [showRainingPolygons, setShowRainingPolygons] = useState(false)
@@ -359,12 +336,6 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     }, [pathname, chainIdsParam.length, updateSearchParams]);
 
     const rawTableData: TOpportunityTable[] = useMemo(() => {
-        // For loop position type, use loop pairs instead of raw opportunities data
-        if (isActiveTab('loop')) {
-            return loopPairs
-        }
-
-        // For lend/borrow, use the existing transformation logic
         return opportunitiesData.map((item) => {
             const platformName = item.platform.platform_name?.split('-')[0]?.toLowerCase()
             const isAaveV3 = PlatformType.AAVE.includes(platformName)
@@ -428,7 +399,6 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         })
     }, [
         positionTypeParam,
-        loopPairs,
         opportunitiesData,
         allChainsData,
         appleFarmRewardsAprs, 
@@ -513,37 +483,8 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
         const matchesChainId = chainIdsParam.length === 0 || chainIdsParam.includes(opportunity.chain_id.toString())
         const matchesToken = tokenIdsParam.length === 0 || tokenIdsParam.includes(opportunity.tokenSymbol)
 
-        // Check correlated pairs filter for loop position type only
-        const matchesCorrelatedPairs = (() => {
-            if (positionTypeParam !== 'loop' || !showCorrelatedPairsParam) {
-                return true // No filtering if not loop or filter not active
-            }
 
-            const lendToken = opportunity.tokenSymbol
-            const borrowToken = (opportunity as any).borrowToken?.symbol
 
-            console.log('Checking correlation for:', {
-                lendToken,
-                borrowToken,
-                pairId: (opportunity as any).pairId,
-                showCorrelatedPairsParam
-            })
-
-            if (!borrowToken) {
-                console.log('No borrow token found')
-                return false
-            }
-
-            const isCorrelated = CORRELATED_PAIRS.some(pair =>
-                (pair.pair1 === lendToken && pair.pair2 === borrowToken) ||
-                (pair.pair1 === borrowToken && pair.pair2 === lendToken)
-            )
-
-            console.log('Is correlated:', isCorrelated)
-            return isCorrelated
-        })()
-
-        // Base filters that apply to all position types
         const commonFilters = handleFilterTableRowsByPlatformIds(opportunity) &&
             matchesChainId &&
             matchesToken &&
@@ -552,44 +493,22 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
 
         if (positionTypeParam === 'borrow') {
             return handleExcludeMorphoVaultsByPositionType(opportunity) && commonFilters
-        } else if (positionTypeParam === 'lend') {
+        } else {
             return handleExcludeMorphoMarketsByParamFlag(opportunity) && commonFilters
-        } else if (positionTypeParam === 'loop') {
-            // For loop positions, apply morpho markets filter, chain filter, and correlated pairs filter
-            const chainFilter = opportunity.chain_id === ChainId.Etherlink
-            return handleExcludeMorphoMarketsByParamFlag(opportunity) && chainFilter && commonFilters && matchesCorrelatedPairs
         }
-
-        // Default fallback (shouldn't reach here)
-        return commonFilters
     }
 
-    function handleRowClick(rowData: any) {
-        if (positionTypeParam === 'loop') {
-            // For loop pairs, use both lend and borrow token information
-            const { tokenAddress, borrowToken, protocol_identifier, chain_id } = rowData
-            const url = `/position-management?lend_token=${tokenAddress}&borrow_token=${borrowToken.address}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
-            router.push(url)
-            logEvent('money_market_selected', {
-                action: positionTypeParam,
-                token_symbol: `${rowData.tokenSymbol} → ${borrowToken.symbol}`,
-                platform_name: rowData.platformName,
-                chain_name: rowData.chainName,
-                wallet_address: walletAddress,
-            })
-        } else {
-            // For lend/borrow, use existing logic
-            const { tokenAddress, protocol_identifier, chain_id } = rowData
-            const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
-            router.push(url)
-            logEvent('money_market_selected', {
-                action: positionTypeParam,
-                token_symbol: rowData.tokenSymbol,
-                platform_name: rowData.platformName,
-                chain_name: rowData.chainName,
-                wallet_address: walletAddress,
-            })
-        }
+    function handleRowClick(rowData: TOpportunityTable) {
+        const { tokenAddress, protocol_identifier, chain_id } = rowData
+        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionTypeParam}`
+        router.push(url)
+        logEvent('money_market_selected', {
+            action: positionTypeParam,
+            token_symbol: rowData.tokenSymbol,
+            platform_name: rowData.platformName,
+            chain_name: rowData.chainName,
+            wallet_address: walletAddress,
+        })
     }
 
     const toggleOpportunityType = (positionType: TPositionType): void => {
@@ -609,9 +528,6 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             protocolIds = filteredIds
             excludeRiskyMarkets = excludeRiskyMarketsFlag
         } else if (positionType === 'borrow') {
-            protocolIds = unfilteredIds
-            excludeRiskyMarkets = undefined
-        } else if (positionType === 'loop') {
             protocolIds = unfilteredIds
             excludeRiskyMarkets = undefined
         }
@@ -638,7 +554,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
     }
 
     const filteredColumns = useMemo(() => {
-        return positionTypeParam === 'loop' ? columnsForLoops : getColumns(allTokensData, searchParams)
+        return getColumns(allTokensData, searchParams)
     }, [positionTypeParam, allTokensData, searchParams])
 
     if (isStateLoading || isLoadingOpportunitiesData) {
@@ -667,27 +583,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                         </div>
                         {/* Filter button for Tablet and below screens */}
                         <div className="flex items-center gap-[12px] lg:hidden">
-                            {positionTypeParam === 'loop' && (
-                                <div className="flex items-center gap-2">
-                                    <Switch
-                                        id="correlated-pairs-mobile"
-                                        checked={showCorrelatedPairsParam}
-                                        onCheckedChange={(checked) => {
-                                            updateSearchParams({
-                                                show_correlated_pairs: checked ? 'true' : undefined,
-                                            })
-                                        }}
-                                    />
-                                    <InfoTooltip
-                                        label={
-                                            <Label htmlFor="correlated-pairs-mobile" className="text-sm cursor-pointer">
-                                                Correlated Pairs
-                                            </Label>
-                                        }
-                                        content="Show only token pairs with similar price movements: USDC/USDT (stablecoins), mTBILL/USDT etc."
-                                    />
-                                </div>
-                            )}
+
                             <DiscoverFiltersDropdown chain={chain} positionType={positionTypeParam} />
                         </div>
                     </div>
@@ -695,25 +591,16 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                         <div className={`w-full ${getToggleTabContainerWidth(countVisibleTabs({ tab1: true, tab2: true, tab3: true }))}`}>
                             <ToggleTab
                                 type={
-                                    positionTypeParam === 'lend'
-                                        ? 'tab1'
-                                        : positionTypeParam === 'borrow'
-                                            ? 'tab2'
-                                            : 'tab3'
+                                    positionTypeParam === 'lend' ? 'tab1' : 'tab2'
                                 }
                                 handleToggle={(positionType: TTypeToMatch) => {
                                     toggleOpportunityType(
-                                        positionType === 'tab1'
-                                            ? 'lend'
-                                            : positionType === 'tab2'
-                                                ? 'borrow'
-                                                : 'loop'
+                                        positionType === 'tab1' ? 'lend' : 'borrow'
                                     )
                                 }}
                                 showTab={{
                                     tab1: true,
                                     tab2: true,
-                                    tab3: !IS_POLYGON_MARKET,
                                 }}
                             />
                         </div>
@@ -730,27 +617,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                 {/* Filter buttons for Desktop and above screens */}
                 <div className="filter-dropdowns-container hidden lg:flex flex-col items-end gap-[8px]">
                     <div className="flex items-center gap-[12px]">
-                        {positionTypeParam === 'loop' && (
-                            <div className="flex items-center gap-2">
-                                <Switch
-                                    id="correlated-pairs-desktop"
-                                    checked={showCorrelatedPairsParam}
-                                    onCheckedChange={(checked) => {
-                                        updateSearchParams({
-                                            show_correlated_pairs: checked ? 'true' : undefined,
-                                        })
-                                    }}
-                                />
-                                <InfoTooltip
-                                    label={
-                                        <Label htmlFor="correlated-pairs-desktop" className="text-sm cursor-pointer">
-                                            Correlated Pairs
-                                        </Label>
-                                    }
-                                    content="Show only token pairs with similar price movements: USDC/USDT (stablecoins), mTBILL/USDT etc."
-                                />
-                            </div>
-                        )}
+
                         <DiscoverFiltersDropdown chain={chain} positionType={positionTypeParam} />
                     </div>
                 </div>
@@ -760,7 +627,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
             {showAllMarkets && <DiscoverOpportunities chain={chain} positionType={positionTypeParam} />}
 
             <div className="top-apy-opportunities-content">
-                {!isLoadingOpportunitiesData && !isLoadingLoopPairs && !isTableLoading && (
+                {!isLoadingOpportunitiesData && !isTableLoading && (
                     <DataTable
                         columns={filteredColumns}
                         data={tableData}
@@ -779,7 +646,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                         isRefreshing={isRefreshing}
                     />
                 )}
-                {(isLoadingOpportunitiesData || isLoadingLoopPairs || isTableLoading) && (
+                {(isLoadingOpportunitiesData || isTableLoading) && (
                     <LoadingSectionSkeleton className="h-[500px] md:h-[600px]" />
                 )}
             </div>
