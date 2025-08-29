@@ -124,7 +124,6 @@ export default function Opportunities({
         })
     }, [
         positionType,
-        loopPairs,
         opportunitiesData,
         allChainsData,
         appleFarmRewardsAprs,
