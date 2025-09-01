@@ -12,12 +12,12 @@ import ToggleTab from '@/components/ToggleTab'
 import { HeadingText } from '@/components/ui/typography'
 import { OpportunitiesDataTable } from '@/components/tables/opportunities-data-table'
 import { columns } from '@/data/table/opportunities'
-import { columns as columnsForLoops } from '@/data/table/loop-opportunities'
 import SearchInput from '@/components/inputs/SearchInput'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table'
 import LoadingSectionSkeleton from '@/components/skeletons/LoadingSection'
-import { TOpportunityTable, TPositionType } from '@/types'
+import { TOpportunityTable } from '@/types'
+type TPositionType = 'lend' | 'borrow';
 import { TChain } from '@/types/chain'
 import { DataTable } from '@/components/ui/data-table'
 import useGetOpportunitiesData from '@/hooks/useGetOpportunitiesData'
@@ -33,7 +33,7 @@ import { PlatformType } from '@/types/platform'
 import { useAnalytics } from '@/context/amplitude-analytics-provider'
 import { useWalletConnection } from '@/hooks/useWalletConnection'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+
 
 type TTopApyOpportunitiesProps = {
     tableData: TOpportunityTable[]
@@ -71,50 +71,20 @@ export default function Opportunities({
         hasAppleFarmRewards
     } = useAppleFarmRewards()
 
-    // Get loop pairs when position type is 'loop'
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
+
 
     useEffect(() => {
-        setColumnVisibility(() => {
-            if (positionType === 'loop') {
-                return {
-                    deposits: false,
-                    borrows: false,
-                    max_ltv: false,
-                    collateral_exposure: false,
-                    available_liquidity: true,
-                    apy_avg_7days: false,
-                }
-            }
-            return {
-                deposits: positionType === 'lend',
-                borrows: positionType === 'borrow',
-                max_ltv: positionType === 'borrow',
-                collateral_exposure: positionType === 'lend',
-                available_liquidity: positionType === 'borrow',
-                apy_avg_7days: positionType === 'lend',
-            }
-        })
+        setColumnVisibility(() => ({
+            deposits: positionType === 'lend',
+            borrows: positionType === 'borrow',
+            max_ltv: positionType === 'borrow',
+            collateral_exposure: positionType === 'lend',
+            available_liquidity: positionType === 'borrow',
+            apy_avg_7days: positionType === 'lend',
+        }))
     }, [positionType])
 
     const rawTableData: TOpportunityTable[] = useMemo(() => {
-        // For loop position type, use loop pairs instead of raw opportunities data
-        if (positionType === 'loop') {
-            // If a token is selected, filter loop pairs to only show strategies that include the selected token
-            if (selectedToken) {
-                return loopPairs.filter((pair: any) => {
-                    const selectedTokenAddress = selectedToken.address.toLowerCase()
-                    const lendTokenAddress = pair.tokenAddress.toLowerCase()
-                    const borrowTokenAddress = pair.borrowToken?.address.toLowerCase()
-
-                    // Show pair if selected token is either the lend token or borrow token
-                    return lendTokenAddress === selectedTokenAddress || borrowTokenAddress === selectedTokenAddress
-                })
-            }
-            return loopPairs
-        }
-
-        // For lend/borrow, use the existing transformation logic
         return opportunitiesData.map((item) => {
             return {
                 tokenAddress: item.token.address,
@@ -154,7 +124,6 @@ export default function Opportunities({
         })
     }, [
         positionType,
-        loopPairs,
         opportunitiesData,
         allChainsData,
         appleFarmRewardsAprs,
@@ -169,19 +138,7 @@ export default function Opportunities({
         const searchTerm = filters.toLowerCase()
 
         return rawTableData.filter(item => {
-            // For loop pairs, search in both lend token and borrow token
-            if (positionType === 'loop' && 'borrowToken' in item) {
-                const loopItem = item as any // Type assertion for loop pair
-                return (
-                    item.tokenSymbol.toLowerCase().includes(searchTerm) ||
-                    item.tokenName.toLowerCase().includes(searchTerm) ||
-                    loopItem.borrowToken.symbol.toLowerCase().includes(searchTerm) ||
-                    loopItem.borrowToken.name.toLowerCase().includes(searchTerm) ||
-                    item.platformName.toLowerCase().includes(searchTerm)
-                )
-            }
-
-            // For lend/borrow, search in token and platform
+            // Search in token and platform
             return (
                 item.tokenSymbol.toLowerCase().includes(searchTerm) ||
                 item.tokenName.toLowerCase().includes(searchTerm) ||
@@ -191,39 +148,20 @@ export default function Opportunities({
     }, [rawTableData, filters, positionType])
 
     function handleRowClick(rowData: TOpportunityTable) {
-        if (positionType === 'loop') {
-            // For loop pairs, use both lend and borrow token information
-            const { tokenAddress, borrowToken, protocol_identifier, chain_id } = rowData as any
-            const url = `/position-management?lend_token=${tokenAddress}&borrow_token=${borrowToken.address}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`
-            router.push(url)
-            logEvent('opportunity_selected', {
-                token_symbol: `${rowData.tokenSymbol} → ${borrowToken.symbol}`,
-                chain_name: rowData.chainName,
-                platform_name: rowData.platformName,
-                apy: (rowData as any).maxAPY,
-                action: positionType,
-                wallet_address: walletAddress,
-            })
-        } else {
-            // For lend/borrow, use existing logic
-            const { tokenAddress, protocol_identifier, chain_id } = rowData
-            const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`
-            router.push(url)
-            logEvent('opportunity_selected', {
-                token_symbol: rowData.tokenSymbol,
-                chain_name: rowData.chainName,
-                platform_name: rowData.platformName,
-                apy: rowData.apy_current,
-                action: positionType,
-                wallet_address: walletAddress,
-            })
-        }
+        const { tokenAddress, protocol_identifier, chain_id } = rowData
+        const url = `/position-management?token=${tokenAddress}&protocol_identifier=${protocol_identifier}&chain_id=${chain_id}&position_type=${positionType}`
+        router.push(url)
+        logEvent('opportunity_selected', {
+            token_symbol: rowData.tokenSymbol,
+            chain_name: rowData.chainName,
+            platform_name: rowData.platformName,
+            apy: rowData.apy_current,
+            action: positionType,
+            wallet_address: walletAddress,
+        })
     }
 
-    // Choose the appropriate columns based on position type
-    const filteredColumns = useMemo(() => {
-        return positionType === 'loop' ? columnsForLoops : columns
-    }, [positionType])
+    const filteredColumns = useMemo(() => columns, [])
 
     return (
         <section
@@ -231,7 +169,7 @@ export default function Opportunities({
             className="opportunities-table flex flex-col gap-[24px]"
         >
             <div className="opportunities-table">
-                {!isLoadingOpportunitiesData && !isLoadingLoopPairs && !isTableLoading && (
+                {!isLoadingOpportunitiesData && !isTableLoading && (
                     <OpportunitiesDataTable
                         columns={filteredColumns}
                         data={tableData}
@@ -240,7 +178,7 @@ export default function Opportunities({
                         setColumnVisibility={setColumnVisibility}
                     />
                 )}
-                {((isLoadingOpportunitiesData && positionType !== 'loop') || (isLoadingLoopPairs && positionType === 'loop') || isTableLoading) && (
+                {(isLoadingOpportunitiesData || isTableLoading) && (
                     <LoadingSectionSkeleton className="h-[320px]" />
                 )}
             </div>

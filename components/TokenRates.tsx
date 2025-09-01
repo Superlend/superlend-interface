@@ -24,7 +24,7 @@ import ArrowRightIcon from './icons/arrow-right-icon'
 import { PlatformType } from '@/types/platform'
 import ImageWithBadge from './ImageWithBadge'
 import { motion } from 'framer-motion'
-import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
+// import { useGetLoopPairs } from '@/hooks/useGetLoopPairs'
 import { TLoopPair } from '@/utils/createLoopPairs'
 import DoubleImage from '@/components/DoubleImage'
 
@@ -36,7 +36,7 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
             chain_ids: [],
             tokens: [],
         })
-    const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
+    // const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
     const [isHovering, setIsHovering] = useState(false)
 
     function handleExcludeMorphoMarketsForLendAssets(opportunity: any) {
@@ -104,12 +104,8 @@ export default function TokenRates({ positionType }: { positionType: TPositionTy
             : handleExcludeMorphoMarketsForLendAssets(opportunity)
     }
 
-    const isLoading =
-        positionType === 'loop'
-            ? isLoadingLoopPairs
-            : isLoadingOpportunitiesData
-    const data: Array<TOpportunity | TLoopPair> =
-        positionType === 'loop' ? loopPairs : opportunitiesData
+    const isLoading = isLoadingOpportunitiesData
+    const data: Array<TOpportunity | TLoopPair> = opportunitiesData
 
     const filteredOpportunitiesData = data
         .filter(handleFilterTableRows)
