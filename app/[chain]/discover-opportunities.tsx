@@ -24,7 +24,7 @@ import { AssetsDataContext } from '@/context/data-provider'
 import { useContext } from 'react'
 import useSuperfundsData from '@/hooks/useSuperfundsData'
 import { ChainId } from '@/types/chain'
-const imageBaseUrl = 'https://superlend-assets.s3.ap-south-1.amazonaws.com'
+const imageBaseUrl = 'https://superlend-public-assets.s3.ap-south-1.amazonaws.com'
 const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 
 // Token Addresses

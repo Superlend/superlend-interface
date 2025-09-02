@@ -44,7 +44,7 @@ export default function MarketsBanner() {
             title: 'Polygon Only',
             stats: ['Ongoing Rewards Program'],
             isActive: activeMarket === 'polygon',
-            icon: <Image src="https://superlend-assets.s3.ap-south-1.amazonaws.com/polygon.svg" alt="Polygon chain logo" width={16} height={16} className="rotate-[30deg] mt-0.5" />
+            icon: <Image src="https://superlend-public-assets.s3.ap-south-1.amazonaws.com/polygon.svg" alt="Polygon chain logo" width={16} height={16} className="rotate-[30deg] mt-0.5" />
         }
     ]
 

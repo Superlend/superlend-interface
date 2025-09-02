@@ -48,13 +48,13 @@ export const metadata: Metadata = {
         description:
             'Lend, Borrow, and Earn across 150+ DeFi markets with Superlend — the top aggregator for Lending & Borrowing.',
         siteName: 'Superlend | Lending & Borrowing Aggregator for Maximum Yield',
-        images: 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png',
+        images: 'https://superlend-public-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png',
     },
     twitter: {
         title: 'Superlend | Lending & Borrowing Aggregator for Maximum Yield',
         description:
             'Lend, Borrow, and Earn across 150+ DeFi markets with Superlend — the top aggregator for Lending & Borrowing.',
-        images: 'https://superlend-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png',
+        images: 'https://superlend-public-assets.s3.ap-south-1.amazonaws.com/superlend_banner.png',
     },
     verification: {
         google: '0j8SKqrdLCo956fdCB-_rUdpg8wEPmuU3TTlvbei_ro',
