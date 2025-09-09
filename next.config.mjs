@@ -18,6 +18,9 @@ const nextConfig = {
                 hostname: 'superlend-public-assets.s3.ap-south-1.amazonaws.com',
             },
             {
+                hostname: 'superlend-assets.s3.ap-south-1.amazonaws.com',
+            },
+            {
                 hostname: 'cdn.whisk.so',
             },
             {
