@@ -89,7 +89,7 @@ interface ButtonProps {
 }
 
 const TelegramButton = ({ logEvent, portfolioValue, walletAddress, onInteraction }: ButtonProps) => {
-    const telegramUsername = "aditya_eth";
+    const telegramUsername = "EugeneUgonna";
     const prefilledText = "Hi Superlend Team, I'd love to know more about personalized support on Superlend!";
     const encodedText = encodeURIComponent(prefilledText);
     const telegramLink = `https://t.me/${telegramUsername}?text=${encodedText}`;
