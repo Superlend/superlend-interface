@@ -13,7 +13,7 @@ import { useShowAllMarkets } from '@/context/show-all-markets-provider'
 import { useAppleFarmRewards } from '@/context/apple-farm-rewards-provider'
 import InfoTooltip from '@/components/tooltips/InfoTooltip'
 import { abbreviateNumber, convertAPRtoAPY } from '@/lib/utils'
-import { TReward } from '@/types'
+import { TOpportunity, TReward } from '@/types'
 import { ChartNoAxesColumnIncreasing, TrendingUp } from 'lucide-react'
 import { BASE_CONFIG, CHAIN_ID_MAPPER } from '@/constants'
 import useGetBoostRewards from '@/hooks/useGetBoostRewards'
@@ -30,7 +30,7 @@ const morphoImageBaseUrl = 'https://cdn.morpho.org/assets/logos'
 // Token Addresses
 const opportunity1TokenAddress = "0x2c03058c8afc06713be23e58d2febc8337dbfe6a";
 const opportunity2TokenAddress = "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f";
-const opportunity3TokenAddress = "0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559";
+const opportunity3TokenAddress = "0x5542f82389b76c23f5848268893234d8a63fd5c8";
 const opportunity4TokenAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bda02913"; // USDC on Base
 const opportunity5TokenAddress = "0x4200000000000000000000000000000000000006"; // WETH on Base
 const opportunity6TokenAddress = "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E"; // crvUSD on Ethereum
@@ -39,20 +39,20 @@ const opportunity8TokenAddress = '0x82f95A2193498119c3c13345A7831393A4033b0A'; /
 const opportunity9TokenAddress = '0x7751E2F4b8ae93EF6B79d86419d42FE3295A4559'; // wusdl on Etherlink (placeholder for another loop)
 
 // Chain IDs
-const opportunity1ChainId = 42793;
-const opportunity2ChainId = 1;
-const opportunity3ChainId = 1;
-const opportunity4ChainId = 8453; // Base
-const opportunity5ChainId = 8453; // Base
-const opportunity6ChainId = 1; // Ethereum
-const opportunity7ChainId = 42793; // Etherlink
-const opportunity8ChainId = 42793; // Etherlink
-const opportunity9ChainId = 42793; // Etherlink
+const opportunity1ChainId = ChainId.Etherlink;
+// const opportunity2ChainId = ChainId.Base;
+const opportunity3ChainId = ChainId.Etherlink;
+const opportunity4ChainId = ChainId.Base;
+const opportunity5ChainId = ChainId.Base;
+const opportunity6ChainId = ChainId.Ethereum;
+const opportunity7ChainId = ChainId.Etherlink;
+const opportunity8ChainId = ChainId.Etherlink;
+const opportunity9ChainId = ChainId.Etherlink;
 
 // Protocol Identifiers
 const opportunity1ProtocolIdentifier = "0xd68cf3aa73c75811ca1665efe01a10524ed5adcba0f412df44d78f04f1c902bf";
 const opportunity2ProtocolIdentifier = "0x36015e6d9a714a91078f6c479b6ff9ce197a1137779118c91f9acb35668129a9";
-const opportunity3ProtocolIdentifier = "0x87eb69182347a95a4a9be4d83afdf0af705a0d7dd3e7d19f22e5cf34090f1d22";
+const opportunity3ProtocolIdentifier = "0xd68cf3aa73c75811ca1665efe01a10524ed5adcba0f412df44d78f04f1c902bf";
 const opportunity4ProtocolIdentifier = "0x1b3c946c1b3c946c1b3c946c1b3c946c1b3c946c1b3c946c1b3c946c1b3c946c"; // Placeholder for Aave Base
 const opportunity5ProtocolIdentifier = "0x2c4d5b2c4d5b2c4d5b2c4d5b2c4d5b2c4d5b2c4d5b2c4d5b2c4d5b2c4d5b2c4d"; // Placeholder for Compound Base
 const opportunity6ProtocolIdentifier = "0x87eb69182347a95a4a9be4d83afdf0af705a0d7dd3e7d19f22e5cf34090f1d22"; // Morpho on Ethereum
@@ -72,6 +72,11 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     
     // Get loop pairs data for top 3 strategies
     // const { pairs: loopPairs, isLoading: isLoadingLoopPairs } = useGetLoopPairs()
+
+    // Get opportunities data for lend APYs
+    const { data: lendOpportunitiesData, isLoading: isLoadingLendOpportunities } = useGetOpportunitiesData({
+        type: 'lend',
+    })
     
     // Get opportunities data for borrow APYs
     const { data: borrowOpportunitiesData, isLoading: isLoadingBorrowOpportunities } = useGetOpportunitiesData({
@@ -96,46 +101,6 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
             chain_id: opportunity1ChainId,
             protocol_identifier: opportunity1ProtocolIdentifier,
         })
-    // const { data: opportunity2PlatformData, isLoading: isLoading2 } =
-    //     useGetPlatformData({
-    //         chain_id: opportunity2ChainId,
-    //         protocol_identifier: opportunity2ProtocolIdentifier,
-    //     })
-    const { data: opportunity3PlatformData, isLoading: isLoading3 } =
-        useGetPlatformData({
-            chain_id: opportunity3ChainId,
-            protocol_identifier: opportunity3ProtocolIdentifier,
-        })
-    const { data: opportunity4PlatformData, isLoading: isLoading4 } =
-        useGetPlatformData({
-            chain_id: opportunity4ChainId,
-            protocol_identifier: opportunity4ProtocolIdentifier,
-        })
-    const { data: opportunity5PlatformData, isLoading: isLoading5 } =
-        useGetPlatformData({
-            chain_id: opportunity5ChainId,
-            protocol_identifier: opportunity5ProtocolIdentifier,
-        })
-    const { data: opportunity6PlatformData, isLoading: isLoading6 } =
-        useGetPlatformData({
-            chain_id: opportunity6ChainId,
-            protocol_identifier: opportunity6ProtocolIdentifier,
-        })
-    const { data: opportunity7PlatformData, isLoading: isLoading7 } =
-        useGetPlatformData({
-            chain_id: opportunity7ChainId,
-            protocol_identifier: opportunity7ProtocolIdentifier,
-        })
-    const { data: opportunity8PlatformData, isLoading: isLoading8 } =
-        useGetPlatformData({
-            chain_id: opportunity8ChainId,
-            protocol_identifier: opportunity8ProtocolIdentifier,
-        })
-    const { data: opportunity9PlatformData, isLoading: isLoading9 } =
-        useGetPlatformData({
-            chain_id: opportunity9ChainId,
-            protocol_identifier: opportunity9ProtocolIdentifier,
-        })
 
     // Don't render anything while loading
     if (isStateLoading) {
@@ -148,7 +113,7 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     }
 
     // Add checks for platform data existence
-    if (!opportunity1PlatformData?.assets || isLoadingBoostRewards || isLoadingEffectiveApy || !opportunity3PlatformData) {
+    if (!opportunity1PlatformData?.assets || isLoadingBoostRewards || isLoadingEffectiveApy || !lendOpportunitiesData) {
         return (
             <div className="flex flex-col gap-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -404,15 +369,19 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     // }
 
     const asset1Data = opportunity1PlatformData?.assets?.find((asset: any) =>
-        asset?.token?.address === opportunity1TokenAddress
+        asset?.token?.address.toLowerCase() === opportunity1TokenAddress.toLowerCase()
+    )
+    const asset3Data = lendOpportunitiesData?.find((asset: TOpportunity) =>
+        asset?.token?.address.toLowerCase() === opportunity3TokenAddress.toLowerCase()
     )
     const asset1AppleFarmRewardsApy = appleFarmRewardsAprs[opportunity1TokenAddress] ?? 0
     const asset1LendRate = Number(asset1Data?.supply_apy || 0) + Number(asset1AppleFarmRewardsApy || 0)
     const asset1DataSupplyApy = Number(asset1Data?.supply_apy || 0)
+    
     // Description
     const description1 = `${abbreviateNumber(asset1LendRate)}% APY`
     const description2 = `Upto ${TOTAL_VAULT_APY}% APY`
-    // const description3 = opportunity3PlatformData?.apy
+    const description3 = `Upto ${abbreviateNumber(Number(asset3Data?.platform.apy.current ?? 0))}% APY`
     const asset1ChainName = opportunity1PlatformData?.platform?.chain_id
         ? CHAIN_ID_MAPPER[opportunity1PlatformData.platform.chain_id as keyof typeof CHAIN_ID_MAPPER]
         : "Unknown"
@@ -462,13 +431,13 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
                 },
                 {
                     id: 3,
-                    label: 'Assured Airdrop',
-                    tokenSymbol: 'Coinshift Vault',
-                    platformName: 'Morpho',
-                    chainName: 'Ethereum',
-                    description: '+ 25% APY in SHIFT tokens',
-                    tokenImage: `${morphoImageBaseUrl}/wusdl.svg`,
-                    platformImage: `${imageBaseUrl}/morpho-logo.svg`,
+                    label: 'Multiply Strategy',
+                    tokenSymbol: 'mMEV',
+                    platformName: 'Superlend',
+                    chainName: 'Etherlink',
+                    description: description3 || "0.00% APY",
+                    tokenImage: `${imageBaseUrl}/1-mmev`,
+                    platformImage: `${imageBaseUrl}/superlend.svg`,
                     link: getRedirectLink(
                         opportunity3TokenAddress,
                         opportunity3ProtocolIdentifier,
@@ -503,7 +472,7 @@ export default function DiscoverOpportunities({ chain, positionType }: { chain: 
     const isLoading: { [key: number]: boolean } = {
         1: isLoading1,
         2: (isLoadingBoostRewards || isLoadingEffectiveApy),
-        3: isLoading3,
+        3: isLoadingLendOpportunities,
         4: isLoadingBorrowOpportunities,
         5: isLoadingBorrowOpportunities,
         6: isLoadingBorrowOpportunities,
