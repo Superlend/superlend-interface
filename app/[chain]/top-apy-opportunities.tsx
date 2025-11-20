@@ -359,7 +359,7 @@ export default function TopApyOpportunities({ chain }: { chain: string }) {
                 availableLiquidity = (Number(item.platform.liquidity) * Number(item.platform.collateral_token_price)) - borrowsInUSD
             }
 
-            const tokenHasAppleFarmRewards = hasAppleFarmRewards(item.token.address) && positionTypeParam === 'lend'
+            const tokenHasAppleFarmRewards = hasAppleFarmRewards(item.token.address) && positionTypeParam === 'lend' && (appleFarmRewardsAprs[item.token.address] ?? 0) > 0
 
             return {
                 positionType: positionTypeParam as TPositionType,
