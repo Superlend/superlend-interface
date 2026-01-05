@@ -185,7 +185,8 @@ export default function TopBanner() {
                         <ImageWithDefault
                             src="/banners/v2-announcement-bg.png"
                             alt="V2 Announcement Background"
-                            fill="true"
+                            fill
+                            style={{ objectFit: 'cover' }}
                             className="absolute top-0 left-0 w-full h-full object-cover"
                         />
                         {/* Left cloud */}
