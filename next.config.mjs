@@ -35,7 +35,9 @@ const nextConfig = {
         ],
         dangerouslyAllowSVG: true,
         contentDispositionType: 'attachment',
-        contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+        contentSecurityPolicy:
+            "default-src 'self'; script-src 'none'; sandbox;",
+        minimumCacheTTL: 60 * 60 * 24 * 14, // 14 days
     },
     webpack: (config) => {
         config.resolve.fallback = { fs: false, net: false, tls: false }
