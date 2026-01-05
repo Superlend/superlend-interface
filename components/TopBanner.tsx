@@ -326,9 +326,9 @@ export default function TopBanner() {
                                         <div className="bg-[#B0E3FF] h-1 w-1 rounded-full" />
                                         <ExternalLink
                                             href="https://app.superlend.xyz"
-                                            className="text-orange-500 font-medium"
+                                            className="!text-orange-500 font-medium"
                                             icon={
-                                                <ExternalLinkIcon className="w-3 h-3 storke-orange-500" />
+                                                <ExternalLinkIcon className="w-3 h-3 !storke-orange-500" />
                                             }
                                         >
                                             Try Out the New UI
